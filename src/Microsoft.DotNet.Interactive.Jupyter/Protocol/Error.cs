@@ -4,25 +4,24 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
+
+[JupyterMessageType(JupyterMessageContentTypes.Error)]
+public class Error : PubSubMessage
 {
-    [JupyterMessageType(JupyterMessageContentTypes.Error)]
-    public class Error : PubSubMessage
+    [JsonPropertyName("ename")]
+    public string EName { get;  }
+
+    [JsonPropertyName("evalue")]
+    public string EValue { get;  }
+
+    [JsonPropertyName("traceback")]
+    public IReadOnlyList<string> Traceback { get; } 
+
+    public Error(string eValue, string eName = null, IReadOnlyList<string> traceback = null)
     {
-        [JsonPropertyName("ename")]
-        public string EName { get;  }
-
-        [JsonPropertyName("evalue")]
-        public string EValue { get;  }
-
-        [JsonPropertyName("traceback")]
-        public IReadOnlyList<string> Traceback { get; } 
-
-        public Error(string eValue, string eName = null, IReadOnlyList<string> traceback = null)
-        {
-            EName = eName ?? "Error";
-            EValue = eValue;
-            Traceback = traceback ?? new List<string>();
-        }
+        EName = eName ?? "Error";
+        EValue = eValue;
+        Traceback = traceback ?? new List<string>();
     }
 }

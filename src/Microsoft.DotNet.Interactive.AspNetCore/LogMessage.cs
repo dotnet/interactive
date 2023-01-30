@@ -4,14 +4,13 @@
 using System;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.Interactive.AspNetCore
+namespace Microsoft.DotNet.Interactive.AspNetCore;
+
+internal class LogMessage
 {
-    internal class LogMessage
-    {
-        public LogLevel LogLevel { get; set; }
-        public string Category { get; set; }
-        public EventId EventId { get; set; }
-        public string Message { get; set; }
-        public Exception Exception { get; set; }
-    }
+    public LogLevel LogLevel { get; set; }
+    public string Category { get; set; }
+    public EventId EventId { get; set; }
+    public string Message { get; set; }
+    public Exception Exception { get; set; }
 }

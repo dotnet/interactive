@@ -3,16 +3,15 @@
 
 using Microsoft.AspNetCore.Html;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public class JsonString : HtmlString
 {
-    public class JsonString : HtmlString
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JsonString"/> class.
+    /// </summary>
+    /// <param name="json">The json.</param>
+    public JsonString(string json) : base(json)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="JsonString"/> class.
-        /// </summary>
-        /// <param name="json">The json.</param>
-        public JsonString(string json) : base(json)
-        {
-        }
     }
 }

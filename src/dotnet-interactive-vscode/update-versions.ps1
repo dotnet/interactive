@@ -1,6 +1,7 @@
 [CmdletBinding(PositionalBinding = $false)]
 param (
-    [switch]$updateAll = $false
+    [switch]$updateAll = $false,
+    [string]$version
 )
 
 Set-StrictMode -version 2.0
@@ -26,13 +27,13 @@ try {
             $newToolVersion = ($packageQueryResults."data" | Select-Object -First 1)."version"
 
             # ...compare to existing...
-            $existingToolVersion = $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.minimumInteractiveToolVersion"."default"
+            $existingToolVersion = $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.requiredInteractiveToolVersion"."default"
             if ($existingToolVersion -eq $newToolVersion) {
                 Write-Host "Existing tool version $existingToolVersion is up to date."
             }
             else {
                 Write-Host "Updating tool version from $existingToolVersion to $newToolVersion"
-                $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.minimumInteractiveToolVersion"."default" = $newToolVersion
+                $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.requiredInteractiveToolVersion"."default" = $newToolVersion
             }
         }
 
@@ -45,7 +46,7 @@ try {
         Write-Host
     }
 
-    $vsCodeStableVersion = (Get-Content "$PSScriptRoot\vscodeStableVersion.txt").Trim() # e.g., "1.53"
+    $vsCodeStableVersion = $version
     $vsCodeVersionParts = $vsCodeStableVersion -split "\."
     $vsCodeInsidersVersion = $vsCodeVersionParts[0] + "." + ([int]$vsCodeVersionParts[1] + 1)
 

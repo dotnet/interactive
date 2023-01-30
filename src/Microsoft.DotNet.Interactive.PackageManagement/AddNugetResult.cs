@@ -4,33 +4,32 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class AddNugetResult
 {
-    public class AddNugetResult
+    public AddNugetResult(
+        bool succeeded,
+        PackageReference requestedPackage,
+        IReadOnlyCollection<string> errors = null)
     {
-        public AddNugetResult(
-            bool succeeded,
-            PackageReference requestedPackage,
-            IReadOnlyCollection<string> errors = null)
+        if (requestedPackage is null)
         {
-            if (requestedPackage is null)
-            {
-                throw new ArgumentNullException(nameof(requestedPackage));
-            }
-
-            Succeeded = succeeded;
-
-            if (!succeeded &&
-                errors?.Count == 0)
-            {
-                throw new ArgumentException("Must provide errors when succeeded is false.");                //TBD: Localize
-            }
-
-            Errors = errors ?? Array.Empty<string>();
+            throw new ArgumentNullException(nameof(requestedPackage));
         }
 
-        public bool Succeeded { get; }
+        Succeeded = succeeded;
 
-        public IReadOnlyCollection<string> Errors { get; }
+        if (!succeeded &&
+            errors?.Count == 0)
+        {
+            throw new ArgumentException("Must provide errors when succeeded is false.");                //TBD: Localize
+        }
+
+        Errors = errors ?? Array.Empty<string>();
     }
+
+    public bool Succeeded { get; }
+
+    public IReadOnlyCollection<string> Errors { get; }
 }

@@ -34,9 +34,13 @@ It is common for organizations to store packages on a private or pre-release fee
 
 ### Local Nuget Sources
 
-You may also use a local folder as a nuget source:
+You can also use a local folder as a nuget source:
 
 ```csharp
 #i "nuget:C:\myorg\mypackage\src\bin\Release"
 #r "nuget:MyOrg.MyPackage"
 ```
+
+### Authenticated feeds
+
+.NET Interactive does not directly support accessing package feeds that require authentication, but you can access authenticated feeds by putting a PAT for the feed into your user-level nuget.config file. You can read more about this approach [here](https://learn.microsoft.com/en-us/azure/devops/artifacts/nuget/nuget-exe?view=azure-devops). 

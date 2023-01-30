@@ -11,191 +11,190 @@ using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+
+public class ProjectAsset : PackageAsset,
+    ICreateWorkspaceForLanguageServices,
+    ICreateWorkspaceForRun,
+    IHaveADirectory
 {
-    public class ProjectAsset : PackageAsset,
-        ICreateWorkspaceForLanguageServices,
-        ICreateWorkspaceForRun,
-        IHaveADirectory
-    {
-        private const string FullBuildBinlogFileName = "package_fullBuild.binlog";
-        private readonly FileInfo _projectFile;
-        private readonly FileInfo _lastBuildErrorLogFile;
-        private readonly PipelineStep<IAnalyzerResult> _projectBuildStep;
-        private readonly PipelineStep<CodeAnalysis.Workspace> _workspaceStep;
-        private readonly PipelineStep<IAnalyzerResult> _cleanupStep;
+    private const string FullBuildBinlogFileName = "package_fullBuild.binlog";
+    private readonly FileInfo _projectFile;
+    private readonly FileInfo _lastBuildErrorLogFile;
+    private readonly PipelineStep<IAnalyzerResult> _projectBuildStep;
+    private readonly PipelineStep<CodeAnalysis.Workspace> _workspaceStep;
+    private readonly PipelineStep<IAnalyzerResult> _cleanupStep;
 
-        public string Name { get; }
+    public string Name { get; }
         
-        public DirectoryInfo Directory { get; }
+    public DirectoryInfo Directory { get; }
 
-        public ProjectAsset(IDirectoryAccessor directoryAccessor, string csprojFileName = null) : base(directoryAccessor)
+    public ProjectAsset(IDirectoryAccessor directoryAccessor, string csprojFileName = null) : base(directoryAccessor)
+    {
+        if (directoryAccessor == null)
         {
-            if (directoryAccessor == null)
-            {
-                throw new ArgumentNullException(nameof(directoryAccessor));
-            }
-
-            if (string.IsNullOrWhiteSpace(csprojFileName))
-            {
-                var firstProject = DirectoryAccessor.GetAllFiles().Single(f => f.Extension == ".csproj");
-                _projectFile = DirectoryAccessor.GetFullyQualifiedFilePath(firstProject.FileName);
-            }
-            else
-            {
-                _projectFile = DirectoryAccessor.GetFullyQualifiedFilePath(csprojFileName);
-            }
-
-            Directory = DirectoryAccessor.GetFullyQualifiedRoot();
-            Name = _projectFile?.Name ?? Directory?.Name;
-            _lastBuildErrorLogFile = directoryAccessor.GetFullyQualifiedFilePath(".trydotnet-builderror");
-            _cleanupStep = new PipelineStep<IAnalyzerResult>(LoadResultOrCleanAsync);
-            _projectBuildStep = _cleanupStep.Then(BuildProjectAsync);
-            _workspaceStep = _projectBuildStep.Then(BuildWorkspaceAsync);
+            throw new ArgumentNullException(nameof(directoryAccessor));
         }
 
-        private async Task<IAnalyzerResult> LoadResultOrCleanAsync()
+        if (string.IsNullOrWhiteSpace(csprojFileName))
         {
-            using (await DirectoryAccessor.TryLockAsync())
-            {
-                var binLog = this.FindLatestBinLog();
-                if (binLog != null)
-                {
-                    var results = await TryLoadAnalyzerResultsAsync(binLog);
-                    var result = results?.FirstOrDefault(p => p.ProjectFilePath == _projectFile.FullName);
+            var firstProject = DirectoryAccessor.GetAllFiles().Single(f => f.Extension == ".csproj");
+            _projectFile = DirectoryAccessor.GetFullyQualifiedFilePath(firstProject.FileName);
+        }
+        else
+        {
+            _projectFile = DirectoryAccessor.GetFullyQualifiedFilePath(csprojFileName);
+        }
 
-                    var didCompile = DidPerformCoreCompile(result);
-                    if (result != null)
+        Directory = DirectoryAccessor.GetFullyQualifiedRoot();
+        Name = _projectFile?.Name ?? Directory?.Name;
+        _lastBuildErrorLogFile = directoryAccessor.GetFullyQualifiedFilePath(".trydotnet-builderror");
+        _cleanupStep = new PipelineStep<IAnalyzerResult>(LoadResultOrCleanAsync);
+        _projectBuildStep = _cleanupStep.Then(BuildProjectAsync);
+        _workspaceStep = _projectBuildStep.Then(BuildWorkspaceAsync);
+    }
+
+    private async Task<IAnalyzerResult> LoadResultOrCleanAsync()
+    {
+        using (await DirectoryAccessor.TryLockAsync())
+        {
+            var binLog = this.FindLatestBinLog();
+            if (binLog != null)
+            {
+                var results = await TryLoadAnalyzerResultsAsync(binLog);
+                var result = results?.FirstOrDefault(p => p.ProjectFilePath == _projectFile.FullName);
+
+                var didCompile = DidPerformCoreCompile(result);
+                if (result != null)
+                {
+                    if (result.Succeeded && didCompile)
                     {
-                        if (result.Succeeded && didCompile)
-                        {
-                            return result;
-                        }
+                        return result;
                     }
                 }
-
-                binLog?.DoWhenFileAvailable(() => binLog.Delete());
-                var toClean = Directory.GetDirectories("obj");
-                foreach (var directoryInfo in toClean)
-                {
-                    directoryInfo.Delete(true);
-                }
-
-                return null;
             }
+
+            binLog?.DoWhenFileAvailable(() => binLog.Delete());
+            var toClean = Directory.GetDirectories("obj");
+            foreach (var directoryInfo in toClean)
+            {
+                directoryInfo.Delete(true);
+            }
+
+            return null;
+        }
+    }
+
+    private bool DidPerformCoreCompile(IAnalyzerResult result)
+    {
+        if (result == null)
+        {
+            return false;
         }
 
-        private bool DidPerformCoreCompile(IAnalyzerResult result)
+        var sourceCount = result.SourceFiles?.Length ?? 0;
+        var compilerInputs = result.GetCompileInputs()?.Length ?? 0;
+
+        return compilerInputs > 0 && sourceCount > 0;
+    }
+
+    private Task<CodeAnalysis.Workspace> BuildWorkspaceAsync(IAnalyzerResult result)
+    {
+        if (result.TryGetWorkspace(out var ws))
         {
-            if (result == null)
-            {
-                return false;
-            }
+            var projectId = ws.CurrentSolution.ProjectIds.FirstOrDefault();
+            var references = result.References;
+            var metadataReferences = references.GetMetadataReferences();
+            var solution = ws.CurrentSolution;
+            solution = solution.WithProjectMetadataReferences(projectId, metadataReferences);
+            ws.TryApplyChanges(solution);
+            return Task.FromResult(ws);
+        }
+        throw new InvalidOperationException("Failed creating workspace");
+    }
 
-            var sourceCount = result.SourceFiles?.Length ?? 0;
-            var compilerInputs = result.GetCompileInputs()?.Length ?? 0;
-
-            return compilerInputs > 0 && sourceCount > 0;
+    private async Task<IAnalyzerResult> BuildProjectAsync(IAnalyzerResult result)
+    {
+        if (result is { })
+        {
+            return result;
         }
 
-        private Task<CodeAnalysis.Workspace> BuildWorkspaceAsync(IAnalyzerResult result)
+        using var _ = await DirectoryAccessor.TryLockAsync();
+
+        await DotnetBuild();
+
+        var binLog = this.FindLatestBinLog();
+
+        if (binLog == null)
         {
-            if (result.TryGetWorkspace(out var ws))
-            {
-                var projectId = ws.CurrentSolution.ProjectIds.FirstOrDefault();
-                var references = result.References;
-                var metadataReferences = references.GetMetadataReferences();
-                var solution = ws.CurrentSolution;
-                solution = solution.WithProjectMetadataReferences(projectId, metadataReferences);
-                ws.TryApplyChanges(solution);
-                return Task.FromResult(ws);
-            }
-            throw new InvalidOperationException("Failed creating workspace");
-        }
-
-        private async Task<IAnalyzerResult> BuildProjectAsync(IAnalyzerResult result)
-        {
-            if (result is { })
-            {
-                return result;
-            }
-
-            using var _ = await DirectoryAccessor.TryLockAsync();
-
-            await DotnetBuild();
-
-            var binLog = this.FindLatestBinLog();
-
-            if (binLog == null)
-            {
-                throw new InvalidOperationException("Failed to build");
-            }
-
-            var results = await TryLoadAnalyzerResultsAsync(binLog);
-
-            if (results?.Count == 0)
-            {
-                throw new InvalidOperationException("The build log seems to contain no solutions or projects");
-            }
-
-            result = results?.FirstOrDefault(p => p.ProjectFilePath == _projectFile.FullName);
-
-            if (result?.Succeeded == true)
-            {
-                return result;
-            }
-
             throw new InvalidOperationException("Failed to build");
         }
 
-        private async Task<IAnalyzerResults> TryLoadAnalyzerResultsAsync(FileInfo binLog)
+        var results = await TryLoadAnalyzerResultsAsync(binLog);
+
+        if (results?.Count == 0)
         {
-            IAnalyzerResults results = null;
-            await binLog.DoWhenFileAvailable(() =>
-            {
-                var manager = new AnalyzerManager();
-                results = manager.Analyze(binLog.FullName);
-            });
-            return results;
+            throw new InvalidOperationException("The build log seems to contain no solutions or projects");
         }
 
-        public Task<CodeAnalysis.Workspace> CreateWorkspaceAsync()
+        result = results?.FirstOrDefault(p => p.ProjectFilePath == _projectFile.FullName);
+
+        if (result?.Succeeded == true)
         {
-            return _workspaceStep.GetLatestAsync();
+            return result;
         }
 
-        public Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync()
+        throw new InvalidOperationException("Failed to build");
+    }
+
+    private async Task<IAnalyzerResults> TryLoadAnalyzerResultsAsync(FileInfo binLog)
+    {
+        IAnalyzerResults results = null;
+        await binLog.DoWhenFileAvailable(() =>
         {
-            return CreateWorkspaceAsync();
+            var manager = new AnalyzerManager();
+            results = manager.Analyze(binLog.FullName);
+        });
+        return results;
+    }
+
+    public Task<CodeAnalysis.Workspace> CreateWorkspaceAsync()
+    {
+        return _workspaceStep.GetLatestAsync();
+    }
+
+    public Task<CodeAnalysis.Workspace> CreateWorkspaceForRunAsync()
+    {
+        return CreateWorkspaceAsync();
+    }
+
+    public Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync()
+    {
+        return CreateWorkspaceAsync();
+    }
+
+    protected async Task DotnetBuild()
+    {
+        var args = $"/bl:{FullBuildBinlogFileName}";
+        if (_projectFile?.Exists == true)
+        {
+            args = $@"""{_projectFile.FullName}"" {args}";
         }
 
-        public Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync()
+        var result = await new Dotnet(Directory).Build(args: args);
+
+        if (result.ExitCode != 0)
         {
-            return CreateWorkspaceAsync();
+            File.WriteAllText(
+                _lastBuildErrorLogFile.FullName,
+                string.Join(Environment.NewLine, result.Error));
+        }
+        else if (_lastBuildErrorLogFile.Exists)
+        {
+            _lastBuildErrorLogFile.Delete();
         }
 
-        protected async Task DotnetBuild()
-        {
-            var args = $"/bl:{FullBuildBinlogFileName}";
-            if (_projectFile?.Exists == true)
-            {
-                args = $@"""{_projectFile.FullName}"" {args}";
-            }
-
-            var result = await new Dotnet(Directory).Build(args: args);
-
-            if (result.ExitCode != 0)
-            {
-                File.WriteAllText(
-                    _lastBuildErrorLogFile.FullName,
-                    string.Join(Environment.NewLine, result.Error));
-            }
-            else if (_lastBuildErrorLogFile.Exists)
-            {
-                _lastBuildErrorLogFile.Delete();
-            }
-
-            result.ThrowOnFailure();
-        }
+        result.ThrowOnFailure();
     }
 }

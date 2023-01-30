@@ -3,33 +3,32 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Formatting.TabularData
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData;
+
+public class TabularDataResourceFormatter<T> : TypeFormatter<T>
 {
-    public class TabularDataResourceFormatter<T> : TypeFormatter<T>
+    private readonly FormatDelegate<T> _format;
+
+    public TabularDataResourceFormatter(FormatDelegate<T> format)
     {
-        private readonly FormatDelegate<T> _format;
-
-        public TabularDataResourceFormatter(FormatDelegate<T> format)
-        {
-            _format = format;
-        }
-
-        public TabularDataResourceFormatter(Action<T, FormatContext> format)
-        {
-            _format = FormatInstance;
-
-            bool FormatInstance(T instance, FormatContext context)
-            {
-                format(instance, context);
-                return true;
-            }
-        }
-
-        public override bool Format(T value, FormatContext context)
-        {
-            return _format(value, context);
-        }
-
-        public override string MimeType => TabularDataResourceFormatter.MimeType;
+        _format = format;
     }
+
+    public TabularDataResourceFormatter(Action<T, FormatContext> format)
+    {
+        _format = FormatInstance;
+
+        bool FormatInstance(T instance, FormatContext context)
+        {
+            format(instance, context);
+            return true;
+        }
+    }
+
+    public override bool Format(T value, FormatContext context)
+    {
+        return _format(value, context);
+    }
+
+    public override string MimeType => TabularDataResourceFormatter.MimeType;
 }

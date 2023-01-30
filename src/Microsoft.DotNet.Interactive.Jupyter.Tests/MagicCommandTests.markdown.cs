@@ -10,37 +10,36 @@ using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Tests
+namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
+
+public partial class MagicCommandTests
 {
-    public partial class MagicCommandTests
+    public class Markdown
     {
-        public class Markdown
+        [Fact]
+        public async Task markdown_renders_markdown_content_as_html()
         {
-            [Fact]
-            public async Task markdown_renders_markdown_content_as_html()
-            {
-                using var kernel = new CompositeKernel()
-                    .UseDefaultMagicCommands();
+            using var kernel = new CompositeKernel()
+                .UseDefaultMagicCommands();
 
-                var expectedHtml = @"<h1 id=""topic"">Topic!</h1><p>Content</p>";
+            var expectedHtml = @"<h1 id=""topic"">Topic!</h1><p>Content</p>";
 
-                using var events = kernel.KernelEvents.ToSubscribedList();
+            using var events = kernel.KernelEvents.ToSubscribedList();
 
-                await kernel.SendAsync(new SubmitCode(
-                                           "#!markdown\n\n# Topic!\nContent"));
+            await kernel.SendAsync(new SubmitCode(
+                "#!markdown\n\n# Topic!\nContent"));
 
-                var formatted =
-                    events
-                        .OfType<DisplayedValueProduced>()
-                        .SelectMany(v => v.FormattedValues)
-                        .ToArray();
+            var formatted =
+                events
+                    .OfType<DisplayedValueProduced>()
+                    .SelectMany(v => v.FormattedValues)
+                    .ToArray();
 
-                formatted
-                    .Should()
-                    .ContainSingle(v =>
-                                       v.MimeType == "text/html" &&
-                                       v.Value.ToString().Crunch().Equals(expectedHtml));
-            }
+            formatted
+                .Should()
+                .ContainSingle(v =>
+                    v.MimeType == "text/html" &&
+                    v.Value.ToString().Crunch().Equals(expectedHtml));
         }
     }
 }

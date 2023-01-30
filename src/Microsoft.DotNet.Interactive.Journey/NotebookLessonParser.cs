@@ -15,276 +15,275 @@ using System.Threading.Tasks;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Journey
+namespace Microsoft.DotNet.Interactive.Journey;
+
+public class NotebookLessonParser
 {
-    public class NotebookLessonParser
+    private static readonly Dictionary<string, LessonDirective> _stringToLessonDirectiveMap = new()
     {
-        private static readonly Dictionary<string, LessonDirective> _stringToLessonDirectiveMap = new()
+        { "Challenge", LessonDirective.Challenge }
+    };
+
+    private static readonly Dictionary<string, ChallengeDirective> _stringToChallengeDirectiveMap = new()
+    {
+        { "ChallengeSetup", ChallengeDirective.ChallengeSetup },
+        { "Question", ChallengeDirective.Question },
+        { "Scratchpad", ChallengeDirective.Scratchpad }
+    };
+
+    private static List<string>? _allDirectiveNames = null;
+
+    public static List<string> AllDirectiveNames =>
+        _allDirectiveNames ??= _stringToLessonDirectiveMap.Keys.Concat(_stringToChallengeDirectiveMap.Keys).ToList();
+
+    public static async Task<InteractiveDocument> ReadFileAsInteractiveDocument(
+        FileInfo file,
+        CompositeKernel? kernel = null)
+    {
+        await using var stream = file.OpenRead();
+
+        var kernelInfo = GetKernelInfoFromKernel(kernel);
+
+        var notebook = file.Extension.ToLowerInvariant() switch
         {
-            { "Challenge", LessonDirective.Challenge }
+            ".ipynb" => await Notebook.ReadAsync(stream, kernelInfo),
+            ".dib" => await CodeSubmission.ReadAsync(stream, kernelInfo),
+            _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
         };
 
-        private static readonly Dictionary<string, ChallengeDirective> _stringToChallengeDirectiveMap = new()
+        return notebook;
+    }
+
+    public static async Task<InteractiveDocument> LoadNotebookFromUrl(
+        Uri uri,
+        HttpClient? httpClient = null,
+        CompositeKernel? kernel = null)
+    {
+        var client = httpClient ?? new HttpClient();
+        var response = await client.GetAsync(uri);
+        var content = await response.Content.ReadAsStringAsync();
+
+        // FIX: (LoadNotebookFromUrl) differentiate file formats
+
+        return CodeSubmission.Parse(content, GetKernelInfoFromKernel(kernel));
+    }
+
+    private static KernelInfoCollection GetKernelInfoFromKernel(CompositeKernel? kernel)
+    {
+        if (kernel is { })
         {
-            { "ChallengeSetup", ChallengeDirective.ChallengeSetup },
-            { "Question", ChallengeDirective.Question },
-            { "Scratchpad", ChallengeDirective.Scratchpad }
-        };
+            KernelInfoCollection kernelInfos = new();
 
-        private static List<string>? _allDirectiveNames = null;
-
-        public static List<string> AllDirectiveNames =>
-            _allDirectiveNames ??= _stringToLessonDirectiveMap.Keys.Concat(_stringToChallengeDirectiveMap.Keys).ToList();
-
-        public static async Task<InteractiveDocument> ReadFileAsInteractiveDocument(
-            FileInfo file,
-            CompositeKernel? kernel = null)
-        {
-            await using var stream = file.OpenRead();
-
-            var kernelInfo = GetKernelInfoFromKernel(kernel);
-
-            var notebook = file.Extension.ToLowerInvariant() switch
+            foreach (var subkernel in kernel)
             {
-                ".ipynb" => await Notebook.ReadAsync(stream, kernelInfo),
-                ".dib" => await CodeSubmission.ReadAsync(stream, kernelInfo),
-                _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
+                var info = subkernel.KernelInfo;
+                kernelInfos.Add(new(info.LocalName, info.LanguageName, info.Aliases));
+            }
+
+            kernelInfos.DefaultKernelName = kernel.DefaultKernelName;
+
+            if (kernelInfos.All(n => n.Name != "markdown"))
+            {
+                kernelInfos.Add(new Documents.KernelInfo("markdown", "Markdown", new[] { "md" }));
+            }
+
+            return kernelInfos;
+        }
+        else
+        {
+            var names = new KernelInfoCollection
+            {
+                new("csharp", "C#", new[] { "cs", "c#" }),
+                new("fsharp", "F#", new[] { "fs", "f#" }),
+                new("pwsh", "PowerShell", new[] { "powershell" }),
+                new("markdown", "Markdown", new[] { "md" })
             };
+            names.DefaultKernelName = "csharp";
+            return names;
+        }
+    }
 
-            return notebook;
+    public static void Parse(InteractiveDocument document, out LessonDefinition lesson, out List<ChallengeDefinition> challenges)
+    {
+        List<InteractiveDocumentElement> rawSetup = new();
+        List<List<InteractiveDocumentElement>> rawChallenges = new();
+        List<string> challengeNames = new();
+
+        var indexOfFirstLessonDirective = 0;
+
+        while (indexOfFirstLessonDirective < document.Elements.Count
+               && !TryParseLessonDirectiveCell(document.Elements[indexOfFirstLessonDirective], out var _, out _, out _))
+        {
+            rawSetup.Add(document.Elements[indexOfFirstLessonDirective]);
+            indexOfFirstLessonDirective++;
         }
 
-        public static async Task<InteractiveDocument> LoadNotebookFromUrl(
-            Uri uri,
-            HttpClient? httpClient = null,
-            CompositeKernel? kernel = null)
+        var setup = rawSetup.Select(c => new SubmitCode(c.Contents)).ToList();
+
+        List<InteractiveDocumentElement> currentChallenge = new();
+        var cellCount = document.Elements.Count;
+        for (var i = indexOfFirstLessonDirective; i < cellCount;)
         {
-            var client = httpClient ?? new HttpClient();
-            var response = await client.GetAsync(uri);
-            var content = await response.Content.ReadAsStringAsync();
-
-            // FIX: (LoadNotebookFromUrl) differentiate file formats
-
-            return CodeSubmission.Parse(content, GetKernelInfoFromKernel(kernel));
-        }
-
-        private static KernelInfoCollection GetKernelInfoFromKernel(CompositeKernel? kernel)
-        {
-            if (kernel is { })
+            if (TryParseLessonDirectiveCell(document.Elements[i], out var remainingCell, out var _, out var challengeName) &&
+                remainingCell is { } &&
+                challengeName is { })
             {
-                KernelInfoCollection kernelInfos = new();
-
-                foreach (var subkernel in kernel)
+                if (!string.IsNullOrWhiteSpace(remainingCell.Contents))
                 {
-                    var info = subkernel.KernelInfo;
-                    kernelInfos.Add(new(info.LocalName, info.LanguageName, info.Aliases));
+                    currentChallenge.Add(remainingCell);
                 }
-
-                kernelInfos.DefaultKernelName = kernel.DefaultKernelName;
-
-                if (kernelInfos.All(n => n.Name != "markdown"))
-                {
-                    kernelInfos.Add(new Documents.KernelInfo("markdown", "Markdown", new[] { "md" }));
-                }
-
-                return kernelInfos;
+                challengeNames.Add(challengeName);
+                i++;
             }
             else
             {
-                var names = new KernelInfoCollection
+                while (i < cellCount &&
+                       !TryParseLessonDirectiveCell(document.Elements[i], out var _, out var _, out var _))
                 {
-                    new("csharp", "C#", new[] { "cs", "c#" }),
-                    new("fsharp", "F#", new[] { "fs", "f#" }),
-                    new("pwsh", "PowerShell", new[] { "powershell" }),
-                    new("markdown", "Markdown", new[] { "md" })
-                };
-                names.DefaultKernelName = "csharp";
-                return names;
-            }
-        }
-
-        public static void Parse(InteractiveDocument document, out LessonDefinition lesson, out List<ChallengeDefinition> challenges)
-        {
-            List<InteractiveDocumentElement> rawSetup = new();
-            List<List<InteractiveDocumentElement>> rawChallenges = new();
-            List<string> challengeNames = new();
-
-            var indexOfFirstLessonDirective = 0;
-
-            while (indexOfFirstLessonDirective < document.Elements.Count
-                && !TryParseLessonDirectiveCell(document.Elements[indexOfFirstLessonDirective], out var _, out _, out _))
-            {
-                rawSetup.Add(document.Elements[indexOfFirstLessonDirective]);
-                indexOfFirstLessonDirective++;
-            }
-
-            var setup = rawSetup.Select(c => new SubmitCode(c.Contents)).ToList();
-
-            List<InteractiveDocumentElement> currentChallenge = new();
-            var cellCount = document.Elements.Count;
-            for (var i = indexOfFirstLessonDirective; i < cellCount;)
-            {
-                if (TryParseLessonDirectiveCell(document.Elements[i], out var remainingCell, out var _, out var challengeName) &&
-                    remainingCell is { } &&
-                    challengeName is { })
-                {
-                    if (!string.IsNullOrWhiteSpace(remainingCell.Contents))
-                    {
-                        currentChallenge.Add(remainingCell);
-                    }
-                    challengeNames.Add(challengeName);
+                    currentChallenge.Add(document.Elements[i]);
                     i++;
                 }
-                else
-                {
-                    while (i < cellCount &&
-                          !TryParseLessonDirectiveCell(document.Elements[i], out var _, out var _, out var _))
-                    {
-                        currentChallenge.Add(document.Elements[i]);
-                        i++;
-                    }
-                    rawChallenges.Add(currentChallenge);
-                    currentChallenge = new();
-                }
+                rawChallenges.Add(currentChallenge);
+                currentChallenge = new();
             }
-            rawChallenges.Add(currentChallenge);
+        }
+        rawChallenges.Add(currentChallenge);
 
-            List<ChallengeDefinition> challengeDefinitions = new();
-            HashSet<string> challengeNamesSet = new();
-            var index = 1;
-            foreach (var (name, challengeCells) in challengeNames.Zip(rawChallenges, (name, challengeCells) => (name, challengeCells)))
+        List<ChallengeDefinition> challengeDefinitions = new();
+        HashSet<string> challengeNamesSet = new();
+        var index = 1;
+        foreach (var (name, challengeCells) in challengeNames.Zip(rawChallenges, (name, challengeCells) => (name, challengeCells)))
+        {
+            var challengeName = string.IsNullOrWhiteSpace(name) ? $"Challenge {index}" : name;
+            if (!challengeNamesSet.Add(challengeName))
             {
-                var challengeName = string.IsNullOrWhiteSpace(name) ? $"Challenge {index}" : name;
-                if (!challengeNamesSet.Add(challengeName))
-                {
-                    throw new ArgumentException($"{challengeName} conflicts with an existing challenge name");
-                }
-
-                challengeDefinitions.Add(ParseChallenge(challengeCells, challengeName));
-
-                index++;
+                throw new ArgumentException($"{challengeName} conflicts with an existing challenge name");
             }
 
-            if (challengeDefinitions.Count == 0)
-            {
-                throw new ArgumentException($"This lesson has no challenges");
-            }
+            challengeDefinitions.Add(ParseChallenge(challengeCells, challengeName));
 
-            challenges = challengeDefinitions;
-            // todo: what is lesson name?
-            lesson = new LessonDefinition("", setup);
+            index++;
         }
 
-        private static ChallengeDefinition ParseChallenge(List<InteractiveDocumentElement> cells, string name)
+        if (challengeDefinitions.Count == 0)
         {
-            List<InteractiveDocumentElement> rawSetup = new();
-            List<InteractiveDocumentElement> rawEnvironmentSetup = new();
-            List<InteractiveDocumentElement> rawContents = new();
+            throw new ArgumentException($"This lesson has no challenges");
+        }
 
-            int indexOfFirstChallengeDirective = 0;
+        challenges = challengeDefinitions;
+        // todo: what is lesson name?
+        lesson = new LessonDefinition("", setup);
+    }
 
-            while (indexOfFirstChallengeDirective < cells.Count
-                && !TryParseChallengeDirectiveElement(cells[indexOfFirstChallengeDirective], out var _, out _, out _))
+    private static ChallengeDefinition ParseChallenge(List<InteractiveDocumentElement> cells, string name)
+    {
+        List<InteractiveDocumentElement> rawSetup = new();
+        List<InteractiveDocumentElement> rawEnvironmentSetup = new();
+        List<InteractiveDocumentElement> rawContents = new();
+
+        int indexOfFirstChallengeDirective = 0;
+
+        while (indexOfFirstChallengeDirective < cells.Count
+               && !TryParseChallengeDirectiveElement(cells[indexOfFirstChallengeDirective], out var _, out _, out _))
+        {
+            rawSetup.Add(cells[indexOfFirstChallengeDirective]);
+            indexOfFirstChallengeDirective++;
+        }
+
+        string? currentDirective = null;
+        for (var i = indexOfFirstChallengeDirective; i < cells.Count;)
+        {
+            if (TryParseChallengeDirectiveElement(cells[i], out var remainingCell, out var directive, out _))
             {
-                rawSetup.Add(cells[indexOfFirstChallengeDirective]);
-                indexOfFirstChallengeDirective++;
-            }
-
-            string? currentDirective = null;
-            for (var i = indexOfFirstChallengeDirective; i < cells.Count;)
-            {
-                if (TryParseChallengeDirectiveElement(cells[i], out var remainingCell, out var directive, out _))
+                currentDirective = directive;
+                if (currentDirective is { } &&
+                    !string.IsNullOrWhiteSpace(remainingCell?.Contents))
                 {
-                    currentDirective = directive;
-                    if (currentDirective is { } &&
-                        !string.IsNullOrWhiteSpace(remainingCell?.Contents))
-                    {
-                        AddChallengeComponent(currentDirective, remainingCell);
-                    }
+                    AddChallengeComponent(currentDirective, remainingCell);
+                }
+                i++;
+            }
+            else
+            {
+                while (i < cells.Count &&
+                       !TryParseChallengeDirectiveElement(cells[i], out var _, out var _, out var _) &&
+                       currentDirective is { })
+                {
+                    AddChallengeComponent(currentDirective, cells[i]);
                     i++;
                 }
-                else
-                {
-                    while (i < cells.Count &&
-                        !TryParseChallengeDirectiveElement(cells[i], out var _, out var _, out var _) &&
-                        currentDirective is { })
-                    {
-                        AddChallengeComponent(currentDirective, cells[i]);
-                        i++;
-                    }
-                }
-            }
-
-            if (rawContents.Count == 0)
-            {
-                throw new ArgumentException($"Challenge {name} has an empty question");
-            }
-
-            var setup = rawSetup.Select(c => new SubmitCode(c.Contents)).ToList();
-            var contents = rawContents.Select(c => new SendEditableCode(c.KernelName, c.Contents)).ToList();
-            var environmentSetup = rawEnvironmentSetup.Select(c => new SubmitCode(c.Contents)).ToList();
-
-            return new ChallengeDefinition(name, setup, contents, environmentSetup);
-
-            void AddChallengeComponent(string directiveName, InteractiveDocumentElement cell)
-            {
-                var directive = _stringToChallengeDirectiveMap[directiveName];
-                switch (directive)
-                {
-                    case ChallengeDirective.ChallengeSetup:
-                        rawEnvironmentSetup.Add(cell);
-                        break;
-                    case ChallengeDirective.Question:
-                        rawContents.Add(cell);
-                        break;
-                    default:
-                        break;
-                }
             }
         }
 
-        private static bool TryParseLessonDirectiveCell(InteractiveDocumentElement cell, out InteractiveDocumentElement? remainingCell, out string? directive, out string? afterDirective)
+        if (rawContents.Count == 0)
         {
-            if (!TryParseDirectiveElement(cell, out directive, out afterDirective, out remainingCell))
-            {
-                return false;
-            }
-            return _stringToLessonDirectiveMap.Keys.Contains(directive);
+            throw new ArgumentException($"Challenge {name} has an empty question");
         }
 
-        private static bool TryParseChallengeDirectiveElement(InteractiveDocumentElement cell, out InteractiveDocumentElement? remainingCell, out string? directive, out string? afterDirective)
+        var setup = rawSetup.Select(c => new SubmitCode(c.Contents)).ToList();
+        var contents = rawContents.Select(c => new SendEditableCode(c.KernelName, c.Contents)).ToList();
+        var environmentSetup = rawEnvironmentSetup.Select(c => new SubmitCode(c.Contents)).ToList();
+
+        return new ChallengeDefinition(name, setup, contents, environmentSetup);
+
+        void AddChallengeComponent(string directiveName, InteractiveDocumentElement cell)
         {
-            if (!TryParseDirectiveElement(cell, out directive, out afterDirective, out remainingCell))
+            var directive = _stringToChallengeDirectiveMap[directiveName];
+            switch (directive)
             {
-                return false;
+                case ChallengeDirective.ChallengeSetup:
+                    rawEnvironmentSetup.Add(cell);
+                    break;
+                case ChallengeDirective.Question:
+                    rawContents.Add(cell);
+                    break;
+                default:
+                    break;
             }
-            return _stringToChallengeDirectiveMap.Keys.Contains(directive);
         }
+    }
 
-        private static bool TryParseDirectiveElement(InteractiveDocumentElement cell, out string? directive, out string? afterDirective, out InteractiveDocumentElement? remainingCell)
+    private static bool TryParseLessonDirectiveCell(InteractiveDocumentElement cell, out InteractiveDocumentElement? remainingCell, out string? directive, out string? afterDirective)
+    {
+        if (!TryParseDirectiveElement(cell, out directive, out afterDirective, out remainingCell))
         {
-            directive = null;
-            afterDirective = null;
-            remainingCell = null;
-
-            if (cell.KernelName != "markdown")
-            {
-                return false;
-            }
-
-            var result = Regex.Split(cell.Contents, "\r\n|\r|\n");
-
-            var directivePattern = @"[^\[]*\[(?<directive>[a-zA-z]+)\][ ]?(?<afterDirective>[\S]*)";
-            var match = Regex.Match(result[0], directivePattern);
-            if (!match.Success)
-            {
-                return false;
-            }
-
-            directive = match.Groups["directive"].Value;
-            afterDirective = match.Groups["afterDirective"].Value;
-            remainingCell = new InteractiveDocumentElement(string.Join(Environment.NewLine, result.Skip(1)), cell.KernelName);
-            return true;
+            return false;
         }
+        return _stringToLessonDirectiveMap.Keys.Contains(directive);
+    }
+
+    private static bool TryParseChallengeDirectiveElement(InteractiveDocumentElement cell, out InteractiveDocumentElement? remainingCell, out string? directive, out string? afterDirective)
+    {
+        if (!TryParseDirectiveElement(cell, out directive, out afterDirective, out remainingCell))
+        {
+            return false;
+        }
+        return _stringToChallengeDirectiveMap.Keys.Contains(directive);
+    }
+
+    private static bool TryParseDirectiveElement(InteractiveDocumentElement cell, out string? directive, out string? afterDirective, out InteractiveDocumentElement? remainingCell)
+    {
+        directive = null;
+        afterDirective = null;
+        remainingCell = null;
+
+        if (cell.KernelName != "markdown")
+        {
+            return false;
+        }
+
+        var result = Regex.Split(cell.Contents, "\r\n|\r|\n");
+
+        var directivePattern = @"[^\[]*\[(?<directive>[a-zA-z]+)\][ ]?(?<afterDirective>[\S]*)";
+        var match = Regex.Match(result[0], directivePattern);
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        directive = match.Groups["directive"].Value;
+        afterDirective = match.Groups["afterDirective"].Value;
+        remainingCell = new InteractiveDocumentElement(string.Join(Environment.NewLine, result.Skip(1)), cell.KernelName);
+        return true;
     }
 }

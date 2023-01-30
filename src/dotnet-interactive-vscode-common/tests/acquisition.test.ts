@@ -195,7 +195,7 @@ describe('Acquisition tests', () => {
         });
     });
 
-    it("simulate local tool exists, is out of date, and is updated to the auto min version", async () => {
+    it("simulate local tool exists, is out of date, and is updated to the auto version", async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
             const args = {
                 dotnetPath: 'dotnet',
@@ -206,7 +206,7 @@ describe('Acquisition tests', () => {
 
             const launchOptions = await acquireDotnetInteractive(
                 args,
-                '42.42.42', // min version
+                '42.42.42', // required version
                 globalStoragePath,
                 getInteractiveVersionThatReturnsSpecificValue('0.0.0'), // report existing version 0.0.0 is installed
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
@@ -233,7 +233,7 @@ describe('Acquisition tests', () => {
         });
     });
 
-    it("simulate local tool exists, is out of date, and is updated to the specified min version", async () => {
+    it("simulate local tool exists, is out of date, and is updated to the specified version", async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
             const args = {
                 dotnetPath: 'dotnet',
@@ -244,7 +244,7 @@ describe('Acquisition tests', () => {
 
             const launchOptions = await acquireDotnetInteractive(
                 args,
-                '42.42.42', // min version
+                '42.42.42', // required version
                 globalStoragePath,
                 getInteractiveVersionThatReturnsSpecificValue('0.0.0'), // report existing version 0.0.0 is installed
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
@@ -275,18 +275,18 @@ describe('Acquisition tests', () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
             const args = {
                 dotnetPath: 'dotnet',
-                toolVersion: '42.42.42' // request at least this version
+                toolVersion: '42.42.42' // install exactly this
             };
             // prepopulate tool manifest...
             await createEmptyToolManifest(args.dotnetPath, globalStoragePath);
             // ...with existing version
-            await installInteractiveTool({ dotnetPath: 'dotnet', toolVersion: '43.43.43' }, globalStoragePath);
+            await installInteractiveTool({ dotnetPath: 'dotnet', toolVersion: '42.42.42' }, globalStoragePath);
 
             const launchOptions = await acquireDotnetInteractive(
                 args,
-                '42.42.42', // min version
+                '42.42.42', // required version
                 globalStoragePath,
-                getInteractiveVersionThatReturnsSpecificValue('43.43.43'), // report existing version 43.43.43 is installed
+                getInteractiveVersionThatReturnsSpecificValue('42.42.42'), // report existing version 42.42.42 is installed
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
                 report,
                 installInteractiveToolThatAlwaysThrows, // throw if acquisition tries to install
@@ -301,7 +301,47 @@ describe('Acquisition tests', () => {
                 isRoot: true,
                 tools: {
                     'microsoft.dotnet-interactive': {
-                        version: '43.43.43',
+                        version: '42.42.42',
+                        commands: [
+                            'dotnet-interactive'
+                        ]
+                    }
+                }
+            });
+        });
+    });
+
+    it("simulate local tool exists and is newer than required; version is downgraded", async () => {
+        await withFakeGlobalStorageLocation(true, async globalStoragePath => {
+            const args = {
+                dotnetPath: 'dotnet',
+                toolVersion: '42.42.42', // install exactly this
+            };
+            // prepopulate tool manifest...
+            await createEmptyToolManifest(args.dotnetPath, globalStoragePath);
+            // ...with existing version
+            await installInteractiveTool({ dotnetPath: 'dotnet', toolVersion: '43.43.43' }, globalStoragePath);
+
+            const launchOptions = await acquireDotnetInteractive(
+                args,
+                '42.42.42', // required version
+                globalStoragePath,
+                getInteractiveVersionThatReturnsSpecificValue('43.43.43'), // report existing version 43.43.43 is installed
+                createToolManifestThatThrows, // throw if acquisition tries to create another manifest
+                report,
+                installInteractiveToolWithSpecificVersion('42.42.42'), // 'install' this version when asked
+                report);
+
+            expect(globalStoragePath).to.be.a.directory();
+            const manifestPath = path.join(globalStoragePath, '.config', 'dotnet-tools.json');
+            expect(manifestPath).to.be.file().with.json;
+            const jsonContent = JSON.parse(fs.readFileSync(manifestPath).toString());
+            expect(jsonContent).to.deep.equal({
+                version: 1,
+                isRoot: true,
+                tools: {
+                    'microsoft.dotnet-interactive': {
+                        version: '42.42.42', // 43.43.43 was downgraded to 42.42.42
                         commands: [
                             'dotnet-interactive'
                         ]

@@ -3,19 +3,18 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer
-{
-    public class NotebookSerializeRequest : NotebookParseOrSerializeRequest
-    {
-        public override RequestType Type => RequestType.Serialize;
-        public string NewLine { get; }
-        public InteractiveDocument Document { get; }
+namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
-        public NotebookSerializeRequest(string id, DocumentSerializationType serializationType, string defaultLanguage, string newLine, InteractiveDocument document)
-            : base(id, serializationType, defaultLanguage)
-        {
-            NewLine = newLine ?? throw new ArgumentNullException(nameof(newLine));
-            Document = document ?? throw new ArgumentNullException(nameof(document));
-        }
+public class NotebookSerializeRequest : NotebookParseOrSerializeRequest
+{
+    public override RequestType Type => RequestType.Serialize;
+    public string NewLine { get; }
+    public InteractiveDocument Document { get; }
+
+    public NotebookSerializeRequest(string id, DocumentSerializationType serializationType, string defaultLanguage, string newLine, InteractiveDocument document)
+        : base(id, serializationType, defaultLanguage)
+    {
+        NewLine = newLine ?? throw new ArgumentNullException(nameof(newLine));
+        Document = document ?? throw new ArgumentNullException(nameof(document));
     }
 }

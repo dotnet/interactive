@@ -4,25 +4,24 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public interface ISupportNuget
 {
-    public interface ISupportNuget
-    {
-        Task<PackageRestoreResult> RestoreAsync();
+    Task<PackageRestoreResult> RestoreAsync();
 
-        IEnumerable<string> RestoreSources { get; }
+    IEnumerable<string> RestoreSources { get; }
 
-        IEnumerable<PackageReference> RequestedPackageReferences { get; }
+    IEnumerable<PackageReference> RequestedPackageReferences { get; }
 
-        IEnumerable<ResolvedPackageReference> ResolvedPackageReferences { get; }
+    IEnumerable<ResolvedPackageReference> ResolvedPackageReferences { get; }
 
-        PackageReference GetOrAddPackageReference(
-            string packageName,
-            string packageVersion = null);
+    PackageReference GetOrAddPackageReference(
+        string packageName,
+        string packageVersion = null);
 
-        void TryAddRestoreSource(string source);
+    void TryAddRestoreSource(string source);
 
-        // Notifies Kernel that packagereferencing is complete, and provides a list of PackageReferences
-        void RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
-    }
+    // Notifies Kernel that packagereferencing is complete, and provides a list of PackageReferences
+    void RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
 }

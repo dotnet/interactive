@@ -5,47 +5,46 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Journey
+namespace Microsoft.DotNet.Interactive.Journey;
+
+public class ChallengeContext
 {
-    public class ChallengeContext
+    public Challenge Challenge { get; }
+    public ChallengeEvaluation Evaluation { get; }
+    public Lesson Lesson => Challenge.Lesson;
+    public IEnumerable<ChallengeSubmission> SubmissionHistory => Challenge.SubmissionHistory;
+    public IEnumerable<RuleEvaluation> RuleEvaluations => Evaluation.RuleEvaluations;
+
+    public ChallengeContext(Challenge challenge)
     {
-        public Challenge Challenge { get; }
-        public ChallengeEvaluation Evaluation { get; }
-        public Lesson Lesson => Challenge.Lesson;
-        public IEnumerable<ChallengeSubmission> SubmissionHistory => Challenge.SubmissionHistory;
-        public IEnumerable<RuleEvaluation> RuleEvaluations => Evaluation.RuleEvaluations;
+        Challenge = challenge ?? throw new ArgumentNullException(nameof(challenge));
+        Evaluation = new ChallengeEvaluation();
+    }
 
-        public ChallengeContext(Challenge challenge)
+    public void SetMessage(string message, object hint = null)
+    {
+        Evaluation.SetMessage(message, hint);
+    }
+
+    public async Task StartChallengeAsync(Challenge challenge)
+    {
+        await Lesson.StartChallengeAsync(challenge);
+    }
+
+    public async Task StartChallengeAsync(string name)
+    {
+        await Lesson.StartChallengeAsync(name);
+    }
+
+    public async Task StartNextChallengeAsync()
+    {
+        if (Challenge.DefaultProgressionHandler is not null)
         {
-            Challenge = challenge ?? throw new ArgumentNullException(nameof(challenge));
-            Evaluation = new ChallengeEvaluation();
+            await Challenge.DefaultProgressionHandler(this);
         }
-
-        public void SetMessage(string message, object hint = null)
+        else
         {
-            Evaluation.SetMessage(message, hint);
-        }
-
-        public async Task StartChallengeAsync(Challenge challenge)
-        {
-            await Lesson.StartChallengeAsync(challenge);
-        }
-
-        public async Task StartChallengeAsync(string name)
-        {
-            await Lesson.StartChallengeAsync(name);
-        }
-
-        public async Task StartNextChallengeAsync()
-        {
-            if (Challenge.DefaultProgressionHandler is not null)
-            {
-                await Challenge.DefaultProgressionHandler(this);
-            }
-            else
-            {
-                await StartChallengeAsync(null as Challenge);
-            }
+            await StartChallengeAsync(null as Challenge);
         }
     }
 }

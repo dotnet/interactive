@@ -1,8 +1,7 @@
 {
   "name": "dotnet-interactive-vscode",
   "displayName": "Polyglot Notebooks",
-  "//description": "During build, the description gets the git SHA appended to it.",
-  "description": "Polyglot Notebooks for VS Code.",
+  "description": "Polyglot Notebooks for VS Code. Use multiple languages in one notebook with full language server support for each language and share variables between them.",
   "icon": "images/icon.png",
   "publisher": "ms-dotnettools",
   "author": "Microsoft Corporation",
@@ -14,7 +13,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.73.0"
+    "vscode": "^1.74.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -29,16 +28,12 @@
     "Visualization"
   ],
   "keywords": [
-    ".NET Core",
     ".NET",
     "interactive",
-    ".NET Interactive",
-    "dotnet interactive",
     "C#",
     "data science",
     "dotnet",
     "F#",
-    "interactive programming",
     "ipynb",
     "Jupyter",
     "notebooks",
@@ -47,14 +42,12 @@
   "activationEvents": [
     "onUri",
     "onNotebook:dotnet-interactive",
-    "onNotebook:dotnet-interactive-legacy",
     "onNotebook:dotnet-interactive-window",
     "onNotebook:jupyter-notebook",
     "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
     "onCommand:dotnet-interactive.saveAsNotebook",
     "onNotebook:polyglot-notebook",
-    "onNotebook:polyglot-notebook-legacy",
     "onNotebook:polyglot-notebook-window",
     "onNotebook:jupyter-notebook",
     "onCommand:dotnet-interactive.acquire",
@@ -175,10 +168,10 @@
           "default": "7.0",
           "description": "The minimum required version of the .NET SDK."
         },
-        "dotnet-interactive.minimumInteractiveToolVersion": {
+        "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.355307",
-          "description": "The minimum required version of the .NET Interactive tool."
+          "default": "1.0.406101",
+          "description": "The required version of the .NET Interactive tool."
         }
       }
     },
@@ -196,7 +189,7 @@
         {
           "type": "webview",
           "id": "polyglot-notebook-panel-values",
-          "name": "Values",
+          "name": "Variables",
           "icon": "resources/icons/notebook.svg"
         }
       ]
@@ -272,7 +265,7 @@
       },
       {
         "command": "polyglot-notebook.notebookEditor.openValueViewer",
-        "title": "Values",
+        "title": "Variables",
         "icon": "$(variable-group)"
       }
     ],
@@ -750,7 +743,7 @@
   },
   "scripts": {
     "compile-webview": "cd ../microsoft-dotnet-interactive && npm run compile-webview",
-    "copy-preloads": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/kernelApiBootstrapper.js ./resources",
+    "copy-preloads": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/activation.js ./resources",
     "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/variableGrid.js ./resources",
     "vscode:prepublish": "npm run compile",
     "compile": "npm run lint && tsc -p ./ && npm run compile-webview && npm run copy-preloads && npm run copy-variable-grid",
@@ -760,7 +753,7 @@
     "test": "mocha out/tests/**/*.test.js",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "tdd": "npm test -- --watch",
-    "package": "npx vsce package",
+    "package": "npx @vscode/vsce package",
     "clearUserData": "del-cli \"./userData/**/*\" \"!.gitignore\""
   },
   "mocha": {},
@@ -778,6 +771,7 @@
     "@types/uuid": "8.3.0",
     "@typescript-eslint/eslint-plugin": "5.3.0",
     "@typescript-eslint/parser": "5.3.0",
+    "@vscode/vsce": "2.16.0",
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
     "chai-fs": "2.0.0",
@@ -786,7 +780,7 @@
     "eslint": "7.32.0",
     "eslint-plugin-deprecation": "1.2.1",
     "glob": "7.2.0",
-    "mocha": "9.2.0",
+    "mocha": "9.2.2",
     "mocha-multi-reporters": "1.5.1",
     "mocha-trx-reporter": "3.3.1",
     "rollup": "2.60.1",
@@ -794,7 +788,6 @@
     "source-map-support": "0.5.21",
     "tmp": "0.2.1",
     "typescript": "4.4.4",
-    "vsce": "2.10.2",
     "vscode-test": "1.6.1"
   },
   "dependencies": {

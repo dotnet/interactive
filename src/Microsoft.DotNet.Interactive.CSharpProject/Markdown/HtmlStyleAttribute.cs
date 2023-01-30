@@ -3,15 +3,14 @@
 
 using Microsoft.AspNetCore.Html;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
-{
-    internal abstract class HtmlStyleAttribute
-    {
-        public override string ToString()
-        {
-            return StyleAttributeString().ToString();
-        }
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
 
-        protected abstract IHtmlContent StyleAttributeString();
+internal abstract class HtmlStyleAttribute
+{
+    public override string ToString()
+    {
+        return StyleAttributeString().ToString();
     }
+
+    protected abstract IHtmlContent StyleAttributeString();
 }

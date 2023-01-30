@@ -17,8 +17,11 @@ import * as metadataUtilities from './vscode-common/metadataUtilities';
 import * as constants from './vscode-common/constants';
 import * as versionSpecificFunctions from './versionSpecificFunctions';
 import * as semanticTokens from './vscode-common/documentSemanticTokenProvider';
+import { ServiceCollection } from './vscode-common/serviceCollection';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
+const standardOutputMimeType = 'application/vnd.code.notebook.stdout';
+const standardErrorMimeType = 'application/vnd.code.notebook.stderr';
 
 export interface DotNetNotebookKernelConfiguration {
     clientMapper: ClientMapper,
@@ -28,9 +31,14 @@ export interface DotNetNotebookKernelConfiguration {
 
 export class DotNetNotebookKernel {
 
+    private trackedOutputIds: Map<vscode.Uri, Set<string>> = new Map(); // tracks notebookUri => [trackedOutputId]
     private disposables: { dispose(): void }[] = [];
 
     constructor(readonly config: DotNetNotebookKernelConfiguration, readonly tokensProvider: semanticTokens.DocumentSemanticTokensProvider) {
+        // ensure the tracked output ids are always fresh
+        ServiceCollection.Instance.NotebookWatcher.onNotebookDocumentOpened((notebook, _client) => this.trackedOutputIds.delete(notebook.uri));
+        ServiceCollection.Instance.NotebookWatcher.onNotebookDocumentClosed((notebook, _client) => this.trackedOutputIds.delete(notebook.uri));
+
         const preloads = config.preloadUris.map(uri => new vscode.NotebookRendererScript(uri));
 
         // .dib execution
@@ -42,16 +50,6 @@ export class DotNetNotebookKernel {
             preloads
         );
         this.commonControllerInit(dibController);
-
-        // .dotnet-interactive execution
-        const legacyController = vscode.notebooks.createNotebookController(
-            constants.LegacyNotebookControllerId,
-            constants.LegacyNotebookViewType,
-            '.NET Interactive',
-            this.executeHandler.bind(this),
-            preloads
-        );
-        this.commonControllerInit(legacyController);
 
         // .ipynb execution via Jupyter extension (optional)
         const jupyterController = vscode.notebooks.createNotebookController(
@@ -171,13 +169,15 @@ export class DotNetNotebookKernel {
                 executionTask.start(startTime);
                 executionTask.executionOrder = undefined;
                 await executionTask.clearOutput(cell);
-                const controllerErrors: vscodeLike.NotebookCellOutput[] = [];
 
-                function outputObserver(outputs: Array<vscodeLike.NotebookCellOutput>) {
+                const outputObserver = (output: vscodeLike.NotebookCellOutput) => {
                     outputUpdatePromise = outputUpdatePromise.catch(ex => {
-                        console.error('Failed to update output', ex);
-                    }).finally(() => updateCellOutputs(executionTask!, [...outputs]));
-                }
+                        Logger.default.error(`Failed to update output: ${ex}`);
+                    }).finally(() => this.applyCellOutput(executionTask, output).catch(ex => {
+                        Logger.default.error(`Failed to update output: ${ex}`);
+                    }));
+                };
+
                 const client = await this.config.clientMapper.getOrAddClient(cell.notebook.uri);
                 executionTask.token.onCancellationRequested(() => {
                     client.cancel().catch(async err => {
@@ -209,6 +209,64 @@ export class DotNetNotebookKernel {
                 throw err;
             }
         }
+    }
+
+    private async applyCellOutput(executionTask: vscode.NotebookCellExecution, output: vscodeLike.NotebookCellOutput): Promise<void> {
+        const streamMimetypes = new Set([standardOutputMimeType, standardErrorMimeType]);
+
+        // ensure we're tracking output ids
+        const cell = executionTask.cell;
+        const trackedOutputs = this.trackedOutputIds.get(cell.notebook.uri) ?? new Set<string>();
+        this.trackedOutputIds.set(cell.notebook.uri, trackedOutputs);
+
+        if (trackedOutputs.has(output.id)) {
+            // if already tracking this output, build a new collection and update them all
+            const newOutputs = cell.outputs.map(o => {
+                if (o.metadata?.id === output.id) {
+                    return generateVsCodeNotebookCellOutput(output);
+                } else {
+                    return o;
+                }
+            });
+
+            await executionTask.replaceOutput(newOutputs);
+        } else {
+            // if the very last output item is stdout/stderr, append to it's parent
+            let appendItems = false;
+            if (cell.outputs.length > 0 && output.items.length === 1) {
+                const lastOutput = cell.outputs[cell.outputs.length - 1];
+                if (lastOutput.items.length > 0) {
+                    const lastOutputItem = lastOutput.items[lastOutput.items.length - 1];
+                    const vsCodeMimeType = getVsCodeMimeTypeFromStreamType(output.items[0].stream);
+                    if (streamMimetypes.has(lastOutputItem.mime) && lastOutputItem.mime === vsCodeMimeType) {
+                        // last mime type matches the incomming one; append the items
+                        appendItems = true;
+                    }
+                }
+            }
+
+            const outputItems = output.items.map(i => generateVsCodeNotebookCellOutputItem(i.data, i.mime, i.stream));
+            if (appendItems) {
+                const lastOutput = cell.outputs[cell.outputs.length - 1];
+                await executionTask.appendOutputItems(outputItems, lastOutput);
+            } else {
+                // couldn't append to last output item, so just create a new output and track it
+                const newOutput = createVsCodeNotebookCellOutput(outputItems, output.id);
+                trackedOutputs.add(output.id);
+                await executionTask.appendOutput(newOutput);
+            }
+        }
+    }
+}
+
+function getVsCodeMimeTypeFromStreamType(stream: string | undefined): string | undefined {
+    switch (stream) {
+        case 'stdout':
+            return standardOutputMimeType;
+        case 'stderr':
+            return standardErrorMimeType;
+        default:
+            return undefined;
     }
 }
 
@@ -281,32 +339,6 @@ async function updateCellLanguagesAndKernels(document: vscode.NotebookDocument):
     }));
 }
 
-async function updateCellOutputs(executionTask: vscode.NotebookCellExecution, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
-    const streamMimetypes = ['application/vnd.code.notebook.stderr', 'application/vnd.code.notebook.stdout'];
-    const reshapedOutputs: vscode.NotebookCellOutput[] = [];
-    outputs.forEach(async (o) => {
-        if (o.items.length > 1) {
-            // multi mimeType outputs should not be processed
-            reshapedOutputs.push(new vscode.NotebookCellOutput(o.items));
-        } else {
-            // If current nad previous items are of the same stream type then append currentItem to previousOutput.
-            const currentItem = generateVsCodeNotebookCellOutputItem(o.items[0].data, o.items[0].mime, o.items[0].stream);
-            const previousOutput = reshapedOutputs.length ? reshapedOutputs[reshapedOutputs.length - 1] : undefined;
-            const previousOutputItem = previousOutput?.items.length === 1 ? previousOutput.items[0] : undefined;
-
-            if (previousOutput && previousOutputItem?.mime && streamMimetypes.includes(previousOutputItem?.mime) && streamMimetypes.includes(currentItem.mime)) {
-                const decoder = new TextDecoder();
-                const newText = `${decoder.decode(previousOutputItem.data)}${decoder.decode(currentItem.data)}`;
-                const newItem = previousOutputItem.mime === 'application/vnd.code.notebook.stderr' ? vscode.NotebookCellOutputItem.stderr(newText) : vscode.NotebookCellOutputItem.stdout(newText);
-                previousOutput.items[previousOutput.items.length - 1] = newItem;
-            } else {
-                reshapedOutputs.push(new vscode.NotebookCellOutput([currentItem]));
-            }
-        }
-    });
-    await executionTask.replaceOutput(reshapedOutputs);
-}
-
 export function endExecution(client: InteractiveClient | undefined, cell: vscode.NotebookCell, success: boolean) {
     const key = cell.document.uri.toString();
     const executionTask = executionTasks.get(key);
@@ -318,7 +350,16 @@ export function endExecution(client: InteractiveClient | undefined, cell: vscode
     }
 }
 
-function generateVsCodeNotebookCellOutputItem(data: Uint8Array, mime: string, stream?: 'stdout' | 'stderr'): vscode.NotebookCellOutputItem {
+function createVsCodeNotebookCellOutput(outputItems: vscode.NotebookCellOutputItem[], id: string): vscode.NotebookCellOutput {
+    return new vscode.NotebookCellOutput(outputItems, { id });
+}
+
+function generateVsCodeNotebookCellOutput(output: vscodeLike.NotebookCellOutput): vscode.NotebookCellOutput {
+    const items = output.items.map(i => generateVsCodeNotebookCellOutputItem(i.data, i.mime, i.stream));
+    return createVsCodeNotebookCellOutput(items, output.id);
+}
+
+function generateVsCodeNotebookCellOutputItem(data: Uint8Array, mime: string, stream: 'stdout' | 'stderr' | undefined): vscode.NotebookCellOutputItem {
     const displayData = reshapeOutputValueForVsCode(data, mime);
     switch (stream) {
         case 'stdout':

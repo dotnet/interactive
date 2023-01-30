@@ -7,35 +7,34 @@ using ICSharpCode.Decompiler.CSharp.OutputVisitor;
 using ICSharpCode.Decompiler.DebugInfo;
 using ICSharpCode.Decompiler.Metadata;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.CSharpDecompiler
+namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.CSharpDecompiler;
+
+internal static class CSharpDecompiler
 {
-    internal static class CSharpDecompiler
+    internal static string Decompile(in PEFile assembly, in InspectionOptions inspectionOptions, in IDebugInfoProvider debugInfoProvider)
     {
-        internal static string Decompile(in PEFile assembly, in InspectionOptions inspectionOptions, in IDebugInfoProvider debugInfoProvider)
+        var decompilationLanguageVersion = Defaults.GetDecompilationLanguageVersion(inspectionOptions.DecompilationLanguage);
+
+        var systemPrivateCoreLibLocation = typeof(object).Assembly.Location;
+        using var peStream = File.OpenRead(systemPrivateCoreLibLocation);
+        using var systemPrivateCoreLib = new PEFile(Path.GetFileName(systemPrivateCoreLibLocation), peStream);
+        var targetFramework = systemPrivateCoreLib.DetectTargetFrameworkId();
+        var assemblyResolver = new UniversalAssemblyResolver($"{Defaults.InternalAssemblyName}.dll", true, targetFramework);
+        var settings = new DecompilerSettings(decompilationLanguageVersion);
+        var decompiler = new ICSharpCode.Decompiler.CSharp.CSharpDecompiler(module: assembly, assemblyResolver: assemblyResolver, settings: settings)
         {
-            var decompilationLanguageVersion = Defaults.GetDecompilationLanguageVersion(inspectionOptions.DecompilationLanguage);
+            DebugInfoProvider = debugInfoProvider
+        };
 
-            var systemPrivateCoreLibLocation = typeof(object).Assembly.Location;
-            using var peStream = File.OpenRead(systemPrivateCoreLibLocation);
-            using var systemPrivateCoreLib = new PEFile(Path.GetFileName(systemPrivateCoreLibLocation), peStream);
-            var targetFramework = systemPrivateCoreLib.DetectTargetFrameworkId();
-            var assemblyResolver = new UniversalAssemblyResolver($"{Defaults.InternalAssemblyName}.dll", true, targetFramework);
-            var settings = new DecompilerSettings(decompilationLanguageVersion);
-            var decompiler = new ICSharpCode.Decompiler.CSharp.CSharpDecompiler(module: assembly, assemblyResolver: assemblyResolver, settings: settings)
-            {
-                DebugInfoProvider = debugInfoProvider
-            };
+        var decompiledSyntaxTree = decompiler.DecompileWholeModuleAsSingleFile();
 
-            var decompiledSyntaxTree = decompiler.DecompileWholeModuleAsSingleFile();
+        var decompiledCSharpCode = new StringWriter();
 
-            var decompiledCSharpCode = new StringWriter();
+        var formattingOptions = FormattingOptionsFactory.CreateAllman();
+        formattingOptions.IndentationString = Defaults.DefaultIndent;
 
-            var formattingOptions = FormattingOptionsFactory.CreateAllman();
-                formattingOptions.IndentationString = Defaults.DefaultIndent;
+        new CSharpOutputVisitor(decompiledCSharpCode, formattingOptions).VisitSyntaxTree(decompiledSyntaxTree);
 
-            new CSharpOutputVisitor(decompiledCSharpCode, formattingOptions).VisitSyntaxTree(decompiledSyntaxTree);
-
-            return decompiledCSharpCode.ToString();
-        }
+        return decompiledCSharpCode.ToString();
     }
 }

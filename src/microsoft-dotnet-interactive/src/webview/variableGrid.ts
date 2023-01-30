@@ -26,6 +26,7 @@ window.addEventListener('DOMContentLoaded', () => {
             row.element.style.display = 'none';
             if (contains(row.row.name, filterElement.value) ||
                 contains(row.row.value, filterElement.value) ||
+                contains(row.row.typeName, filterElement.value) ||
                 contains(row.row.kernelDisplayName, filterElement.value)) {
                 row.element.style.display = '';
             }
@@ -43,7 +44,6 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
     filterElement.addEventListener('input', doFilter);
-    document.getElementById('clear')!.addEventListener('click', clearFilter);
 });
 
 function contains(text: string, search: string): boolean {
@@ -63,20 +63,25 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
     nameHeader.innerText = 'Name';
     header.appendChild(nameHeader);
 
+    const shareHeader = document.createElement('th');
+    shareHeader.classList.add('share-column');
+    shareHeader.innerText = 'Share';
+    header.appendChild(shareHeader);
+
     const valueHeader = document.createElement('th');
     valueHeader.classList.add('value-column');
     valueHeader.innerText = 'Value';
     header.appendChild(valueHeader);
 
+    const typeHeader = document.createElement('th');
+    typeHeader.classList.add('type-column');
+    typeHeader.innerText = 'Type';
+    header.appendChild(typeHeader);
+
     const kernelHeader = document.createElement('th');
     kernelHeader.classList.add('kernel-column');
     kernelHeader.innerText = 'Kernel';
     header.appendChild(kernelHeader);
-
-    const shareHeader = document.createElement('th');
-    shareHeader.classList.add('share-column');
-    shareHeader.innerText = 'Share';
-    header.appendChild(shareHeader);
 
     for (const row of rows) {
         const dataRow = document.createElement('tr');
@@ -86,18 +91,28 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
         dataName.innerText = truncateValue(row.name);
         dataRow.appendChild(dataName);
 
+        const dataShare = document.createElement('td');
+        dataShare.classList.add('share-data');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.classList.add('share');
+        button.setAttribute('aria-label', `Share ${row.name} from ${row.kernelDisplayName} kernel to`);
+        button.addEventListener('click', () => shareValueWith({ sourceKernelName: row.kernelName, valueName: row.name }));
+        button.innerHTML = '<svg class="share-symbol"><use xlink:href="#share-icon" aria-hidden="true"></use></svg>';
+        dataShare.appendChild(button);
+        dataRow.appendChild(dataShare);
+
         const dataValue = document.createElement('td');
         dataValue.innerText = truncateValue(row.value);
         dataRow.appendChild(dataValue);
 
+        const dataType = document.createElement('td');
+        dataType.innerText = truncateValue(row.typeName);
+        dataRow.appendChild(dataType);
+
         const dataKernel = document.createElement('td');
         dataKernel.innerText = truncateValue(row.kernelDisplayName);
         dataRow.appendChild(dataKernel);
-
-        const dataShare = document.createElement('td');
-        dataShare.classList.add('share-data');
-        dataShare.innerHTML = `<button type="button" onclick="shareValueWith({sourceKernelName:'${row.kernelName}', valueName: '${row.name}'})" name="" aria-label="Share ${row.name} from ${row.kernelDisplayName} kernel to" class="share"><svg class="share-symbol" ><use xlink:href="#share-icon" aria-hidden="true"></use></svg></button>`;
-        dataRow.appendChild(dataShare);
 
         displayedRows.push({
             row,
@@ -114,7 +129,7 @@ function setDataRows(container: HTMLElement, rows: VariableGridRow[]): Displayed
 const maxDisplayLength = 100;
 
 function truncateValue(value: string): string {
-    if (value.length > maxDisplayLength) {
+    if (value?.length > maxDisplayLength) {
         return value.substring(0, maxDisplayLength - 3) + '...';
     }
 
@@ -124,9 +139,9 @@ function truncateValue(value: string): string {
 // @ts-ignore
 const vscode = acquireVsCodeApi();
 
-(<any>window).shareValueWith = function (variableInfo: VariableInfo) {
+function shareValueWith(variableInfo: VariableInfo) {
     vscode.postMessage({
         command: 'shareValueWith',
         variableInfo: variableInfo
     });
-};
+}

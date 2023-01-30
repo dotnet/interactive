@@ -6,66 +6,65 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+public class PolyglotSyntaxTree
 {
-    public class PolyglotSyntaxTree
+    private readonly SourceText _sourceText;
+    private SyntaxNode? _root;
+
+    internal PolyglotSyntaxTree(SourceText sourceText)
     {
-        private readonly SourceText _sourceText;
-        private SyntaxNode? _root;
+        _sourceText = sourceText;
+    }
 
-        internal PolyglotSyntaxTree(SourceText sourceText)
+    public int Length => _sourceText.Length;
+
+    internal SyntaxNode? RootNode
+    {
+        get => _root;
+        set => _root = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
+    public SyntaxNode? GetRoot()
+    {
+        return _root;
+    }
+
+    public override string ToString()
+    {
+        return _sourceText.ToString();
+    }
+
+    public string? GetLanguageAtPosition(int position)
+    {
+        if (_root is null)
         {
-            _sourceText = sourceText;
+            return null;
         }
 
-        public int Length => _sourceText.Length;
-
-        internal SyntaxNode? RootNode
+        if (position >= _root.Span.End)
         {
-            get => _root;
-            set => _root = value ?? throw new ArgumentNullException(nameof(value));
+            position = _root.Span.End - 1;
         }
 
-        public SyntaxNode? GetRoot()
-        {
-            return _root;
-        }
-
-        public override string ToString()
-        {
-            return _sourceText.ToString();
-        }
-
-        public string? GetLanguageAtPosition(int position)
-        {
-            if (_root is null)
-            {
-                return null;
-            }
-
-            if (position >= _root.Span.End)
-            {
-                position = _root.Span.End - 1;
-            }
-
-            var node = _root.FindNode(position);
+        var node = _root.FindNode(position);
             
-            switch (node)
-            {
-                case LanguageNode languageNode:
-                    return languageNode.KernelName;
-
-                case PolyglotSubmissionNode submissionNode:
-                    return submissionNode.DefaultLanguage;
-
-                default:
-                    return null;
-            }
-        }
-
-        public int GetAbsolutePosition(LinePosition linePosition)
+        switch (node)
         {
-            return _sourceText.Lines.GetPosition(linePosition.ToCodeAnalysisLinePosition());
+            case LanguageNode languageNode:
+                return languageNode.KernelName;
+
+            case PolyglotSubmissionNode submissionNode:
+                return submissionNode.DefaultLanguage;
+
+            default:
+                return null;
         }
+    }
+
+    public int GetAbsolutePosition(LinePosition linePosition)
+    {
+        return _sourceText.Lines.GetPosition(linePosition.ToCodeAnalysisLinePosition());
     }
 }

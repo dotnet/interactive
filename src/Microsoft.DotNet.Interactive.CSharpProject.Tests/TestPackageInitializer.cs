@@ -6,25 +6,24 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
+
+public class TestPackageInitializer : PackageInitializer
 {
-    public class TestPackageInitializer : PackageInitializer
+    public int InitializeCount { get; private set; }
+
+    public TestPackageInitializer(
+        string template,
+        string projectName,
+        string language = null,
+        Func<DirectoryInfo, Task> afterCreate = null) :
+        base(template, projectName, language, afterCreate)
     {
-        public int InitializeCount { get; private set; }
+    }
 
-        public TestPackageInitializer(
-            string template,
-            string projectName,
-            string language = null,
-            Func<DirectoryInfo, Task> afterCreate = null) :
-            base(template, projectName, language, afterCreate)
-        {
-        }
-
-        public override Task InitializeAsync(DirectoryInfo directory)
-        {
-            InitializeCount++;
-            return base.InitializeAsync(directory);
-        }
+    public override Task InitializeAsync(DirectoryInfo directory)
+    {
+        InitializeCount++;
+        return base.InitializeAsync(directory);
     }
 }

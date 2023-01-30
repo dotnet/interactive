@@ -7,56 +7,55 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+public class HttpProbingSettings
 {
-    public class HttpProbingSettings
+    public Uri[] AddressList { get; private set; }
+
+    public static HttpProbingSettings Create(int? port)
     {
-        public Uri[] AddressList { get; private set; }
-
-        public static HttpProbingSettings Create(int? port)
+        return new HttpProbingSettings
         {
-            return new HttpProbingSettings
-            {
-                AddressList = GetProbingAddressList(port)
-            };
-        }
+            AddressList = GetProbingAddressList(port)
+        };
+    }
 
-        private static Uri[] GetProbingAddressList(int? httpPort)
+    private static Uri[] GetProbingAddressList(int? httpPort)
+    {
+        var sources = new List<string>();
+        foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
         {
-            var sources = new List<string>();
-            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+            if (ni.OperationalStatus == OperationalStatus.Up)
             {
-                if (ni.OperationalStatus == OperationalStatus.Up)
+                foreach (var ip in ni.GetIPProperties().UnicastAddresses.Select(a => a.Address.ToString()))
                 {
-                    foreach (var ip in ni.GetIPProperties().UnicastAddresses.Select(a => a.Address.ToString()))
-                    {
 
-                        if (ip != IPAddress.Loopback.ToString())
-                        {
-                            sources.Add(ip);
-                        }
+                    if (ip != IPAddress.Loopback.ToString())
+                    {
+                        sources.Add(ip);
                     }
                 }
             }
-
-            sources.Add(IPAddress.Loopback.ToString());
-
-            var addresses = sources
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .Select(s =>
-                {
-                    var uriString = httpPort is not null ? $"http://{s}:{httpPort}/" : $"http://{s}/";
-                    if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
-                    {
-                        return uri;
-                    }
-
-                    return null;
-                })
-                .Where(u => u is not null)
-                .ToArray();
-
-            return addresses;
         }
+
+        sources.Add(IPAddress.Loopback.ToString());
+
+        var addresses = sources
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s =>
+            {
+                var uriString = httpPort is not null ? $"http://{s}:{httpPort}/" : $"http://{s}/";
+                if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
+                {
+                    return uri;
+                }
+
+                return null;
+            })
+            .Where(u => u is not null)
+            .ToArray();
+
+        return addresses;
     }
 }

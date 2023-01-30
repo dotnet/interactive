@@ -4,19 +4,18 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive
-{
-    public class SignatureInformation
-    {
-        public SignatureInformation(string label, FormattedValue documentation, IReadOnlyList<ParameterInformation> parameters)
-        {
-            Label = label ?? throw new ArgumentNullException(nameof(label));
-            Documentation = documentation ?? throw new ArgumentNullException(nameof(documentation));
-            Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
-        }
+namespace Microsoft.DotNet.Interactive;
 
-        public string Label { get; }
-        public FormattedValue Documentation { get; }
-        public IReadOnlyList<ParameterInformation> Parameters { get; }
+public class SignatureInformation
+{
+    public SignatureInformation(string label, FormattedValue documentation, IReadOnlyList<ParameterInformation> parameters)
+    {
+        Label = label ?? throw new ArgumentNullException(nameof(label));
+        Documentation = documentation ?? throw new ArgumentNullException(nameof(documentation));
+        Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
     }
+
+    public string Label { get; }
+    public FormattedValue Documentation { get; }
+    public IReadOnlyList<ParameterInformation> Parameters { get; }
 }

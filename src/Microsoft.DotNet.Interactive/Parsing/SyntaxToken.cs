@@ -6,27 +6,26 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+[DebuggerStepThrough]
+[DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
+public abstract class SyntaxToken : SyntaxNodeOrToken
 {
-    [DebuggerStepThrough]
-    [DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
-    public abstract class SyntaxToken : SyntaxNodeOrToken
+    internal SyntaxToken(
+        SourceText sourceText,
+        TextSpan span,
+        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
-        internal SyntaxToken(
-            SourceText sourceText,
-            TextSpan span,
-            PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
-        {
-            Span = span;
-        }
-
-        public override TextSpan Span { get; }
-
-        private string GetDebuggerDisplay()
-        {
-            return GetType().Name + ": " + this;
-        }
-
-        public override string ToString() => Text;
+        Span = span;
     }
+
+    public override TextSpan Span { get; }
+
+    private string GetDebuggerDisplay()
+    {
+        return GetType().Name + ": " + this;
+    }
+
+    public override string ToString() => Text;
 }

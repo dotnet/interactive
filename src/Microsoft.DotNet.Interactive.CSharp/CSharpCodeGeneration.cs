@@ -4,45 +4,44 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive.CSharp
+namespace Microsoft.DotNet.Interactive.CSharp;
+
+internal static class TypeExtensions
 {
-    internal static class TypeExtensions
+    public static void WriteCSharpDeclarationTo(
+        this Type type,
+        TextWriter writer,
+        bool excludeNamespace = false)
     {
-        public static void WriteCSharpDeclarationTo(
-            this Type type,
-            TextWriter writer,
-            bool excludeNamespace = false)
+        var typeName = excludeNamespace
+            ? type.Name
+            : type.FullName ?? type.Name;
+
+        if (typeName.Contains("`"))
         {
-            var typeName = excludeNamespace
-                               ? type.Name
-                               : type.FullName ?? type.Name;
+            writer.Write(typeName.Remove(typeName.IndexOf('`')));
+            writer.Write("<");
+            var genericArguments = type.GetGenericArguments();
 
-            if (typeName.Contains("`"))
+            for (var i = 0; i < genericArguments.Length; i++)
             {
-                writer.Write(typeName.Remove(typeName.IndexOf('`')));
-                writer.Write("<");
-                var genericArguments = type.GetGenericArguments();
-
-                for (var i = 0; i < genericArguments.Length; i++)
+                genericArguments[i].WriteCSharpDeclarationTo(writer, excludeNamespace);
+                if (i < genericArguments.Length - 1)
                 {
-                    genericArguments[i].WriteCSharpDeclarationTo(writer, excludeNamespace);
-                    if (i < genericArguments.Length - 1)
-                    {
-                        writer.Write(",");
-                    }
-                }
-
-                writer.Write(">");
-
-                if (type.IsArray)
-                {
-                    writer.Write("[]");
+                    writer.Write(",");
                 }
             }
-            else
+
+            writer.Write(">");
+
+            if (type.IsArray)
             {
-                writer.Write(typeName);
+                writer.Write("[]");
             }
+        }
+        else
+        {
+            writer.Write(typeName);
         }
     }
 }

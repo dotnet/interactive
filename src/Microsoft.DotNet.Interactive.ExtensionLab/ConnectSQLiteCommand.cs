@@ -6,27 +6,26 @@ using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab
+namespace Microsoft.DotNet.Interactive.ExtensionLab;
+
+public class ConnectSQLiteCommand : ConnectKernelCommand
 {
-    public class ConnectSQLiteCommand : ConnectKernelCommand
+    public ConnectSQLiteCommand()
+        : base("sqlite", "Connects to a SQLite database")
     {
-        public ConnectSQLiteCommand()
-            : base("sqlite", "Connects to a SQLite database")
-        {
-            Add(ConnectionStringArgument);
-        }
+        Add(ConnectionStringArgument);
+    }
 
-        public Argument<string> ConnectionStringArgument { get; } =
-            new("connectionString", "The connection string used to connect to the database");
+    public Argument<string> ConnectionStringArgument { get; } =
+        new("connectionString", "The connection string used to connect to the database");
 
-        public override Task<Kernel> ConnectKernelAsync(
-            KernelInvocationContext context,
-            InvocationContext commandLineContext)
-        {
-            var connectionString = commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument);
-            var connector = new SQLiteKernelConnector(connectionString);
-            var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
-            return connector.CreateKernelAsync(localName);
-        }
+    public override Task<Kernel> ConnectKernelAsync(
+        KernelInvocationContext context,
+        InvocationContext commandLineContext)
+    {
+        var connectionString = commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument);
+        var connector = new SQLiteKernelConnector(connectionString);
+        var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+        return connector.CreateKernelAsync(localName);
     }
 }

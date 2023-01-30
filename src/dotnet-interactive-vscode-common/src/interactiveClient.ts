@@ -58,13 +58,11 @@ import { clearDebounce, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';
 import { CompositeKernel } from './dotnet-interactive/compositeKernel';
-import { ProxyKernel } from './dotnet-interactive/proxyKernel';
 import { Guid } from './dotnet-interactive/tokenGenerator';
 import { KernelHost } from './dotnet-interactive/kernelHost';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 import * as connection from './dotnet-interactive/connection';
 import { DisposableSubscription } from './dotnet-interactive/disposables';
-import { Logger } from './dotnet-interactive/logger';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -82,7 +80,6 @@ export class InteractiveClient {
     private nextToken: number = 1;
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
     private deferredOutput: Array<vscodeLike.NotebookCellOutput> = [];
-    private valueIdMap: Map<string, { idx: number, outputs: Array<vscodeLike.NotebookCellOutput>, observer: { (outputs: Array<vscodeLike.NotebookCellOutput>): void } }> = new Map<string, { idx: number, outputs: Array<vscodeLike.NotebookCellOutput>, observer: { (outputs: Array<vscodeLike.NotebookCellOutput>): void } }>();
     private _kernel: CompositeKernel;
     private _kernelHost: KernelHost;
     constructor(readonly config: InteractiveClientConfiguration) {
@@ -134,20 +131,15 @@ export class InteractiveClient {
         clearDebounce(`sighelp-${requestId}`);
     }
 
-    execute(source: string, language: string, outputObserver: { (outputs: Array<vscodeLike.NotebookCellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<boolean> {
+    execute(source: string, language: string, outputReporter: { (output: vscodeLike.NotebookCellOutput): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<boolean> {
         if (configuration !== undefined && configuration.id !== undefined) {
             this.clearExistingLanguageServiceRequests(configuration.id);
         }
         return new Promise((resolve, reject) => {
             let diagnostics: Array<Diagnostic> = [];
-            let outputs: Array<vscodeLike.NotebookCellOutput> = [];
 
             let reportDiagnostics = () => {
                 diagnosticObserver(diagnostics);
-            };
-
-            let reportOutputs = () => {
-                outputObserver(outputs);
             };
 
             let failureReported = false;
@@ -156,7 +148,9 @@ export class InteractiveClient {
             try {
                 return this.submitCode(source, language, eventEnvelope => {
                     if (this.deferredOutput.length > 0) {
-                        outputs.push(...this.deferredOutput);
+                        for (const output of this.deferredOutput) {
+                            outputReporter(output);
+                        }
                         this.deferredOutput = [];
                     }
 
@@ -172,8 +166,7 @@ export class InteractiveClient {
                             {
                                 const err = <CommandFailed>eventEnvelope.event;
                                 const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
-                                outputs.push(errorOutput);
-                                reportOutputs();
+                                outputReporter(errorOutput);
                                 failureReported = true;
                                 if (eventEnvelope.command?.id === commandId) {
                                     // only complete this promise if it's the root command
@@ -184,8 +177,7 @@ export class InteractiveClient {
                         case ErrorProducedType: {
                             const err = <ErrorProduced>eventEnvelope.event;
                             const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
-                            outputs.push(errorOutput);
-                            reportOutputs();
+                            outputReporter(errorOutput);
                             failureReported = true;
                         }
                         case DiagnosticsProducedType:
@@ -198,43 +190,19 @@ export class InteractiveClient {
                         case StandardErrorValueProducedType:
                         case StandardOutputValueProducedType:
                             {
-                                let disp = <DisplayEvent>eventEnvelope.event;
+                                const disp = <DisplayEvent>eventEnvelope.event;
                                 const stream = eventEnvelope.eventType === StandardErrorValueProducedType ? 'stderr' : 'stdout';
-                                let output = this.displayEventToCellOutput(disp, stream);
-                                outputs.push(output);
-                                reportOutputs();
+                                const output = this.displayEventToCellOutput(disp, stream);
+                                outputReporter(output);
                             }
                             break;
                         case DisplayedValueProducedType:
                         case DisplayedValueUpdatedType:
                         case ReturnValueProducedType:
                             {
-                                let disp = <DisplayEvent>eventEnvelope.event;
-                                let output = this.displayEventToCellOutput(disp);
-
-                                if (disp.valueId) {
-                                    let valueId = this.valueIdMap.get(disp.valueId);
-                                    if (valueId !== undefined) {
-                                        // update existing value
-                                        valueId.outputs[valueId.idx] = output;
-                                        valueId.observer(valueId.outputs);
-                                        // don't report through regular channels
-                                        break;
-                                    } else {
-                                        // add new tracked value
-                                        this.valueIdMap.set(disp.valueId, {
-                                            idx: outputs.length,
-                                            outputs,
-                                            observer: outputObserver
-                                        });
-                                        outputs.push(output);
-                                    }
-                                } else {
-                                    // raw value, just push it
-                                    outputs.push(output);
-                                }
-
-                                reportOutputs();
+                                const disp = <DisplayEvent>eventEnvelope.event;
+                                const output = this.displayEventToCellOutput(disp);
+                                outputReporter(output);
                             }
                             break;
                     }
@@ -243,8 +211,7 @@ export class InteractiveClient {
                     if (!failureReported) {
                         const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
                         const errorOutput = this.config.createErrorOutput(errorMessage, this.getNextOutputId());
-                        outputs.push(errorOutput);
-                        reportOutputs();
+                        outputReporter(errorOutput);
                         reject(e);
                     }
                 });
@@ -324,6 +291,7 @@ export class InteractiveClient {
     requestValueInfos(kernelName: string): Promise<ValueInfosProduced> {
         const command: RequestValueInfos = {
             targetKernelName: kernelName,
+            mimeType: "text/plain+summary"
         };
         return this.submitCommandAndGetResult(command, RequestValueInfosType, ValueInfosProducedType, undefined);
     }
@@ -491,7 +459,7 @@ export class InteractiveClient {
     private displayEventToCellOutput(disp: DisplayEvent, stream?: 'stdout' | 'stderr'): vscodeLike.NotebookCellOutput {
 
         const encoder = new TextEncoder();
-        let outputItems: Array<vscodeLike.NotebookCellOutputItem> = [];
+        const outputItems: Array<vscodeLike.NotebookCellOutputItem> = [];
         if (disp.formattedValues && disp.formattedValues.length > 0) {
             for (let formatted of disp.formattedValues) {
                 let data = this.IsEncodedMimeType(formatted.mimeType)
@@ -508,7 +476,8 @@ export class InteractiveClient {
             }
         }
 
-        const output = createOutput(outputItems, this.getNextOutputId());
+        const outputId = disp.valueId ?? this.getNextOutputId();
+        const output = createOutput(outputItems, outputId);
         return output;
     }
 

@@ -5,14 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Interactive.CSharp
+namespace Microsoft.DotNet.Interactive.CSharp;
+
+internal static class EnumerableExtensions
 {
-    internal static class EnumerableExtensions
+    public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> source, Comparison<T> compare)
     {
-        public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> source, Comparison<T> compare)
-        {
-            var comparer = Comparer<T>.Create(compare);
-            return source.OrderBy(t => t, comparer);
-        }
+        var comparer = Comparer<T>.Create(compare);
+        return source.OrderBy(t => t, comparer);
     }
 }

@@ -1,4 +1,4 @@
-[CmdletBinding(PositionalBinding=$false)]
+[CmdletBinding(PositionalBinding = $false)]
 param (
     [string]$extensionPath
 )
@@ -28,7 +28,7 @@ try {
     $availableVersions = ($packageQueryResults."data" | Select-Object -First 1)."versions" | ForEach-Object { $_."version" }
 
     # ensure package exists
-    $expectedVersion = $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.minimumInteractiveToolVersion"."default"
+    $expectedVersion = $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.requiredInteractiveToolVersion"."default"
     $exists = $availableVersions -contains $expectedVersion
 
     # cleanup unpacked extension
@@ -36,7 +36,8 @@ try {
 
     if ($exists) {
         Write-Host "Package version $expectedVersion exists on feed $toolFeed"
-    } else {
+    }
+    else {
         Write-Host "Package version $expectedVersion not found on feed $toolFeed"
         exit 1
     }

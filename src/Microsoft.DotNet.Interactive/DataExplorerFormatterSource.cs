@@ -9,33 +9,32 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+internal class DataExplorerFormatterSource : ITypeFormatterSource
 {
-    internal class DataExplorerFormatterSource : ITypeFormatterSource
+    public IEnumerable<ITypeFormatter> CreateTypeFormatters()
     {
-        public IEnumerable<ITypeFormatter> CreateTypeFormatters()
+        yield return new JsonFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
         {
-            yield return new JsonFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
-            {
-                var json = JsonSerializer.Serialize(dataExplorer.Data.Data,
-                                                    TabularDataResourceFormatter.JsonSerializerOptions);
+            var json = JsonSerializer.Serialize(dataExplorer.Data.Data,
+                TabularDataResourceFormatter.JsonSerializerOptions);
 
-                context.Writer.Write(json);
-            });
+            context.Writer.Write(json);
+        });
 
-            yield return new TabularDataResourceFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
-            {
-                var json = JsonSerializer.Serialize(dataExplorer.Data, TabularDataResourceFormatter.JsonSerializerOptions);
+        yield return new TabularDataResourceFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
+        {
+            var json = JsonSerializer.Serialize(dataExplorer.Data, TabularDataResourceFormatter.JsonSerializerOptions);
 
-                context.Writer.Write(json);
-            });
+            context.Writer.Write(json);
+        });
 
-            yield return new CsvFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
-            {
-                dataExplorer.Data.FormatTo(context, CsvFormatter.MimeType);
+        yield return new CsvFormatter<DataExplorer<TabularDataResource>>((dataExplorer, context) =>
+        {
+            dataExplorer.Data.FormatTo(context, CsvFormatter.MimeType);
 
-                return true;
-            });
-        }
+            return true;
+        });
     }
 }

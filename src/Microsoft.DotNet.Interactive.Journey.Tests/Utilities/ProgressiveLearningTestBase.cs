@@ -9,56 +9,56 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
-namespace Microsoft.DotNet.Interactive.Journey.Tests.Utilities
+namespace Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
+
+public abstract class ProgressiveLearningTestBase
 {
-    public abstract class ProgressiveLearningTestBase
+    private string? _tempPath;
+
+    protected Challenge GetEmptyChallenge()
     {
-        private string? _tempPath;
+        return new Challenge();
+    }
 
-        protected Challenge GetEmptyChallenge()
+    protected async Task<CompositeKernel> CreateKernel(LessonMode mode, HttpClient? httpClient = null)
+    {
+        var vscodeKernel = new FakeKernel("vscode");
+        vscodeKernel.RegisterCommandHandler<SendEditableCode>((_, _) => Task.CompletedTask);
+        var compositeKernel = new CompositeKernel
         {
-            return new Challenge();
-        }
+            new CSharpKernel().UseNugetDirective().UseKernelHelpers(),
+            vscodeKernel
+        };
 
-        protected async Task<CompositeKernel> CreateKernel(LessonMode mode, HttpClient? httpClient = null)
-        {
-            var vscodeKernel = new FakeKernel("vscode");
-            vscodeKernel.RegisterCommandHandler<SendEditableCode>((_, _) => Task.CompletedTask);
-            var kernel = new CompositeKernel
-            {
-                new CSharpKernel().UseNugetDirective().UseKernelHelpers(),
-                vscodeKernel
-            };
+        compositeKernel.DefaultKernelName = "csharp";
+        compositeKernel.SetDefaultTargetKernelNameForCommand(typeof(SendEditableCode), "vscode");
 
-            kernel.DefaultKernelName = "csharp";
+        Lesson.Mode = mode;
 
-            Lesson.Mode = mode;
+        await Main.OnLoadAsync(compositeKernel, httpClient);
 
-            await Main.OnLoadAsync(kernel, httpClient);
+        return compositeKernel;
+    }
 
-            return kernel;
-        }
+    protected string ToModelAnswer(string answer)
+    {
+        return $"#!model-answer\r\n{answer}";
+    }
 
-        protected string ToModelAnswer(string answer)
-        {
-            return $"#!model-answer\r\n{answer}";
-        }
+    protected string GetPatchedNotebookPath(string notebookName, [CallerMemberName]string? testName = null)
+    {
+        var original = PathUtilities.GetNotebookPath(notebookName);
+        var txt = File.ReadAllText(original);
 
-        protected string GetPatchedNotebookPath(string notebookName, [CallerMemberName]string? testName = null)
-        {
-            var original = PathUtilities.GetNotebookPath(notebookName);
-            var txt = File.ReadAllText(original);
+        var newNotebookContent = txt.Replace("{journey_dll_path}", $"\"{typeof(KernelExtensions).Assembly.Location}\"");
 
-            var newNotebookContent = txt.Replace("{journey_dll_path}", $"\"{typeof(KernelExtensions).Assembly.Location}\"");
+        _tempPath = Path.Combine( Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(_tempPath);
 
-            _tempPath = Path.Combine( Path.GetTempPath(), Path.GetRandomFileName());
-            Directory.CreateDirectory(_tempPath);
+        var newFilePath = Path.Combine(_tempPath, $"{testName??"patched"}_{notebookName}");
 
-            var newFilePath = Path.Combine(_tempPath, $"{testName??"patched"}_{notebookName}");
+        File.WriteAllText(newFilePath, newNotebookContent);
 
-            File.WriteAllText(newFilePath, newNotebookContent);
-
-            return newFilePath;
-        }
+        return newFilePath;
     }
 }

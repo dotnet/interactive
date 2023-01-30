@@ -5,41 +5,40 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging
-{
-    public static class PackageFinder
-    {
-        public static Task<T> FindAsync<T>(
-            this IPackageFinder finder,
-            string packageName)
-            where T : class, IPackage =>
-            finder.Find<T>(new PackageDescriptor(packageName));
+namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
-        public static IPackageFinder Create(Func<Task<Package>> package)
+public static class PackageFinder
+{
+    public static Task<T> FindAsync<T>(
+        this IPackageFinder finder,
+        string packageName)
+        where T : class, IPackage =>
+        finder.Find<T>(new PackageDescriptor(packageName));
+
+    public static IPackageFinder Create(Func<Task<Package>> package)
+    {
+        return new AnonymousPackageFinder(package);
+    }
+
+    private class AnonymousPackageFinder : IPackageFinder
+    {
+        private readonly AsyncLazy<Package> _lazyPackage;
+
+        public AnonymousPackageFinder(Func<Task<Package>> package)
         {
-            return new AnonymousPackageFinder(package);
+            _lazyPackage = new(package);
         }
 
-        private class AnonymousPackageFinder : IPackageFinder
+        public async Task<T> Find<T>(PackageDescriptor descriptor) where T : class, IPackage
         {
-            private readonly AsyncLazy<Package> _lazyPackage;
+            var package = await _lazyPackage.ValueAsync();
 
-            public AnonymousPackageFinder(Func<Task<Package>> package)
+            if (package is T p)
             {
-                _lazyPackage = new(package);
+                return p;
             }
 
-            public async Task<T> Find<T>(PackageDescriptor descriptor) where T : class, IPackage
-            {
-                var package = await _lazyPackage.ValueAsync();
-
-                if (package is T p)
-                {
-                    return p;
-                }
-
-                return default;
-            }
+            return default;
         }
     }
 }

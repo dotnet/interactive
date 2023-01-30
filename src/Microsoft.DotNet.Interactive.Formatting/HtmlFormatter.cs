@@ -6,313 +6,340 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Net.Http;
 using System.Numerics;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public static class HtmlFormatter
 {
-    public static class HtmlFormatter
+    static HtmlFormatter()
     {
-        static HtmlFormatter()
+        Formatter.Clearing += Initialize;
+
+        void Initialize() => MaxProperties = DefaultMaxProperties;
+    }
+
+    /// <summary>
+    ///   Indicates the maximum number of properties to show in the default HTML display of arbitrary objects.
+    ///   If set to zero no properties are shown.
+    /// </summary>
+    public static int MaxProperties { get; set; } = DefaultMaxProperties;
+
+    internal const int DefaultMaxProperties = 20;
+
+    public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
+        Formatter.GetPreferredFormatterFor(type, MimeType);
+
+    public static ITypeFormatter GetPreferredFormatterFor<T>() =>
+        GetPreferredFormatterFor(typeof(T));
+
+    public const string MimeType = "text/html";
+
+    internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type) =>
+        FormattersForAnyObject.GetOrCreateFormatterForType(type);
+
+    internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
+        FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
+
+    internal static void FormatAndStyleAsPlainText(
+        object text, 
+        FormatContext context)
+    {
+        context.RequireDefaultStyles();
+
+        PocketView tag = div(pre(text.ToDisplayString(PlainTextFormatter.MimeType)));
+        tag.HtmlAttributes["class"] = "dni-plaintext";
+        tag.WriteTo(context);
+    }
+
+    internal static FormatterMapByType FormattersForAnyObject =
+        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
+
+    internal static FormatterMapByType FormattersForAnyEnumerable =
+        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
+
+    internal static readonly ITypeFormatter[] DefaultFormatters =
+    {
+        new HtmlFormatter<DateTime>((dateTime, context) =>
         {
-            Formatter.Clearing += Initialize;
+            PocketView view = span(dateTime.ToString("u"));
+            view.WriteTo(context);
+            return true;
+        }),
 
-            void Initialize() => MaxProperties = DefaultMaxProperties;
-        }
+        new HtmlFormatter<DateTimeOffset>((dateTime, context) =>
+        {
+            PocketView view = span(dateTime.ToString("u"));
+            view.WriteTo(context);
+            return true;
+        }),
 
-        /// <summary>
-        ///   Indicates the maximum number of properties to show in the default HTML display of arbitrary objects.
-        ///   If set to zero no properties are shown.
-        /// </summary>
-        public static int MaxProperties { get; set; } = DefaultMaxProperties;
+        new HtmlFormatter<ExpandoObject>((value, context) =>
+        {
+            var headers = new List<IHtmlContent>();
+            var values = new List<IHtmlContent>();
 
-        internal const int DefaultMaxProperties = 20;
+            foreach (var pair in value.OrderBy(p => p.Key))
+            {
+                // Note, embeds the keys and values as arbitrary objects into the HTML content,
+                // ultimately rendered by PocketView
+                headers.Add(th(pair.Key));
+                values.Add(td(pair.Value));
+            }
 
-        public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
-            Formatter.GetPreferredFormatterFor(type, MimeType);
+            PocketView view =
+                table(
+                    thead(
+                        tr(
+                            headers)),
+                    tbody(
+                        tr(
+                            values)));
 
-        public static ITypeFormatter GetPreferredFormatterFor<T>() =>
-            GetPreferredFormatterFor(typeof(T));
+            view.WriteTo(context);
+            return true;
+        }),
 
-        public const string MimeType = "text/html";
+        new HtmlFormatter<PocketView>((view, context) =>
+        {
+            view.WriteTo(context);
+            return true;
+        }),
 
-        internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
-            FormattersForAnyObject.GetOrCreateFormatterForType(type, includeInternals);
+        new HtmlFormatter<IHtmlContent>((view, context) =>
+        {
+            view.WriteTo(context.Writer, HtmlEncoder.Default);
+            return true;
+        }),
 
-        internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
-            FormattersForAnyEnumerable.GetOrCreateFormatterForType(type, false);
+        new HtmlFormatter<ReadOnlyMemory<char>>((memory, context) =>
+        {
+            PocketView view = span(memory.Span.ToString());
 
-        internal static void FormatAndStyleAsPlainText(
-            object text, 
-            FormatContext context)
+            view.WriteTo(context);
+            return true;
+        }),
+
+        new HtmlFormatter<string>((s, context) =>
+        {
+            // If PlainTextPreformat is true, then strings
+            // will have line breaks and white-space preserved
+            FormatAndStyleAsPlainText(s, context);
+            return true;
+        }),
+
+        new HtmlFormatter<TimeSpan>((timespan, context) =>
+        {
+            PocketView view = span(timespan.ToString());
+            view.WriteTo(context);
+            return true;
+        }),
+
+        new HtmlFormatter<Type>((type, context) =>
+        {
+            var text = type.ToDisplayString(PlainTextFormatter.MimeType);
+                    
+            // This is approximate
+            var isKnownDocType =
+                type.Namespace is not null &&
+                (type.Namespace == "System" ||
+                 type.Namespace.StartsWith("System.") ||
+                 type.Namespace.StartsWith("Microsoft."));
+
+            if (!isKnownDocType || type.IsAnonymous())
+            {
+                context.Writer.Write(text.HtmlEncode());
+            }
+            else
+            {
+                //system.collections.generic.list-1
+                //system.collections.generic.list-1.enumerator
+                var genericTypeDefinition = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+
+                var typeLookupName =
+                    genericTypeDefinition.FullName.ToLower().Replace("+",".").Replace("`","-");
+
+                PocketView view = 
+                    span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-7.0"](
+                        text));
+                view.WriteTo(context);
+            }
+
+            return true;
+        }),
+
+        // Transform ReadOnlyMemory to an array for formatting
+        new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
+            mimeType: MimeType,
+            format: (value, context) =>
+            {
+                var actualType = value.GetType();
+                var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
+                    (actualType.GetGenericArguments());
+
+                var array = toArray.Invoke(null, new[] { value });
+
+                array.FormatTo(context, MimeType);
+
+                return true;
+            }),
+
+        new HtmlFormatter<Enum>((enumValue, context) =>
+        {
+            PocketView view = span(enumValue.ToString());
+            view.WriteTo(context);
+            return true;
+        }),
+
+        // Try to display enumerable results as tables. This will return false for nested tables.
+        new HtmlFormatter<IEnumerable>((value, context) =>
+        {
+            var type = value.GetType();
+            var formatter = GetDefaultFormatterForAnyEnumerable(type);
+            return formatter.Format(value, context);
+        }),
+
+        // BigInteger should be displayed as plain text
+        new HtmlFormatter<BigInteger>((value, context) =>
+        {
+            FormatAndStyleAsPlainText(value, context);
+            return true;
+        }),
+
+         // decimal should be displayed as plain text
+         new HtmlFormatter<decimal>((value, context) =>
+         {
+             FormatAndStyleAsPlainText(value, context);
+             return true;
+         }),
+
+        // Try to display object results as tables. This will return false for nested tables.
+        new HtmlFormatter<object>((value, context) =>
         {
             context.RequireDefaultStyles();
 
-            PocketView tag = div(pre(text.ToDisplayString(PlainTextFormatter.MimeType)));
-            tag.HtmlAttributes["class"] = "dni-plaintext";
-            tag.WriteTo(context);
-        }
+            var type = value.GetType();
+            var formatter = GetDefaultFormatterForAnyObject(type);
+            return formatter.Format(value, context);
+        }),
 
-        internal static FormatterMapByType FormattersForAnyObject =
-            new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
-
-        internal static FormatterMapByType FormattersForAnyEnumerable =
-            new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
-
-        internal static readonly ITypeFormatter[] DefaultFormatters =
+        // Final last resort is to convert to plain text
+        new HtmlFormatter<object>((value, context) =>
         {
-            new HtmlFormatter<DateTime>((dateTime, context) =>
+            if (value is null)
             {
-                PocketView view = span(dateTime.ToString("u"));
-                view.WriteTo(context);
-                return true;
-            }),
-
-            new HtmlFormatter<DateTimeOffset>((dateTime, context) =>
-            {
-                PocketView view = span(dateTime.ToString("u"));
-                view.WriteTo(context);
-                return true;
-            }),
-
-            new HtmlFormatter<ExpandoObject>((value, context) =>
-            {
-                var headers = new List<IHtmlContent>();
-                var values = new List<IHtmlContent>();
-
-                foreach (var pair in value.OrderBy(p => p.Key))
-                {
-                    // Note, embeds the keys and values as arbitrary objects into the HTML content,
-                    // ultimately rendered by PocketView
-                    headers.Add(th(pair.Key));
-                    values.Add(td(pair.Value));
-                }
-
-                PocketView view =
-                    table(
-                        thead(
-                            tr(
-                                headers)),
-                        tbody(
-                            tr(
-                                values)));
-
-                view.WriteTo(context);
-                return true;
-            }),
-
-            new HtmlFormatter<PocketView>((view, context) =>
-            {
-                view.WriteTo(context);
-                return true;
-            }),
-
-            new HtmlFormatter<IHtmlContent>((view, context) =>
-            {
-                view.WriteTo(context.Writer, HtmlEncoder.Default);
-                return true;
-            }),
-
-            new HtmlFormatter<ReadOnlyMemory<char>>((memory, context) =>
-            {
-                PocketView view = span(memory.Span.ToString());
-
-                view.WriteTo(context);
-                return true;
-            }),
-
-            new HtmlFormatter<string>((s, context) =>
-            {
-                // If PlainTextPreformat is true, then strings
-                // will have line breaks and white-space preserved
-                FormatAndStyleAsPlainText(s, context);
-                return true;
-            }),
-
-            new HtmlFormatter<TimeSpan>((timespan, context) =>
-            {
-                PocketView view = span(timespan.ToString());
-                view.WriteTo(context);
-                return true;
-            }),
-
-            new HtmlFormatter<Type>((type, context) =>
-            {
-                var text = type.ToDisplayString(PlainTextFormatter.MimeType);
-                    
-                // This is approximate
-                var isKnownDocType =
-                    type.Namespace is not null &&
-                    (type.Namespace == "System" ||
-                     type.Namespace.StartsWith("System.") ||
-                     type.Namespace.StartsWith("Microsoft."));
-
-                if (!isKnownDocType || type.IsAnonymous())
-                {
-                    context.Writer.Write(text.HtmlEncode());
-                }
-                else
-                {
-                    //system.collections.generic.list-1
-                    //system.collections.generic.list-1.enumerator
-                    var genericTypeDefinition = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
-
-                    var typeLookupName =
-                        genericTypeDefinition.FullName.ToLower().Replace("+",".").Replace("`","-");
-
-                    PocketView view = 
-                        span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-5.0"](
-                                 text));
-                    view.WriteTo(context);
-                }
-
-                return true;
-            }),
-
-            // Transform ReadOnlyMemory to an array for formatting
-            new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
-                                               mimeType: MimeType,
-                                               format: (value, context) =>
-                                               {
-                                                   var actualType = value.GetType();
-                                                   var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
-                                                       (actualType.GetGenericArguments());
-
-                                                   var array = toArray.Invoke(null, new[] { value });
-
-                                                   array.FormatTo(context, MimeType);
-
-                                                   return true;
-                                               }),
-
-            new HtmlFormatter<Enum>((enumValue, context) =>
-            {
-                PocketView view = span(enumValue.ToString());
-                view.WriteTo(context);
-                return true;
-            }),
-
-            // Try to display enumerable results as tables. This will return false for nested tables.
-            new HtmlFormatter<IEnumerable>((value, context) =>
-            {
-                var type = value.GetType();
-                var formatter = GetDefaultFormatterForAnyEnumerable(type);
-                return formatter.Format(value, context);
-            }),
-
-            // BigInteger should be displayed as plain text
-            new HtmlFormatter<BigInteger>((value, context) =>
+                FormatAndStyleAsPlainText(Formatter.NullString, context);
+            }
+            else
             {
                 FormatAndStyleAsPlainText(value, context);
-                return true;
-            }),
+            }
 
-            // Try to display object results as tables. This will return false for nested tables.
-            new HtmlFormatter<object>((value, context) =>
+            return true;
+        }),
+
+        new HtmlFormatter<JsonDocument>((doc, context) =>
+        {
+            doc.RootElement.FormatTo(context, MimeType);
+            return true;
+        }),
+
+        new HtmlFormatter<JsonElement>((element, context) =>
+        {
+            PocketView view = null;
+
+            switch (element.ValueKind)
             {
-                var type = value.GetType();
-                var formatter = GetDefaultFormatterForAnyObject(type);
-                return formatter.Format(value, context);
-            }),
+                case JsonValueKind.Object:
 
-            // Final last resort is to convert to plain text
-            new HtmlFormatter<object>((value, context) =>
+                    var keysAndValues = element.EnumerateObject().ToArray();
+
+                    view = details[@class: "dni-treeview"](
+                        summary(
+                            span[@class: "dni-code-hint"](code(element.ToString()))),
+                        div(
+                            Html.Table(
+                                headers: null,
+                                rows: keysAndValues.Select(
+                                    a => (IHtmlContent)
+                                        tr(
+                                            td(a.Name), td(a.Value))).ToArray())));
+
+                    break;
+
+                case JsonValueKind.Array:
+
+                    var arrayEnumerator = element.EnumerateArray().ToArray();
+
+                    view = details[@class: "dni-treeview"](
+                        summary(
+                            span[@class: "dni-code-hint"](code(element.ToString()))),
+                        div(
+                            Html.Table(
+                                headers: null,
+                                rows: arrayEnumerator.Select(
+                                    a => (IHtmlContent) tr(td(a))).ToArray())));
+
+                    break;
+
+                case JsonValueKind.String:
+
+                    var value = element.GetString();
+                    view = span($"\"{value}\"");
+
+                    break;
+
+                case JsonValueKind.Number:
+                    view = span(element.GetSingle());
+                    break;
+
+                case JsonValueKind.True:
+                    view = span("true");
+                    break;
+
+                case JsonValueKind.False:
+                    view = span("false");
+                    break;
+
+                case JsonValueKind.Null:
+                    view = span(Formatter.NullString);
+                    break;
+
+                default:
+                    return false;
+            }
+
+            context.RequireDefaultStyles();
+
+            view.WriteTo(context);
+
+            return true;
+        }),
+
+        new HtmlFormatter<HttpResponseMessage>((value, context) =>
+        {
+            // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
+            ExecutionContext.SuppressFlow();
+            try
             {
-                if (value is null)
-                {
-                    FormatAndStyleAsPlainText(Formatter.NullString, context);
-                }
-                else
-                {
-                    FormatAndStyleAsPlainText(value, context);
-                }
-
-                return true;
-            }),
-
-            new HtmlFormatter<JsonDocument>((doc, context) =>
+                value.FormatAsHtml(context).Wait();
+            }
+            finally
             {
-                doc.RootElement.FormatTo(context, MimeType);
-                return true;
-            }),
+                ExecutionContext.RestoreFlow();
+            }
 
-            new HtmlFormatter<JsonElement>((element, context) =>
-            {
-                PocketView view = null;
+            return true;
+        })
+    };
 
-                switch (element.ValueKind)
-                {
-                    case JsonValueKind.Object:
-
-                        var keysAndValues = element.EnumerateObject().ToArray();
-
-                        view = details[@class: "dni-treeview"](
-                            summary(
-                                span[@class: "dni-code-hint"](code(element.ToString()))),
-                            div(
-                                Html.Table(
-                                    headers: null,
-                                    rows: keysAndValues.Select(
-                                        a => (IHtmlContent)
-                                            tr(
-                                                td(a.Name), td(a.Value))).ToArray())));
-
-                        break;
-
-                    case JsonValueKind.Array:
-
-                        var arrayEnumerator = element.EnumerateArray().ToArray();
-
-                        view = details[@class: "dni-treeview"](
-                            summary(
-                                span[@class: "dni-code-hint"](code(element.ToString()))),
-                            div(
-                                Html.Table(
-                                    headers: null,
-                                    rows: arrayEnumerator.Select(
-                                        a => (IHtmlContent) tr(td(a))).ToArray())));
-
-                        break;
-
-                    case JsonValueKind.String:
-
-                        var value = element.GetString();
-                        view = span($"\"{value}\"");
-
-                        break;
-
-                    case JsonValueKind.Number:
-                        view = span(element.GetSingle());
-                        break;
-
-                    case JsonValueKind.True:
-                        view = span("true");
-                        break;
-
-                    case JsonValueKind.False:
-                        view = span("false");
-                        break;
-
-                    case JsonValueKind.Null:
-                        view = span(Formatter.NullString);
-                        break;
-
-                    default:
-                        return false;
-                }
-
-                context.RequireDefaultStyles();
-
-                view.WriteTo(context);
-
-                return true;
-            })
-        };
-
-        private static readonly Lazy<IHtmlContent> _defaultStyles = new(() => style(new HtmlString(@"
+    private static readonly Lazy<IHtmlContent> _defaultStyles = new(() => style(new HtmlString(@"
 .dni-code-hint {
     font-style: italic;
     overflow: hidden;
@@ -345,11 +372,10 @@ table th {
 }
 ")));
 
-        internal static IHtmlContent DefaultStyles() => _defaultStyles.Value;
+    internal static IHtmlContent DefaultStyles() => _defaultStyles.Value;
 
-        public static void RequireDefaultStyles(this FormatContext context)
-        {
-            context.RequireOnComplete("dni-styles", DefaultStyles());
-        }
+    public static void RequireDefaultStyles(this FormatContext context)
+    {
+        context.RequireOnComplete("dni-styles", DefaultStyles());
     }
 }

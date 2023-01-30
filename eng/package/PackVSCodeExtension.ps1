@@ -1,7 +1,6 @@
 [CmdletBinding(PositionalBinding = $false)]
 param (
     [string]$stableToolVersionNumber,
-    [string]$gitSha,
     [string]$outDir
 )
 
@@ -14,12 +13,11 @@ function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDi
     $packageJsonPath = Join-Path (Get-Location) "package.json"
     $packageJsonContents = ReadJson -packageJsonPath $packageJsonPath
     SetNpmVersionNumber -packageJsonContents $packageJsonContents -packageVersionNumber $packageVersionNumber
-    AddGitShaToDescription -packageJsonContents $packageJsonContents -gitSha $gitSha
 
     # set tool version
     if ($kernelVersionNumber -Ne "") {
         Write-Host "Setting tool version to $kernelVersionNumber"
-        $packageJsonContents.contributes.configuration.properties."dotnet-interactive.minimumInteractiveToolVersion"."default" = $kernelVersionNumber
+        $packageJsonContents.contributes.configuration.properties."dotnet-interactive.requiredInteractiveToolVersion"."default" = $kernelVersionNumber
     }
 
     SaveJson -packageJsonPath $packagejsonPath -packageJsonContents $packageJsonContents

@@ -3,10 +3,9 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public interface IDestructurer<in T>
 {
-    public interface IDestructurer<in T>
-    {
-        IDictionary<string, object> Destructure(T instance);
-    }
+    IDictionary<string, object> Destructure(T instance);
 }

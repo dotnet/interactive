@@ -5,20 +5,19 @@ using System;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using NetMQ;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
+namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
+
+public class MessageReceiver
 {
-    public class MessageReceiver
+    private readonly NetMQSocket _socket;
+
+    public MessageReceiver(NetMQSocket socket)
     {
-        private readonly NetMQSocket _socket;
+        _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+    }
 
-        public MessageReceiver(NetMQSocket socket)
-        {
-            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-        }
-
-        public Message Receive()
-        {
-            return _socket.GetMessage();
-        }
+    public Message Receive()
+    {
+        return _socket.GetMessage();
     }
 }

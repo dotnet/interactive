@@ -5,22 +5,21 @@ using System;
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class PackageAdded : KernelEvent
 {
-    public class PackageAdded : KernelEvent
+    public PackageAdded(
+        ResolvedPackageReference packageReference,
+        KernelCommand command) : base(command)
     {
-        public PackageAdded(
-            ResolvedPackageReference packageReference,
-            KernelCommand command) : base(command)
-        {
-            PackageReference = packageReference ?? throw new ArgumentNullException(nameof(packageReference));
-        }
+        PackageReference = packageReference ?? throw new ArgumentNullException(nameof(packageReference));
+    }
 
-        public ResolvedPackageReference PackageReference { get; }
+    public ResolvedPackageReference PackageReference { get; }
 
-        public override string ToString()
-        {
-            return $"{base.ToString()}: {PackageReference}";
-        }
+    public override string ToString()
+    {
+        return $"{base.ToString()}: {PackageReference}";
     }
 }

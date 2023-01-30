@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as contracts from '../../src/vscode-common/dotnet-interactive/contracts';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 import { expect } from 'chai';
@@ -11,9 +12,10 @@ import { Logger } from '../../src/vscode-common/dotnet-interactive';
 describe('dynamic grammar tests', async () => {
     let logMessages: string[] = [];
     let grammarContentsByPath: Map<string, string>;
+    let languageConfigurationByPath: Map<string, any>;
     const testUri: vscodeLike.Uri = {
-        fsPath: '',
-        scheme: ''
+        fsPath: 'my-test-notebook-path',
+        scheme: 'test'
     };
     let dynamicTokenProvider: DynamicGrammarSemanticTokenProvider;
 
@@ -374,6 +376,178 @@ $x = "this is perl code";
         expect(tokens).to.deep.equal([]); // should be empty, but this gives better error messages
     });
 
+    it('http grammar can classify code', async () => {
+        const updatedKernelInfos: contracts.KernelInfo[] = [
+            {
+                localName: 'httpRequest',
+                uri: 'kernel://httpRequest',
+                languageName: 'http',
+                aliases: [],
+                displayName: '',
+                supportedKernelCommands: [],
+                supportedDirectives: [],
+            }
+        ];
+        dynamicTokenProvider.rebuildNotebookGrammar(testUri, updatedKernelInfos);
+
+        const code = `
+// some comment
+GET /{{subPath}}/page.html
+User-Agent: abc/{{userAgent}}/def`;
+        const tokens = await getTokens('httpRequest', code);
+        expect(tokens).to.deep.equal([
+            {
+                tokenText: '// some comment',
+                tokenType: 'polyglot-notebook-comment'
+            },
+            {
+                tokenText: 'GET',
+                tokenType: 'polyglot-notebook-keyword'
+            },
+            {
+                tokenText: '{{',
+                tokenType: 'polyglot-notebook-punctuation-section-brackets-single-begin'
+            },
+            {
+                tokenText: 'subPath',
+                tokenType: 'polyglot-notebook-variable-language'
+            },
+            {
+                tokenText: '}}',
+                tokenType: 'polyglot-notebook-punctuation-section-brackets-single-end'
+            },
+            {
+                tokenText: 'User-Agent:',
+                tokenType: 'polyglot-notebook-keyword-control'
+            },
+            {
+                tokenText: '{{',
+                tokenType: 'polyglot-notebook-punctuation-section-brackets-single-begin'
+            },
+            {
+                tokenText: 'userAgent',
+                tokenType: 'polyglot-notebook-variable-language'
+            },
+            {
+                tokenText: '}}',
+                tokenType: 'polyglot-notebook-punctuation-section-brackets-single-end'
+            }
+        ]);
+    });
+
+    it('language configuration can be pulled from kernel name', () => {
+        const notebookDocument: vscodeLike.NotebookDocument = {
+            uri: testUri,
+            metadata: {}
+        };
+        const languageConfiguration = dynamicTokenProvider.getLanguageConfigurationFromKernelNameOrAlias(notebookDocument, 'test-csharp');
+        expect(languageConfiguration).to.deep.equal({
+            comments: {
+                lineComment: '//'
+            }
+        });
+    });
+
+    it('language configuration can be pulled from kernel alias', () => {
+        const notebookDocument: vscodeLike.NotebookDocument = {
+            uri: testUri,
+            metadata: {}
+        };
+        const languageConfiguration = dynamicTokenProvider.getLanguageConfigurationFromKernelNameOrAlias(notebookDocument, 'see-sharp-alias');
+        expect(languageConfiguration).to.deep.equal({
+            comments: {
+                lineComment: '//'
+            }
+        });
+    });
+
+    it('language configuration can be pulled from kernel name after it was added dynamically', () => {
+        const notebookDocument: vscodeLike.NotebookDocument = {
+            uri: testUri,
+            metadata: {}
+        };
+
+        // initially empty
+        let languageConfiguration = dynamicTokenProvider.getLanguageConfigurationFromKernelNameOrAlias(notebookDocument, 'test-erlang');
+        expect(languageConfiguration).to.deep.equal({
+            autoClosingPairs: [],
+            brackets: [],
+            comments: {},
+            folding: {},
+            surroundingPairs: [],
+        });
+
+        // rebuild the grammar with an additional KernelInfo
+        const newKernelInfo: contracts.KernelInfo = {
+            localName: 'test-erlang',
+            uri: 'kernel://test-erlang',
+            languageName: 'erlang',
+            aliases: [],
+            displayName: '',
+            supportedKernelCommands: [],
+            supportedDirectives: [],
+        };
+        dynamicTokenProvider.rebuildNotebookGrammar(testUri, [newKernelInfo]);
+
+        languageConfiguration = dynamicTokenProvider.getLanguageConfigurationFromKernelNameOrAlias(notebookDocument, 'test-erlang');
+        expect(languageConfiguration).to.deep.equal({
+            comments: {
+                lineComment: '%'
+            }
+        });
+    });
+
+    it('language configuration can be pulled from kernel alias after it was added dynamically', () => {
+        const notebookDocument: vscodeLike.NotebookDocument = {
+            uri: testUri,
+            metadata: {}
+        };
+
+        // initially empty
+        let languageConfiguration = dynamicTokenProvider.getLanguageConfigurationFromKernelNameOrAlias(notebookDocument, 'test-erlang-alias');
+        expect(languageConfiguration).to.deep.equal({
+            autoClosingPairs: [],
+            brackets: [],
+            comments: {},
+            folding: {},
+            surroundingPairs: [],
+        });
+
+        // rebuild the grammar with an additional KernelInfo
+        const newKernelInfo: contracts.KernelInfo = {
+            localName: 'test-erlang',
+            uri: 'kernel://test-erlang',
+            languageName: 'erlang',
+            aliases: ['test-erlang-alias'],
+            displayName: '',
+            supportedKernelCommands: [],
+            supportedDirectives: [],
+        };
+        dynamicTokenProvider.rebuildNotebookGrammar(testUri, [newKernelInfo]);
+
+        languageConfiguration = dynamicTokenProvider.getLanguageConfigurationFromKernelNameOrAlias(notebookDocument, 'test-erlang-alias');
+        expect(languageConfiguration).to.deep.equal({
+            comments: {
+                lineComment: '%'
+            }
+        });
+    });
+
+    it('empty language configuration is returned when a kernel could not be found', () => {
+        const notebookDocument: vscodeLike.NotebookDocument = {
+            uri: testUri,
+            metadata: {}
+        };
+        const languageConfiguration = dynamicTokenProvider.getLanguageConfigurationFromKernelNameOrAlias(notebookDocument, 'not-a-language-with-a-configuration');
+        expect(languageConfiguration).to.deep.equal({
+            autoClosingPairs: [],
+            brackets: [],
+            comments: {},
+            folding: {},
+            surroundingPairs: [],
+        });
+    });
+
     ////////////////////////////////////////////////////////////////////////////
     //                                                               setup stuff
     ////////////////////////////////////////////////////////////////////////////
@@ -401,6 +575,7 @@ $x = "this is perl code";
                         languages: [
                             {
                                 id: 'csharp', // same as grammars.language above
+                                configuration: 'csharp.language-configuration.json',
                                 aliases: [
                                     'see_sharp'
                                 ]
@@ -420,8 +595,14 @@ $x = "this is perl code";
                                 scopeName: 'source.python',
                                 path: 'python.tmGrammar.json'
                             }
+                        ],
+                        languages: [
+                            {
+                                id: 'python',
+                                configuration: 'python.language-configuration.json'
+                                // no aliases
+                            }
                         ]
-                        // no aliases
                     }
                 }
             },
@@ -437,8 +618,14 @@ $x = "this is perl code";
                                 scopeName: 'source.erlang',
                                 path: 'erlang.tmGrammar.json'
                             }
+                        ],
+                        languages: [
+                            {
+                                id: 'erlang',
+                                configuration: 'erlang.language-configuration.json'
+                                // no aliases
+                            }
                         ]
-                        // no aliases
                     }
                 }
             }
@@ -481,7 +668,39 @@ $x = "this is perl code";
                 }
             ]
         }));
-        dynamicTokenProvider = new DynamicGrammarSemanticTokenProvider(packageJSON, testExtensionGrammars, path => true, path => grammarContentsByPath.get(path)!);
+
+        languageConfigurationByPath = new Map();
+        languageConfigurationByPath.set('csharp.language-configuration.json', {
+            comments: {
+                lineComment: '//'
+            }
+        });
+        languageConfigurationByPath.set('python.language-configuration.json', {
+            comments: {
+                lineComment: '#'
+            }
+        });
+        languageConfigurationByPath.set('erlang.language-configuration.json', {
+            comments: {
+                lineComment: '%'
+            }
+        });
+
+        function getFileContents(filePath: string): string {
+            const grammarContents = grammarContentsByPath.get(filePath);
+            if (grammarContents) {
+                return grammarContents;
+            }
+
+            const languageConfigurationObject = languageConfigurationByPath.get(filePath);
+            if (languageConfigurationObject) {
+                return JSON.stringify(languageConfigurationObject);
+            }
+
+            return fs.readFileSync(filePath, 'utf8');
+        }
+
+        dynamicTokenProvider = new DynamicGrammarSemanticTokenProvider(packageJSON, testExtensionGrammars, _path => true, path => getFileContents(path));
         await dynamicTokenProvider.init();
 
         dynamicTokenProvider.rebuildNotebookGrammar(testUri, defaultKernelInfos);

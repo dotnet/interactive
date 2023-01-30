@@ -23,6 +23,7 @@ internal class MsKqlKernel : ToolsServiceKernel
         KqlConnectionDetails connectionDetails,
         ToolsServiceClient client) : base(name, client, "KQL")
     {
+        KernelInfo.DisplayName = "KQL";
         _connectionDetails = connectionDetails ?? throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
     }
 

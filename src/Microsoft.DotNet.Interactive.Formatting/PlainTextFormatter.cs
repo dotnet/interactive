@@ -6,11 +6,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Net.Http;
 using System.Numerics;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
+
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
 
@@ -25,13 +28,13 @@ public static class PlainTextFormatter
         void Initialize() => MaxProperties = DefaultMaxProperties;
     }
 
+    public const string MimeType = "text/plain";
+
     public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
         Formatter.GetPreferredFormatterFor(type, MimeType);
 
     public static ITypeFormatter GetPreferredFormatterFor<T>() =>
         GetPreferredFormatterFor(typeof(T));
-
-    public const string MimeType = "text/plain";
 
     /// <summary>
     ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
@@ -39,10 +42,12 @@ public static class PlainTextFormatter
     /// </summary>
     public static int MaxProperties { get; set; } = DefaultMaxProperties;
 
-    internal const int DefaultMaxProperties = 20;
+    private const int DefaultMaxProperties = 20;
+
+    private const int NumberOfSpacesToIndent = 2;
 
     internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
-        FormattersForAnyObject.GetOrCreateFormatterForType(type, includeInternals);
+        FormattersForAnyObject.GetOrCreateFormatterForType(type);
 
     internal static FormatDelegate<T> CreateFormatDelegate<T>(MemberInfo[] forMembers)
     {
@@ -267,7 +272,7 @@ public static class PlainTextFormatter
                 return true;
             }
             var type = obj.GetType();
-            var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(type, false);
+            var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
             return formatter.Format(obj, context);
         }),
 
@@ -276,6 +281,30 @@ public static class PlainTextFormatter
         {
             value.FormatTo(context, PlainTextFormatter.MimeType);
             return true;
+        }),
+
+        // Decimal should be displayed as plain text
+        new PlainTextFormatter<decimal>((value, context) =>
+        {
+            value.FormatTo(context, PlainTextFormatter.MimeType);
+            return true;
+        }),
+
+        new PlainTextFormatter<HttpResponseMessage>((value, context) =>
+            {
+                // Formatter.Register() doesn't support async formatters yet.
+                // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
+                ExecutionContext.SuppressFlow();
+                try
+                {
+                    value.FormatAsPlainText(context).Wait();
+                }
+                finally
+                {
+                    ExecutionContext.RestoreFlow();
+                }
+
+                return true;
         }),
 
         // Fallback for any object
@@ -290,14 +319,16 @@ public static class PlainTextFormatter
             var formatter = GetDefaultFormatterForAnyObject(type);
             return formatter.Format(obj, context);
         })
+
+       
     };
 
     private static string IndentAtNewLines(this string s, FormatContext context) => 
-        Regex.Replace(s, @"^\s+", new string(' ', (context.Depth + 1) * 4), RegexOptions.Multiline);
+        Regex.Replace(s, @"^\s+", new string(' ', (context.Depth + 1) * NumberOfSpacesToIndent), RegexOptions.Multiline);
 
     internal static void WriteIndent(FormatContext context, string bonus = "    ")
     {
-        var effectiveIndent = context.Depth * 4;
+        var effectiveIndent = context.Depth * NumberOfSpacesToIndent;
         var indent = new string(' ', effectiveIndent);
         context.Writer.Write(indent);
         context.Writer.Write(bonus);

@@ -8,6 +8,7 @@
 #     #!connect stdio --kernel-name perl --command perl.exe kernel.pl
 
 use JSON;
+use Capture::Tiny qw(capture);
 use Try::Tiny;
 
 $|++; # autoflush
@@ -187,7 +188,40 @@ sub main {
                     #                                                SubmitCode
                     #
                     $code = $command->{'code'};
-                    $result = eval $code;
+                    ($stdout, $stderr, $result) = capture {
+                        return eval $code;
+                    };
+                    #$result = eval $code;
+                    if ($stdout ne "") {
+                        publish({
+                            "eventType" => "StandardOutputValueProduced",
+                            "event" => {
+                                "formattedValues" => [{
+                                    "mimeType" => "text/plain",
+                                    "value" => $stdout
+                                }]
+                            },
+                            "command" => $envelope,
+                            "routingSlip" => [
+                                $kernelUri
+                            ]
+                        });
+                    }
+                    if ($stderr ne "") {
+                        publish({
+                            "eventType" => "StandardErrorValueProduced",
+                            "event" => {
+                                "formattedValues" => [{
+                                    "mimeType" => "text/plain",
+                                    "value" => $stderr
+                                }]
+                            },
+                            "command" => $envelope,
+                            "routingSlip" => [
+                                $kernelUri
+                            ]
+                        });
+                    }
                     publish({
                         "eventType" => "ReturnValueProduced",
                         "event" => {

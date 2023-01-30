@@ -4,52 +4,51 @@
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
+namespace Microsoft.DotNet.Interactive.Jupyter.Messaging;
+
+public static class JsonElementExtensions
 {
-    public static class JsonElementExtensions
+    public static object ToObject(this JsonElement source)
     {
-        public static object ToObject(this JsonElement source)
+        return source.ValueKind switch
         {
-            return source.ValueKind switch
-            {
-                JsonValueKind.String => source.GetString(),
-                JsonValueKind.False => false,
-                JsonValueKind.True => true,
-                JsonValueKind.Number => source.GetDouble(),
-                JsonValueKind.Object => source.ToDictionary(),
-                JsonValueKind.Array => source.ToArray(),
-                _ => null
-            };
-        }
+            JsonValueKind.String => source.GetString(),
+            JsonValueKind.False => false,
+            JsonValueKind.True => true,
+            JsonValueKind.Number => source.GetDouble(),
+            JsonValueKind.Object => source.ToDictionary(),
+            JsonValueKind.Array => source.ToArray(),
+            _ => null
+        };
+    }
 
-        public static IReadOnlyDictionary<string, object> ToReadOnlyDictionary(this JsonElement source)
+    public static IReadOnlyDictionary<string, object> ToReadOnlyDictionary(this JsonElement source)
+    {
+        var ret = new Dictionary<string, object>();
+        foreach (var value in source.EnumerateObject())
         {
-            var ret = new Dictionary<string, object>();
-            foreach (var value in source.EnumerateObject())
-            {
-                ret[value.Name] = value.Value.ToObject();
-            }
-            return ret;
+            ret[value.Name] = value.Value.ToObject();
         }
+        return ret;
+    }
 
-        public static IDictionary<string, object> ToDictionary(this JsonElement source)
+    public static IDictionary<string, object> ToDictionary(this JsonElement source)
+    {
+        var ret = new Dictionary<string, object>();
+        foreach (var value in source.EnumerateObject())
         {
-            var ret = new Dictionary<string, object>();
-            foreach (var value in source.EnumerateObject())
-            {
-                ret[value.Name] = value.Value.ToObject();
-            }
-            return ret;
+            ret[value.Name] = value.Value.ToObject();
         }
+        return ret;
+    }
 
-        public static object[] ToArray(this JsonElement source)
+    public static object[] ToArray(this JsonElement source)
+    {
+        var ret = new List<object>();
+        foreach (var value in source.EnumerateArray())
         {
-            var ret = new List<object>();
-            foreach (var value in source.EnumerateArray())
-            {
-                ret.Add(value.ToObject());
-            }
-            return ret.ToArray();
+            ret.Add(value.ToObject());
         }
+        return ret.ToArray();
     }
 }

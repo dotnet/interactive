@@ -8,43 +8,47 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+/// <remarks>This kernel is used as a placeholder for the MSKQL kernel in order to enable KQL language coloring in the editor. Language grammars can only be defined for fixed kernel names, but MSKQL subkernels are user-defined via the #!connect magic command. So, this kernel is specified in addition to the user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability for KQL features. </remarks>
+public class KqlDiscoverabilityKernel :
+    Kernel,
+    IKernelCommandHandler<SubmitCode>
 {
-    /// <remarks>This kernel is used as a placeholder for the MSKQL kernel in order to enable KQL language coloring in the editor. Language grammars can only be defined for fixed kernel names, but MSKQL subkernels are user-defined via the #!connect magic command. So, this kernel is specified in addition to the user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability for KQL features. </remarks>
-    public class KqlDiscoverabilityKernel :
-        Kernel,
-        IKernelCommandHandler<SubmitCode>
+    private readonly HashSet<string> _kernelNameFilter;
+    private const string DefaultKernelName = "kql";
+
+    public KqlDiscoverabilityKernel() : base(DefaultKernelName)
     {
-        private readonly HashSet<string> _kernelNameFilter;
-        private const string DefaultKernelName = "kql";
-
-        public KqlDiscoverabilityKernel() : base(DefaultKernelName)
+        _kernelNameFilter = new HashSet<string>
         {
-            _kernelNameFilter = new HashSet<string>
-            {
-                "MsKqlKernel"
-            };
-            KernelInfo.LanguageName = "KQL";
-            KernelInfo.DisplayName = "Kusto Query Language";
-        }
+            "MsKqlKernel"
+        };
+        KernelInfo.LanguageName = "KQL";
+        KernelInfo.DisplayName = "Kusto Query Language";
+    }
 
-        Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
+    Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
+    {
+        var root = (Kernel)ParentKernel ?? this;
+
+        var connectedKqlKernelNames = new HashSet<string>();
+
+        root.VisitSubkernels(childKernel =>
         {
-            var root = (Kernel)ParentKernel ?? this;
-
-            var connectedKqlKernelNames = new HashSet<string>();
-
-            root.VisitSubkernels(childKernel =>
+            if (_kernelNameFilter.Contains(childKernel.GetType().Name))
             {
-                if (_kernelNameFilter.Contains(childKernel.GetType().Name))
-                {
-                    connectedKqlKernelNames.Add(childKernel.Name);
-                }
-            });
+                connectedKqlKernelNames.Add(childKernel.Name);
+            }
+        });
 
-            if (connectedKqlKernelNames.Count == 0)
-            {
-                context.Display(HTML(@"
+        var codeSample = !string.IsNullOrWhiteSpace(command.Code)
+            ? command.Code
+            : @"tableName | take 10";
+
+        if (connectedKqlKernelNames.Count == 0)
+        {
+            context.Display(HTML($@"
 <p>A KQL connection has not been established.</p>
 <p>To connect to a database, first add the KQL extension package by running the following in a C# cell:</p>
 <code>
@@ -61,26 +65,30 @@ Now, you can connect to a Microsoft Kusto Server database by running the followi
 <p>Once a connection is established, you can send KQL statements by prefixing them with the magic command for your connection.</p>
 <code>
     <pre>
-    #!kql-mydatabase
-    tableName | take 10
+#!kql-mydatabase
+{codeSample}
     </pre>
 </code>
 "), "text/html");
-            }
-            else
-            {
-                PocketView view =
-                    div(
-                        p("You can send KQL statements to one of the following connected KQL kernels:"),
-                        connectedKqlKernelNames.Select(
-                            name =>
-                                code(
-                                    pre($"    #!{name}\n tableName | take 10"))));
-
-                context.Display(view);
-            }
-
-            return Task.CompletedTask;
         }
+        else
+        {
+            PocketView view =
+                div(
+                    p("You can send KQL statements to one of the following connected KQL kernels:"),
+                    connectedKqlKernelNames.Select(
+                        name =>
+                            code(
+                                pre($"#!{name}\n{codeSample}"))));
+
+            context.Display(view);
+        }
+
+        if (!string.IsNullOrWhiteSpace(command.Code))
+        {
+            context.Fail(command, message: "KQL statements cannot be executed in this kernel.");
+        }
+
+        return Task.CompletedTask;
     }
 }

@@ -1,5 +1,7 @@
 # Kernel-to-client communication with client-side commands
 
+[ _**Outdated.** Some of the details described here have changed._ ]
+
 When you execute code in a notebook, it normally follows a particular pattern: client side code handles user input, which results in a command being sent to the kernel, which will send one or more messages back to the client reporting progress and the final output. However, there are some scenarios where it is useful for the kernel to be able to initiate communication. To enable these, .NET Interactive supports a bidirectional model in which the kernel process can send commands to the client.
 
 This is useful if execution of notebook cell starts an ongoing process. For example, imagine a notebook controlling a motorised robot with sensors around its perimeter able to report when it has come into contact with something. You could imagine a cell which, when run, produces an output containing a scrolling list, with a new line being shown each time one of these sensors detects a change. This ongoing reactive display does not fit well with the model in which all kernel-to-client notifications are sent within the scope of a particular command, because it would require the command never to finish. And since .NET Interactive currently uses a model in which commands are executed sequentially, such an ongoing activity would prevent any other cell in the notebook from running. This kind of output really needs the kernel process to be able to send messages to the client whenever necessary, and outside the context of any particular client-to-kernel command.
@@ -79,7 +81,7 @@ Code that runs inside the kernel process (typically defined in a code cell, but 
 
 ```cs
 var cmd = new MyToClientCommand("From C# kernel");
-var clientKernel = GetKernel("notebook");
+var clientKernel = Kernel.Root.FindKernelByName("notebook");
 await clientKernel.SendAsync(cmd);
 ```
 

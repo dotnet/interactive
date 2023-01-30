@@ -4,37 +4,36 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class PackageRestoreResult
 {
-    public class PackageRestoreResult
+    public PackageRestoreResult(
+        bool succeeded,
+        IEnumerable<PackageReference> requestedPackages,
+        IReadOnlyList<ResolvedPackageReference> resolvedReferences = null,
+        IReadOnlyCollection<string> errors = null)
     {
-        public PackageRestoreResult(
-            bool succeeded,
-            IEnumerable<PackageReference> requestedPackages,
-            IReadOnlyList<ResolvedPackageReference> resolvedReferences = null,
-            IReadOnlyCollection<string> errors = null)
+        if (requestedPackages is null)
         {
-            if (requestedPackages is null)
-            {
-                throw new ArgumentNullException(nameof(requestedPackages));
-            }
-
-            if (!succeeded && errors?.Count == 0)
-            {
-                throw new ArgumentException("Must provide errors when succeeded is false.");
-            }
-
-            Succeeded = succeeded;
-
-            ResolvedReferences = resolvedReferences ?? Array.Empty<ResolvedPackageReference>();
-
-            Errors = errors ?? Array.Empty<string>();
+            throw new ArgumentNullException(nameof(requestedPackages));
         }
 
-        public IReadOnlyList<ResolvedPackageReference> ResolvedReferences { get; }
+        if (!succeeded && errors?.Count == 0)
+        {
+            throw new ArgumentException("Must provide errors when succeeded is false.");
+        }
 
-        public bool Succeeded { get; }
+        Succeeded = succeeded;
 
-        public IReadOnlyCollection<string> Errors { get; }
+        ResolvedReferences = resolvedReferences ?? Array.Empty<ResolvedPackageReference>();
+
+        Errors = errors ?? Array.Empty<string>();
     }
+
+    public IReadOnlyList<ResolvedPackageReference> ResolvedReferences { get; }
+
+    public bool Succeeded { get; }
+
+    public IReadOnlyCollection<string> Errors { get; }
 }

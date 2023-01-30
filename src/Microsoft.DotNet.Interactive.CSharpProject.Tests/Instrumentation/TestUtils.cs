@@ -5,11 +5,9 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation
-{
-    public static class TestUtils
-    {
-        public static string RemoveWhitespace(string input) => Regex.Replace(input, @"\s", "");
-    }
-}
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation;
 
+public static class TestUtils
+{
+    public static string RemoveWhitespace(string input) => Regex.Replace(input, @"\s", "");
+}

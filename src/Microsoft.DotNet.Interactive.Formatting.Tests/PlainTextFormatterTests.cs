@@ -16,16 +16,26 @@ using static System.Environment;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
-public class PlainTextFormatterTests_MultiLine : FormatterTestBase
+public partial class PlainTextFormatterTests : FormatterTestBase
 {
     public class Objects : FormatterTestBase
     {
         [Fact]
-        public void Null_references_are_indicated()
+        public void Null_reference_types_are_indicated()
         {
             string value = null;
 
-            value.ToDisplayString().Should().Be("<null>");
+            value.ToDisplayString().Should().Be(Formatter.NullString);
+        }
+
+        [Fact]
+        public void Null_nullables_are_indicated()
+        {
+            int? nullable = null;
+
+            var output = nullable.ToDisplayString();
+
+            output.Should().Be(Formatter.NullString);
         }
 
         [Fact]
@@ -84,7 +94,7 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
             PlainTextFormatter.MaxProperties = 1;
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.ClassWithManyProperties(), writer);
+            formatter.Format(new ClassWithManyProperties(), writer);
 
             var s = writer.ToString();
             s.Should().Be($"ClassWithManyProperties{NewLine}    X1: 1{NewLine}    ...");
@@ -106,45 +116,15 @@ public class PlainTextFormatterTests_MultiLine : FormatterTestBase
         [Fact]
         public void When_Zero_properties_available_to_choose_just_ToString_is_used()
         {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.ClassWithNoPropertiesAndCustomToString>();
+            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithNoPropertiesAndCustomToString>();
 
             var writer = new StringWriter();
-            formatter.Format(new Dummy.ClassWithNoPropertiesAndCustomToString(), writer);
+            formatter.Format(new ClassWithNoPropertiesAndCustomToString(), writer);
 
             var s = writer.ToString();
             s.Should().Be($"{typeof(ClassWithNoPropertiesAndCustomToString)} custom ToString value");
         }
-
-        [Fact]
-        public void CreateForMembers_emits_the_specified_property_names_and_values_for_a_specific_type()
-        {
-            var formatter = PlainTextFormatter<SomethingWithLotsOfProperties>.CreateForMembers(
-                o => o.DateProperty,
-                o => o.StringProperty);
-
-            var s = new SomethingWithLotsOfProperties
-            {
-                DateProperty = DateTime.MinValue,
-                StringProperty = "howdy"
-            }.ToDisplayString(formatter);
-
-            s.Should().Contain("DateProperty: 0001-01-01 00:00:00Z");
-            s.Should().Contain("StringProperty: howdy");
-            s.Should().NotContain("IntProperty");
-            s.Should().NotContain("BoolProperty");
-            s.Should().NotContain("UriProperty");
-        }
-
-        [Fact]
-        public void CreateForMembers_throws_when_an_expression_is_not_a_MemberExpression()
-        {
-            var ex = Assert.Throws<ArgumentException>(() => PlainTextFormatter<SomethingWithLotsOfProperties>.CreateForMembers(
-                                                          o => o.DateProperty.ToShortDateString(),
-                                                          o => o.StringProperty));
-
-            ex.Message.Should().Contain("o => o.DateProperty.ToShortDateString()");
-        }
-
+        
         [Theory]
         [InlineData(typeof(Boolean), "False")]
         [InlineData(typeof(Byte), "0")]
@@ -227,14 +207,52 @@ Parts: <null>".ReplaceLineEndings());
             var log = new SomePropertyThrows().ToDisplayString();
 
             log.Should().Match(
-@"SomePropertyThrows
-        Fine: Fine
-        NotOk: System.Exception: not ok
-            at Microsoft.DotNet.Interactive.Formatting.Tests.SomePropertyThrows.get_NotOk()*
-            at lambda_method*(Closure, SomePropertyThrows)
-            at Microsoft.DotNet.Interactive.Formatting.MemberAccessor`1.GetValueOrException(T instance)*
-        Ok: ok
-        PerfectlyFine: PerfectlyFine".ReplaceLineEndings());
+                """
+                SomePropertyThrows
+                      Fine: Fine
+                      NotOk: System.Exception: not ok
+                      at Microsoft.DotNet.Interactive.Formatting.Tests.SomePropertyThrows.get_NotOk()*
+                      at lambda_method*(Closure, SomePropertyThrows)
+                      at Microsoft.DotNet.Interactive.Formatting.MemberAccessor`1.GetValueOrException(T instance)*
+                      Ok: ok
+                      PerfectlyFine: PerfectlyFine
+                """.ReplaceLineEndings());
+
+    /*
+Xunit.Sdk.XunitException: Expected log to match "
+
+SomePropertyThrows
+    Fine: Fine
+    NotOk: System.Exception: not ok
+    at Microsoft.DotNet.Interactive.Formatting.Tests.SomePropertyThrows.get_NotOk()*
+    at lambda_method*(Closure, SomePropertyThrows)
+    at Microsoft.DotNet.Interactive.Formatting.MemberAccessor`1.GetValueOrException(T instance)*
+    Ok: ok
+    PerfectlyFine: PerfectlyFine", but "
+    
+    SomePropertyThrows
+      Fine: Fine
+      NotOk: System.Exception: not ok
+      at Microsoft.DotNet.Interactive.Formatting.Tests.SomePropertyThrows.get_NotOk() in C:\dev\interactive\src\Microsoft.DotNet.Interactive.Formatting.Tests\TestClasses.cs:line 41
+      at lambda_method3(Closure, SomePropertyThrows)
+      at Microsoft.DotNet.Interactive.Formatting.MemberAccessor`1.GetValueOrException(T instance) in C:\dev\interactive\src\Microsoft.DotNet.Interactive.Formatting\MemberAccessor{T}.cs:line 57
+      Ok: ok
+      PerfectlyFine: PerfectlyFine" does not.
+   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message) in /_/Src/FluentAssertions/Execution/XUnit2TestFramework.cs:line 35
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message) in /_/Src/FluentAssertions/Execution/TestFrameworkProvider.cs:line 34
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message) in /_/Src/FluentAssertions/Execution/DefaultAssertionStrategy.cs:line 25
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc) in /_/Src/FluentAssertions/Execution/AssertionScope.cs:line 274
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc) in /_/Src/FluentAssertions/Execution/AssertionScope.cs:line 246
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args) in /_/Src/FluentAssertions/Execution/AssertionScope.cs:line 296
+   at FluentAssertions.Primitives.StringWildcardMatchingValidator.ValidateAgainstMismatch() in /_/Src/FluentAssertions/Primitives/StringWildcardMatchingValidator.cs:line 22
+   at FluentAssertions.Primitives.StringValidator.Validate() in /_/Src/FluentAssertions/Primitives/StringValidator.cs:line 46
+   at FluentAssertions.Primitives.StringAssertions`1.Match(String wildcardPattern, String because, Object[] becauseArgs) in /_/Src/FluentAssertions/Primitives/StringAssertions.cs:line 220
+   at Microsoft.DotNet.Interactive.Formatting.Tests.PlainTextFormatterTests.Objects.When_a_property_throws_then_then_exception_is_written_in_place_of_the_property_and_indented() in C:\dev\interactive\src\Microsoft.DotNet.Interactive.Formatting.Tests\PlainTextFormatterTests.cs:line 209
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodInvoker.Invoke(Object obj, IntPtr* args, BindingFlags invokeAttr)
+
+
+    */
         }
         
         [Fact]
@@ -301,40 +319,7 @@ Parts: <null>".ReplaceLineEndings());
             output.Should().Contain("DateField: ");
             output.Should().Contain("DateProperty: ");
         }
-
-        [Fact]
-        public void Output_can_include_internal_fields()
-        {
-            var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
-
-            var node = new Node { Id = "5" };
-
-            var output = node.ToDisplayString(formatter);
-
-            output.Should().Contain("_id: 5");
-        }
-
-        [Fact]
-        public void Output_does_not_include_autoproperty_backing_fields()
-        {
-            var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
-
-            var output = new Node().ToDisplayString(formatter);
-
-            output.Should().NotContain("<Nodes>k__BackingField");
-            output.Should().NotContain("<NodesArray>k__BackingField");
-        }
-
-        [Fact]
-        public void Output_can_include_internal_properties()
-        {
-            var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
-
-            var output = new Node { Id = "6" }.ToDisplayString(formatter);
-
-            output.Should().Contain("InternalId: 6");
-        }
-
+        
         [Fact]
         public void Tuple_values_are_formatted_on_one_line_when_all_scalar()
         {
@@ -450,12 +435,17 @@ Parts: <null>".ReplaceLineEndings());
             var writer = new StringWriter();
             formatter.Format(obj, writer);
 
-            writer.ToString().Should().Match(@"<>f__AnonymousType*<String,<>f__AnonymousType*<String,String>,String>
-    PropertyA: A
-    PropertyB: <>f__AnonymousType*<String,String>
-        PropertyB1: B.1
-        PropertyB2: B.2
-    PropertyC: C".ReplaceLineEndings());
+            var formatted = writer.ToString();
+
+            formatted.Should().Match(
+                """
+                <>f__AnonymousType*<String,<>f__AnonymousType*<String,String>,String>
+                    PropertyA: A
+                    PropertyB: <>f__AnonymousType*<String,String>
+                      PropertyB1: B.1
+                      PropertyB2: B.2
+                    PropertyC: C
+                """.ReplaceLineEndings());
         }
 
         [Fact]
@@ -485,14 +475,16 @@ Parts: <null>".ReplaceLineEndings());
             var writer = new StringWriter();
             formatter.Format(obj, writer);
 
-            writer.ToString().Should().Match(@"<>f__AnonymousType*<String,<>f__AnonymousType*<Int32,String>[],String>
-    PropertyA: A
-    PropertyB: <>f__AnonymousType*<Int32,String>[]
-          - IntProperty: 1
-            StringProperty: one
-          - IntProperty: 2
-            StringProperty: two
-    PropertyC: C".ReplaceLineEndings());
+            writer.ToString().Should().Match("""
+                <>f__AnonymousType*<String,<>f__AnonymousType*<Int32,String>[],String>
+                    PropertyA: A
+                    PropertyB: <>f__AnonymousType*<Int32,String>[]
+                      - IntProperty: 1
+                        StringProperty: one
+                      - IntProperty: 2
+                        StringProperty: two
+                    PropertyC: C
+                """.ReplaceLineEndings());
         }
 
         [Fact(Skip = "TODO")]
@@ -651,12 +643,12 @@ Object[]
             var formatted = list.ToDisplayString(formatter);
 
             formatted.Should().Be(@"List<Widget>
-      - Name: widget x
-        Parts: <null>
-      - Name: widget y
-        Parts: <null>
-      - Name: widget z
-        Parts: <null>".ReplaceLineEndings());
+    - Name: widget x
+      Parts: <null>
+    - Name: widget y
+      Parts: <null>
+    - Name: widget z
+      Parts: <null>".ReplaceLineEndings());
 
             /* or ... ?
 TheWidgets: Widget[]
@@ -762,17 +754,19 @@ TheWidgets: Widget[]
             formatter.Format(node, writer);
 
             writer.ToString().Should().Contain(
-@"Node
-    Id: 1
-    Nodes: Node[]
-          - Id: 1.1
-            Nodes: <null>
-          - Id: 1.2
-            Nodes: Node[]
-                  - Id: 1.2.1
-                    Nodes: <null>
-          - Id: 1.3
-            Nodes: <null>".ReplaceLineEndings());
+            """
+                Node
+                    Id: 1
+                    Nodes: Node[]
+                      - Id: 1.1
+                        Nodes: <null>
+                      - Id: 1.2
+                        Nodes: Node[]
+                          - Id: 1.2.1
+                            Nodes: <null>
+                      - Id: 1.3
+                        Nodes: <null>
+                """.ReplaceLineEndings());
         }
     }
 }

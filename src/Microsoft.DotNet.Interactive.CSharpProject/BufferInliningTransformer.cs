@@ -10,127 +10,126 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using File = System.IO.File;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class BufferInliningTransformer : IWorkspaceTransformer
 {
-    public class BufferInliningTransformer : IWorkspaceTransformer
+    public static IWorkspaceTransformer Instance { get; } = new BufferInliningTransformer();
+
+    private static readonly string Padding = "\n";
+
+    public static int PaddingSize => Padding.Length;
+
+    public async Task<Workspace> TransformAsync(Workspace source)
     {
-        public static IWorkspaceTransformer Instance { get; } = new BufferInliningTransformer();
+        if (source == null) throw new ArgumentNullException(nameof(source));
 
-        private static readonly string Padding = "\n";
+        var (files, buffers) = await InlineBuffersAsync(source);
 
-        public static int PaddingSize => Padding.Length;
+        return new Workspace(
+            workspaceType: source.WorkspaceType,
+            files: files,
+            buffers: buffers,
+            usings: source.Usings,
+            includeInstrumentation: source.IncludeInstrumentation);
+    }
 
-        public async Task<Workspace> TransformAsync(Workspace source)
+    protected async Task<(ProjectFileContent[] files, Buffer[] buffers)> InlineBuffersAsync(Workspace source)
+    {
+        var files = (source.Files ?? Array.Empty<ProjectFileContent>()).ToDictionary(f => f.Name, f =>
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (string.IsNullOrEmpty(f.Text) && File.Exists(f.Name))
+            {
+                return SourceFile.Create(File.ReadAllText(f.Name), f.Name);
+            }
 
-            var (files, buffers) = await InlineBuffersAsync(source);
+            return f.ToSourceFile();
+        }, StringComparer.OrdinalIgnoreCase);
 
-            return new Workspace(
-                workspaceType: source.WorkspaceType,
-                files: files,
-                buffers: buffers,
-                usings: source.Usings,
-                includeInstrumentation: source.IncludeInstrumentation);
-        }
-
-        protected async Task<(ProjectFileContent[] files, Buffer[] buffers)> InlineBuffersAsync(Workspace source)
+        var buffers = new List<Buffer>();
+        foreach (var sourceBuffer in source.Buffers)
         {
-            var files = (source.Files ?? Array.Empty<ProjectFileContent>()).ToDictionary(f => f.Name, f =>
+            var bufferFileName = sourceBuffer.Id.FileName;
+            if (!files.ContainsKey(bufferFileName) && File.Exists(bufferFileName))
             {
-                if (string.IsNullOrEmpty(f.Text) && File.Exists(f.Name))
-                {
-                    return SourceFile.Create(File.ReadAllText(f.Name), f.Name);
-                }
+                var sourceFile = SourceFile.Create(File.ReadAllText(bufferFileName), bufferFileName);
+                files[bufferFileName] = sourceFile;
+            }
 
-                return f.ToSourceFile();
-            }, StringComparer.OrdinalIgnoreCase);
-
-            var buffers = new List<Buffer>();
-            foreach (var sourceBuffer in source.Buffers)
+            if (!string.IsNullOrWhiteSpace(sourceBuffer.Id.RegionName))
             {
-                var bufferFileName = sourceBuffer.Id.FileName;
-                if (!files.ContainsKey(bufferFileName) && File.Exists(bufferFileName))
+                var normalizedBufferId = sourceBuffer.Id.GetNormalized();
+                var injectionPoint = sourceBuffer.Id.GetInjectionPoint();
+                var viewPorts = files.Select(f => f.Value).ExtractViewports();
+                if (viewPorts.SingleOrDefault(viewport => viewport.BufferId == normalizedBufferId) is { } viewPort)
                 {
-                    var sourceFile = SourceFile.Create(File.ReadAllText(bufferFileName), bufferFileName);
-                    files[bufferFileName] = sourceFile;
-                }
-
-                if (!string.IsNullOrWhiteSpace(sourceBuffer.Id.RegionName))
-                {
-                    var normalizedBufferId = sourceBuffer.Id.GetNormalized();
-                    var injectionPoint = sourceBuffer.Id.GetInjectionPoint();
-                    var viewPorts = files.Select(f => f.Value).ExtractViewports();
-                    if (viewPorts.SingleOrDefault(viewport => viewport.BufferId == normalizedBufferId) is { } viewPort)
-                    {
-                        await InjectBuffer(viewPort, sourceBuffer, buffers, files, injectionPoint);
-                    }
-                    else
-                    {
-                        throw new ArgumentException($"Could not find specified buffer: {sourceBuffer.Id}");
-                    }
+                    await InjectBuffer(viewPort, sourceBuffer, buffers, files, injectionPoint);
                 }
                 else
                 {
-                    files[sourceBuffer.Id.FileName] = SourceFile.Create(sourceBuffer.Content, sourceBuffer.Id.FileName);
-                    buffers.Add(sourceBuffer);
+                    throw new ArgumentException($"Could not find specified buffer: {sourceBuffer.Id}");
                 }
             }
-
-            var processedFiles = files.Values.Select(sf => new ProjectFileContent(sf.Name, sf.Text.ToString())).ToArray();
-            var processedBuffers = buffers.ToArray();
-
-            return (processedFiles, processedBuffers);
-        }
-      
-        private Task InjectBuffer(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files,
-            BufferInjectionPoints bufferIdInjectionPoints)
-        {
-            TextSpan targetSpan;
-            switch (bufferIdInjectionPoints)
+            else
             {
-                case BufferInjectionPoints.Before:
-                    targetSpan = CreateTextSpanBefore(viewPort.OuterRegion);
-                    break;
-                case BufferInjectionPoints.After:
-                    targetSpan = CreateTextSpanAfter(viewPort.OuterRegion);
-                    break;
-                default:
-                    targetSpan = viewPort.Region;
-                    break;
+                files[sourceBuffer.Id.FileName] = SourceFile.Create(sourceBuffer.Content, sourceBuffer.Id.FileName);
+                buffers.Add(sourceBuffer);
             }
-            return InjectBufferAtSpan(viewPort, sourceBuffer, buffers, files, targetSpan);
         }
 
-        private static TextSpan CreateTextSpanAfter(TextSpan viewPortRegion)
+        var processedFiles = files.Values.Select(sf => new ProjectFileContent(sf.Name, sf.Text.ToString())).ToArray();
+        var processedBuffers = buffers.ToArray();
+
+        return (processedFiles, processedBuffers);
+    }
+      
+    private Task InjectBuffer(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files,
+        BufferInjectionPoints bufferIdInjectionPoints)
+    {
+        TextSpan targetSpan;
+        switch (bufferIdInjectionPoints)
         {
-            return new TextSpan(viewPortRegion.End, 0);
+            case BufferInjectionPoints.Before:
+                targetSpan = CreateTextSpanBefore(viewPort.OuterRegion);
+                break;
+            case BufferInjectionPoints.After:
+                targetSpan = CreateTextSpanAfter(viewPort.OuterRegion);
+                break;
+            default:
+                targetSpan = viewPort.Region;
+                break;
         }
+        return InjectBufferAtSpan(viewPort, sourceBuffer, buffers, files, targetSpan);
+    }
 
-        private static TextSpan CreateTextSpanBefore(TextSpan viewPortRegion)
-        {
-            return new TextSpan(viewPortRegion.Start, 0);
-        }
+    private static TextSpan CreateTextSpanAfter(TextSpan viewPortRegion)
+    {
+        return new TextSpan(viewPortRegion.End, 0);
+    }
 
-        protected virtual async Task InjectBufferAtSpan(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files, TextSpan span)
-        {
-            var tree = CSharpSyntaxTree.ParseText(viewPort.Destination.Text.ToString());
-            var textChange = new TextChange(
-                span,
-                $"{Padding}{sourceBuffer.Content}{Padding}");
+    private static TextSpan CreateTextSpanBefore(TextSpan viewPortRegion)
+    {
+        return new TextSpan(viewPortRegion.Start, 0);
+    }
 
-            var txt = tree.WithChangedText(tree.GetText().WithChanges(textChange));
+    protected virtual async Task InjectBufferAtSpan(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files, TextSpan span)
+    {
+        var tree = CSharpSyntaxTree.ParseText(viewPort.Destination.Text.ToString());
+        var textChange = new TextChange(
+            span,
+            $"{Padding}{sourceBuffer.Content}{Padding}");
 
-            var offset = span.Start + PaddingSize;
+        var txt = tree.WithChangedText(tree.GetText().WithChanges(textChange));
 
-            var newCode = (await txt.GetTextAsync()).ToString();
+        var offset = span.Start + PaddingSize;
 
-            buffers.Add(new Buffer(
-                sourceBuffer.Id,
-                sourceBuffer.Content,
-                sourceBuffer.Position,
-                offset));
-            files[viewPort.Destination.Name] = SourceFile.Create(newCode, viewPort.Destination.Name);
-        }
+        var newCode = (await txt.GetTextAsync()).ToString();
+
+        buffers.Add(new Buffer(
+            sourceBuffer.Id,
+            sourceBuffer.Content,
+            sourceBuffer.Position,
+            offset));
+        files[viewPort.Destination.Name] = SourceFile.Create(newCode, viewPort.Destination.Name);
     }
 }

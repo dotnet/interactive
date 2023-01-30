@@ -1,7 +1,6 @@
 {
   "name": "@microsoft/dotnet-interactive",
   "displayName": ".NET Interactive Notebooks",
-  "//description": "During build, the description gets the git SHA appended to it.",
   "description": ".NET Interactive Notebook APIs for NodeJS.",
   "license": "MIT",
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
@@ -12,9 +11,9 @@
     "url": "https://github.com/dotnet/interactive"
   },
   "scripts": {
-    "compile-preloads": "rollup -c rollup.config.js -i ./src/webview/kernelApiBootstrapper.ts -o ./dist/kernelApiBootstrapper.js",
+    "compile-es-module": "rollup -c rollup.es.config.js -i ./src/webview/activation.ts -o ./dist/activation.js",
     "compile-variable-grid": "rollup -c rollup.config.js -i src/webview/variableGrid.ts -o dist/variableGrid.js",
-    "compile-webview": "npm run compile-preloads && npm run compile-variable-grid",
+    "compile-webview": "npm run compile-es-module && npm run compile-variable-grid",
     "compile-library": "rollup -c rollup.library.config.js -i src/index.ts -o lib/dotnet-interactive.js",
     "compile": "npm run lint && tsc -p  ./ && npm run compile-webview  && npm run compile-library",
     "lint": "eslint src --ext ts",

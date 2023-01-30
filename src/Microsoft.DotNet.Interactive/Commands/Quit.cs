@@ -4,21 +4,20 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class Quit : KernelCommand
 {
-    public class Quit : KernelCommand
+    public override Task InvokeAsync(KernelInvocationContext context)
     {
-        public override Task InvokeAsync(KernelInvocationContext context)
+        try
         {
-            try
-            {
-                return base.InvokeAsync(context);
-            }
-            catch (NoSuitableKernelException)
-            {
-                throw new InvalidOperationException(
-                    $"The {nameof(Quit)} command has not been configured. In order to enable it, call {nameof(KernelExtensions)}.{nameof(KernelExtensions.UseQuitCommand)}");
-            }
+            return base.InvokeAsync(context);
+        }
+        catch (NoSuitableKernelException)
+        {
+            throw new InvalidOperationException(
+                $"The {nameof(Quit)} command has not been configured. In order to enable it, call {nameof(KernelExtensions)}.{nameof(KernelExtensions.UseQuitCommand)}");
         }
     }
 }

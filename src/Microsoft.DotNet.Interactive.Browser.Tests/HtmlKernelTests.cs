@@ -217,6 +217,30 @@ public class HtmlKernelTests : IDisposable
             .ContainSingle(v => v.Value.Contains("<div>hey there!</div>"));
     }
 
+    [FactSkipLinux("Requires Playwright installed")]
+    public async Task html_kernel_evaluates_script_tags()
+    {
+        var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
+        
+        using var htmlKernel = await connector.CreateKernelAsync("html", BrowserKernelLanguage.Html);
+        using var javascriptKernel = await connector.CreateKernelAsync("javascript", BrowserKernelLanguage.JavaScript);
+        await htmlKernel.SendAsync(new SubmitCode("<div><script>myValue = 123;</script></div>"));
+
+        var result = await javascriptKernel.SendAsync(new SubmitCode("return myValue;"));
+
+        var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should().NotContainErrors();
+
+        events
+            .Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.Value.Contains("123"));
+    }
+
     private async Task<Kernel> CreateHtmlProxyKernelAsync()
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);

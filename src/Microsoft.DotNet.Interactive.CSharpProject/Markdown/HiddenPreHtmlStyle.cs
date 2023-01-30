@@ -3,13 +3,12 @@
 
 using Microsoft.AspNetCore.Html;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
+
+internal class HiddenPreHtmlStyle : HtmlStyleAttribute
 {
-    internal class HiddenPreHtmlStyle : HtmlStyleAttribute
+    protected override IHtmlContent StyleAttributeString()
     {
-        protected override IHtmlContent StyleAttributeString()
-        {
-            return new HtmlString( @"style=""border:none; margin:0px; padding:0px; visibility:hidden; display: none;""");
-        }
+        return new HtmlString( @"style=""border:none; margin:0px; padding:0px; visibility:hidden; display: none;""");
     }
 }

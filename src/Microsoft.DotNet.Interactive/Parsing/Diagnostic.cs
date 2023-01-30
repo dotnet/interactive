@@ -3,24 +3,23 @@
 
 #nullable enable
 
-namespace Microsoft.DotNet.Interactive.Parsing
+namespace Microsoft.DotNet.Interactive.Parsing;
+
+public class Diagnostic
 {
-    public class Diagnostic
+    internal Diagnostic(
+        string message,
+        DiagnosticSeverity severity, 
+        Location location)
     {
-        internal Diagnostic(
-            string message,
-            DiagnosticSeverity severity, 
-            Location location)
-        {
-            Message = message;
-            Severity = severity;
-            Location = location;
-        }
-
-        public string Message { get; }
-
-        public DiagnosticSeverity Severity { get; }
-
-        public Location Location { get; }
+        Message = message;
+        Severity = severity;
+        Location = location;
     }
+
+    public string Message { get; }
+
+    public DiagnosticSeverity Severity { get; }
+
+    public Location Location { get; }
 }

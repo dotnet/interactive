@@ -20,393 +20,406 @@ using Microsoft.DotNet.Interactive.ValueSharing;
 using Microsoft.PowerShell;
 using Microsoft.PowerShell.Commands;
 
-namespace Microsoft.DotNet.Interactive.PowerShell
+namespace Microsoft.DotNet.Interactive.PowerShell;
+
+using System.Management.Automation;
+
+using Microsoft.DotNet.Interactive.Utility;
+
+public class PowerShellKernel :
+    Kernel,
+    IKernelCommandHandler<RequestCompletions>,
+    IKernelCommandHandler<RequestDiagnostics>,
+    IKernelCommandHandler<RequestValueInfos>,
+    IKernelCommandHandler<RequestValue>,
+    IKernelCommandHandler<SendValue>,
+    IKernelCommandHandler<SubmitCode>
 {
-    using System.Management.Automation;
+    private const string PSTelemetryEnvName = "POWERSHELL_DISTRIBUTION_CHANNEL";
+    private const string PSTelemetryChannel = "dotnet-interactive-powershell";
+    private const string PSModulePathEnvName = "PSModulePath";
 
-    using Microsoft.DotNet.Interactive.Utility;
+    internal const string DefaultKernelName = "pwsh";
+    internal const string LanguageName = "PowerShell";
 
-    public class PowerShellKernel :
-        Kernel,
-        IKernelCommandHandler<RequestCompletions>,
-        IKernelCommandHandler<RequestDiagnostics>,
-        IKernelCommandHandler<RequestValueInfos>,
-        IKernelCommandHandler<RequestValue>,
-        IKernelCommandHandler<SendValue>,
-        IKernelCommandHandler<SubmitCode>
-    {
-        private const string PSTelemetryEnvName = "POWERSHELL_DISTRIBUTION_CHANNEL";
-        private const string PSTelemetryChannel = "dotnet-interactive-powershell";
-        private const string PSModulePathEnvName = "PSModulePath";
+    private static readonly CmdletInfo _outDefaultCommand;
+    private static readonly PropertyInfo _writeStreamProperty;
+    private static readonly object _errorStreamValue;
+    private static readonly MethodInfo _addAccelerator;
 
-        internal const string DefaultKernelName = "pwsh";
-        internal const string LanguageName = "PowerShell";
-
-        private static readonly CmdletInfo _outDefaultCommand;
-        private static readonly PropertyInfo _writeStreamProperty;
-        private static readonly object _errorStreamValue;
-        private static readonly MethodInfo _addAccelerator;
-
-        private readonly PSKernelHost _psHost;
-        private readonly Lazy<PowerShell> _lazyPwsh;
+    private readonly PSKernelHost _psHost;
+    private readonly Lazy<PowerShell> _lazyPwsh;
         
-        private PowerShell pwsh => _lazyPwsh.Value;
+    private PowerShell pwsh => _lazyPwsh.Value;
 
-        public Func<string, string> ReadInput { get; set; }
+    public Func<string, string> ReadInput { get; set; }
 
-        public Func<string, PasswordString> ReadPassword { get; set; }
+    public Func<string, PasswordString> ReadPassword { get; set; }
 
-        internal AzShellConnectionUtils AzShell { get; set; }
+    internal AzShellConnectionUtils AzShell { get; set; }
 
-        internal int DefaultRunspaceId => _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1;
+    internal int DefaultRunspaceId => _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1;
 
-        private readonly HashSet<string> _suppressedValueInfoNames;
+    private readonly HashSet<string> _suppressedValueInfoNames = new();
 
-        static PowerShellKernel()
+    static PowerShellKernel()
+    {
+        // Prepare for marking PSObject as error with 'WriteStream'.
+        _writeStreamProperty = typeof(PSObject).GetProperty("WriteStream", BindingFlags.Instance | BindingFlags.NonPublic);
+        var writeStreamType = typeof(PSObject).Assembly.GetType("System.Management.Automation.WriteStreamType");
+        _errorStreamValue = Enum.Parse(writeStreamType, "Error");
+
+        // When the downstream cmdlet of a native executable is 'Out-Default', PowerShell assumes
+        // it's running in the console where the 'Out-Default' would be added by default. Hence,
+        // PowerShell won't redirect the standard output of the executable.
+        // To workaround that, we rename 'Out-Default' to 'Out-Default2' to make sure the standard
+        // output is captured.
+        _outDefaultCommand = new CmdletInfo("Out-Default2", typeof(OutDefaultCommand));
+
+        // Get the AddAccelerator method
+        var acceleratorType = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
+        _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
+    }
+
+    public PowerShellKernel() : base(DefaultKernelName)
+    {
+        KernelInfo.LanguageName = LanguageName;
+        KernelInfo.DisplayName = LanguageName;
+        _psHost = new PSKernelHost(this);
+        _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
+
+        var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
+
+        if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
         {
-            // Prepare for marking PSObject as error with 'WriteStream'.
-            _writeStreamProperty = typeof(PSObject).GetProperty("WriteStream", BindingFlags.Instance | BindingFlags.NonPublic);
-            var writeStreamType = typeof(PSObject).Assembly.GetType("System.Management.Automation.WriteStreamType");
-            _errorStreamValue = Enum.Parse(writeStreamType, "Error");
+            _suppressedValueInfoNames.UnionWith(valueCollection.Select(x => x.Name));
+        }
+    }
 
-            // When the downstream cmdlet of a native executable is 'Out-Default', PowerShell assumes
-            // it's running in the console where the 'Out-Default' would be added by default. Hence,
-            // PowerShell won't redirect the standard output of the executable.
-            // To workaround that, we rename 'Out-Default' to 'Out-Default2' to make sure the standard
-            // output is captured.
-            _outDefaultCommand = new CmdletInfo("Out-Default2", typeof(OutDefaultCommand));
+    private PowerShell CreatePowerShell()
+    {
+        // Set the distribution channel so telemetry can be distinguished in PS7+ telemetry
+        Environment.SetEnvironmentVariable(PSTelemetryEnvName, PSTelemetryChannel);
 
-            // Get the AddAccelerator method
-            var acceleratorType = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
-            _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
+        // Create PowerShell instance
+        var iss = InitialSessionState.CreateDefault2();
+        if (Platform.IsWindows)
+        {
+            // This sets the execution policy on Windows to RemoteSigned.
+            iss.ExecutionPolicy = ExecutionPolicy.RemoteSigned;
         }
 
-        public PowerShellKernel() : base(DefaultKernelName)
+        // Set $PROFILE.
+        var profileValue = DollarProfileHelper.GetProfileValue();
+        iss.Variables.Add(new SessionStateVariableEntry("PROFILE", profileValue, "The $PROFILE."));
+
+        var runspace = RunspaceFactory.CreateRunspace(_psHost, iss);
+        runspace.Open();
+        var pwsh = PowerShell.Create(runspace);
+
+        // Add Modules directory that contains the helper modules
+        var psJupyterModulePath = Path.Join(
+            Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
+            "Modules");
+
+        AddModulePath(psJupyterModulePath);
+        RegisterForDisposal(pwsh);
+        return pwsh;
+    }
+
+    public void AddModulePath(string modulePath)
+    {
+        if (string.IsNullOrWhiteSpace(modulePath))
         {
-            KernelInfo.LanguageName = LanguageName;
-            KernelInfo.DisplayName = LanguageName;
-            _psHost = new PSKernelHost(this);
-            _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
-            _suppressedValueInfoNames = GetAllValueInfos().Select(v => v.Name).ToHashSet();
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(modulePath));
         }
 
-        private PowerShell CreatePowerShell()
-        {
-            // Set the distribution channel so telemetry can be distinguished in PS7+ telemetry
-            Environment.SetEnvironmentVariable(PSTelemetryEnvName, PSTelemetryChannel);
+        var psModulePath = Environment.GetEnvironmentVariable(PSModulePathEnvName);
 
-            // Create PowerShell instance
-            var iss = InitialSessionState.CreateDefault2();
-            if (Platform.IsWindows)
+        Environment.SetEnvironmentVariable(
+            PSModulePathEnvName,
+            $"{modulePath}{Path.PathSeparator}{psModulePath}");
+    }
+
+    public void AddAccelerator(string name, Type type)
+    {
+        _addAccelerator?.Invoke(null, new object[] { name, type });
+    }
+
+    public bool TryGetValue<T>(string name, out T value)
+    {
+        var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
+
+        if (variable is not null)
+        {
+            object outVal = (variable.Value is PSObject psobject) ? psobject.Unwrap() : variable.Value;
+
+            if (outVal is T tObj)
             {
-                // This sets the execution policy on Windows to RemoteSigned.
-                iss.ExecutionPolicy = ExecutionPolicy.RemoteSigned;
+                value = tObj;
+                return true;
             }
-
-            // Set $PROFILE.
-            var profileValue = DollarProfileHelper.GetProfileValue();
-            iss.Variables.Add(new SessionStateVariableEntry("PROFILE", profileValue, "The $PROFILE."));
-
-            var runspace = RunspaceFactory.CreateRunspace(_psHost, iss);
-            runspace.Open();
-            var pwsh = PowerShell.Create(runspace);
-
-            // Add Modules directory that contains the helper modules
-            var psJupyterModulePath = Path.Join(
-               Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
-               "Modules");
-
-            AddModulePath(psJupyterModulePath);
-            RegisterForDisposal(pwsh);
-            return pwsh;
         }
 
-        public void AddModulePath(string modulePath)
+        value = default;
+        return false;
+    }
+
+    Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+    {
+        var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
+
+        KernelValueInfo[] valueInfos;
+
+        if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
         {
-            if (string.IsNullOrWhiteSpace(modulePath))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(modulePath));
-            }
+            valueInfos = valueCollection
+                         .Where(v => !_suppressedValueInfoNames.Contains(v.Name))
+                         .Select(v =>
+                         {
+                             var formattedValue = FormattedValue.FromObject(
+                                 v.Value,
+                                 command.MimeType)[0];
 
-            var psModulePath = Environment.GetEnvironmentVariable(PSModulePathEnvName);
-
-            Environment.SetEnvironmentVariable(
-                PSModulePathEnvName,
-                $"{modulePath}{Path.PathSeparator}{psModulePath}");
+                             return new KernelValueInfo(
+                                 v.Name,
+                                 formattedValue,
+                                 v.Value?.GetType());
+                         }).ToArray();
+        }
+        else
+        {
+            valueInfos = Array.Empty<KernelValueInfo>();
         }
 
-        public void AddAccelerator(string name, Type type)
+        context.Publish(new ValueInfosProduced(valueInfos, command));
+
+        return Task.CompletedTask;
+    }
+
+    Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
+    {
+        if (TryGetValue<object>(command.Name, out var value))
         {
-            _addAccelerator?.Invoke(null, new object[] { name, type });
+            context.PublishValueProduced(command, value);
+        }
+        else
+        {
+            context.Fail(command, message: $"Value '{command.Name}' not found in kernel {Name}");
         }
 
-        private IEnumerable<KernelValueInfo> GetAllValueInfos()
+        return Task.CompletedTask;
+    }
+
+    async Task IKernelCommandHandler<SendValue>.HandleAsync(
+        SendValue command,
+        KernelInvocationContext context)
+    {
+        await SetValueAsync(command, context, SetAsync);
+
+        Task SetAsync(string name, object value, Type declaredType)
         {
-            var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
-
-            if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
-            {
-                return valueCollection.Select(v => new KernelValueInfo(v.Name, v.Value?.GetType())).ToArray();
-            }
-
-            return Array.Empty<KernelValueInfo>();
-        }
-
-        public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
-        {
-            return GetAllValueInfos().Where(v => !_suppressedValueInfoNames.Contains(v.Name)).ToArray();
-        }
-
-        public bool TryGetValue<T>(string name, out T value)
-        {
-            var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
-
-            if (variable is not null)
-            {
-                object outVal = (variable.Value is PSObject psobject) ? psobject.Unwrap() : variable.Value;
-
-                if (outVal is T tObj)
-                {
-                    value = tObj;
-                    return true;
-                }
-            }
-
-            value = default;
-            return false;
-        }
-
-        Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
-        {
-            var valueInfos = GetValueInfos();
-            context.Publish(new ValueInfosProduced(valueInfos, command));
+            _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
             return Task.CompletedTask;
         }
+    }
 
-        Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(
+        SubmitCode submitCode,
+        KernelInvocationContext context)
+    {
+        // Acknowledge that we received the request.
+        context.Publish(new CodeSubmissionReceived(submitCode));
+
+        var code = submitCode.Code;
+
+        // Test is the code we got is actually able to run.
+        if (IsCompleteSubmission(code, out ParseError[] parseErrors))
         {
-            if (TryGetValue<object>(command.Name, out var value))
-            {
-                context.PublishValueProduced(command, value);
-            }
-            else
-            {
-                context.Fail(command, message: $"Value '{command.Name}' not found in kernel {Name}");
-            }
-
-            return Task.CompletedTask;
+            context.Publish(new CompleteCodeSubmissionReceived(submitCode));
+        }
+        else
+        {
+            context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
         }
 
-        async Task IKernelCommandHandler<SendValue>.HandleAsync(
-            SendValue command,
-            KernelInvocationContext context)
-        {
-            await SetValueAsync(command, context, SetAsync);
+        var formattedDiagnostics =
+            parseErrors
+                .Select(d => d.ToString())
+                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                .ToImmutableArray();
 
-            Task SetAsync(string name, object value, Type declaredType)
-            {
-                _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
-                return Task.CompletedTask;
-            }
+        var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
+
+        context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
+
+        // If there were parse errors, display them and return early.
+        if (parseErrors.Length > 0)
+        {
+            var parseException = new ParseException(parseErrors);
+            ReportError(parseException.ErrorRecord);
+            return;
         }
 
-        async Task IKernelCommandHandler<SubmitCode>.HandleAsync(
-            SubmitCode submitCode,
-            KernelInvocationContext context)
+        // Do nothing if we get a Diagnose type.
+        if (submitCode.SubmissionType == SubmissionType.Diagnose)
         {
-            // Acknowledge that we received the request.
-            context.Publish(new CodeSubmissionReceived(submitCode));
-
-            var code = submitCode.Code;
-
-            // Test is the code we got is actually able to run.
-            if (IsCompleteSubmission(code, out ParseError[] parseErrors))
-            {
-                context.Publish(new CompleteCodeSubmissionReceived(submitCode));
-            }
-            else
-            {
-                context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
-            }
-
-            var formattedDiagnostics =
-                parseErrors
-                    .Select(d => d.ToString())
-                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                    .ToImmutableArray();
-
-            var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
-
-            context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
-
-            // If there were parse errors, display them and return early.
-            if (parseErrors.Length > 0)
-            {
-                var parseException = new ParseException(parseErrors);
-                ReportError(parseException.ErrorRecord);
-                return;
-            }
-
-            // Do nothing if we get a Diagnose type.
-            if (submitCode.SubmissionType == SubmissionType.Diagnose)
-            {
-                return;
-            }
-
-            if (context.CancellationToken.IsCancellationRequested)
-            {
-                context.Fail(submitCode, null, "Command cancelled");
-                return;
-            }
-
-            if (AzShell is not null)
-            {
-                await RunSubmitCodeInAzShell(code);
-            }
-            else
-            {
-                RunSubmitCodeLocally(code);
-            }
+            return;
         }
 
-        Task IKernelCommandHandler<RequestCompletions>.HandleAsync(
-            RequestCompletions requestCompletions,
-            KernelInvocationContext context)
+        if (context.CancellationToken.IsCancellationRequested)
         {
-            CompletionsProduced completion;
-
-            if (AzShell is not null)
-            {
-                // Currently no tab completion when interacting with AzShell.
-                completion = new CompletionsProduced(Array.Empty<CompletionItem>(), requestCompletions);
-            }
-            else
-            {
-                var results = CommandCompletion.CompleteInput(
-                    requestCompletions.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletions.Code, requestCompletions.LinePosition),
-                    options: null,
-                    pwsh);
-
-                var completionItems = results.CompletionMatches.Select(
-                    c => new CompletionItem(
-                        displayText: c.CompletionText,
-                        kind: c.ResultType.ToString(),
-                        documentation: c.ToolTip));
-
-                // The end index is the start index plus the length of the replacement.
-                var endIndex = results.ReplacementIndex + results.ReplacementLength;
-                completion = new CompletionsProduced(
-                    completionItems,
-                    requestCompletions,
-                    SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(requestCompletions.Code, results.ReplacementIndex, endIndex));
-            }
-
-            context.Publish(completion);
-            return Task.CompletedTask;
+            context.Fail(submitCode, null, "Command cancelled");
+            return;
         }
 
-        Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(
-            RequestDiagnostics requestDiagnostics,
-            KernelInvocationContext context)
+        if (AzShell is not null)
         {
-            var code = requestDiagnostics.Code;
+            await RunSubmitCodeInAzShell(code);
+        }
+        else
+        {
+            RunSubmitCodeLocally(code);
+        }
+    }
 
-            IsCompleteSubmission(code, out var parseErrors);
+    Task IKernelCommandHandler<RequestCompletions>.HandleAsync(
+        RequestCompletions requestCompletions,
+        KernelInvocationContext context)
+    {
+        CompletionsProduced completion;
 
-            var diagnostics = parseErrors.Select(ToDiagnostic);
-            context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
+        if (AzShell is not null)
+        {
+            // Currently no tab completion when interacting with AzShell.
+            completion = new CompletionsProduced(Array.Empty<CompletionItem>(), requestCompletions);
+        }
+        else
+        {
+            var results = CommandCompletion.CompleteInput(
+                requestCompletions.Code,
+                SourceUtilities.GetCursorOffsetFromPosition(requestCompletions.Code, requestCompletions.LinePosition),
+                options: null,
+                pwsh);
 
-            return Task.CompletedTask;
+            var completionItems = results.CompletionMatches.Select(
+                c => new CompletionItem(
+                    displayText: c.CompletionText,
+                    kind: c.ResultType.ToString(),
+                    documentation: c.ToolTip));
+
+            // The end index is the start index plus the length of the replacement.
+            var endIndex = results.ReplacementIndex + results.ReplacementLength;
+            completion = new CompletionsProduced(
+                completionItems,
+                requestCompletions,
+                SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(requestCompletions.Code, results.ReplacementIndex, endIndex));
         }
 
-        private async Task RunSubmitCodeInAzShell(string code)
-        {
-            code = code.Trim();
-            var shouldDispose = false;
+        context.Publish(completion);
+        return Task.CompletedTask;
+    }
 
-            try
+    Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(
+        RequestDiagnostics requestDiagnostics,
+        KernelInvocationContext context)
+    {
+        var code = requestDiagnostics.Code;
+
+        IsCompleteSubmission(code, out var parseErrors);
+
+        var diagnostics = parseErrors.Select(ToDiagnostic);
+        context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
+
+        return Task.CompletedTask;
+    }
+
+    private async Task RunSubmitCodeInAzShell(string code)
+    {
+        code = code.Trim();
+        var shouldDispose = false;
+
+        try
+        {
+            if (string.Equals(code, "exit", StringComparison.OrdinalIgnoreCase))
             {
-                if (string.Equals(code, "exit", StringComparison.OrdinalIgnoreCase))
-                {
-                    await AzShell.ExitSession();
-                    shouldDispose = true;
-                }
-                else
-                {
-                    await AzShell.SendCommand(code);
-                }
-            }
-            catch (IOException e)
-            {
-                ReportException(e);
+                await AzShell.ExitSession();
                 shouldDispose = true;
             }
-
-            if (shouldDispose)
+            else
             {
-                AzShell.Dispose();
-                AzShell = null;
+                await AzShell.SendCommand(code);
             }
         }
-
-        private void RunSubmitCodeLocally(string code)
+        catch (IOException e)
         {
-            try
-            {
-                pwsh.AddScript(code)
-                    .AddCommand(_outDefaultCommand)
-                    .Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
-
-                pwsh.InvokeAndClearCommands();
-            }
-            catch (Exception e)
-            {
-                ReportException(e);
-            }
-            finally
-            {
-                ((PSKernelHostUserInterface)_psHost.UI).ResetProgress();
-            }
+            ReportException(e);
+            shouldDispose = true;
         }
 
-        private static bool IsCompleteSubmission(string code, out ParseError[] errors)
+        if (shouldDispose)
         {
-            // Parse the PowerShell script. If there are any parse errors, check if the input was incomplete.
-            // We only need to check if the first ParseError has incomplete input. This is consistant with
-            // what PowerShell itself does today.
-            Parser.ParseInput(code, out _, out errors);
-            return errors.Length == 0 || !errors[0].IncompleteInput;
+            AzShell.Dispose();
+            AzShell = null;
         }
+    }
 
-        private void ReportError(ErrorRecord error)
+    private void RunSubmitCodeLocally(string code)
+    {
+        try
         {
-            var psObject = PSObject.AsPSObject(error);
-            _writeStreamProperty.SetValue(psObject, _errorStreamValue);
+            pwsh.AddScript(code)
+                .AddCommand(_outDefaultCommand)
+                .Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
 
-            pwsh.AddCommand(_outDefaultCommand)
-                .AddParameter("InputObject", psObject)
-                .InvokeAndClearCommands();
+            pwsh.InvokeAndClearCommands();
         }
-
-        private void ReportException(Exception e)
+        catch (Exception e)
         {
-            var error = e is IContainsErrorRecord icer
-                ? icer.ErrorRecord
-                : new ErrorRecord(e, "JupyterPSHost.ReportException", ErrorCategory.NotSpecified, targetObject: null);
-
-            ReportError(error);
+            ReportException(e);
         }
-
-        private static Diagnostic ToDiagnostic(ParseError parseError)
+        finally
         {
-            return new Diagnostic(
-                new LinePositionSpan(
-                    new LinePosition(parseError.Extent.StartLineNumber - 1, parseError.Extent.StartColumnNumber),
-                    new LinePosition(parseError.Extent.EndLineNumber - 1, parseError.Extent.EndColumnNumber)),
-                DiagnosticSeverity.Error,
-                parseError.ErrorId,
-                parseError.Message);
+            ((PSKernelHostUserInterface)_psHost.UI).ResetProgress();
         }
+    }
+
+    private static bool IsCompleteSubmission(string code, out ParseError[] errors)
+    {
+        // Parse the PowerShell script. If there are any parse errors, check if the input was incomplete.
+        // We only need to check if the first ParseError has incomplete input. This is consistant with
+        // what PowerShell itself does today.
+        Parser.ParseInput(code, out _, out errors);
+        return errors.Length == 0 || !errors[0].IncompleteInput;
+    }
+
+    private void ReportError(ErrorRecord error)
+    {
+        var psObject = PSObject.AsPSObject(error);
+        _writeStreamProperty.SetValue(psObject, _errorStreamValue);
+
+        pwsh.AddCommand(_outDefaultCommand)
+            .AddParameter("InputObject", psObject)
+            .InvokeAndClearCommands();
+    }
+
+    private void ReportException(Exception e)
+    {
+        var error = e is IContainsErrorRecord icer
+            ? icer.ErrorRecord
+            : new ErrorRecord(e, "JupyterPSHost.ReportException", ErrorCategory.NotSpecified, targetObject: null);
+
+        ReportError(error);
+    }
+
+    private static Diagnostic ToDiagnostic(ParseError parseError)
+    {
+        return new Diagnostic(
+            new LinePositionSpan(
+                new LinePosition(parseError.Extent.StartLineNumber - 1, parseError.Extent.StartColumnNumber),
+                new LinePosition(parseError.Extent.EndLineNumber - 1, parseError.Extent.EndColumnNumber)),
+            DiagnosticSeverity.Error,
+            parseError.ErrorId,
+            parseError.Message);
     }
 }

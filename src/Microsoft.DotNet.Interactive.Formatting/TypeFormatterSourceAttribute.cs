@@ -3,16 +3,15 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Formatting
-{
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
-    public class TypeFormatterSourceAttribute : Attribute
-    {
-        public TypeFormatterSourceAttribute(Type formatterSourceType)
-        {
-            FormatterSourceType = formatterSourceType;
-        }
+namespace Microsoft.DotNet.Interactive.Formatting;
 
-        public Type FormatterSourceType { get; }
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
+public class TypeFormatterSourceAttribute : Attribute
+{
+    public TypeFormatterSourceAttribute(Type formatterSourceType)
+    {
+        FormatterSourceType = formatterSourceType;
     }
+
+    public Type FormatterSourceType { get; }
 }

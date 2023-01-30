@@ -6,59 +6,58 @@ using HtmlAgilityPack;
 using Microsoft.DotNet.Interactive.Formatting;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Journey.Tests
+namespace Microsoft.DotNet.Interactive.Journey.Tests;
+
+public class ChallengeEvaluationFormattingTests
 {
-    public class ChallengeEvaluationFormattingTests
+    [Fact]
+    public void teacher_can_provide_feedback_for_a_specific_rule()
     {
-        [Fact]
-        public void teacher_can_provide_feedback_for_a_specific_rule()
-        {
-            // arrange
-            var evaluation = new ChallengeEvaluation();
-            evaluation.SetRuleOutcome("Code compiles", Outcome.Success, "Your submission has compiled.");
+        // arrange
+        var evaluation = new ChallengeEvaluation();
+        evaluation.SetRuleOutcome("Code compiles", Outcome.Success, "Your submission has compiled.");
 
-            // act
-            var message = evaluation.ToDisplayString(HtmlFormatter.MimeType);
-            // assert
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(message);
+        // act
+        var message = evaluation.ToDisplayString(HtmlFormatter.MimeType);
+        // assert
+        var htmlDoc = new HtmlDocument();
+        htmlDoc.LoadHtml(message);
 
-            var summary = htmlDoc.DocumentNode
-                .SelectSingleNode("//details[@class='ruleEvaluation']/summary");
+        var summary = htmlDoc.DocumentNode
+            .SelectSingleNode("//details[@class='ruleEvaluation']/summary");
 
-            summary.InnerText
-                .Should()
-                .Be("[ Code compiles ]: Success");
+        summary.InnerText
+            .Should()
+            .Be("[ Code compiles ]: Success");
 
-            var p = htmlDoc.DocumentNode
-                .SelectSingleNode("//details[@class='ruleEvaluation']/div");
+        var p = htmlDoc.DocumentNode
+            .SelectSingleNode("//details[@class='ruleEvaluation']/div");
 
-            p.InnerText
-                .Should()
-                .Be("Your submission has compiled.");
-        }
+        p.InnerText
+            .Should()
+            .Be("Your submission has compiled.");
+    }
 
-        [Fact]
-        public void display_number_of_rules()
-        {
-            // arrange
-            var evaluation = new ChallengeEvaluation();
-            evaluation.SetRuleOutcome("Code compiles", Outcome.Success);
-            evaluation.SetRuleOutcome("Code matches output", Outcome.Success);
-            evaluation.SetRuleOutcome("Code is recursive", Outcome.Failure);
+    [Fact]
+    public void display_number_of_rules()
+    {
+        // arrange
+        var evaluation = new ChallengeEvaluation();
+        evaluation.SetRuleOutcome("Code compiles", Outcome.Success);
+        evaluation.SetRuleOutcome("Code matches output", Outcome.Success);
+        evaluation.SetRuleOutcome("Code is recursive", Outcome.Failure);
 
-            // act
-            var message = evaluation.ToDisplayString(HtmlFormatter.MimeType);
-            // assert
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(message);
+        // act
+        var message = evaluation.ToDisplayString(HtmlFormatter.MimeType);
+        // assert
+        var htmlDoc = new HtmlDocument();
+        htmlDoc.LoadHtml(message);
 
-            var summary = htmlDoc.DocumentNode
-                .SelectSingleNode("//details[@class='challengeEvaluation']/summary");
+        var summary = htmlDoc.DocumentNode
+            .SelectSingleNode("//details[@class='challengeEvaluation']/summary");
 
-            summary.InnerText
-                .Should()
-                .Be("(2/3) rules have passed.");
-        }
+        summary.InnerText
+            .Should()
+            .Be("(2/3) rules have passed.");
     }
 }

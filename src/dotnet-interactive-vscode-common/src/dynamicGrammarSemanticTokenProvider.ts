@@ -41,8 +41,9 @@ const languageSelector: string = '#!';
 const magicCommandSelector: string = '#!';
 
 // grammars shipped with this extension
-const wellKnownLanguages: { languageName: string, grammarFileName: string, aliases: string[] }[] = [
-    { languageName: 'kql', grammarFileName: 'kql.tmGrammar.json', aliases: [] },
+const wellKnownLanguages: { languageName: string, aliases: string[] }[] = [
+    { languageName: 'kql', aliases: [] },
+    { languageName: 'http', aliases: [] },
 ];
 
 // aliases that we might want to manually specify
@@ -54,7 +55,18 @@ export class DynamicGrammarSemanticTokenProvider {
     private _documentKernelInfos: Map<vscodeLike.Uri, Map<string, contracts.KernelInfo>> = new Map();
     private _documentGrammarRegistries: Map<vscodeLike.Uri, vsctm.Registry> = new Map();
     private _textMateScopeToSemanticType: Map<string, string> = new Map();
+    private _languageNameConfigurationMap: Map<string, any> = new Map();
     private _languageNameInfoMap: Map<string, LanguageInfo> = new Map();
+
+    // This is used as a fallback when a language doesn't have a registered grammar, e.g., Mermaid.  Empty properties
+    // are required to prevent the editor from falling back to the previously applied language configuration.
+    private _emptyLanguageConfiguration: any = {
+        comments: {},
+        brackets: [],
+        autoClosingPairs: [],
+        surroundingPairs: [],
+        folding: {},
+    };
 
     constructor(packageJSON: any, extensionData: VSCodeExtensionLike[], private readonly fileExists: (path: string) => boolean, private readonly fileReader: (path: string) => string) {
         this.buildInstalledLanguageInfosMap(extensionData);
@@ -108,6 +120,17 @@ export class DynamicGrammarSemanticTokenProvider {
 
         // no match found
         return undefined;
+    }
+
+    getLanguageConfigurationFromKernelNameOrAlias(notebookDocument: vscodeLike.NotebookDocument, kernelNameOrAlias: string): any {
+        let languageConfiguration = this._emptyLanguageConfiguration;
+        const languageName = this.getLanguageNameFromKernelNameOrAlias(notebookDocument, kernelNameOrAlias);
+        if (languageName) {
+            const normalizedLanguageName = normalizeLanguageName(languageName);
+            languageConfiguration = this._languageNameConfigurationMap.get(normalizedLanguageName) ?? languageConfiguration;
+        }
+
+        return languageConfiguration;
     }
 
     async getTokens(notebookUri: vscodeLike.Uri, initialKernelName: string, code: string): Promise<SemanticToken[]> {
@@ -190,11 +213,26 @@ export class DynamicGrammarSemanticTokenProvider {
         // grammars shipped with this extension
         const grammarDir = path.join(__dirname, '..', '..', '..', 'grammars');
         for (const wellKnown of wellKnownLanguages) {
-            const grammarPath = path.join(grammarDir, wellKnown.grammarFileName);
+            const grammarPath = path.join(grammarDir, `${wellKnown.languageName}.tmGrammar.json`);
             const languageInfo = this.createLanguageInfoFromGrammar(normalizeLanguageName(wellKnown.languageName), `source.${wellKnown.languageName}`, grammarPath);
-            for (const languageNameOrAlias of [wellKnown.languageName, ...wellKnown.aliases].map(normalizeLanguageName)) {
+            const allNames = [wellKnown.languageName, ...wellKnown.aliases].map(normalizeLanguageName);
+            for (const languageNameOrAlias of allNames) {
                 this._languageNameInfoMap.set(languageNameOrAlias, languageInfo);
                 seenLanguages.add(languageNameOrAlias);
+            }
+
+            // set language configuration
+            const languageConfigurationFilePath = path.join(grammarDir, `${wellKnown.languageName}.language-configuration.json`);
+            if (this.fileExists(languageConfigurationFilePath)) {
+                try {
+                    const languageConfigurationContents = this.fileReader(languageConfigurationFilePath);
+                    const languageConfiguration = JSON.parse(languageConfigurationContents);
+                    for (const languageNameOrAlias of allNames) {
+                        this._languageNameConfigurationMap.set(languageNameOrAlias, languageConfiguration);
+                    }
+                } catch {
+                    // don't care if it failed
+                }
             }
         }
 
@@ -226,11 +264,32 @@ export class DynamicGrammarSemanticTokenProvider {
                 for (let languageIndex = 0; languageIndex < extension.packageJSON.contributes.languages.length; languageIndex++) {
                     const language = extension.packageJSON.contributes.languages[languageIndex];
                     const languageId = normalizeLanguageName(<string>language.id);
+
+                    // set language configuration
+                    let languageConfigurationObject: any | undefined = undefined;
+                    if (typeof language.configuration === 'string') {
+                        const languageConfiguration = <string>language.configuration;
+                        const languageConfigurationPath = path.join(extension.extensionPath, languageConfiguration);
+                        if (this.fileExists(languageConfigurationPath)) {
+                            const languageConfigurationContents = this.fileReader(languageConfigurationPath);
+                            try {
+                                languageConfigurationObject = JSON.parse(languageConfigurationContents);
+                                this._languageNameConfigurationMap.set(languageId, languageConfigurationObject);
+                            } catch {
+                                // we don't care if we couldn't parse it
+                            }
+                        }
+                    }
+
+                    // set language info
                     const languageInfo = this._languageNameInfoMap.get(languageId);
                     if (languageInfo) {
                         const aliases = Array.isArray(language.aliases) ? language.aliases : [];
                         for (const alias of aliases.map(normalizeLanguageName)) {
                             this._languageNameInfoMap.set(alias, languageInfo);
+                            if (languageConfigurationObject) {
+                                this._languageNameConfigurationMap.set(alias, languageConfigurationObject);
+                            }
                         }
                     }
                 }

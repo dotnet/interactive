@@ -4,18 +4,17 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
-{
-    [JsonConverter(typeof(HistoryReplyConverter))]
-    [JupyterMessageType(JupyterMessageContentTypes.HistoryReply)]
-    public class HistoryReply : ReplyMessage
-    {
-        [JsonPropertyName("history")]
-        public IReadOnlyList<HistoryElement> History { get; }
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-        public HistoryReply(IReadOnlyList<HistoryElement> history = null)
-        {
-            History = history ?? new List<HistoryElement>();
-        }
+[JsonConverter(typeof(HistoryReplyConverter))]
+[JupyterMessageType(JupyterMessageContentTypes.HistoryReply)]
+public class HistoryReply : ReplyMessage
+{
+    [JsonPropertyName("history")]
+    public IReadOnlyList<HistoryElement> History { get; }
+
+    public HistoryReply(IReadOnlyList<HistoryElement> history = null)
+    {
+        History = history ?? new List<HistoryElement>();
     }
 }

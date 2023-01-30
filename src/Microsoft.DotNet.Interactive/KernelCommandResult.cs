@@ -4,15 +4,14 @@
 using System;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive
-{
-    public class KernelCommandResult
-    {
-        internal KernelCommandResult(IObservable<KernelEvent> events)
-        {
-            KernelEvents = events ?? throw new ArgumentNullException(nameof(events));
-        }
+namespace Microsoft.DotNet.Interactive;
 
-        public IObservable<KernelEvent> KernelEvents { get; }
+public class KernelCommandResult
+{
+    internal KernelCommandResult(IObservable<KernelEvent> events)
+    {
+        KernelEvents = events ?? throw new ArgumentNullException(nameof(events));
     }
+
+    public IObservable<KernelEvent> KernelEvents { get; }
 }

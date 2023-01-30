@@ -274,7 +274,15 @@ export function getVersionNumber(output: string): string {
     return lines[lines.length - 1];
 }
 
-export function isVersionSufficient(firstVersion: string, secondVersion: string): boolean {
+export function isVersionExactlyEqual(firstVersion: string, secondVersion: string): boolean {
+    try {
+        return compareVersions.compare(firstVersion, secondVersion, '=');
+    } catch (_) {
+        return false;
+    }
+}
+
+export function isVersionGreaterOrEqual(firstVersion: string, secondVersion: string): boolean {
     try {
         return compareVersions.compare(firstVersion, secondVersion, '>=');
     } catch (_) {
@@ -285,7 +293,6 @@ export function isVersionSufficient(firstVersion: string, secondVersion: string)
 export function extensionToDocumentType(extension: string): contracts.DocumentSerializationType {
     switch (extension) {
         case '.dib':
-        case '.dotnet-interactive':
             return contracts.DocumentSerializationType.Dib;
         case '.ipynb':
             return contracts.DocumentSerializationType.Ipynb;

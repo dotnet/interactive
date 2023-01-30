@@ -3,15 +3,14 @@
 
 using System.CommandLine.Parsing;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
+
+public class OutputBlockAnnotations : CodeFenceAnnotations
 {
-    public class OutputBlockAnnotations : CodeFenceAnnotations
+    public OutputBlockAnnotations(
+        ParseResult parseResult = null,
+        string session = null)
+        : base(parseResult, session)
     {
-        public OutputBlockAnnotations(
-            ParseResult parseResult = null,
-            string session = null)
-            : base(parseResult, session)
-        {
-        }
     }
 }

@@ -13,63 +13,63 @@ using Xunit;
 using TextSpans = System.Collections.Generic.IDictionary<string, System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.Text.TextSpan>>;
 using LinePositionSpans = System.Collections.Generic.IDictionary<string, System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.Text.LinePositionSpan>>;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation
+namespace Microsoft.DotNet.Interactive.CSharpProject.Tests.Instrumentation;
+
+using LinePosition = CodeAnalysis.Text.LinePosition;
+using LinePositionSpan = CodeAnalysis.Text.LinePositionSpan;
+
+public class VisitorVariableLocationTests
 {
-    using LinePosition = CodeAnalysis.Text.LinePosition;
-    using LinePositionSpan = CodeAnalysis.Text.LinePositionSpan;
 
-    public class VisitorVariableLocationTests
+    private LinePositionSpans ConvertSpans(TextSpans spans, SourceText text)
     {
-
-        private LinePositionSpans ConvertSpans(TextSpans spans, SourceText text)
+        var convertedKeyValues = spans.Select(kv =>
         {
-            var convertedKeyValues = spans.Select(kv =>
+            var convertedSpans = kv.Value.Select(span =>
             {
-                var convertedSpans = kv.Value.Select(span =>
-                {
-                    var line = text.Lines.GetLineFromPosition(span.Start);
-                    var col = span.Start - line.Start;
+                var line = text.Lines.GetLineFromPosition(span.Start);
+                var col = span.Start - line.Start;
 
-                    var endLine = text.Lines.GetLineFromPosition(span.End);
-                    var endcol = span.End - endLine.Start;
+                var endLine = text.Lines.GetLineFromPosition(span.End);
+                var endcol = span.End - endLine.Start;
 
-                    return new LinePositionSpan(
-                       new LinePosition(line.LineNumber, col),
-                       new LinePosition(endLine.LineNumber, endcol)
-                    );
-                });
-                return new KeyValuePair<string, ImmutableArray<LinePositionSpan>>(kv.Key, convertedSpans.ToImmutableArray());
+                return new LinePositionSpan(
+                    new LinePosition(line.LineNumber, col),
+                    new LinePosition(endLine.LineNumber, endcol)
+                );
             });
-            return convertedKeyValues.ToDictionary(x => x.Key, x => x.Value);
-        }
+            return new KeyValuePair<string, ImmutableArray<LinePositionSpan>>(kv.Key, convertedSpans.ToImmutableArray());
+        });
+        return convertedKeyValues.ToDictionary(x => x.Key, x => x.Value);
+    }
 
-        private async Task FindAndValidateVariablesAsync(string markup)
+    private async Task FindAndValidateVariablesAsync(string markup)
+    {
+        MarkupTestFile.GetNamedSpans(
+            markup,
+            out var text,
+            out IDictionary<string, ImmutableArray<TextSpan>> spans);
+
+        var document = Sources.GetDocument(text);
+        var fileLineLocationSpans = ConvertSpans(spans, await document.GetTextAsync());
+
+        var visitor = new InstrumentationSyntaxVisitor(document, await document.GetSemanticModelAsync());
+        var locations = visitor.VariableLocations.Data.ToDictionary(
+            key => key.Key.Name,
+            values => values.Value.Select(location => location.ToLinePositionSpan()));
+
+        foreach (var kv in locations)
         {
-            MarkupTestFile.GetNamedSpans(
-                markup,
-                out var text,
-                out IDictionary<string, ImmutableArray<TextSpan>> spans);
-
-            var document = Sources.GetDocument(text);
-            var fileLineLocationSpans = ConvertSpans(spans, await document.GetTextAsync());
-
-            var visitor = new InstrumentationSyntaxVisitor(document, await document.GetSemanticModelAsync());
-            var locations = visitor.VariableLocations.Data.ToDictionary(
-                key => key.Key.Name,
-                values => values.Value.Select(location => location.ToLinePositionSpan()));
-
-            foreach (var kv in locations)
-            {
-                var expected = new HashSet<LinePositionSpan>(fileLineLocationSpans[kv.Key]);
-                var actual = new HashSet<LinePositionSpan>(kv.Value);
-                Assert.Equal(expected, actual);
-            }
+            var expected = new HashSet<LinePositionSpan>(fileLineLocationSpans[kv.Key]);
+            var actual = new HashSet<LinePositionSpan>(kv.Value);
+            Assert.Equal(expected, actual);
         }
+    }
 
-        [Fact]
-        public async Task Pattern_Matching_Variables_Should_Be_Recorded()
-        {
-            await FindAndValidateVariablesAsync(@"
+    [Fact]
+    public async Task Pattern_Matching_Variables_Should_Be_Recorded()
+    {
+        await FindAndValidateVariablesAsync(@"
 using System;
 namespace RoslynRecorder
 {
@@ -86,12 +86,12 @@ namespace RoslynRecorder
         }
     }
 }");
-        }
+    }
 
-        [Fact]
-        public async Task Dynamic_Variable_Should_Be_Recorded()
-        {
-            await FindAndValidateVariablesAsync(@"
+    [Fact]
+    public async Task Dynamic_Variable_Should_Be_Recorded()
+    {
+        await FindAndValidateVariablesAsync(@"
 
 using System;
 namespace RoslynRecorder
@@ -106,11 +106,11 @@ namespace RoslynRecorder
     }
 }
 ");
-        }
-        [Fact]
-        public async Task Property_Usages_Should_Be_Recorded()
-        {
-            await FindAndValidateVariablesAsync(@"
+    }
+    [Fact]
+    public async Task Property_Usages_Should_Be_Recorded()
+    {
+        await FindAndValidateVariablesAsync(@"
 using System;
 
 namespace ConsoleApp1
@@ -133,12 +133,12 @@ namespace ConsoleApp1
         }
     }
 ");
-        }
+    }
 
-        [Fact]
-        public async Task Field_Usages_Should_Be_Recorded()
-        {
-            await FindAndValidateVariablesAsync(@"
+    [Fact]
+    public async Task Field_Usages_Should_Be_Recorded()
+    {
+        await FindAndValidateVariablesAsync(@"
 using System;
 
 namespace ConsoleApp1
@@ -161,12 +161,12 @@ namespace ConsoleApp1
         }
     }
 ");
-        }
+    }
 
-        [Fact]
-        public async Task Out_Variable_Should_Be_Recorded()
-        {
-            await FindAndValidateVariablesAsync(@"
+    [Fact]
+    public async Task Out_Variable_Should_Be_Recorded()
+    {
+        await FindAndValidateVariablesAsync(@"
 using System;
 
 namespace ConsoleApp1
@@ -188,12 +188,12 @@ namespace ConsoleApp1
     }
 }
 ");
-        }
+    }
 
-        [Fact]
-        public async Task Variable_In_Simple_Lambda_Function_Should_Be_Recorded()
-        {
-            await FindAndValidateVariablesAsync(@"
+    [Fact]
+    public async Task Variable_In_Simple_Lambda_Function_Should_Be_Recorded()
+    {
+        await FindAndValidateVariablesAsync(@"
 using System;
 using System.Linq;
 
@@ -211,12 +211,12 @@ namespace ConsoleApp1
     }
 }
 ");
-        }
+    }
 
-        [Fact]
-        public async Task Variable_In_Parens_Lambda_Function_Should_Be_Recorded()
-        {
-            await FindAndValidateVariablesAsync(@"
+    [Fact]
+    public async Task Variable_In_Parens_Lambda_Function_Should_Be_Recorded()
+    {
+        await FindAndValidateVariablesAsync(@"
 using System;
 using System.Linq;
 
@@ -236,12 +236,12 @@ namespace ConsoleApp1
     }
 }
 ");
-        }
+    }
 
-        [Fact]
-        public async Task For_Loop_Variables_Should_Be_Recorded()
-        {
-            await FindAndValidateVariablesAsync(@"
+    [Fact]
+    public async Task For_Loop_Variables_Should_Be_Recorded()
+    {
+        await FindAndValidateVariablesAsync(@"
 using System;
 using System.Linq;
 
@@ -260,12 +260,12 @@ namespace ConsoleApp1
 }
 ");
 
-        }
+    }
 
-        [Fact]
-        public async Task ForEach_Loop_Variables_Should_Be_Recorded()
-        {
-            await FindAndValidateVariablesAsync(@"
+    [Fact]
+    public async Task ForEach_Loop_Variables_Should_Be_Recorded()
+    {
+        await FindAndValidateVariablesAsync(@"
 using System;
 using System.Linq;
 
@@ -286,7 +286,5 @@ namespace ConsoleApp1
 ");
 
 
-        }
     }
 }
-

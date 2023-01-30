@@ -4,17 +4,16 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
-{
-    [JupyterMessageType(JupyterMessageContentTypes.IsCompleteRequest)]
-    public class IsCompleteRequest : RequestMessage
-    {
-        [JsonPropertyName("code")]
-        public string Code { get; set; }
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-        public IsCompleteRequest(string code)
-        {
-            Code = code ?? throw new ArgumentNullException(nameof(code));
-        }
+[JupyterMessageType(JupyterMessageContentTypes.IsCompleteRequest)]
+public class IsCompleteRequest : RequestMessage
+{
+    [JsonPropertyName("code")]
+    public string Code { get; set; }
+
+    public IsCompleteRequest(string code)
+    {
+        Code = code ?? throw new ArgumentNullException(nameof(code));
     }
 }

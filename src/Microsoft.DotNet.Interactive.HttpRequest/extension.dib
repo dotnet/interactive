@@ -1,0 +1,3 @@
+#!csharp
+
+Microsoft.DotNet.Interactive.HttpRequest.HttpRequestKernelExtension.Load(Microsoft.DotNet.Interactive.KernelInvocationContext.Current.HandlingKernel.RootKernel);

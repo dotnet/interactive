@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
-public sealed partial class FormatterTests
+public sealed partial class PlainTextFormatterTests
 {
     public class Defaults : FormatterTestBase
     {
@@ -48,16 +48,6 @@ public sealed partial class FormatterTests
             GetType().ToDisplayString()
                      .Should().Be(GetType().GUID.ToString());
         }
-
-        [Fact]
-        public void Default_formatter_for_null_Nullable_indicates_null()
-        {
-            int? nullable = null;
-
-            var output = nullable.ToDisplayString();
-
-            output.Should().Be(((object) null).ToDisplayString());
-        }
         
         [Fact]
         public void Exception_StackTrace_is_included_by_default()
@@ -75,7 +65,7 @@ public sealed partial class FormatterTests
             }
 
             msg.Should()
-               .Contain($"at {typeof(FormatterTests)}.{nameof(Defaults)}.{MethodInfo.GetCurrentMethod().Name}");
+               .Contain($"at {typeof(PlainTextFormatterTests)}.{nameof(Defaults)}.{MethodInfo.GetCurrentMethod().Name}");
         }
 
         [Fact]

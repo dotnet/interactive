@@ -4,23 +4,22 @@
 using System.Web;
 using Microsoft.AspNetCore.Html;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
+
+internal static class HtmlExtensions
 {
-    internal static class HtmlExtensions
+    public static IHtmlContent HtmlEncode(this string content)
     {
-        public static IHtmlContent HtmlEncode(this string content)
-        {
-            return new HtmlString(HttpUtility.HtmlEncode(content));
-        }
+        return new HtmlString(HttpUtility.HtmlEncode(content));
+    }
 
-        public static IHtmlContent HtmlAttributeEncode(this string content)
-        {
-            return new HtmlString(HttpUtility.HtmlAttributeEncode(content));
-        }
+    public static IHtmlContent HtmlAttributeEncode(this string content)
+    {
+        return new HtmlString(HttpUtility.HtmlAttributeEncode(content));
+    }
 
-        public static IHtmlContent ToHtmlContent(this string value)
-        {
-            return new HtmlString(value);
-        }
+    public static IHtmlContent ToHtmlContent(this string value)
+    {
+        return new HtmlString(value);
     }
 }

@@ -8,20 +8,19 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Utility;
 using Xunit.Abstractions;
 
-namespace Pocket
+namespace Pocket;
+
+internal partial class LogEvents
 {
-    internal partial class LogEvents
-    {
-        public static IDisposable SubscribeToPocketLogger(this ITestOutputHelper output) =>
-            Subscribe(
-                e => output.WriteLine(e.ToLogString()),
-                new[]
-                {
-                    typeof(LogEvents).Assembly,
-                    typeof(Startup).Assembly,
-                    typeof(CommandLine).Assembly,
-                    typeof(CSharpKernel).Assembly,
-                    typeof(FSharpKernel).Assembly,
-                });
-    }
+    public static IDisposable SubscribeToPocketLogger(this ITestOutputHelper output) =>
+        Subscribe(
+            e => output.WriteLine(e.ToLogString()),
+            new[]
+            {
+                typeof(LogEvents).Assembly,
+                typeof(Startup).Assembly,
+                typeof(CommandLine).Assembly,
+                typeof(CSharpKernel).Assembly,
+                typeof(FSharpKernel).Assembly,
+            });
 }

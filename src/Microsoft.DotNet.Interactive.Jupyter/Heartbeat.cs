@@ -9,50 +9,49 @@ using NetMQ;
 using NetMQ.Sockets;
 using Pocket;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+public class Heartbeat : IHostedService
 {
-    public class Heartbeat : IHostedService
+    private readonly string _address;
+    private readonly ResponseSocket _server;
+
+    public Heartbeat(ConnectionInformation connectionInformation)
     {
-        private readonly string _address;
-        private readonly ResponseSocket _server;
-
-        public Heartbeat(ConnectionInformation connectionInformation)
+        if (connectionInformation is null)
         {
-            if (connectionInformation is null)
-            {
-                throw new ArgumentNullException(nameof(connectionInformation));
-            }
-
-            _address = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.HBPort}";
-
-            Logger<Heartbeat>.Log.Info($"using address {nameof(_address)}", _address);
-            _server = new ResponseSocket();
+            throw new ArgumentNullException(nameof(connectionInformation));
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        _address = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.HBPort}";
+
+        Logger<Heartbeat>.Log.Info($"using address {nameof(_address)}", _address);
+        _server = new ResponseSocket();
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _server.Bind(_address);
+        Task.Run(() =>
         {
-            _server.Bind(_address);
-            Task.Run(() =>
+            using (Logger<Heartbeat>.Log.OnEnterAndExit())
             {
-                using (Logger<Heartbeat>.Log.OnEnterAndExit())
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    while (!cancellationToken.IsCancellationRequested)
-                    {
-                        var data = _server.ReceiveFrameBytes();
+                    var data = _server.ReceiveFrameBytes();
 
-                        // Echoing back whatever was received
-                        _server.TrySendFrame(data);
-                    }
+                    // Echoing back whatever was received
+                    _server.TrySendFrame(data);
                 }
-            }, cancellationToken);
+            }
+        }, cancellationToken);
 
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
+    }
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _server.Dispose();
-            return Task.CompletedTask;
-        }
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _server.Dispose();
+        return Task.CompletedTask;
     }
 }

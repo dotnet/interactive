@@ -4,17 +4,16 @@
 
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
-{
-    [JupyterMessageType(JupyterMessageContentTypes.KernelShutdownReply)]
-    public class ShutdownReply : ReplyMessage
-    {
-        [JsonPropertyName("restart")]
-        public bool Restart { get;}
+namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-        public ShutdownReply(bool restart = false)
-        {
-            Restart = restart;
-        }
+[JupyterMessageType(JupyterMessageContentTypes.KernelShutdownReply)]
+public class ShutdownReply : ReplyMessage
+{
+    [JsonPropertyName("restart")]
+    public bool Restart { get;}
+
+    public ShutdownReply(bool restart = false)
+    {
+        Restart = restart;
     }
 }

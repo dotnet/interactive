@@ -5,26 +5,25 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Recipes
-{
-    internal class BareObjectConverter : JsonConverter<object>
-    {
-        public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            throw new NotImplementedException();
-        }
+namespace Recipes;
 
-        public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+internal class BareObjectConverter : JsonConverter<object>
+{
+    public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+    {
+        if (value.GetType() == typeof(object))
         {
-            if (value.GetType() == typeof(object))
-            {
-                // empty object
-                writer.WriteRawValue("{}");
-            }
-            else
-            {
-                JsonSerializer.Serialize(writer, value, value.GetType(), options);
-            }
+            // empty object
+            writer.WriteRawValue("{}");
+        }
+        else
+        {
+            JsonSerializer.Serialize(writer, value, value.GetType(), options);
         }
     }
 }

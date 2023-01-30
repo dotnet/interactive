@@ -11,14 +11,39 @@ namespace Microsoft.DotNet.Interactive.ValueSharing;
 public class KernelValueInfo
 {
     private readonly IReadOnlyCollection<string> _preferredMimeTypes;
+    private string _typeName;
 
-    public KernelValueInfo(string name, Type type = null)
+    public KernelValueInfo(string name, FormattedValue formattedValue, Type type = null, string typeName = null)
     {
         Name = name;
         Type = type;
+        TypeName = typeName;
+        FormattedValue = formattedValue;
     }
 
+    /// <summary>
+    /// The type name of the value, as appropriate to the source kernel.
+    /// </summary>
+    public string TypeName
+    {
+        get
+        {
+            if (_typeName is null && Type is not null)
+            {
+                _typeName = Type.ToDisplayString(PlainTextSummaryFormatter.MimeType);
+            }
+
+            return _typeName;
+        }
+        set => _typeName = value;
+    }
+
+    /// <summary>
+    /// The name of the value.
+    /// </summary>
     public string Name { get; }
+
+    public FormattedValue FormattedValue { get; }
 
     public IReadOnlyCollection<string> PreferredMimeTypes
     {

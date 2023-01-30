@@ -4,13 +4,12 @@
 using System;
 using System.Reflection;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+internal static class MemberAccessor
 {
-    internal static class MemberAccessor
+    public static MemberAccessor<T> CreateMemberAccessor<T>(MemberInfo memberInfo)
     {
-        public static MemberAccessor<T> CreateMemberAccessor<T>(MemberInfo memberInfo)
-        {
-            return new MemberAccessor<T>(memberInfo);
-        }
+        return new MemberAccessor<T>(memberInfo);
     }
 }

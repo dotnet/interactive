@@ -3,10 +3,9 @@
 
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public interface IKernelExtension
 {
-    public interface IKernelExtension
-    {
-        Task OnLoadAsync(Kernel kernel);
-    }
+    Task OnLoadAsync(Kernel kernel);
 }

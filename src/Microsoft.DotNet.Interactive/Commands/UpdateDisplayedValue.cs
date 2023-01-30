@@ -5,36 +5,35 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive.Commands
+namespace Microsoft.DotNet.Interactive.Commands;
+
+public class UpdateDisplayedValue : KernelCommand
 {
-    public class UpdateDisplayedValue : KernelCommand
+    public UpdateDisplayedValue(FormattedValue formattedValue, string valueId)
     {
-        public UpdateDisplayedValue(FormattedValue formattedValue, string valueId)
+        if (string.IsNullOrWhiteSpace(valueId))
         {
-            if (string.IsNullOrWhiteSpace(valueId))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(valueId));
-            }
-
-            FormattedValue = formattedValue;
-            ValueId = valueId;
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(valueId));
         }
 
-        public FormattedValue FormattedValue { get; }
+        FormattedValue = formattedValue;
+        ValueId = valueId;
+    }
+
+    public FormattedValue FormattedValue { get; }
         
-        public string ValueId { get; }
+    public string ValueId { get; }
 
-        public override Task InvokeAsync(KernelInvocationContext context)
-        {
-            context.Publish(
-                new DisplayedValueUpdated(
-                    null,
-                    valueId: ValueId,
-                    command: this,
-                    formattedValues: new[] { FormattedValue }
-                ));
+    public override Task InvokeAsync(KernelInvocationContext context)
+    {
+        context.Publish(
+            new DisplayedValueUpdated(
+                null,
+                valueId: ValueId,
+                command: this,
+                formattedValues: new[] { FormattedValue }
+            ));
 
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

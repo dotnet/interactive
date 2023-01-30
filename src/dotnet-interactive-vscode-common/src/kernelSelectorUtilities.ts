@@ -13,7 +13,13 @@ export interface KernelSelectorOption {
 }
 
 export function getKernelInfoDisplayValue(kernelInfo: contracts.KernelInfo): string {
-    return `${kernelInfo.localName} - ${kernelInfo.displayName}`;
+    const localName = kernelInfo.localName;
+    const displayName = kernelInfo.displayName;
+    if (localName === displayName) {
+        return localName;
+    } else {
+        return `${kernelInfo.localName} - ${kernelInfo.displayName}`;
+    }
 }
 
 export function getKernelSelectorOptions(kernel: CompositeKernel, document: vscodeLike.NotebookDocument, requiredSupportedCommandType: contracts.KernelCommandType): KernelSelectorOption[] {
@@ -41,8 +47,11 @@ export function getKernelSelectorOptions(kernel: CompositeKernel, document: vsco
         kernelInfos.set(childKernel.name, childKernel.kernelInfo);
     }
 
+    // ...order by kernel name...
+    const orderedKernels = [...kernelInfos.values()].sort((a, b) => a.localName.localeCompare(b.localName));
+
     // ...filter to only kernels that can handle `requiredSupportedCommandType`...
-    const filteredKernels = [...kernelInfos.values()].filter(k => k.supportedKernelCommands.findIndex(kci => kci.name === requiredSupportedCommandType) >= 0);
+    const filteredKernels = orderedKernels.filter(k => k.supportedKernelCommands.findIndex(kci => kci.name === requiredSupportedCommandType) >= 0);
 
     // ...and pull out just the information necessary
     const selectorOptions: KernelSelectorOption[] = filteredKernels.map(kernelInfo => {

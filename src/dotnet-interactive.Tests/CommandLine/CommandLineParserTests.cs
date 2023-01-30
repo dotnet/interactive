@@ -349,6 +349,8 @@ public class CommandLineParserTests : IDisposable
             .Be(new Uri("kernel://some-kernel-name"));
     }
 
+ 
+
     [Fact]
     public void stdio_command_working_dir_defaults_to_process_current()
     {

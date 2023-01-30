@@ -8,44 +8,48 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+/// <remarks>This kernel is used as a placeholder for the MSSQL kernel in order to enable SQL language coloring in the editor. Language grammars can only be defined for fixed kernel names, but MSSQL subkernels are user-defined via the #!connect magic command. So, this kernel is specified in addition to the user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability for SQL features.</remarks>
+public class SqlDiscoverabilityKernel :
+    Kernel,
+    IKernelCommandHandler<SubmitCode>
 {
-    /// <remarks>This kernel is used as a placeholder for the MSSQL kernel in order to enable SQL language coloring in the editor. Language grammars can only be defined for fixed kernel names, but MSSQL subkernels are user-defined via the #!connect magic command. So, this kernel is specified in addition to the user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability for SQL features.</remarks>
-    public class SqlDiscoverabilityKernel :
-        Kernel,
-        IKernelCommandHandler<SubmitCode>
+    private readonly HashSet<string> _kernelNameFilter;
+    public const string DefaultKernelName = "sql";
+
+    public SqlDiscoverabilityKernel() : base(DefaultKernelName)
     {
-        private readonly HashSet<string> _kernelNameFilter;
-        public const string DefaultKernelName = "sql";
-
-        public SqlDiscoverabilityKernel() : base(DefaultKernelName)
+        _kernelNameFilter = new HashSet<string>
         {
-            _kernelNameFilter = new HashSet<string>
-            {
-                "MsSqlKernel",
-                "SQLiteKernel"
-            };
-            KernelInfo.LanguageName = "SQL";
-            KernelInfo.DisplayName = "SQL";
-        }
+            "MsSqlKernel",
+            "SQLiteKernel"
+        };
+        KernelInfo.LanguageName = "SQL";
+        KernelInfo.DisplayName = "SQL";
+    }
 
-        Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
+    Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
+    {
+        var root = (Kernel)ParentKernel ?? this;
+
+        var connectedSqlKernelNames = new HashSet<string>();
+
+        root.VisitSubkernels(childKernel =>
         {
-            var root = (Kernel)ParentKernel ?? this;
-
-            var connectedSqlKernelNames = new HashSet<string>();
-
-            root.VisitSubkernels(childKernel =>
+            if (_kernelNameFilter.Contains(childKernel.GetType().Name))
             {
-                if (_kernelNameFilter.Contains(childKernel.GetType().Name))
-                {
-                    connectedSqlKernelNames.Add(childKernel.Name);
-                }
-            });
+                connectedSqlKernelNames.Add(childKernel.Name);
+            }
+        });
 
-            if (connectedSqlKernelNames.Count == 0)
-            {
-                context.Display(HTML(@"
+        var codeSample = !string.IsNullOrWhiteSpace(command.Code)
+            ? command.Code
+            : "SELECT TOP * FROM ...";
+
+        if (connectedSqlKernelNames.Count == 0)
+        {
+            context.Display(HTML($@"
 <p>A SQL connection has not been established.</p>
 <p>To connect to a database, first add the SQL extension package by running the following in a C# cell:</p>
 <code>
@@ -62,26 +66,31 @@ Now, you can connect to a Microsoft SQL Server database by running the following
 <p>Once a connection is established, you can send SQL statements by prefixing them with the magic command for your connection.</p>
 <code>
     <pre>
-    #!sql-mydatabase
-    SELECT * FROM MyDatabase.MyTable
+#!sql-mydatabase
+{codeSample}
     </pre>
 </code>
 "), "text/html");
-            }
-            else
-            {
-                PocketView view =
-                    div(
-                        p("You can send SQL statements to one of the following connected SQL kernels:"),
-                        connectedSqlKernelNames.Select(
-                            name =>
-                                code(
-                                    pre($"    #!{name}\n    SELECT TOP * FROM ..."))));
-
-                context.Display(view);
-            }
-
-            return Task.CompletedTask;
         }
+        else
+        {
+
+            PocketView view =
+                div(
+                    p("You can send SQL statements to one of the following connected SQL kernels:"),
+                    connectedSqlKernelNames.Select(
+                        name =>
+                            code(
+                                pre($"#!{name}\n{codeSample}"))));
+
+            context.Display(view);
+        }
+        
+        if (!string.IsNullOrWhiteSpace(command.Code))
+        {
+            context.Fail(command, message: "SQL statements cannot be executed in this kernel.");
+        }
+        
+        return Task.CompletedTask;
     }
 }

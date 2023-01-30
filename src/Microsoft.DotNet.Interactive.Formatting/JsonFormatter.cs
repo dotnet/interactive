@@ -6,30 +6,42 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public static class JsonFormatter
 {
-    public static class JsonFormatter
+    public const string MimeType = "application/json";
+
+    static JsonFormatter()
     {
-        static JsonFormatter()
+        SerializerOptions = new JsonSerializerOptions
         {
-            SerializerOptions = new JsonSerializerOptions
+            WriteIndented = false,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters =
             {
-                WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-        }
-
-        public static ITypeFormatter GetPreferredFormatterFor(Type type)
-        {
-            return Formatter.GetPreferredFormatterFor(type, MimeType);
-        }
-
-        public const string MimeType = "application/json";
-
-        internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultJsonFormatterSet.DefaultFormatters;
-
-        public static JsonSerializerOptions SerializerOptions { get; }
+                new DataDictionaryConverter()
+            }
+        };
     }
+
+    public static ITypeFormatter GetPreferredFormatterFor(Type type)
+    {
+        return Formatter.GetPreferredFormatterFor(type, MimeType);
+    }
+
+    internal static ITypeFormatter[] DefaultFormatters { get; } =
+    {
+        new JsonFormatter<string>((s, context) =>
+        {
+            var data = JsonSerializer.Serialize(s, SerializerOptions);
+            context.Writer.Write(data);
+            return true;
+        }),
+        new JsonFormatter<object>()
+    };
+
+    public static JsonSerializerOptions SerializerOptions { get; }
 }

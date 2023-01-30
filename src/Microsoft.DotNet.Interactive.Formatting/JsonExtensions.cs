@@ -6,53 +6,75 @@ using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting;
+
+public static class JsonExtensions
 {
-    public static class JsonExtensions
+    public static TabularDataResource ToTabularDataResource(this JsonDocument document)
     {
-        public static TabularDataResource ToTabularDataResource(this JsonDocument document)
+        return document.RootElement.ToTabularDataResource();
+    }
+
+    public static TabularDataResource ToTabularDataResource(this JsonElement jsonElement)
+    {
+        if (jsonElement.ValueKind != JsonValueKind.Array)
         {
-            return document.RootElement.ToTabularDataResource();
+            throw new InvalidOperationException("input must be a valid array of object");
         }
 
-        public static TabularDataResource ToTabularDataResource(this JsonElement jsonElement)
+        var rows = new List<IEnumerable<KeyValuePair<string, object>>>();
+
+        foreach (var element in jsonElement.EnumerateArray())
         {
-            if (jsonElement.ValueKind != JsonValueKind.Array)
+            if (element.ValueKind == JsonValueKind.Object)
             {
-                throw new InvalidOperationException("input must be a valid array of object");
-            }
+                var row = new List<KeyValuePair<string, object>>();
 
-            var dictionaries = new List<Dictionary<string, object>>();
-
-            foreach (var element in jsonElement.EnumerateArray())
-            {
-                if (element.ValueKind == JsonValueKind.Object)
+                foreach (var property in element.EnumerateObject())
                 {
-                    var dict = new Dictionary<string, object>();
-
-                    foreach (var property in element.EnumerateObject())
-                    {
-                        dict.Add(
-                            property.Name,
-                            property.Value.ValueKind switch
-                            {
-                                JsonValueKind.String => property.Value.GetString(),
-                                JsonValueKind.Number => property.Value.GetSingle(),
-                                JsonValueKind.True => true,
-                                JsonValueKind.False => false,
-                                JsonValueKind.Null => null,
-                                JsonValueKind.Undefined => property.Value,
-                                JsonValueKind.Object => property.Value,
-                                JsonValueKind.Array => property.Value,
-                                _ => throw new ArgumentOutOfRangeException()
-                            });
-                    }
-
-                    dictionaries.Add(dict);
+                    row.Add(new KeyValuePair<string, object>(                  
+                        property.Name,
+                        property.Value.ValueKind switch
+                        {
+                            JsonValueKind.String => property.Value.GetString(),
+                            JsonValueKind.Number => GetNumber(property.Value),
+                            JsonValueKind.True => true,
+                            JsonValueKind.False => false,
+                            JsonValueKind.Null => null,
+                            JsonValueKind.Undefined => property.Value,
+                            JsonValueKind.Object => property.Value,
+                            JsonValueKind.Array => property.Value,
+                            _ => throw new ArgumentOutOfRangeException()
+                        }));
                 }
+
+                rows.Add(row);
+            }
+        }
+
+        return rows.ToTabularDataResource();
+
+        static object GetNumber(JsonElement propertyValue)
+        {
+
+            if (propertyValue.TryGetInt32(out var integer))
+            {
+                return integer;
             }
 
-            return dictionaries.ToTabularDataResource();
+            if (propertyValue.TryGetInt64(out var longInt))
+            {
+                return longInt;
+            }
+
+            if (propertyValue.TryGetDouble(out var doublePrecision))
+            {
+                return doublePrecision;
+            }
+
+            return propertyValue.GetDecimal();
         }
     }
+
+    
 }

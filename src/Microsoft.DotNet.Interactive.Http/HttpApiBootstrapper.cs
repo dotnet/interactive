@@ -6,15 +6,15 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.AspNetCore.Html;
 
-namespace Microsoft.DotNet.Interactive.Http
+namespace Microsoft.DotNet.Interactive.Http;
+
+internal static class HttpApiBootstrapper
 {
-    internal static class HttpApiBootstrapper
+    public static IHtmlContent GetHtmlInjection(Uri[] probingUris, string seed)
     {
-        public static IHtmlContent GetHtmlInjection(Uri[] probingUris, string seed)
-        {
-            var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
-            var template = 
-                $@"
+        var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
+        var template = 
+            $@"
 <div>
     <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
         The below script needs to be able to find the current output cell; this is an easy method to get it.
@@ -106,11 +106,10 @@ function loadDotnetInteractiveApi() {{
     </script>
 </div>";
             
-            var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
-            var html =  template
-                .Replace("$ADDRESSES$", jsProbingUris)
-                .Replace("$CACHE_BUSTER$", apiCacheBuster);
-            return new HtmlString(html);
-        }
+        var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
+        var html =  template
+            .Replace("$ADDRESSES$", jsProbingUris)
+            .Replace("$CACHE_BUSTER$", apiCacheBuster);
+        return new HtmlString(html);
     }
 }

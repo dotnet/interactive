@@ -10,6 +10,7 @@ using System.Runtime.Loader;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.PackageDirectoryExtensionLoader>;
 
@@ -156,7 +157,7 @@ internal class PackageDirectoryExtensionLoader : IKernelExtensionLoader
 
             context.Display(logMessage);
 
-            var scriptContents = await File.ReadAllTextAsync(extensionFile.FullName, Encoding.UTF8);
+            var scriptContents = await IOExtensions.ReadAllTextAsync(extensionFile.FullName, Encoding.UTF8);
 
             await kernel.SubmitCodeAsync(scriptContents);
         }

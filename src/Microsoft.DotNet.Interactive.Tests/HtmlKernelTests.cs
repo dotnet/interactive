@@ -9,38 +9,37 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests;
+
+public class HtmlKernelTests
 {
-    public class HtmlKernelTests
+    [Fact]
+    public async Task html_emits_string_as_content_within_a_script_element()
     {
-        [Fact]
-        public async Task html_emits_string_as_content_within_a_script_element()
+        using var kernel = new CompositeKernel
         {
-            using var kernel = new CompositeKernel
-            {
-                new HtmlKernel()
-            };
+            new HtmlKernel()
+        };
 
-            var html = "<b>hello!</b>";
+        var html = "<b>hello!</b>";
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
+        using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SendAsync(new SubmitCode($"#!html\n\n{html}"));
+        await kernel.SendAsync(new SubmitCode($"#!html\n\n{html}"));
 
-            var formatted =
-                events
-                    .OfType<DisplayedValueProduced>()
-                    .SelectMany(v => v.FormattedValues)
-                    .ToArray();
+        var formatted =
+            events
+                .OfType<DisplayedValueProduced>()
+                .SelectMany(v => v.FormattedValues)
+                .ToArray();
 
-            formatted
-                .Should()
-                .ContainSingle(v => v.MimeType == "text/html")
-                .Which
-                .Value
-                .Trim()
-                .Should()
-                .Be(html);
-        }
+        formatted
+            .Should()
+            .ContainSingle(v => v.MimeType == "text/html")
+            .Which
+            .Value
+            .Trim()
+            .Should()
+            .Be(html);
     }
 }

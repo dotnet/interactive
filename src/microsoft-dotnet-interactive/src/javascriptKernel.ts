@@ -5,6 +5,7 @@ import * as contracts from "./contracts";
 import { ConsoleCapture } from "./consoleCapture";
 import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
+import { TruthyTypesOf } from "rxjs";
 
 export class JavascriptKernel extends Kernel {
     private suppressedLocals: Set<string>;
@@ -12,6 +13,7 @@ export class JavascriptKernel extends Kernel {
 
     constructor(name?: string) {
         super(name ?? "javascript", "JavaScript");
+        this.kernelInfo.displayName = 'JavaScript';
         this.suppressedLocals = new Set<string>(this.allLocalVariableNames());
         this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
         this.registerCommandHandler({ commandType: contracts.RequestValueInfosType, handle: invocation => this.handleRequestValueInfos(invocation) });
@@ -68,7 +70,14 @@ export class JavascriptKernel extends Kernel {
     }
 
     private handleRequestValueInfos(invocation: IKernelCommandInvocation): Promise<void> {
-        const valueInfos: contracts.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => ({ name: v, preferredMimeTypes: [] }));
+        const valueInfos: contracts.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => (
+            {
+                name: v,
+                typeName: getType(this.getLocalVariable(v)),
+                formattedValue: formatValue(this.getLocalVariable(v), "text/plain"),
+                preferredMimeTypes: []
+            }));
+
         const event: contracts.ValueInfosProduced = {
             valueInfos
         };
@@ -119,6 +128,9 @@ export function formatValue(arg: any, mimeType: string): contracts.FormattedValu
     switch (mimeType) {
         case 'text/plain':
             value = arg?.toString() || 'undefined';
+            if (Array.isArray(arg)) {
+                value = `[${value}]`;
+            }
             break;
         case 'application/json':
             value = JSON.stringify(arg);
@@ -131,4 +143,14 @@ export function formatValue(arg: any, mimeType: string): contracts.FormattedValu
         mimeType,
         value,
     };
+}
+
+export function getType(arg: any): string {
+    let type: string = arg ? typeof (arg) : "";//?
+
+    if (Array.isArray(arg)) {
+        type = `${typeof (arg[0])}[]`;//?
+    }
+
+    return type; //?
 }

@@ -20,13 +20,13 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { languageToCellKind } from './interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 
-import { createOutput, debounce, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionSufficient, processArguments } from './utilities';
+import { createOutput, debounce, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionGreaterOrEqual, processArguments } from './utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 import * as notebookControllers from '../notebookControllers';
 import * as notebookSerializers from '../notebookSerializers';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
-import { ErrorOutputCreator } from './interactiveClient';
+import { ErrorOutputCreator, InteractiveClient } from './interactiveClient';
 
 import * as vscodeUtilities from './vscodeUtilities';
 import fetch from 'node-fetch';
@@ -37,9 +37,9 @@ import { NotebookParserServer } from './notebookParserServer';
 import { registerVariableExplorer } from './variableExplorer';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 import { ActiveNotebookTracker } from './activeNotebookTracker';
-import { onKernelInfoUpdates } from './dotnet-interactive';
 import * as metadataUtilities from './metadataUtilities';
 import * as constants from './constants';
+import { ServiceCollection } from './serviceCollection';
 
 export class CachedDotNetPathManager {
     private dotNetPath: string = 'dotnet'; // default to global tool if possible
@@ -88,13 +88,13 @@ export async function activate(context: vscode.ExtensionContext) {
     await waitForSdkPackExtension();
 
     // this must happen early, because some following functions use the acquisition command
-    registerAcquisitionCommands(context, diagnosticsChannel);
+    await registerAcquisitionCommands(context, diagnosticsChannel);
 
     // check sdk version
     let showHelpPage = false;
     try {
         const dotnetVersion = await getDotNetVersionOrThrow(DotNetPathManager.getDotNetPath(), diagnosticsChannel);
-        if (!isVersionSufficient(dotnetVersion, minDotNetSdkVersion)) {
+        if (!isVersionGreaterOrEqual(dotnetVersion, minDotNetSdkVersion)) {
             showHelpPage = true;
             const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The minimum required version is ${minDotNetSdkVersion}.`;
             diagnosticsChannel.appendLine(message);
@@ -192,30 +192,40 @@ export async function activate(context: vscode.ExtensionContext) {
                 const addCell = <contracts.SendEditableCode>commandInvocation.commandEnvelope.command;
                 const kernelName = addCell.kernelName;
                 const contents = addCell.code;
-                const kernel = compositeKernel.findKernelByName(kernelName);
                 const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === notebookUri.toString());
-                if (kernel && notebookDocument) {
-                    const language = tokensProvider.dynamicTokenProvider.getLanguageNameFromKernelNameOrAlias(notebookDocument, kernel.kernelInfo.localName);
-                    const range = new vscode.NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount);
-                    const cellKind = languageToCellKind(language);
-                    const cellLanguage = cellKind === vscode.NotebookCellKind.Code ? constants.CellLanguageIdentifier : 'markdown';
-                    const newCell = new vscode.NotebookCellData(cellKind, contents, cellLanguage);
-                    const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {
-                        kernelName
-                    };
-                    const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
-                    newCell.metadata = rawCellMetadata;
-                    const succeeded = await versionSpecificFunctions.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
-                    if (!succeeded) {
-                        throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);
-                    }
 
-                    // when new cells are added, the previous cell's kernel name is copied forward, but in this case we want to force it back
-                    const addedCell = notebookDocument.cellAt(notebookDocument.cellCount - 1); // the newly added cell is always the last one
-                    await vscodeUtilities.setCellKernelName(addedCell, kernelName);
-                } else {
+                if (!notebookDocument) {
                     throw new Error(`Unable to get notebook document for URI '${notebookUri.toString()}'.`);
                 }
+                const range = new vscode.NotebookRange(notebookDocument!.cellCount, notebookDocument!.cellCount);
+                const kernel = compositeKernel.findKernelByName(kernelName);
+                let newCell: vscode.NotebookCellData;
+                if (kernelName.toLowerCase() === 'markdown') {
+                    newCell = new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, contents, kernelName);
+
+                } else if (kernel) {
+                    const language = tokensProvider.dynamicTokenProvider.getLanguageNameFromKernelNameOrAlias(notebookDocument, kernel.kernelInfo.localName);
+                    const cellKind = languageToCellKind(language);
+                    const cellLanguage = cellKind === vscode.NotebookCellKind.Code ? constants.CellLanguageIdentifier : 'markdown';
+                    newCell = new vscode.NotebookCellData(cellKind, contents, cellLanguage);
+
+                } else {
+                    throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}', kernel ${kernelName} is not found.`);
+                }
+                const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {
+                    kernelName
+                };
+                const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
+                newCell.metadata = rawCellMetadata;
+                const succeeded = await versionSpecificFunctions.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
+
+                if (!succeeded) {
+                    throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);
+                }
+
+                // when new cells are added, the previous cell's kernel name is copied forward, but in this case we want to force it back
+                const addedCell = notebookDocument.cellAt(notebookDocument.cellCount - 1); // the newly added cell is always the last one
+                await vscodeUtilities.setCellKernelName(addedCell, kernelName);
             }
         });
     }
@@ -230,6 +240,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const clientMapper = new ClientMapper(clientMapperConfig);
     registerKernelCommands(context, clientMapper);
     registerVariableExplorer(context, clientMapper);
+
+    ServiceCollection.initialize(context, clientMapper, tokensProvider.dynamicTokenProvider);
+    context.subscriptions.push(new ActiveNotebookTracker(clientMapper));
 
     const hostVersionSuffix = vscodeUtilities.isInsidersBuild() ? 'Insiders' : 'Stable';
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
@@ -253,23 +266,23 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
     context.subscriptions.push(serializerLineAdapter);
-    context.subscriptions.push(new ActiveNotebookTracker(context, clientMapper));
 
     // rebuild notebook grammar
-    const compositeKernelToNotebookUri: Map<CompositeKernel, vscodeLike.Uri> = new Map();
-    clientMapper.onClientCreate((uri, client) => {
-        compositeKernelToNotebookUri.set(client.kernel, uri);
-    });
-    onKernelInfoUpdates.push((compositeKernel) => {
-        const notebookUri = compositeKernelToNotebookUri.get(compositeKernel);
-        if (notebookUri) {
-            const kernelInfos = compositeKernel.childKernels.map(k => k.kernelInfo);
-            tokensProvider.dynamicTokenProvider.rebuildNotebookGrammar(notebookUri, kernelInfos);
-            debounce('refresh-tokens-after-grammar-update', 500, () => {
-                tokensProvider.refresh();
-            });
+    context.subscriptions.push(ServiceCollection.Instance.KernelInfoUpdaterService.onKernelInfoUpdated((notebook: vscode.NotebookDocument, client: InteractiveClient) => {
+        const kernelInfos = client.kernel.childKernels.map(k => k.kernelInfo);
+        tokensProvider.dynamicTokenProvider.rebuildNotebookGrammar(notebook.uri, kernelInfos);
+        debounce('refresh-tokens-after-grammar-update', 500, () => {
+            tokensProvider.refresh();
+        });
+    }));
+
+    // ensure appropriate language configuration
+    context.subscriptions.push(ServiceCollection.Instance.KernelInfoUpdaterService.onKernelInfoUpdated((notebook: vscode.NotebookDocument, client: InteractiveClient) => {
+        const activeTextEditor = vscode.window.activeTextEditor;
+        if (activeTextEditor) {
+            ServiceCollection.Instance.LanguageConfigurationManager.ensureLanguageConfigurationForDocument(activeTextEditor.document);
         }
-    });
+    }));
 
     // build initial notebook grammar
     context.subscriptions.push(vscode.workspace.onDidOpenNotebookDocument(async notebook => {
@@ -325,7 +338,7 @@ function getPreloads(extensionPath: string): vscode.Uri[] {
     const preloads: vscode.Uri[] = [];
     const errors: string[] = [];
     const apiFiles: string[] = [
-        'kernelApiBootstrapper.js'
+        'activation.js'
     ];
 
     for (const apiFile of apiFiles) {
@@ -389,7 +402,6 @@ async function openNotebookFromUrl(notebookUrl: string, notebookFormat: string |
             let extension = path.extname(resolvedUri.path);
             switch (extension) {
                 case '.dib':
-                case '.dotnet-interactive':
                     notebookFormat = 'dib';
                     break;
                 case '.ipynb':

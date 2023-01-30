@@ -6,25 +6,24 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
 
-namespace Microsoft.DotNet.Interactive.Jupyter.Messaging
-{
-    internal static class MessageFormatter
-    {
-        static MessageFormatter()
-        {
-            SerializerOptions = new JsonSerializerOptions(JsonFormatter.SerializerOptions)
-            {
-                WriteIndented = true,
-                NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                ReferenceHandler = null,
-                Converters =
-                {
-                    new MessageConverter()
-                }
-            };
-        }
+namespace Microsoft.DotNet.Interactive.Jupyter.Messaging;
 
-        public static JsonSerializerOptions SerializerOptions { get; }
+internal static class MessageFormatter
+{
+    static MessageFormatter()
+    {
+        SerializerOptions = new JsonSerializerOptions(JsonFormatter.SerializerOptions)
+        {
+            WriteIndented = true,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            ReferenceHandler = null,
+            Converters =
+            {
+                new MessageConverter()
+            }
+        };
     }
+
+    public static JsonSerializerOptions SerializerOptions { get; }
 }

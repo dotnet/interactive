@@ -4,9 +4,8 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive
-{
-    public delegate Task KernelCommandInvocation(
-        KernelCommand command,
-        KernelInvocationContext context);
-}
+namespace Microsoft.DotNet.Interactive;
+
+public delegate Task KernelCommandInvocation(
+    KernelCommand command,
+    KernelInvocationContext context);

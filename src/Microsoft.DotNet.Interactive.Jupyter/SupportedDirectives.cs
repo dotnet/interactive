@@ -4,18 +4,17 @@
 using System.Collections.Generic;
 using System.CommandLine;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+public class SupportedDirectives
 {
-    public class SupportedDirectives
+    public SupportedDirectives(string kernelName, IReadOnlyList<Command> commands)
     {
-        public SupportedDirectives(string kernelName, IReadOnlyList<Command> commands)
-        {
-            KernelName = kernelName;
-            Commands = commands;
-        }
-
-        public string KernelName { get; }
-
-        public IReadOnlyList<Command> Commands { get; } = new List<Command>();
+        KernelName = kernelName;
+        Commands = commands;
     }
+
+    public string KernelName { get; }
+
+    public IReadOnlyList<Command> Commands { get; } = new List<Command>();
 }

@@ -6,46 +6,45 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+internal class KernelValuesFormatter : HtmlFormatter<KernelValues>
 {
-    internal class KernelValuesFormatter : HtmlFormatter<KernelValues>
+    public KernelValuesFormatter() : base(FormatKernelValues)
     {
-        public KernelValuesFormatter() : base(FormatKernelValues)
+    }
+
+    private static bool FormatKernelValues(
+        KernelValues instance, 
+        FormatContext context)
+    {
+        PocketView output = null;
+
+        context.RequireDefaultStyles();
+
+        if (instance.Detailed)
         {
-        }
-
-        private static bool FormatKernelValues(
-            KernelValues instance, 
-            FormatContext context)
-        {
-            PocketView output = null;
-
-            context.RequireDefaultStyles();
-
-            if (instance.Detailed)
-            {
-                output = table(
-                    thead(
+            output = table(
+                thead(
+                    tr(
+                        th("Variable"),
+                        th("Type"),
+                        th("Value"))),
+                tbody(
+                    instance.Select(v =>
                         tr(
-                            th("Variable"),
-                            th("Type"),
-                            th("Value"))),
-                    tbody(
-                        instance.Select(v =>
-                                            tr(
-                                                td(v.Name),
-                                                td(v.Type),
-                                                td(div[@class: "dni-plaintext"](pre(v.Value.ToDisplayString())))
-                                            ))));
-            }
-            else
-            {
-                output = div(instance.Select(v => v.Name + "\t "));
-            }
-
-            output.WriteTo(context);
-
-            return true;
+                            td(v.Name),
+                            td(v.Type),
+                            td(div[@class: "dni-plaintext"](pre(v.Value.ToDisplayString())))
+                        ))));
         }
+        else
+        {
+            output = div(instance.Select(v => v.Name + "\t "));
+        }
+
+        output.WriteTo(context);
+
+        return true;
     }
 }

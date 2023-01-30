@@ -4,45 +4,44 @@
 using System;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject
+namespace Microsoft.DotNet.Interactive.CSharpProject;
+
+public class WorkspaceRequest
 {
-    public class WorkspaceRequest
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public string RequestId { get; }
+
+    public string RunArgs { get; }
+
+    public Workspace Workspace { get; }
+
+    public BufferId ActiveBufferId { get; }
+
+    public WorkspaceRequest(
+        Workspace workspace,
+        BufferId activeBufferId = null,
+        int? position = null,
+        string requestId = null,
+        string runArgs = "")
     {
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string RequestId { get; }
+        Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
 
-        public string RunArgs { get; }
+        RequestId = requestId;
+        RunArgs = runArgs;
 
-        public Workspace Workspace { get; }
-
-        public BufferId ActiveBufferId { get; }
-
-        public WorkspaceRequest(
-            Workspace workspace,
-            BufferId activeBufferId = null,
-            int? position = null,
-            string requestId = null,
-            string runArgs = "")
+        if (activeBufferId != null)
         {
-            Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
+            ActiveBufferId = activeBufferId;
+        }
+        else if (workspace.Buffers.Length == 1)
+        {
+            ActiveBufferId = workspace.Buffers[0].Id;
+        }
 
-            RequestId = requestId;
-            RunArgs = runArgs;
-
-            if (activeBufferId != null)
-            {
-                ActiveBufferId = activeBufferId;
-            }
-            else if (workspace.Buffers.Length == 1)
-            {
-                ActiveBufferId = workspace.Buffers[0].Id;
-            }
-
-            if (position != null)
-            {
-                var buffer = Workspace.GetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne(ActiveBufferId);
-                buffer.Position = position.Value;
-            }
+        if (position != null)
+        {
+            var buffer = Workspace.GetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne(ActiveBufferId);
+            buffer.Position = position.Value;
         }
     }
 }

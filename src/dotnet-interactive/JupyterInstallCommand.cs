@@ -11,89 +11,87 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.App
+namespace Microsoft.DotNet.Interactive.App;
+
+public class JupyterInstallCommand
 {
-
-    public class JupyterInstallCommand
+    private readonly IConsole _console;
+    private readonly IJupyterKernelSpecInstaller _jupyterKernelSpecInstaller;
+    private readonly HttpPortRange _httpPortRange;
+    private readonly DirectoryInfo _path;
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web)
     {
-        private readonly IConsole _console;
-        private readonly IJupyterKernelSpecInstaller _jupyterKernelSpecInstaller;
-        private readonly HttpPortRange _httpPortRange;
-        private readonly DirectoryInfo _path;
-        private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web)
-        {
-            WriteIndented = true
-        };
+        WriteIndented = true
+    };
 
-        public JupyterInstallCommand(IConsole console, IJupyterKernelSpecInstaller jupyterKernelSpecInstaller, HttpPortRange httpPortRange = null, DirectoryInfo path = null)
-        {
-            _console = console;
-            _jupyterKernelSpecInstaller = jupyterKernelSpecInstaller;
-            _httpPortRange = httpPortRange;
-            _path = path;
-        }
+    public JupyterInstallCommand(IConsole console, IJupyterKernelSpecInstaller jupyterKernelSpecInstaller, HttpPortRange httpPortRange = null, DirectoryInfo path = null)
+    {
+        _console = console;
+        _jupyterKernelSpecInstaller = jupyterKernelSpecInstaller;
+        _httpPortRange = httpPortRange;
+        _path = path;
+    }
 
-        public async Task<int> InvokeAsync()
+    public async Task<int> InvokeAsync()
+    {
+        var errorCount = 0;
+        using (var disposableDirectory = DisposableDirectory.Create())
         {
-            var errorCount = 0;
-            using (var disposableDirectory = DisposableDirectory.Create())
+            var assembly = typeof(Program).Assembly;
+
+            using (var resourceStream = assembly.GetManifestResourceStream("dotnetKernel.zip"))
             {
-                var assembly = typeof(Program).Assembly;
+                var zipPath = Path.Combine(disposableDirectory.Directory.FullName, "dotnetKernel.zip");
 
-                using (var resourceStream = assembly.GetManifestResourceStream("dotnetKernel.zip"))
+                using (var fileStream = new FileStream(zipPath, FileMode.Create, FileAccess.Write))
                 {
-                    var zipPath = Path.Combine(disposableDirectory.Directory.FullName, "dotnetKernel.zip");
+                    resourceStream.CopyTo(fileStream);
+                }
 
-                    using (var fileStream = new FileStream(zipPath, FileMode.Create, FileAccess.Write))
-                    {
-                        resourceStream.CopyTo(fileStream);
-                    }
+                var dotnetDirectory = disposableDirectory.Directory;
+                ZipFile.ExtractToDirectory(zipPath, dotnetDirectory.FullName);
 
-                    var dotnetDirectory = disposableDirectory.Directory;
-                    ZipFile.ExtractToDirectory(zipPath, dotnetDirectory.FullName);
-
-                    if (_httpPortRange is not null)
-                    {
-                        ComputeKernelSpecArgs(_httpPortRange, dotnetDirectory);
-                    }
+                if (_httpPortRange is not null)
+                {
+                    ComputeKernelSpecArgs(_httpPortRange, dotnetDirectory);
+                }
                    
 
-                    foreach (var kernelSpecSourcePath in dotnetDirectory.GetDirectories())
-                    {
-                        var succeeded = await _jupyterKernelSpecInstaller.TryInstallKernelAsync(kernelSpecSourcePath, _path);
+                foreach (var kernelSpecSourcePath in dotnetDirectory.GetDirectories())
+                {
+                    var succeeded = await _jupyterKernelSpecInstaller.TryInstallKernelAsync(kernelSpecSourcePath, _path);
                         
-                        if (!succeeded)
-                        {
-                            errorCount++;
-                        }
-
+                    if (!succeeded)
+                    {
+                        errorCount++;
                     }
+
                 }
             }
-
-            return errorCount;
         }
+
+        return errorCount;
+    }
 
         
 
-        private static void ComputeKernelSpecArgs(HttpPortRange httpPortRange, DirectoryInfo directory)
+    private static void ComputeKernelSpecArgs(HttpPortRange httpPortRange, DirectoryInfo directory)
+    {
+        var kernelSpecs = directory.GetFiles("kernel.json", SearchOption.AllDirectories);
+
+        foreach (var kernelSpec in kernelSpecs)
         {
-            var kernelSpecs = directory.GetFiles("kernel.json", SearchOption.AllDirectories);
-
-            foreach (var kernelSpec in kernelSpecs)
-            {
-                var newKernelSpec = JsonDocument.Parse(File.ReadAllText(kernelSpec.FullName)).RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+            var newKernelSpec = JsonDocument.Parse(File.ReadAllText(kernelSpec.FullName)).RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
                 
-                var argv = newKernelSpec["argv"].EnumerateArray().Select(e => e.GetString()).ToList();
+            var argv = newKernelSpec["argv"].EnumerateArray().Select(e => e.GetString()).ToList();
 
-                argv.Add( "--http-port-range");
-                argv.Add($"{httpPortRange.Start}-{httpPortRange.End}");
+            argv.Add( "--http-port-range");
+            argv.Add($"{httpPortRange.Start}-{httpPortRange.End}");
 
-                newKernelSpec["argv"] = JsonSerializer.SerializeToElement(argv);
+            newKernelSpec["argv"] = JsonSerializer.SerializeToElement(argv);
 
-                File.WriteAllText(kernelSpec.FullName, JsonSerializer.Serialize(newKernelSpec, JsonSerializerOptions));
+            File.WriteAllText(kernelSpec.FullName, JsonSerializer.Serialize(newKernelSpec, JsonSerializerOptions));
 
-            }
         }
     }
 }

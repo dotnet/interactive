@@ -5,20 +5,19 @@ using System.IO;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive;
+
+public class ScriptContent : IHtmlContent
 {
-    public class ScriptContent : IHtmlContent
+    public string ScriptValue { get; }
+
+    public ScriptContent(string scriptValue)
     {
-        public string ScriptValue { get; }
+        ScriptValue = scriptValue;
+    }
 
-        public ScriptContent(string scriptValue)
-        {
-            ScriptValue = scriptValue;
-        }
-
-        public void WriteTo(TextWriter writer, HtmlEncoder encoder)
-        {
-            writer.Write(ScriptValue);
-        }
+    public void WriteTo(TextWriter writer, HtmlEncoder encoder)
+    {
+        writer.Write(ScriptValue);
     }
 }

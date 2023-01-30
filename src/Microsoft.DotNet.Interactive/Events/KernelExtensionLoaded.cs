@@ -5,22 +5,21 @@
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Events
+namespace Microsoft.DotNet.Interactive.Events;
+
+public class KernelExtensionLoaded : KernelEvent
 {
-    public class KernelExtensionLoaded : KernelEvent
+    [JsonIgnore]
+    public IKernelExtension KernelExtension { get; }
+
+
+    [JsonConstructor]
+    public KernelExtensionLoaded(KernelCommand command) : base(command)
     {
-        [JsonIgnore]
-        public IKernelExtension KernelExtension { get; }
+    }
+    public KernelExtensionLoaded(IKernelExtension kernelExtension, KernelCommand command) : base(command)
+    {
+        KernelExtension = kernelExtension;
 
-
-        [JsonConstructor]
-        public KernelExtensionLoaded(KernelCommand command) : base(command)
-        {
-        }
-        public KernelExtensionLoaded(IKernelExtension kernelExtension, KernelCommand command) : base(command)
-        {
-            KernelExtension = kernelExtension;
-
-        }
     }
 }

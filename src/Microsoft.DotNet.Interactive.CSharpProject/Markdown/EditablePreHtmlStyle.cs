@@ -3,20 +3,19 @@
 
 using Microsoft.AspNetCore.Html;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown
+namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
+
+internal class EditablePreHtmlStyle : HtmlStyleAttribute
 {
-    internal class EditablePreHtmlStyle : HtmlStyleAttribute
+    private readonly string _height;
+
+    public EditablePreHtmlStyle(string height)
     {
-        private readonly string _height;
+        _height = height;
+    }
 
-        public EditablePreHtmlStyle(string height)
-        {
-            _height = height;
-        }
-
-        protected override IHtmlContent StyleAttributeString()
-        {
-            return new HtmlString(  $@"style=""border:none; height:{_height}""");
-        }
+    protected override IHtmlContent StyleAttributeString()
+    {
+        return new HtmlString(  $@"style=""border:none; height:{_height}""");
     }
 }

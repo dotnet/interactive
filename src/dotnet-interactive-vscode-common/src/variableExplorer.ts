@@ -8,9 +8,10 @@ import * as contracts from './dotnet-interactive/contracts';
 import { VariableGridRow, VariableInfo } from './dotnet-interactive/webview/variableGridInterfaces';
 import * as utilities from './utilities';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
-import { DisposableSubscription } from './dotnet-interactive/disposables';
+import { Disposable } from './dotnet-interactive/disposables';
 import { isKernelEventEnvelope } from './dotnet-interactive';
 import * as kernelSelectorUtilities from './kernelSelectorUtilities';
+import * as vscodeLike from './interfaces/vscode-like';
 
 function debounce(callback: () => void) {
     utilities.debounce('variable-explorer', 500, callback);
@@ -50,24 +51,65 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
 
     const webViewProvider = new WatchWindowTableViewProvider(clientMapper, context.extensionPath);
     context.subscriptions.push(vscode.window.registerWebviewViewProvider('polyglot-notebook-panel-values', webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
-    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.clearValueExplorer', () => {
-        webViewProvider.clearRows();
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.resetValueExplorerSubscriptions', async () => {
-        await webViewProvider.refreshSubscriptions();
-    }));
 
-    vscode.window.onDidChangeActiveNotebookEditor(async _editor => {
-        // TODO: update on client process restart
-        debounce(() => webViewProvider.refresh());
+    vscode.window.onDidChangeActiveNotebookEditor(async editor => {
+        const notebookUri = editor?.notebook.uri;
+        debounce(() => webViewProvider.showNotebookVariables(notebookUri));
     });
 }
 
 class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
-    private currentNotebookSubscription: DisposableSubscription | undefined = undefined;
     private webview: vscode.Webview | undefined = undefined;
+    private clientMessageSubscriptions: Map<vscodeLike.Uri, Disposable> = new Map();
+    private notebookVariables: Map<vscodeLike.Uri, VariableGridRow[]> = new Map();
+    private completedNotebookKernels: Map<vscodeLike.Uri, Set<string>> = new Map();
 
     constructor(private readonly clientMapper: ClientMapper, private readonly extensionPath: string) {
+        // on every new notebook, track it's completion events
+        clientMapper.onClientCreate((uri, client) => {
+            const subscription = client.channel.receiver.subscribe({
+                next: (envelope) => {
+                    if (isKernelEventEnvelope(envelope)) {
+                        switch (envelope.eventType) {
+                            case contracts.CommandSucceededType:
+                            case contracts.CommandFailedType:
+                            case contracts.CommandCancelledType:
+                                if (envelope.command?.commandType === contracts.SubmitCodeType) {
+                                    const completedKernels = this.completedNotebookKernels.get(uri) ?? new Set<string>();
+                                    const kernelName = envelope.command?.command?.targetKernelName;
+                                    if (kernelName) {
+                                        completedKernels.add(kernelName);
+                                    }
+
+                                    this.completedNotebookKernels.set(uri, completedKernels);
+                                    debounce(() => {
+                                        this.refreshVariables(uri).then(() => {
+                                            this.showNotebookVariables(vscode.window.activeNotebookEditor?.notebook.uri);
+                                        });
+                                    });
+                                }
+                                break;
+                        }
+                    }
+                }
+            });
+
+            this.clientMessageSubscriptions.set(uri, {
+                dispose: () => {
+                    subscription.unsubscribe();
+                    this.completedNotebookKernels.delete(uri);
+                    this.notebookVariables.delete(uri);
+                }
+            });
+        });
+
+        // when the notebook is closed, stop tracking it's completion events
+        clientMapper.onClientDispose((uri, _client) => {
+            const disposable = this.clientMessageSubscriptions.get(uri);
+            if (disposable) {
+                disposable.dispose();
+            }
+        });
     }
 
     async resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext<unknown>, token: vscode.CancellationToken): Promise<void> {
@@ -109,7 +151,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
 
                     input {
                         background-color: var(--vscode-settings-textInputBackground);
-                        border: var(--vscode-settings-textInputBorder);
+                        border: 1px solid var(--vscode-inputValidation-infoBorder);
                         color: var(--vscode-settings-textInputForeground);
                     }
                     button {
@@ -127,10 +169,13 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                     .name-column {
                         width: 20%;
                     }
+                    .type-column {
+                        width: 15%;
+                    }
                     .value-column {
                     }
                     .kernel-column {
-                        width: 20%;
+                        width: 15%;
                     }
                     .share-column {
                         width: 10%;
@@ -166,15 +211,18 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                   </symbol>
                 </svg>
                 <script defer type="text/javascript" src="${apiFileUri.toString()}"></script>
-                <label for="filter">Filter</label>
-                <input id="filter" type="text" />
-                <button id="clear">Clear</button>
+                <div style="margin: 2px 0px 2px 0px;">
+                  <label for="filter">Filter</label>
+                  <input id="filter" type="text" />
+                </div>
                 <div id="content"></div>
             </body>
         </html>
         `;
         this.webview.html = html;
-        debounce(() => this.refresh());
+
+        const currentNotebookUri = vscode.window.activeNotebookEditor?.notebook.uri;
+        this.showNotebookVariables(currentNotebookUri);
     }
 
     private setRows(rows: VariableGridRow[]) {
@@ -183,78 +231,38 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    clearRows() {
-        this.setRows([]);
-    }
-
-    async refreshSubscriptions(): Promise<void> {
-        this.currentNotebookSubscription?.dispose();
-        this.currentNotebookSubscription = undefined;
-        if (vscode.window.activeNotebookEditor) {
-            const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
-            const client = await this.clientMapper.getOrAddClient(notebook.uri);
-
-            let sub = client.channel.receiver.subscribe({
-                next: (envelope) => {
-                    if (isKernelEventEnvelope(envelope)) {
-                        switch (envelope.eventType) {
-                            case contracts.CommandSucceededType:
-                            case contracts.CommandFailedType:
-                            case contracts.CommandCancelledType:
-                                if (envelope.command?.commandType === contracts.SubmitCodeType) {
-                                    debounce(() => this.refresh());
-                                }
-                                break;
-                        }
-                    }
-                }
-            });
-
-            this.currentNotebookSubscription = { dispose: () => sub.unsubscribe() };
+    showNotebookVariables(notebookUri: vscodeLike.Uri | undefined) {
+        let rows: VariableGridRow[] = [];
+        if (notebookUri) {
+            const cachedRows = this.notebookVariables.get(notebookUri);
+            rows = cachedRows ?? [];
         }
+
+        this.setRows(rows);
     }
 
-    async refresh(): Promise<void> {
+    async refreshVariables(uri: vscodeLike.Uri): Promise<void> {
         const rows: VariableGridRow[] = [];
-        this.currentNotebookSubscription?.dispose();
-        this.currentNotebookSubscription = undefined;
-        if (vscode.window.activeNotebookEditor) {
-            const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
-            const client = await this.clientMapper.getOrAddClient(notebook.uri);
-
-            let sub = client.channel.receiver.subscribe({
-                next: (envelope) => {
-                    if (isKernelEventEnvelope(envelope)) {
-                        switch (envelope.eventType) {
-                            case contracts.CommandSucceededType:
-                            case contracts.CommandFailedType:
-                            case contracts.CommandCancelledType:
-                                if (envelope.command?.commandType === contracts.SubmitCodeType) {
-                                    debounce(() => this.refresh());
-                                }
-                                break;
-                        }
-                    }
-                }
+        const client = await this.clientMapper.tryGetClient(uri);
+        if (client) {
+            const allKernels = Array.from(client.kernel.childKernels.filter(k => k.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.RequestValueInfosType)));
+            const kernels = allKernels.filter(kernel => {
+                return this.completedNotebookKernels.get(uri)?.has(kernel.name) ?? false;
             });
-
-            this.currentNotebookSubscription = { dispose: () => sub.unsubscribe() };
-
-            const kernels = Array.from(client.kernel.childKernels.filter(k => k.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.RequestValueInfosType)));
-
             for (const kernel of kernels) {
                 try {
                     const valueInfos = await client.requestValueInfos(kernel.name);
                     for (const valueInfo of valueInfos.valueInfos) {
                         try {
-                            const value = await client.requestValue(valueInfo.name, kernel.name);
-                            const valueName = value.name;
-                            const valueValue = value.formattedValue.value;
+                            const valueName = valueInfo.name;
+                            const valueValue = valueInfo.formattedValue.value;
+                            const typeName = valueInfo.typeName;
                             const displayName = kernelSelectorUtilities.getKernelInfoDisplayValue(kernel.kernelInfo);
                             const commandUrl = `command:polyglot-notebook.shareValueWith?${encodeURIComponent(JSON.stringify({ valueName, kernelName: kernel.name }))}`;
                             rows.push({
                                 name: valueName,
                                 value: valueValue,
+                                typeName: typeName,
                                 kernelDisplayName: displayName,
                                 kernelName: kernel.name,
                                 link: commandUrl,
@@ -271,6 +279,6 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
             }
         }
 
-        this.setRows(rows);
+        this.notebookVariables.set(uri, rows);
     }
 }

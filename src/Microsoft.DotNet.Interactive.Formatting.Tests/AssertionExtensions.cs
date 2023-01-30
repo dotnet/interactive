@@ -6,50 +6,49 @@ using FluentAssertions;
 using FluentAssertions.Primitives;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 
-namespace Microsoft.DotNet.Interactive.Formatting.Tests
+namespace Microsoft.DotNet.Interactive.Formatting.Tests;
+
+public static class AssertionExtensions
 {
-    public static class AssertionExtensions
+    public static AndWhichConstraint<StringAssertions, string> BeEquivalentHtmlTo(
+        this StringAssertions assertions,
+        string expected)
     {
-        public static AndWhichConstraint<StringAssertions, string> BeEquivalentHtmlTo(
-            this StringAssertions assertions,
-            string expected)
-        {
-            var subject = assertions.Subject;
+        var subject = assertions.Subject;
 
-            var actual = subject.IndentHtml();
+        var actual = subject.IndentHtml();
 
-            var diff = new DefaultStringComparer(true).Compare(
-                actual,
-                expected.IndentHtml()).Error;
+        var diff = new DefaultStringComparer(true).Compare(
+            actual,
+            expected.IndentHtml()).Error;
 
-            (diff ?? "")
-                .Replace("Received:", "\nActual:\n")
-                .Replace("Approved:", "\nExpected:\n")
-                .Should()
-                .BeNullOrEmpty(because: "HTML doesn't match. Unexpected output was: \n\n" + actual);
+        (diff ?? "")
+            .Replace("Received:", "\nActual:\n")
+            .Replace("Approved:", "\nExpected:\n")
+            .Should()
+            .BeNullOrEmpty(because: "HTML doesn't match. Unexpected output was: \n\n" + actual);
 
-            return new AndWhichConstraint<StringAssertions, string>(
-                subject.Should(),
-                subject);
-        }
+        return new AndWhichConstraint<StringAssertions, string>(
+            subject.Should(),
+            subject);
+    }
 
-        public static AndWhichConstraint<StringAssertions, string> BeExceptingWhitespace(
-            this StringAssertions assertions,
-            string expected)
-        {
-            Normalize(assertions.Subject)
-                .Should()
-                .Be(Normalize(expected));
+    public static AndWhichConstraint<StringAssertions, string> BeExceptingWhitespace(
+        this StringAssertions assertions,
+        string expected)
+    {
+        Normalize(assertions.Subject)
+            .Should()
+            .Be(Normalize(expected));
 
-            return new AndWhichConstraint<StringAssertions, string>(
-                assertions.Subject.Should(),
-                assertions.Subject);
+        return new AndWhichConstraint<StringAssertions, string>(
+            assertions.Subject.Should(),
+            assertions.Subject);
 
-            string Normalize(string value) => 
-                value
-                    .Trim()
-                    .Crunch()
-                    .Replace("\r\n", "\n");
-        }
+        string Normalize(string value) => 
+            value
+                .Trim()
+                .Crunch()
+                .Replace("\r\n", "\n");
     }
 }

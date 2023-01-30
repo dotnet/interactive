@@ -3,26 +3,25 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.Jupyter
+namespace Microsoft.DotNet.Interactive.Jupyter;
+
+internal static class KernelCommandExtensions
 {
-    internal static class KernelCommandExtensions
+    private const string PublishInternalEventsKey = "publish-internal-events";
+
+    internal static bool ShouldPublishInternalEvents(
+        this KernelCommand command)
     {
-        private const string PublishInternalEventsKey = "publish-internal-events";
-
-        internal static bool ShouldPublishInternalEvents(
-            this KernelCommand command)
+        var returnValue = false;
+        if (command.Properties.TryGetValue(PublishInternalEventsKey, out var produceEvents))
         {
-            var returnValue = false;
-            if (command.Properties.TryGetValue(PublishInternalEventsKey, out var produceEvents))
-            {
-                returnValue = (bool) produceEvents;
-            }
-            else if (command?.Parent is not null)
-            {
-                returnValue = command.Parent.ShouldPublishInternalEvents();
-            }
-
-            return returnValue;
+            returnValue = (bool) produceEvents;
         }
+        else if (command?.Parent is not null)
+        {
+            returnValue = command.Parent.ShouldPublishInternalEvents();
+        }
+
+        return returnValue;
     }
 }
