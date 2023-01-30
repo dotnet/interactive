@@ -4,376 +4,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
-using System.Text.Json;
 using FluentAssertions;
-using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
-using Xunit.Abstractions;
-using static System.Environment;
-using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
-public static class Tags
+public partial class HtmlFormatterTests
 {
-    public const string PlainTextBegin = "<div class=\"dni-plaintext\"><pre>";
-    public const string PlainTextEnd = "</pre></div>";
-    public static readonly string DefaultStyles = "";
-
-    static Tags()
-    {
-        var formatter = new HtmlFormatter<string>((value, context) => context.RequireDefaultStyles());
-
-        using var writer = new StringWriter();
-
-        formatter.Format("", writer);
-
-        DefaultStyles = writer.ToString();
-    }
-}
-
-public class HtmlFormatterTests : FormatterTestBase
-{
-    public class Objects : FormatterTestBase
-    {
-
-
-        [Fact]
-        public void Formatters_are_generated_on_the_fly_when_HTML_mime_type_is_requested()
-        {
-            var output = new { a = 123 }.ToDisplayString(HtmlFormatter.MimeType);
-
-            output
-                .RemoveStyleElement()
-                .Should()
-                .Be($"<table><thead><tr><th>a</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td></tr></tbody></table>");
-        }
-
-        [Fact]
-        public void Null_references_are_indicated()
-        {
-            string value = null;
-
-            value.ToDisplayString(HtmlFormatter.MimeType).RemoveStyleElement()
-                .Should()
-                .Be($"{PlainTextBegin}&lt;null&gt;{PlainTextEnd}");
-        }
-
-        [Fact]
-        public void Formatter_puts_div_with_class_around_string()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
-
-            var s = "hello".ToDisplayString(formatter).RemoveStyleElement();
-
-            s.Should().Be($"{PlainTextBegin}hello{PlainTextEnd}");
-        }
-        
-        [Fact]
-        public void Formatter_expands_properties_of_ExpandoObjects()
-        {
-            dynamic expando = new ExpandoObject();
-            expando.Name = "socks";
-            expando.Count = 2;
-
-            var formatter = HtmlFormatter.GetPreferredFormatterFor<ExpandoObject>();
-
-            var output = ((object) expando).ToDisplayString(formatter).RemoveStyleElement();
-
-            output.Should().BeEquivalentHtmlTo($@"
-<table>
-    <thead>
-       <tr><th>Count</th><th>Name</th></tr>
-    </thead>
-    <tbody><tr><td>{PlainTextBegin}2{PlainTextEnd}</td><td>socks</td></tr>
-    </tbody>
-</table>");
-        }
-
-        [Fact]
-        public void It_formats_objects_as_tables_having_properties_on_the_y_axis()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(EntityId));
-
-            var writer = new StringWriter();
-
-            var instance = new EntityId("TheEntity", "123");
-
-            formatter.Format(instance, writer);
-
-            var html = writer.ToString().RemoveStyleElement();
-
-            html
-                .Should()
-                .BeEquivalentHtmlTo($@"
-<table>
-   <thead><tr><th>TypeName</th><th>Id</th></tr></thead>
-   <tbody>
-     <tr><td>{PlainTextBegin}TheEntity{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr>
-  </tbody>
-</table>");
-        }
-
-        [Fact]
-        public void Formatted_objects_include_custom_styles()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(FileInfo));
-
-            var writer = new StringWriter();
-
-            var instance = new FileInfo("a.txt");
-
-            formatter.Format(instance, writer);
-
-            var html = writer.ToString();
-
-            html.Should().Contain(DefaultStyles);
-        }
-
-        [Fact]
-        public void It_formats_anonymous_types_as_tables_having_properties_on_the_y_axis()
-        {
-            var writer = new StringWriter();
-
-            var instance = new
-            {
-                PropertyA = 123,
-                PropertyB = "hello"
-            };
-
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-            formatter.Format(instance, writer);
-
-            writer.ToString().RemoveStyleElement()
-                .Should()
-                .BeEquivalentHtmlTo($@"
-<table>
- <thead><tr><th>PropertyA</th><th>PropertyB</th></tr></thead>
- <tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}hello{PlainTextEnd}</td></tr></tbody>
-</table>");
-        }
-
-        [Fact]
-        public void It_formats_tuples_as_tables_having_properties_on_the_y_axis()
-        {
-            var writer = new StringWriter();
-
-            var instance = (123, "hello");
-
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-            formatter.Format(instance, writer);
-
-            writer.ToString().RemoveStyleElement()
-                .Should()
-                .BeEquivalentHtmlTo($@"<table><thead><tr><th>Item1</th><th>Item2</th></tr></thead>
-<tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}hello{PlainTextEnd}</td></tr></tbody></table>");
-        }
-
-        [Fact]
-        public void Object_properties_are_formatted_using_plain_text_formatter()
-        {
-            var writer = new StringWriter();
-
-            var instance = new
-            {
-                A = 123,
-                B = new { BA = 456 }
-            };
-
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-            formatter.Format(instance, writer);
-
-            writer.ToString().RemoveStyleElement()
-                .Should()
-                .Match($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}&lt;&gt;f__AnonymousType*&lt;Int32&gt;{NewLine}      BA: 456{PlainTextEnd}</td></tr></tbody></table>");
-        }
-
-        [Fact]
-        public void Sequence_properties_are_formatted_using_plain_text_formatter()
-        {
-            var writer = new StringWriter();
-
-            var instance = new
-            {
-                PropertyA = 123,
-                PropertyB = Enumerable.Range(1, 3)
-            };
-
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-            formatter.Format(instance, writer);
-
-            writer.ToString()
-                .Should()
-                .Contain($"<table><thead><tr><th>PropertyA</th><th>PropertyB</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td></tr></tbody></table>");
-        }
-
-        [Fact]
-        public void Collection_properties_are_formatted_using_plain_text_formatting()
-        {
-            var writer = new StringWriter();
-
-            var instance = new
-            {
-                PropertyA = Enumerable.Range(1, 3)
-            };
-
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-            formatter.Format(instance, writer);
-
-            writer.ToString()
-                .Should()
-                .Contain("[ 1, 2, 3 ]");
-        }
-
-        [Fact]
-        public void It_displays_exceptions_thrown_by_properties_in_the_property_value_cell()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(SomePropertyThrows));
-
-            var writer = new StringWriter();
-
-            var widget = new SomePropertyThrows();
-
-            formatter.Format(widget, writer);
-
-            writer.ToString()
-                .Should()
-                .Contain($"<td>{PlainTextBegin}System.Exception");
-        }
-
-        [Fact]
-        public void Type_instances_do_not_have_properties_expanded()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
-
-            var writer = new StringWriter();
-
-            formatter.Format(typeof(Dummy.ClassNotInSystemNamespace), writer);
-
-            writer.ToString()
-                .Should()
-                .Be("Dummy.ClassNotInSystemNamespace");
-        }
-
-        [Fact]
-        public void Type_instances_have_link_added_for_System_namespace_type()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
-
-            var writer = new StringWriter();
-
-            formatter.Format(typeof(string), writer);
-
-            writer.ToString()
-                .Should()
-                .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0\">System.String</a></span>");
-        }
-
-
-        [Fact]
-        public void Type_instances_have_link_added_for_Microsoft_namespace_type()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
-
-            var writer = new StringWriter();
-
-            formatter.Format(typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException), writer);
-
-            writer.ToString()
-                .Should()
-                .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=net-7.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
-        }
-
-
-        [Fact]
-        public void Enums_are_formatted_using_their_names()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(FileAccess));
-
-            var writer = new StringWriter();
-
-            formatter.Format(FileAccess.ReadWrite, writer);
-
-            writer.ToString().Should().Contain("ReadWrite");
-        }
-
-        [Fact]
-        public void TimeSpan_is_not_destructured()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(TimeSpan));
-
-            var writer = new StringWriter();
-
-            var timespan = 25.Milliseconds();
-
-            formatter.Format(timespan, writer);
-
-            writer.ToString().Should().Contain(timespan.ToString());
-        }
-
-    }
-
-    public class PreformatPlainText : FormatterTestBase
-    {
-        [Fact]
-        public void It_can_format_a_String_with_class()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(string));
-
-            var writer = new StringWriter();
-
-            var instance = @"this
-is a 
-   multiline<>
-string";
-
-            formatter.Format(instance, writer);
-
-            writer.ToString().RemoveStyleElement()
-                .Should()
-                .BeEquivalentHtmlTo(
-                    $"{PlainTextBegin}{instance.HtmlEncode()}{PlainTextEnd}");
-        }
-
-        [Fact]
-        public void HtmlFormatter_returns_plain_for_decimal()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor<decimal>();
-
-            var d = 10.123m.ToDisplayString(formatter).RemoveStyleElement();
-
-            d.Should().Be($"{PlainTextBegin}10.123{PlainTextEnd}");
-        }
-
-
-        [Fact]
-        public void HtmlFormatter_returns_plain_for_BigInteger()
-        {
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(BigInteger));
-
-            var writer = new StringWriter();
-
-            var instance = BigInteger.Parse("78923589327589332402359");
-
-            formatter.Format(instance, writer);
-
-            var html = writer.ToString().RemoveStyleElement();
-
-            html.Should()
-                .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
-        }
-    }
-
     public class Sequences : FormatterTestBase
     {
         [Fact]
@@ -392,10 +32,10 @@ string";
             formatter.Format(instance, writer);
 
             writer.ToString()
-                .RemoveStyleElement()
-                .Should()
-                .BeEquivalentHtmlTo(
-                    @$"
+                  .RemoveStyleElement()
+                  .Should()
+                  .BeEquivalentHtmlTo(
+                      @$"
 <table>
    <thead>
      <tr><th><i>index</i></th><th>TypeName</th><th>Id</th></tr>
@@ -427,8 +67,8 @@ string";
             formatter.Format(listOfArrays, writer);
 
             writer.ToString()
-                .Should()
-                .Contain($"<td>{PlainTextBegin}{listOfArrays.First().ToDisplayString("text/plain")}{PlainTextEnd}</td>");
+                  .Should()
+                  .Contain($"<td>{Tags.PlainTextBegin}{listOfArrays.First().ToDisplayString("text/plain")}{Tags.PlainTextEnd}</td>");
         }
             
         [Fact]
@@ -447,10 +87,10 @@ string";
             formatter.Format(instance, writer);
 
             writer.ToString()
-                .RemoveStyleElement()
-                .Should()
-                .BeEquivalentHtmlTo(
-                    "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
+                  .RemoveStyleElement()
+                  .Should()
+                  .BeEquivalentHtmlTo(
+                      "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
         }
 
         [Fact]
@@ -469,10 +109,10 @@ string";
             formatter.Format(instance, writer);
 
             writer.ToString()
-                .RemoveStyleElement()
-                .Should()
-                .BeEquivalentHtmlTo(
-                    $@"<table>
+                  .RemoveStyleElement()
+                  .Should()
+                  .BeEquivalentHtmlTo(
+                      $@"<table>
     <thead>
        <tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr>
     </thead>
@@ -523,7 +163,7 @@ string";
 
             var html = text.ToDisplayString("text/html").RemoveStyleElement();
 
-            html.Should().Be($"{PlainTextBegin}hello&lt;b&gt;world  &lt;/b&gt;  \n\n  {PlainTextEnd}");
+            html.Should().Be($"{Tags.PlainTextBegin}hello&lt;b&gt;world  &lt;/b&gt;  \n\n  {Tags.PlainTextEnd}");
         }
 
         [Fact]
@@ -532,10 +172,10 @@ string";
             var strings = new[] { "apple", "banana", "cherry" };
 
             strings.ToDisplayString("text/html")
-                .RemoveStyleElement()
-                .Should()
-                .BeEquivalentHtmlTo(
-                    $@"
+                   .RemoveStyleElement()
+                   .Should()
+                   .BeEquivalentHtmlTo(
+                       $@"
 <table>
   <thead>
     <tr><th><i>index</i></th><th>value</th></tr>
@@ -714,7 +354,7 @@ string";
             var html = dict.ToDisplayString("text/html").RemoveStyleElement();
 
             html.Should().BeEquivalentHtmlTo(
-                $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{PlainTextBegin}1{PlainTextEnd}</td><td>2</td></tr></tbody></table>");
+                $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{Tags.PlainTextBegin}1{Tags.PlainTextEnd}</td><td>2</td></tr></tbody></table>");
         }
 
         [Fact]
@@ -729,8 +369,8 @@ string";
             formatter.Format(readOnlyMemory, writer);
 
             writer.ToString()
-                .Should()
-                .BeEquivalentHtmlTo("<span>Hi!</span>");
+                  .Should()
+                  .BeEquivalentHtmlTo("<span>Hi!</span>");
         }
 
         [Fact]
@@ -745,17 +385,17 @@ string";
             formatter.Format(readOnlyMemory, writer);
                 
             writer.ToString().RemoveStyleElement()
-                .Should()
-                .BeEquivalentHtmlTo(
-                    $@"
+                  .Should()
+                  .BeEquivalentHtmlTo(
+                      $@"
 <table>
   <thead>
     <tr><th><i>index</i></th><th>value</th></tr>
   </thead>
   <tbody>
-    <tr><td>0</td><td>{PlainTextBegin}7{PlainTextEnd}</td></tr>
-    <tr><td>1</td><td>{PlainTextBegin}8{PlainTextEnd}</td></tr>
-    <tr><td>2</td><td>{PlainTextBegin}9{PlainTextEnd}</td></tr>
+    <tr><td>0</td><td>{Tags.PlainTextBegin}7{Tags.PlainTextEnd}</td></tr>
+    <tr><td>1</td><td>{Tags.PlainTextBegin}8{Tags.PlainTextEnd}</td></tr>
+    <tr><td>2</td><td>{Tags.PlainTextBegin}9{Tags.PlainTextEnd}</td></tr>
   </tbody>
 </table>");
         }
@@ -770,16 +410,16 @@ string";
             formatter.Format(new object[] { 8, null, 9 }, writer);
 
             writer.ToString().RemoveStyleElement().Should()
-                .BeEquivalentHtmlTo(
-                    $@"
+                  .BeEquivalentHtmlTo(
+                      $@"
 <table>
   <thead>
     <tr><th><i>index</i></th><th>value</th></tr>
   </thead>
   <tbody>
-    <tr><td>0</td><td>{PlainTextBegin}8{PlainTextEnd}</td></tr>
-    <tr><td>1</td><td>{PlainTextBegin}&lt;null&gt;{PlainTextEnd}</td></tr>
-    <tr><td>2</td><td>{PlainTextBegin}9{PlainTextEnd}</td></tr>
+    <tr><td>0</td><td>{Tags.PlainTextBegin}8{Tags.PlainTextEnd}</td></tr>
+    <tr><td>1</td><td>{Tags.PlainTextBegin}&lt;null&gt;{Tags.PlainTextEnd}</td></tr>
+    <tr><td>2</td><td>{Tags.PlainTextBegin}9{Tags.PlainTextEnd}</td></tr>
   </tbody>
 </table>");
         }
@@ -794,7 +434,7 @@ string";
             formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
             writer.ToString().RemoveStyleElement().Should()
-                .BeEquivalentHtmlTo($@"<table>
+                  .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
           <th>X1</th>
@@ -822,26 +462,26 @@ string";
       </thead>
       <tbody>
         <tr>
-          <td>{PlainTextBegin}1{PlainTextEnd}</td>
-          <td>{PlainTextBegin}2{PlainTextEnd}</td>
-          <td>{PlainTextBegin}3{PlainTextEnd}</td>
-          <td>{PlainTextBegin}4{PlainTextEnd}</td>
-          <td>{PlainTextBegin}5{PlainTextEnd}</td>
-          <td>{PlainTextBegin}6{PlainTextEnd}</td>
-          <td>{PlainTextBegin}7{PlainTextEnd}</td>
-          <td>{PlainTextBegin}8{PlainTextEnd}</td>
-          <td>{PlainTextBegin}9{PlainTextEnd}</td>
-          <td>{PlainTextBegin}10{PlainTextEnd}</td>
-          <td>{PlainTextBegin}11{PlainTextEnd}</td>
-          <td>{PlainTextBegin}12{PlainTextEnd}</td>
-          <td>{PlainTextBegin}13{PlainTextEnd}</td>
-          <td>{PlainTextBegin}14{PlainTextEnd}</td>
-          <td>{PlainTextBegin}15{PlainTextEnd}</td>
-          <td>{PlainTextBegin}16{PlainTextEnd}</td>
-          <td>{PlainTextBegin}17{PlainTextEnd}</td>
-          <td>{PlainTextBegin}18{PlainTextEnd}</td>
-          <td>{PlainTextBegin}19{PlainTextEnd}</td>
-          <td>{PlainTextBegin}20{PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}1{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}2{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}3{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}4{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}5{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}6{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}7{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}8{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}9{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}10{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}11{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}12{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}13{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}14{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}15{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}16{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}17{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}18{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}19{Tags.PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}20{Tags.PlainTextEnd}</td>
         </tr>
       </tbody>
     </table>");
@@ -858,7 +498,7 @@ string";
             formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
             writer.ToString().RemoveStyleElement().Should()
-                .BeEquivalentHtmlTo($@"<table>
+                  .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
           <th>X1</th>
@@ -867,7 +507,7 @@ string";
       </thead>
       <tbody>
         <tr>
-          <td>{PlainTextBegin}1{PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}1{Tags.PlainTextEnd}</td>
         </tr>
       </tbody>
     </table>");
@@ -885,9 +525,9 @@ string";
             formatter.Format(new Dummy.ClassWithManyProperties(), writer);
 
             writer.ToString()
-                .RemoveStyleElement()
-                .Should()
-                .Be($"{PlainTextBegin}Dummy.ClassWithManyProperties{PlainTextEnd}");
+                  .RemoveStyleElement()
+                  .Should()
+                  .Be($"{Tags.PlainTextBegin}Dummy.ClassWithManyProperties{Tags.PlainTextEnd}");
         }
 
         [Fact]
@@ -907,7 +547,7 @@ string";
             formatter.Format(GetCollection(), writer);
 
             writer.ToString().RemoveStyleElement().Should()
-                .BeEquivalentHtmlTo($@"<table>
+                  .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
           <th>
@@ -927,7 +567,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=net-7.0\""}>System.Boolean</a>
             </span>
           </td>
-          <td>{PlainTextBegin}True{PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}True{Tags.PlainTextEnd}</td>
         </tr>
         <tr>
           <td>1</td>
@@ -936,7 +576,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\""}>System.Int32</a>
             </span>
           </td>
-          <td>{PlainTextBegin}99{PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}99{Tags.PlainTextEnd}</td>
         </tr>
         <tr>
           <td>2</td>
@@ -991,7 +631,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\""}>System.Int32</a>
             </span>
           </td>
-          <td>{PlainTextBegin}1{PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}1{Tags.PlainTextEnd}</td>
           <td></td>
           <td></td>
           <td></td>
@@ -1005,7 +645,7 @@ string";
             </span>
           </td>
           <td></td>
-          <td>{PlainTextBegin}2{PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}2{Tags.PlainTextEnd}</td>
           <td>two</td>
           <td></td>
           <td></td>
@@ -1017,7 +657,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-7.0\""}>System.Linq.Enumerable+RangeIterator</a>
             </span>
           </td>
-          <td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td>
+          <td>{Tags.PlainTextBegin}[ 1, 2, 3 ]{Tags.PlainTextEnd}</td>
           <td></td>
           <td></td>
           <td></td>
@@ -1035,87 +675,7 @@ string";
       </tbody>
     </table>");
         }
-
-        [Fact]
-        public void All_properties_are_shown_when_sequences_contain_different_types_in_order_they_are_encountered()
-        {
-            var objects = new object[]
-            {
-                new { name = "apple", Item2 = "green" },
-                (2, "two"),
-                1,
-                Enumerable.Range(1, 3),
-            };
-
-            var result = objects.ToDisplayString("text/html").RemoveStyleElement();
-
-            result
-                .Should()
-                .BeEquivalentHtmlTo(
-                    $@"<table>
-      <thead>
-        <tr>
-          <th>
-            <i>index</i>
-          </th>
-          <th>
-            <i>type</i>
-          </th>
-          <th>name</th>
-          <th>Item2</th>
-          <th>Item1</th>
-          <th>value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>0</td>
-          <td>(anonymous)</td>
-          <td>apple</td>
-          <td>green</td>
-          <td></td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>1</td>
-          <td>
-            <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-7.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
-            </span>
-          </td>
-          <td></td>
-          <td>two</td>
-          <td>{PlainTextBegin}2{PlainTextEnd}</td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>
-            <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\""}>System.Int32</a>
-            </span>
-          </td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td>{PlainTextBegin}1{PlainTextEnd}</td>
-        </tr>
-        <tr>
-          <td>3</td>
-          <td>
-            <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-7.0\""}>System.Linq.Enumerable+RangeIterator</a>
-            </span>
-          </td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td>
-        </tr>
-      </tbody>
-    </table>");
-        }
-
+        
         [Fact]
         public void Respective_HTML_formatters_are_used_when_sequences_contain_different_types()
         {
@@ -1169,7 +729,7 @@ string";
       </td>
       <td></td>
       <td>
-        {PlainTextBegin}123{PlainTextEnd}
+        {Tags.PlainTextBegin}123{Tags.PlainTextEnd}
       </td>
       <td>two</td>
     </tr>
@@ -1181,7 +741,7 @@ string";
         </span>
       </td>
       <td>
-        {PlainTextBegin}456{PlainTextEnd}
+        {Tags.PlainTextBegin}456{Tags.PlainTextEnd}
       </td>
       <td></td>
       <td></td>
@@ -1194,7 +754,7 @@ string";
         </span>
       </td>
       <td>
-        {PlainTextBegin}[ 7, 8, 9 ]{PlainTextEnd}
+        {Tags.PlainTextBegin}[ 7, 8, 9 ]{Tags.PlainTextEnd}
       </td>
       <td></td>
       <td></td>
@@ -1267,109 +827,6 @@ string";
             {
                 return ((IEnumerable)new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
             }
-        }
-    }
-
-    public class Json : FormatterTestBase
-    {
-        private readonly ITestOutputHelper _output;
-
-        public Json(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
-        [Fact]
-        public void JsonDocument_and_JsonDocument_RootElement_output_the_same_HTML()
-        {
-            var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
-
-            var jsonDocument = JsonDocument.Parse(jsonString);
-            var jsonElement = JsonDocument.Parse(jsonString).RootElement;
-
-            var jsonDocumentHtml = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
-            var jsonElementHtml = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
-
-            jsonDocumentHtml.Should().Be(jsonElementHtml);
-        }
-
-        [Fact]
-        public void JSON_object_output_contains_a_text_summary()
-        {
-            var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
-
-            var jsonDocument = JsonDocument.Parse(jsonString);
-
-            var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
-
-            html.Should().ContainAll(
-                "<code>", 
-                jsonString.HtmlEncode().ToString(),
-                "</code>");
-        }
-
-        [Fact]
-        public void JSON_object_output_contains_table_of_properties_within_details_tag()
-        {
-            var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
-
-            var jsonDocument = JsonDocument.Parse(jsonString);
-
-            var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
-
-            html.Should().ContainAll(
-                "<details",
-                "<td>Name</td>",
-                "<td><span>&quot;cherry&quot;</span></td>",
-                "</details>");
-        }
-
-        [Fact]
-        public void JSON_array_output_contains_a_text_summary()
-        {
-            var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
-
-            var jsonDocument = JsonDocument.Parse(jsonString);
-
-            var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
-
-            html.Should().ContainAll(
-                "<code>",
-                jsonString.HtmlEncode().ToString(),
-                "</code>");
-        }
-            
-        [Fact]
-        public void JSON_array_output_contains_table_of_items_within_details_tag()
-        {
-            var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
-
-            var jsonDocument = JsonDocument.Parse(jsonString);
-
-            var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType).RemoveStyleElement();
-
-            html.Should().Contain(
-                "<tr><td><span>&quot;apple&quot;</span></td></tr><tr><td><span>&quot;banana&quot;</span></td></tr><tr><td><span>&quot;cherry&quot;</span></td></tr>");
-        }
-
-        [Fact]
-        public void Strings_with_escaped_sequences_are_encoded()
-        {
-            var value = "hola! \n \t \" \" ' ' the joy of escapes! ==> &   white  space  ";
-
-            var text = value.ToDisplayString("text/html").RemoveStyleElement();
-
-            text.Should().Be($"{PlainTextBegin}hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  {PlainTextEnd}");
-        }
-
-        [Fact]
-        public void Strings_with_unicode_sequences_are_encoded()
-        {
-            var value = "hola! ʰ˽˵ΘϱϪԘÓŴ𝓌🦁♿🌪🍒☝🏿";
-
-            var text = value.ToDisplayString("text/html").RemoveStyleElement();
-
-            text.Should().Be($"{PlainTextBegin}{value.HtmlEncode()}{PlainTextEnd}");
         }
     }
 }
