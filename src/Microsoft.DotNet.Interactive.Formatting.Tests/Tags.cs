@@ -8,8 +8,13 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 public static class Tags
 {
     public const string PlainTextBegin = "<div class=\"dni-plaintext\"><pre>";
-    public const string PlainTextEnd = "</pre></div>";
-    public static readonly string DefaultStyles = "";
+    public const string PlainTextEnd = "</pre></div>";  
+    
+    public const string SummaryTextBegin = "<summary><span class=\"dni-code-hint\"><code>";
+    public const string SummaryTextEnd = "</code></span></summary>";
+
+    public static readonly string DefaultStyles;
+
 
     static Tags()
     {

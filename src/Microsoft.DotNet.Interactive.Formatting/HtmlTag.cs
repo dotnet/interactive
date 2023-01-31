@@ -81,6 +81,7 @@ public class HtmlTag : IHtmlContent
     /// <inheritdoc />
     public virtual void WriteTo(TextWriter writer, HtmlEncoder encoder = null)
     {
+        // FIX: (WriteTo) who's calling this?
         WriteTo(new FormatContext(writer));
     }
 

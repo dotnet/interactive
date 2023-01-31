@@ -1,10 +1,11 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -89,9 +90,10 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                     headers.Add(th(".."));
                 }
 
+                // FIX: (CreateTableFormatterForAnyObject) should this use a tree view?
                 IEnumerable<object> values =
                     reducedMembers.Select(m => m.GetValueOrException(instance))
-                                  .Select(v => { return td(div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType)))); });
+                                  .Select(v => td(div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType)))));
 
                 PocketView t =
                     table(
@@ -112,22 +114,22 @@ public class HtmlFormatter<T> : TypeFormatter<T>
     internal static HtmlFormatter<T> CreateTableFormatterForAnyEnumerable()
     {
         Func<T, IEnumerable> getKeys = null;
-        Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
+        Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
 
         var dictType =
             typeof(T).GetAllInterfaces()
-                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                     .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
             ??
             typeof(T).GetAllInterfaces()
-                .FirstOrDefault(i => i == typeof(IDictionary));
+                     .FirstOrDefault(i => i == typeof(IDictionary));
 
         if (dictType is not null)
         {
             var keysProperty = dictType.GetProperty("Keys");
-            getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
+            getKeys = instance => (IEnumerable)keysProperty.GetValue(instance, null);
 
             var valuesProperty = dictType.GetProperty("Values");
-            getValues = instance => (IEnumerable) valuesProperty.GetValue(instance, null);
+            getValues = instance => (IEnumerable)valuesProperty.GetValue(instance, null);
         }
 
         return new HtmlFormatter<T>(BuildTable);
@@ -138,19 +140,18 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
             using var _ = context.IncrementTableDepth();
 
-            if (context.TableDepth > 1)
+            if (context.TableDepth > 1 || !context.AllowRecursion)
             {
-                // FIX: (CreateForAnyEnumerable) change nested tree views
-                HtmlFormatter.FormatAndStyleAsPlainText(source,  context);
+                HtmlFormatter.FormatAndStyleAsPlainText(source, context);
                 return true;
             }
 
             var canCountRemainder = source is ICollection;
 
             var (rowData, remainingCount) = getValues(source)
-                .Cast<object>()
-                .Select((v, i) => (v, i))
-                .TakeAndCountRemaining(Formatter.ListExpansionLimit, canCountRemainder);
+                                            .Cast<object>()
+                                            .Select((v, i) => (v, i))
+                                            .TakeAndCountRemaining(Formatter.ListExpansionLimit, canCountRemainder);
 
             if (rowData.Count == 0)
             {
@@ -217,16 +218,16 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             {
                 headers.Add(th(i("key")));
                 leftColumnValues = getKeys(source)
-                    .Cast<object>()
-                    .Take(rowData.Count)
-                    .ToList();
+                                   .Cast<object>()
+                                   .Take(rowData.Count)
+                                   .ToList();
             }
             else
             {
                 headers.Add(th(i("index")));
                 leftColumnValues = Enumerable.Range(0, rowData.Count)
-                    .Select(i => (object) new HtmlString(i.ToString()))
-                    .ToList();
+                                             .Select(i => (object)new HtmlString(i.ToString()))
+                                             .ToList();
             }
 
             if (typesAreDifferent)
@@ -238,20 +239,20 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             // property, then by the destructuring order within that type.
             var valueKeys =
                 valuesByHeader.Keys
-                    .OrderBy(x => headerToSortIndex[x])
-                    .ToArray();
+                              .OrderBy(x => headerToSortIndex[x])
+                              .ToArray();
 
             var valueKeysLimited =
                 valueKeys
                     .Take(Math.Max(0, HtmlFormatter.MaxProperties))
                     .ToArray();
 
-            headers.AddRange(valueKeysLimited.Select(k => (IHtmlContent) th(k)));
+            headers.AddRange(valueKeysLimited.Select(k => (IHtmlContent)th(k)));
             if (valueKeysLimited.Length < valueKeys.Length)
             {
                 headers.Add((IHtmlContent)th(".."));
             }
-                
+
             var rows = new List<IHtmlContent>();
 
             for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
@@ -295,6 +296,58 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             var table = Html.Table(headers, rows);
 
             table.WriteTo(context);
+
+            return true;
+        }
+    }
+
+    internal static HtmlFormatter<T> CreateTreeViewFormatterForAnyObject()
+    {
+        if (typeof(T).IsScalar())
+        {
+            return new HtmlFormatter<T>((value, context) => { HtmlFormatter.FormatAndStyleAsPlainText(value, context); });
+        }
+
+        var members = typeof(T).GetMembersToFormat()
+                               .GetMemberAccessors<T>();
+
+        return new HtmlFormatter<T>((instance, context) => BuildTreeView(instance, context, members));
+
+        static bool BuildTreeView(T source, FormatContext context, MemberAccessor<T>[] memberAccessors)
+        {
+            context.RequireDefaultStyles();
+
+            using var _ = context.IncrementTableDepth();
+            using var __ = context.IncrementDepth();
+
+            // FIX: (CreateTreeViewFormatterForAnyObject) 
+            if (!context.AllowRecursion)
+            {
+                HtmlFormatter.FormatAndStyleAsPlainText(source, context);
+                return true;
+            }
+
+            PocketView view = null;
+
+            HtmlTag code = new HtmlTag("code", c =>
+            {
+                var formatter = PlainTextSummaryFormatter.GetPreferredFormatterFor(source?.GetType());
+
+                formatter.Format(source, context);
+            });
+
+            view = details[@class: "dni-treeview"](
+                summary(
+                    span[@class: "dni-code-hint"](code)),
+                div(
+                    Html.Table(
+                        headers: null,
+                        rows: memberAccessors.Select(
+                            a => (IHtmlContent)
+                                tr(
+                                    td(a.Member.Name), td(a.GetValueOrException(source)))).ToArray())));
+
+            view.WriteTo(context);
 
             return true;
         }

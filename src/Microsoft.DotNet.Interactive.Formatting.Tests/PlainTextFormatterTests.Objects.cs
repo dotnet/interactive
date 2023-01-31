@@ -257,7 +257,7 @@ SomePropertyThrows
         public void Recursive_formatter_calls_do_not_cause_exceptions()
         {
             var widget = new Widget();
-            widget.Parts = new List<Part> { new Part { Widget = widget } };
+            widget.Parts = new List<Part> { new() { Widget = widget } };
 
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(widget.GetType());
 
@@ -271,7 +271,7 @@ SomePropertyThrows
             {
                 Name = "hello"
             };
-            widget.Parts = new List<Part> { new Part { Widget = widget } };
+            widget.Parts = new List<Part> { new() { Widget = widget } };
 
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<Widget>();
 

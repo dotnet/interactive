@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public partial class HtmlFormatterTests
 {
-    public class Objects : FormatterTestBase
+    public class Objects_TableView : FormatterTestBase
     {
         [Fact]
         public void Formatters_are_generated_on_the_fly_when_HTML_mime_type_is_requested()
