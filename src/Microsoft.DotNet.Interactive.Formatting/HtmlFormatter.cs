@@ -25,26 +25,16 @@ public static class HtmlFormatter
         void Initialize()
         {
 #if (false) // FIX: delete
-  FormattersForAnyObject = new FormatterMapByType(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTableFormatterForAnyObject));
+            FormattersForAnyObject = new FormatterMapByType(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTableFormatterForAnyObject));
 #else
-  FormattersForAnyObject = new FormatterMapByType(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTreeViewFormatterForAnyObject));
+            FormattersForAnyObject = new FormatterMapByType(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTreeViewFormatterForAnyObject));
 #endif
-            MaxProperties = DefaultMaxProperties;
         }
     }
 
     // FIX: (HtmlFormatter.UseTreeView) delete this 
     public static bool UseTreeView { get; set; }
-
-    // FIX: (MaxProperties) this can likely be removed 
-    /// <summary>
-    ///   Indicates the maximum number of properties to show in the default HTML display of arbitrary objects.
-    ///   If set to zero no properties are shown.
-    /// </summary>
-    public static int MaxProperties { get; set; } = DefaultMaxProperties;
-
-    internal const int DefaultMaxProperties = 20;
-
+    
     // FIX: (HtmlFormatter) this can return a formatter with the wrong MIME type
     public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
         Formatter.GetPreferredFormatterFor(type, MimeType);

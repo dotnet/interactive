@@ -65,13 +65,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
         static bool BuildTable(T instance, FormatContext context, MemberAccessor<T>[] memberAccessors)
         {
-            // Note the order of members is declaration order
-            var reducedMembers =
-                memberAccessors
-                    .Take(Math.Max(0, HtmlFormatter.MaxProperties))
-                    .ToArray();
-
-            if (reducedMembers.Length == 0)
+            if (memberAccessors.Length == 0)
             {
                 // This formatter refuses to format objects without members, and 
                 // refused to produce nested tables, or if no members are selected
@@ -81,19 +75,13 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             {
                 // Note, embeds the keys and values as arbitrary objects into the HTML content,
                 List<IHtmlContent> headers =
-                    reducedMembers.Select(m => (IHtmlContent)th(m.Member.Name))
-                                  .ToList();
-
-                // Add a '..' column if we elided some members due to size limitations
-                if (reducedMembers.Length < memberAccessors.Length)
-                {
-                    headers.Add(th(".."));
-                }
+                    memberAccessors.Select(m => (IHtmlContent)th(m.Member.Name))
+                                   .ToList();
 
                 // FIX: (CreateTableFormatterForAnyObject) should this use a tree view?
                 IEnumerable<object> values =
-                    reducedMembers.Select(m => m.GetValueOrException(instance))
-                                  .Select(v => td(div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType)))));
+                    memberAccessors.Select(m => m.GetValueOrException(instance))
+                                   .Select(v => td(div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType)))));
 
                 PocketView t =
                     table(
@@ -242,17 +230,8 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                               .OrderBy(x => headerToSortIndex[x])
                               .ToArray();
 
-            var valueKeysLimited =
-                valueKeys
-                    .Take(Math.Max(0, HtmlFormatter.MaxProperties))
-                    .ToArray();
-
-            headers.AddRange(valueKeysLimited.Select(k => (IHtmlContent)th(k)));
-            if (valueKeysLimited.Length < valueKeys.Length)
-            {
-                headers.Add((IHtmlContent)th(".."));
-            }
-
+            headers.AddRange(valueKeys.Select(k => (IHtmlContent)th(k)));
+           
             var rows = new List<IHtmlContent>();
 
             for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
@@ -269,7 +248,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                     rowValues.Add(type);
                 }
 
-                foreach (var key in valueKeysLimited)
+                foreach (var key in valueKeys)
                 {
                     if (valuesByHeader[key].TryGetValue(rowIndex, out var cellData))
                     {
@@ -320,7 +299,6 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             using var _ = context.IncrementTableDepth();
             using var __ = context.IncrementDepth();
 
-            // FIX: (CreateTreeViewFormatterForAnyObject) 
             if (!context.AllowRecursion)
             {
                 HtmlFormatter.FormatAndStyleAsPlainText(source, context);

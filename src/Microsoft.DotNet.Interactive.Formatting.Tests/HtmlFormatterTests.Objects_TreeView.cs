@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.ComponentModel;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -12,8 +11,6 @@ using FluentAssertions.Extensions;
 using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
