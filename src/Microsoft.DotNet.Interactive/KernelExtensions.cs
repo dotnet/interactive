@@ -213,55 +213,18 @@ public static class KernelExtensions
         return kernel;
     }
 
-   
-
     private static void HandleSetMagicCommand<T>(T kernel,
         InvocationContext cmdLineContext,
-        Option<bool> fromResultOption,
         Option<string> nameOption,
-        Option<string> fromValueOption, 
-        Option<string> mimeTypeOption) 
+        Option<string> fromValueOption,
+        Option<string> mimeTypeOption)
         where T : Kernel
     {
-        var fromResult = cmdLineContext.ParseResult.GetValueForOption(fromResultOption);
         var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
         var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
         var context = cmdLineContext.GetService<KernelInvocationContext>();
-       
 
-        if (fromResult)
-        {
-            context.OnComplete((c) =>
-            {
-                if (c.IsFailed)
-                {
-                    return;
-                }
-
-                SetValueFromReturnValueProduced(c);
-            });
-        }
-        else
-        {
-            SetValueFromValueProduced(mimeType);
-        }
-
-        void SetValueFromReturnValueProduced(KernelInvocationContext c)
-        {
-            var returnValueProducedEvents = new List<ReturnValueProduced>();
-            using var eventSubscription = context.KernelEvents.OfType<ReturnValueProduced>()
-                .Subscribe(returnValueProducedEvents.Add);
-
-            var returnValueProduced = returnValueProducedEvents.SingleOrDefault();
-
-            if (returnValueProduced is { })
-            {
-                SendValue(kernel, returnValueProduced.Value, returnValueProduced.FormattedValues.FirstOrDefault(), valueName).GetAwaiter().GetResult();}
-            else
-            {
-                c.Fail(c.Command, message: "The submission did not produce a return value.");
-            }
-        }
+        SetValueFromValueProduced(mimeType);
 
         void SetValueFromValueProduced(string mimetype)
         {
@@ -273,7 +236,6 @@ public static class KernelExtensions
 
                 var valueProduced = events.SingleOrDefault();
 
-
                 if (valueProduced is { })
                 {
                     var referenceValue = mimetype is not null ? null : valueProduced.Value;
@@ -282,7 +244,7 @@ public static class KernelExtensions
                     if (mimeType is not null && formattedValue.MimeType != mimeType)
                     {
                         var fromKernelUri = new Uri(valueProduced.RoutingSlip.ToUriArray().First());
-                        var fromKernel = kernel.RootKernel.FindKernel(k => k.KernelInfo.Uri == fromKernelUri|| kernel.KernelInfo.RemoteUri == fromKernelUri
+                        var fromKernel = kernel.RootKernel.FindKernel(k => k.KernelInfo.Uri == fromKernelUri || kernel.KernelInfo.RemoteUri == fromKernelUri
                     );
                         var v = GetValue(fromKernel, valueProduced.Name, mimeType).GetAwaiter().GetResult();
                         formattedValue = v.FormattedValue;
@@ -293,7 +255,7 @@ public static class KernelExtensions
                 else
                 {
                     var interpolatedValue = cmdLineContext.ParseResult.GetValueForOption(fromValueOption);
-                    SendValue(kernel, interpolatedValue,null, valueName)
+                    SendValue(kernel, interpolatedValue, null, valueName)
                         .GetAwaiter().GetResult();
                 }
             }
@@ -313,23 +275,12 @@ public static class KernelExtensions
 
     private static void ConfigureAndAddSetMagicCommand<T>(T kernel) where T : Kernel
     {
-        var fromResultOption = new Option<bool>(
-            "--from-result",
-            description: "Captures the execution result.");
-
-
         var fromValueOption = new Option<string>(
             "--from-value",
-            description: "Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.",
-            parseArgument: result =>
-            {
-                if (SetErrorIfAlsoUsed(fromResultOption, result))
-                {
-                    return null;
-                }
-
-                return result.Tokens.Single().Value;
-            });
+            description: "Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.")
+        {
+            IsRequired = true
+        };
 
         var mimeTypeOption = new Option<string>("--mime-type", "Share the value as a string formatted to the specified MIME type.")
             .AddCompletions(
@@ -339,16 +290,8 @@ public static class KernelExtensions
 
         var nameOption = new Option<string>(
             "--name",
-            description: "This is the name used to declare and set the value in the kernel.",
-            parseArgument: result =>
-            {
-                if (SetErrorIfNoneAreUsed(result, fromResultOption, fromValueOption))
-                {
-                    return null;
-                }
+            description: "This is the name used to declare and set the value in the kernel."
 
-                return result.Tokens.Single().Value;
-            }
         )
         {
             IsRequired = true
@@ -357,14 +300,13 @@ public static class KernelExtensions
         var set = new Command("#!set")
         {
             nameOption,
-            fromResultOption,
             fromValueOption,
             mimeTypeOption
         };
 
         set.SetHandler(cmdLineContext =>
         {
-            HandleSetMagicCommand(kernel, cmdLineContext, fromResultOption, nameOption, fromValueOption, mimeTypeOption);
+            HandleSetMagicCommand(kernel, cmdLineContext, nameOption, fromValueOption, mimeTypeOption);
         });
 
         kernel.AddDirective(set);
@@ -502,7 +444,7 @@ public static class KernelExtensions
     {
         var valueProduced = await GetValue(fromKernel, fromName, requestedMimeType);
 
-        if (valueProduced is { } )
+        if (valueProduced is { })
         {
             var declarationName = toName ?? fromName;
 
@@ -528,7 +470,7 @@ public static class KernelExtensions
         }
     }
 
-    private static async Task SendValue(Kernel kernel,object value, FormattedValue formattedValue,
+    private static async Task SendValue(Kernel kernel, object value, FormattedValue formattedValue,
         string declarationName)
     {
         if (kernel.SupportsCommandType(typeof(SendValue)))
@@ -619,7 +561,7 @@ public static class KernelExtensions
                 using var __ = result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
             }
 
-            var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, new FormattedValue(PlainTextFormatter.MimeType, e.Value?.ToDisplayString(PlainTextFormatter.MimeType)) ,e.Value?.GetType()), e.Value, context.HandlingKernel.Name));
+            var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, new FormattedValue(PlainTextFormatter.MimeType, e.Value?.ToDisplayString(PlainTextFormatter.MimeType)), e.Value?.GetType()), e.Value, context.HandlingKernel.Name));
 
             var currentVariables = new KernelValues(
                 kernelValues,

@@ -16,21 +16,6 @@ namespace Microsoft.DotNet.Interactive.Tests;
 
 public class SetMagicCommandTests
 {
-    [Fact]
-    public async Task can_set_value_using_return_value()
-    {
-        using var kernel = CreateKernel(Language.CSharp);
-
-        await kernel.SendAsync(new SubmitCode(@"
-#!set --name x --from-result
-1+3"));
-        var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
-
-        using var _ = new AssertionScope();
-
-        succeeded.Should().BeTrue();
-        valueProduced.Value.Should().BeEquivalentTo(4);
-    }
 
     [Fact]
     public async Task can_set_value_prompting_user()
@@ -113,53 +98,9 @@ public class SetMagicCommandTests
         valueProduced.Value.Should().BeEquivalentTo("456");
     }
 
-    [Fact]
-    public async Task set_value_using_return_value_fails_when_successful_code_does_not_produce_return_value()
-    {
-        using var kernel = CreateKernel(Language.CSharp);
-
-        var results  = await kernel.SendAsync(new SubmitCode(@"
-#!set --name x --from-result
-var num = 1+3;"));
-
-        var events = results.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<CommandFailed>()
-            .Which.Message.Should().Be("The submission did not produce a return value.");
-
-    }
 
     [Fact]
-    public async Task does_not_set_value_if_the_submission_fails()
-    {
-        using var kernel = CreateKernel(Language.CSharp);
-
-        var results = await kernel.SendAsync(new SubmitCode(@"
-#!set --name x --from-result
-throw new Exception(""custom error."");"));
-
-        var events = results.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<CommandFailed>()
-            .Which.Message.Should().Contain("System.Exception: custom error.");
-    }
-
-    [Fact]
-    public async Task set_does_not_allow_from_value_and_from_results_at_the_same_time()
-    {
-        using var kernel = CreateKernel(Language.CSharp);
-
-        var results = await kernel.SendAsync(new SubmitCode(@"
-#!set --name x --from-result --from-value fsharp:y
-1+3"));
-        var events = results.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<CommandFailed>()
-            .Which.Message.Should().Be("The --from-result and --from-value options cannot be used together.");
-    }
-
-    [Fact]
-    public async Task set_requires_from_value_or_from_results()
+    public async Task set_requires_from_option()
     {
         using var kernel = CreateKernel(Language.CSharp);
 
@@ -169,7 +110,7 @@ throw new Exception(""custom error."");"));
         var events = results.KernelEvents.ToSubscribedList();
 
         events.Should().ContainSingle<CommandFailed>()
-            .Which.Message.Should().Be("At least one of the options [from-result, from-value] must be specified.");
+            .Which.Message.Should().Be("Option '--from-value' is required.");
     }
 
     private static Kernel CreateKernel(Language language)
