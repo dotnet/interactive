@@ -19,6 +19,7 @@ using Recipes;
 using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
+using static Microsoft.DotNet.Interactive.Jupyter.Tests.RecordingJupyterMessageSender;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
@@ -128,7 +129,7 @@ f();"));
         await context.Done().Timeout(5.Seconds());
 
         JupyterMessageSender.PubSubMessages.Should()
-            .ContainSingle<Protocol.Stream>()
+            .ContainSingle<Stream>()
             .Which
             .Text
             .Should()
@@ -314,9 +315,9 @@ f();"));
     }
 
     [Theory]
-    [InlineData("input()", "", "input-value")]
-    [InlineData("input(\"User: \")", "User: ", "user name")]
-    [InlineData("await Microsoft.DotNet.Interactive.Kernel.GetInputAsync(\"User: \")", "User: ", "user name")]
+    [InlineData("input()", "", InputForUnspecifiedPrompt)]
+    [InlineData($"input(\"{InputPromptForUser}\")", InputPromptForUser, InputForUser)]
+    [InlineData($"await Microsoft.DotNet.Interactive.Kernel.GetInputAsync(\"{InputPromptForUser}\")", InputPromptForUser, InputForUser)]
     public async Task sends_InputRequest_message_when_submission_requests_user_input_in_csharp(string code, string prompt, string expectedDisplayValue)
     {
         var scheduler = CreateScheduler();
@@ -334,8 +335,8 @@ f();"));
     }
 
     [Theory]
-    [InlineData("Read-Host", "", "input-value")]
-    [InlineData("Read-Host -Prompt User", "User: ", "user name")]
+    [InlineData("Read-Host", "", InputForUnspecifiedPrompt)]
+    [InlineData("Read-Host -Prompt User", InputPromptForUser, InputForUser)]
     public async Task sends_InputRequest_message_when_submission_requests_user_input_in_powershell(string code, string prompt, string expectedDisplayValue)
     {
         SetKernelLanguage(Language.PowerShell);
@@ -349,9 +350,9 @@ f();"));
 
         JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == false);
         JupyterMessageSender.PubSubMessages
-            .OfType<Protocol.Stream>()
+            .OfType<Stream>()
             .Should()
-            .Contain(s => s.Name == Protocol.Stream.StandardOutput && s.Text == (expectedDisplayValue + Environment.NewLine));
+            .Contain(s => s.Name == Stream.StandardOutput && s.Text == (expectedDisplayValue + Environment.NewLine));
     }
 
     [Fact]
@@ -361,13 +362,13 @@ f();"));
         using var _ = LogEvents.Subscribe(e => log.Append(e.ToLogString()));
 
         var scheduler = CreateScheduler();
-        var request = ZeroMQMessage.Create(new ExecuteRequest("password(\"Password: \")"));
+        var request = ZeroMQMessage.Create(new ExecuteRequest($"password(\"{InputPromptForPassword}\")"));
         var context = new JupyterRequestContext(JupyterMessageSender, request);
         await scheduler.Schedule(context);
 
         await context.Done().Timeout(20.Seconds());
 
-        log.ToString().Should().NotContain("secret");
+        log.ToString().Should().NotContain(InputForPassword);
     }
 
     [Theory]
@@ -383,10 +384,12 @@ f();"));
         await context.Done().Timeout(20.Seconds());
 
         JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password);
+
         JupyterMessageSender.PubSubMessages
-            .OfType<ExecuteResult>()
-            .Should()
-            .Contain(dp => (dp.Data["text/html"] as string).RemoveStyleElement() == $"{PlainTextBegin}{typeof(PasswordString).FullName}{PlainTextEnd}");
+                            .OfType<ExecuteResult>()
+                            .Should()
+                            .Contain(dp => (dp.Data["text/html"] as string).Contains($"{SummaryTextBegin}{typeof(PasswordString).FullName}{SummaryTextEnd}"),
+                                     because: $" password function returns the {typeof(PasswordString)} instance");
     }
 
     [Theory]
