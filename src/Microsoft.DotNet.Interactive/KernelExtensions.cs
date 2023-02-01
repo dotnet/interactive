@@ -256,7 +256,11 @@ public static class KernelExtensions
 
             if (returnValueProduced is { })
             {
-                SendValue(kernel, returnValueProduced.Value, returnValueProduced.FormattedValues.FirstOrDefault(), valueName).GetAwaiter().GetResult();}
+                var formattedValue = returnValueProduced.FormattedValues.FirstOrDefault(fv => fv.MimeType == JsonFormatter.MimeType) 
+                                     ?? returnValueProduced.FormattedValues.FirstOrDefault(fv => fv.MimeType == PlainTextFormatter.MimeType) 
+                                     ?? returnValueProduced.FormattedValues.FirstOrDefault();
+                SendValue(kernel, returnValueProduced.Value, formattedValue, valueName).GetAwaiter().GetResult();
+            }
             else
             {
                 c.Fail(c.Command, message: "The submission did not produce a return value.");
