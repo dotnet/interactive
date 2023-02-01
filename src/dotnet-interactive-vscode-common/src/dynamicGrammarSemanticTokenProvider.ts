@@ -192,8 +192,25 @@ export class DynamicGrammarSemanticTokenProvider {
         }
 
         // update that collection with new/changed values
+        let hasMarkdownKernel = false;
         for (const kernelInfo of kernelInfos) {
             documentKernelInfos.set(kernelInfo.localName, kernelInfo);
+            if (kernelInfo.localName.toLocaleLowerCase() === 'markdown') {
+                hasMarkdownKernel = true;
+            }
+        }
+
+        if (!hasMarkdownKernel) {
+            // the markdown kernel isn't real, but still needs to be accounted for in the grammar
+            documentKernelInfos.set('markdown', {
+                localName: 'markdown', // always assume it's called #!markdown
+                displayName: 'unused',
+                languageName: 'markdown',
+                aliases: ['md'],
+                supportedKernelCommands: [],
+                supportedDirectives: [],
+                uri: 'unused',
+            });
         }
 
         // keep that collection for next time
@@ -284,7 +301,7 @@ export class DynamicGrammarSemanticTokenProvider {
                     // set language info
                     const languageInfo = this._languageNameInfoMap.get(languageId);
                     if (languageInfo) {
-                        const aliases = Array.isArray(language.aliases) ? language.aliases : [];
+                        const aliases: string[] = (Array.isArray(language.aliases) ? <any[]>language.aliases : []).filter(a => typeof a === 'string');
                         for (const alias of aliases.map(normalizeLanguageName)) {
                             this._languageNameInfoMap.set(alias, languageInfo);
                             if (languageConfigurationObject) {

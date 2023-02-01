@@ -435,6 +435,20 @@ User-Agent: abc/{{userAgent}}/def`;
         ]);
     });
 
+    it('markdown grammar can classify code', async () => {
+        const code = `
+#!markdown
+This is \`markdown\`.
+`;
+        const tokens = await getTokens('test-csharp', code);
+        expect(tokens).to.deep.equal([
+            {
+                tokenText: '`markdown`',
+                tokenType: 'polyglot-notebook-string'
+            }
+        ]);
+    });
+
     it('language configuration can be pulled from kernel name', () => {
         const notebookDocument: vscodeLike.NotebookDocument = {
             uri: testUri,
@@ -628,6 +642,30 @@ User-Agent: abc/{{userAgent}}/def`;
                         ]
                     }
                 }
+            },
+            // markdown isn't in the kernel list, but it's special-cased inside
+            {
+                id: 'test-extension.markdown',
+                extensionPath: '',
+                packageJSON: {
+                    contributes: {
+                        grammars: [
+                            {
+                                language: 'markdown',
+                                scopeName: 'source.markdown',
+                                path: 'markdown.tmGrammar.json'
+                            }
+                        ],
+                        languages: [
+                            {
+                                id: 'markdown',
+                                aliases: [
+                                    'md'
+                                ]
+                            }
+                        ]
+                    }
+                }
             }
         ];
 
@@ -645,13 +683,21 @@ User-Agent: abc/{{userAgent}}/def`;
                 }
             ]
         }));
-
         grammarContentsByPath.set('erlang.tmGrammar.json', JSON.stringify({
             scopeName: 'source.erlang',
             patterns: [
                 {
                     name: 'comment.line.erlang',
                     match: '%.*'
+                }
+            ]
+        }));
+        grammarContentsByPath.set('markdown.tmGrammar.json', JSON.stringify({
+            scopeName: 'source.markdown',
+            patterns: [
+                {
+                    name: 'string.raw',
+                    match: '`[^`]*`'
                 }
             ]
         }));
