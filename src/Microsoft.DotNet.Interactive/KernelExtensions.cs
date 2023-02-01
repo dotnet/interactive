@@ -19,6 +19,8 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -256,15 +258,34 @@ public static class KernelExtensions
 
             if (returnValueProduced is { })
             {
-                var formattedValue = returnValueProduced.FormattedValues.FirstOrDefault(fv => fv.MimeType == JsonFormatter.MimeType) 
-                                     ?? returnValueProduced.FormattedValues.FirstOrDefault(fv => fv.MimeType == PlainTextFormatter.MimeType) 
-                                     ?? returnValueProduced.FormattedValues.FirstOrDefault();
+                var mimetype = GetMostRelevantMimetype(returnValueProduced.FormattedValues.Select(fv => fv.MimeType ));
+
+                var formattedValue = returnValueProduced.FormattedValues.FirstOrDefault(fv => fv.MimeType == mimetype);
+
                 SendValue(kernel, returnValueProduced.Value, formattedValue, valueName).GetAwaiter().GetResult();
             }
             else
             {
                 c.Fail(c.Command, message: "The submission did not produce a return value.");
             }
+        }
+
+        string GetMostRelevantMimetype(IEnumerable<string> mimetypes)
+        {
+            var sorted = mimetypes.OrderBy(mt =>
+            {
+                return mt switch
+                {
+                    TabularDataResourceFormatter.MimeType => 10,
+                    JsonFormatter.MimeType => 9,
+                    CsvFormatter.MimeType => 8,
+                    PlainTextFormatter.MimeType => 7,
+                    HtmlFormatter.MimeType => 6,
+                    _ => 0
+                };
+            });
+
+            return sorted.FirstOrDefault();
         }
 
         void SetValueFromValueProduced(string mimetype)
