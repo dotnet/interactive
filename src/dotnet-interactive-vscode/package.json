@@ -44,9 +44,6 @@
     "onNotebook:dotnet-interactive",
     "onNotebook:dotnet-interactive-window",
     "onNotebook:jupyter-notebook",
-    "onCommand:dotnet-interactive.newNotebook",
-    "onCommand:dotnet-interactive.openNotebook",
-    "onCommand:dotnet-interactive.saveAsNotebook",
     "onNotebook:polyglot-notebook",
     "onNotebook:polyglot-notebook-window",
     "onNotebook:jupyter-notebook",
@@ -232,36 +229,12 @@
         "title": "Polyglot Notebook: Select cell kernel"
       },
       {
-        "command": "dotnet-interactive.openNotebook",
-        "title": ".NET Interactive: Open notebook"
-      },
-      {
-        "command": "dotnet-interactive.saveAsNotebook",
-        "title": ".NET Interactive: Save notebook as..."
-      },
-      {
-        "command": "dotnet-interactive.newNotebook",
-        "title": ".NET Interactive: Create new blank notebook"
-      },
-      {
-        "command": "dotnet-interactive.restartCurrentNotebookKernel",
-        "title": ".NET Interactive: Restart the current notebook's kernel"
-      },
-      {
         "command": "polyglot-notebook.notebookEditor.restartKernel",
         "title": "Restart",
         "icon": {
           "light": "resources/light/restart-kernel.svg",
           "dark": "resources/dark/restart-kernel.svg"
         }
-      },
-      {
-        "command": "dotnet-interactive.stopCurrentNotebookKernel",
-        "title": ".NET Interactive: Stop the current notebook's kernel"
-      },
-      {
-        "command": "dotnet-interactive.stopAllNotebookKernels",
-        "title": ".NET Interactive: Stop all notebook kernels"
       },
       {
         "command": "polyglot-notebook.notebookEditor.openValueViewer",
