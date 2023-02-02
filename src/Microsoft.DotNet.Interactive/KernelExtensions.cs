@@ -310,36 +310,6 @@ public static class KernelExtensions
         });
 
         kernel.AddDirective(set);
-
-        bool SetErrorIfAlsoUsed(Option otherOption, ArgumentResult result)
-        {
-            var otherOptionResult = result.FindResultFor(otherOption);
-
-            if (otherOptionResult is { })
-            {
-                result.ErrorMessage =
-                    $"The {otherOptionResult.Token.Value} and {((OptionResult)result.Parent).Token.Value} options cannot be used together.";
-
-                return true;
-            }
-
-            return false;
-        }
-
-        bool SetErrorIfNoneAreUsed(ArgumentResult result, params Option[] options)
-        {
-            var otherOptionResults = options.Select(result.FindResultFor).Where(option => option is not null).ToList();
-
-            if (otherOptionResults.Count == 0)
-            {
-                result.ErrorMessage =
-                    $"At least one of the options [{string.Join(", ", options.Select(o => o.Name))}] must be specified.";
-
-                return true;
-            }
-
-            return false;
-        }
     }
 
     private static void ConfigureAndAddShareMagicCommand<T>(T kernel) where T : Kernel
