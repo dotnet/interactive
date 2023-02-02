@@ -10,8 +10,13 @@ try {
     $stableDirectory = Resolve-Path $PSScriptROot
     $insidersDirectory = Resolve-Path "$PSScriptRoot\..\dotnet-interactive-vscode-insiders"
 
-    # copy and patch package.json
-    . "$stableDirectory\copy-package-json.ps1"
+    # ensure semantic token types are up to date
+    Push-Location $insidersDirectory
+    & node .\tools\buildSemanticTokenScopes.js
+    Pop-Location
+
+    # copy package.json
+    Copy-Item -Path "$stableDirectory\package.json" -Destination "$insidersDirectory\package.json"
 
     # copy grammar files
     Remove-Item -Path "$stableDirectory\grammars\*"

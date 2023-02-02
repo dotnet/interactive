@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 import { expect } from 'chai';
-import { DynamicGrammarSemanticTokenProvider, VSCodeExtensionLike } from '../../src/vscode-common/dynamicGrammarSemanticTokenProvider';
+import { DynamicGrammarSemanticTokenProvider, VSCodeExtensionLike, parseLanguageConfiguration } from '../../src/vscode-common/dynamicGrammarSemanticTokenProvider';
 import { Logger } from '../../src/vscode-common/dotnet-interactive';
 
 describe('dynamic grammar tests', async () => {
@@ -435,6 +435,20 @@ User-Agent: abc/{{userAgent}}/def`;
         ]);
     });
 
+    it('markdown grammar can classify code', async () => {
+        const code = `
+#!markdown
+This is \`markdown\`.
+`;
+        const tokens = await getTokens('test-csharp', code);
+        expect(tokens).to.deep.equal([
+            {
+                tokenText: '`markdown`',
+                tokenType: 'polyglot-notebook-string'
+            }
+        ]);
+    });
+
     it('language configuration can be pulled from kernel name', () => {
         const notebookDocument: vscodeLike.NotebookDocument = {
             uri: testUri,
@@ -628,6 +642,30 @@ User-Agent: abc/{{userAgent}}/def`;
                         ]
                     }
                 }
+            },
+            // markdown isn't in the kernel list, but it's special-cased inside
+            {
+                id: 'test-extension.markdown',
+                extensionPath: '',
+                packageJSON: {
+                    contributes: {
+                        grammars: [
+                            {
+                                language: 'markdown',
+                                scopeName: 'source.markdown',
+                                path: 'markdown.tmGrammar.json'
+                            }
+                        ],
+                        languages: [
+                            {
+                                id: 'markdown',
+                                aliases: [
+                                    'md'
+                                ]
+                            }
+                        ]
+                    }
+                }
             }
         ];
 
@@ -645,13 +683,21 @@ User-Agent: abc/{{userAgent}}/def`;
                 }
             ]
         }));
-
         grammarContentsByPath.set('erlang.tmGrammar.json', JSON.stringify({
             scopeName: 'source.erlang',
             patterns: [
                 {
                     name: 'comment.line.erlang',
                     match: '%.*'
+                }
+            ]
+        }));
+        grammarContentsByPath.set('markdown.tmGrammar.json', JSON.stringify({
+            scopeName: 'source.markdown',
+            patterns: [
+                {
+                    name: 'string.raw',
+                    match: '`[^`]*`'
                 }
             ]
         }));
@@ -711,4 +757,187 @@ User-Agent: abc/{{userAgent}}/def`;
             expect(logMessages).to.deep.equal([]);
         }
     });
+});
+
+describe('deserializing language configuration tests', () => {
+
+    // it'll be easier to test if we can pass in a raw object
+    function getConfigurationFromObject(obj: any): any {
+        const asString = JSON.stringify(obj);
+        const config = parseLanguageConfiguration(asString);
+        return config;
+    }
+
+    function verifyIsRegExp(obj: any) {
+        expect(obj.constructor.name).to.equal('RegExp');
+    }
+
+    it('`wordPattern` can be deserialized from string', () => {
+        const config = getConfigurationFromObject({
+            wordPattern: 'abc',
+        });
+        verifyIsRegExp(config.wordPattern);
+    });
+
+    it('`wordPattern` can be deserialized from object', () => {
+        const config = getConfigurationFromObject({
+            wordPattern: {
+                pattern: 'abc',
+            },
+        });
+        verifyIsRegExp(config.wordPattern);
+    });
+
+    it('`indentationRules.decreaseIndentPattern` can be deserialized from string', () => {
+        const config = getConfigurationFromObject({
+            indentationRules: {
+                decreaseIndentPattern: 'abc',
+            },
+        });
+        verifyIsRegExp(config.indentationRules.decreaseIndentPattern);
+    });
+
+    it('`indentationRules.decreaseIndentPattern` can be deserialized from object', () => {
+        const config = getConfigurationFromObject({
+            indentationRules: {
+                decreaseIndentPattern: {
+                    pattern: 'abc',
+                },
+            },
+        });
+        verifyIsRegExp(config.indentationRules.decreaseIndentPattern);
+    });
+
+    it('`indentationRules.increaseIndentPattern` can be deserialized from string', () => {
+        const config = getConfigurationFromObject({
+            indentationRules: {
+                increaseIndentPattern: 'abc',
+            },
+        });
+        verifyIsRegExp(config.indentationRules.increaseIndentPattern);
+    });
+
+    it('`indentationRules.increaseIndentPattern` can be deserialized from object', () => {
+        const config = getConfigurationFromObject({
+            indentationRules: {
+                increaseIndentPattern: {
+                    pattern: 'abc',
+                },
+            },
+        });
+        verifyIsRegExp(config.indentationRules.increaseIndentPattern);
+    });
+
+    it('`indentationRules.indentNextLinePattern` can be deserialized from string', () => {
+        const config = getConfigurationFromObject({
+            indentationRules: {
+                indentNextLinePattern: 'abc',
+            },
+        });
+        verifyIsRegExp(config.indentationRules.indentNextLinePattern);
+    });
+
+    it('`indentationRules.indentNextLinePattern` can be deserialized from object', () => {
+        const config = getConfigurationFromObject({
+            indentationRules: {
+                indentNextLinePattern: {
+                    pattern: 'abc',
+                },
+            },
+        });
+        verifyIsRegExp(config.indentationRules.indentNextLinePattern);
+    });
+
+    it('`indentationRules.unIndentedLinePattern` can be deserialized from string', () => {
+        const config = getConfigurationFromObject({
+            indentationRules: {
+                unIndentedLinePattern: 'abc',
+            },
+        });
+        verifyIsRegExp(config.indentationRules.unIndentedLinePattern);
+    });
+
+    it('`indentationRules.unIndentedLinePattern` can be deserialized from object', () => {
+        const config = getConfigurationFromObject({
+            indentationRules: {
+                unIndentedLinePattern: {
+                    pattern: 'abc',
+                },
+            },
+        });
+        verifyIsRegExp(config.indentationRules.unIndentedLinePattern);
+    });
+
+    it('`onEnterRules.beforeText` can be deserialized from string', () => {
+        const config = getConfigurationFromObject({
+            onEnterRules: [
+                {
+                    beforeText: 'abc',
+                }
+            ]
+        });
+        verifyIsRegExp(config.onEnterRules[0].beforeText);
+    });
+
+    it('`onEnterRules.beforeText` can be deserialized from object', () => {
+        const config = getConfigurationFromObject({
+            onEnterRules: [
+                {
+                    beforeText: {
+                        pattern: 'abc',
+                    },
+                }
+            ]
+        });
+        verifyIsRegExp(config.onEnterRules[0].beforeText);
+    });
+
+    it('`onEnterRules.afterText` can be deserialized from string', () => {
+        const config = getConfigurationFromObject({
+            onEnterRules: [
+                {
+                    afterText: 'abc',
+                }
+            ]
+        });
+        verifyIsRegExp(config.onEnterRules[0].afterText);
+    });
+
+    it('`onEnterRules.afterText` can be deserialized from object', () => {
+        const config = getConfigurationFromObject({
+            onEnterRules: [
+                {
+                    afterText: {
+                        pattern: 'abc',
+                    },
+                }
+            ]
+        });
+        verifyIsRegExp(config.onEnterRules[0].afterText);
+    });
+
+    it('`onEnterRules.previousLineText` can be deserialized from string', () => {
+        const config = getConfigurationFromObject({
+            onEnterRules: [
+                {
+                    previousLineText: 'abc',
+                }
+            ]
+        });
+        verifyIsRegExp(config.onEnterRules[0].previousLineText);
+    });
+
+    it('`onEnterRules.previousLineText` can be deserialized from object', () => {
+        const config = getConfigurationFromObject({
+            onEnterRules: [
+                {
+                    previousLineText: {
+                        pattern: 'abc',
+                    },
+                }
+            ]
+        });
+        verifyIsRegExp(config.onEnterRules[0].previousLineText);
+    });
+
 });
