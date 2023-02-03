@@ -504,7 +504,11 @@ public static class CommandLineParser
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());
         kernel.AddKernelConnector(new ConnectStdIoCommand(startupOptions.KernelHost));
-        kernel.AddKernelConnector(new ConnectJupyterKernelCommand());
+
+        kernel.AddKernelConnector(
+            new ConnectJupyterKernelCommand()
+            .AddConnectionOptions(new JupyterHttpKernelConnectionOptions())
+            .AddConnectionOptions(new JupyterLocalKernelConnectionOptions()));
 
         if (startupOptions.Verbose)
         {
