@@ -115,6 +115,40 @@ public class KeyValueStoreKernelTests
     }
 
     [Fact]
+    public async Task requestValueInfos_uses_mimetypes_as_type_names()
+    {
+        using var kernel = CreateKernel();
+
+        var storedValue = "1,2,3";
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name a --mime-type text/plain
+{storedValue}
+");
+
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name b --mime-type application/json
+{storedValue}
+");
+
+        var result = await kernel.SendAsync(new RequestValueInfos( targetKernelName: "value"));
+
+        using var events = result.KernelEvents.ToSubscribedList();
+
+        var valueInfosProduced = events.Should()
+            .ContainSingle<ValueInfosProduced>()
+            .Which;
+
+        valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "a" && v.TypeName == "text/plain");
+
+
+        valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "b" && v.TypeName == "application/json");
+    }
+
+    [Fact]
     public async Task When_mime_type_is_not_specified_then_it_default_to_text_plain ()
     {
         using var kernel = CreateKernel();
