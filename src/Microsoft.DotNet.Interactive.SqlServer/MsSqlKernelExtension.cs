@@ -13,7 +13,7 @@ public class MsSqlKernelExtension : IKernelExtension
         if (kernel is CompositeKernel compositeKernel)
         {
             var sqlToolName = "MicrosoftSqlToolsServiceLayer";
-            await Utils.CheckAndInstallGlobalTool(sqlToolName, "1.1.0"); 
+            await Utils.CheckAndInstallGlobalToolAsync(sqlToolName, "1.1.0");
 
             compositeKernel
                 .AddKernelConnector(new ConnectMsSqlCommand(sqlToolName));
