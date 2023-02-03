@@ -69,7 +69,7 @@ public static class Utils
             });
     }
 
-    public static async Task CheckAndInstallGlobalToolAsync(string toolName, string minimumVersion)
+    public static async Task CheckAndInstallGlobalToolAsync(string toolName, string minimumVersion, string nugetPackage)
     {
         var dotnet = new Dotnet();
         var installedGlobalTools = await Utils.GetGlobalToolListAsync();
@@ -88,7 +88,7 @@ public static class Utils
         });
         if (!toolInstalled)
         {
-            var commandLineResult = await dotnet.ToolInstall("Microsoft.SqlServer.KustoServiceLayer.Tool", null, null, minimumVersion);
+            var commandLineResult = await dotnet.ToolInstall(nugetPackage, null, null, minimumVersion);
             commandLineResult.ThrowOnFailure();
         }
     }
