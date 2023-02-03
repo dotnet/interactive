@@ -114,6 +114,32 @@ public class KeyValueStoreKernelTests
             .Be("text/test-stuff");
     }
 
+    [Fact]
+    public async Task When_mime_type_is_not_specified_then_it_default_to_text_plain ()
+    {
+        using var kernel = CreateKernel();
+
+        var storedValue = "1,2,3";
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name hello
+{storedValue}
+");
+
+        var result = await kernel.SendAsync(new RequestValue("hello", targetKernelName: "value"));
+
+        using var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .FormattedValue
+            .MimeType
+            .Should()
+            .Be("text/plain");
+    }
+
     [Theory]
     [InlineData("#!value --name hi --from-file {0}")]
     [InlineData("#!value --name hi --from-file {0}\n")]
