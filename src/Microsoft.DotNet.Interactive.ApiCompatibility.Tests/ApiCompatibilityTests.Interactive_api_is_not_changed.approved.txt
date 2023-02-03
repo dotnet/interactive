@@ -286,7 +286,7 @@ Microsoft.DotNet.Interactive
   public class KeyValueStoreKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor(System.String name = value)
     public ChooseKernelDirective ChooseKernelDirective { get;}
-    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Values { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,FormattedValue> Values { get;}
   public class KqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
   public class LinePosition, System.IEquatable<LinePosition>
