@@ -88,6 +88,32 @@ public class KeyValueStoreKernelTests
                                 v.Value == storedValue);
     }
 
+    [Fact]
+    public async Task When_mime_type_is_specified_then_it_retains_the_specified_mime_type()
+    {
+        using var kernel = CreateKernel();
+
+        var storedValue = "1,2,3";
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name hello --mime-type text/test-stuff
+{storedValue}
+");
+
+        var result = await kernel.SendAsync(new RequestValue("hello", targetKernelName:"value"));
+
+        using var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .FormattedValue
+            .MimeType
+            .Should()
+            .Be("text/test-stuff");
+    }
+
     [Theory]
     [InlineData("#!value --name hi --from-file {0}")]
     [InlineData("#!value --name hi --from-file {0}\n")]
