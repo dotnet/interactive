@@ -276,7 +276,7 @@ public static class KernelExtensions
     private static void ConfigureAndAddSetMagicCommand<T>(T kernel) where T : Kernel
     {
         var fromValueOption = new Option<string>(
-            "--from-value",
+            "--value",
             description: "Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.")
         {
             IsRequired = true

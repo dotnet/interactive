@@ -36,7 +36,7 @@ public class SetMagicCommandTests
 
 
         await composite.SendAsync(new SubmitCode(@"
-#!set --name x --from-value @input:input-please
+#!set --name x --value @input:input-please
 1+3"));
         var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
 
@@ -61,7 +61,7 @@ public class SetMagicCommandTests
         await fsharpKernel.SendAsync(new SubmitCode("let y = 456"));
 
         await composite.SendAsync(new SubmitCode($@"
-#!set --name x --from-value @{fsharpKernel.Name}:y
+#!set --name x --value @{fsharpKernel.Name}:y
 1+3", targetKernelName: csharpKernel.Name));
 
         var (succeeded, valueProduced) = await csharpKernel.TryRequestValueAsync("x");
@@ -87,7 +87,7 @@ public class SetMagicCommandTests
         await fsharpKernel.SendAsync(new SubmitCode("let y = 456"));
 
         await composite.SendAsync(new SubmitCode($@"
-#!set --name x --from-value @{fsharpKernel.Name}:y --mime-type text/plain
+#!set --name x --value @{fsharpKernel.Name}:y --mime-type text/plain
 1+3", targetKernelName: csharpKernel.Name));
 
         var (succeeded, valueProduced) = await csharpKernel.TryRequestValueAsync("x");
@@ -110,7 +110,7 @@ public class SetMagicCommandTests
         var events = results.KernelEvents.ToSubscribedList();
 
         events.Should().ContainSingle<CommandFailed>()
-            .Which.Message.Should().Be("Option '--from-value' is required.");
+            .Which.Message.Should().Be("Option '--value' is required.");
     }
 
     private static Kernel CreateKernel(Language language)
