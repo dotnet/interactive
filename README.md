@@ -9,9 +9,9 @@
 - PowerShell
 - JavaScript
 - SQL 
-- KQL (Kusto Query Language)
+- KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))
 - HTML*
-- Mermaid*
+- [Mermaid](https://mermaid.js.org/intro/)*
 
 *Variable sharing not available
 
