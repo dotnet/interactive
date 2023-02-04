@@ -48,7 +48,7 @@ public class NotebookLessonParser
         {
             ".ipynb" => await Notebook.ReadAsync(stream, kernelInfo),
             ".dib" => await CodeSubmission.ReadAsync(stream, kernelInfo),
-            _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}"),
+            _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}")
         };
 
         return notebook;
