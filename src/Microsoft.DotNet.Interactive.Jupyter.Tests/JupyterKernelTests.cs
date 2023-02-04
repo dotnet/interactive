@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Assent;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -23,12 +22,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 public class JupyterKernelTests : IDisposable
 {
-    private readonly Configuration _configuration;
     private readonly ITestOutputHelper _output;
     private const bool SkipConnectionTests = true;
     private const string SkipReason = SkipConnectionTests ? "Setup not available" : null;
     private CompositeDisposable _disposables = new();
-    
+
     public JupyterKernelTests(ITestOutputHelper output)
     {
         _output = output;
@@ -38,7 +36,7 @@ public class JupyterKernelTests : IDisposable
     {
         //_disposables.Dispose();
     }
-    
+
     private CompositeKernel CreateKernelAsync(IJupyterKernelConnectionOptions options)
     {
         Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
@@ -71,7 +69,7 @@ public class JupyterKernelTests : IDisposable
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
-        
+
         var result = await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecToTest} {options.TestConnectionString}");
 
@@ -138,10 +136,16 @@ public class JupyterKernelTests : IDisposable
             .Should()
             .NotContainErrors();
 
-        // should send the comm message for setting up variable sharing channel
         sentMessages
             .Should()
-            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest);
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
+            .Which
+            .Content
+            .As<ExecuteRequest>()
+            .Code
+            .Trim()
+            .Should()
+            .Be("1+1");
 
         events.Should()
            .ContainSingle<ReturnValueProduced>()
@@ -157,9 +161,11 @@ public class JupyterKernelTests : IDisposable
     }
 
     [Theory]
-    [InlineData(typeof(JupyterHttpKernelConnectionOptions), "python3", "from IPython.display import display; display(2)", Skip = SkipReason)]
-    [InlineData(typeof(JupyterLocalKernelConnectionOptions), "python3", "from IPython.display import display; display(2)", Skip = SkipReason)]
-    public async Task can_submit_code_and_get_display_value_produced(Type connectionOptionsToTest, string kernelSpecToTest, string codeToRun)
+    [InlineData(typeof(JupyterHttpKernelConnectionOptions), "python3", "from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", Skip = SkipReason)]
+    [InlineData(typeof(JupyterLocalKernelConnectionOptions), "python3", "from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", Skip = SkipReason)]
+    [InlineData(typeof(JupyterHttpKernelConnectionOptions), "ir", "1+1", PlainTextFormatter.MimeType, "[1] 2", Skip = SkipReason)]
+    [InlineData(typeof(JupyterLocalKernelConnectionOptions), "ir", "1+1", PlainTextFormatter.MimeType, "[1] 2", Skip = SkipReason)]
+    public async Task can_submit_code_and_get_display_value_produced(Type connectionOptionsToTest, string kernelSpecToTest, string codeToRun, string mimeType, string outputReturned)
     {
         var options = JupyterKernelTestHelper.GetConnectionOptions(connectionOptionsToTest);
 
@@ -178,21 +184,28 @@ public class JupyterKernelTests : IDisposable
             .Should()
             .NotContainErrors();
 
-        // should send the comm message for setting up variable sharing channel
         sentMessages
             .Should()
-            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest);
-        
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
+            .Which
+            .Content
+            .As<ExecuteRequest>()
+            .Code
+            .Trim()
+            .Should()
+            .Be(codeToRun);
+
+
         events.Should()
            .ContainSingle<DisplayedValueProduced>()
            .Which
            .FormattedValues
             .Should()
-            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+            .ContainSingle(v => v.MimeType == mimeType)
             .Which
             .Value
             .Trim()
             .Should()
-            .Be("2");
+            .Be(outputReturned);
     }
 }
