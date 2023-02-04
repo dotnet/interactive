@@ -1,18 +1,61 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
+using Xunit.Sdk;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-internal sealed class JupyterZMQConnectionHelper 
+public class JupyterConnectionData
+{
+    private readonly string _type;
+    private readonly string _connectionString;
+    private readonly IJupyterKernelConnectionOptions _connectionOptions;
+    
+    public JupyterConnectionData(string type, IJupyterKernelConnectionOptions connectionOptions = null, string connectionString = "")
+    {
+        _type = type;
+        _connectionString = connectionString;
+        _connectionOptions = connectionOptions;
+    }
+
+    public string ConnectionType => _type;
+    public string GetConnectionString() => _connectionString;
+    public IJupyterKernelConnectionOptions GetConnectionOptions() => _connectionOptions;
+}
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+internal sealed class JupyterZMQTestDataAttribute : DataAttribute
 {
     public const string TEST_DOTNET_JUPYTER_ZMQ_CONN = nameof(TEST_DOTNET_JUPYTER_ZMQ_CONN);
-    public static readonly string SkipReason;
+    public const string JUPYTER_ZMQ = nameof(JUPYTER_ZMQ);
+    private static readonly string _skipReason;
+    private readonly object[] _data;
     
-    static JupyterZMQConnectionHelper()
+    
+    static JupyterZMQTestDataAttribute()
     {
-        SkipReason = TestConnectionAndReturnSkipReason();
+        _skipReason = TestConnectionAndReturnSkipReason();
+    }
+
+    public JupyterZMQTestDataAttribute(params object[] data)
+    {
+        _data = data;
+        if (_skipReason is not null)
+        {
+            Skip = _skipReason;
+        }
+    }
+
+    public override IEnumerable<object[]> GetData(MethodInfo testMethod)
+    {
+        List<object> testData = new();
+        testData.Add(new JupyterConnectionData(JUPYTER_ZMQ, new JupyterLocalKernelConnectionOptions()));
+        testData.AddRange(_data);
+        return new[] { testData.ToArray() };
     }
 
     internal static string TestConnectionAndReturnSkipReason()
@@ -33,14 +76,34 @@ internal sealed class JupyterZMQConnectionHelper
     }
 }
 
-internal sealed class JupyterHttpConnectionHelper
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+internal sealed class JupyterHttpTestDataAttribute : DataAttribute
 {
     public const string TEST_DOTNET_JUPYTER_HTTP_CONN = nameof(TEST_DOTNET_JUPYTER_HTTP_CONN);
-    public static readonly string SkipReason;
+    public const string JUPYTER_HTTP = nameof(JUPYTER_HTTP);
+    private static readonly string _skipReason;
+    private readonly object[] _data;
 
-    static JupyterHttpConnectionHelper()
+    static JupyterHttpTestDataAttribute()
     {
-        SkipReason = TestConnectionAndReturnSkipReason();
+        _skipReason = TestConnectionAndReturnSkipReason();
+    }
+
+    public JupyterHttpTestDataAttribute(params object[] data)
+    {
+        _data = data;
+        if (_skipReason is not null)
+        {
+            Skip = _skipReason;
+        }
+    }
+    
+    public override IEnumerable<object[]> GetData(MethodInfo testMethod)
+    {
+        List<object> testData = new();
+        testData.Add(new JupyterConnectionData(JUPYTER_HTTP, new JupyterHttpKernelConnectionOptions(), GetConnectionString()));
+        testData.AddRange(_data);
+        return new[] { testData.ToArray() };
     }
 
     internal static string TestConnectionAndReturnSkipReason()
@@ -62,25 +125,3 @@ internal sealed class JupyterHttpConnectionHelper
     }
 }
 
-
-internal class JupyterKernelTestHelper
-{
-    public static TestJupyterConnectionOptions GetConnectionOptions(Type connectionOptionsToTest = null)
-    {
-        var options = new TestJupyterConnectionOptions();
-        if (connectionOptionsToTest == typeof(JupyterHttpKernelConnectionOptions) && JupyterHttpConnectionHelper.SkipReason is null)
-        {
-            options.Record(new JupyterHttpKernelConnectionOptions(), JupyterHttpConnectionHelper.GetConnectionString());
-        }
-        else if (connectionOptionsToTest == typeof(JupyterLocalKernelConnectionOptions) && JupyterZMQConnectionHelper.SkipReason is null)
-        {
-            options.Record(new JupyterLocalKernelConnectionOptions());
-        }
-        else if (connectionOptionsToTest == null)
-        {
-            options.Playback(null);
-        }
-
-        return options;
-    }
-}

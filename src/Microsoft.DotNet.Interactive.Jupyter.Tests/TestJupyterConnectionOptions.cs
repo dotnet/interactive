@@ -163,14 +163,19 @@ internal class TestJupyterConnection : IJupyterConnection
 internal class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
 {
     private IJupyterKernelConnectionOptions _testOptions;
-    private string _testConnectionString = "--test";
     private TestJupyterConnection _connection;
-
-    public void Record(IJupyterKernelConnectionOptions options, string connectionString = "")
+    
+    public TestJupyterConnectionOptions(IJupyterKernelConnectionOptions optionsToTest = null)
+    {
+        if (optionsToTest != null)
+        {
+            Record(optionsToTest);
+        }
+    }
+    
+    public void Record(IJupyterKernelConnectionOptions options)
     {
         _testOptions = options;
-        _testConnectionString = $"{_testConnectionString} {connectionString}";
-
         MessageTracker = new MessageRecorder();
         _connection = new TestJupyterConnection(new TestJupyterKernelConnection(MessageTracker));
     }
@@ -183,7 +188,6 @@ internal class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
 
     public IMessageTracker MessageTracker { get; private set; }
     public TestJupyterConnection Connection => _connection;
-    public string TestConnectionString => _testConnectionString;
 
     public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
     {
@@ -198,10 +202,8 @@ internal class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
     public IReadOnlyCollection<Option> GetOptions()
     {
         List<Option> options = new();
-        options.Add(new Option<bool>("--test"));
         if (_testOptions != null)
         {
-
             options.AddRange(_testOptions.GetOptions());
         }
 

@@ -23,8 +23,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 public class JupyterKernelTests : IDisposable
 {
     private readonly ITestOutputHelper _output;
-    private const bool SkipConnectionTests = true;
-    private const string SkipReason = SkipConnectionTests ? "Setup not available" : null;
     private CompositeDisposable _disposables = new();
 
     public JupyterKernelTests(ITestOutputHelper output)
@@ -40,30 +38,26 @@ public class JupyterKernelTests : IDisposable
     private CompositeKernel CreateKernelAsync(IJupyterKernelConnectionOptions options)
     {
         Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
+
         var csharpKernel = new CSharpKernel();
-
-        var kernel = new CompositeKernel
-        {
-            csharpKernel,
-        };
-        _disposables.Add(kernel);
-
+        var kernel = new CompositeKernel { csharpKernel };
         kernel.DefaultKernelName = csharpKernel.Name;
 
         var jupyterKernelCommand = new ConnectJupyterKernelCommand();
-
         kernel.AddKernelConnector(jupyterKernelCommand.AddConnectionOptions(options));
+
+        _disposables.Add(kernel);
         return kernel;
     }
 
     [Theory]
-    [InlineData(typeof(JupyterHttpKernelConnectionOptions), "python3", Skip = SkipReason)]
-    [InlineData(typeof(JupyterHttpKernelConnectionOptions), "ir", Skip = SkipReason)]
-    [InlineData(typeof(JupyterLocalKernelConnectionOptions), "python3", Skip = SkipReason)]
-    [InlineData(typeof(JupyterLocalKernelConnectionOptions), "ir", Skip = SkipReason)]
-    public async Task can_connect_to_jupyter_kernel_and_kernel_info_produced(Type connectionOptionsToTest, string kernelSpecToTest)
+    [JupyterHttpTestData("python3")]
+    [JupyterHttpTestData("ir")]
+    [JupyterZMQTestData("python3")]
+    [JupyterZMQTestData("ir")]
+    public async Task can_connect_to_and_get_kernel_info_produced(JupyterConnectionData connectionData, string kernelSpecToTest)
     {
-        var options = JupyterKernelTestHelper.GetConnectionOptions(connectionOptionsToTest);
+        var options = new TestJupyterConnectionOptions(connectionData.GetConnectionOptions());
 
         var kernel = CreateKernelAsync(options);
 
@@ -71,7 +65,7 @@ public class JupyterKernelTests : IDisposable
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecToTest} {options.TestConnectionString}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecToTest} {connectionData.GetConnectionString()}");
 
         var events = result.KernelEvents.ToSubscribedList();
 
@@ -115,16 +109,16 @@ public class JupyterKernelTests : IDisposable
 
     // note that R kernel returns display_data instead of execute_result
     [Theory]
-    [InlineData(typeof(JupyterHttpKernelConnectionOptions), "python3", Skip = SkipReason)]
-    [InlineData(typeof(JupyterLocalKernelConnectionOptions), "python3", Skip = SkipReason)]
-    public async Task can_submit_code_and_get_return_value_produced(Type connectionOptionsToTest, string kernelSpecToTest)
+    [JupyterHttpTestData("python3")]
+    [JupyterZMQTestData("python3")]
+    public async Task can_submit_code_and_get_return_value_produced(JupyterConnectionData connectionData, string kernelSpecToTest)
     {
-        var options = JupyterKernelTestHelper.GetConnectionOptions(connectionOptionsToTest);
+        var options = new TestJupyterConnectionOptions(connectionData.GetConnectionOptions());
 
         var kernel = CreateKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecToTest} {options.TestConnectionString}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecToTest} {connectionData.GetConnectionString()}");
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
@@ -161,18 +155,18 @@ public class JupyterKernelTests : IDisposable
     }
 
     [Theory]
-    [InlineData(typeof(JupyterHttpKernelConnectionOptions), "python3", "from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", Skip = SkipReason)]
-    [InlineData(typeof(JupyterLocalKernelConnectionOptions), "python3", "from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", Skip = SkipReason)]
-    [InlineData(typeof(JupyterHttpKernelConnectionOptions), "ir", "1+1", PlainTextFormatter.MimeType, "[1] 2", Skip = SkipReason)]
-    [InlineData(typeof(JupyterLocalKernelConnectionOptions), "ir", "1+1", PlainTextFormatter.MimeType, "[1] 2", Skip = SkipReason)]
-    public async Task can_submit_code_and_get_display_value_produced(Type connectionOptionsToTest, string kernelSpecToTest, string codeToRun, string mimeType, string outputReturned)
+    [JupyterHttpTestData("python3", "from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2")]
+    [JupyterZMQTestData("python3", "from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2")]
+    [JupyterHttpTestData("ir", "1+1", PlainTextFormatter.MimeType, "[1] 2")]
+    [JupyterZMQTestData("ir", "1+1", PlainTextFormatter.MimeType, "[1] 2")]
+    public async Task can_submit_code_and_get_display_value_produced(JupyterConnectionData connectionData, string kernelSpecToTest, string codeToRun, string mimeType, string outputReturned)
     {
-        var options = JupyterKernelTestHelper.GetConnectionOptions(connectionOptionsToTest);
+        var options = new TestJupyterConnectionOptions(connectionData.GetConnectionOptions());
 
         var kernel = CreateKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecToTest} {options.TestConnectionString}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecToTest} {connectionData.GetConnectionString()}");
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
