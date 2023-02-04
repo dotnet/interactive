@@ -16,6 +16,7 @@ public partial class HtmlFormatterTests
 {
     public class Objects_TableView : FormatterTestBase
     {
+        // FIX: (Objects_TableView) delete?
         [Fact]
         public void Formatters_are_generated_on_the_fly_when_HTML_mime_type_is_requested()
         {

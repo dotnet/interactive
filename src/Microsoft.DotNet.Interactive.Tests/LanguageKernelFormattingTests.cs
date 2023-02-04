@@ -41,11 +41,11 @@ using {typeof(PocketView).Namespace};
     [InlineData(Language.CSharp, "b(123)", $"<b>{PlainTextBegin}123{PlainTextEnd}</b>")]
     [InlineData(Language.FSharp, "b [] [str \"123\" ]", "<b>123</b>")]
     // sequence
-    [InlineData(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<table>")]
-    [InlineData(Language.FSharp, "[1; 2; 3; 4]", "<table>")]
+    [InlineData(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<pre>")]
+    [InlineData(Language.FSharp, "[1; 2; 3; 4]", "<pre>")]
     // sequence of anonymous objects
     [InlineData(Language.CSharp, "new[] { new { a = 123 }, new { a = 456 } }", "<table>")]
-    [InlineData(Language.FSharp, "[{| a = 123 |}; {| a = 456 |}]", "<table>")]
+    [InlineData(Language.FSharp, "[{| a = 123 |}; {| a = 456 |}]", "<div>")]
     public async Task Default_formatting_is_HTML(
         Language language,
         string submission,

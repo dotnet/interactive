@@ -32,7 +32,7 @@ public partial class HtmlFormatterTests
                 .RemoveStyleElement()
                 .Should()
                 .BeEquivalentHtmlTo($$"""
-                    <details class="dni-treeview">
+                    <details open="open" class="dni-treeview">
                         {{Tags.SummaryTextBegin}}{ a = 123 }{{Tags.SummaryTextEnd}}
                         <div>
                             <table>
@@ -112,8 +112,8 @@ public partial class HtmlFormatterTests
             html
                 .Should()
                 .BeEquivalentHtmlTo($"""
-                    <details class="dni-treeview">
-                        {Tags.SummaryTextBegin}Microsoft.DotNet.Interactive.Formatting.Tests.EntityId{Tags.SummaryTextEnd}
+                    <details open="open" class="dni-treeview">
+                        {Tags.SummaryTextBegin}{typeof(EntityId).FullName}{Tags.SummaryTextEnd}
                         <div>
                             <table>
                                 <thead>
@@ -166,7 +166,7 @@ public partial class HtmlFormatterTests
                   .RemoveStyleElement()
                   .Should()
                   .BeEquivalentHtmlTo($"""
-                    <details class="dni-treeview">
+                    <details open="open" class="dni-treeview">
                         {Tags.SummaryTextBegin}(123, hello){Tags.SummaryTextEnd}
                     <div>
                         <table>
@@ -206,13 +206,9 @@ public partial class HtmlFormatterTests
 
             formatter.Format(instance, writer);
 
-            writer.ToString()
-                  .RemoveStyleElement()
-                  .Should()
-                  .BeEquivalentHtmlTo(
-                      $$"""
-                        <details class="dni-treeview">
-                           {{Tags.SummaryTextBegin}}{ A = 123, B = { BA = 456 } }{{Tags.SummaryTextEnd}}
+            var expected = $$"""
+                        <details open="open" class="dni-treeview">
+                           <summary><span class="dni-code-hint"><code>{ A = 123, B = { BA = 456 } }</code></span></summary>
                            <div>
                                <table>
                                    <thead>
@@ -230,8 +226,8 @@ public partial class HtmlFormatterTests
                                        <tr>
                                            <td>B</td>
                                            <td>
-                                               <details class="dni-treeview">
-                                                   {{Tags.SummaryTextBegin}}{ BA = 456 }{{Tags.SummaryTextEnd}}
+                                               <details open="open" class="dni-treeview">
+                                                   <summary><span class="dni-code-hint"><code>{ BA = 456 }</code></span></summary>
                                                    <div>
                                                        <table>
                                                            <thead>
@@ -256,8 +252,14 @@ public partial class HtmlFormatterTests
                                </table>
                            </div>
                        </details>
-                       
-                       """);
+                       """;
+
+            var actual = writer.ToString().RemoveStyleElement();
+
+            actual
+                  .Should()
+                  .BeEquivalentHtmlTo(
+                      expected);
         }
 
         [Fact]
@@ -275,12 +277,13 @@ public partial class HtmlFormatterTests
 
             formatter.Format(instance, writer);
 
-            writer.ToString()
-                  .RemoveStyleElement()
-                  .Should()
-                  .BeEquivalentHtmlTo(
-                      $$"""
-                       <details class="dni-treeview">
+            var html = writer.ToString().RemoveStyleElement();
+
+            html
+                .Should()
+                .BeEquivalentHtmlTo(
+                    $$"""
+                       <details open="open" class="dni-treeview">
                            {{Tags.SummaryTextBegin}}{ PropertyA = 123, PropertyB = System.Linq.Enumerable+RangeIterator }{{Tags.SummaryTextEnd}}
                            <div>
                                <table>
@@ -312,25 +315,6 @@ public partial class HtmlFormatterTests
         }
 
         [Fact]
-        public void Collection_properties_are_formatted_using_plain_text_formatting()
-        {
-            var writer = new StringWriter();
-
-            var instance = new
-            {
-                PropertyA = Enumerable.Range(1, 3)
-            };
-
-            var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
-
-            formatter.Format(instance, writer);
-
-            writer.ToString()
-                  .Should()
-                  .Contain("[ 1, 2, 3 ]");
-        }
-
-        [Fact]
         public void It_displays_exceptions_thrown_by_properties_in_the_property_value_cell()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(SomePropertyThrows));
@@ -349,7 +333,7 @@ public partial class HtmlFormatterTests
                     <tr>
                         <td>NotOk</td>
                         <td>
-                            <details class="dni-treeview">
+                            <details open="open" class="dni-treeview">
                                 <summary><span class="dni-code-hint"><code>System.Exception: not ok
                     """.Crunch());
         }

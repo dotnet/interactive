@@ -31,20 +31,76 @@ public partial class HtmlFormatterTests
 
             formatter.Format(instance, writer);
 
-            writer.ToString()
-                  .RemoveStyleElement()
-                  .Should()
-                  .BeEquivalentHtmlTo(
-                      @$"
-<table>
-   <thead>
-     <tr><th><i>index</i></th><th>TypeName</th><th>Id</th></tr>
-   </thead>
-   <tbody>
-     <tr><td>0</td><td>entity one</td><td>123</td></tr>
-     <tr><td>1</td><td>entity two</td><td>456</td></tr>
-   </tbody>
-</table>");
+            var html = writer.ToString().RemoveStyleElement();
+
+            html.Should()
+                .BeEquivalentHtmlTo(
+                    """
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><i>index</i></th>
+                                    <th>value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0</td>
+                                    <td>
+                                        <details open="open" class="dni-treeview">
+                                            <summary><span
+                                                    class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span>
+                                            </summary>
+                                            <div>
+                                                <table>
+                                                    <thead>
+                                                        <tr></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>TypeName</td>
+                                                            <td>entity one</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Id</td>
+                                                            <td>123</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </details>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>
+                                        <details open="open" class="dni-treeview">
+                                            <summary><span
+                                                    class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span>
+                                            </summary>
+                                            <div>
+                                                <table>
+                                                    <thead>
+                                                        <tr></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>TypeName</td>
+                                                            <td>entity two</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Id</td>
+                                                            <td>456</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </details>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        """);
         }
 
         [Fact]
@@ -72,7 +128,7 @@ public partial class HtmlFormatterTests
         }
             
         [Fact]
-        public void It_formats_generic_dictionaries_that_arent_non_generic_as_tables_with_the_key_on_the_y_axis()
+        public void It_formats_generic_dictionaries_with_tree_views_in_the_value_column()
         {
             var writer = new StringWriter();
 
@@ -86,15 +142,80 @@ public partial class HtmlFormatterTests
 
             formatter.Format(instance, writer);
 
-            writer.ToString()
-                  .RemoveStyleElement()
-                  .Should()
-                  .BeEquivalentHtmlTo(
-                      "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
+            var html = writer.ToString().RemoveStyleElement();
+
+            html.Should()
+                .BeEquivalentHtmlTo(
+                    """
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><i>key</i></th>
+                                    <th>value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>first</td>
+                                    <td>
+                                        <details open="open" class="dni-treeview">
+                                            <summary><span
+                                                    class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span>
+                                            </summary>
+                                            <div>
+                                                <table>
+                                                    <thead>
+                                                        <tr></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>TypeName</td>
+                                                            <td>entity one</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Id</td>
+                                                            <td>123</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </details>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>second</td>
+                                    <td>
+                                        <details open="open" class="dni-treeview">
+                                            <summary><span
+                                                    class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span>
+                                            </summary>
+                                            <div>
+                                                <table>
+                                                    <thead>
+                                                        <tr></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>TypeName</td>
+                                                            <td>entity two</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Id</td>
+                                                            <td>456</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </details>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        """);
         }
 
         [Fact]
-        public void It_formats_non_generic_dictionaries_that_arent_generic_as_tables_with_the_key_on_the_y_axis()
+        public void It_formats_non_generic_dictionaries_with_tree_views_in_the_value_column()
         {
             var writer = new StringWriter();
 
@@ -112,15 +233,72 @@ public partial class HtmlFormatterTests
                   .RemoveStyleElement()
                   .Should()
                   .BeEquivalentHtmlTo(
-                      $@"<table>
-    <thead>
-       <tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>first</td><td>entity one</td><td>123</td></tr>
-      <tr><td>second</td><td>entity two</td><td>456</td></tr>
-    </tbody>
-</table>");
+                      """
+                          <table>
+                              <thead>
+                                  <tr>
+                                      <th><i>key</i></th>
+                                      <th>value</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  <tr>
+                                      <td>first</td>
+                                      <td>
+                                          <details open="open" class="dni-treeview">
+                                              <summary><span
+                                                      class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span>
+                                              </summary>
+                                              <div>
+                                                  <table>
+                                                      <thead>
+                                                          <tr></tr>
+                                                      </thead>
+                                                      <tbody>
+                                                          <tr>
+                                                              <td>TypeName</td>
+                                                              <td>entity one</td>
+                                                          </tr>
+                                                          <tr>
+                                                              <td>Id</td>
+                                                              <td>123</td>
+                                                          </tr>
+                                                      </tbody>
+                                                  </table>
+                                              </div>
+                                          </details>
+                                      </td>
+                                  </tr>
+                                  <tr>
+                                      <td>second</td>
+                                      <td>
+                                          <details open="open" class="dni-treeview">
+                                              <summary><span
+                                                      class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span>
+                                              </summary>
+                                              <div>
+                                                  <table>
+                                                      <thead>
+                                                          <tr></tr>
+                                                      </thead>
+                                                      <tbody>
+                                                          <tr>
+                                                              <td>TypeName</td>
+                                                              <td>entity two</td>
+                                                          </tr>
+                                                          <tr>
+                                                              <td>Id</td>
+                                                              <td>456</td>
+                                                          </tr>
+                                                      </tbody>
+                                                  </table>
+                                              </div>
+                                          </details>
+                                      </td>
+                                  </tr>
+                              </tbody>
+                          </table>
+                          """);
         }
 
         [Fact]
@@ -175,17 +353,11 @@ public partial class HtmlFormatterTests
                    .RemoveStyleElement()
                    .Should()
                    .BeEquivalentHtmlTo(
-                       $@"
-<table>
-  <thead>
-    <tr><th><i>index</i></th><th>value</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>0</td><td>apple</td></tr>
-    <tr><td>1</td><td>banana</td></tr>
-    <tr><td>2</td><td>cherry</td></tr>
-  </tbody>
-</table>");
+                       """
+                           <div class="dni-plaintext">
+                             <pre>[ apple, banana, cherry ]</pre>
+                           </div>
+                           """);
         }
 
         [Fact]
@@ -198,17 +370,11 @@ public partial class HtmlFormatterTests
             var html = sorted.ToDisplayString("text/html").RemoveStyleElement();
 
             html.Should()
-                .BeEquivalentHtmlTo($@"
-<table>
-  <thead>
-     <tr><th><i>index</i></th><th>value</th></tr>
-  </thead>
-  <tbody>
-     <tr><td>0</td><td>kiwi</td></tr>
-     <tr><td>1</td><td>apple</td></tr>
-     <tr><td>2</td><td>plantain</td></tr>
-  </tbody>
-</table>");
+                .BeEquivalentHtmlTo("""
+                    <div class="dni-plaintext">
+                      <pre>[ kiwi, apple, plantain ]</pre>
+                    </div>
+                    """);
         }
 
         [Fact]
@@ -218,7 +384,12 @@ public partial class HtmlFormatterTests
 
             var html = list.ToDisplayString("text/html").RemoveStyleElement();
 
-            html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
+            html.Should().BeEquivalentHtmlTo(
+                """
+                <div class="dni-plaintext">
+                  <pre>[  ]</pre>
+                </div>
+                """);
         }
 
         [Fact]
@@ -249,7 +420,7 @@ public partial class HtmlFormatterTests
             formatted.Should().Contain("number 1");
             formatted.Should().Contain("number 4");
             formatted.Should().NotContain("number 5");
-            formatted.Should().Contain("<i>(6 more)</i>");
+            formatted.Should().Contain("(6 more)");
         }
 
         [Fact]
@@ -284,7 +455,7 @@ public partial class HtmlFormatterTests
             var formatted = InfiniteSequence().ToDisplayString(formatter);
 
             formatted.Should().Contain("number 9");
-            formatted.Should().Contain("<i>... (more)</i>");
+            formatted.Should().Contain("... (more)");
 
             static IEnumerable<string> InfiniteSequence()
             {
@@ -387,17 +558,11 @@ public partial class HtmlFormatterTests
             writer.ToString().RemoveStyleElement()
                   .Should()
                   .BeEquivalentHtmlTo(
-                      $@"
-<table>
-  <thead>
-    <tr><th><i>index</i></th><th>value</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>0</td><td>{Tags.PlainTextBegin}7{Tags.PlainTextEnd}</td></tr>
-    <tr><td>1</td><td>{Tags.PlainTextBegin}8{Tags.PlainTextEnd}</td></tr>
-    <tr><td>2</td><td>{Tags.PlainTextBegin}9{Tags.PlainTextEnd}</td></tr>
-  </tbody>
-</table>");
+                      """
+                          <div class="dni-plaintext">
+                            <pre>[ 7, 8, 9 ]</pre>
+                          </div>
+                          """);
         }
 
         [Fact]
@@ -490,84 +655,109 @@ public partial class HtmlFormatterTests
         {
             var objects = new object[]
             {
-                1, 
-                (2, "two"), 
+                1,
+                (2, "two"),
                 Enumerable.Range(1, 3),
                 new { name = "apple", color = "green" }
             };
 
-            var result= objects.ToDisplayString("text/html").RemoveStyleElement();
+            var result = objects.ToDisplayString("text/html").RemoveStyleElement();
 
             result
                 .Should()
                 .BeEquivalentHtmlTo(
-                    $@"<table>
-      <thead>
-        <tr>
-          <th>
-            <i>index</i>
-          </th>
-          <th>
-            <i>type</i>
-          </th>
-          <th>value</th>
-          <th>Item1</th>
-          <th>Item2</th>
-          <th>name</th>
-          <th>color</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>0</td>
-          <td>
-            <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\""}>System.Int32</a>
-            </span>
-          </td>
-          <td>{Tags.PlainTextBegin}1{Tags.PlainTextEnd}</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>1</td>
-          <td>
-            <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-7.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
-            </span>
-          </td>
-          <td></td>
-          <td>{Tags.PlainTextBegin}2{Tags.PlainTextEnd}</td>
-          <td>two</td>
-          <td></td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>
-            <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-7.0\""}>System.Linq.Enumerable+RangeIterator</a>
-            </span>
-          </td>
-          <td>{Tags.PlainTextBegin}[ 1, 2, 3 ]{Tags.PlainTextEnd}</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>3</td>
-          <td>(anonymous)</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td>apple</td>
-          <td>green</td>
-        </tr>
-      </tbody>
-    </table>");
+                    """
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><i>index</i></th>
+                                    <th><i>type</i></th>
+                                    <th>value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0</td>
+                                    <td><span><a href="https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0">System.Int32</a></span>
+                                    </td>
+                                    <td>
+                                        <div class="dni-plaintext">
+                                            <pre>1</pre>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td><span><a
+                                                href="https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-7.0">System.ValueTuple&lt;System.Int32,System.String&gt;</a></span>
+                                    </td>
+                                    <td>
+                                        <details class="dni-treeview">
+                                            <summary><span class="dni-code-hint"><code>(2, two)</code></span></summary>
+                                            <div>
+                                                <table>
+                                                    <thead>
+                                                        <tr></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Item1</td>
+                                                            <td>
+                                                                <div class="dni-plaintext">
+                                                                    <pre>2</pre>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Item2</td>
+                                                            <td>two</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </details>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td><span><a
+                                                href="https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-7.0">System.Linq.Enumerable+RangeIterator</a></span>
+                                    </td>
+                                    <td>
+                                        <div class="dni-plaintext">
+                                            <pre>[ 1, 2, 3 ]</pre>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>(anonymous)</td>
+                                    <td>
+                                        <details class="dni-treeview">
+                                            <summary><span class="dni-code-hint"><code>{ name = apple, color = green }</code></span></summary>
+                                            <div>
+                                                <table>
+                                                    <thead>
+                                                        <tr></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>name</td>
+                                                            <td>apple</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>color</td>
+                                                            <td>green</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </details>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        """);
         }
         
         [Fact]
@@ -585,76 +775,81 @@ public partial class HtmlFormatterTests
                 new [] { 7, 8, 9 } 
             };
 
-            var result = objects.ToDisplayString("text/html").RemoveStyleElement();
+            var html = objects.ToDisplayString("text/html").RemoveStyleElement();
 
-            result
-                .Should()
+            html.Should()
                 .BeEquivalentHtmlTo(
-                    $@"<table>
-  <thead>
-    <tr>
-      <th>
-        <i>index</i>
-      </th>
-      <th>
-        <i>type</i>
-      </th>
-      <th>value</th>
-      <th>Item1</th>
-      <th>Item2</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>0</td>
-      <td>(anonymous)</td>
-      <td>
-        <i>{{ name = apple, color = green }}</i>
-      </td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>1</td>
-      <td>
-        <span>
-          <a href=""https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-7.0"">System.ValueTuple&lt;System.Int32,System.String&gt;</a>
-        </span>
-      </td>
-      <td></td>
-      <td>
-        {Tags.PlainTextBegin}123{Tags.PlainTextEnd}
-      </td>
-      <td>two</td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>
-        <span>
-          <a href=""https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0"">System.Int32</a>
-        </span>
-      </td>
-      <td>
-        {Tags.PlainTextBegin}456{Tags.PlainTextEnd}
-      </td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>
-        <span>
-          <a href=""https://docs.microsoft.com/dotnet/api/system.int32[]?view=net-7.0"">System.Int32[]</a>
-        </span>
-      </td>
-      <td>
-        {Tags.PlainTextBegin}[ 7, 8, 9 ]{Tags.PlainTextEnd}
-      </td>
-      <td></td>
-      <td></td>
-    </tr>
-  </tbody>
-</table>");
+                    $$"""
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><i>index</i></th>
+                                    <th><i>type</i></th>
+                                    <th>value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0</td>
+                                    <td>(anonymous)</td>
+                                    <td><i>{ name = apple, color = green }</i></td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td><span><a
+                                                href="https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-7.0">System.ValueTuple&lt;System.Int32,System.String&gt;</a></span>
+                                    </td>
+                                    <td>
+                                        <details class="dni-treeview">
+                                            <summary><span class="dni-code-hint"><code>(123, two)</code></span></summary>
+                                            <div>
+                                                <table>
+                                                    <thead>
+                                                        <tr></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Item1</td>
+                                                            <td>
+                                                                <div class="dni-plaintext">
+                                                                    <pre>123</pre>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Item2</td>
+                                                            <td>two</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </details>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td><span><a href="https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0">System.Int32</a></span>
+                                    </td>
+                                    <td>
+                                        <div class="dni-plaintext">
+                                            <pre>456</pre>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td><span><a
+                                                href="https://docs.microsoft.com/dotnet/api/system.int32[]?view=net-7.0">System.Int32[]</a></span>
+                                    </td>
+                                    <td>
+                                        <div class="dni-plaintext">
+                                            <pre>[ 7, 8, 9 ]</pre>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        """);
         }
 
         class SomeDictUsingInterfaceImpls : IDictionary<int, string>

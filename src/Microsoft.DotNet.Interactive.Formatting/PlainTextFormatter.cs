@@ -319,8 +319,6 @@ public static class PlainTextFormatter
             var formatter = GetDefaultFormatterForAnyObject(type);
             return formatter.Format(obj, context);
         })
-
-       
     };
 
     private static string IndentAtNewLines(this string s, FormatContext context) => 

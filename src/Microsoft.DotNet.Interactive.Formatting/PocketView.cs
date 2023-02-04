@@ -143,27 +143,28 @@ public class PocketView : DynamicObject, IHtmlContent
         object[] values,
         out object result)
     {
-        var argumentNameIndex = 0;
+        var offset = values.Length - binder.CallInfo.ArgumentNames.Count;
 
         for (var i = 0; i < values.Length; i++)
         {
-            var att = values[i];
+            var value = values[i];
 
-            if (att is IDictionary<string, object> dict)
+            if (value is IDictionary<string, object> dict)
             {
                 HtmlAttributes.MergeWith(dict);
             }
             else
             {
-                if (binder.CallInfo.ArgumentNames.Count > 0)
+                if (i >= offset)
                 {
                     var key = binder.CallInfo
-                        .ArgumentNames
-                        .ElementAt(argumentNameIndex++)
-                        .Replace("_", "-");
-                    HtmlAttributes[key] = values[i];
+                                    .ArgumentNames
+                                    .ElementAt(i - offset)
+                                    .Replace("_", "-");
+
+                    HtmlAttributes[key] = value;
                 }
-                else if (att is string s)
+                else if (value is string s)
                 {
                     HtmlAttributes[s] = null;
                 }

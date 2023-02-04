@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -103,32 +102,36 @@ public class HtmlFormatter<T> : TypeFormatter<T>
     {
         Func<T, IEnumerable> getKeys = null;
         Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
+        bool flatten = false;
 
-        var dictType =
-            typeof(T).GetAllInterfaces()
-                     .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-            ??
-            typeof(T).GetAllInterfaces()
-                     .FirstOrDefault(i => i == typeof(IDictionary));
-
-        if (dictType is not null)
+        if (typeof(T).IsDictionary(
+                out var getKeys1,
+                out var getValues1,
+                out var keyType1,
+                out var valueType1))
+        { 
+            getKeys = instance => getKeys1(instance);  
+            getValues = instance => getValues1(instance);
+        }
+        else
         {
-            var keysProperty = dictType.GetProperty("Keys");
-            getKeys = instance => (IEnumerable)keysProperty.GetValue(instance, null);
+            var elementType = typeof(T).GetElementTypeIfEnumerable();
 
-            var valuesProperty = dictType.GetProperty("Values");
-            getValues = instance => (IEnumerable)valuesProperty.GetValue(instance, null);
+            if (elementType?.IsScalar() is true)
+            {
+                flatten = true;
+            }
         }
 
-        return new HtmlFormatter<T>(BuildTable);
+        return new HtmlFormatter<T>((value, context) => BuildTable(value, context, flatten));
 
-        bool BuildTable(T source, FormatContext context)
+        bool BuildTable(T source, FormatContext context, bool summarize)
         {
             context.RequireDefaultStyles();
 
             using var _ = context.IncrementTableDepth();
 
-            if (context.TableDepth > 1 || !context.AllowRecursion)
+            if (summarize || !context.AllowRecursion)
             {
                 HtmlFormatter.FormatAndStyleAsPlainText(source, context);
                 return true;
@@ -156,6 +159,8 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             {
                 IDictionary<string, object> keysAndValues;
 
+                // FIX: (CreateTableFormatterForAnyEnumerable) 
+#if false
                 if (value is { } &&
                     Formatter.GetPreferredFormatterFor(value.GetType(), HtmlFormatter.MimeType) is { } formatter &&
                     formatter.Type == typeof(object))
@@ -168,6 +173,9 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                 {
                     keysAndValues = NonDestructurer.Instance.Destructure(value);
                 }
+#else
+                keysAndValues = NonDestructurer.Instance.Destructure(value);
+#endif
 
                 if (value is not null)
                 {
@@ -296,9 +304,6 @@ public class HtmlFormatter<T> : TypeFormatter<T>
         {
             context.RequireDefaultStyles();
 
-            using var _ = context.IncrementTableDepth();
-            using var __ = context.IncrementDepth();
-
             if (!context.AllowRecursion)
             {
                 HtmlFormatter.FormatAndStyleAsPlainText(source, context);
@@ -314,7 +319,16 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                 formatter.Format(source, context);
             });
 
-            view = details[@class: "dni-treeview"](
+            var attributes = new HtmlAttributes();
+
+            if (context.Depth < 2)
+            {
+                attributes.Add("open", "open");
+            }
+
+            attributes.AddCssClass("dni-treeview");
+
+            view = details[attributes](
                 summary(
                     span[@class: "dni-code-hint"](code)),
                 div(
