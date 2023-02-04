@@ -16,13 +16,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public partial class HtmlFormatterTests
 {
-    public class Objects_TreeView : FormatterTestBase
+    public class Objects : FormatterTestBase
     {
-        public Objects_TreeView()
-        {
-            HtmlFormatter.UseTreeView = true;
-        }
-
         [Fact]
         public void Formatters_are_generated_on_the_fly_for_anonymous_types()
         {

@@ -54,50 +54,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
     }
 
     public override string MimeType => HtmlFormatter.MimeType;
-
-    internal static HtmlFormatter<T> CreateTableFormatterForAnyObject()
-    {
-        var members = typeof(T).GetMembersToFormat()
-                               .GetMemberAccessors<T>();
-
-        return new HtmlFormatter<T>((instance, context) => BuildTable(instance, context, members));
-
-        static bool BuildTable(T instance, FormatContext context, MemberAccessor<T>[] memberAccessors)
-        {
-            if (memberAccessors.Length == 0)
-            {
-                // This formatter refuses to format objects without members, and 
-                // refused to produce nested tables, or if no members are selected
-                return false;
-            }
-            else
-            {
-                // Note, embeds the keys and values as arbitrary objects into the HTML content,
-                List<IHtmlContent> headers =
-                    memberAccessors.Select(m => (IHtmlContent)th(m.Member.Name))
-                                   .ToList();
-
-                // FIX: (CreateTableFormatterForAnyObject) should this use a tree view?
-                IEnumerable<object> values =
-                    memberAccessors.Select(m => m.GetValueOrException(instance))
-                                   .Select(v => td(div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType)))));
-
-                PocketView t =
-                    table(
-                        thead(
-                            tr(
-                                headers)),
-                        tbody(
-                            tr(
-                                values)));
-
-                t.WriteTo(context);
-
-                return true;
-            }
-        }
-    }
-
+    
     internal static HtmlFormatter<T> CreateTableFormatterForAnyEnumerable()
     {
         Func<T, IEnumerable> getKeys = null;
@@ -151,32 +108,11 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             }
 
             var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
-            var headerToSortIndex = new Dictionary<string, (int, int)>();
             var typesAreDifferent = false;
             var types = new Dictionary<Type, int>();
 
             foreach (var (value, index) in rowData)
             {
-                IDictionary<string, object> keysAndValues;
-
-                // FIX: (CreateTableFormatterForAnyEnumerable) 
-#if false
-                if (value is { } &&
-                    Formatter.GetPreferredFormatterFor(value.GetType(), HtmlFormatter.MimeType) is { } formatter &&
-                    formatter.Type == typeof(object))
-                {
-                    var destructurer = Destructurer.GetOrCreate(value?.GetType());
-
-                    keysAndValues = destructurer.Destructure(value);
-                }
-                else
-                {
-                    keysAndValues = NonDestructurer.Instance.Destructure(value);
-                }
-#else
-                keysAndValues = NonDestructurer.Instance.Destructure(value);
-#endif
-
                 if (value is not null)
                 {
                     var type = value.GetType();
@@ -188,22 +124,9 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                     typesAreDifferent = types.Count > 1;
                 }
 
-                var typeIndex = value is null ? 0 : types[value.GetType()];
-
-                var pairIndex = 0;
-
-                foreach (var pair in keysAndValues)
-                {
-                    if (!headerToSortIndex.ContainsKey(pair.Key))
-                    {
-                        headerToSortIndex.Add(pair.Key, (typeIndex, pairIndex));
-                    }
-
-                    valuesByHeader
-                        .GetOrAdd(pair.Key, _ => new Dictionary<int, object>())
-                        .Add(index, pair.Value);
-                    pairIndex++;
-                }
+                valuesByHeader
+                    .GetOrAdd("value", _ => new Dictionary<int, object>())
+                    .Add(index, value);
             }
 
             var headers = new List<IHtmlContent>();
@@ -231,15 +154,10 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                 headers.Insert(1, th(i("type")));
             }
 
-            // Order the columns first by the *first* type to exhibit the
-            // property, then by the destructuring order within that type.
-            var valueKeys =
-                valuesByHeader.Keys
-                              .OrderBy(x => headerToSortIndex[x])
-                              .ToArray();
+            var valueKeys = valuesByHeader.Keys.ToArray();
 
             headers.AddRange(valueKeys.Select(k => (IHtmlContent)th(k)));
-           
+
             var rows = new List<IHtmlContent>();
 
             for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
@@ -310,8 +228,6 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                 return true;
             }
 
-            PocketView view = null;
-
             HtmlTag code = new HtmlTag("code", c =>
             {
                 var formatter = PlainTextSummaryFormatter.GetPreferredFormatterFor(source?.GetType());
@@ -328,7 +244,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
             attributes.AddCssClass("dni-treeview");
 
-            view = details[attributes](
+            PocketView view = details[attributes](
                 summary(
                     span[@class: "dni-code-hint"](code)),
                 div(

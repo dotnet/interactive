@@ -24,17 +24,10 @@ public static class HtmlFormatter
 
         void Initialize()
         {
-#if (false) // FIX: delete
-            FormattersForAnyObject = new FormatterMapByType(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTableFormatterForAnyObject));
-#else
             FormattersForAnyObject = new FormatterMapByType(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTreeViewFormatterForAnyObject));
-#endif
         }
     }
 
-    // FIX: (HtmlFormatter.UseTreeView) delete this 
-    public static bool UseTreeView { get; set; }
-    
     // FIX: (HtmlFormatter) this can return a formatter with the wrong MIME type
     public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
         Formatter.GetPreferredFormatterFor(type, MimeType);
@@ -55,8 +48,6 @@ public static class HtmlFormatter
         FormatContext context)
     {
         context.RequireDefaultStyles();
-
-        // FIX: (FormatAndStyleAsPlainText) can this be refactored out to a reusable instance?
 
         PocketView tag = div(pre(value.ToDisplayString(PlainTextFormatter.MimeType)));
         tag.HtmlAttributes["class"] = "dni-plaintext";
