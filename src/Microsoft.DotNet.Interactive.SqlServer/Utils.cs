@@ -41,8 +41,7 @@ public static class Utils
     public static async Task<IEnumerable<DotnetToolInfo>> GetGlobalToolListAsync()
     {
         var dotnet = new Dotnet();
-        var args = "tool list --global";
-        var result = await dotnet.Execute(args);
+        var result = await dotnet.Execute("tool list --global");
         if (result.ExitCode != 0)
         {
             return new DotnetToolInfo[0];
@@ -71,24 +70,33 @@ public static class Utils
 
     public static async Task CheckAndInstallGlobalToolAsync(string toolName, string minimumVersion, string nugetPackage)
     {
-        var dotnet = new Dotnet();
         var installedGlobalTools = await Utils.GetGlobalToolListAsync();
         var expectedVersion = Version.Parse(minimumVersion);
-        bool toolInstalled = installedGlobalTools.Any(tool =>
+        var installNeeded = true;
+        var updateNeeded = false;
+        foreach (var tool in installedGlobalTools)
         {
             if (string.Equals(tool.CommandName, toolName, StringComparison.InvariantCultureIgnoreCase))
             {
+                installNeeded = false;
                 var installedVersion = Version.Parse(tool.PackageVersion);
-                return installedVersion >= expectedVersion;
+                if (installedVersion < expectedVersion)
+                {
+                    updateNeeded = true;
+                }
+                break;
             }
-            else
-            {
-                return false;
-            }
-        });
-        if (!toolInstalled)
+        }
+
+        var dotnet = new Dotnet();
+        if (updateNeeded)
         {
-            var commandLineResult = await dotnet.ToolInstall(nugetPackage, null, null, minimumVersion);
+            var commandLineResult = await dotnet.Execute($"tool update --global {nugetPackage} --version {minimumVersion}");
+            commandLineResult.ThrowOnFailure();
+        }
+        else if (installNeeded)
+        {
+            var commandLineResult = await dotnet.Execute($"tool install --global {nugetPackage} --version {minimumVersion}");
             commandLineResult.ThrowOnFailure();
         }
     }
