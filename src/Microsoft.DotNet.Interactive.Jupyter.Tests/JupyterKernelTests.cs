@@ -12,11 +12,11 @@ using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
@@ -24,23 +24,21 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 public class JupyterKernelTests : IDisposable
 {
     private readonly Configuration _configuration;
+    private readonly ITestOutputHelper _output;
     private const bool SkipConnectionTests = true;
     private const string SkipReason = SkipConnectionTests ? "Setup not available" : null;
     private CompositeDisposable _disposables = new();
-
-    public JupyterKernelTests()
+    
+    public JupyterKernelTests(ITestOutputHelper output)
     {
-        _configuration = new Configuration()
-            .UsingExtension("json");
-
-        _configuration = _configuration.SetInteractive(Debugger.IsAttached);
+        _output = output;
     }
 
     public void Dispose()
     {
         //_disposables.Dispose();
     }
-
+    
     private CompositeKernel CreateKernelAsync(IJupyterKernelConnectionOptions options)
     {
         Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
@@ -73,7 +71,7 @@ public class JupyterKernelTests : IDisposable
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
-
+        
         var result = await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecToTest} {options.TestConnectionString}");
 

@@ -2,13 +2,8 @@
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
@@ -47,7 +42,15 @@ public class JupyterMessageSerializationTests
         }
         IEnumerable<Message> messages()
         {
+            // yield return Message.Create(new KernelInfoRequest());
+
+            yield return Message.Create(new ExecuteRequest("code"));
+            
             yield return Message.Create(new ExecuteReplyOk());
+
+            // codeMirror setting
+            yield return Message.Create(new KernelInfoReply("protocolVersion", "implementation", null, 
+                new LanguageInfo("name", "version", "mimeType", "fileExt", "pygmentsLexer", null, "nbConvertExplorer"), "banner", null));
         };
     }
 }
