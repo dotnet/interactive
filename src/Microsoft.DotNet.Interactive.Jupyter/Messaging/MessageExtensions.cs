@@ -24,7 +24,7 @@ public static class MessageExtensions
     private static Protocol.Message DeserializeMessageContentFromJsonString(string source, string messageType)
     {
         var ret = Protocol.Message.Empty;
-        if (!string.IsNullOrWhiteSpace(source) && !IsEmptyJson(source))
+        if (!string.IsNullOrWhiteSpace(source)) 
         {
             ret = Protocol.Message.FromJsonString(source, messageType);
         }

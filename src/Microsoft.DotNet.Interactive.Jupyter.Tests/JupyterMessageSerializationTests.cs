@@ -45,7 +45,7 @@ public class JupyterMessageSerializationTests
         }
         IEnumerable<Message> messages()
         {
-            // yield return Message.Create(new KernelInfoRequest());
+            yield return Message.Create(new KernelInfoRequest());
 
             yield return Message.Create(new ExecuteRequest("code"));
             
