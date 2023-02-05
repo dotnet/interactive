@@ -14,8 +14,7 @@ using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-
-internal interface IMessageTracker : IMessageSender, IMessageReceiver
+public interface IMessageTracker : IMessageSender, IMessageReceiver
 {
     public void Attach(IMessageSender sender, IMessageReceiver receiver);
     public IObservable<Message> SentMessages { get; }
@@ -160,7 +159,7 @@ internal class TestJupyterConnection : IJupyterConnection
     }
 }
 
-internal class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
+public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
 {
     private IJupyterKernelConnectionOptions _testOptions;
     private TestJupyterConnection _connection;
@@ -187,7 +186,6 @@ internal class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
     }
 
     public IMessageTracker MessageTracker { get; private set; }
-    public TestJupyterConnection Connection => _connection;
 
     public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
     {

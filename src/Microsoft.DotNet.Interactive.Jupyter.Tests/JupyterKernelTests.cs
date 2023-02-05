@@ -55,9 +55,9 @@ public class JupyterKernelTests : IDisposable
     [JupyterHttpTestData("ir")]
     [JupyterZMQTestData("python3")]
     [JupyterZMQTestData("ir")]
-    public async Task can_connect_to_and_get_kernel_info_produced(JupyterConnectionData connectionData, string kernelSpecToTest)
+    public async Task can_connect_to_and_get_kernel_info_produced(JupyterConnectionTestData connectionData, string kernelSpecToTest)
     {
-        var options = new TestJupyterConnectionOptions(connectionData.GetConnectionOptions());
+        var options = connectionData.GetConnectionOptions();
 
         var kernel = CreateKernelAsync(options);
 
@@ -111,9 +111,9 @@ public class JupyterKernelTests : IDisposable
     [Theory]
     [JupyterHttpTestData("python3")]
     [JupyterZMQTestData("python3")]
-    public async Task can_submit_code_and_get_return_value_produced(JupyterConnectionData connectionData, string kernelSpecToTest)
+    public async Task can_submit_code_and_get_return_value_produced(JupyterConnectionTestData connectionData, string kernelSpecToTest)
     {
-        var options = new TestJupyterConnectionOptions(connectionData.GetConnectionOptions());
+        var options = connectionData.GetConnectionOptions();
 
         var kernel = CreateKernelAsync(options);
 
@@ -159,9 +159,9 @@ public class JupyterKernelTests : IDisposable
     [JupyterZMQTestData("python3", "from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2")]
     [JupyterHttpTestData("ir", "1+1", PlainTextFormatter.MimeType, "[1] 2")]
     [JupyterZMQTestData("ir", "1+1", PlainTextFormatter.MimeType, "[1] 2")]
-    public async Task can_submit_code_and_get_display_value_produced(JupyterConnectionData connectionData, string kernelSpecToTest, string codeToRun, string mimeType, string outputReturned)
+    public async Task can_submit_code_and_get_display_value_produced(JupyterConnectionTestData connectionData, string kernelSpecToTest, string codeToRun, string mimeType, string outputReturned)
     {
-        var options = new TestJupyterConnectionOptions(connectionData.GetConnectionOptions());
+        var options = connectionData.GetConnectionOptions();
 
         var kernel = CreateKernelAsync(options);
 

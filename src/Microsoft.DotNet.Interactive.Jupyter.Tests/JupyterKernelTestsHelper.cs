@@ -9,22 +9,22 @@ using Xunit.Sdk;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-public class JupyterConnectionData
+public class JupyterConnectionTestData
 {
     private readonly string _type;
     private readonly string _connectionString;
-    private readonly IJupyterKernelConnectionOptions _connectionOptions;
+    private readonly TestJupyterConnectionOptions _connectionOptions;
     
-    public JupyterConnectionData(string type, IJupyterKernelConnectionOptions connectionOptions = null, string connectionString = "")
+    public JupyterConnectionTestData(string type, IJupyterKernelConnectionOptions connectionOptions = null, string connectionString = "")
     {
         _type = type;
         _connectionString = connectionString;
-        _connectionOptions = connectionOptions;
+        _connectionOptions = new TestJupyterConnectionOptions(connectionOptions);
     }
 
     public string ConnectionType => _type;
     public string GetConnectionString() => _connectionString;
-    public IJupyterKernelConnectionOptions GetConnectionOptions() => _connectionOptions;
+    public TestJupyterConnectionOptions GetConnectionOptions() => _connectionOptions;
 }
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
@@ -53,7 +53,7 @@ internal sealed class JupyterZMQTestDataAttribute : DataAttribute
     public override IEnumerable<object[]> GetData(MethodInfo testMethod)
     {
         List<object> testData = new();
-        testData.Add(new JupyterConnectionData(JUPYTER_ZMQ, new JupyterLocalKernelConnectionOptions()));
+        testData.Add(new JupyterConnectionTestData(JUPYTER_ZMQ, new JupyterLocalKernelConnectionOptions()));
         testData.AddRange(_data);
         return new[] { testData.ToArray() };
     }
@@ -101,7 +101,7 @@ internal sealed class JupyterHttpTestDataAttribute : DataAttribute
     public override IEnumerable<object[]> GetData(MethodInfo testMethod)
     {
         List<object> testData = new();
-        testData.Add(new JupyterConnectionData(JUPYTER_HTTP, new JupyterHttpKernelConnectionOptions(), GetConnectionString()));
+        testData.Add(new JupyterConnectionTestData(JUPYTER_HTTP, new JupyterHttpKernelConnectionOptions(), GetConnectionString()));
         testData.AddRange(_data);
         return new[] { testData.ToArray() };
     }
