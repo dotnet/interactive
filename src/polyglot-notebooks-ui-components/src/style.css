@@ -62,7 +62,7 @@ td {
     margin-bottom: 10px;
 }
 
-.dragger {
+.grip {
     position: absolute;
     top: 0;
     right: 0;

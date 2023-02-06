@@ -207,7 +207,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                             >
                                 Name
                                 <div
-                                    className='dragger'
+                                    className='grip'
                                     draggable={true}
                                     onDragStart={(e) => this.handleStart(e, `0-0`)}
                                     onDrag={(e) => this.handleMove(e, `0-0`)}
@@ -220,7 +220,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                             >
                                 Value
                                 <div
-                                    className='dragger'
+                                    className='grip'
                                     draggable={true}
                                     onDragStart={(e) => this.handleStart(e, `0-1`)}
                                     onDrag={(e) => this.handleMove(e, `0-1`)}
@@ -233,7 +233,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                             >
                                 TypeName
                                 <div
-                                    className='dragger'
+                                    className='grip'
                                     draggable={true}
                                     onDragStart={(e) => this.handleStart(e, `0-2`)}
                                     onDrag={(e) => this.handleMove(e, `0-2`)}
@@ -246,7 +246,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                             >
                                 Kernel
                                 <div
-                                    className='dragger'
+                                    className='grip'
                                     draggable={true}
                                     onDragStart={(e) => this.handleStart(e, `0-3`)}
                                     onDrag={(e) => this.handleMove(e, `0-3`)}
@@ -267,7 +267,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                         {row.name}
                                     </pre>
                                     <div
-                                        className='dragger'
+                                        className='grip'
                                         draggable={true}
                                         onDragStart={(e) => this.handleStart(e, `${0}-${0}`)}
                                         onDrag={(e) => this.handleMove(e, `${0}-${0}`)}
@@ -278,7 +278,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                         {row.value}
                                     </pre>
                                     <div
-                                        className='dragger'
+                                        className='grip'
                                         draggable={true}
                                         onDragStart={(e) => this.handleStart(e, `${0}-${1}`)}
                                         onDrag={(e) => this.handleMove(e, `${0}-${1}`)}
@@ -289,7 +289,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                         {row.typeName}
                                     </pre>
                                     <div
-                                        className='dragger'
+                                        className='grip'
                                         draggable={true}
                                         onDragStart={(e) => this.handleStart(e, `${0}-${2}`)}
                                         onDrag={(e) => this.handleMove(e, `${0}-${2}`)}
@@ -300,7 +300,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                         {row.kernelDisplayName}
                                     </pre>
                                     <div
-                                        className='dragger'
+                                        className='grip'
                                         draggable={true}
                                         onDragStart={(e) => this.handleStart(e, `${0}-${3}`)}
                                         onDrag={(e) => this.handleMove(e, `${0}-${3}`)}

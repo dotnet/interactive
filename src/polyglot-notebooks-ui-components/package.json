@@ -1,7 +1,7 @@
 {
   "name": "@microsoft/polyglot-notebooks-ui-components",
-  "displayName": ".NET Interactive Notebooks UI Components",
-  "description": ".NET Interactive Notebook UI Components.",
+  "displayName": "Polyglot Notebooks UI Components",
+  "description": "Polyglot Notebook UI Components.",
   "license": "MIT",
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
