@@ -91,12 +91,12 @@ public static class Utils
         var dotnet = new Dotnet();
         if (updateNeeded)
         {
-            var commandLineResult = await dotnet.Execute($"tool update --global {nugetPackage} --version {minimumVersion}");
+            var commandLineResult = await dotnet.Execute($"tool update --global \"{nugetPackage}\" --version \"{minimumVersion}\"");
             commandLineResult.ThrowOnFailure();
         }
         else if (installNeeded)
         {
-            var commandLineResult = await dotnet.Execute($"tool install --global {nugetPackage} --version {minimumVersion}");
+            var commandLineResult = await dotnet.Execute($"tool install --global \"{nugetPackage}\" --version \"{minimumVersion}\"");
             commandLineResult.ThrowOnFailure();
         }
     }
