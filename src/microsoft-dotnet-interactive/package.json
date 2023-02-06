@@ -12,10 +12,8 @@
   },
   "scripts": {
     "compile-es-module": "rollup -c rollup.es.config.js -i ./src/webview/activation.ts -o ./dist/activation.js",
-    "compile-variable-grid": "rollup -c rollup.config.js -i src/webview/variableGrid.ts -o dist/variableGrid.js",
-    "compile-webview": "npm run compile-es-module && npm run compile-variable-grid",
     "compile-library": "rollup -c rollup.library.config.js -i src/index.ts -o lib/dotnet-interactive.js",
-    "compile": "npm run lint && tsc -p  ./ && npm run compile-webview  && npm run compile-library",
+    "compile": "npm run lint && tsc -p  ./ && npm run compile-library && npm run compile-es-module",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
