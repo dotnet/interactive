@@ -62,7 +62,25 @@ public abstract class RoutingSlip
         return false;
     }
 
-    public bool StartsWith(RoutingSlip other) => StartsWith(other._entries);
+    public bool StartsWith(RoutingSlip other)
+    {
+        if (other._entries.Count > 0 && other._entries.Count <= _entries.Count)
+        {
+            for (int i = 0; i < other._entries.Count; i++)
+            {
+                if (_entries[i].AbsoluteUriWithQuery != other._entries[i].AbsoluteUriWithQuery)
+                {
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     public void ContinueWith(RoutingSlip other)
     {
@@ -88,32 +106,9 @@ public abstract class RoutingSlip
         }
     }
 
-    private protected bool Contains(Entry entry)
+    private bool Contains(Entry entry)
     {
         return _entries.Any(e => e.AbsoluteUriWithQuery == entry.AbsoluteUriWithQuery);
-    }
-
-    private protected bool StartsWith(List<Entry> entries)
-    {
-        var startsWith = true;
-
-        if (entries.Count > 0 && entries.Count <= _entries.Count)
-        {
-            for (int i = 0; i < entries.Count; i++)
-            {
-                if (_entries[i].AbsoluteUriWithQuery != entries[i].AbsoluteUriWithQuery)
-                {
-                    startsWith = false;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            startsWith = false;
-        }
-
-        return startsWith;
     }
 
     protected static string GetAbsoluteUriWithoutQuery(Uri uri)
