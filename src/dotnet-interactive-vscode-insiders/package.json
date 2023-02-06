@@ -715,11 +715,14 @@
     ]
   },
   "scripts": {
-    "compile-webview": "cd ../microsoft-dotnet-interactive && npm run compile-webview",
+    "compile-preloads": "cd ../microsoft-dotnet-interactive && npm run compile",
     "copy-preloads": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/activation.js ./resources",
-    "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/variableGrid.js ./resources",
+    "compile-variable-grid": "cd ../polyglot-notebooks-ui-components && npm run buildDev",
+    "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../polyglot-notebooks-ui-components/dist/*.* ./resources",
     "vscode:prepublish": "npm run compile",
-    "compile": "npm run lint && tsc -p ./ && npm run compile-webview && npm run copy-preloads && npm run copy-variable-grid",
+    "compile-and-copy-preloads": "npm run compile-preloads && npm run copy-preloads",
+    "compile-and-copy-variable-grid": "npm run compile-variable-grid && npm run copy-variable-grid",
+    "compile": "npm run lint && tsc -p ./ && npm run compile-and-copy-preloads && npm run compile-and-copy-variable-grid",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
