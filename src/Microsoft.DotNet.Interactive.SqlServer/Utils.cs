@@ -9,14 +9,14 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
-public class DotnetToolInfo {
+internal class DotnetToolInfo {
     public string PackageId { get; set; }
     public string PackageVersion { get; set; }
     public string CommandName { get; set; }
 
 }
 
-public static class Utils
+internal static class Utils
 {
     /// <summary>
     /// Returns a version of the string quoted with single quotes. Any single quotes in the string are escaped as ''
