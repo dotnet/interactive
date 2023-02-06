@@ -8,7 +8,6 @@ namespace Microsoft.DotNet.Interactive;
 
 public class CommandRoutingSlip : RoutingSlip
 {
-
     public void StampAs(Uri uri, string tag)
     {
         var absoluteUri = GetAbsoluteUriWithoutQuery(uri);

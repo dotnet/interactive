@@ -51,7 +51,7 @@ public class KernelInvocationContext : IDisposable
 
         Command = command;
 
-        Result = new KernelCommandResult(_events);
+        Result = new KernelCommandResult(command, _events);
 
         _disposables.Add(_cancellationTokenSource);
 
@@ -250,7 +250,7 @@ public class KernelInvocationContext : IDisposable
         else
         {
             var events = _childCommands[command];
-            return new KernelCommandResult(events);
+            return new KernelCommandResult(command, events);
         }
     }
 
