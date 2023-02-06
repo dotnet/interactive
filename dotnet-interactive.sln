@@ -47,7 +47,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "interface-generator", "src\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{4DD50BCA-133B-4594-8368-ED56939BAF6B}"
 	ProjectSection(SolutionItems) = preProject
-		docs\CreateBinder.md = docs\CreateBinder.md
 		docs\display-output-csharp.md = docs\display-output-csharp.md
 		docs\extending-dotnet-interactive.md = docs\extending-dotnet-interactive.md
 		docs\formatting.md = docs\formatting.md
@@ -55,7 +54,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{4DD50BCA-1
 		docs\kernels-overview.md = docs\kernels-overview.md
 		docs\magic-commands.md = docs\magic-commands.md
 		docs\NotebooksLocalExperience.md = docs\NotebooksLocalExperience.md
-		docs\NotebooksOnBinder.md = docs\NotebooksOnBinder.md
 		docs\nuget-overview.md = docs\nuget-overview.md
 		docs\pocketview.md = docs\pocketview.md
 		docs\polyglot.md = docs\polyglot.md
