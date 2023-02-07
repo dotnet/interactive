@@ -78,8 +78,9 @@ class DotNetNotebookCellStatusBarItemProvider {
             return [];
         }
 
+        const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(cell.notebook);
         const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
-        const cellKernelName = cellMetadata.kernelName ?? 'csharp';
+        const cellKernelName = cellMetadata.kernelName ?? notebookMetadata.kernelInfo.defaultKernelName;
         const notebookDocument = getNotebookDcoumentFromCellDocument(cell.document);
         const client = await this.clientMapper.tryGetClient(notebookDocument!.uri); // don't force client creation
         let displayText: string;

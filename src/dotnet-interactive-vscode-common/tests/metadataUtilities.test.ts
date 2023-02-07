@@ -222,6 +222,38 @@ describe('metadata utility tests', async () => {
         });
     });
 
+    it('notebook document metadata can be synthesized from .ipynb kernelspec', () => {
+        const notebookDocument: vscodeLike.NotebookDocument = {
+            uri: {
+                fsPath: 'test-notebook.ipynb',
+                scheme: 'unused',
+            },
+            metadata: {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: '.NET (F#)',
+                            language: 'F#',
+                            name: '.net-fsharp',
+                        }
+                    }
+                }
+            }
+        };
+        const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(notebookDocument);
+        expect(notebookDocumentMetadata).to.deep.equal({
+            kernelInfo: {
+                defaultKernelName: 'fsharp',
+                items: [
+                    {
+                        name: 'fsharp',
+                        aliases: [],
+                    }
+                ]
+            }
+        });
+    });
+
     it('kernel infos can be created from .dib notebook document', () => {
         const notebookDocument: vscodeLike.NotebookDocument = {
             uri: {
