@@ -231,7 +231,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                 id={`0-2`}
                                 className="header"
                             >
-                                TypeName
+                                Type
                                 <div
                                     className='grip'
                                     draggable={true}
