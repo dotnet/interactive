@@ -1,14 +1,51 @@
 # CI and PR triggers
 trigger:
-- main
-- feature/*
-- hotfix/*
-- release/*
+  branches:
+    include:
+    - main
+    - feature/*
+    - hotfix/*
+    - release/*
+  paths:
+    include:
+    - '*'
+    exclude:
+    - '**/*.md'
+    - .config/*
+    - .devcontainer/*
+    - .github/*
+    - .vscode/*
+    - assets/*
+    - docs/*
+    - images/*
+    - .editorconfig
+    - .gitignore
+    - '*.txt'
+    - '*.github-issues'
+
 pr:
-- main
-- feature/*
-- hotfix/*
-- release/*
+  branches:
+    include:
+    - main
+    - feature/*
+    - hotfix/*
+    - release/*
+  paths:
+    include:
+    - '*'
+    exclude:
+    - '**/*.md'
+    - .config/*
+    - .devcontainer/*
+    - .github/*
+    - .vscode/*
+    - assets/*
+    - docs/*
+    - images/*
+    - .editorconfig
+    - .gitignore
+    - '*.txt'
+    - '*.github-issues'
 
 # Variables
 variables:
