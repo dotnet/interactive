@@ -125,13 +125,16 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
         }
     }
 
-    handleFilterChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    handleInput(e: React.FormEvent<HTMLInputElement>): void {
+        const inputField = e.target as HTMLInputElement;
+        this.updateFilter(inputField.value);
+    }
+    updateFilter(filter: string) {
         this.setState({
             ...this.state,
-            filter: e.target.value
+            filter: filter
         });
     }
-
 
     clearFilter(): void {
         this.setState({
@@ -146,7 +149,9 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
     }
 
     cancelOnEscKey(e: React.KeyboardEvent<HTMLInputElement>): void {
-        this.clearFilter();
+        if (e.code === "Escape") {
+            this.clearFilter();
+        }
     }
 
     render(): React.ReactNode {
@@ -194,7 +199,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                         aria-label="filter the grid results"
                         placeholder="filter"
                         onKeyDown={(e) => this.cancelOnEscKey(e)}
-                        onChange={(e) => this.handleFilterChange(e)}
+                        onInput={(e) => this.handleInput(e)}
                     />
                 </div>
                 <table>
@@ -337,4 +342,6 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
             </div>
         );
     }
+
+
 }
