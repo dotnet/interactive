@@ -74,11 +74,20 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                             case contracts.CommandSucceededType:
                             case contracts.CommandFailedType:
                             case contracts.CommandCancelledType:
-                                if (envelope.command?.commandType === contracts.SubmitCodeType) {
+                                if (envelope.command?.commandType === contracts.SubmitCodeType
+                                    || envelope.command?.commandType === contracts.SendValueType) {
+
                                     const completedKernels = this.completedNotebookKernels.get(uri) ?? new Set<string>();
                                     const kernelName = envelope.command?.command?.targetKernelName;
                                     if (kernelName) {
                                         completedKernels.add(kernelName);
+                                    }
+                                    if ((envelope.routingSlip?.length ?? 0) > 0) {
+                                        const kernelUri = envelope.routingSlip![0];
+                                        let kernel = client.kernel.findKernelByUri(kernelUri);
+                                        if (kernel) {
+                                            completedKernels.add(kernel.name);
+                                        }
                                     }
 
                                     this.completedNotebookKernels.set(uri, completedKernels);
