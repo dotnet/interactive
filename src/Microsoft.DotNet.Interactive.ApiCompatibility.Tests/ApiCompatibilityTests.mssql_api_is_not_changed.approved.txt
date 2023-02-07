@@ -268,9 +268,6 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
     protected System.Void StoreQueryResults(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> results, System.CommandLine.Parsing.ParseResult commandKernelChooserParseResult)
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
-  public static class Utils
-    public static System.String AsDoubleQuotedString()
-    public static System.String AsSingleQuotedString()
   public class VersionedTextDocumentIdentifier : TextDocumentIdentifier
     .ctor()
     public System.Int32 Version { get; set;}
