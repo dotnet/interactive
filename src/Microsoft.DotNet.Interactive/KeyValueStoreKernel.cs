@@ -3,13 +3,13 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using static Microsoft.DotNet.Interactive.ChooseKeyValueStoreKernelDirective;
 
@@ -24,9 +24,9 @@ public class KeyValueStoreKernel :
 {
     internal const string DefaultKernelName = "value";
 
-    private readonly ConcurrentDictionary<string, object> _values = new();
+    private readonly ConcurrentDictionary<string, FormattedValue> _values = new();
     private ChooseKeyValueStoreKernelDirective _chooseKernelDirective;
-    private (bool hadValue, object previousValue, object newValue)? _lastOperation;
+    private (bool hadValue, FormattedValue previousValue, string newValue)? _lastOperation;
 
     public KeyValueStoreKernel(string name = DefaultKernelName) : base(name)
     {
@@ -35,7 +35,7 @@ public class KeyValueStoreKernel :
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var valueInfos = _values.Select(e => new KernelValueInfo(e.Key, new FormattedValue(PlainTextFormatter.MimeType, e.Value?.ToDisplayString(PlainTextFormatter.MimeType)),typeof(string))).ToArray();
+        var valueInfos = _values.Select(e => new KernelValueInfo(e.Key, e.Value, typeName: e.Value.MimeType)).ToArray();
         context.Publish(new ValueInfosProduced(valueInfos, command));
         return Task.CompletedTask;
     }
@@ -44,7 +44,11 @@ public class KeyValueStoreKernel :
     {
         if (_values.TryGetValue(command.Name, out var value))
         {
-            context.PublishValueProduced(command, value);
+            context.Publish(new ValueProduced(
+                value.Value,
+                command.Name,
+                value,
+                command));
         }
         else
         {
@@ -54,20 +58,17 @@ public class KeyValueStoreKernel :
         return Task.CompletedTask;
     }
 
-    async Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
+    Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
     {
-        await SetValueAsync(command, context, (name, value, _) =>
-        {
-            _values[name] = value;
-            return Task.CompletedTask;
-        });
+        _values[command.Name] = command.FormattedValue;
+        return Task.CompletedTask;
     }
 
     // todo: change to ChooseKeyValueStoreKernelDirective after removing NetStandardc2.0 dependency
     public override ChooseKernelDirective ChooseKernelDirective =>
         _chooseKernelDirective ??= new(this);
 
-    public IReadOnlyDictionary<string, object> Values => _values;
+    public IReadOnlyDictionary<string, FormattedValue> Values => _values;
 
     Task IKernelCommandHandler<SubmitCode>.HandleAsync(
         SubmitCode command,
@@ -95,7 +96,7 @@ public class KeyValueStoreKernel :
 
         if (options.FromFile is { } file)
         {
-            newValue = await File.ReadAllTextAsync(file.FullName);
+            newValue = await IOExtensions.ReadAllTextAsync(file.FullName);
             loadedFromOptions = true;
         }
         else if (options.FromUrl is { } uri)
@@ -182,7 +183,7 @@ public class KeyValueStoreKernel :
         ValueDirectiveOptions options,
         KernelInvocationContext context)
     {
-        _values[options.Name] = value;
+        _values[options.Name] = new FormattedValue(options.MimeType ?? PlainTextFormatter.MimeType, value);
 
         if (options.MimeType is { } mimeType)
         {

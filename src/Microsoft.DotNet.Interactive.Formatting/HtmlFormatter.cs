@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -22,17 +22,13 @@ public static class HtmlFormatter
     {
         Formatter.Clearing += Initialize;
 
-        void Initialize() => MaxProperties = DefaultMaxProperties;
+        void Initialize()
+        {
+            FormattersForAnyObject = new FormatterMapByType(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTreeViewFormatterForAnyObject));
+        }
     }
 
-    /// <summary>
-    ///   Indicates the maximum number of properties to show in the default HTML display of arbitrary objects.
-    ///   If set to zero no properties are shown.
-    /// </summary>
-    public static int MaxProperties { get; set; } = DefaultMaxProperties;
-
-    internal const int DefaultMaxProperties = 20;
-
+    // FIX: (HtmlFormatter) this can return a formatter with the wrong MIME type
     public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
         Formatter.GetPreferredFormatterFor(type, MimeType);
 
@@ -48,21 +44,20 @@ public static class HtmlFormatter
         FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
 
     internal static void FormatAndStyleAsPlainText(
-        object text, 
+        object value, 
         FormatContext context)
     {
         context.RequireDefaultStyles();
 
-        PocketView tag = div(pre(text.ToDisplayString(PlainTextFormatter.MimeType)));
+        PocketView tag = div(pre(value.ToDisplayString(PlainTextFormatter.MimeType)));
         tag.HtmlAttributes["class"] = "dni-plaintext";
         tag.WriteTo(context);
     }
 
-    internal static FormatterMapByType FormattersForAnyObject =
-        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
+    internal static FormatterMapByType FormattersForAnyObject;
 
     internal static FormatterMapByType FormattersForAnyEnumerable =
-        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
+        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTableFormatterForAnyEnumerable));
 
     internal static readonly ITypeFormatter[] DefaultFormatters =
     {

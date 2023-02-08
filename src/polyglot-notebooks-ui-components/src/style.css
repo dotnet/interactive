@@ -1,0 +1,114 @@
+.share-symbol {
+    padding: 2px;
+    height: 16px;
+    width: 16px;
+}
+
+.arrow {
+    fill: var(--vscode-input-foreground);
+}
+
+.arrow-box {
+    fill: var(--vscode-button-background);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    position: relative;
+}
+
+th,
+td {
+    position: relative;
+    border-collapse: collapse;
+    border: 1px solid var(--vscode-quickInputList-focusBackground);
+    text-align: left;
+    display: table-cell;
+    color: var(--vscode-foreground);
+}
+
+.header {
+    background-color: var(--vscode-quickInputList-focusBackground);
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    align-content: center;
+    flex-wrap: wrap;
+    flex-direction: row;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.data-cell {
+    margin: 3px;
+    color: var(--vscode-foreground);
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+    font-size: var(--vscode-editor-font-size);
+}
+
+
+.toolbar {
+    margin-bottom: 10px;
+}
+
+.grip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    cursor: col-resize;
+    user-select: none;
+    height: 100%;
+}
+
+.name-column {
+    width: 20%;
+}
+
+.type-column {
+    width: 15%;
+}
+
+.value-column {
+    width: 40%;
+}
+
+.kernel-column {
+    width: 15%;
+}
+
+.actions-column {
+    width: 10%;
+}
+
+button {
+    background-color: var(--vscode-button-background);
+    border: var(--vscode-button-border);
+    color: var(--vscode-button-foreground);
+}
+
+button[hover] {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+
+button.share {
+    background-color: transparent;
+    border: 0px;
+}
+
+.filter {
+    color: var(--vscode-input-foreground);
+    background-color: var(--vscode-input-background);
+}

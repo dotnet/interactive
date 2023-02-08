@@ -83,14 +83,12 @@ export class DotNetNotebookKernel {
                     const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(notebook);
                     const cells = notebook.getCells();
                     const foundCell = cells.find(cell => cell.document === textDocument);
-                    if (foundCell && foundCell.index > 0) {
-                        // if we found the cell and it's not the first, ensure it has kernel metadata
+                    if (foundCell) {
+                        // if we found the cell ensure it has kernel metadata
                         const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(foundCell);
                         if (!cellMetadata.kernelName) {
-                            // no kernel metadata; copy from previous cell
-                            const previousCell = cells[foundCell.index - 1];
-                            const previousCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(previousCell);
-                            await vscodeUtilities.setCellKernelName(foundCell, previousCellMetadata.kernelName ?? notebookMetadata.kernelInfo.defaultKernelName);
+                            // no kernel name; set it from the notebook metadata
+                            await vscodeUtilities.setCellKernelName(foundCell, notebookMetadata.kernelInfo.defaultKernelName);
                         }
                     }
                 }

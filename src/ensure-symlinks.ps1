@@ -20,8 +20,10 @@ EnsureSymlink -sourceDirectory "$PSScriptRoot\microsoft-dotnet-interactive-brows
 
 EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-common\src" -linkName "dotnet-interactive" -destinationLocation "..\..\microsoft-dotnet-interactive\src"
 
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\src" -linkName "ui" -destinationLocation "..\..\polyglot-notebooks-ui-components\src\contracts"
 EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\src" -linkName "vscode-common" -destinationLocation "..\..\dotnet-interactive-vscode-common\src"
 EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\dotnet-interactive-vscode-common\tests"
 
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\src" -linkName "ui" -destinationLocation "..\..\polyglot-notebooks-ui-components\src\contracts"
 EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\src" -linkName "vscode-common" -destinationLocation "..\..\dotnet-interactive-vscode-common\src"
 EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\dotnet-interactive-vscode-common\tests"

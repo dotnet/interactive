@@ -88,6 +88,92 @@ public class KeyValueStoreKernelTests
                                 v.Value == storedValue);
     }
 
+    [Fact]
+    public async Task When_mime_type_is_specified_then_it_retains_the_specified_mime_type()
+    {
+        using var kernel = CreateKernel();
+
+        var storedValue = "1,2,3";
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name hello --mime-type text/test-stuff
+{storedValue}
+");
+
+        var result = await kernel.SendAsync(new RequestValue("hello", targetKernelName:"value"));
+
+        using var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .FormattedValue
+            .MimeType
+            .Should()
+            .Be("text/test-stuff");
+    }
+
+    [Fact]
+    public async Task requestValueInfos_uses_mimetypes_as_type_names()
+    {
+        using var kernel = CreateKernel();
+
+        var storedValue = "1,2,3";
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name a --mime-type text/plain
+{storedValue}
+");
+
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name b --mime-type application/json
+{storedValue}
+");
+
+        var result = await kernel.SendAsync(new RequestValueInfos( targetKernelName: "value"));
+
+        using var events = result.KernelEvents.ToSubscribedList();
+
+        var valueInfosProduced = events.Should()
+            .ContainSingle<ValueInfosProduced>()
+            .Which;
+
+        valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "a" && v.TypeName == "text/plain");
+
+
+        valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "b" && v.TypeName == "application/json");
+    }
+
+    [Fact]
+    public async Task When_mime_type_is_not_specified_then_it_default_to_text_plain ()
+    {
+        using var kernel = CreateKernel();
+
+        var storedValue = "1,2,3";
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name hello
+{storedValue}
+");
+
+        var result = await kernel.SendAsync(new RequestValue("hello", targetKernelName: "value"));
+
+        using var events = result.KernelEvents.ToSubscribedList();
+
+        events.Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .FormattedValue
+            .MimeType
+            .Should()
+            .Be("text/plain");
+    }
+
     [Theory]
     [InlineData("#!value --name hi --from-file {0}")]
     [InlineData("#!value --name hi --from-file {0}\n")]

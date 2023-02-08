@@ -817,7 +817,7 @@ using NodaTime.Extensions;");
             .Which
             .Message
             .Should()
-            .Contain($"error NU1101:", nonexistentPackageName);
+            .Contain("error NU1101:", nonexistentPackageName);
     }
 
     [Theory]

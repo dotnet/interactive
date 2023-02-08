@@ -16,7 +16,7 @@ public class FileProvider : IFileProvider, IDisposable
 {
     private readonly EmbeddedFileProvider _root;
     private readonly IDisposable _eventSubscription;
-    private readonly ConcurrentDictionary<string, EmbeddedFileProvider> _providers = new ConcurrentDictionary<string, EmbeddedFileProvider>();
+    private readonly ConcurrentDictionary<string, EmbeddedFileProvider> _providers = new();
 
     public FileProvider(Kernel kernel, Assembly rootProviderAssembly)
     {

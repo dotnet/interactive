@@ -252,13 +252,28 @@ public class PocketViewTests : FormatterTestBase
 
         output.Should().Be("<details open><summary>heading</summary><p>some content</p></details>");
     }
-        
+
     [Fact]
     public void multiple_attributes_can_be_written_without_a_value()
     {
         string output = details["open", "disabled"](summary("heading"), p("some content")).ToString();
 
         output.Should().Be("<details open disabled><summary>heading</summary><p>some content</p></details>");
+    }
+
+    [Fact]
+    public void Attributes_without_a_value_can_be_combined_with_named_attributes()
+    {
+        PocketView view = details["open", @class: "the-class"](summary("expand for more"), div("more"));
+
+        var html = view.ToString();
+
+        html.Should().Be("""
+            <details open class="the-class">
+                <summary>expand for more</summary>
+                <div>more</div>
+            </details>
+            """.Crunch());
     }
 
     [Fact]

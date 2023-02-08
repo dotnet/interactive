@@ -1,10 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive;
+namespace Microsoft.DotNet.Interactive.Utility;
 
 internal static partial class DictionaryExtensions
 {
@@ -20,6 +22,20 @@ internal static partial class DictionaryExtensions
         }
 
         return value;
+    }
+
+    public static TValue GetOrAdd<TValue>(
+        this IDictionary<string, object> dictionary,
+        string key,
+        Func<string, TValue> getValue)
+    {
+        if (!dictionary.TryGetValue(key, out var value))
+        {
+            value = getValue(key);
+            dictionary.Add(key, value);
+        }
+
+        return (TValue)value;
     }
 
 #if NETSTANDARD2_0

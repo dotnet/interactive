@@ -27,7 +27,7 @@ public static class KernelExtensionTestHelper
 
         return await CreateExtensionNupkg(
             projectDir,
-            $"await kernel.SendAsync(new SubmitCode(\"\\\"SimpleExtension\\\"\"));",
+            "await kernel.SendAsync(new SubmitCode(\"\\\"SimpleExtension\\\"\"));",
             packageName,
             packageVersion,
             timeout: TimeSpan.FromMinutes(5));
@@ -43,7 +43,7 @@ public static class KernelExtensionTestHelper
 
         return await CreateExtensionNupkg(
             projectDir,
-            $"await kernel.SendAsync(new SubmitCode(\"\\\"FileProviderExtension\\\"\"));",
+            "await kernel.SendAsync(new SubmitCode(\"\\\"FileProviderExtension\\\"\"));",
             packageName,
             packageVersion,
             fileToEmbed: fileToEmbed,
@@ -58,6 +58,10 @@ public static class KernelExtensionTestHelper
 
         var extensionScriptPath = new FileInfo(Path.Combine(projectDir.FullName, "extension.dib"));
         var extensionScriptContent = @"
+#!markdown
+
+# This is an extension!
+
 #!csharp
 ""ScriptExtension""
 ";

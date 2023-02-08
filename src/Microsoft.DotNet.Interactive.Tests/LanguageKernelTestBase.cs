@@ -54,7 +54,7 @@ public abstract class LanguageKernelTestBase : IDisposable
         }
     }
 
-    protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp,
+    protected virtual CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp,
         bool openTestingNamespaces = false)
     {
         return CreateCompositeKernel(

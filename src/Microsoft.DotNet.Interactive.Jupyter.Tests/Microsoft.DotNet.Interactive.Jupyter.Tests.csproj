@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Compile Include="..\dotnet-interactive\(Recipes)\TaskExtensions.cs" />
+    <Compile Include="..\dotnet-interactive\Utility\KernelDiagnostics.cs" Link="KernelDiagnostics.cs" />
   </ItemGroup>
 
   <ItemGroup>

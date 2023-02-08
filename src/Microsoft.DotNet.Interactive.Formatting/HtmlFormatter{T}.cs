@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
@@ -53,101 +54,52 @@ public class HtmlFormatter<T> : TypeFormatter<T>
     }
 
     public override string MimeType => HtmlFormatter.MimeType;
-
-    internal static HtmlFormatter<T> CreateForAnyObject()
-    {
-        var members = typeof(T).GetMembersToFormat()
-                               .GetMemberAccessors<T>();
-
-        return new HtmlFormatter<T>((instance, context) =>
-        {
-            // Note the order of members is declaration order
-            var reducedMembers = 
-                members
-                    .Take(Math.Max(0, HtmlFormatter.MaxProperties))
-                    .ToArray();
-
-            if (reducedMembers.Length == 0)
-            {
-                // This formatter refuses to format objects without members, and 
-                // refused to produce nested tables, or if no members are selected
-                return false;
-            }
-            else
-            {
-                // Note, embeds the keys and values as arbitrary objects into the HTML content,
-                List<IHtmlContent> headers = 
-                    reducedMembers.Select(m => (IHtmlContent)th(m.Member.Name))
-                        .ToList();
-                    
-                // Add a '..' column if we elided some members due to size limitations
-                if (reducedMembers.Length < members.Length)
-                {
-                    headers.Add(th(".."));
-                }
-
-                IEnumerable<object> values =
-                    reducedMembers.Select(m => m.GetValueOrException(instance))
-                        .Select(v => td(
-                            div[@class: "dni-plaintext"](pre(v.ToDisplayString(PlainTextFormatter.MimeType)))));
-
-                PocketView t =
-                    table(
-                        thead(
-                            tr(
-                                headers)),
-                        tbody(
-                            tr(
-                                values)));
-
-                t.WriteTo(context);
-
-                return true;
-            }
-        });
-    }
-
-    internal static HtmlFormatter<T> CreateForAnyEnumerable()
+    
+    internal static HtmlFormatter<T> CreateTableFormatterForAnyEnumerable()
     {
         Func<T, IEnumerable> getKeys = null;
-        Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
+        Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
+        bool flatten = false;
 
-        var dictType =
-            typeof(T).GetAllInterfaces()
-                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-            ??
-            typeof(T).GetAllInterfaces()
-                .FirstOrDefault(i => i == typeof(IDictionary));
-
-        if (dictType is not null)
+        if (typeof(T).IsDictionary(
+                out var getKeys1,
+                out var getValues1,
+                out var keyType1,
+                out var valueType1))
+        { 
+            getKeys = instance => getKeys1(instance);  
+            getValues = instance => getValues1(instance);
+        }
+        else
         {
-            var keysProperty = dictType.GetProperty("Keys");
-            getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
+            var elementType = typeof(T).GetElementTypeIfEnumerable();
 
-            var valuesProperty = dictType.GetProperty("Values");
-            getValues = instance => (IEnumerable) valuesProperty.GetValue(instance, null);
+            if (elementType?.IsScalar() is true)
+            {
+                flatten = true;
+            }
         }
 
-        return new HtmlFormatter<T>(BuildTable);
+        return new HtmlFormatter<T>((value, context) => BuildTable(value, context, flatten));
 
-        bool BuildTable(T source, FormatContext context)
+        bool BuildTable(T source, FormatContext context, bool summarize)
         {
             context.RequireDefaultStyles();
 
             using var _ = context.IncrementTableDepth();
 
-            if (context.TableDepth > 1)
+            if (summarize || !context.AllowRecursion)
             {
-                HtmlFormatter.FormatAndStyleAsPlainText(source,  context);
+                HtmlFormatter.FormatAndStyleAsPlainText(source, context);
                 return true;
             }
 
             var canCountRemainder = source is ICollection;
 
             var (rowData, remainingCount) = getValues(source)
-                .Cast<object>()
-                .Select((v, i) => (v, i))
-                .TakeAndCountRemaining(Formatter.ListExpansionLimit, canCountRemainder);
+                                            .Cast<object>()
+                                            .Select((v, i) => (v, i))
+                                            .TakeAndCountRemaining(Formatter.ListExpansionLimit, canCountRemainder);
 
             if (rowData.Count == 0)
             {
@@ -156,27 +108,11 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             }
 
             var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
-            var headerToSortIndex = new Dictionary<string, (int, int)>();
             var typesAreDifferent = false;
             var types = new Dictionary<Type, int>();
 
             foreach (var (value, index) in rowData)
             {
-                IDictionary<string, object> keysAndValues;
-
-                if (value is { } &&
-                    Formatter.GetPreferredFormatterFor(value.GetType(), HtmlFormatter.MimeType) is { } formatter &&
-                    formatter.Type == typeof(object))
-                {
-                    var destructurer = Destructurer.GetOrCreate(value?.GetType());
-
-                    keysAndValues = destructurer.Destructure(value);
-                }
-                else
-                {
-                    keysAndValues = NonDestructurer.Instance.Destructure(value);
-                }
-
                 if (value is not null)
                 {
                     var type = value.GetType();
@@ -188,22 +124,9 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                     typesAreDifferent = types.Count > 1;
                 }
 
-                var typeIndex = value is null ? 0 : types[value.GetType()];
-
-                var pairIndex = 0;
-
-                foreach (var pair in keysAndValues)
-                {
-                    if (!headerToSortIndex.ContainsKey(pair.Key))
-                    {
-                        headerToSortIndex.Add(pair.Key, (typeIndex, pairIndex));
-                    }
-
-                    valuesByHeader
-                        .GetOrAdd(pair.Key, _ => new Dictionary<int, object>())
-                        .Add(index, pair.Value);
-                    pairIndex++;
-                }
+                valuesByHeader
+                    .GetOrAdd("value", _ => new Dictionary<int, object>())
+                    .Add(index, value);
             }
 
             var headers = new List<IHtmlContent>();
@@ -214,16 +137,16 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             {
                 headers.Add(th(i("key")));
                 leftColumnValues = getKeys(source)
-                    .Cast<object>()
-                    .Take(rowData.Count)
-                    .ToList();
+                                   .Cast<object>()
+                                   .Take(rowData.Count)
+                                   .ToList();
             }
             else
             {
                 headers.Add(th(i("index")));
                 leftColumnValues = Enumerable.Range(0, rowData.Count)
-                    .Select(i => (object) new HtmlString(i.ToString()))
-                    .ToList();
+                                             .Select(i => (object)new HtmlString(i.ToString()))
+                                             .ToList();
             }
 
             if (typesAreDifferent)
@@ -231,24 +154,10 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                 headers.Insert(1, th(i("type")));
             }
 
-            // Order the columns first by the *first* type to exhibit the
-            // property, then by the destructuring order within that type.
-            var valueKeys =
-                valuesByHeader.Keys
-                    .OrderBy(x => headerToSortIndex[x])
-                    .ToArray();
+            var valueKeys = valuesByHeader.Keys.ToArray();
 
-            var valueKeysLimited =
-                valueKeys
-                    .Take(Math.Max(0, HtmlFormatter.MaxProperties))
-                    .ToArray();
+            headers.AddRange(valueKeys.Select(k => (IHtmlContent)th(k)));
 
-            headers.AddRange(valueKeysLimited.Select(k => (IHtmlContent) th(k)));
-            if (valueKeysLimited.Length < valueKeys.Length)
-            {
-                headers.Add((IHtmlContent)th(".."));
-            }
-                
             var rows = new List<IHtmlContent>();
 
             for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
@@ -265,7 +174,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                     rowValues.Add(type);
                 }
 
-                foreach (var key in valueKeysLimited)
+                foreach (var key in valueKeys)
                 {
                     if (valuesByHeader[key].TryGetValue(rowIndex, out var cellData))
                     {
@@ -292,6 +201,61 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             var table = Html.Table(headers, rows);
 
             table.WriteTo(context);
+
+            return true;
+        }
+    }
+
+    internal static HtmlFormatter<T> CreateTreeViewFormatterForAnyObject()
+    {
+        if (typeof(T).IsScalar())
+        {
+            return new HtmlFormatter<T>((value, context) => { HtmlFormatter.FormatAndStyleAsPlainText(value, context); });
+        }
+
+        var members = typeof(T).GetMembersToFormat()
+                               .GetMemberAccessors<T>();
+
+        return new HtmlFormatter<T>((instance, context) => BuildTreeView(instance, context, members));
+
+        static bool BuildTreeView(T source, FormatContext context, MemberAccessor<T>[] memberAccessors)
+        {
+            context.RequireDefaultStyles();
+
+            if (!context.AllowRecursion)
+            {
+                HtmlFormatter.FormatAndStyleAsPlainText(source, context);
+                return true;
+            }
+
+            HtmlTag code = new HtmlTag("code", c =>
+            {
+                var formatter = PlainTextSummaryFormatter.GetPreferredFormatterFor(source?.GetType());
+
+                formatter.Format(source, context);
+            });
+
+            var attributes = new HtmlAttributes();
+
+            if (context.Depth < 2)
+            {
+                attributes.Add("open", "open");
+            }
+
+            attributes.AddCssClass("dni-treeview");
+
+            PocketView view = details[attributes](
+                summary(
+                    span[@class: "dni-code-hint"](code)),
+                div(
+                    Html.Table(
+                        headers: null,
+                        rows: memberAccessors.Select(
+                            a => (IHtmlContent)
+                                tr(
+                                    td(a.Member.Name), td(a.GetValueOrException(source)))).ToArray())));
+
+            view.WriteTo(context);
 
             return true;
         }
