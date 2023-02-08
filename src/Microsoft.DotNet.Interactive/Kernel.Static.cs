@@ -55,17 +55,16 @@ public partial class Kernel
             prompt,
             inputTypeHint: isPassword ? "password" : typeHint);
 
-        var results = await Root.SendAsync(command, CancellationToken.None);
+        var result = await Root.SendAsync(command, CancellationToken.None);
 
-        var failedEvent = await results.KernelEvents.OfType<CommandFailed>().FirstOrDefaultAsync();
-        if (failedEvent is { })
+        if (result.Events.Last() is CommandFailed failedEvent)
         {
             throw new Exception(failedEvent.Message);
         }
 
-        var inputProduced = await results.KernelEvents
+        var inputProduced = result.Events
             .OfType<InputProduced>()
-            .FirstOrDefaultAsync();
+            .FirstOrDefault();
 
         return inputProduced?.Value;
     }

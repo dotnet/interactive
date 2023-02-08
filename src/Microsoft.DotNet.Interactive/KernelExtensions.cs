@@ -2,13 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
-using System.CommandLine.Parsing;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -322,22 +319,21 @@ public static class KernelExtensions
         {
             if (kernel.ParentKernel is { } composite)
             {
-                var valueInfos = new ConcurrentQueue<ValueInfosProduced>();
-                var getValueTasks = composite.ChildKernels.Where(
-                        k => k != kernel &&
-                             k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
-                    .Select(async k =>
-                    {
-                        var result = await k.SendAsync(new RequestValueInfos());
-                        result.KernelEvents.OfType<ValueInfosProduced>().Subscribe(e => valueInfos.Enqueue(e));
-                    });
-                Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
+                var getValueTasks = composite.ChildKernels
+                                             .Where(
+                                                 k => k != kernel &&
+                                                      k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
+                                             .Select(async k => await k.SendAsync(new RequestValueInfos()));
 
-                return valueInfos
-                    .SelectMany(k => k.ValueInfos.Select(vn => vn.Name))
-                    .OrderBy(x => x)
-                    .Select(n => new CompletionItem(n))
-                    .ToArray();
+                var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
+
+                return tasks
+                       .Select(t => t.Events.OfType<ValueInfosProduced>())
+                       .SelectMany(events => events.SelectMany(e => e.ValueInfos))
+                       .Select(vi => vi.Name)
+                       .OrderBy(x => x)
+                       .Select(n => new CompletionItem(n))
+                       .ToArray();
             }
 
             return Array.Empty<CompletionItem>();
@@ -468,7 +464,7 @@ public static class KernelExtensions
 
         var requestValueResult = await kernel.SendAsync(new RequestValue(name, mimeType: requestedMimeType));
 
-        return requestValueResult.KernelEvents.ToEnumerable().OfType<ValueProduced>().SingleOrDefault();
+        return requestValueResult.Events.OfType<ValueProduced>().SingleOrDefault();
     }
 
     public static TKernel UseWho<TKernel>(this TKernel kernel)
@@ -518,20 +514,23 @@ public static class KernelExtensions
             var nameEvents = new List<ValueInfosProduced>();
 
             var result = await context.HandlingKernel.SendAsync(new RequestValueInfos(context.HandlingKernel.Name));
-            using var _ = result.KernelEvents.OfType<ValueInfosProduced>().Subscribe(e => nameEvents.Add(e));
+            nameEvents.AddRange(result.Events.OfType<ValueInfosProduced>());
 
             var valueNames = nameEvents.SelectMany(e => e.ValueInfos.Select(d => d.Name)).Distinct();
 
-            var valueEvents = new List<ValueProduced>();
             var valueCommands = valueNames.Select(valueName => new RequestValue(valueName, targetKernelName: context.HandlingKernel.Name));
 
+            var valueEvents = new List<ValueProduced>();
             foreach (var valueCommand in valueCommands)
             {
                 result = await context.HandlingKernel.SendAsync(valueCommand);
-                using var __ = result.KernelEvents.OfType<ValueProduced>().Subscribe(e => valueEvents.Add(e));
+                valueEvents.AddRange(result.Events.OfType<ValueProduced>());
             }
 
-            var kernelValues = valueEvents.Select(e => new KernelValue(new KernelValueInfo(e.Name, new FormattedValue(PlainTextFormatter.MimeType, e.Value?.ToDisplayString(PlainTextFormatter.MimeType)), e.Value?.GetType()), e.Value, context.HandlingKernel.Name));
+            var kernelValues =
+                valueEvents.Select(e => new KernelValue(
+                                       new KernelValueInfo(e.Name, new FormattedValue(PlainTextFormatter.MimeType, e.Value?.ToDisplayString(PlainTextFormatter.MimeType)),
+                                                           e.Value?.GetType()), e.Value, context.HandlingKernel.Name));
 
             var currentVariables = new KernelValues(
                 kernelValues,
