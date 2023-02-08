@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -60,7 +61,7 @@ public class JupyterKernelTests : IDisposable
     [JupyterZMQTestData(KernelSpecName = "ir")]
     [JupyterTestData(KernelSpecName = "python3")]
     [JupyterTestData(KernelSpecName = "ir")]
-    public async Task can_connect_to_and_get_kernel_info_produced(JupyterConnectionTestData connectionData)
+    public async Task can_connect_to_and_setup_kernel(JupyterConnectionTestData connectionData)
     {
         var options = connectionData.GetConnectionOptions();
 
@@ -89,11 +90,11 @@ public class JupyterKernelTests : IDisposable
             .Cast<KernelInfoReply>()
             .First();
 
+        var testKernel = kernel.FindKernelByName("testKernel");
+        Assert.NotNull(testKernel);
+
         // kernel info should be sent as kernel info produced
-        events
-            .Should()
-            .ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "testKernel")
-            .Which
+        testKernel
             .KernelInfo
             .Should()
             .BeEquivalentTo(new
@@ -102,15 +103,22 @@ public class JupyterKernelTests : IDisposable
                 LanguageVersion = kernelInfoReturned.LanguageInfo.Version
             }, c => c.ExcludingMissingMembers());
 
-        // should send the comm message for setting up variable sharing channel
-        sentMessages
-            .Should()
-            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest);
+        // ensure variable sharing is setup
+        testKernel
+            .KernelInfo
+            .SupportedKernelCommands
+            .Contains(new KernelCommandInfo(nameof(RequestValue)));
 
-        sentMessages
-            .Should()
-            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.CommOpen);
+        testKernel
+            .KernelInfo
+            .SupportedKernelCommands
+            .Contains(new KernelCommandInfo(nameof(RequestValueInfos)));
 
+        testKernel
+            .KernelInfo
+            .SupportedKernelCommands
+            .Contains(new KernelCommandInfo(nameof(SendValue)));
+        
         options.SaveState();
     }
 
