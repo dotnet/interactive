@@ -15,7 +15,16 @@ export type VariableGridState = {
     filter: string,
     drag?: {
         iniMouse: number,
-        iniSize: number
+        sizes: {
+            targetColumn: {
+                iniSize: number,
+                id: string
+            },
+            affectedColumn?: {
+                iniSize: number,
+                id: string
+            }
+        }
     }
 };
 
@@ -37,11 +46,11 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
     };
 
     idToClass: { [key: string]: string } = {
-        "0-0": "name-column-content",
-        "0-1": "value-column-content",
-        "0-2": "type-column-content",
-        "0-3": "kernel-column-content",
-        "0-4": "actions-column-content"
+        "0-0": "name",
+        "0-1": "value",
+        "0-2": "type",
+        "0-3": "kernel",
+        "0-4": "actions"
     };
 
     idlayout: {
@@ -55,15 +64,15 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
             },
             "0-1": {
                 left: "0-0",
-                right: "0-1"
+                right: "0-2"
             },
             "0-2": {
                 left: "0-1",
-                right: "0-2"
+                right: "0-3"
             },
             "0-3": {
                 left: "0-2",
-                right: "0-3"
+                right: "0-4"
             },
             "0-4": {
                 left: "0-3",
@@ -100,17 +109,49 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
         });
     }
 
-    handleStart(e: React.DragEvent<HTMLDivElement>, id: string) {
+    getTableSize(): number {
+        const tableElement = document.getElementById("table-root")!;
+        return this.getWidth(tableElement);
+    }
 
+    getWidth(element: Element) {
+        const computedStyle = window.getComputedStyle(element);
+        const width = parseInt(computedStyle.width);
+        return width;
+    }
+
+    handleStart(e: React.DragEvent<HTMLDivElement>, id: string) {
         const element = document.getElementById(id);
         if (element) {
             let iniMouse = e.clientX;
-            let iniSize = parseInt(window.getComputedStyle(element).width);
+            let iniSize = this.getWidth(element);
+            let sizes: {
+                targetColumn: {
+                    iniSize: number,
+                    id: string
+                },
+                affectedColumn?: {
+                    iniSize: number,
+                    id: string
+                }
+            } = {
+                targetColumn: {
+                    iniSize,
+                    id
+                }
+            };
+            const affectedcolumnId = this.idlayout[id].right;
+            if (affectedcolumnId) {
+                sizes.affectedColumn = {
+                    id: affectedcolumnId,
+                    iniSize: this.getWidth(document.getElementById(id)!)
+                }
+            }
             this.setState({
                 ...this.state,
                 drag: {
                     iniMouse: iniMouse,
-                    iniSize: iniSize
+                    sizes: sizes
                 }
             });
         }
@@ -118,63 +159,32 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
 
     handleMove(e: React.DragEvent<HTMLDivElement>, id: string) {
         if (this.state.drag && e.clientX) {
-            const element = document.getElementById(id);
+
+            const element = document.getElementById(id)!;
+            const tableWidth = this.getTableSize();
+
             if (element) {
-                const iniMouse = this.state.drag.iniMouse!;
-                const iniSize = this.state.drag.iniSize!;
-                const endMouse = e.clientX;
-                const delta = (endMouse - iniMouse)
-                const endSize = iniSize + delta;
-                element.style.width = `${endSize}px`;
-                const targetClass = this.idToClass[id];
-                const affectedcolumnId = this.idlayout[id].right;
+                const startDragPosition = this.state.drag.iniMouse!;
+                const sizes = this.state.drag.sizes;
+                const iniSize = sizes.targetColumn.iniSize!;
+                const endDragPosition = e.clientX;
+                const delta = (endDragPosition - startDragPosition);
+                const iniSizePercentage = (iniSize / tableWidth) * 100.0;
+                const deltaPercentage = (delta / tableWidth) * 100.0;
+                const endSizePercentage = iniSizePercentage + deltaPercentage;
+                const targetClass = `${this.idToClass[id]}-column`;
+                const affectedcolumnId = sizes.affectedColumn?.id;
 
                 if (targetClass && affectedcolumnId) {
-                    const affectedColumn = document.getElementById(affectedcolumnId)!;
-                    const w = affectedColumn.clientWidth - delta;
-                    affectedColumn.style.width = `${w}px`;
+                    const affectedColumnClass = `${this.idToClass[affectedcolumnId]}-column`;
+                    const w = ((sizes.affectedColumn?.iniSize! / tableWidth) * 100.0) - deltaPercentage;
 
-                    const targetToResizeClass = this.idToClass[affectedcolumnId];
-                    const targets = document.querySelectorAll(`.${targetClass}`);
-                    for (let index = 0; index < targets.length; index++) {
-                        const target = targets[index] as any;
-                        target.style["max-width"] = `${endSize}px`;
-                    }
+                    const targetColumn: any = document.querySelector(`col.${targetClass}`)!;
+                    const affectedColumn: any = document.querySelector(`col.${affectedColumnClass}`)!;
 
-                    const targetsToResize = document.querySelectorAll(`.${targetToResizeClass}`);
-                    for (let index = 0; index < targetsToResize.length; index++) {
-                        const targetToResize = targetsToResize[index] as any;
-                        targetToResize.style["max-width"] = `${w}px`;
-                    }
+                    targetColumn.style["width"] = `${endSizePercentage}%`;
+                    affectedColumn.style["width"] = `${w}%`;
                 }
-            }
-        }
-    }
-
-    handleDragEnd(e: React.DragEvent<HTMLDivElement>, id: string): void {
-        const element = document.getElementById(id);
-        const affectedcolumnId = this.idlayout[id].right;
-
-        if (element && affectedcolumnId) {
-            const affectedColumn = document.getElementById(affectedcolumnId)!;
-            const targetClass = this.idToClass[id];
-            const targetToResizeClass = this.idToClass[affectedcolumnId];
-            const computedStyle = window.getComputedStyle(document.getElementById(id)!);
-            const computedStyleForAffected = window.getComputedStyle(document.getElementById(id)!);
-            if (targetClass) {
-                window.setTimeout(() => {
-                    const targets = document.querySelectorAll(`.${targetClass}`);
-                    for (let index = 0; index < targets.length; index++) {
-                        const target = targets[index] as any;
-                        target.style["max-width"] = computedStyle.width;
-                    }
-
-                    const targetsToResize = document.querySelectorAll(`.${targetToResizeClass}`);
-                    for (let index = 0; index < targetsToResize.length; index++) {
-                        const targetToResize = targetsToResize[index] as any;
-                        targetToResize.style["max-width"] = computedStyleForAffected.width;
-                    }
-                }, 10);
             }
         }
     }
@@ -207,10 +217,13 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
         }
     }
 
+
+
     handleInput(e: React.FormEvent<HTMLInputElement>): void {
         const inputField = e.target as HTMLInputElement;
         this.updateFilter(inputField.value);
     }
+
     updateFilter(filter: string) {
         this.setState({
             ...this.state,
@@ -285,13 +298,20 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                     />
                 </div>
                 <div className="table-container" >
-                    <table>
+                    <table id="table-root">
+                        <colgroup>
+                            <col className="name-column"></col>
+                            <col className="value-column"></col>
+                            <col className="type-column"></col>
+                            <col className="kernel-column"></col>
+                            <col className="actions-column"></col>
+                        </colgroup>
                         <tbody>
                             <tr>
                                 <th
                                     key={0}
                                     id={`0-0`}
-                                    className="header"
+                                    className="header name-column"
                                 >
                                     Name
                                     <div
@@ -299,13 +319,12 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                         draggable={true}
                                         onDragStart={(e) => this.handleStart(e, `0-0`)}
                                         onDrag={(e) => this.handleMove(e, `0-0`)}
-                                        onDragEnd={(e) => this.handleDragEnd(e, `0-0`)}
                                     />
                                 </th>
                                 <th
                                     key={1}
                                     id={`0-1`}
-                                    className="header"
+                                    className="header value-column"
                                 >
                                     Value
                                     <div
@@ -313,13 +332,12 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                         draggable={true}
                                         onDragStart={(e) => this.handleStart(e, `0-1`)}
                                         onDrag={(e) => this.handleMove(e, `0-1`)}
-                                        onDragEnd={(e) => this.handleDragEnd(e, `0-1`)}
                                     />
                                 </th>
                                 <th
                                     key={2}
                                     id={`0-2`}
-                                    className="header"
+                                    className="header type-column"
                                 >
                                     Type
                                     <div
@@ -327,13 +345,12 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                         draggable={true}
                                         onDragStart={(e) => this.handleStart(e, `0-2`)}
                                         onDrag={(e) => this.handleMove(e, `0-2`)}
-                                        onDragEnd={(e) => this.handleDragEnd(e, `0-2`)}
                                     />
                                 </th>
                                 <th
                                     key={3}
                                     id={`0-3`}
-                                    className="header"
+                                    className="header kernel-column"
                                 >
                                     Kernel
                                     <div
@@ -341,13 +358,12 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                         draggable={true}
                                         onDragStart={(e) => this.handleStart(e, `0-3`)}
                                         onDrag={(e) => this.handleMove(e, `0-3`)}
-                                        onDragEnd={(e) => this.handleDragEnd(e, `0-3`)}
                                     />
                                 </th>
                                 <th
                                     key={4}
                                     id={`0-4`}
-                                    className="header"
+                                    className="header actions-column"
                                 >
                                     Actions
                                 </th>
@@ -365,7 +381,6 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                             draggable={true}
                                             onDragStart={(e) => this.handleStart(e, `0-0`)}
                                             onDrag={(e) => this.handleMove(e, `0-0`)}
-                                            onDragEnd={(e) => this.handleDragEnd(e, `0-0`)}
                                         />
                                     </td>
                                     <td key={1} id={`${row.id}-${1}`} className="value-column">
@@ -379,7 +394,6 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                             draggable={true}
                                             onDragStart={(e) => this.handleStart(e, `0-1`)}
                                             onDrag={(e) => this.handleMove(e, `0-1`)}
-                                            onDragEnd={(e) => this.handleDragEnd(e, `0-1`)}
                                         />
                                     </td>
                                     <td key={2} id={`${row.id}-${2}`} className="type-column">
@@ -393,7 +407,6 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                             draggable={true}
                                             onDragStart={(e) => this.handleStart(e, `0-2`)}
                                             onDrag={(e) => this.handleMove(e, `0-2`)}
-                                            onDragEnd={(e) => this.handleDragEnd(e, `0-2`)}
                                         />
                                     </td>
                                     <td key={3} id={`${row.id}-${3}`} className="kernel-column">
@@ -407,7 +420,6 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                             draggable={true}
                                             onDragStart={(e) => this.handleStart(e, `0-3`)}
                                             onDrag={(e) => this.handleMove(e, `0-3`)}
-                                            onDragEnd={(e) => this.handleDragEnd(e, `0-3`)}
                                         />
                                     </td>
                                     <td key={4} id={`${row.id}-${4}`} className="actions-column">

@@ -17,6 +17,7 @@ table {
     border-collapse: collapse;
     position: relative;
     overflow-y: auto;
+    table-layout: fixed;
 }
 
 th,
@@ -82,27 +83,27 @@ td {
     height: 100%;
 }
 
-td.name-column {
+col.name-column {
     width: 20%;
 }
 
-td.type-column {
+col.type-column {
     width: 15%;
 }
 
-td.value-column {
+col.value-column {
     width: 40%;
 }
 
-td.kernel-column {
+col.kernel-column {
     width: 15%;
 }
 
-td.actions-column {
+col.actions-column {
     width: 10%;
 }
 
-div.name-column-content {
+/* div.name-column-content {
     max-width: 20vw;
 }
 
@@ -120,7 +121,7 @@ div.kernel-column-content {
 
 div.actions-column-content {
     max-width: 10vw;
-}
+} */
 
 button {
     background-color: var(--vscode-button-background);

@@ -4,7 +4,7 @@ const HtmlWebPackPlugin = require('html-webpack-plugin');
 module.exports = {
     mode: 'development',
     entry: {
-        'variable-grid': './src/localTest.tsx'
+        'variable-grid': './src/index.tsx'
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
