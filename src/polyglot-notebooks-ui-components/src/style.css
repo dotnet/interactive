@@ -16,6 +16,8 @@ table {
     width: 100%;
     border-collapse: collapse;
     position: relative;
+    overflow-y: auto;
+    table-layout: fixed;
 }
 
 th,
@@ -49,6 +51,10 @@ td {
     align-items: flex-end;
 }
 
+.table-container {
+    width: 98vw;
+}
+
 .data-cell {
     margin: 3px;
     color: var(--vscode-foreground);
@@ -57,6 +63,11 @@ td {
     font-size: var(--vscode-editor-font-size);
 }
 
+.long-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 .toolbar {
     margin-bottom: 10px;
@@ -72,25 +83,45 @@ td {
     height: 100%;
 }
 
-.name-column {
+col.name-column {
     width: 20%;
 }
 
-.type-column {
+col.type-column {
     width: 15%;
 }
 
-.value-column {
+col.value-column {
     width: 40%;
 }
 
-.kernel-column {
+col.kernel-column {
     width: 15%;
 }
 
-.actions-column {
+col.actions-column {
     width: 10%;
 }
+
+/* div.name-column-content {
+    max-width: 20vw;
+}
+
+div.type-column-content {
+    max-width: 15vw;
+}
+
+div.value-column-content {
+    max-width: 40vw;
+}
+
+div.kernel-column-content {
+    max-width: 15vw;
+}
+
+div.actions-column-content {
+    max-width: 10vw;
+} */
 
 button {
     background-color: var(--vscode-button-background);
