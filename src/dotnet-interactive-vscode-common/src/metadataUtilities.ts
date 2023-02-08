@@ -112,6 +112,8 @@ export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDo
 
 export function getNotebookDocumentMetadataFromNotebookDocument(document: vscodeLike.NotebookDocument): NotebookDocumentMetadata {
     const notebookMetadata = createDefaultNotebookDocumentMetadata();
+    let setDefaultKernel = false;
+    let setItems = false;
 
     // .dib files will have their metadata at the root; .ipynb files will have their metadata a little deeper
     const polyglot_notebook = document.metadata.polyglot_notebook ?? document.metadata?.custom?.metadata?.polyglot_notebook;
@@ -120,15 +122,35 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
         if (typeof kernelInfo === 'object') {
             if (typeof kernelInfo.defaultKernelName === 'string') {
                 notebookMetadata.kernelInfo.defaultKernelName = kernelInfo.defaultKernelName;
+                setDefaultKernel = true;
             }
 
             const items = kernelInfo.items;
             if (Array.isArray(items) && items.every(item => typeof item === 'object')) {
                 notebookMetadata.kernelInfo.items = items;
+                setItems = true;
             }
         }
-    } else {
-        const x = 1;
+    }
+
+    // if nothing was found, populate it from the kernelspec metadata
+    if (isIpynbNotebook(document)) {
+        if (!setDefaultKernel) {
+            const kernelSpecMetadata = getKernelspecMetadataFromIpynbNotebookDocument(document);
+            if (kernelSpecMetadata.name.startsWith('.net-')) {
+                // the command `dotnet interactive jupyter install` lays down 3 well-known kernelspecs, all with the name `.net-<kernelName>`
+                notebookMetadata.kernelInfo.defaultKernelName = kernelSpecMetadata.name.substring('.net-'.length);
+            }
+        }
+
+        if (!setItems) {
+            notebookMetadata.kernelInfo.items = [
+                {
+                    name: notebookMetadata.kernelInfo.defaultKernelName,
+                    aliases: [],
+                }
+            ];
+        }
     }
 
     notebookMetadata.kernelInfo.items = notebookMetadata.kernelInfo.items.map(item => ensureProperShapeForDocumentKernelInfo(item));

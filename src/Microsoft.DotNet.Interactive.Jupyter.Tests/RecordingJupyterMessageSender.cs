@@ -45,9 +45,15 @@ public class RecordingJupyterMessageSender : IJupyterMessageSender
 
         return message.Prompt switch
         {
-            "User: " => "user name",
-            "Password: " => "secret",
-            _ => "input-value"
+            InputPromptForUser => InputForUser,
+            InputPromptForPassword => InputForPassword,
+            _ => InputForUnspecifiedPrompt
         };
     }
+
+    public const string InputPromptForUser = "User: ";
+    public const string InputPromptForPassword = "Password: ";
+    public const string InputForUser = "user name";
+    public const string InputForPassword = "secret";
+    public const string InputForUnspecifiedPrompt = "input-value";
 }

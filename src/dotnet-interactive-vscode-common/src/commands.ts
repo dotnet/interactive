@@ -117,27 +117,7 @@ function getCurrentNotebookDocument(): vscode.NotebookDocument | undefined {
     return versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
 }
 
-export function registerLegacyKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        vscode.window.showWarningMessage(`The command '.NET Interactive: Restart the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Restart the current notebook's kernel' command instead.`);
-        await await vscode.commands.executeCommand('polyglot-notebook.restartCurrentNotebookKernel', notebook);
-    }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
-        vscode.window.showWarningMessage(`The command '.NET Interactive: Stop the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Stop the current notebook's kernel' command instead.`);
-        await await vscode.commands.executeCommand('polyglot-notebook.stopCurrentNotebookKernel', notebook);
-    }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
-        vscode.window.showWarningMessage(`The command '.NET Interactive: Stop the current notebook's kernel' is deprecated.  Please use the 'Polyglot Notebook: Stop the current notebook's kernel' command instead.`);
-        await await vscode.commands.executeCommand('polyglot-notebook.stopAllNotebookKernels');
-    }));
-}
-
 export function registerKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
-    // TODO: remove this
-    registerLegacyKernelCommands(context, clientMapper);
 
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.notebookEditor.restartKernel', async (_notebookEditor) => {
         await vscode.commands.executeCommand('polyglot-notebook.restartCurrentNotebookKernel');
@@ -190,35 +170,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-function registerLegacyFileCommands(context: vscode.ExtensionContext, parserServer: NotebookParserServer, clientMapper: ClientMapper) {
-
-    const eol = getEol();
-
-    const notebookFileFilters = {
-        'Polyglot Notebooks': ['dib', 'dotnet-interactive'],
-        'Jupyter Notebooks': ['ipynb'],
-    };
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        vscode.window.showWarningMessage(`The command '.NET Interactive: Create new blank notebook' is deprecated.  Please use the 'Polyglot Notebook: Create new blank notebook' command instead.`);
-        await vscode.commands.executeCommand('polyglot-notebook.newNotebook');
-    }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
-        vscode.window.showWarningMessage(`The command '.NET Interactive: Open notebook' is deprecated.  Please use the 'Polyglot Notebook: Open notebook' command instead.`);
-        await vscode.commands.executeCommand('polyglot-notebook.openNotebook', notebookUri);
-    }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
-        vscode.window.showWarningMessage(`The command '.NET Interactive: Save notebook as...' is deprecated.  Please use the 'Polyglot Notebook: Save notebook as...' command instead.`);
-        await vscode.commands.executeCommand('polyglot-notebook.saveAsNotebook');
-    }));
-}
-
 export function registerFileCommands(context: vscode.ExtensionContext, parserServer: NotebookParserServer, clientMapper: ClientMapper) {
-
-    // todo: delete this later
-    registerLegacyFileCommands(context, parserServer, clientMapper);
 
     const eol = getEol();
 

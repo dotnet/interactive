@@ -13,7 +13,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "1.75.0-insider"
+    "vscode": "1.76.0-insider"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -44,9 +44,6 @@
     "onNotebook:dotnet-interactive",
     "onNotebook:dotnet-interactive-window",
     "onNotebook:jupyter-notebook",
-    "onCommand:dotnet-interactive.newNotebook",
-    "onCommand:dotnet-interactive.openNotebook",
-    "onCommand:dotnet-interactive.saveAsNotebook",
     "onNotebook:polyglot-notebook",
     "onNotebook:polyglot-notebook-window",
     "onNotebook:jupyter-notebook",
@@ -170,7 +167,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.406101",
+          "default": "1.0.408001",
           "description": "The required version of the .NET Interactive tool."
         }
       }
@@ -232,36 +229,12 @@
         "title": "Polyglot Notebook: Select cell kernel"
       },
       {
-        "command": "dotnet-interactive.openNotebook",
-        "title": ".NET Interactive: Open notebook"
-      },
-      {
-        "command": "dotnet-interactive.saveAsNotebook",
-        "title": ".NET Interactive: Save notebook as..."
-      },
-      {
-        "command": "dotnet-interactive.newNotebook",
-        "title": ".NET Interactive: Create new blank notebook"
-      },
-      {
-        "command": "dotnet-interactive.restartCurrentNotebookKernel",
-        "title": ".NET Interactive: Restart the current notebook's kernel"
-      },
-      {
         "command": "polyglot-notebook.notebookEditor.restartKernel",
         "title": "Restart",
         "icon": {
           "light": "resources/light/restart-kernel.svg",
           "dark": "resources/dark/restart-kernel.svg"
         }
-      },
-      {
-        "command": "dotnet-interactive.stopCurrentNotebookKernel",
-        "title": ".NET Interactive: Stop the current notebook's kernel"
-      },
-      {
-        "command": "dotnet-interactive.stopAllNotebookKernels",
-        "title": ".NET Interactive: Stop all notebook kernels"
       },
       {
         "command": "polyglot-notebook.notebookEditor.openValueViewer",
@@ -742,11 +715,14 @@
     ]
   },
   "scripts": {
-    "compile-webview": "cd ../microsoft-dotnet-interactive && npm run compile-webview",
+    "compile-preloads": "cd ../microsoft-dotnet-interactive && npm run compile",
     "copy-preloads": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/activation.js ./resources",
-    "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/variableGrid.js ./resources",
+    "compile-variable-grid": "cd ../polyglot-notebooks-ui-components && npm run buildDev",
+    "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../polyglot-notebooks-ui-components/dist/*.* ./resources",
     "vscode:prepublish": "npm run compile",
-    "compile": "npm run lint && tsc -p ./ && npm run compile-webview && npm run copy-preloads && npm run copy-variable-grid",
+    "compile-and-copy-preloads": "npm run compile-preloads && npm run copy-preloads",
+    "compile-and-copy-variable-grid": "npm run compile-variable-grid && npm run copy-variable-grid",
+    "compile": "npm run lint && tsc -p ./ && npm run compile-and-copy-preloads && npm run compile-and-copy-variable-grid",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",

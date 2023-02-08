@@ -90,13 +90,12 @@ internal static class HttpResponseMessageFormattingExtensions
             PocketViewTags.div(PocketViewTags.h2("Response"), PocketViewTags.hr(), responseLine, responseHeaders, responseBody));
         
         output.WriteTo(context);
-
     }
 
     private static dynamic HeaderTable(HttpHeaders headers, HttpContentHeaders contentHeaders) => PocketViewTags.table(PocketViewTags.thead(PocketViewTags.tr(PocketViewTags.th("Name"), PocketViewTags.th("Value"))), PocketViewTags.tbody((contentHeaders is null ? headers : headers.Concat(contentHeaders)).Select(header => PocketViewTags.tr(PocketViewTags.td(header.Key), PocketViewTags.td(string.Join("; ", header.Value))))));
 
 
-    public  static async Task FormatAsPlainText(
+    public static async Task FormatAsPlainText(
         this HttpResponseMessage responseMessage,
         FormatContext context)
     {

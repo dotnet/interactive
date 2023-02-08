@@ -35,8 +35,6 @@ internal class JavaScriptValueDeclarer
             return true;
         }
 
-        // FIX: (TryGetValueDeclaration) handle application/json
-
         code = null;
         return false;
     }

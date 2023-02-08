@@ -192,8 +192,25 @@ export class DynamicGrammarSemanticTokenProvider {
         }
 
         // update that collection with new/changed values
+        let hasMarkdownKernel = false;
         for (const kernelInfo of kernelInfos) {
             documentKernelInfos.set(kernelInfo.localName, kernelInfo);
+            if (kernelInfo.localName.toLocaleLowerCase() === 'markdown') {
+                hasMarkdownKernel = true;
+            }
+        }
+
+        if (!hasMarkdownKernel) {
+            // the markdown kernel isn't real, but still needs to be accounted for in the grammar
+            documentKernelInfos.set('markdown', {
+                localName: 'markdown', // always assume it's called #!markdown
+                displayName: 'unused',
+                languageName: 'markdown',
+                aliases: ['md'],
+                supportedKernelCommands: [],
+                supportedDirectives: [],
+                uri: 'unused',
+            });
         }
 
         // keep that collection for next time
@@ -226,7 +243,7 @@ export class DynamicGrammarSemanticTokenProvider {
             if (this.fileExists(languageConfigurationFilePath)) {
                 try {
                     const languageConfigurationContents = this.fileReader(languageConfigurationFilePath);
-                    const languageConfiguration = JSON.parse(languageConfigurationContents);
+                    const languageConfiguration = parseLanguageConfiguration(languageConfigurationContents);
                     for (const languageNameOrAlias of allNames) {
                         this._languageNameConfigurationMap.set(languageNameOrAlias, languageConfiguration);
                     }
@@ -273,7 +290,7 @@ export class DynamicGrammarSemanticTokenProvider {
                         if (this.fileExists(languageConfigurationPath)) {
                             const languageConfigurationContents = this.fileReader(languageConfigurationPath);
                             try {
-                                languageConfigurationObject = JSON.parse(languageConfigurationContents);
+                                languageConfigurationObject = parseLanguageConfiguration(languageConfigurationContents);
                                 this._languageNameConfigurationMap.set(languageId, languageConfigurationObject);
                             } catch {
                                 // we don't care if we couldn't parse it
@@ -284,7 +301,7 @@ export class DynamicGrammarSemanticTokenProvider {
                     // set language info
                     const languageInfo = this._languageNameInfoMap.get(languageId);
                     if (languageInfo) {
-                        const aliases = Array.isArray(language.aliases) ? language.aliases : [];
+                        const aliases: string[] = (Array.isArray(language.aliases) ? <any[]>language.aliases : []).filter(a => typeof a === 'string');
                         for (const alias of aliases.map(normalizeLanguageName)) {
                             this._languageNameInfoMap.set(alias, languageInfo);
                             if (languageConfigurationObject) {
@@ -512,4 +529,35 @@ function normalizeLanguageName(languageName: string): string {
 function languageNameFromKernelInfo(kernelInfo: contracts.KernelInfo): string {
     // ensure we have some kind of language name, even if it doesn't map to anything
     return normalizeLanguageName(kernelInfo.languageName ?? `unknown-language-from-kernel-${kernelInfo.localName}`);
+}
+
+export function parseLanguageConfiguration(content: string): any {
+    const languageConfigurationObject = JSON.parse(content);
+
+    fixRegExpProperty(languageConfigurationObject, 'wordPattern');
+
+    if (typeof languageConfigurationObject.indentationRules === 'object') {
+        fixRegExpProperty(languageConfigurationObject.indentationRules, 'decreaseIndentPattern');
+        fixRegExpProperty(languageConfigurationObject.indentationRules, 'increaseIndentPattern');
+        fixRegExpProperty(languageConfigurationObject.indentationRules, 'indentNextLinePattern');
+        fixRegExpProperty(languageConfigurationObject.indentationRules, 'unIndentedLinePattern');
+    }
+
+    if (Array.isArray(languageConfigurationObject.onEnterRules)) {
+        languageConfigurationObject.onEnterRules.forEach((rule: any) => {
+            fixRegExpProperty(rule, 'beforeText');
+            fixRegExpProperty(rule, 'afterText');
+            fixRegExpProperty(rule, 'previousLineText');
+        });
+    }
+
+    return languageConfigurationObject;
+}
+
+function fixRegExpProperty(value: any, propertyName: string) {
+    if (typeof value[propertyName] === 'string') {
+        value[propertyName] = new RegExp(value[propertyName]);
+    } else if (typeof value[propertyName] === 'object' && typeof value[propertyName].pattern === 'string') {
+        value[propertyName] = new RegExp(value[propertyName].pattern);
+    }
 }

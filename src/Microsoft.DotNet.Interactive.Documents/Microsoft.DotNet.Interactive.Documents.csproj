@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>preview</LangVersion>
     <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive.Documents</PackageId>
   </PropertyGroup>
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageDescription Condition="'$(PackageDescription)'==''">Notebooks support for .NET Interactive</PackageDescription>
-    <PackageTags Condition="'$(PackageTags)'==''">polyglot notebook dotnet interactive</PackageTags>
+    <PackageDescription Condition="'$(PackageDescription)'==''">Provides APIs for reading and writing .ipynb and other file formats for .NET Interactive</PackageDescription>
+    <PackageTags Condition="'$(PackageTags)'==''">polyglot notebook dotnet interactive ipynb jupyter</PackageTags>
     <RootNamespace>Microsoft.DotNet.Interactive.Documents</RootNamespace>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -18,6 +18,10 @@
     <PackageReference Include="System.Collections.Immutable" Version="7.0.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.Text.Json" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
   </ItemGroup>
+
+  <Import Project="..\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems" Label="Shared" />
 
 </Project>

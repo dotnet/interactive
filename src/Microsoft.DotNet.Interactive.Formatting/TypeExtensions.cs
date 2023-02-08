@@ -51,26 +51,6 @@ internal static class TypeExtensions
         throw new ArgumentException($"Expression {expression} does not specify a member.");
     }
 
-    public static IEnumerable<MemberInfo> GetMembers<T>(
-        this Type type,
-        params Expression<Func<T, object>>[] forProperties)
-    {
-        var allMembers = typeof(T).GetMembersToFormat().ToArray();
-
-        if (forProperties is null || !forProperties.Any())
-        {
-            return allMembers;
-        }
-
-        return
-            forProperties
-                .Select(p =>
-                {
-                    var memberName = p.MemberName();
-                    return allMembers.Single(m => m.Name == memberName);
-                });
-    }
-
     public static MemberAccessor<T>[] GetMemberAccessors<T>(this IEnumerable<MemberInfo> forMembers) =>
         forMembers
             .Select(MemberAccessor.CreateMemberAccessor<T>)
@@ -217,7 +197,7 @@ internal static class TypeExtensions
 
         Type enumerableInterface;
 
-        if (type.IsEnumerable())
+        if (type.IsEnumerable()   )
         {
             enumerableInterface = type;
         }
@@ -233,11 +213,23 @@ internal static class TypeExtensions
             return null;
         }
 
-        return enumerableInterface.GenericTypeArguments switch
+        if (enumerableInterface.GenericTypeArguments is { Length: 1 } genericTypeArguments)
         {
-            { Length: 1 } genericTypeArguments => genericTypeArguments[0],
-            _ => null
-        };
+            return genericTypeArguments[0];
+        }
+
+        var enumerableTInterfaces = enumerableInterface
+                                    .GetInterfaces()
+                                    .Where(i => i.IsGenericType)
+                                    .Where(i => i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                                    .ToArray();
+
+        if (enumerableTInterfaces is { Length: 1 } x)
+        {
+            return x[0].GenericTypeArguments[0];
+        }
+
+        return null;
     }
 
     internal static bool IsEnumerable(this Type type)
@@ -246,10 +238,58 @@ internal static class TypeExtensions
         {
             return false;
         }
-
+            
         return
             type.IsArray
             ||
             typeof(IEnumerable).IsAssignableFrom(type);
+    }
+
+    public static bool IsDictionary(
+        this Type type,
+        out Func<object, IEnumerable> getKeys,
+        out Func<object, IEnumerable> getValues,
+        out Type keyType,
+        out Type valueType)
+    {
+        var dictType =
+            type.GetAllInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+            ??
+            type.GetAllInterfaces()
+                .FirstOrDefault(i => i == typeof(IDictionary));
+
+        if (dictType is null)
+        {
+            getKeys = null;
+            getValues = null;
+            keyType = null;
+            valueType = null;
+
+            return false;
+        }
+
+        var keysProperty = dictType.GetProperty("Keys");
+        getKeys = instance => (IEnumerable)keysProperty.GetValue(instance, null);
+
+        var valuesProperty = dictType.GetProperty("Values");
+        getValues = instance => (IEnumerable)valuesProperty.GetValue(instance, null);
+
+        if (type.GetElementTypeIfEnumerable() is { } keyValuePairType &&
+            keyValuePairType.IsConstructedGenericType &&
+            keyValuePairType.GetGenericTypeDefinition() is { } genericTypeDefinition &&
+            genericTypeDefinition == typeof(KeyValuePair<,>))
+        {
+            keyType = keyValuePairType.GetGenericArguments()[0];
+            valueType = keyValuePairType.GetGenericArguments()[1];
+        }
+        else
+        {
+            keyType = null;
+
+            valueType = null;
+        }
+
+        return true;
     }
 }

@@ -44,6 +44,7 @@ done
 # build and test NPM
 npmDirs='src/microsoft-dotnet-interactive
          src/microsoft-dotnet-interactive-browser
+         src/polyglot-notebooks-ui-components
          src/dotnet-interactive-vscode
          src/dotnet-interactive-vscode-insiders'
 for npmDir in $npmDirs;

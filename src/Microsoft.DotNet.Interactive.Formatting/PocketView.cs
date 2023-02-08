@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
 
@@ -142,27 +143,28 @@ public class PocketView : DynamicObject, IHtmlContent
         object[] values,
         out object result)
     {
-        var argumentNameIndex = 0;
+        var offset = values.Length - binder.CallInfo.ArgumentNames.Count;
 
         for (var i = 0; i < values.Length; i++)
         {
-            var att = values[i];
+            var value = values[i];
 
-            if (att is IDictionary<string, object> dict)
+            if (value is IDictionary<string, object> dict)
             {
                 HtmlAttributes.MergeWith(dict);
             }
             else
             {
-                if (binder.CallInfo.ArgumentNames.Count > 0)
+                if (i >= offset)
                 {
                     var key = binder.CallInfo
-                        .ArgumentNames
-                        .ElementAt(argumentNameIndex++)
-                        .Replace("_", "-");
-                    HtmlAttributes[key] = values[i];
+                                    .ArgumentNames
+                                    .ElementAt(i - offset)
+                                    .Replace("_", "-");
+
+                    HtmlAttributes[key] = value;
                 }
-                else if (att is string s)
+                else if (value is string s)
                 {
                     HtmlAttributes[s] = null;
                 }
@@ -246,21 +248,14 @@ public class PocketView : DynamicObject, IHtmlContent
     /// </returns>
     public override string ToString()
     {
-        if (HtmlTag is null)
+        using var writer = new StringWriter(CultureInfo.InvariantCulture);
+        using (var formatContext = new FormatContext(writer))
         {
-            return "";
+            ApplyTransform(null, null, formatContext);
+            HtmlTag.WriteTo(formatContext);
         }
-        else
-        {
-            var writer = new StringWriter(CultureInfo.InvariantCulture);
-            using (var formatContext = new FormatContext(writer))
-            {
-                ApplyTransform(null, null, formatContext);
-                HtmlTag.WriteTo(formatContext);
-            }
 
-            return writer.ToString();
-        }
+        return writer.ToString();
     }
 
     /// <summary>
@@ -276,12 +271,12 @@ public class PocketView : DynamicObject, IHtmlContent
     /// <param name="encoder">An HTML encoder.</param>
     public void WriteTo(TextWriter writer, HtmlEncoder encoder)
     {
-        HtmlTag?.WriteTo(writer, encoder);
+        HtmlTag.WriteTo(writer, encoder);
     }
         
     public void WriteTo(FormatContext context)
     {
-        HtmlTag?.WriteTo(context);
+        HtmlTag.WriteTo(context);
 
         if (_dependentContent is not null)
         {
@@ -329,11 +324,6 @@ public class PocketView : DynamicObject, IHtmlContent
         void TagTransform(HtmlTag tag, object contents, FormatContext _) => transform(tag, contents);
 
         return new TagTransform(TagTransform);
-    }
-
-    public static object Transform(Action<HtmlTag, dynamic, FormatContext> transform)
-    {
-        return new TagTransform(transform);
     }
 
     private delegate void TagTransform(HtmlTag tag, object contents, FormatContext context = null);
