@@ -117,7 +117,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 var result = await Kernel.Root.SendAsync(new SubmitCode(""123"", ""fsharp""));
 
-await result.KernelEvents.LastAsync()
+result.Events.Last()
 ");
 
         result.Events.Should().NotContainErrors();
@@ -144,7 +144,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 var result = await Kernel.Root.SendAsync(new SubmitCode(""nope"", ""cs2""));
 
-await result.KernelEvents.LastAsync()
+result.Events.Last()
 ", "cs1"));
 
         result.Events

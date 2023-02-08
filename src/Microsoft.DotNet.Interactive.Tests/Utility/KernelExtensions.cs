@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -16,7 +17,7 @@ public static class KernelExtensions
         {
             var result = await kernel.SendAsync(new RequestValueInfos());
 
-            var candidateResult = await result.KernelEvents.OfType<ValueInfosProduced>().FirstOrDefaultAsync();
+            var candidateResult = result.Events.OfType<ValueInfosProduced>().FirstOrDefault();
             if (candidateResult is { })
             {
                 return (true, candidateResult);
@@ -32,7 +33,7 @@ public static class KernelExtensions
         {
             var commandResult = await kernel.SendAsync(new RequestValue(valueName));
 
-            if (await commandResult.KernelEvents.OfType<ValueProduced>().FirstOrDefaultAsync() is { } valueProduced)
+            if (commandResult.Events.OfType<ValueProduced>().FirstOrDefault() is { } valueProduced)
             {
                 return (true, valueProduced);
             }

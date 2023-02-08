@@ -67,12 +67,10 @@ public class MermaidKernelTests
     B --> D[Server2]
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var returnValue = events
-            .OfType<DisplayedValueProduced>()
-            .Single()
-            .Value as MermaidMarkdown;
+        var returnValue = result.Events
+                                .OfType<DisplayedValueProduced>()
+                                .Single()
+                                .Value as MermaidMarkdown;
 
         returnValue.ToString().Should().Be(@"graph TD
     A[Client] --> B[Load Balancer]
