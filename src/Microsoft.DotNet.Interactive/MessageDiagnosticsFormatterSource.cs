@@ -11,22 +11,11 @@ internal class MessageDiagnosticsFormatterSource : ITypeFormatterSource
 {
     public IEnumerable<ITypeFormatter> CreateTypeFormatters()
     {
-        yield return new HtmlFormatter<KernelCommandResult>((result, context) =>
+        yield return new PlainTextFormatter<RoutingSlip>((slip, context) =>
         {
-            // FIX: (CreateTypeFormatters) plain text
+            var list = slip.Entries.Select(e => e.ToString());
 
-            // if (result.KernelEventsInternal.IsCompleted)
-            // {
-            //     var KernelEvents = result.KernelEvents.ToEnumerable().ToArray();
-            //
-            //     var displayObj = new
-            //     {
-            //         KernelEvents,
-            //         result.Command
-            //     };
-            //
-            //     displayObj.FormatTo(context, HtmlFormatter.MimeType);
-            // }
+            list.FormatTo(context, PlainTextFormatter.MimeType);
 
             return true;
         });
