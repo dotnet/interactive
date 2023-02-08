@@ -198,3 +198,37 @@ else
    - If you get an error about access being denied, ensure that all other Notebooks are closed and then restart the kernel again as in step 5
 
 8. Now, use the kernel as you normally would. You should see your local changes being used by the extension.
+
+
+### Setup full suite of tests to run
+
+Some tests require additional setup or will be skipped. `JupyterKernel` tests for e.g. are setup to have the same test run against a Jupyter server, directly against the Jupyter kernel over ZMQ and with a simulation of the messages. Jupyter server and Jupyter kernel tests require the following setup or will be skipped while the tests with simulation can be run without additional steps. 
+
+### Run tests with a local Jupyter Server
+
+1. Install [Jupyter server](https://docs.jupyter.org/en/latest/install.html) or [Anaconda](https://www.anaconda.com/products/distribution)
+2. [Install R kernel](https://irkernel.github.io/installation/) for R tests
+3. Start the server locally as mentioned [here](https://docs.jupyter.org/en/latest/running.html)
+```
+jupyter notebook --no-browser --NotebookApp.token=<your_token> --port=8888
+```
+4. Set an environment variable `TEST_DOTNET_JUPYTER_HTTP_CONN` pointing to the server and the token generated for the Jupyter server as 
+```
+--url http://localhost:8888 --token <your_token>
+```
+5. The tests will now use the environment variable to connect to your server. 
+
+### Run tests with a Jupyter Kernel over ZMQ
+
+1. Install [Anaconda](https://www.anaconda.com/products/distribution)
+2. [Install R kernel](https://irkernel.github.io/installation/) for R tests
+3. Start Anaconda Bash prompt and create an environment variable `TEST_DOTNET_JUPYTER_ZMQ_CONN` and set to `true` and reactivate your conda environment
+```bash
+conda env config vars set TEST_DOTNET_JUPYTER_ZMQ_CONN=true 
+conda activate base
+```
+3. Restart `dotnet-interactive.sln` from the Anaconda Bash prompt. 
+4. The tests will now use the environment variable to connect to your server. 
+
+
+
