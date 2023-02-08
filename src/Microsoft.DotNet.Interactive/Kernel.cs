@@ -38,10 +38,10 @@ public abstract partial class Kernel :
     private readonly Subject<KernelEvent> _kernelEvents = new();
     private readonly CompositeDisposable _disposables = new();
     private readonly ConcurrentDictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
+    private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
     private readonly ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler = new();
     private FrontendEnvironment _frontendEnvironment;
     private ChooseKernelDirective _chooseKernelDirective;
-    private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
     private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
     private KernelInvocationContext _inFlightContext;
     private int _countOfLanguageServiceCommandsInFlight = 0;
