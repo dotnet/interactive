@@ -1,0 +1,6 @@
+{
+    "reporterEnabled": "spec,mocha-trx-reporter",
+    "mochaTrxReporterReporterOptions": {
+        "output": "../../artifacts/TestResults/Release/polyglot-notebooks-vscode-insiders.trx"
+    }
+}

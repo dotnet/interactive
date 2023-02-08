@@ -49,6 +49,6 @@ dotnet run --project src/interface-generator -- --out-file {contractFile.FullNam
     [Fact]
     public void vscode_generated_TypeScript_interfaces_file_has_known_shape()
     {
-        CheckTypeScriptInterfaceFile("src/microsoft-dotnet-interactive/src/contracts.ts");
+        CheckTypeScriptInterfaceFile("src/polyglot-notebooks/src/contracts.ts");
     }
 }
