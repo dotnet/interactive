@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -53,9 +54,9 @@ using {typeof(PocketView).Namespace};
     {
         var kernel = CreateKernel(language, openTestingNamespaces: true);
 
-        await kernel.SendAsync(new SubmitCode(submission));
+        var result = await kernel.SendAsync(new SubmitCode(submission));
 
-        KernelEvents
+        result.Events
             .Should()
             .ContainSingle<ReturnValueProduced>()
             .Which
@@ -78,16 +79,15 @@ using {typeof(PocketView).Namespace};
 
         var result = await kernel.SendAsync(new SubmitCode(submission));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v =>
-                v.MimeType == "text/plain" &&
-                v.Value.ToString().Contains(expectedContent));
+        result.Events
+              .Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v =>
+                                 v.MimeType == "text/plain" &&
+                                 v.Value.ToString().Contains(expectedContent));
     }
 
     [Theory]
@@ -133,11 +133,8 @@ using {typeof(PocketView).Namespace};
 
         var result = await kernel.SendAsync(new SubmitCode(code));
 
-        var events = result
-            .KernelEvents
-            .ToSubscribedList();
-
-        events
+        result
+            .Events
             .Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which
@@ -223,8 +220,7 @@ using {typeof(PocketView).Namespace};
         var updateCommandResult = await kernel.SubmitCodeAsync(submissions[1]);
 
         updateCommandResult
-            .KernelEvents
-            .ToSubscribedList()
+            .Events
             .Should()
             .ContainSingle<DisplayedValueUpdated>()
             .Which
@@ -331,17 +327,15 @@ using {typeof(PocketView).Namespace};
 
         var result = await kernel.SendAsync(new SubmitCode(submission));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v =>
-                v.MimeType == "text/html" &&
-                v.Value.ToString().Contains($"var css = `{cssContent}`"));
+        result.Events
+              .Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v =>
+                                 v.MimeType == "text/html" &&
+                                 v.Value.ToString().Contains($"var css = `{cssContent}`"));
     }
 
     [Theory]
@@ -497,11 +491,9 @@ f();"
 
         var result = await kernel.SubmitCodeAsync("let t = StringBuilder()");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<CommandSucceeded>();
+        result.Events
+              .Should()
+              .ContainSingle<CommandSucceeded>();
     }
 
     [Fact]

@@ -779,7 +779,7 @@ public partial class HtmlFormatterTests
 
             html.Should()
                 .BeEquivalentHtmlTo(
-                    $$"""
+                    """
                         <table>
                             <thead>
                                 <tr>

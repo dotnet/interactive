@@ -124,7 +124,7 @@ new [] {1,2,3}");
 
         var result = await compositeKernel.SubmitCodeAsync($"{chooseKernelCommand}\n#!hi");
 
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         received
             .Should()
@@ -151,9 +151,9 @@ new [] {1,2,3}");
                 @"var x = 123;",
                 "unregistered kernel name"));
 
-        using var events = results.KernelEvents.ToSubscribedList();
-        events.Should()
-            .ContainSingle<CommandFailed>(cf => cf.Exception is NoSuitableKernelException);
+        results.Events
+               .Should()
+               .ContainSingle<CommandFailed>(cf => cf.Exception is NoSuitableKernelException);
     }
 
     [Fact]
@@ -572,7 +572,7 @@ new [] {1,2,3}");
 
         var commandSentToCompositeKernel = new FirstSubmission.MyCommand("test");
         var result = await compositeKernel.SendAsync(commandSentToCompositeKernel);
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         commandPassedToHandler
             .Should()

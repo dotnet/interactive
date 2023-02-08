@@ -45,7 +45,7 @@ Endpoints.MapGet(""/"", async context =>
 
 await HttpClient.GetAsync(""/"")"));
 
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
+        result.Events.Should().NotContainErrors()
             .And.ContainSingle<ReturnValueProduced>()
             .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
             .Which.Value.Should().Contain("Hello from MapGet!");
@@ -74,7 +74,7 @@ Endpoints.MapInteractive(""/"", async context =>
 
 await HttpClient.GetAsync(""/"")"));
 
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
+        result.Events.Should().NotContainErrors()
             .And.ContainSingle<ReturnValueProduced>()
             .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
             .Which.Value.Should().Contain("Hello from MapInteractive 2!");
@@ -96,7 +96,7 @@ App.Use(next =>
 
 await HttpClient.GetAsync(""/"")"));
 
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
+        result.Events.Should().NotContainErrors()
             .And.ContainSingle<ReturnValueProduced>()
             .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
             .Which.Value.Should().Contain("Hello from middleware!");
@@ -123,7 +123,7 @@ Endpoints.MapGet(""/"", async context =>
 
 await HttpClient.GetAsync(""/"")"));
 
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
+        result.Events.Should().NotContainErrors()
             .And.ContainSingle<ReturnValueProduced>()
             .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
             .Which.Value.Should().Contain("Hello from MapGet!");
@@ -142,7 +142,7 @@ App.Use(next =>
 
 await HttpClient.GetAsync(""/"")"));
 
-        result2.KernelEvents.ToSubscribedList().Should().NotContainErrors()
+        result2.Events.Should().NotContainErrors()
             .And.ContainSingle<ReturnValueProduced>()
             .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
             .Which.Value.Should().Contain("Hello from MapGet!");
@@ -162,7 +162,7 @@ Endpoints.MapGet(""/"", async context =>
 
 await HttpClient.GetAsync(""/"")"));
 
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
+        result.Events.Should().NotContainErrors()
             .And.ContainSingle<ReturnValueProduced>()
             .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
             .Which.Value.Should().Contain("Hello from MapGet!");
@@ -173,7 +173,7 @@ await HttpClient.GetAsync(""/"")"));
     {
         var commandResult = await _kernel.SendAsync(new SubmitCode("#!aspnet"));
 
-        commandResult.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+        commandResult.Events.Should().NotContainErrors();
 
         var result = await _kernel.SendAsync(new SubmitCode(@"
 Endpoints.MapGet(""/"", async context =>
@@ -183,7 +183,7 @@ Endpoints.MapGet(""/"", async context =>
 
 await HttpClient.GetAsync(""/"")"));
 
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
+        result.Events.Should().NotContainErrors()
             .And.ContainSingle<ReturnValueProduced>()
             .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
             .Which.Value.Should().Contain("Hello from MapGet!");
@@ -200,7 +200,7 @@ HttpClient.BaseAddress"));
         // Assume any port higher than 1000 is ephemeral. In practice, the start of the ephemeral port range is
         // usually even higher (Windows XP and older Windows releases notwithstanding).
         // https://en.wikipedia.org/wiki/Ephemeral_port
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
+        result.Events.Should().NotContainErrors()
             .And.ContainSingle<ReturnValueProduced>()
             .Which.Value.Should().Match(uri => uri.As<Uri>().Port > 1_000);
     }

@@ -71,10 +71,9 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
 
                 var result = await kernel.SendAsync(followingCommand).Timeout(10.Seconds());
 
-                result.KernelEvents
-                    .ToSubscribedList()
-                    .Should()
-                    .ContainSingle<CommandSucceeded>();
+                result.Events
+                      .Should()
+                      .ContainSingle<CommandSucceeded>();
                 break;
             }
             catch (TimeoutException)
@@ -92,7 +91,7 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
 
         var results = await kernel.SendAsync(cancelCommand);
 
-        results.KernelEvents.ToSubscribedList()
+        results.Events
             .Should()
             .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
     }
@@ -118,17 +117,15 @@ while(!cancellationToken.IsCancellationRequested){
 
             var result = await kernel.SendAsync(cancelCommand);
 
-            var cancellationEvents = result.KernelEvents.ToSubscribedList();
-
             try
             {
                 await resultForCommandToCancel.Timeout(10.Seconds());
-                cancellationEvents.Should()
-                    .ContainSingle<CommandCancelled>()
-                    .Which
-                    .CancelledCommand
-                    .Should()
-                    .Be(commandToCancel);
+                result.Events.Should()
+                      .ContainSingle<CommandCancelled>()
+                      .Which
+                      .CancelledCommand
+                      .Should()
+                      .Be(commandToCancel);
                 break;
             }
             catch (TimeoutException)
@@ -163,15 +160,13 @@ while(!cancellationToken.IsCancellationRequested){
 
                 var result = await resultForCommandToCancel.Timeout(10.Seconds());
 
-                var submitCodeEvents = result.KernelEvents.ToSubscribedList();
-
-                submitCodeEvents
-                    .Should()
-                    .ContainSingle<CommandFailed>()
-                    .Which
-                    .Command
-                    .Should()
-                    .Be(commandToCancel);
+                result.Events
+                      .Should()
+                      .ContainSingle<CommandFailed>()
+                      .Which
+                      .Command
+                      .Should()
+                      .Be(commandToCancel);
                 break;
             }
             catch (TimeoutException)

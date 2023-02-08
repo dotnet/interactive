@@ -97,17 +97,15 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 
         await localCompositeKernel.SendAsync(connectToRemoteKernel);
 
-        var res = await localCompositeKernel.SendAsync(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName", "newKernelName"));
+        var result = await localCompositeKernel.SendAsync(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName", "newKernelName"));
         
         var expected = Encoding.UTF8.EncodingName + "/" + Encoding.UTF8.EncodingName;
 
-        var events = res.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .EventuallyContainSingle<DisplayEvent>(
-                @where: d => d.FormattedValues.Any(FormattedValue => FormattedValue.Value == expected),
-                timeout: 10_000);
+        result.Events
+           .Should()
+           .EventuallyContainSingle<DisplayEvent>(
+               where: d => d.FormattedValues.Any(FormattedValue => FormattedValue.Value == expected),
+               timeout: 10_000);
     }
 
     protected override SubmitCode CreateConnectCommand(string localKernelName)

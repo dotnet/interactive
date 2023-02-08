@@ -70,9 +70,7 @@ Console.WriteLine(1);";
         var command = new SubmitCode(code, "csharp-proxy");
         var result = await localCompositeKernel.SendAsync(command);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         handledCommands.Should()
             .ContainSingle<SubmitCode>()
@@ -121,8 +119,7 @@ Console.WriteLine(1);";
 Console.WriteLine(1);";
 
         var command = new SubmitCode(code);
-        var result = await localCompositeKernel.SendAsync(command);
-        var events = result.KernelEvents.ToSubscribedList();
+        await localCompositeKernel.SendAsync(command);
 
         handledCommands.Should()
             .ContainSingle<SubmitCode>()
@@ -191,38 +188,6 @@ Console.WriteLine(1);";
                 "kernel://local/csharp?tag=arrived", 
                 "kernel://local/csharp", 
                 "kernel://local/.NET"
-            });
-    }
-
-    [Fact(Skip = "this example shows spooky action at a distance")]
-    public async Task commands_routing_slip_contains_the_uris_of_parent_command()
-    {
-        using var compositeKernel = new CompositeKernel
-        {
-            new CSharpKernel(),
-            new FSharpKernel()
-        };
-
-        compositeKernel.DefaultKernelName = "fsharp";
-
-        var command = new SubmitCode(@"
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
-var command = new SubmitCode(@""1+1"", targetKernelName: ""fsharp"");
-await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
-
-        var result = await compositeKernel.SendAsync(command);
-
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var fsharpEvent = events.OfType<ReturnValueProduced>().First();
-
-        fsharpEvent.Command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
-            new[]
-            {
-                "kernel://local/.NET",
-                "kernel://local/csharp",
-                "kernel://local/fsharp"
             });
     }
 
@@ -326,17 +291,15 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         var result = await compositeKernel.SendAsync(command);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<ReturnValueProduced>()
-            .Which
-            .RoutingSlip.ToUriArray().Should().ContainInOrder(
-            new[]
-            {
-                "kernel://local/csharp",
-                "kernel://local/.NET"
+        result.Events.Should().ContainSingle<ReturnValueProduced>()
+              .Which
+              .RoutingSlip.ToUriArray().Should().ContainInOrder(
+                  new[]
+                  {
+                      "kernel://local/csharp",
+                      "kernel://local/.NET"
                
-            });
+                  });
     }
 
     [Fact]
@@ -365,17 +328,17 @@ await Kernel.Root.SendAsync(command);", targetKernelName: "csharp");
 
         var result = await localCompositeKernel.SendAsync(command);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<ReturnValueProduced>()
-            .Which
-            .RoutingSlip.ToUriArray().Should().ContainInOrder(
-            new[]
-            {
-                "kernel://remote/csharp",
-                "kernel://remote/",
-                "kernel://local/csharp-proxy",
-                "kernel://local/"
-            });
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .RoutingSlip.ToUriArray().Should().ContainInOrder(
+                  new[]
+                  {
+                      "kernel://remote/csharp",
+                      "kernel://remote/",
+                      "kernel://local/csharp-proxy",
+                      "kernel://local/"
+                  });
     }
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -50,11 +51,9 @@ public class SQLiteKernelExtensionTests : IDisposable
 SELECT * FROM fruit
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var formattedData = events.OfType<DisplayedValueProduced>().Single()
-            .FormattedValues.Single(fm => fm.MimeType == HtmlFormatter.MimeType)
-            .Value;
+        var formattedData = result.Events.OfType<DisplayedValueProduced>().Single()
+                                  .FormattedValues.Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                                  .Value;
 
            
         this.Assent(formattedData, _configuration);
@@ -83,14 +82,12 @@ SELECT * FROM fruit
 SELECT 1 AS Apples, 2 AS Bananas, 3 AS Apples, 4 AS BANANAS, 5 AS Apples, 6 AS BaNaNaS
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var formattedData = events
-            .OfType<DisplayedValueProduced>()
-            .Single()
-            .FormattedValues
-            .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
-            .Value;
+        var formattedData = result.Events
+                                  .OfType<DisplayedValueProduced>()
+                                  .Single()
+                                  .FormattedValues
+                                  .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                                  .Value;
 
         this.Assent(formattedData, _configuration);
     }

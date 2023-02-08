@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -107,10 +108,9 @@ public class SetMagicCommandTests
         var results = await kernel.SendAsync(new SubmitCode(@"
 #!set --name x
 1+3"));
-        var events = results.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<CommandFailed>()
-            .Which.Message.Should().Be("Option '--value' is required.");
+        results.Events.Should().ContainSingle<CommandFailed>()
+               .Which.Message.Should().Be("Option '--value' is required.");
     }
 
     private static Kernel CreateKernel(Language language)

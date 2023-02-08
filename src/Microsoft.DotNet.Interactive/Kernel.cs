@@ -25,7 +25,6 @@ using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
 using Microsoft.DotNet.Interactive.Formatting;
 using System.Text.Json;
-using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.Interactive;
 

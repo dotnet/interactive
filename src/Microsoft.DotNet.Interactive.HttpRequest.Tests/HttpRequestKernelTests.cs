@@ -38,9 +38,7 @@ public class HttpRequestKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode($"{verb} http://testuri.ninja"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         request.Method.Method.Should().Be(verb);
 
@@ -53,9 +51,7 @@ public class HttpRequestKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode("get  /relativePath"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var error =  events.Should().ContainSingle<CommandFailed>().Which;
+        var error =  result.Events.Should().ContainSingle<CommandFailed>().Which;
 
         error.Message.Should().Contain("Cannot use relative path /relativePath without a base address.");
     }
@@ -76,9 +72,7 @@ public class HttpRequestKernelTests
         
         var result = await kernel.SendAsync(new SubmitCode("get  https://anotherlocation.com/endpoint"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         request.RequestUri.Should().Be("https://anotherlocation.com/endpoint");
     }
@@ -100,9 +94,7 @@ public class HttpRequestKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode("get  https://{{my_host}}:1200/endpoint"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         request.RequestUri.Should().Be("https://my.host.com:1200/endpoint");
     }
@@ -123,9 +115,7 @@ public class HttpRequestKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode("get  https://{{host}}:1200/endpoint"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         request.RequestUri.Should().Be("https://example.com:1200/endpoint");
     }
@@ -148,9 +138,7 @@ get  https://location1.com:1200/endpoint
 
 put  https://location2.com:1200/endpoint"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         requests.Select(r => r.RequestUri.AbsoluteUri).ToArray().Should().BeEquivalentTo(new []{ "https://location1.com:1200/endpoint", "https://location2.com:1200/endpoint" });
     }
@@ -172,9 +160,7 @@ put  https://location2.com:1200/endpoint"));
 get  https://location1.com:1200/endpoint
 Authorization: Basic username password"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         request.Headers.Authorization.ToString().Should().Be("Basic username password");
     }
@@ -200,9 +186,7 @@ Content-Type: application/json
 { ""key"" : ""value"", ""list"": [1, 2, 3] }
 "));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
         bodyAsString.Should().Be("{ \"key\" : \"value\", \"list\": [1, 2, 3] }");
@@ -229,9 +213,7 @@ Content-Type: application/json
 { ""key"" : ""value"", ""list"": [{{one}}, 2, 3] }
 "));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
         bodyAsString.Should().Be("{ \"key\" : \"value\", \"list\": [1, 2, 3] }");
@@ -257,9 +239,7 @@ GET https://{{theHost}}";
 
         var result = await kernel.SendAsync(new SubmitCode(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         request.RequestUri.AbsoluteUri.Should().Be("https://example.com/");
     }
@@ -272,11 +252,9 @@ GET https://{{theHost}}";
 
         var result = await kernel.SendAsync(new RequestDiagnostics("get https://anotherlocation.com/{{api_endpoint}}"));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.First().Message.Should().Be(@"Cannot resolve symbol 'api_endpoint'");
     }
@@ -293,11 +271,9 @@ GET https://example.com/{{unresolved_symbol}}";
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 26), new LinePosition(2, 43)));
     }
@@ -310,11 +286,9 @@ GET https://example.com/{{unresolved_symbol}}";
 
         var result = await kernel.SendAsync(new RequestValue("host"));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        events.Should().ContainSingle<ValueProduced>()
+        result.Events.Should().ContainSingle<ValueProduced>()
               .Which.Value.Should().Be("example.com");
     }
 
@@ -330,11 +304,9 @@ User-Agent: {{user_agent}}";
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 14), new LinePosition(2, 24)));
     }
@@ -351,11 +323,9 @@ User-Agent: {{missing_value_2}}";
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.Should().HaveCount(2);
     }
