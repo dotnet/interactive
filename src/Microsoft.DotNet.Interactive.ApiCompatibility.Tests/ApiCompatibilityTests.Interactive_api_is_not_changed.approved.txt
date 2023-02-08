@@ -182,7 +182,9 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task EndInvoke(System.IAsyncResult result)
     public System.Threading.Tasks.Task Invoke(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
   public class KernelCommandResult
-    public System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
+    public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
+    public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Events.KernelEvent> Events { get;}
+    public System.Reactive.Subjects.ReplaySubject<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
   public class KernelDirectiveInfo, System.IEquatable<KernelDirectiveInfo>
     public static System.Boolean op_Equality(KernelDirectiveInfo left, KernelDirectiveInfo right)
     public static System.Boolean op_Inequality(KernelDirectiveInfo left, KernelDirectiveInfo right)
@@ -348,12 +350,9 @@ Microsoft.DotNet.Interactive
   public abstract class RoutingSlip
     public System.Int32 Count { get;}
     public System.Boolean Contains(System.Uri uri, System.Boolean ignoreQuery = False)
-     System.Boolean Contains(Entry entry)
     public System.Void ContinueWith(RoutingSlip other)
-     System.Collections.Generic.ICollection<Entry> get_Entries()
     public System.Void Stamp(System.Uri uri)
     public System.Boolean StartsWith(RoutingSlip other)
-     System.Boolean StartsWith(System.Collections.Generic.List<Entry> entries)
     public System.String[] ToUriArray()
   public class ScriptContent, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String scriptValue)

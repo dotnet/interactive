@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -89,12 +90,10 @@ public class LanguageKernelPackageTests : LanguageKernelTestBase
 
         var result = await kernel.SendAsync(command);
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.OfType<PackageAdded>()
-            .Should()
-            .ContainSingle(e => e.PackageReference.PackageName == "Microsoft.Extensions.Logging"
-                                && e.PackageReference.PackageVersion == "2.2.0");
+        result.Events.OfType<PackageAdded>()
+              .Should()
+              .ContainSingle(e => e.PackageReference.PackageName == "Microsoft.Extensions.Logging"
+                                  && e.PackageReference.PackageVersion == "2.2.0");
     }
 
     [Fact]
@@ -312,16 +311,15 @@ Formatter.Register<DataFrame>((df, writer) =>
             "https://completelyFakerestoreSourceCommand2.1"
         };
 
-        using var events = result.KernelEvents.ToSubscribedList();
-        events.OfType<DisplayedValueProduced>()
-            .Should()
-            .ContainSingle(v => v.Value is InstallPackagesMessage)
-            .Which.Value
-            .As<InstallPackagesMessage>()
-            .RestoreSources
-            .Aggregate((s, acc) => acc + " & " + s)
-            .Should()
-            .ContainAll(expectedList);
+        result.Events.OfType<DisplayedValueProduced>()
+              .Should()
+              .ContainSingle(v => v.Value is InstallPackagesMessage)
+              .Which.Value
+              .As<InstallPackagesMessage>()
+              .RestoreSources
+              .Aggregate((s, acc) => acc + " & " + s)
+              .Should()
+              .ContainAll(expectedList);
     }
 
     [Theory]
@@ -349,16 +347,14 @@ Formatter.Register<DataFrame>((df, writer) =>
             "https://completelyFakerestoreSourceCommand2.2"
         };
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.OfType<DisplayedValueProduced>()
-            .Should()
-            .ContainSingle(v => v.Value is InstallPackagesMessage)
-            .Which.Value
-            .As<InstallPackagesMessage>()
-            .RestoreSources
-            .Should()
-            .BeEquivalentTo(expectedList);
+        result.Events.OfType<DisplayedValueProduced>()
+              .Should()
+              .ContainSingle(v => v.Value is InstallPackagesMessage)
+              .Which.Value
+              .As<InstallPackagesMessage>()
+              .RestoreSources
+              .Should()
+              .BeEquivalentTo(expectedList);
     }
 
     [Theory]
@@ -505,14 +501,12 @@ Formatter.Register<DataFrame>((df, writer) =>
 #r ""nuget:SixLabors.ImageSharp, 1.0.2""
 ");
 
-        var events = results.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<CommandFailed>()
-            .Which
-            .Message
-            .Should()
-            .Be("SixLabors.ImageSharp version 1.0.2 cannot be added because version 1.0.1 was added previously.");
+        results.Events.Should()
+               .ContainSingle<CommandFailed>()
+               .Which
+               .Message
+               .Should()
+               .Be("SixLabors.ImageSharp version 1.0.2 cannot be added because version 1.0.1 was added previously.");
 
     }
 
@@ -531,13 +525,12 @@ Formatter.Register<DataFrame>((df, writer) =>
 
         var results = await kernel.SubmitCodeAsync(code);
 
-        var events = results.KernelEvents.ToSubscribedList();
-        events.Should()
-            .ContainSingle<CommandFailed>()
-            .Which
-            .Message
-            .Should()
-            .Match(errorMessage);
+        results.Events.Should()
+               .ContainSingle<CommandFailed>()
+               .Which
+               .Message
+               .Should()
+               .Match(errorMessage);
     }
 
     [Theory]
@@ -600,8 +593,6 @@ Formatter.Register<DataFrame>((df, writer) =>
 
         kernel.DefaultKernelName = "csharp";
 
-        var events = kernel.KernelEvents.ToSubscribedList();
-
         var command = new SubmitCode(@"#r ""nuget:Octokit, 0.50.0""
 #r ""nuget:NodaTime, 3.1.0""
 
@@ -609,11 +600,11 @@ using Octokit;
 using NodaTime;
 using NodaTime.Extensions;");
 
-        await kernel.SendAsync(command, CancellationToken.None);
+        var result = await kernel.SendAsync(command, CancellationToken.None);
 
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
-        events
+        result.Events
             .Should()
             .ContainSingle<CommandSucceeded>(ch => ch.Command == command);
     }
@@ -1139,13 +1130,12 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 ";
 
         var result = await kernel.SendAsync(new SubmitCode(codeSecondSubmission));
-        using var events = result.KernelEvents.ToSubscribedList();
 
         using var _ = new AssertionScope();
 
-        events
-            .Should()
-            .NotContainErrors();
+        result.Events
+              .Should()
+              .NotContainErrors();
     }
 
     [Theory]
@@ -1159,16 +1149,13 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 #r ""nuget:Google.Protobuf, 3.5.1""
 ";
 
-
         await kernel.SendAsync(new SubmitCode(codeFirstSubmission));
-
 
         var codeSecondSubmission = @"
 #r ""nuget:Google.Protobuf, *-*""
 ";
 
         var result = await kernel.SendAsync(new SubmitCode(codeSecondSubmission));
-        using var events = result.KernelEvents.ToSubscribedList();
 
         using var _ = new AssertionScope();
 
@@ -1177,12 +1164,13 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             "Google.Protobuf, 3.5.1"
         };
 
-        events.OfType<DisplayedValueUpdated>()
-            .Where(v => v.Value is InstallPackagesMessage)
-            .Last().Value
-            .As<InstallPackagesMessage>()
-            .InstalledPackages
-            .Should()
-            .BeEquivalentTo(expectedDisplayed);
+        result.Events
+              .OfType<DisplayedValueUpdated>()
+              .Last(v => v.Value is InstallPackagesMessage)
+              .Value
+              .As<InstallPackagesMessage>()
+              .InstalledPackages
+              .Should()
+              .BeEquivalentTo(expectedDisplayed);
     }
 }

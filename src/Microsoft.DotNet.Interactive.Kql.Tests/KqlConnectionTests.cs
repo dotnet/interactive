@@ -48,8 +48,7 @@ public class KqlConnectionTests : IDisposable
         var result = await kernel.SubmitCodeAsync(
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -58,17 +57,15 @@ public class KqlConnectionTests : IDisposable
 StormEvents | take 10
             ");
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should()
+              .NotContainErrors()
+              .And
+              .ContainSingle<DisplayedValueProduced>(e =>
+                                                         e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType));
 
-        events.Should()
-            .NotContainErrors()
-            .And
-            .ContainSingle<DisplayedValueProduced>(e =>
-                e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType));
-
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>(e =>
-                e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>(e =>
+                                                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
     }
 
     [KqlFact]
@@ -79,8 +76,7 @@ StormEvents | take 10
         var result = await kernel.SubmitCodeAsync(
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -93,10 +89,8 @@ StormEvents | take 10
 
         result = await kqlKernel.SendAsync(new RequestValue("my_data_result"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<ValueProduced>()
-            .Which.Value.Should().BeAssignableTo<IEnumerable<TabularDataResource>>();
+        result.Events.Should().ContainSingle<ValueProduced>()
+              .Which.Value.Should().BeAssignableTo<IEnumerable<TabularDataResource>>();
     }
 
     [KqlFact]
@@ -108,23 +102,20 @@ StormEvents | take 10
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
             
         var kqlKernel = kernel.FindKernelByName("kql-KustoHelp");
 
         result = await kqlKernel.SendAsync(new RequestValue("my_data_result"));
-            
-        using var events = result.KernelEvents.ToSubscribedList();
-            
-        events.Should()
-            .ContainSingle<CommandFailed>()
-            .Which
-            .Message
-            .Should()
-            .Contain("Value 'my_data_result' not found in kernel kql-KustoHelp");
+
+        result.Events.Should()
+              .ContainSingle<CommandFailed>()
+              .Which
+              .Message
+              .Should()
+              .Contain("Value 'my_data_result' not found in kernel kql-KustoHelp");
     }
 
     [KqlFact]
@@ -135,31 +126,27 @@ StormEvents | take 10
         var result = await kernel.SubmitCodeAsync(
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
-            .Should()
-            .NotContainErrors();
+        result.Events
+              .Should()
+              .NotContainErrors();
+
         var queryCode = "StormEvents | take 10";
         result = await kernel.SubmitCodeAsync($@"
 #!kql
 {queryCode}
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>(e =>
-                e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
-            .Which.FormattedValues.Single(f => f.MimeType == HtmlFormatter.MimeType)
-            .Value
-            .Should()
-            .Contain("#!kql-KustoHelp")
-            .And
-            .Contain(queryCode);
-
+        result.Events
+              .Should()
+              .ContainSingle<DisplayedValueProduced>(e =>
+                                                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
+              .Which.FormattedValues.Single(f => f.MimeType == HtmlFormatter.MimeType)
+              .Value
+              .Should()
+              .Contain("#!kql-KustoHelp")
+              .And
+              .Contain(queryCode);
     }
-
-    
 
     [KqlFact]
     public async Task Field_types_are_deserialized_correctly()
@@ -169,8 +156,7 @@ StormEvents | take 10
         var result = await kernel.SubmitCodeAsync(
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -179,17 +165,15 @@ StormEvents | take 10
 StormEvents | take 10
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.ShouldDisplayTabularDataResourceWhich()
-            .Schema
-            .Fields
-            .Should()
-            .ContainSingle(f => f.Name == "StartTime")
-            .Which
-            .Type
-            .Should()
-            .Be(TableSchemaFieldType.DateTime);
+        result.Events.ShouldDisplayTabularDataResourceWhich()
+              .Schema
+              .Fields
+              .Should()
+              .ContainSingle(f => f.Name == "StartTime")
+              .Which
+              .Type
+              .Should()
+              .Be(TableSchemaFieldType.DateTime);
     }
 
     [KqlFact]
@@ -200,8 +184,7 @@ StormEvents | take 10
         var result = await kernel.SubmitCodeAsync(
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -210,16 +193,14 @@ StormEvents | take 10
 StormEvents | take 10
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>(fvp => fvp.Value is DataExplorer<TabularDataResource>)
-            .Which
-            .FormattedValues.Select(fv => fv.MimeType)
-            .Should()
-            .BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>(fvp => fvp.Value is DataExplorer<TabularDataResource>)
+              .Which
+              .FormattedValues.Select(fv => fv.MimeType)
+              .Should()
+              .BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
     }
 
     [KqlFact]
@@ -230,23 +211,21 @@ StormEvents | take 10
         var result = await kernel.SubmitCodeAsync(
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
-            .Should()
-            .NotContainErrors();
+        result.Events
+              .Should()
+              .NotContainErrors();
 
         result = await kernel.SubmitCodeAsync($@"
 #!kql-KustoHelp
 StormEvents | take 0
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .NotContainErrors()
-            .And
-            .ContainSingle<DisplayedValueProduced>(e =>
-                e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType && f.Value.ToString().StartsWith("Info")));
+        result.Events
+              .Should()
+              .NotContainErrors()
+              .And
+              .ContainSingle<DisplayedValueProduced>(e =>
+                                                         e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType && f.Value.ToString().StartsWith("Info")));
     }
 
     [KqlTheory]
@@ -275,8 +254,7 @@ StormEvents | take 0
         var result = await kernel.SubmitCodeAsync(
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -289,16 +267,14 @@ print testVar";
 
         result = await kernel.SendAsync(new SubmitCode(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .ShouldDisplayTabularDataResourceWhich()
-            .Data
-            .Should()
-            .ContainSingle()
-            .Which
-            .Should()
-            .ContainValue(expectedValue);
+        result.Events
+              .ShouldDisplayTabularDataResourceWhich()
+              .Data
+              .Should()
+              .ContainSingle()
+              .Which
+              .Should()
+              .ContainValue(expectedValue);
     }
     
     [KqlTheory]
@@ -315,8 +291,7 @@ print testVar";
         var result = await kernel.SubmitCodeAsync(
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -329,9 +304,7 @@ print testVar";
 
         result = await kernel.SendAsync(new SubmitCode(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<CommandFailed>();
+        result.Events.Should().ContainSingle<CommandFailed>();
     }
 
     [KqlFact]
@@ -349,9 +322,7 @@ print testVar";
 #!share --from csharp testVar
 StormEvents | take testVar";
 
-
         await kernel.SendAsync(new SubmitCode(code));
-
 
         var kustoKernel = kernel.FindKernelByName("kql-KustoHelp") as ToolsServiceKernel;
 

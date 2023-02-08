@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -42,15 +43,13 @@ public class HtmlKernelTests : IDisposable
 
         var result = await kernel.SendAsync(new RequestValue("*"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<ValueProduced>()
-            .Which
-            .Value
-            .Should()
-            .BeAssignableTo<ILocator>();
+        result.Events
+              .Should()
+              .ContainSingle<ValueProduced>()
+              .Which
+              .Value
+              .Should()
+              .BeAssignableTo<ILocator>();
     }
 
     [FactSkipLinux("Requires Playwright installed")]
@@ -59,20 +58,18 @@ public class HtmlKernelTests : IDisposable
         using var kernel = await CreateHtmlProxyKernelAsync();
 
         var setupEvents = await kernel.SubmitCodeAsync("<div>hello</div>");
-        setupEvents.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+        setupEvents.Events.Should().NotContainErrors();
 
         var result = await kernel.SendAsync(new RequestValue("*", "text/html"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<ValueProduced>()
-            .Which
-            .FormattedValue
-            .Value
-            .Should()
-            .Contain("<div>hello</div>");
+        result.Events
+              .Should()
+              .ContainSingle<ValueProduced>()
+              .Which
+              .FormattedValue
+              .Value
+              .Should()
+              .Contain("<div>hello</div>");
     }
 
     [FactSkipLinux("Requires Playwright installed")]
@@ -81,20 +78,18 @@ public class HtmlKernelTests : IDisposable
         using var kernel = await CreateHtmlProxyKernelAsync();
 
         var setupEvents = await kernel.SubmitCodeAsync("<div>hello</div>");
-        setupEvents.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+        setupEvents.Events.Should().NotContainErrors();
 
         var result = await kernel.SendAsync(new RequestValue(":root", "text/plain"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<ValueProduced>()
-            .Which
-            .FormattedValue
-            .Value
-            .Should()
-            .Be("hello");
+        result.Events
+              .Should()
+              .ContainSingle<ValueProduced>()
+              .Which
+              .FormattedValue
+              .Value
+              .Should()
+              .Be("hello");
     }
 
     [FactSkipLinux("Requires Playwright installed")]
@@ -108,16 +103,14 @@ public class HtmlKernelTests : IDisposable
 
         var result = await kernel.SendAsync(new RequestValue("svg", "image/png"));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        var value = events
-                    .Should()
-                    .ContainSingle<ValueProduced>()
-                    .Which
-                    .FormattedValue
-                    .Value;
+        var value = result.Events
+                          .Should()
+                          .ContainSingle<ValueProduced>()
+                          .Which
+                          .FormattedValue
+                          .Value;
 
         value.Invoking(v => Image.Load(Convert.FromBase64String(v), new PngDecoder()))
              .Should()
@@ -135,16 +128,14 @@ public class HtmlKernelTests : IDisposable
 
         var result = await kernel.SendAsync(new RequestValue("svg", "image/jpeg"));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        var value = events
-                    .Should()
-                    .ContainSingle<ValueProduced>()
-                    .Which
-                    .FormattedValue
-                    .Value;
+        var value = result.Events
+                          .Should()
+                          .ContainSingle<ValueProduced>()
+                          .Which
+                          .FormattedValue
+                          .Value;
 
         value.Invoking(v => Image.Load(Convert.FromBase64String(v), new JpegDecoder()))
              .Should()
@@ -158,15 +149,13 @@ public class HtmlKernelTests : IDisposable
 
         var result = await kernel.SendAsync(new RequestValueInfos());
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<ValueInfosProduced>()
-            .Which
-            .ValueInfos
-            .Should()
-            .ContainSingle(i => i.Name == ":root");
+        result.Events
+              .Should()
+              .ContainSingle<ValueInfosProduced>()
+              .Which
+              .ValueInfos
+              .Should()
+              .ContainSingle(i => i.Name == ":root");
     }
 
     [FactSkipLinux("Requires Playwright installed")]
@@ -181,15 +170,14 @@ public class HtmlKernelTests : IDisposable
 
         var result = await htmlKernel.SendAsync(new RequestValue("html", "text/html"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-        events
-            .Should()
-            .ContainSingle<ValueProduced>()
-            .Which
-            .FormattedValue
-            .Value
-            .Should()
-            .Contain("<div>howdy</div>");
+        result.Events
+              .Should()
+              .ContainSingle<ValueProduced>()
+              .Which
+              .FormattedValue
+              .Value
+              .Should()
+              .Contain("<div>howdy</div>");
     }
 
     [FactSkipLinux("Requires Playwright installed")]
@@ -204,17 +192,15 @@ public class HtmlKernelTests : IDisposable
 
         var result = await javascriptKernel.SendAsync(new SubmitCode("return document.body.innerHTML;"));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        events
-            .Should()
-            .ContainSingle<ReturnValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.Value.Contains("<div>hey there!</div>"));
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.Value.Contains("<div>hey there!</div>"));
     }
 
     [FactSkipLinux("Requires Playwright installed")]
@@ -228,17 +214,15 @@ public class HtmlKernelTests : IDisposable
 
         var result = await javascriptKernel.SendAsync(new SubmitCode("return myValue;"));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        events
-            .Should()
-            .ContainSingle<ReturnValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.Value.Contains("123"));
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.Value.Contains("123"));
     }
 
     private async Task<Kernel> CreateHtmlProxyKernelAsync()

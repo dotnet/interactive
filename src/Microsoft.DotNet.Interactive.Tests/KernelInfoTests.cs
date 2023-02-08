@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -57,10 +58,8 @@ public class KernelInfoTests
 
             var result = await kernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "csharp");
-            events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "fsharp");
+            result.Events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "csharp");
+            result.Events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "fsharp");
         }
 
         [Fact]
@@ -92,9 +91,7 @@ public class KernelInfoTests
             var result = await localCompositeKernel.SendAsync(
                              new RequestKernelInfo(remoteKernelUri));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
+            result.Events.Should()
                   .ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "fsharp")
                   .Which
                   .KernelInfo
@@ -135,18 +132,17 @@ public class KernelInfoTests
             var result = await localCompositeKernel.SendAsync(
                 new RequestKernelInfo(targetKernelName: "proxied-fsharp"));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
-                .ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "proxied-fsharp")
-                .Which
-                .KernelInfo
-                .Should()
-                .BeEquivalentTo(new
-                {
-                    LanguageName = "fsharp",
-                    RemoteUri = remoteKernelUri
-                }, c => c.ExcludingMissingMembers());
+            result.Events
+                  .Should()
+                  .ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "proxied-fsharp")
+                  .Which
+                  .KernelInfo
+                  .Should()
+                  .BeEquivalentTo(new
+                  {
+                      LanguageName = "fsharp",
+                      RemoteUri = remoteKernelUri
+                  }, c => c.ExcludingMissingMembers());
         }
 
         [Fact]
@@ -222,8 +218,7 @@ public class KernelInfoTests
 
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents
-                               .ToSubscribedList()
+            var events = result.Events
                                .OfType<KernelInfoProduced>();
 
             events
@@ -244,15 +239,13 @@ public class KernelInfoTests
 
             var result = await localCompositeKernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
-                .ContainSingle<KernelInfoProduced>(k => k.KernelInfo.LocalName == "csharp")
-                .Which
-                .KernelInfo
-                .Uri
-                .Should()
-                .Be(new Uri("kernel://local/csharp"));
+            result.Events.Should()
+                  .ContainSingle<KernelInfoProduced>(k => k.KernelInfo.LocalName == "csharp")
+                  .Which
+                  .KernelInfo
+                  .Uri
+                  .Should()
+                  .Be(new Uri("kernel://local/csharp"));
         }
 
         [Fact]
@@ -380,9 +373,7 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
 ";
             var result = await compositeKernel.SendAsync(new SubmitCode(code, targetKernelName:"csharp"));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "csharpTwo");
+            result.Events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "csharpTwo");
         }
     }
 
@@ -395,9 +386,8 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
 
             var result = await kernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
+            result.Events
+                  .Should()
                   .ContainSingle<KernelInfoProduced>()
                   .Which
                   .KernelInfo
@@ -415,9 +405,7 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
 
             var result = await kernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
+            result.Events.Should()
                   .ContainSingle<KernelInfoProduced>()
                   .Which
                   .KernelInfo
@@ -433,9 +421,7 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
 
             var result = await kernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
+            result.Events.Should()
                   .ContainSingle<KernelInfoProduced>()
                   .Which
                   .KernelInfo
@@ -451,9 +437,8 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
 
             var result = await kernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
+            result.Events
+                  .Should()
                   .ContainSingle<KernelInfoProduced>()
                   .Which
                   .KernelInfo
@@ -471,9 +456,8 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
 
             var result = await kernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
+            result.Events
+                  .Should()
                   .ContainSingle<KernelInfoProduced>()
                   .Which
                   .KernelInfo
@@ -493,9 +477,8 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
 
             var result = await kernel.SendAsync(new RequestKernelInfo());
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events.Should()
+            result.Events
+                  .Should()
                   .ContainSingle<KernelInfoProduced>()
                   .Which
                   .KernelInfo
@@ -553,17 +536,16 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
         var result = await localCompositeKernel.SendAsync(
             new RequestKernelInfo());
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "proxied-fsharp")
-            .Which
-            .KernelInfo
-            .Should()
-            .BeEquivalentTo(new
-            {
-                LanguageName = "fsharp",
-                RemoteUri = remoteKernelUri
-            }, c => c.ExcludingMissingMembers());
+        result.Events
+              .Should()
+              .ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "proxied-fsharp")
+              .Which
+              .KernelInfo
+              .Should()
+              .BeEquivalentTo(new
+              {
+                  LanguageName = "fsharp",
+                  RemoteUri = remoteKernelUri
+              }, c => c.ExcludingMissingMembers());
     }
 }

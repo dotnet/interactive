@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Threading.Tasks;
@@ -60,21 +61,19 @@ public class ConnectDirectiveTests : IDisposable
 
         var result = await kernel.SubmitCodeAsync("#!connect fake --kernel-name my-fake-kernel --fakeness-level 9000");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .NotContainErrors()
-            .And
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle()
-            .Which
-            .Value
-            .Should()
-            .Be("Kernel added: #!my-fake-kernel");
+        result.Events
+              .Should()
+              .NotContainErrors()
+              .And
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle()
+              .Which
+              .Value
+              .Should()
+              .Be("Kernel added: #!my-fake-kernel");
     }
 
     [Fact]
@@ -113,7 +112,7 @@ hello!
 
         var result = await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name my-fake-kernel --fakeness-level 9000");
 
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         compositeKernel.Dispose();
 
@@ -132,18 +131,16 @@ hello!
 
         var result = await compositeKernel.SubmitCodeAsync("#!fake-kernel -h");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<StandardOutputValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle()
-            .Which
-            .Value
-            .Should()
-            .ContainAll("#!fake-kernel", "Connects the fake kernel (Connected kernel)");
+        result.Events.Should()
+              .ContainSingle<StandardOutputValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle()
+              .Which
+              .Value
+              .Should()
+              .ContainAll("#!fake-kernel", "Connects the fake kernel (Connected kernel)");
     }
 
     [Fact]

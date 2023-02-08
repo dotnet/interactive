@@ -445,8 +445,7 @@ public class SubmissionParser
 
             var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 
-            var events = result.KernelEvents.ToEnumerable().ToArray();
-            var valueProduced = events.OfType<InputProduced>().SingleOrDefault();
+            var valueProduced = result.Events.OfType<InputProduced>().SingleOrDefault();
 
             if (valueProduced is { })
             {

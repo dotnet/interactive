@@ -89,7 +89,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""123"", ""fake""));
 await Kernel.Root.SendAsync(new SubmitCode(""456"", ""fake""));
 ", "csharp"));
 
-            result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+            result.Events.Should().NotContainErrors();
 
             kernel.SubmissionCount.Should().Be(1);
         }

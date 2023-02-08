@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Management.Automation;
 using System.Threading.Tasks;
@@ -51,23 +52,21 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 ");
         var result = await kernel.SendAsync(command);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        Assert.Collection(events,
-            e => e.Should().BeOfType<CodeSubmissionReceived>(),
-            e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-            e => e.Should().BeOfType<DiagnosticsProduced>()
-                .Which.Diagnostics.Count.Should().Be(0),
-            e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                .Value.Should().BeOfType<string>().Which
-                .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
-            e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                .Value.Should().BeOfType<string>().Which
-                .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
-            e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                .Value.Should().BeOfType<string>().Which
-                .Should().Be(string.Empty),
-            e => e.Should().BeOfType<CommandSucceeded>());
+        Assert.Collection(result.Events,
+                          e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                          e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                          e => e.Should().BeOfType<DiagnosticsProduced>()
+                                .Which.Diagnostics.Count.Should().Be(0),
+                          e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                                .Value.Should().BeOfType<string>().Which
+                                .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
+                          e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                                .Value.Should().BeOfType<string>().Which
+                                .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
+                          e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                                .Value.Should().BeOfType<string>().Which
+                                .Should().Be(string.Empty),
+                          e => e.Should().BeOfType<CommandSucceeded>());
     }
         
     [Fact]
@@ -130,8 +129,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         await kernel.SendAsync(new SubmitCode("echo bar > $null"));
         var result = await kernel.SendAsync(new SubmitCode("Get-History | % CommandLine"));
 
-        var outputs = result.KernelEvents
-            .ToSubscribedList()
+        var outputs = result.Events
             .OfType<StandardOutputValueProduced>();
 
         outputs.Should().SatisfyRespectively(
@@ -230,7 +228,6 @@ for ($j = 0; $j -le 4; $j += 4 ) {
     {
         var kernel = CreateKernel(Language.PowerShell);
         var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
-        var outputs = result.KernelEvents.ToSubscribedList();
 
         var mimeType = "text/html";
         var formattedHtml =
@@ -268,7 +265,7 @@ table th {
 </style>";
         var fv = new FormattedValue(mimeType, formattedHtml);
 
-        outputs.Should().SatisfyRespectively(
+        result.Events.Should().SatisfyRespectively(
             e => e.Should().BeOfType<CodeSubmissionReceived>(),
             e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
             e => e.Should().BeOfType<DiagnosticsProduced>().Which.Diagnostics.Count.Should().Be(0),
@@ -284,17 +281,17 @@ table th {
         await kernel.SendAsync(new SubmitCode("$theAnswer = 42"));
 
         var result = await kernel.SendAsync(new RequestValueInfos());
-        var events = result.KernelEvents.ToSubscribedList();
-        events
-            .Should()
-            .ContainSingle<ValueInfosProduced>()
-            .Which
-            .ValueInfos
-            .Should()
-            .ContainSingle()
-            .Which
-            .Name
-            .Should()
-            .Be("theAnswer");
+
+        result.Events
+              .Should()
+              .ContainSingle<ValueInfosProduced>()
+              .Which
+              .ValueInfos
+              .Should()
+              .ContainSingle()
+              .Which
+              .Name
+              .Should()
+              .Be("theAnswer");
     }
 }

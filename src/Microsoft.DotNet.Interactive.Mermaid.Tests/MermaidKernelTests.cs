@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -95,12 +96,10 @@ public class MermaidKernelTests
     R -- ""pandas.DataFrame"" --> Py[py fa:fa-gear \nPredictive Modeling\n w/ pandas, scikit-learn]
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var formattedValue = events
-            .OfType<DisplayedValueProduced>()
-            .Single()
-            .FormattedValues.First(fm => fm.MimeType == HtmlFormatter.MimeType);
+        var formattedValue = result.Events
+                                   .OfType<DisplayedValueProduced>()
+                                   .Single()
+                                   .FormattedValues.First(fm => fm.MimeType == HtmlFormatter.MimeType);
 
         formattedValue.Value.Should().Contain(@"flowchart LR
     data[(SQL\\nQuery Titanic data)] 
@@ -125,14 +124,12 @@ public class MermaidKernelTests
     B --> D[Server2]
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var formattedData = events
-            .OfType<DisplayedValueProduced>()
-            .Single()
-            .FormattedValues
-            .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
-            .Value;
+        var formattedData = result.Events
+                                  .OfType<DisplayedValueProduced>()
+                                  .Single()
+                                  .FormattedValues
+                                  .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                                  .Value;
 
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(formattedData.FixedGuid());
@@ -160,14 +157,12 @@ public class MermaidKernelTests
     B --> D[Server2]
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var formattedData = events
-            .OfType<DisplayedValueProduced>()
-            .Single()
-            .FormattedValues
-            .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
-            .Value;
+        var formattedData = result.Events
+                                  .OfType<DisplayedValueProduced>()
+                                  .Single()
+                                  .FormattedValues
+                                  .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                                  .Value;
 
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(formattedData.FixedGuid());

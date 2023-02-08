@@ -179,14 +179,13 @@ public class LessonTests : ProgressiveLearningTestBase
         Lesson.CurrentChallenge.Should().Be(null);
 
         var result = await kernel.SubmitCodeAsync("1+41");
-        var events = result.KernelEvents.ToSubscribedList();
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().ContainSingle<ReturnValueProduced>()
-            .Which
-            .Value
-            .Should()
-            .Be(42);
+        result.Events.Should().ContainSingle<ReturnValueProduced>()
+              .Which
+              .Value
+              .Should()
+              .Be(42);
     }
 
     [Fact]

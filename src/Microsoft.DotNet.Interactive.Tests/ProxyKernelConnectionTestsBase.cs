@@ -52,41 +52,37 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
 
         var kernelCommand2 = new SubmitCode("\"echo2\"");
 
-        var res1 = await proxyKernel1.SendAsync(kernelCommand1);
+        var result1 = await proxyKernel1.SendAsync(kernelCommand1);
 
-        var res2 = await proxyKernel2.SendAsync(kernelCommand2);
+        var result2 = await proxyKernel2.SendAsync(kernelCommand2);
 
-        var kernelEvents1 = res1.KernelEvents.ToSubscribedList();
+        result1.Events.Should().NotContainErrors()
+               .And
+               .ContainSingle<CommandSucceeded>()
+               .Which
+               .Command.As<SubmitCode>()
+               .Code
+               .Should().Be(kernelCommand1.Code);
 
-        var kernelEvents2 = res2.KernelEvents.ToSubscribedList();
+        result1.Events.Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .FormattedValues
+            .Should().ContainSingle(f => f.Value == "echo1");
 
-        kernelEvents1.Should().NotContainErrors()
-                     .And
-                     .ContainSingle<CommandSucceeded>()
-                     .Which
-                     .Command.As<SubmitCode>()
-                     .Code
-                     .Should().Be(kernelCommand1.Code);
+        result2.Events.Should().NotContainErrors()
+            .And
+            .ContainSingle<CommandSucceeded>()
+            .Which
+            .Command.As<SubmitCode>()
+            .Code
+            .Should().Be(kernelCommand2.Code);
 
-        kernelEvents1.Should()
-                     .ContainSingle<ReturnValueProduced>()
-                     .Which
-                     .FormattedValues
-                     .Should().ContainSingle(f => f.Value == "echo1");
-
-        kernelEvents2.Should().NotContainErrors()
-                     .And
-                     .ContainSingle<CommandSucceeded>()
-                     .Which
-                     .Command.As<SubmitCode>()
-                     .Code
-                     .Should().Be(kernelCommand2.Code);
-
-        kernelEvents2.Should()
-                     .ContainSingle<ReturnValueProduced>()
-                     .Which
-                     .FormattedValues
-                     .Should().ContainSingle(f => f.Value == "echo2");
+        result2.Events.Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .FormattedValues
+            .Should().ContainSingle(f => f.Value == "echo2");
     }
 
     [WindowsFact]
@@ -109,7 +105,7 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
 
         var connectResults = await localCompositeKernel.SendAsync(connectToRemoteKernel);
 
-        connectResults.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+        connectResults.Events.Should().NotContainErrors();
 
         var codeSubmissionForRemoteKernel = new SubmitCode($@"
 #!{localKernelName}
@@ -118,19 +114,17 @@ x.Display(""text/plain"");");
 
         var submissionResults = await localCompositeKernel.SendAsync(codeSubmissionForRemoteKernel);
 
-        var submissionEvents = submissionResults.KernelEvents.ToSubscribedList();
-
-        submissionEvents
-            .Should()
-            .NotContainErrors()
-            .And
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Single()
-            .Value
-            .Should()
-            .Be("2");
+        submissionResults.Events
+                         .Should()
+                         .NotContainErrors()
+                         .And
+                         .ContainSingle<DisplayedValueProduced>()
+                         .Which
+                         .FormattedValues
+                         .Single()
+                         .Value
+                         .Should()
+                         .Be("2");
     }
 
     [WindowsFact]
@@ -148,11 +142,9 @@ x.Display(""text/plain"");");
 
         var result = await kernel.SendAsync(new RequestHoverText(code, new LinePosition(line, column)));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .EventuallyContainSingle<HoverTextProduced>();
+        result.Events
+              .Should()
+              .EventuallyContainSingle<HoverTextProduced>();
     }
 
     protected abstract Task<IKernelConnector> CreateConnectorAsync();

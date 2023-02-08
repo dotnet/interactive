@@ -4,14 +4,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive;
 
+[TypeFormatterSource(typeof(MessageDiagnosticsFormatterSource))]
 public abstract class RoutingSlip
 {
     private readonly List<Entry> _entries = new();
-
-    private protected ICollection<Entry> Entries => _entries;
+    internal ICollection<Entry> Entries => _entries;
 
     public abstract void Stamp(Uri uri);
 
@@ -121,7 +122,7 @@ public abstract class RoutingSlip
         return absoluteUri;
     }
 
-    private protected class Entry
+    internal class Entry
     {
         public Entry(string absoluteUriWithoutQuery, string tag = null)
         {

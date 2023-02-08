@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -90,14 +91,12 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
 ");
         var result = await kernel.SendAsync(command);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<ErrorProduced>()
-            .Which
-            .Message
-            .Should()
-            .Be("(1,1): error CS0103: The name 'error' does not exist in the current context");
+        result.Events.Should()
+              .ContainSingle<ErrorProduced>()
+              .Which
+              .Message
+              .Should()
+              .Be("(1,1): error CS0103: The name 'error' does not exist in the current context");
     }
 
     [Fact]
@@ -121,13 +120,11 @@ var result = await Kernel.Root.SendAsync(new SubmitCode(""123"", ""fsharp""));
 await result.KernelEvents.LastAsync()
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        events
-            .Should()
-            .ContainSingle<ReturnValueProduced>(e => e.Value is CommandSucceeded);
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>(e => e.Value is CommandSucceeded);
     }
 
     [Fact]
@@ -150,10 +147,8 @@ var result = await Kernel.Root.SendAsync(new SubmitCode(""nope"", ""cs2""));
 await result.KernelEvents.LastAsync()
 ", "cs1"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<ReturnValueProduced>(e => e.Value is CommandFailed);
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>(e => e.Value is CommandFailed);
     }
 }
