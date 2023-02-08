@@ -19,9 +19,7 @@ Microsoft.DotNet.Interactive.Jupyter
     .ctor()
     public System.CommandLine.Option<System.String> InitScript { get;}
     public System.CommandLine.Option<System.String> KernelSpecName { get;}
-    public System.CommandLine.Option<System.String> TargetUrl { get;}
-    public System.CommandLine.Option<System.String> Token { get;}
-    public System.CommandLine.Option<System.Boolean> UseBearerAuth { get;}
+    public ConnectJupyterKernelCommand AddConnectionOptions(Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions connectionOptions)
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
   public static class Constants
   public class ExecuteRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.ExecuteRequest>, System.IDisposable
@@ -51,11 +49,19 @@ Microsoft.DotNet.Interactive.Jupyter
   public class JupyterClientKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
     .ctor()
     public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
+  public class JupyterHttpKernelConnectionOptions, Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions
+    .ctor()
+    public Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
+    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
   public class JupyterKernelSpecModule, IJupyterKernelSpecModule
     .ctor()
     public System.IO.DirectoryInfo GetDefaultKernelSpecDirectory()
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> InstallKernel(System.IO.DirectoryInfo sourceDirectory)
     public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernels()
+  public class JupyterLocalKernelConnectionOptions, Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions
+    .ctor()
+    public Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
+    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
   public class JupyterRequestContext
     .ctor(IJupyterMessageResponseSender jupyterMessageSender, Microsoft.DotNet.Interactive.Jupyter.Messaging.Message request)
     public IJupyterMessageResponseSender JupyterMessageSender { get;}
@@ -118,6 +124,9 @@ Microsoft.DotNet.Interactive.Jupyter.Connection
     public Microsoft.DotNet.Interactive.Jupyter.Messaging.IMessageSender Sender { get;}
     public System.Uri Uri { get;}
     public System.Threading.Tasks.Task StartAsync()
+  public abstract class IJupyterKernelConnectionOptions
+    public IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
+    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
 Microsoft.DotNet.Interactive.Jupyter.Formatting
   public class LaTeXString
     public static LaTeXString op_Implicit(System.String source)
@@ -164,6 +173,8 @@ Microsoft.DotNet.Interactive.Jupyter.Messaging
     public static T DeserializeFromJsonString<T>(System.String source)
     public static Message DeserializeMessage(System.String signature, System.String headerJson, System.String parentHeaderJson, System.String metadataJson, System.String contentJson, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> identifiers, System.Text.Json.JsonSerializerOptions options = null)
     public static System.Boolean IsEmptyJson(System.String source)
+  public static class MessageFormatter
+    public static System.Text.Json.JsonSerializerOptions SerializerOptions { get;}
   public static class MessageObservableExtensions
     public static System.IObservable<Microsoft.DotNet.Interactive.Jupyter.Protocol.Message> Content()
     public static System.IObservable<Message> ResponseOf(Message parentMessage)

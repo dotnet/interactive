@@ -8,7 +8,7 @@ using System.Text.Encodings.Web;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Messaging;
 
-internal static class MessageFormatter
+public static class MessageFormatter
 {
     static MessageFormatter()
     {
