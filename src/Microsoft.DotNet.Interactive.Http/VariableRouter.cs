@@ -140,7 +140,7 @@ public class VariableRouter : IRouter
     {
         var result = await targetKernel.SendAsync(new RequestValue(variableName));
 
-        if (await result.KernelEvents.FirstOrDefaultAsync() is ValueProduced { Value: { } value })
+        if (result.Events[0] is ValueProduced { Value: { } value })
         {
             return new FormattedValue(JsonFormatter.MimeType, value.ToDisplayString(JsonFormatter.MimeType));
         }

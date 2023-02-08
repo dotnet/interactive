@@ -184,7 +184,6 @@ Microsoft.DotNet.Interactive
   public class KernelCommandResult
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Events.KernelEvent> Events { get;}
-    public System.Reactive.Subjects.ReplaySubject<Microsoft.DotNet.Interactive.Events.KernelEvent> KernelEvents { get;}
   public class KernelDirectiveInfo, System.IEquatable<KernelDirectiveInfo>
     public static System.Boolean op_Equality(KernelDirectiveInfo left, KernelDirectiveInfo right)
     public static System.Boolean op_Inequality(KernelDirectiveInfo left, KernelDirectiveInfo right)

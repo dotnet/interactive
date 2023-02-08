@@ -16,7 +16,7 @@ public class KernelCommandResult
     private readonly List<KernelEvent> _events = new();
 
     internal KernelCommandResult(
-        KernelCommand command, 
+        KernelCommand command,
         ReplaySubject<KernelEvent> events)
     {
         Command = command;
@@ -26,9 +26,8 @@ public class KernelCommandResult
 
     public KernelCommand Command { get; }
 
-    // FIX: (KernelCommandResult.KernelEvents) delete this
-    public ReplaySubject<KernelEvent> KernelEvents { get; }
-
     public IReadOnlyList<KernelEvent> Events => _events;
 
+    // FIX: (KernelCommandResult.KernelEvents) delete this
+    internal ReplaySubject<KernelEvent> KernelEvents { get; }
 }

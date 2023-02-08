@@ -102,11 +102,10 @@ using {typeof(PocketView).Namespace};
 
         var result = await kernel.SendAsync(new SubmitCode(submission));
 
-        var valueProduced = await result
-            .KernelEvents
+        var valueProduced = result
+            .Events
             .OfType<ReturnValueProduced>()
-            .Timeout(5.Seconds())
-            .FirstAsync();
+            .First();
 
         valueProduced
             .FormattedValues
