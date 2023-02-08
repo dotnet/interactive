@@ -219,7 +219,7 @@ stages:
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/package/PackNpmPackage.ps1
             arguments: -packageVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\npm"
-            workingDirectory: "$(Build.SourcesDirectory)/src/microsoft-dotnet-interactive"
+            workingDirectory: "$(Build.SourcesDirectory)/src/polyglot-notebooks"
             pwsh: true
 
         - task: PublishBuildArtifacts@1
