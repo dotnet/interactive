@@ -33,11 +33,7 @@ internal class MessageDiagnosticsFormatterSource : ITypeFormatterSource
 
         yield return new HtmlFormatter<RoutingSlip>((slip, context) =>
         {
-            var list = slip.Entries.Select(e => new
-            {
-                e.Tag,
-                e.AbsoluteUriWithoutQuery
-            });
+            var list = slip.Entries.Select(e => e.ToString());
 
             list.FormatTo(context, HtmlFormatter.MimeType);
 
