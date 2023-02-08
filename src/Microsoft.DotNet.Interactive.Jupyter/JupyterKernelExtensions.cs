@@ -3,6 +3,7 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 
@@ -18,9 +19,7 @@ internal static class JupyterKernelExtensions
     public async static Task<bool> RunOnKernelAsync(this JupyterKernel kernel, string code)
     {
         var results = await kernel.SendAsync(new SubmitCode(code));
-        var success = await results.KernelEvents
-                                         .OfType<CommandSucceeded>()
-                                         .FirstOrDefaultAsync();
+        var success = results.Events.OfType<CommandSucceeded>().FirstOrDefault();
 
         return success is { };
     }
