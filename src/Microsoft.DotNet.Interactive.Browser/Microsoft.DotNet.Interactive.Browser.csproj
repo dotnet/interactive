@@ -37,7 +37,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <EmbeddedResource Include="..\microsoft-dotnet-interactive\lib\dotnet-interactive.js" />
+    <EmbeddedResource Include="..\polyglot-notebooks\lib\polyglot-notebooks.js" />
   </ItemGroup>
 
   <ItemGroup>
