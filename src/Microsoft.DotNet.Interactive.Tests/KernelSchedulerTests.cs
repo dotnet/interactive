@@ -90,6 +90,32 @@ public class KernelSchedulerTests : IDisposable
     }
 
     [Fact]
+    public async Task preemptively_scheduled_work_does_not_execute_in_parallel()
+    {
+        using var scheduler = new KernelScheduler<int, int>((i, i1) => true);
+        var concurrencyCounter = 0;
+        var maxObservedParallelism = 0;
+
+        var tasks = Enumerable.Range(1, 3).Select(i =>
+        {
+            return scheduler.RunAsync(i, async v =>
+            {
+                Interlocked.Increment(ref concurrencyCounter);
+
+                await Task.Delay(100);
+                maxObservedParallelism = Math.Max(concurrencyCounter, maxObservedParallelism);
+
+                Interlocked.Decrement(ref concurrencyCounter);
+                return v;
+            });
+        });
+
+        await Task.WhenAll(tasks);
+
+        maxObservedParallelism.Should().Be(1);
+    }
+
+    [Fact]
     public async Task deferred_work_is_executed_before_new_work()
     {
         var executionList = new List<int>();
