@@ -24,6 +24,8 @@ public class JupyterKernelTests : IDisposable
 {
     private readonly ITestOutputHelper _output;
     private CompositeDisposable _disposables = new();
+
+    // to re-record the tests for simulated playback with JuptyerTestData, set this to true
     private const bool RECORD_FOR_PLAYBACK = false;
     
     public JupyterKernelTests(ITestOutputHelper output)
@@ -56,8 +58,8 @@ public class JupyterKernelTests : IDisposable
     [JupyterHttpTestData(KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = "python3")]
     [JupyterZMQTestData(KernelSpecName = "ir")]
-    //[JupyterTestData(KernelSpecName = "python3")]
-    //[JupyterTestData(KernelSpecName = "ir")]
+    [JupyterTestData(KernelSpecName = "python3")]
+    [JupyterTestData(KernelSpecName = "ir")]
     public async Task can_connect_to_and_get_kernel_info_produced(JupyterConnectionTestData connectionData)
     {
         var options = connectionData.GetConnectionOptions();
@@ -116,7 +118,7 @@ public class JupyterKernelTests : IDisposable
     [Theory]
     [JupyterHttpTestData(KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = "python3")]
-    //[JupyterTestData(KernelSpecName = "python3")]
+    [JupyterTestData(KernelSpecName = "python3")]
     public async Task can_submit_code_and_get_return_value_produced(JupyterConnectionTestData connectionData)
     {
         var options = connectionData.GetConnectionOptions();
@@ -165,10 +167,10 @@ public class JupyterKernelTests : IDisposable
     [Theory]
     [JupyterHttpTestData("from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3")]
-    //[JupyterTestData("from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3")]
+    [JupyterTestData("from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3")]
     [JupyterHttpTestData("1+1", PlainTextFormatter.MimeType, "[1] 2", KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("1+1", PlainTextFormatter.MimeType, "[1] 2", KernelSpecName = "ir")]
-    //[JupyterTestData("1+1", PlainTextFormatter.MimeType, "[1] 2", KernelSpecName = "ir")]
+    [JupyterTestData("1+1", PlainTextFormatter.MimeType, "[1] 2", KernelSpecName = "ir")]
     public async Task can_submit_code_and_get_display_value_produced(JupyterConnectionTestData connectionData, string codeToRun, string mimeType, string outputReturned)
     {
         var options = connectionData.GetConnectionOptions();
@@ -214,4 +216,6 @@ public class JupyterKernelTests : IDisposable
 
         options.SaveState();
     }
+
+
 }
