@@ -36,6 +36,40 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
         }
     };
 
+    idToClass: { [key: string]: string } = {
+        "0-0": "name-column-content",
+        "0-1": "value-column-content",
+        "0-2": "type-column-content",
+        "0-3": "kernel-column-content",
+        "0-4": "actions-column-content"
+    };
+
+    idlayout: {
+        [key: string]: {
+            left?: string,
+            right?: string
+        }
+    } = {
+            "0-0": {
+                right: "0-1"
+            },
+            "0-1": {
+                left: "0-0",
+                right: "0-1"
+            },
+            "0-2": {
+                left: "0-1",
+                right: "0-2"
+            },
+            "0-3": {
+                left: "0-2",
+                right: "0-3"
+            },
+            "0-4": {
+                left: "0-3",
+            },
+        };
+
     constructor(props: VariableGridProps) {
         super(props);
 
@@ -83,16 +117,64 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
     }
 
     handleMove(e: React.DragEvent<HTMLDivElement>, id: string) {
-
         if (this.state.drag && e.clientX) {
             const element = document.getElementById(id);
             if (element) {
-                let iniMouse = this.state.drag.iniMouse!;
-                let iniSize = this.state.drag.iniSize!;
-                let endMouse = e.clientX;
-
-                let endSize = iniSize + (endMouse - iniMouse);
+                const iniMouse = this.state.drag.iniMouse!;
+                const iniSize = this.state.drag.iniSize!;
+                const endMouse = e.clientX;
+                const delta = (endMouse - iniMouse)
+                const endSize = iniSize + delta;
                 element.style.width = `${endSize}px`;
+                const targetClass = this.idToClass[id];
+                const affectedcolumnId = this.idlayout[id].right;
+
+                if (targetClass && affectedcolumnId) {
+                    const affectedColumn = document.getElementById(affectedcolumnId)!;
+                    const w = affectedColumn.clientWidth - delta;
+                    affectedColumn.style.width = `${w}px`;
+
+                    const targetToResizeClass = this.idToClass[affectedcolumnId];
+                    const targets = document.querySelectorAll(`.${targetClass}`);
+                    for (let index = 0; index < targets.length; index++) {
+                        const target = targets[index] as any;
+                        target.style["max-width"] = `${endSize}px`;
+                    }
+
+                    const targetsToResize = document.querySelectorAll(`.${targetToResizeClass}`);
+                    for (let index = 0; index < targetsToResize.length; index++) {
+                        const targetToResize = targetsToResize[index] as any;
+                        targetToResize.style["max-width"] = `${w}px`;
+                    }
+                }
+            }
+        }
+    }
+
+    handleDragEnd(e: React.DragEvent<HTMLDivElement>, id: string): void {
+        const element = document.getElementById(id);
+        const affectedcolumnId = this.idlayout[id].right;
+
+        if (element && affectedcolumnId) {
+            const affectedColumn = document.getElementById(affectedcolumnId)!;
+            const targetClass = this.idToClass[id];
+            const targetToResizeClass = this.idToClass[affectedcolumnId];
+            const computedStyle = window.getComputedStyle(document.getElementById(id)!);
+            const computedStyleForAffected = window.getComputedStyle(document.getElementById(id)!);
+            if (targetClass) {
+                window.setTimeout(() => {
+                    const targets = document.querySelectorAll(`.${targetClass}`);
+                    for (let index = 0; index < targets.length; index++) {
+                        const target = targets[index] as any;
+                        target.style["max-width"] = computedStyle.width;
+                    }
+
+                    const targetsToResize = document.querySelectorAll(`.${targetToResizeClass}`);
+                    for (let index = 0; index < targetsToResize.length; index++) {
+                        const targetToResize = targetsToResize[index] as any;
+                        targetToResize.style["max-width"] = computedStyleForAffected.width;
+                    }
+                }, 10);
             }
         }
     }
@@ -202,146 +284,162 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                         onInput={(e) => this.handleInput(e)}
                     />
                 </div>
-                <table>
-                    <tbody>
-                        <tr>
-                            <th
-                                key={0}
-                                id={`0-0`}
-                                className="header"
-                            >
-                                Name
-                                <div
-                                    className='grip'
-                                    draggable={true}
-                                    onDragStart={(e) => this.handleStart(e, `0-0`)}
-                                    onDrag={(e) => this.handleMove(e, `0-0`)}
-                                />
-                            </th>
-                            <th
-                                key={1}
-                                id={`0-1`}
-                                className="header"
-                            >
-                                Value
-                                <div
-                                    className='grip'
-                                    draggable={true}
-                                    onDragStart={(e) => this.handleStart(e, `0-1`)}
-                                    onDrag={(e) => this.handleMove(e, `0-1`)}
-                                />
-                            </th>
-                            <th
-                                key={2}
-                                id={`0-2`}
-                                className="header"
-                            >
-                                Type
-                                <div
-                                    className='grip'
-                                    draggable={true}
-                                    onDragStart={(e) => this.handleStart(e, `0-2`)}
-                                    onDrag={(e) => this.handleMove(e, `0-2`)}
-                                />
-                            </th>
-                            <th
-                                key={3}
-                                id={`0-3`}
-                                className="header"
-                            >
-                                Kernel
-                                <div
-                                    className='grip'
-                                    draggable={true}
-                                    onDragStart={(e) => this.handleStart(e, `0-3`)}
-                                    onDrag={(e) => this.handleMove(e, `0-3`)}
-                                />
-                            </th>
-                            <th
-                                key={4}
-                                id={`0-4`}
-                                className="header"
-                            >
-                                Actions
-                            </th>
-                        </tr>
-                        {rows.map((row: VariableGridRow, i) =>
-                            <tr key={i + 1}>
-                                <td key={0} id={`${row.id}-${0}`}>
-                                    <pre className="data-cell">
-                                        {row.name}
-                                    </pre>
+                <div className="table-container" >
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th
+                                    key={0}
+                                    id={`0-0`}
+                                    className="header"
+                                >
+                                    Name
                                     <div
                                         className='grip'
                                         draggable={true}
-                                        onDragStart={(e) => this.handleStart(e, `${0}-${0}`)}
-                                        onDrag={(e) => this.handleMove(e, `${0}-${0}`)}
+                                        onDragStart={(e) => this.handleStart(e, `0-0`)}
+                                        onDrag={(e) => this.handleMove(e, `0-0`)}
+                                        onDragEnd={(e) => this.handleDragEnd(e, `0-0`)}
                                     />
-                                </td>
-                                <td key={1} id={`${row.id}-${1}`}>
-                                    <pre className="data-cell">
-                                        {row.value}
-                                    </pre>
+                                </th>
+                                <th
+                                    key={1}
+                                    id={`0-1`}
+                                    className="header"
+                                >
+                                    Value
                                     <div
                                         className='grip'
                                         draggable={true}
-                                        onDragStart={(e) => this.handleStart(e, `${0}-${1}`)}
-                                        onDrag={(e) => this.handleMove(e, `${0}-${1}`)}
+                                        onDragStart={(e) => this.handleStart(e, `0-1`)}
+                                        onDrag={(e) => this.handleMove(e, `0-1`)}
+                                        onDragEnd={(e) => this.handleDragEnd(e, `0-1`)}
                                     />
-                                </td>
-                                <td key={2} id={`${row.id}-${2}`}>
-                                    <pre className="data-cell">
-                                        {row.typeName}
-                                    </pre>
+                                </th>
+                                <th
+                                    key={2}
+                                    id={`0-2`}
+                                    className="header"
+                                >
+                                    Type
                                     <div
                                         className='grip'
                                         draggable={true}
-                                        onDragStart={(e) => this.handleStart(e, `${0}-${2}`)}
-                                        onDrag={(e) => this.handleMove(e, `${0}-${2}`)}
+                                        onDragStart={(e) => this.handleStart(e, `0-2`)}
+                                        onDrag={(e) => this.handleMove(e, `0-2`)}
+                                        onDragEnd={(e) => this.handleDragEnd(e, `0-2`)}
                                     />
-                                </td>
-                                <td key={3} id={`${row.id}-${3}`}>
-                                    <pre className="data-cell">
-                                        {row.kernelDisplayName}
-                                    </pre>
+                                </th>
+                                <th
+                                    key={3}
+                                    id={`0-3`}
+                                    className="header"
+                                >
+                                    Kernel
                                     <div
                                         className='grip'
                                         draggable={true}
-                                        onDragStart={(e) => this.handleStart(e, `${0}-${3}`)}
-                                        onDrag={(e) => this.handleMove(e, `${0}-${3}`)}
+                                        onDragStart={(e) => this.handleStart(e, `0-3`)}
+                                        onDrag={(e) => this.handleMove(e, `0-3`)}
+                                        onDragEnd={(e) => this.handleDragEnd(e, `0-3`)}
                                     />
-                                </td>
-                                <td key={4} id={`${row.id}-${4}`}>
-                                    <div className="actions">
-                                        <button
-                                            title={`Share ${row.name} from ${row.kernelDisplayName}`}
-                                            className="share"
-                                            aria-label={`Share ${row.name} from ${row.kernelDisplayName} kernel to`}
-                                            style={{ marginRight: 16 }}
-                                            onClick={() => {
-                                                this.state.shareValue(row);
-                                            }}
-                                        >
-                                            <svg
-
-                                                className="share-symbol"
-                                                aria-hidden={true}>
-                                                <use
-                                                    xlinkHref="#share-icon"
-                                                    aria-hidden="true">
-                                                </use>
-                                            </svg>
-
-                                        </button>
-                                    </div>
-                                </td>
+                                </th>
+                                <th
+                                    key={4}
+                                    id={`0-4`}
+                                    className="header"
+                                >
+                                    Actions
+                                </th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                            {rows.map((row: VariableGridRow, i) =>
+                                <tr key={i + 1}>
+                                    <td key={0} id={`${row.id}-${0}`} className="name-column">
+                                        <div
+                                            title={row.name}
+                                            className="data-cell long-text name-column-content">
+                                            {row.name}
+                                        </div>
+                                        <div
+                                            className='grip'
+                                            draggable={true}
+                                            onDragStart={(e) => this.handleStart(e, `0-0`)}
+                                            onDrag={(e) => this.handleMove(e, `0-0`)}
+                                            onDragEnd={(e) => this.handleDragEnd(e, `0-0`)}
+                                        />
+                                    </td>
+                                    <td key={1} id={`${row.id}-${1}`} className="value-column">
+                                        <div
+                                            title={row.value}
+                                            className="data-cell long-text value-column-content">
+                                            {row.value}
+                                        </div>
+                                        <div
+                                            className='grip'
+                                            draggable={true}
+                                            onDragStart={(e) => this.handleStart(e, `0-1`)}
+                                            onDrag={(e) => this.handleMove(e, `0-1`)}
+                                            onDragEnd={(e) => this.handleDragEnd(e, `0-1`)}
+                                        />
+                                    </td>
+                                    <td key={2} id={`${row.id}-${2}`} className="type-column">
+                                        <div
+                                            title={row.typeName}
+                                            className="data-cell long-text type-column-content">
+                                            {row.typeName}
+                                        </div>
+                                        <div
+                                            className='grip'
+                                            draggable={true}
+                                            onDragStart={(e) => this.handleStart(e, `0-2`)}
+                                            onDrag={(e) => this.handleMove(e, `0-2`)}
+                                            onDragEnd={(e) => this.handleDragEnd(e, `0-2`)}
+                                        />
+                                    </td>
+                                    <td key={3} id={`${row.id}-${3}`} className="kernel-column">
+                                        <div
+                                            title={row.kernelDisplayName}
+                                            className="data-cell long-text kernel-column-content">
+                                            {row.kernelDisplayName}
+                                        </div>
+                                        <div
+                                            className='grip'
+                                            draggable={true}
+                                            onDragStart={(e) => this.handleStart(e, `0-3`)}
+                                            onDrag={(e) => this.handleMove(e, `0-3`)}
+                                            onDragEnd={(e) => this.handleDragEnd(e, `0-3`)}
+                                        />
+                                    </td>
+                                    <td key={4} id={`${row.id}-${4}`} className="actions-column">
+                                        <div className="actions">
+                                            <button
+                                                title={`Share ${row.name} from ${row.kernelDisplayName}`}
+                                                className="share"
+                                                aria-label={`Share ${row.name} from ${row.kernelDisplayName} kernel to`}
+                                                style={{ marginRight: 16 }}
+                                                onClick={() => {
+                                                    this.state.shareValue(row);
+                                                }}
+                                            >
+                                                <svg
+
+                                                    className="share-symbol"
+                                                    aria-hidden={true}>
+                                                    <use
+                                                        xlinkHref="#share-icon"
+                                                        aria-hidden="true">
+                                                    </use>
+                                                </svg>
+
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     }
-
-
 }

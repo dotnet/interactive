@@ -19,13 +19,13 @@ const data = [
     {
         kernelDisplayName: "csharp - display",
         link: "",
-        name: "b",
-        value: '"123"',
+        name: "bergtaergradadfae asefasfasdf adfadsf asdf asdf asdf asdf asdf asdf a fadf ",
+        value: '"123 lllllllllllllllllllllllllllllllllllllllooooooonnnnn  gg wer ewr wer wer wer wer we sdfgsdfgsfgsdfgsdfg sfg sgsdfg sdfg sdfg sdfg sdfg s fgsdfg g assdfa sdfa sdfadf ad fadf asdf adf"',
         kernelName: "csharp",
         typeName: "System.String"
     },
     {
-        kernelDisplayName: "csharp - display",
+        kernelDisplayName: "csharp - display  wer wer wer wer qwe354t6 wsert w54tsergsrgb zsxbtygh sbxzr",
         link: "",
         name: "c",
         value: '"123"',
