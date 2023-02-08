@@ -4,14 +4,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive;
 
+[TypeFormatterSource(typeof(MessageDiagnosticsFormatterSource))]
 public abstract class RoutingSlip
 {
     private readonly List<Entry> _entries = new();
-
-    private protected ICollection<Entry> Entries => _entries;
+    internal ICollection<Entry> Entries => _entries;
 
     public abstract void Stamp(Uri uri);
 
@@ -62,7 +63,25 @@ public abstract class RoutingSlip
         return false;
     }
 
-    public bool StartsWith(RoutingSlip other) => StartsWith(other._entries);
+    public bool StartsWith(RoutingSlip other)
+    {
+        if (other._entries.Count > 0 && other._entries.Count <= _entries.Count)
+        {
+            for (int i = 0; i < other._entries.Count; i++)
+            {
+                if (_entries[i].AbsoluteUriWithQuery != other._entries[i].AbsoluteUriWithQuery)
+                {
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     public void ContinueWith(RoutingSlip other)
     {
@@ -88,32 +107,9 @@ public abstract class RoutingSlip
         }
     }
 
-    private protected bool Contains(Entry entry)
+    private bool Contains(Entry entry)
     {
         return _entries.Any(e => e.AbsoluteUriWithQuery == entry.AbsoluteUriWithQuery);
-    }
-
-    private protected bool StartsWith(List<Entry> entries)
-    {
-        var startsWith = true;
-
-        if (entries.Count > 0 && entries.Count <= _entries.Count)
-        {
-            for (int i = 0; i < entries.Count; i++)
-            {
-                if (_entries[i].AbsoluteUriWithQuery != entries[i].AbsoluteUriWithQuery)
-                {
-                    startsWith = false;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            startsWith = false;
-        }
-
-        return startsWith;
     }
 
     protected static string GetAbsoluteUriWithoutQuery(Uri uri)
@@ -126,7 +122,7 @@ public abstract class RoutingSlip
         return absoluteUri;
     }
 
-    private protected class Entry
+    internal class Entry
     {
         public Entry(string absoluteUriWithoutQuery, string tag = null)
         {
@@ -155,6 +151,6 @@ public abstract class RoutingSlip
 
         public string AbsoluteUriWithQuery { get; }
 
-        public override string ToString() => AbsoluteUriWithQuery;
+        public override string ToString() => $"{AbsoluteUriWithoutQuery} ({Tag})" ;
     }
 }

@@ -91,14 +91,14 @@ Here are some examples to illustrate how formatter selection works.
 
 * If you register `List<>` and `List<int>` formatters, the `List<int>` formatter is preferred for objects of type `List<int>`.
 
-* If you register a confusing, conflicting mess of overlapping formatters incrementally, you can reset them by calling `Formatter.Clear()` or by restarting the kernel.
+* If you register a confusing, conflicting mess of overlapping formatters incrementally, you can reset them by calling `Formatter.ResetToDefault()` or by restarting the kernel.
 
 * If you register `text/plain` as the preferred MIME type for `object` then it is used as the MIME type for everything (and likewise any other MIME type).
 
 
 ## Default Formatters
 
-See [`DefaultHtmlFormatterSet.cs`](https://github.com/dotnet/interactive/blob/main/src/Microsoft.DotNet.Interactive.Formatting/DefaultHtmlFormatterSet.cs), [`DefaultPlainTextFormatterSet.cs`](https://github.com/dotnet/interactive/blob/main/src/Microsoft.DotNet.Interactive.Formatting/DefaultJsonFormatterSet.cs) and [`DefaultJsonFormatterSet.cs`](https://github.com/dotnet/interactive/blob/main/src/Microsoft.DotNet.Interactive.Formatting/DefaultJsonFormatterSet.cs) among others.
+See [`HtmlFormatter.cs`](https://github.com/dotnet/interactive/blob/main/src/Microsoft.DotNet.Interactive.Formatting/HtmlFormatter.cs), [`PlainTextFormatter.cs`](https://github.com/dotnet/interactive/blob/main/src/Microsoft.DotNet.Interactive.Formatting/PlainTextFormatter.cs) and [`JsonFormatterSet.cs`](https://github.com/dotnet/interactive/blob/main/src/Microsoft.DotNet.Interactive.Formatting/JsonFormatter.cs) among others.
 
 ## User Configuration of Default Formatters
 

@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -36,7 +37,7 @@ public class SetMagicCommandTests
 
 
         await composite.SendAsync(new SubmitCode(@"
-#!set --name x --from-value @input:input-please
+#!set --name x --value @input:input-please
 1+3"));
         var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
 
@@ -61,7 +62,7 @@ public class SetMagicCommandTests
         await fsharpKernel.SendAsync(new SubmitCode("let y = 456"));
 
         await composite.SendAsync(new SubmitCode($@"
-#!set --name x --from-value @{fsharpKernel.Name}:y
+#!set --name x --value @{fsharpKernel.Name}:y
 1+3", targetKernelName: csharpKernel.Name));
 
         var (succeeded, valueProduced) = await csharpKernel.TryRequestValueAsync("x");
@@ -87,7 +88,7 @@ public class SetMagicCommandTests
         await fsharpKernel.SendAsync(new SubmitCode("let y = 456"));
 
         await composite.SendAsync(new SubmitCode($@"
-#!set --name x --from-value @{fsharpKernel.Name}:y --mime-type text/plain
+#!set --name x --value @{fsharpKernel.Name}:y --mime-type text/plain
 1+3", targetKernelName: csharpKernel.Name));
 
         var (succeeded, valueProduced) = await csharpKernel.TryRequestValueAsync("x");
@@ -107,10 +108,9 @@ public class SetMagicCommandTests
         var results = await kernel.SendAsync(new SubmitCode(@"
 #!set --name x
 1+3"));
-        var events = results.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<CommandFailed>()
-            .Which.Message.Should().Be("Option '--from-value' is required.");
+        results.Events.Should().ContainSingle<CommandFailed>()
+               .Which.Message.Should().Be("Option '--value' is required.");
     }
 
     private static Kernel CreateKernel(Language language)

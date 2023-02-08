@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.Linq;
@@ -218,15 +219,13 @@ public partial class CompletionTests
 
             var result = await compositeKernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Should()
-                .ContainSingle(e => e.DisplayText == commandName);
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Should()
+                  .ContainSingle(e => e.DisplayText == commandName);
         }
 
         [Theory]
@@ -281,16 +280,14 @@ public partial class CompletionTests
 
             var result = await kernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Select(i => i.Documentation)
-                .Should()
-                .NotContain(i => i.Contains(exeName));
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Select(i => i.Documentation)
+                  .Should()
+                  .NotContain(i => i.Contains(exeName));
         }
 
         [Fact]
@@ -302,16 +299,14 @@ public partial class CompletionTests
 
             var result = await kernel.SendAsync(new RequestCompletions(shareFrom, new LinePosition(0, shareFrom.Length)));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Select(i => i.DisplayText)
-                .Should()
-                .Contain(new[] { "fsharp", "pwsh" });
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Select(i => i.DisplayText)
+                  .Should()
+                  .Contain(new[] { "fsharp", "pwsh" });
         }
 
         [Fact]
@@ -332,16 +327,14 @@ public partial class CompletionTests
                     new LinePosition(0, shareFrom.Length),
                     targetKernelName: "fsharp"));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Select(i => i.DisplayText)
-                .Should()
-                .Contain(variableName);
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Select(i => i.DisplayText)
+                  .Should()
+                  .Contain(variableName);
         }
     }
 }

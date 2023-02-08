@@ -104,7 +104,7 @@ public class VariableSharingTests : IDisposable
 
         var results = await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead} | Out-Display -MimeType text/plain");
 
-        results.KernelEvents.ToSubscribedList().Should()
+        results.Events.Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which
             .FormattedValues
@@ -223,9 +223,7 @@ public class VariableSharingTests : IDisposable
 #!share --from csharp csharpVariable");
         var result = await compositeKernel.SendAsync(submitCode);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         remoteCommands.Should()
             .ContainSingle<SendValue>()
@@ -250,8 +248,7 @@ public class VariableSharingTests : IDisposable
 
         var result = await compositeKernel.SendAsync(new RequestKernelInfo("javascript"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         var submitCode = new SubmitCode($@"
 #!csharp
@@ -294,9 +291,7 @@ public class VariableSharingTests : IDisposable
 ");
         var result = await compositeKernel.SendAsync(submitCode);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         var (success, valueProduced) = await valueKernel.TryRequestValueAsync(valueName);
 

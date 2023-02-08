@@ -4,19 +4,23 @@
       "path": ".."
     },
     {
-      "path": "../src/dotnet-interactive-npm"
+      "path": "../src/polyglot-notebooks-browser"
+    },
+    {
+      "path": "../src/polyglot-notebooks-ui-components"
+    },
+    {
+      "path": "../src/polyglot-notebooks"
     },
     {
       "name": "VS Code - Stable",
-      "path": "../src/dotnet-interactive-vscode/stable"
+      "path": "../src/polyglot-notebooks-vscode"
     },
     {
       "name": "VS Code - Insiders",
-      "path": "../src/dotnet-interactive-vscode/insiders"
-    },
-    {
-      "path": "../src/Microsoft.DotNet.Interactive.Js"
+      "path": "../src/polyglot-notebooks-vscode-insiders"
     }
+  
   ],
   "settings": {}
 }

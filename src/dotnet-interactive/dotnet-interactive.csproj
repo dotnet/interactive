@@ -118,7 +118,7 @@
   </Target>
 
   <PropertyGroup>
-    <JsApiRoot>$(MSBuildThisFileDirectory)/../microsoft-dotnet-interactive-browser/</JsApiRoot>
+    <JsApiRoot>$(MSBuildThisFileDirectory)/../polyglot-notebooks-browser/</JsApiRoot>
   </PropertyGroup>
 
   <ItemGroup>

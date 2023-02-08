@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
@@ -33,8 +34,7 @@ public class SQLiteConnectionTests
         var result = await kernel.SubmitCodeAsync(
             $"#!connect sqlite --kernel-name mydb \"{connectionString}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -43,22 +43,20 @@ public class SQLiteConnectionTests
 SELECT * FROM fruit
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<CommandFailed>()
-            .Which
-            .Message
-            .Should()
-            .Be("SQL statements cannot be executed in this kernel.");
+        result.Events.Should()
+              .ContainSingle<CommandFailed>()
+              .Which
+              .Message
+              .Should()
+              .Be("SQL statements cannot be executed in this kernel.");
         
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.Value.Contains("#!sql-mydb") &&
-                                v.MimeType == "text/html");
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.Value.Contains("#!sql-mydb") &&
+                                  v.MimeType == "text/html");
     }
 
     [Fact]
@@ -78,8 +76,7 @@ SELECT * FROM fruit
         var result = await kernel.SubmitCodeAsync(
             $"#!connect sqlite --kernel-name mydb  \"{connectionString}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -88,16 +85,14 @@ SELECT * FROM fruit
 SELECT * FROM fruit
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
     }
 
     internal static IDisposable CreateInMemorySQLiteDb(out string connectionString)

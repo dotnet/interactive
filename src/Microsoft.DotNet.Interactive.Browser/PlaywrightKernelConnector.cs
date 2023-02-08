@@ -45,7 +45,7 @@ public class PlaywrightKernelConnector
 
             string jsSource;
 
-            var resourceName = "dotnet-interactive.js";
+            var resourceName = "polyglot-notebooks.js";
             var type = typeof(PlaywrightKernelConnector);
             using (var stream = type.Assembly.GetManifestResourceStream($"{type.Namespace}.{resourceName}"))
             using (var reader = new StreamReader(stream ?? throw new InvalidOperationException($"Resource \"{resourceName}\" not found"), Encoding.UTF8))
@@ -62,7 +62,7 @@ public class PlaywrightKernelConnector
 
             await page.EvaluateAsync(jsSource);
 
-            await page.EvaluateAsync($@"dotnetInteractive.setup({{hostName : ""browser"", enableLogger: {enableLog.ToString().ToLowerInvariant()}}});");
+            await page.EvaluateAsync($@"polyglotNotebooks.setup({{hostName : ""browser"", enableLogger: {enableLog.ToString().ToLowerInvariant()}}});");
 
             playwrightDisposable.Disposable = Disposable.Create(() => { playwright.Dispose(); });
 

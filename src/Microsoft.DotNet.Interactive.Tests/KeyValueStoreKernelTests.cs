@@ -30,14 +30,12 @@ public class KeyValueStoreKernelTests
 {storedValue}
 ");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<CommandFailed>()
-            .Which
-            .Message
-            .Should()
-            .Be("Option '--name' is required.");
+        result.Events.Should()
+              .ContainSingle<CommandFailed>()
+              .Which
+              .Message
+              .Should()
+              .Be("Option '--name' is required.");
     }
 
     [Fact]
@@ -77,15 +75,95 @@ public class KeyValueStoreKernelTests
 {storedValue}
 ");
 
-        using var events = result.KernelEvents.ToSubscribedList();
+        result.Events
+              .Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.MimeType == "text/test-stuff" &&
+                                  v.Value == storedValue);
+    }
 
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.MimeType == "text/test-stuff" &&
-                                v.Value == storedValue);
+    [Fact]
+    public async Task When_mime_type_is_specified_then_it_retains_the_specified_mime_type()
+    {
+        using var kernel = CreateKernel();
+
+        var storedValue = "1,2,3";
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name hello --mime-type text/test-stuff
+{storedValue}
+");
+
+        var result = await kernel.SendAsync(new RequestValue("hello", targetKernelName:"value"));
+
+        result.Events
+              .Should()
+              .ContainSingle<ValueProduced>()
+              .Which
+              .FormattedValue
+              .MimeType
+              .Should()
+              .Be("text/test-stuff");
+    }
+
+    [Fact]
+    public async Task requestValueInfos_uses_mimetypes_as_type_names()
+    {
+        using var kernel = CreateKernel();
+
+        var storedValue = "1,2,3";
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name a --mime-type text/plain
+{storedValue}
+");
+
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name b --mime-type application/json
+{storedValue}
+");
+
+        var result = await kernel.SendAsync(new RequestValueInfos( targetKernelName: "value"));
+
+        var valueInfosProduced = result.Events.Should()
+                                       .ContainSingle<ValueInfosProduced>()
+                                       .Which;
+
+        valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "a" && v.TypeName == "text/plain");
+
+
+        valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "b" && v.TypeName == "application/json");
+    }
+
+    [Fact]
+    public async Task When_mime_type_is_not_specified_then_it_default_to_text_plain ()
+    {
+        using var kernel = CreateKernel();
+
+        var storedValue = "1,2,3";
+
+        await kernel.SubmitCodeAsync(
+            @$"
+#!value --name hello
+{storedValue}
+");
+
+        var result = await kernel.SendAsync(new RequestValue("hello", targetKernelName: "value"));
+
+        result.Events.Should()
+              .ContainSingle<ValueProduced>()
+              .Which
+              .FormattedValue
+              .MimeType
+              .Should()
+              .Be("text/plain");
     }
 
     [Theory]
@@ -166,8 +244,7 @@ public class KeyValueStoreKernelTests
 
         var result = await kernel.SubmitCodeAsync("#!value --name hi --from-url http://bing.com --from-file filename.txt");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which
@@ -183,8 +260,7 @@ public class KeyValueStoreKernelTests
 
         var result = await kernel.SubmitCodeAsync("#!value --name hi --from-file filename.txt --from-value x");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which
@@ -200,8 +276,7 @@ public class KeyValueStoreKernelTests
 
         var result = await kernel.SubmitCodeAsync("#!value --name hi --from-url http://bing.com --from-value x");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which
@@ -220,9 +295,7 @@ public class KeyValueStoreKernelTests
 #!share --from fsharp f
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         var valueKernel = (KeyValueStoreKernel)kernel.FindKernelByName("value");
 
@@ -244,8 +317,7 @@ public class KeyValueStoreKernelTests
 #!value --name hi --from-file {file}
 // some content");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which
@@ -264,7 +336,7 @@ public class KeyValueStoreKernelTests
 #!value --name hi --from-url {url}
 // some content");
 
-        result.KernelEvents.ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which
@@ -291,11 +363,9 @@ public class KeyValueStoreKernelTests
 
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
         using var _ = new AssertionScope();
 
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         var valueKernel = kernel.ChildKernels.OfType<KeyValueStoreKernel>().Single();
 
@@ -310,11 +380,9 @@ public class KeyValueStoreKernelTests
         using var kernel = CreateKernel();
 
         var url = $"http://example.com/{Guid.NewGuid():N}";
-        var result = await kernel.SubmitCodeAsync($@"
+        await kernel.SubmitCodeAsync($@"
 #!value --name hi --from-url {url}
 // some content");
-
-        result.KernelEvents.ToSubscribedList();
 
         var valueKernel = kernel.FindKernelByName("value");
 
@@ -340,8 +408,6 @@ public class KeyValueStoreKernelTests
 #!value --name hi --from-url {url}
 // some content");
 
-        result.KernelEvents.ToSubscribedList();
-
         var valueKernel = kernel.FindKernelByName("value");
 
         var (success, valueProduced) = await valueKernel.TryRequestValueAsync("hi");
@@ -364,15 +430,13 @@ public class KeyValueStoreKernelTests
 
         var result = await kernel.SendAsync(new RequestCompletions(markupCode.Code, new LinePosition(0, markupCode.Span.End)));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<CompletionsProduced>()
-            .Which
-            .Completions
-            .Select(c => c.InsertText)
-            .Should()
-            .Contain("--name", "--from-url", "--from-file", "--mime-type");
+        result.Events.Should()
+              .ContainSingle<CompletionsProduced>()
+              .Which
+              .Completions
+              .Select(c => c.InsertText)
+              .Should()
+              .Contain("--name", "--from-url", "--from-file", "--mime-type");
     }
 
     private static CompositeKernel CreateKernel() =>

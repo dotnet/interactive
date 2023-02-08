@@ -33,8 +33,8 @@ public static class TopLevelMethods
         }
 
         var inputReq = new InputRequest(prompt, password: true);
-        var password1 = context.JupyterMessageSender.Send(inputReq);
-        var result = new PasswordString(password1);
+        var password = context.JupyterMessageSender.Send(inputReq);
+        var result = new PasswordString(password);
         return result;
     }
 }

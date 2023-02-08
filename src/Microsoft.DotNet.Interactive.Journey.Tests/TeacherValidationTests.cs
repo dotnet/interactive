@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -69,9 +70,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
 
         var result = await kernel.SubmitCodeAsync("1");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<DisplayedValueProduced>(
+        result.Events.Should().ContainSingle<DisplayedValueProduced>(
             e => e.FormattedValues.Single(v => v.MimeType == "text/html")
                 .Value.ContainsAll(
                     "Challenge func rule",
@@ -86,9 +85,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
 
         var result = await kernel.SubmitCodeAsync("1");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<DisplayedValueProduced>(
+        result.Events.Should().ContainSingle<DisplayedValueProduced>(
             e => e.FormattedValues.Single(v => v.MimeType == "text/html")
                 .Value.ContainsAll(
                     "Challenge func not done"));
@@ -102,9 +99,8 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
         await kernel.SubmitCodeAsync("CalculateTriangleArea = (double x, double y) => 0.5 * x * y;");
 
         var result = await kernel.SubmitCodeAsync("Math.Sqrt(pi)");
-        using var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<DisplayedValueProduced>(
+        result.Events.Should().ContainSingle<DisplayedValueProduced>(
             e => e.FormattedValues.Single(v => v.MimeType == "text/html")
                 .Value.ContainsAll(
                     "Challenge math rule",
@@ -120,8 +116,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
 
         var result = await kernel.SubmitCodeAsync("Math.Sqrt(pi)");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-        events.Should().ContainSingle<DisplayedValueProduced>(
+        result.Events.Should().ContainSingle<DisplayedValueProduced>(
             e => e.FormattedValues.Single(v => v.MimeType == "text/html")
                 .Value.ContainsAll(
                     "Challenge math message"));

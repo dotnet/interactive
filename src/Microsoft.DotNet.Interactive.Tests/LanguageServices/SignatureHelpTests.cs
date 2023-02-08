@@ -72,8 +72,7 @@ public class SignatureHelpTests : LanguageKernelTestBase
         var commandResult = await SendSignatureHelpRequest(kernel, code, line, character);
 
         commandResult
-            .KernelEvents
-            .ToSubscribedList()
+            .Events
             .Should()
             .ContainSingle<SignatureHelpProduced>()
             .Which
@@ -89,9 +88,9 @@ public class SignatureHelpTests : LanguageKernelTestBase
         using var kernel = CreateKernel(language);
 
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
-        await kernel.SendAsync(new RequestSignatureHelp(code, new LinePosition(line, character)));
+        var result = await kernel.SendAsync(new RequestSignatureHelp(code, new LinePosition(line, character)));
 
-        KernelEvents
+        result.Events
             .Should()
             .ContainSingle<SignatureHelpProduced>()
             .Which

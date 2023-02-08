@@ -27,3 +27,4 @@ public class LogDirectiveTests
                 e => e.Message == "Logging enabled");
     }
 }
+
