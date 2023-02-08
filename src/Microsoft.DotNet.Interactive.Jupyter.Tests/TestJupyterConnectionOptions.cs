@@ -79,7 +79,7 @@ internal class MessagePlayback : IMessageTracker
     public MessagePlayback(IReadOnlyCollection<Message> messages)
     {
         _playbackMessages.AddRange(messages);
-        Task.Run(() => ProcessRequestsAsync());
+        var requestProcessing = Task.Run(() => ProcessRequestsAsync());
     }
 
     public Task SendAsync(Message message)
