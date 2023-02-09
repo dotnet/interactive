@@ -16,7 +16,7 @@ function Build-NpmPackage() {
     # pack
     Write-Host "Packing package"
     npm pack
-    Copy-Item -Path (Join-Path (Get-Location) "microsoft-dotnet-interactive-$packageVersionNumber.tgz") -Destination $outDir
+    Copy-Item -Path (Join-Path (Get-Location) "microsoft-polyglot-notebooks-$packageVersionNumber.tgz") -Destination $outDir
 }
 
 try {

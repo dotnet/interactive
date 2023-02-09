@@ -50,27 +50,24 @@ public class MsSqlConnectionTests : IDisposable
         var result = await kernel.SubmitCodeAsync(
             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
-            .Should()
-            .NotContainErrors();
+        result.Events
+              .Should()
+              .NotContainErrors();
 
         result = await kernel.SubmitCodeAsync(@"
 #!sql-adventureworks
 SELECT TOP 100 * FROM Person.Person
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should()
+              .NotContainErrors()
+              .And
+              .ContainSingle<DisplayedValueProduced>(e =>
+                                                         e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType));
 
-        events.Should()
-            .NotContainErrors()
-            .And
-            .ContainSingle<DisplayedValueProduced>(e =>
-                e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType));
-
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>(e =>
-                e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>(e =>
+                                                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
     }
 
     [MsSqlFact]
@@ -81,8 +78,7 @@ SELECT TOP 100 * FROM Person.Person
         var result = await kernel.SubmitCodeAsync(
             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -91,24 +87,23 @@ SELECT TOP 100 * FROM Person.Person
 select top 10 AddressLine1, AddressLine2 from Person.Address
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
         using var _ = new AssertionScope();
 
-        events.ShouldDisplayTabularDataResourceWhich()
-            .Schema
-            .Fields
-            .Should()
-            .ContainSingle(f => f.Name == "AddressLine2")
-            .Which
-            .Type
-            .Should()
-            .Be(TableSchemaFieldType.String);
+        result.Events.ShouldDisplayTabularDataResourceWhich()
+              .Schema
+              .Fields
+              .Should()
+              .ContainSingle(f => f.Name == "AddressLine2")
+              .Which
+              .Type
+              .Should()
+              .Be(TableSchemaFieldType.String);
 
-        events.ShouldDisplayTabularDataResourceWhich()
-            .Data
-            .SelectMany(row => row.Where(r => r.Key == "AddressLine2").Select(r => r.Value))
-            .Should()
-            .AllBeEquivalentTo((object)null);
+        result.Events.ShouldDisplayTabularDataResourceWhich()
+              .Data
+              .SelectMany(row => row.Where(r => r.Key == "AddressLine2").Select(r => r.Value))
+              .Should()
+              .AllBeEquivalentTo((object)null);
     }
 
     [MsSqlFact]
@@ -119,29 +114,27 @@ select top 10 AddressLine1, AddressLine2 from Person.Address
         var result = await kernel.SubmitCodeAsync(
             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
-            .Should()
-            .NotContainErrors();
+        result.Events
+              .Should()
+              .NotContainErrors();
 
         result = await kernel.SubmitCodeAsync(@"
 #!sql
 SELECT TOP 100 * FROM Person.Person
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .NotContainErrors()
-            .And
-            .ContainSingle<DisplayedValueProduced>(e =>
-                e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
-            .Which.FormattedValues.Single(f => f.MimeType == HtmlFormatter.MimeType)
-            .Value
-            .Should()
-            .Contain("#!sql-adventureworks")
-            .And
-            .Contain(" SELECT TOP * FROM");
+        result.Events
+              .Should()
+              .NotContainErrors()
+              .And
+              .ContainSingle<DisplayedValueProduced>(e =>
+                                                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
+              .Which.FormattedValues.Single(f => f.MimeType == HtmlFormatter.MimeType)
+              .Value
+              .Should()
+              .Contain("#!sql-adventureworks")
+              .And
+              .Contain(" SELECT TOP * FROM");
 
     }
 
@@ -154,22 +147,19 @@ SELECT TOP 100 * FROM Person.Person
         var result = await kernel.SubmitCodeAsync(
             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\" --create-dbcontext");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         result = await kernel.SubmitCodeAsync("adventureworks.AddressTypes.Count()");
 
-        events = result.KernelEvents.ToSubscribedList();
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
-        events.Should()
-            .ContainSingle<ReturnValueProduced>()
-            .Which
-            .Value
-            .As<int>()
-            .Should()
-            .Be(6);
+        result.Events.Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .Value
+              .As<int>()
+              .Should()
+              .Be(6);
     }
 
     [MsSqlFact]
@@ -180,27 +170,24 @@ SELECT TOP 100 * FROM Person.Person
         var result = await kernel.SubmitCodeAsync(
             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
-            .Should()
-            .NotContainErrors();
+        result.Events
+              .Should()
+              .NotContainErrors();
 
         result = await kernel.SubmitCodeAsync($@"
 #!sql-adventureworks
 select * from sys.databases
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.ShouldDisplayTabularDataResourceWhich()
-            .Schema
-            .Fields
-            .Should()
-            .ContainSingle(f => f.Name == "database_id")
-            .Which
-            .Type
-            .Should()
-            .Be(TableSchemaFieldType.Integer);
+        result.Events.ShouldDisplayTabularDataResourceWhich()
+              .Schema
+              .Fields
+              .Should()
+              .ContainSingle(f => f.Name == "database_id")
+              .Which
+              .Type
+              .Should()
+              .Be(TableSchemaFieldType.Integer);
     }
 
     [MsSqlFact]
@@ -211,26 +198,23 @@ select * from sys.databases
         var result = await kernel.SubmitCodeAsync(
             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
-            .Should()
-            .NotContainErrors();
+        result.Events
+              .Should()
+              .NotContainErrors();
 
         result = await kernel.SubmitCodeAsync($@"
 #!sql-adventureworks
 select * from sys.databases
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>(fvp => fvp.Value is DataExplorer<TabularDataResource>)
-            .Which
-            .FormattedValues.Select(fv => fv.MimeType)
-            .Should()
-            .BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>(fvp => fvp.Value is DataExplorer<TabularDataResource>)
+              .Which
+              .FormattedValues.Select(fv => fv.MimeType)
+              .Should()
+              .BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
     }
 
     [MsSqlFact]
@@ -241,10 +225,9 @@ select * from sys.databases
         var result = await kernel.SubmitCodeAsync(
             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
-            .Should()
-            .NotContainErrors();
+        result.Events
+              .Should()
+              .NotContainErrors();
 
         result = await kernel.SubmitCodeAsync($@"
 #!sql-adventureworks
@@ -254,13 +237,12 @@ select * from dbo.EmptyTable;
 drop table dbo.EmptyTable;
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .NotContainErrors()
-            .And
-            .ContainSingle<DisplayedValueProduced>(e =>
-                e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType && f.Value.ToString().StartsWith("Info")));
+        result.Events
+              .Should()
+              .NotContainErrors()
+              .And
+              .ContainSingle<DisplayedValueProduced>(e =>
+                                                         e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType && f.Value.ToString().StartsWith("Info")));
     }
 
     [MsSqlFact]
@@ -278,23 +260,22 @@ select * from sys.databases
 ");
 
         // Use share to fetch result set
-        var csharpResults = await kernel.SubmitCodeAsync($@"
+        var result = await kernel.SubmitCodeAsync($@"
 #!csharp
 #!share --from sql-adventureworks my_data_result
 my_data_result");
 
         // Verify the variable loaded is of the correct type and has the expected number of result sets
-        var csharpEvents = csharpResults.KernelEvents.ToSubscribedList();
-        csharpEvents
-            .Should()
-            .ContainSingle<ReturnValueProduced>()
-            .Which
-            .Value
-            .Should()
-            .BeAssignableTo<IEnumerable<TabularDataResource>>()
-            .Which.Count()
-            .Should()
-            .Be(1);
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .Value
+              .Should()
+              .BeAssignableTo<IEnumerable<TabularDataResource>>()
+              .Which.Count()
+              .Should()
+              .Be(1);
     }
 
     [MsSqlFact]
@@ -305,9 +286,7 @@ my_data_result");
         var result = await kernel.SubmitCodeAsync(
             $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
 
-
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -315,14 +294,12 @@ my_data_result");
 
         result = await sqlKernel.SendAsync(new RequestValue("my_data_result"));
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<CommandFailed>()
-            .Which
-            .Message
-            .Should()
-            .Contain("Value 'my_data_result' not found in kernel sql-adventureworks");
+        result.Events.Should()
+              .ContainSingle<CommandFailed>()
+              .Which
+              .Message
+              .Should()
+              .Contain("Value 'my_data_result' not found in kernel sql-adventureworks");
     }
 
     [MsSqlFact]
@@ -341,23 +318,22 @@ select * from sys.databases
 ");
 
         // Use share to fetch result set
-        var csharpResults = await kernel.SubmitCodeAsync($@"
+        var result = await kernel.SubmitCodeAsync($@"
 #!csharp
 #!share --from sql-adventureworks my_data_result
 my_data_result");
 
         // Verify the variable loaded is of the correct type and has the expected number of result sets
-        var csharpEvents = csharpResults.KernelEvents.ToSubscribedList();
-        csharpEvents
-            .Should()
-            .ContainSingle<ReturnValueProduced>()
-            .Which
-            .Value
-            .Should()
-            .BeAssignableTo<IEnumerable<TabularDataResource>>()
-            .Which.Count()
-            .Should()
-            .Be(2);
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .Value
+              .Should()
+              .BeAssignableTo<IEnumerable<TabularDataResource>>()
+              .Which.Count()
+              .Should()
+              .Be(2);
     }
 
     public static readonly IEnumerable<object[]> SharedObjectVariables =
@@ -388,8 +364,7 @@ my_data_result");
         var result = await kernel.SubmitCodeAsync(
             $"#!connect mssql --kernel-name adventureworks \"{MsSqlFactAttribute.GetConnectionStringForTests()}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
@@ -402,9 +377,7 @@ select @testVar";
 
         result = await kernel.SendAsync(new SubmitCode(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var data = events.ShouldDisplayTabularDataResourceWhich();
+        var data = result.Events.ShouldDisplayTabularDataResourceWhich();
 
         if (changeType != null)
         {
@@ -424,12 +397,11 @@ select @testVar";
     {
         using var kernel = await CreateKernelAsync();
         var result = await kernel.SubmitCodeAsync(
-            $"#!connect mssql --kernel-name adventureworks \"{MsSqlFactAttribute.GetConnectionStringForTests()}\"");
+                         $"#!connect mssql --kernel-name adventureworks \"{MsSqlFactAttribute.GetConnectionStringForTests()}\"");
 
-        result.KernelEvents
-            .ToSubscribedList()
-            .Should()
-            .NotContainErrors();
+        result.Events
+              .Should()
+              .NotContainErrors();
 
         var csharpCode = "string x = \"Hello world!\";";
         await kernel.SendAsync(new SubmitCode(csharpCode));
@@ -445,14 +417,13 @@ select @x, @y";
 
         result = await kernel.SendAsync(new SubmitCode(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.ShouldDisplayTabularDataResourceWhich().Data
-            .Should()
-            .ContainSingle()
-            .Which
-            .Should()
-            .ContainValues(new object[] { "Hello world!", 123 });
+        result.Events
+              .ShouldDisplayTabularDataResourceWhich().Data
+              .Should()
+              .ContainSingle()
+              .Which
+              .Should()
+              .ContainValues(new object[] { "Hello world!", 123 });
     }
 
     [MsSqlFact]

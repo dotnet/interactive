@@ -248,15 +248,15 @@ internal partial class JupyterKernel
 
         var results = await Root.SendAsync(command, CancellationToken.None);
 
-        var failedEvent = await results.KernelEvents.OfType<CommandFailed>().FirstOrDefaultAsync();
+        var failedEvent = results.Events.OfType<CommandFailed>().FirstOrDefault();
         if (failedEvent is { })
         {
             context.Fail(context.Command, null, failedEvent.Message);
         }
 
-        var inputProduced = await results.KernelEvents
+        var inputProduced = results.Events
                                          .OfType<InputProduced>()
-                                         .FirstOrDefaultAsync();
+                                         .FirstOrDefault();
 
         return inputProduced?.Value;
     }

@@ -46,9 +46,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
 
         var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         receivedValue.Should().Be("123");
     }
@@ -62,9 +60,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
 
         var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @value-kernel:x", "csharp"));
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         receivedValue.Should().Be(valueX);
     }
@@ -74,11 +70,9 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
     {
         var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
         receivedValue.Should().BeNull();
 
-        events.Should()
+        result.Events.Should()
               .ContainSingle<CommandFailed>()
               .Which
               .Message
@@ -100,7 +94,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
         var code = "#!share @input:stuff";
         var result = await _kernel.SendAsync(new RequestCompletions(code, new LinePosition(0, code.Length)));
 
-        result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         inputWasRequested.Should().BeFalse();
     }

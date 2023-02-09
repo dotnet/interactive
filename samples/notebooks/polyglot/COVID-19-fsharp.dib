@@ -1,10 +1,12 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"name":"csharp","aliases":["c#","C#"],"languageName":"C#"},{"name":".NET","aliases":[]},{"name":"fsharp","aliases":["f#","F#"],"languageName":"F#"},{"name":"html","aliases":[],"languageName":"HTML"},{"name":"kql","aliases":[],"languageName":"KQL"},{"name":"mermaid","aliases":[],"languageName":"Mermaid"},{"name":"pwsh","aliases":["powershell"],"languageName":"PowerShell"},{"name":"sql","aliases":[],"languageName":"SQL"},{"name":"value","aliases":[]},{"name":"vscode","languageName":null,"aliases":["frontend"]}]}}
+
 #!markdown
 
 [this doc on github](https://github.com/dotnet/interactive/tree/main/samples/notebooks/polyglot)
 
 # Visualizing the Johns Hopkins COVID-19 time series data
-
-**This is a work in progress.** It doesn't work yet in [Binder](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab) because it relies on HTTP communication between the kernel and the Jupyter frontend.
 
 Also, due to travel restrictions, you should run this at home on isolated compute.
 
@@ -242,6 +244,7 @@ Yes, this is a contrived example, and we're planning to support true streaming d
 
 <div id="plotlyChartCovid"></div>
 
-#!js
+#!javascript
+
 #!share --from fsharp series
 plot("plotlyChartCovid",series);

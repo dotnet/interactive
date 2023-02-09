@@ -28,7 +28,7 @@ public class JupyterKernelTests : IDisposable
 
     // to re-record the tests for simulated playback with JuptyerTestData, set this to true
     private const bool RECORD_FOR_PLAYBACK = false;
-    
+
     public JupyterKernelTests(ITestOutputHelper output)
     {
         _output = output;
@@ -73,7 +73,7 @@ public class JupyterKernelTests : IDisposable
         var result = await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
 
-        var events = result.KernelEvents.ToSubscribedList();
+        var events = result.Events;
 
         events
             .Should()
@@ -89,6 +89,18 @@ public class JupyterKernelTests : IDisposable
             .Select(m => m.Content)
             .Cast<KernelInfoReply>()
             .First();
+
+        events
+            .Should()
+            .ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "testKernel")
+            .Which
+            .KernelInfo
+            .Should()
+            .BeEquivalentTo(new
+            {
+                LanguageName = kernelInfoReturned.LanguageInfo.Name,
+                LanguageVersion = kernelInfoReturned.LanguageInfo.Version
+            }, c => c.ExcludingMissingMembers());
 
         var testKernel = kernel.FindKernelByName("testKernel");
         Assert.NotNull(testKernel);
@@ -118,16 +130,16 @@ public class JupyterKernelTests : IDisposable
             .KernelInfo
             .SupportedKernelCommands
             .Contains(new KernelCommandInfo(nameof(SendValue)));
-        
+
         options.SaveState();
     }
 
     // note that R kernel returns display_data instead of execute_result
     [Theory]
-    [JupyterHttpTestData(KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData(KernelSpecName = "python3")]
-    [JupyterTestData(KernelSpecName = "python3")]
-    public async Task can_submit_code_and_get_return_value_produced(JupyterConnectionTestData connectionData)
+    [JupyterHttpTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3")]
+    [JupyterTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3")]
+    public async Task can_submit_code_and_get_return_value_produced(JupyterConnectionTestData connectionData, string codeToRun, string mimeType, string outputReturned)
     {
         var options = connectionData.GetConnectionOptions();
 
@@ -139,8 +151,8 @@ public class JupyterKernelTests : IDisposable
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
-        var result = await kernel.SubmitCodeAsync("#!testKernel\n1+1");
-        var events = result.KernelEvents.ToSubscribedList();
+        var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
+        var events = result.Events;
 
         events
             .Should()
@@ -155,31 +167,31 @@ public class JupyterKernelTests : IDisposable
             .Code
             .Trim()
             .Should()
-            .Be("1+1");
+            .Be(codeToRun);
 
         events.Should()
            .ContainSingle<ReturnValueProduced>()
            .Which
            .FormattedValues
             .Should()
-            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+            .ContainSingle(v => v.MimeType == mimeType)
             .Which
             .Value
             .Trim()
             .Should()
-            .Be("2");
+            .Be(outputReturned);
 
         options.SaveState();
     }
 
     [Theory]
-    [JupyterHttpTestData("from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3")]
-    [JupyterTestData("from IPython.display import display; display(2)", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3")]
-    [JupyterHttpTestData("1+1", PlainTextFormatter.MimeType, "[1] 2", KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("1+1", PlainTextFormatter.MimeType, "[1] 2", KernelSpecName = "ir")]
-    [JupyterTestData("1+1", PlainTextFormatter.MimeType, "[1] 2", KernelSpecName = "ir")]
-    public async Task can_submit_code_and_get_display_value_produced(JupyterConnectionTestData connectionData, string codeToRun, string mimeType, string outputReturned)
+    [JupyterHttpTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = "python3")]
+    [JupyterTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = "python3")]
+    [JupyterHttpTestData("1+1", new[] { "text/plain", "text/html", "text/latex", "text/markdown" }, new[] { "[1] 2", "2", "2", "2" }, KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("1+1", new[] { "text/plain", "text/html", "text/latex", "text/markdown" }, new[] { "[1] 2", "2", "2", "2" }, KernelSpecName = "ir")]
+    [JupyterTestData("1+1", new[] { "text/plain", "text/html", "text/latex", "text/markdown" }, new[] { "[1] 2", "2", "2", "2" }, KernelSpecName = "ir")]
+    public async Task can_submit_code_and_get_display_value_produced(JupyterConnectionTestData connectionData, string codeToRun, string[] mimeTypes, string[] valuesToExpect)
     {
         var options = connectionData.GetConnectionOptions();
 
@@ -192,7 +204,7 @@ public class JupyterKernelTests : IDisposable
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
-        var events = result.KernelEvents.ToSubscribedList();
+        var events = result.Events;
 
         events
             .Should()
@@ -210,17 +222,20 @@ public class JupyterKernelTests : IDisposable
             .Be(codeToRun);
 
 
-        events.Should()
+        for (int i = 0; i < mimeTypes.Length; i++)
+        {
+            events.Should()
            .ContainSingle<DisplayedValueProduced>()
            .Which
            .FormattedValues
             .Should()
-            .ContainSingle(v => v.MimeType == mimeType)
+            .ContainSingle(v => v.MimeType == mimeTypes[i])
             .Which
             .Value
             .Trim()
             .Should()
-            .Be(outputReturned);
+            .Be(valuesToExpect[i]);
+        }
 
         options.SaveState();
     }

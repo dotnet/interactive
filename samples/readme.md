@@ -8,6 +8,4 @@ This folder contains a number of samples that you can use to explore features of
 
 * [`extensions`](extensions/readme.md) contains sample projects that provide examples of how to create shareable .NET Interactive extensions and publish them using NuGet packages.
 
-* [`my binder`](my%20binder) contains a Dockerfile that can be used as a template for deploying your notebooks along with the .NET Interactive tool using the [Binder](https://mybinder.org/) service.
-
 * [`simple-fsharp-console`](simple-fsharp-console) demonstrates the most basic use of .NET Interactive: it is a console app, executing user's commands and printing the result.

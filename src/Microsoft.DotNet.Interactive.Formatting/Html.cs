@@ -185,7 +185,7 @@ public static class Html
         return tag;
     }
 
-    public static PocketView Table(
+    internal static PocketView Table(
         IReadOnlyList<IHtmlContent> headers,
         IReadOnlyList<IHtmlContent> rows) =>
         table(

@@ -1,14 +1,51 @@
 # CI and PR triggers
 trigger:
-- main
-- feature/*
-- hotfix/*
-- release/*
+  branches:
+    include:
+    - main
+    - feature/*
+    - hotfix/*
+    - release/*
+  paths:
+    include:
+    - '*'
+    exclude:
+    - '**/*.md'
+    - .config/*
+    - .devcontainer/*
+    - .github/*
+    - .vscode/*
+    - assets/*
+    - docs/*
+    - images/*
+    - .editorconfig
+    - .gitignore
+    - '*.txt'
+    - '*.github-issues'
+
 pr:
-- main
-- feature/*
-- hotfix/*
-- release/*
+  branches:
+    include:
+    - main
+    - feature/*
+    - hotfix/*
+    - release/*
+  paths:
+    include:
+    - '*'
+    exclude:
+    - '**/*.md'
+    - .config/*
+    - .devcontainer/*
+    - .github/*
+    - .vscode/*
+    - assets/*
+    - docs/*
+    - images/*
+    - .editorconfig
+    - .gitignore
+    - '*.txt'
+    - '*.github-issues'
 
 # Variables
 variables:
@@ -182,7 +219,7 @@ stages:
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/package/PackNpmPackage.ps1
             arguments: -packageVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\npm"
-            workingDirectory: "$(Build.SourcesDirectory)/src/microsoft-dotnet-interactive"
+            workingDirectory: "$(Build.SourcesDirectory)/src/polyglot-notebooks"
             pwsh: true
 
         - task: PublishBuildArtifacts@1
@@ -308,52 +345,6 @@ stages:
             searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
           condition: always()
 
-  - template: /eng/common/templates/jobs/jobs.yml
-    parameters:
-      enableMicrobuild: true
-      enableSbom: false
-      jobs:
-      - job: Dockerfile_Main
-        pool:
-          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore-Svc-Public
-            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
-          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore1ESPool-Svc-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
-        steps:
-        - checkout: self
-          clean: true
-        - task: Docker@2
-          displayName: Build main Dockerfile
-          continueOnError: true
-          inputs:
-            command: build
-            Dockerfile: "$(Build.SourcesDirectory)/Dockerfile"
-
-  - template: /eng/common/templates/jobs/jobs.yml
-    parameters:
-      enableMicrobuild: true
-      enableSbom: false
-      jobs:
-      - job: Dockerfile_Binder_Dependency
-        pool:
-          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore-Svc-Public
-            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
-          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCore1ESPool-Svc-Internal
-            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
-        steps:
-        - checkout: self
-          clean: true
-        - task: Docker@2
-          displayName: Build Binder dependency Dockerfile
-          continueOnError: true
-          inputs:
-            command: build
-            Dockerfile: "$(Build.SourcesDirectory)/samples/my binder/Dockerfile"
-
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    Post Build                                                       #
 #---------------------------------------------------------------------------------------------------------------------#
@@ -389,7 +380,7 @@ stages:
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
   - template: eng/publish/publish-npm.yml
     parameters:
-      packageName: microsoft-dotnet-interactive-*.tgz
+      packageName: microsoft-polyglot-notebooks-*.tgz
       registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
       registryUser: dnceng
       registryEmail: dnceng@microsoft.com

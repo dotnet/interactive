@@ -108,7 +108,7 @@ To get started, you'll need:
 
 2. Follow the regular build instructions as given above.
 
-3. Open the `<REPO-ROOT>/src/dotnet-interactive-vscode-insiders` directory in Visual Studio Code Insiders. (From your terminal, you can run `code-insiders <REPO-ROOT>/src/dotnet-interactive-vscode-insiders`.)
+3. Open the `<REPO-ROOT>/src/polyglot-notebooks-vscode-insiders` directory in Visual Studio Code Insiders. (From your terminal, you can run `code-insiders <REPO-ROOT>/src/polyglot-notebooks-vscode-insiders`.)
 
 4. Make the desired source code changes.
 

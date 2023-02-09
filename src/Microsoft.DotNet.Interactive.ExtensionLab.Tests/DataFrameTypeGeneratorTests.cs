@@ -55,8 +55,7 @@ public class DataFrameTypeGeneratorTests
         var events = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(0, position.Value)));
 
         events
-            .KernelEvents
-            .ToSubscribedList()
+            .Events
             .Should()
             .ContainSingle<CompletionsProduced>()
             .Which
@@ -94,13 +93,11 @@ using Microsoft.Data.Analysis;
 
         var result = await kernel.SubmitCodeAsync("#!linqify frame --show-code");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which
@@ -133,7 +130,7 @@ using Microsoft.Data.Analysis;
         var code = "#!linqify ";
         var result = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(0, code.Length)));
 
-        result.KernelEvents.ToSubscribedList().Should().ContainSingle<CompletionsProduced>()
+        result.Events.Should().ContainSingle<CompletionsProduced>()
             .Which
             .Completions
             .Select(c => c.DisplayText)

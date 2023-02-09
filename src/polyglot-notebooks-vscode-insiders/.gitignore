@@ -1,0 +1,6 @@
+out/
+resources/activation.js
+resources/variableGrid.js
+resources/index.variable-grid.html
+resources/variable-grid.bundle.js
+dotnet-interactive-vscode-*.vsix

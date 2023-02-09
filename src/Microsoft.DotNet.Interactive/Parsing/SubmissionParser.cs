@@ -445,10 +445,7 @@ public class SubmissionParser
 
             var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 
-            var events = result.KernelEvents.ToEnumerable().ToArray();
-            var valueProduced = events.OfType<InputProduced>().SingleOrDefault();
-
-            if (valueProduced is { })
+            if (result.Events.OfType<InputProduced>().SingleOrDefault() is { } valueProduced)
             {
                 replacementTokens = new[] { valueProduced.Value };
             }
@@ -459,8 +456,7 @@ public class SubmissionParser
         {
             var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, mimeType: "application/json" , targetKernelName: targetKernelName)).GetAwaiter().GetResult();
 
-            var events = result.KernelEvents.ToEnumerable().ToArray();
-            var valueProduced = events.OfType<ValueProduced>().SingleOrDefault();
+            var valueProduced = result.Events.OfType<ValueProduced>().SingleOrDefault();
 
             if (valueProduced is { })
             {
@@ -490,7 +486,7 @@ public class SubmissionParser
                 }
                 else
                 {
-                    errorMessage = events.OfType<CommandFailed>().Last().Message;
+                    errorMessage = result.Events.OfType<CommandFailed>().Last().Message;
 
                     return false;
                 }
@@ -508,7 +504,7 @@ public class SubmissionParser
             }
             else
             {
-                errorMessage = events.OfType<CommandFailed>().Last().Message;
+                errorMessage = result.Events.OfType<CommandFailed>().Last().Message;
                 return false;
             }
         }

@@ -56,7 +56,7 @@ public static class PlainTextFormatter
         if (Formatter<T>.TypeIsValueTuple || 
             Formatter<T>.TypeIsTuple)
         {
-            return FormatAnyTuple;
+            return FormatTuple;
         }
 
         if (typeof(T).IsEnum)
@@ -118,7 +118,7 @@ public static class PlainTextFormatter
             return true;
         }
 
-        bool FormatAnyTuple(T target, FormatContext context)
+        bool FormatTuple(T target, FormatContext context)
         {
             if (Formatter<T>.TypeIsTupleOfScalars)
             {
@@ -319,8 +319,6 @@ public static class PlainTextFormatter
             var formatter = GetDefaultFormatterForAnyObject(type);
             return formatter.Format(obj, context);
         })
-
-       
     };
 
     private static string IndentAtNewLines(this string s, FormatContext context) => 

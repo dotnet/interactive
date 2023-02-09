@@ -70,11 +70,8 @@ public class KernelInvocationContextTests
         });
 
         var result = await kernel.SendAsync(new SubmitCode("2"));
-        var events = new List<KernelEvent>();
 
-        result.KernelEvents.Subscribe(e => events.Add(e));
-
-        var values = events.OfType<DisplayEvent>()
+        var values = result.Events.OfType<DisplayEvent>()
             .Where(x => x is ReturnValueProduced || x is DisplayedValueProduced)
             .Select(v => v.Value);
 

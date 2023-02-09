@@ -44,9 +44,9 @@ try {
 
     $stablePackageVersion = "${stableToolVersionNumber}0"
     $insidersPackageVersion = "${stableToolVersionNumber}1"
-    Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode" -outputSubDirectory "stable-locked" -packageVersionNumber $stablePackageVersion
-    Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode" -outputSubDirectory "stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
-    Build-VsCodeExtension -packageDirectory "dotnet-interactive-vscode-insiders" -outputSubDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber
+    Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode" -outputSubDirectory "stable-locked" -packageVersionNumber $stablePackageVersion
+    Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode" -outputSubDirectory "stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
+    Build-VsCodeExtension -packageDirectory "polyglot-notebooks-vscode-insiders" -outputSubDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber
 }
 catch {
     Write-Host $_

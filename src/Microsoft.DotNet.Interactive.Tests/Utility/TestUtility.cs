@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -296,7 +297,7 @@ public class SubscribedList<T> : IReadOnlyList<T>, IDisposable
 
     public SubscribedList(IObservable<T> source)
     {
-        _subscription = source.Subscribe(x => { _list = _list.Add(x); });
+        _subscription = source.Subscribe(x => _list = _list.Add(x));
     }
 
     public IEnumerator<T> GetEnumerator()
@@ -316,7 +317,7 @@ public class SubscribedList<T> : IReadOnlyList<T>, IDisposable
 internal static class TestUtility
 {
     internal static TabularDataResource ShouldDisplayTabularDataResourceWhich(
-        this SubscribedList<KernelEvent> events)
+        this IReadOnlyList<KernelEvent> events)
     {
         events.Should().NotContainErrors();
 
