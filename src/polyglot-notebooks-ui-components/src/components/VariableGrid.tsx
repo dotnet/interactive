@@ -94,6 +94,8 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
 
         this.configureShare();
 
+        this.setColumnsWidth();
+
         window.addEventListener('message', event => {
             switch (event.data.command) {
                 case 'set-rows':
@@ -107,6 +109,21 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                     break;
             }
         });
+    }
+    setColumnsWidth() {
+        const width = this.getTableSize();
+        this.setColumnWidth("name-column", width);
+        this.setColumnWidth("value-column", width);
+        this.setColumnWidth("type-column", width);
+        this.setColumnWidth("kernel-column", width);
+        this.setColumnWidth("actions-column", width);
+    }
+
+    setColumnWidth(columnId: string, tableWidth: number) {
+        const tableElement = document.getElementById(columnId)!;
+        const columnWidth = this.getWidth(tableElement);
+        const columnWidthPercentage = (columnWidth / tableWidth) * 100.0;
+        tableElement.style.width = `${columnWidthPercentage}%`;
     }
 
     getTableSize(): number {
@@ -144,7 +161,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
             if (affectedcolumnId) {
                 sizes.affectedColumn = {
                     id: affectedcolumnId,
-                    iniSize: this.getWidth(document.getElementById(id)!)
+                    iniSize: this.getWidth(document.getElementById(affectedcolumnId)!)
                 }
             }
             this.setState({
@@ -166,18 +183,30 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
             if (element) {
                 const startDragPosition = this.state.drag.iniMouse!;
                 const sizes = this.state.drag.sizes;
-                const iniSize = sizes.targetColumn.iniSize!;
+                const targetColumnSize = sizes.targetColumn.iniSize!;
                 const endDragPosition = e.clientX;
-                const delta = (endDragPosition - startDragPosition);
-                const iniSizePercentage = (iniSize / tableWidth) * 100.0;
-                const deltaPercentage = (delta / tableWidth) * 100.0;
-                const endSizePercentage = iniSizePercentage + deltaPercentage;
+                let delta = (endDragPosition - startDragPosition);
+
                 const targetClass = `${this.idToClass[id]}-column`;
                 const affectedcolumnId = sizes.affectedColumn?.id;
 
                 if (targetClass && affectedcolumnId) {
+
+                    const sizeLimit = 40;
+                    const affectedColumnSize = sizes.affectedColumn?.iniSize!;
+                    if ((targetColumnSize + delta) < sizeLimit) {
+                        delta = sizeLimit - targetColumnSize;
+                    }
+                    else if ((affectedColumnSize - delta) < sizeLimit) {
+                        delta = affectedColumnSize - sizeLimit;
+                    }
+
+                    const iniSizePercentage = (targetColumnSize / tableWidth) * 100.0;
+                    const deltaPercentage = (delta / tableWidth) * 100.0;
+                    const endSizePercentage = iniSizePercentage + deltaPercentage;
+
                     const affectedColumnClass = `${this.idToClass[affectedcolumnId]}-column`;
-                    const w = ((sizes.affectedColumn?.iniSize! / tableWidth) * 100.0) - deltaPercentage;
+                    const w = ((affectedColumnSize / tableWidth) * 100.0) - deltaPercentage;
 
                     const targetColumn: any = document.querySelector(`col.${targetClass}`)!;
                     const affectedColumn: any = document.querySelector(`col.${affectedColumnClass}`)!;
@@ -300,11 +329,11 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                 <div className="table-container" >
                     <table id="table-root">
                         <colgroup>
-                            <col className="name-column"></col>
-                            <col className="value-column"></col>
-                            <col className="type-column"></col>
-                            <col className="kernel-column"></col>
-                            <col className="actions-column"></col>
+                            <col id="name-column" className="name-column"></col>
+                            <col id="value-column" className="value-column"></col>
+                            <col id="type-column" className="type-column"></col>
+                            <col id="kernel-column" className="kernel-column"></col>
+                            <col id="actions-column" className="actions-column"></col>
                         </colgroup>
                         <tbody>
                             <tr>
