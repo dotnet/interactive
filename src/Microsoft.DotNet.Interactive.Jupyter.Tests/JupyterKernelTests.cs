@@ -166,7 +166,7 @@ public class JupyterKernelTests : IDisposable
 
         // validate that line endings going to the kernel are normalized to \n
         sentMessages
-                    .Should()
+            .Should()
             .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
             .Which
             .Content
