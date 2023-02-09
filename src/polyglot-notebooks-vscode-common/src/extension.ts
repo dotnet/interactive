@@ -23,8 +23,8 @@ import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 import { createOutput, debounce, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionGreaterOrEqual, processArguments } from './utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
-import * as notebookControllers from '../notebookControllers';
-import * as notebookSerializers from '../notebookSerializers';
+import * as notebookControllers from './notebookControllers';
+import * as notebookSerializers from './notebookSerializers';
 import * as versionSpecificFunctions from '../versionSpecificFunctions';
 import { ErrorOutputCreator, InteractiveClient } from './interactiveClient';
 

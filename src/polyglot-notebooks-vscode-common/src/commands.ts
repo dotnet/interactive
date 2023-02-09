@@ -10,7 +10,7 @@ import { getEol, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog, extensionToDocumentType, getVersionNumber } from './utilities';
 
-import * as notebookControllers from '../notebookControllers';
+import * as notebookControllers from './notebookControllers';
 import * as metadataUtilities from './metadataUtilities';
 import { ReportChannel } from './interfaces/vscode-like';
 import { NotebookParserServer } from './notebookParserServer';

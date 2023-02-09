@@ -2,22 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import { ClientMapper } from './vscode-common/clientMapper';
-import * as contracts from './vscode-common/polyglot-notebooks/contracts';
-import * as vscodeLike from './vscode-common/interfaces/vscode-like';
-import * as diagnostics from './vscode-common/diagnostics';
-import * as vscodeUtilities from './vscode-common/vscodeUtilities';
-import { reshapeOutputValueForVsCode } from './vscode-common/interfaces/utilities';
-import { selectDotNetInteractiveKernelForJupyter } from './vscode-common/commands';
-import { ErrorOutputCreator, InteractiveClient } from './vscode-common/interactiveClient';
-import { LogEntry, Logger } from './vscode-common/polyglot-notebooks/logger';
-import { isKernelEventEnvelope, KernelCommandOrEventEnvelope } from './vscode-common/polyglot-notebooks/connection';
+import { ClientMapper } from './clientMapper';
+import * as contracts from './polyglot-notebooks/contracts';
+import * as vscodeLike from './interfaces/vscode-like';
+import * as diagnostics from './diagnostics';
+import * as vscodeUtilities from './vscodeUtilities';
+import { reshapeOutputValueForVsCode } from './interfaces/utilities';
+import { selectDotNetInteractiveKernelForJupyter } from './commands';
+import { ErrorOutputCreator, InteractiveClient } from './interactiveClient';
+import { LogEntry, Logger } from './polyglot-notebooks/logger';
+import { isKernelEventEnvelope, KernelCommandOrEventEnvelope } from './polyglot-notebooks/connection';
 import * as rxjs from 'rxjs';
-import * as metadataUtilities from './vscode-common/metadataUtilities';
-import * as constants from './vscode-common/constants';
-import * as versionSpecificFunctions from './versionSpecificFunctions';
-import * as semanticTokens from './vscode-common/documentSemanticTokenProvider';
-import { ServiceCollection } from './vscode-common/serviceCollection';
+import * as metadataUtilities from './metadataUtilities';
+import * as constants from './constants';
+import * as versionSpecificFunctions from '../versionSpecificFunctions';
+import * as semanticTokens from './documentSemanticTokenProvider';
+import { ServiceCollection } from './serviceCollection';
 
 const executionTasks: Map<string, vscode.NotebookCellExecution> = new Map();
 const standardOutputMimeType = 'application/vnd.code.notebook.stdout';
