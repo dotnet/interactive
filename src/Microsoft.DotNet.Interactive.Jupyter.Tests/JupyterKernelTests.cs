@@ -284,7 +284,7 @@ public class JupyterKernelTests : IDisposable
         events.OfType<StandardOutputValueProduced>()
             .Should()
             .HaveCount(outputReturned.Length);
-        
+
         for (int i = 0; i < outputReturned.Length; i++)
         {
             events.OfType<StandardOutputValueProduced>()
@@ -384,7 +384,7 @@ public class JupyterKernelTests : IDisposable
             .Which
             .Content
             .As<ExecuteRequest>();
-        
+
         request
             .Code
             .Should()
@@ -406,6 +406,75 @@ public class JupyterKernelTests : IDisposable
             .Value
             .Should()
             .ContainAll(errorMessages);
+
+        options.SaveState();
+    }
+
+    [Theory]
+    [JupyterHttpTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = "python3")]
+    [JupyterTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = "python3")]
+    public async Task can_submit_code_and_get_update_display_produced(JupyterConnectionTestData connectionData, string codeToRun, string displayValue, string updateDisplayValue)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = CreateKernelAsync(options);
+
+        await kernel.SubmitCodeAsync(
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+
+        var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
+        var events = result.Events;
+
+
+        sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
+            .Which
+            .Content
+            .As<ExecuteRequest>()
+            .Code
+            .Should()
+            .Be(codeToRun.Replace("\r\n", "\n"));
+
+        var display = events
+            .Should()
+            .ContainSingle<DisplayedValueProduced>();
+
+        display
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+            .Which
+            .Value
+            .Should()
+            .Be(displayValue);
+
+        var updateDisplay = events
+            .Should()
+            .ContainSingle<DisplayedValueUpdated>();
+
+        updateDisplay
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+            .Which
+            .Value
+            .Should()
+            .Be(updateDisplayValue);
+
+        Assert.NotNull(display.Which.ValueId);
+
+        updateDisplay
+            .Which
+            .ValueId
+            .Should()
+            .Be(display.Which.ValueId);
 
         options.SaveState();
     }
