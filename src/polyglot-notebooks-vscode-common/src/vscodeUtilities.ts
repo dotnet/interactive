@@ -9,7 +9,7 @@ import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, Display
 import * as metadataUtilities from './metadataUtilities';
 import * as vscodeLike from './interfaces/vscode-like';
 import * as constants from './constants';
-import * as versionSpecificFunctions from '../versionSpecificFunctions';
+import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 
 export function isInsidersBuild(): boolean {
     return vscode.version.indexOf('-insider') >= 0;
@@ -93,7 +93,7 @@ export async function setCellKernelName(cell: vscode.NotebookCell, kernelName: s
         kernelName
     };
     const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(cellMetadata);
-    await versionSpecificFunctions.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, rawCellMetadata);
+    await vscodeNotebookManagement.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, rawCellMetadata);
 }
 
 export async function ensureCellKernelKind(cell: vscode.NotebookCell, kind: vscode.NotebookCellKind): Promise<vscode.NotebookCell> {
@@ -108,7 +108,7 @@ export async function ensureCellKernelKind(cell: vscode.NotebookCell, kind: vsco
         metadata: cell.metadata,
     };
     const cellIndex = cell.index; // this gets reset to -1 when the cell is replaced so we have to capture it here
-    await versionSpecificFunctions.replaceNotebookCells(cell.notebook.uri, new vscode.NotebookRange(cellIndex, cellIndex + 1), [newCellData]);
+    await vscodeNotebookManagement.replaceNotebookCells(cell.notebook.uri, new vscode.NotebookRange(cellIndex, cellIndex + 1), [newCellData]);
     const cells = cell.notebook.getCells();
     return cells[cellIndex];
 }
@@ -122,7 +122,7 @@ export async function ensureCellLanguage(cell: vscode.NotebookCell): Promise<voi
                 constants.CellLanguageIdentifier
             );
             updatedCellData.metadata = cell.metadata;
-            await versionSpecificFunctions.replaceNotebookCells(cell.notebook.uri, new vscode.NotebookRange(cell.index, cell.index + 1), [updatedCellData]);
+            await vscodeNotebookManagement.replaceNotebookCells(cell.notebook.uri, new vscode.NotebookRange(cell.index, cell.index + 1), [updatedCellData]);
         }
     }
 }

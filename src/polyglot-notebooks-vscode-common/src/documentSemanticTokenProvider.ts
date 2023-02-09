@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import * as metadataUtilities from './metadataUtilities';
 import { DynamicGrammarSemanticTokenProvider, VSCodeExtensionLike } from './dynamicGrammarSemanticTokenProvider';
 import * as constants from './constants';
-import * as versionSpecificFunctions from '../versionSpecificFunctions';
+import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 
 // https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide#standard-token-types-and-modifiers
 const defaultTokenTypes = [
@@ -84,7 +84,7 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
                 const isIpynb = metadataUtilities.isIpynbNotebook(notebook);
                 const bareMetadata = metadataUtilities.createDefaultNotebookDocumentMetadata();
                 const rawBareMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(bareMetadata, isIpynb);
-                const _succeeded = await versionSpecificFunctions.replaceNotebookMetadata(notebook.uri, rawBareMetadata);
+                const _succeeded = await vscodeNotebookManagement.replaceNotebookMetadata(notebook.uri, rawBareMetadata);
                 const kernelInfos = metadataUtilities.getKernelInfosFromNotebookDocument(notebook);
                 this.dynamicTokenProvider.rebuildNotebookGrammar(notebook.uri, kernelInfos, true);
             }

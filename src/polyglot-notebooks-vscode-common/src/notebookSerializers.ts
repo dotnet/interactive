@@ -2,15 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import * as contracts from './vscode-common/polyglot-notebooks/contracts';
-import * as utilities from './vscode-common/interfaces/utilities';
-import * as vscodeLike from './vscode-common/interfaces/vscode-like';
-import { languageToCellKind } from './vscode-common/interactiveNotebook';
-import * as vscodeUtilities from './vscode-common/vscodeUtilities';
-import { NotebookParserServer } from './vscode-common/notebookParserServer';
-import { Eol } from './vscode-common/interfaces';
-import * as metadataUtilities from './vscode-common/metadataUtilities';
-import * as constants from './vscode-common/constants';
+import * as contracts from './polyglot-notebooks/contracts';
+import * as utilities from './interfaces/utilities';
+import * as vscodeLike from './interfaces/vscode-like';
+import { languageToCellKind } from './interactiveNotebook';
+import * as vscodeUtilities from './vscodeUtilities';
+import { NotebookParserServer } from './notebookParserServer';
+import { Eol } from './interfaces';
+import * as metadataUtilities from './metadataUtilities';
+import * as constants from './constants';
 
 function toInteractiveDocumentElement(cell: vscode.NotebookCellData): contracts.InteractiveDocumentElement {
     // just need to match the shape
