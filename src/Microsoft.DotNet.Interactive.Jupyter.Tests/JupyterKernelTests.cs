@@ -55,13 +55,13 @@ public class JupyterKernelTests : IDisposable
     }
 
     [Theory]
-    [JupyterHttpTestData(KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterHttpTestData(KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData(KernelSpecName = "python3")]
-    [JupyterZMQTestData(KernelSpecName = "ir")]
-    [JupyterTestData(KernelSpecName = "python3")]
-    [JupyterTestData(KernelSpecName = "ir")]
-    public async Task can_connect_to_and_setup_kernel(JupyterConnectionTestData connectionData)
+    [JupyterHttpTestData("python", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData("R", KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("python", KernelSpecName = "python3")]
+    [JupyterZMQTestData("R", KernelSpecName = "ir")]
+    [JupyterTestData("python", KernelSpecName = "python3")]
+    [JupyterTestData("R", KernelSpecName = "ir")]
+    public async Task can_connect_to_and_setup_kernel(JupyterConnectionTestData connectionData, string languageName)
     {
         var options = connectionData.GetConnectionOptions();
 
@@ -89,6 +89,12 @@ public class JupyterKernelTests : IDisposable
             .Select(m => m.Content)
             .Cast<KernelInfoReply>()
             .First();
+
+        kernelInfoReturned
+            .LanguageInfo
+            .Name
+            .Should()
+            .Be(languageName);
 
         events
             .Should()
@@ -158,16 +164,16 @@ public class JupyterKernelTests : IDisposable
             .Should()
             .NotContainErrors();
 
+        // validate that line endings going to the kernel are normalized to \n
         sentMessages
-            .Should()
+                    .Should()
             .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
             .Which
             .Content
             .As<ExecuteRequest>()
             .Code
-            .Trim()
             .Should()
-            .Be(codeToRun);
+            .Be(codeToRun.Replace("\r\n", "\n"));
 
         events.Should()
            .ContainSingle<ReturnValueProduced>()
@@ -177,7 +183,6 @@ public class JupyterKernelTests : IDisposable
             .ContainSingle(v => v.MimeType == mimeType)
             .Which
             .Value
-            .Trim()
             .Should()
             .Be(outputReturned);
 
@@ -210,6 +215,7 @@ public class JupyterKernelTests : IDisposable
             .Should()
             .NotContainErrors();
 
+        // validate that line endings going to the kernel are normalized to \n
         sentMessages
             .Should()
             .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
@@ -217,9 +223,8 @@ public class JupyterKernelTests : IDisposable
             .Content
             .As<ExecuteRequest>()
             .Code
-            .Trim()
             .Should()
-            .Be(codeToRun);
+            .Be(codeToRun.Replace("\r\n", "\n"));
 
 
         for (int i = 0; i < mimeTypes.Length; i++)
@@ -232,7 +237,6 @@ public class JupyterKernelTests : IDisposable
             .ContainSingle(v => v.MimeType == mimeTypes[i])
             .Which
             .Value
-            .Trim()
             .Should()
             .Be(valuesToExpect[i]);
         }
@@ -240,5 +244,111 @@ public class JupyterKernelTests : IDisposable
         options.SaveState();
     }
 
+    [Theory]
+    [JupyterHttpTestData("for i in range(2):\r\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("for i in range(2):\r\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = "python3")]
+    [JupyterTestData("for i in range(2):\r\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = "python3")]
+    [JupyterHttpTestData("for (x in 1:2) {\r\n\tprint(x);\r\n\tflush.console()\r\n}", new[] { "[1] 1\n", "[1] 2\n" }, KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("for (x in 1:2) {\r\n\tprint(x);\r\n\tflush.console()\r\n}", new[] { "[1] 1\n", "[1] 2\n" }, KernelSpecName = "ir")]
+    [JupyterTestData("for (x in 1:2) {\r\n\tprint(x);\r\n\tflush.console()\r\n}", new[] { "[1] 1\n", "[1] 2\n" }, KernelSpecName = "ir")]
+    public async Task can_submit_code_and_get_stream_stdout_produced(JupyterConnectionTestData connectionData, string codeToRun, string[] outputReturned)
+    {
+        var options = connectionData.GetConnectionOptions();
 
+        var kernel = CreateKernelAsync(options);
+
+        await kernel.SubmitCodeAsync(
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+
+        var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        // validate that line endings going to the kernel are normalized to \n
+        sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
+            .Which
+            .Content
+            .As<ExecuteRequest>()
+            .Code
+            .Should()
+            .Be(codeToRun.Replace("\r\n", "\n"));
+
+        events.OfType<StandardOutputValueProduced>()
+            .Should()
+            .HaveCount(outputReturned.Length);
+        
+        for (int i = 0; i < outputReturned.Length; i++)
+        {
+            events.OfType<StandardOutputValueProduced>()
+                .ElementAt(i)
+                .FormattedValues
+                .Should()
+                .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+                .Which
+                .Value
+                .Should()
+                .Be(outputReturned[i]);
+        }
+
+        options.SaveState();
+    }
+
+
+    [Theory]
+    [JupyterHttpTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData("message('stderr')", "stderr\n", KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = "python3")]
+    [JupyterZMQTestData("message('stderr')", "stderr\n", KernelSpecName = "ir")]
+    [JupyterTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = "python3")]
+    [JupyterTestData("message('stderr')", "stderr\n", KernelSpecName = "ir")]
+    public async Task can_submit_code_and_get_stderr_produced(JupyterConnectionTestData connectionData, string codeToRun, string outputReturned)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = CreateKernelAsync(options);
+
+        await kernel.SubmitCodeAsync(
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+
+        var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
+            .Which
+            .Content
+            .As<ExecuteRequest>()
+            .Code
+            .Should()
+            .Be(codeToRun.Replace("\r\n", "\n"));
+
+        events.Should()
+           .ContainSingle<StandardErrorValueProduced>()
+           .Which
+           .FormattedValues
+            .Should()
+            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+            .Which
+            .Value
+            .Should()
+            .Be(outputReturned);
+
+        options.SaveState();
+    }
 }
