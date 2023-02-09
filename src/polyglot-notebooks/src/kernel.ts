@@ -135,12 +135,17 @@ export class Kernel {
         if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
             routingslip.stampCommandRoutingSlipAsArrived(commandEnvelope, kernelUri);
         } else {
-            "should not be here";//?
+            Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`)
         }
         commandEnvelope.routingSlip;//?
         KernelInvocationContext.establish(commandEnvelope);
         return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value).finally(() => {
-            routingslip.stampCommandRoutingSlip(commandEnvelope, kernelUri);
+            if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
+                routingslip.stampCommandRoutingSlip(commandEnvelope, kernelUri);
+            }
+            else {
+                Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as completed but uri ${kernelUri} is already present.`);
+            }
         }));
     }
 

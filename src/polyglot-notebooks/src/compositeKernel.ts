@@ -186,7 +186,7 @@ export class CompositeKernel extends Kernel {
             if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
                 routingslip.stampCommandRoutingSlipAsArrived(commandEnvelope, kernelUri);
             } else {
-                "we should not be here";//?
+                Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`);
             }
             return kernel.handleCommand(commandEnvelope).finally(() => {
                 if (invocationContext !== null) {
@@ -195,7 +195,7 @@ export class CompositeKernel extends Kernel {
                 if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
                     routingslip.stampCommandRoutingSlip(commandEnvelope, kernelUri);
                 } else {
-                    "we should not be here";//?
+                    Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as completed but uri ${kernelUri} is already present.`);
                 }
             });
         }
