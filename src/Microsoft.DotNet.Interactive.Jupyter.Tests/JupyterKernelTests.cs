@@ -351,4 +351,62 @@ public class JupyterKernelTests : IDisposable
 
         options.SaveState();
     }
+
+    [Theory]
+    [JupyterHttpTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = "python3")]
+    [JupyterZMQTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = "ir")]
+    [JupyterTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = "python3")]
+    [JupyterTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = "ir")]
+    public async Task can_submit_code_and_get_error_produced(JupyterConnectionTestData connectionData, string codeToRun, string[] errorMessages)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = CreateKernelAsync(options);
+
+        await kernel.SubmitCodeAsync(
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+
+        var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
+        var events = result.Events;
+
+        events
+            .Should()
+            .Contain(e => e is CommandFailed);
+
+        var request = sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
+            .Which
+            .Content
+            .As<ExecuteRequest>();
+        
+        request
+            .Code
+            .Should()
+            .Be(codeToRun.Replace("\r\n", "\n"));
+
+        request
+            .StopOnError
+            .Should().BeTrue();
+
+        // should be returning ErrorProduced but there is a bug on the front end
+        // using stderr to display errors to the user
+        events.Should()
+           .ContainSingle<StandardErrorValueProduced>()
+           .Which
+           .FormattedValues
+            .Should()
+            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+            .Which
+            .Value
+            .Should()
+            .ContainAll(errorMessages);
+
+        options.SaveState();
+    }
 }
