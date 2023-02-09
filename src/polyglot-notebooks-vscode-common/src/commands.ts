@@ -14,7 +14,7 @@ import * as notebookControllers from './notebookControllers';
 import * as metadataUtilities from './metadataUtilities';
 import { ReportChannel } from './interfaces/vscode-like';
 import { NotebookParserServer } from './notebookParserServer';
-import * as versionSpecificFunctions from '../versionSpecificFunctions';
+import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { PromiseCompletionSource } from './polyglot-notebooks/promiseCompletionSource';
 
 import * as constants from './constants';
@@ -114,7 +114,7 @@ function getCurrentNotebookDocument(): vscode.NotebookDocument | undefined {
         return undefined;
     }
 
-    return versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+    return vscodeNotebookManagement.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
 }
 
 export function registerKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
@@ -305,7 +305,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
                 return;
             }
 
-            const notebook = versionSpecificFunctions.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+            const notebook = vscodeNotebookManagement.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
             const interactiveDocument = toNotebookDocument(notebook);
             const uriPath = uri.toString();
             const extension = path.extname(uriPath);
