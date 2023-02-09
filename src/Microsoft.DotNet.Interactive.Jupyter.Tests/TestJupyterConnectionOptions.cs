@@ -268,6 +268,11 @@ public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
         Playback(messages);
     }
 
+    public TestJupyterConnectionOptions(IReadOnlyCollection<Message> messagesToPlayback)
+    {
+        Playback(messagesToPlayback);
+    }
+
     public TestJupyterConnectionOptions(IJupyterKernelConnectionOptions optionsToTest, string kernelSpecName, bool allowPlayback = false)
     {
         if (optionsToTest == null)
@@ -277,11 +282,6 @@ public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
         KernelSpecName = kernelSpecName;
         _allowPlayback = allowPlayback;
         Record(optionsToTest);
-    }
-
-    public TestJupyterConnectionOptions(IReadOnlyCollection<Message> messagesToPlayback)
-    {
-        Playback(messagesToPlayback);
     }
 
     public void Record(IJupyterKernelConnectionOptions options)
