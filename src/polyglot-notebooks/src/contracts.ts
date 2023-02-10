@@ -466,6 +466,8 @@ export interface KernelInfo {
     aliases: Array<string>;
     languageName?: string;
     languageVersion?: string;
+    isProxy: boolean;
+    isComposite: boolean;
     displayName: string;
     localName: string;
     uri: string;

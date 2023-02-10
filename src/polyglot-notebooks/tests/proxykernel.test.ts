@@ -220,6 +220,8 @@ describe("proxyKernel", () => {
                     eventType: contracts.KernelInfoProducedType,
                     event: <contracts.KernelInfoProduced>{
                         kernelInfo: {
+                            isComposite: false,
+                            isProxy: false,
                             localName: "remoteKernel",
                             aliases: [],
                             uri: 'kernel://local/remoteKernel',
@@ -254,9 +256,11 @@ describe("proxyKernel", () => {
 
         expect(kernel.kernelInfo).to.deep.equal({
             aliases: [],
+            displayName: 'G#',
+            isComposite: false,
+            isProxy: true,
             languageName: 'gsharp',
             languageVersion: '1.2.3',
-            displayName: 'G#',
             localName: 'proxy',
             remoteUri: 'kernel://local/remoteKernel',
             supportedDirectives: [],

@@ -3,7 +3,7 @@
 
 import * as contracts from "./contracts";
 import { Logger } from "./logger";
-import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri, KernelType } from "./kernel";
+import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri } from "./kernel";
 import * as connection from "./connection";
 import * as routingSlip from "./routingslip";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
@@ -13,7 +13,7 @@ export class ProxyKernel extends Kernel {
 
     constructor(override readonly name: string, private readonly _sender: connection.IKernelCommandAndEventSender, private readonly _receiver: connection.IKernelCommandAndEventReceiver, languageName?: string, languageVersion?: string) {
         super(name, languageName, languageVersion);
-        this.kernelType = KernelType.proxy;
+        this.kernelInfo.isProxy = true;
     }
 
     override getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {

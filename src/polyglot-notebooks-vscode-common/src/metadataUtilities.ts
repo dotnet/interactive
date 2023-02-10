@@ -213,6 +213,8 @@ export function getKernelInfosFromNotebookDocument(notebookDocument: vscodeLike.
     const kernelInfos: contracts.KernelInfo[] = notebookDocumentMetadata.kernelInfo.items.map(item => ({
         // these are the only important ones
         localName: item.name,
+        isComposite: false,
+        isProxy: false,
         aliases: item.aliases,
         languageName: item.languageName,
         // these are unused

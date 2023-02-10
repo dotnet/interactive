@@ -6,7 +6,6 @@ import { CompositeKernel } from './compositeKernel';
 import * as contracts from './contracts';
 import * as disposables from './disposables';
 import { Disposable } from './disposables';
-import { KernelType } from './kernel';
 import { Logger } from './logger';
 
 export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
@@ -126,7 +125,7 @@ function notifyOfKernelInfoUpdates(compositeKernel: CompositeKernel) {
 }
 
 export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
-    if (kernelInfoProduced.kernelInfo.remoteUri) {
+    if (kernelInfoProduced.kernelInfo.isProxy) {
         Logger.default.warn(`skippin creation of proxy for a proxy kernel : [${JSON.stringify(kernelInfoProduced.kernelInfo)}]`);
         return;
     }
@@ -146,7 +145,7 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.K
             Logger.default.info(`patching proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfoProduced)} `);
         }
 
-        if (kernel.kernelType === KernelType.proxy) {
+        if (kernel.kernelInfo.isProxy) {
             // patch
             updateKernelInfo(kernel.kernelInfo, kernelInfoProduced.kernelInfo);
         }

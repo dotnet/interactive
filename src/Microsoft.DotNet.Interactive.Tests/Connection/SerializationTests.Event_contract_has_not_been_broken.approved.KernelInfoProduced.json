@@ -6,6 +6,8 @@
       ],
       "languageName": "JavaScript",
       "languageVersion": null,
+      "isProxy": false,
+      "isComposite": false,
       "displayName": "JavaScript",
       "localName": "javascript",
       "uri": "kernel://vscode/javascript",
