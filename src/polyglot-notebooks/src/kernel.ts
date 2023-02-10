@@ -26,11 +26,6 @@ export interface IKernelEventObserver {
     (kernelEvent: contracts.KernelEventEnvelope): void;
 }
 
-export enum KernelType {
-    composite,
-    proxy,
-    default
-};
 
 export class Kernel {
     private _kernelInfo: contracts.KernelInfo;
@@ -40,19 +35,11 @@ export class Kernel {
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
     private _scheduler?: KernelScheduler<contracts.KernelCommandEnvelope> | null = null;
-    private _kernelType: KernelType = KernelType.default;
+
 
     public get kernelInfo(): contracts.KernelInfo {
 
         return this._kernelInfo;
-    }
-
-    public get kernelType(): KernelType {
-        return this._kernelType;
-    }
-
-    protected set kernelType(value: KernelType) {
-        this._kernelType = value;
     }
 
     public get kernelEvents(): rxjs.Observable<contracts.KernelEventEnvelope> {
@@ -61,6 +48,8 @@ export class Kernel {
 
     constructor(readonly name: string, languageName?: string, languageVersion?: string, displayName?: string) {
         this._kernelInfo = {
+            isProxy: false,
+            isComposite: false,
             localName: name,
             languageName: languageName,
             aliases: [],
@@ -135,7 +124,7 @@ export class Kernel {
         if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
             routingslip.stampCommandRoutingSlipAsArrived(commandEnvelope, kernelUri);
         } else {
-            Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`)
+            Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`);
         }
         commandEnvelope.routingSlip;//?
         KernelInvocationContext.establish(commandEnvelope);
@@ -179,10 +168,10 @@ export class Kernel {
             let eventSubscription: rxjs.Subscription | undefined = undefined;//?
 
             if (isRootCommand) {
-                this.name;//?
-                Logger.default.info(`kernel ${this.name} of type ${KernelType[this.kernelType]} subscribing to context events`);
+                const kernelType = (this.kernelInfo.isProxy ? "proxy" : "") + (this.kernelInfo.isComposite ? "composite" : "");
+                Logger.default.info(`kernel ${this.name} of type ${kernelType} subscribing to context events`);
                 eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
-                    const message = `kernel ${this.name} of type ${KernelType[this.kernelType]} saw event ${e.eventType} with token ${e.command?.token}`;
+                    const message = `kernel ${this.name} of type ${kernelType} saw event ${e.eventType} with token ${e.command?.token}`;
                     message;//?
                     Logger.default.info(message);
                     const kernelUri = getKernelUri(this);

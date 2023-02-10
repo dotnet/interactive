@@ -25,47 +25,52 @@ describe("kernelInfo", () => {
             const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo);
 
             expect(kernelInfos.length).to.equal(3);
-            expect(kernelInfos).to.deep.equal([
-                {
-                    aliases: [],
-                    languageName: undefined,
-                    languageVersion: undefined,
-                    localName: 'root',
-                    displayName: 'root',
-                    supportedDirectives: [],
-                    supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
-                    uri: 'kernel://local/root'
-                },
-                {
-                    aliases: ['child1Js'],
-                    languageName: 'JavaScript',
-                    languageVersion: undefined,
-                    displayName: 'JavaScript',
-                    localName: 'child1',
-                    supportedDirectives: [],
-                    supportedKernelCommands:
-                        [{ name: 'RequestKernelInfo' },
-                        { name: 'SubmitCode' },
-                        { name: 'RequestValueInfos' },
-                        { name: 'RequestValue' },
-                        { name: 'SendValue' }],
-                    uri: 'kernel://local/root/child1'
-                },
-                {
-                    aliases: ['child2Js'],
-                    languageName: 'JavaScript',
-                    languageVersion: undefined,
-                    displayName: 'JavaScript',
-                    localName: 'child2',
-                    supportedDirectives: [],
-                    supportedKernelCommands:
-                        [{ name: 'RequestKernelInfo' },
-                        { name: 'SubmitCode' },
-                        { name: 'RequestValueInfos' },
-                        { name: 'RequestValue' },
-                        { name: 'SendValue' }],
-                    uri: 'kernel://local/root/child2'
-                }]);
+            expect(kernelInfos).to.deep.equal([{
+                aliases: [],
+                displayName: 'root',
+                isComposite: true,
+                isProxy: false,
+                languageName: undefined,
+                languageVersion: undefined,
+                localName: 'root',
+                supportedDirectives: [],
+                supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
+                uri: 'kernel://local/root'
+            },
+            {
+                aliases: ['child1Js'],
+                displayName: 'JavaScript',
+                isComposite: false,
+                isProxy: false,
+                languageName: 'JavaScript',
+                languageVersion: undefined,
+                localName: 'child1',
+                supportedDirectives: [],
+                supportedKernelCommands:
+                    [{ name: 'RequestKernelInfo' },
+                    { name: 'SubmitCode' },
+                    { name: 'RequestValueInfos' },
+                    { name: 'RequestValue' },
+                    { name: 'SendValue' }],
+                uri: 'kernel://local/root/child1'
+            },
+            {
+                aliases: ['child2Js'],
+                displayName: 'JavaScript',
+                isComposite: false,
+                isProxy: false,
+                languageName: 'JavaScript',
+                languageVersion: undefined,
+                localName: 'child2',
+                supportedDirectives: [],
+                supportedKernelCommands:
+                    [{ name: 'RequestKernelInfo' },
+                    { name: 'SubmitCode' },
+                    { name: 'RequestValueInfos' },
+                    { name: 'RequestValue' },
+                    { name: 'SendValue' }],
+                uri: 'kernel://local/root/child2'
+            }]);
         });
 
         it("unproxied kernels have a URI", async () => {
@@ -100,29 +105,30 @@ describe("kernelInfo", () => {
 
             kernel.add(new JavascriptKernel("child1"), ["child1Js"]);
 
-            expect(events).to.deep.equal([
+            expect(events).to.deep.equal([{
+                event:
                 {
-                    event:
+                    kernelInfo:
                     {
-                        kernelInfo:
-                        {
-                            aliases: ['child1Js'],
-                            languageName: 'JavaScript',
-                            languageVersion: undefined,
-                            displayName: 'JavaScript',
-                            localName: 'child1',
-                            supportedDirectives: [],
-                            supportedKernelCommands:
-                                [{ name: 'RequestKernelInfo' },
-                                { name: 'SubmitCode' },
-                                { name: 'RequestValueInfos' },
-                                { name: 'RequestValue' },
-                                { name: 'SendValue' }],
-                            uri: 'kernel://local/root/child1'
-                        }
-                    },
-                    eventType: 'KernelInfoProduced'
-                }]);
+                        aliases: ['child1Js'],
+                        displayName: 'JavaScript',
+                        isComposite: false,
+                        isProxy: false,
+                        languageName: 'JavaScript',
+                        languageVersion: undefined,
+                        localName: 'child1',
+                        supportedDirectives: [],
+                        supportedKernelCommands:
+                            [{ name: 'RequestKernelInfo' },
+                            { name: 'SubmitCode' },
+                            { name: 'RequestValueInfos' },
+                            { name: 'RequestValue' },
+                            { name: 'SendValue' }],
+                        uri: 'kernel://local/root/child1'
+                    }
+                },
+                eventType: 'KernelInfoProduced'
+            }]);
         });
 
         it("when a custom command is added during command execution it produces and updatedKernelInfoProduced event", async () => {
@@ -154,40 +160,41 @@ describe("kernelInfo", () => {
             expect(events.filter(e => e.eventType === contracts.KernelInfoProducedType))
                 .to
                 .deep
-                .equal([
+                .equal([{
+                    command:
                     {
-                        command:
+                        command: { targetKernelName: 'child1' },
+                        commandType: 'SubmitCode',
+                        id: 'commandId',
+                        routingSlip:
+                            ['kernel://local/root?tag=arrived',
+                                'kernel://local/root/child1?tag=arrived',
+                                'kernel://local/root/child1',
+                                'kernel://local/root'],
+                        token: 'commandToken'
+                    },
+                    event:
+                    {
+                        kernelInfo:
                         {
-                            command: { targetKernelName: 'child1' },
-                            commandType: 'SubmitCode',
-                            id: 'commandId',
-                            routingSlip:
-                                ['kernel://local/root?tag=arrived',
-                                    'kernel://local/root/child1?tag=arrived',
-                                    'kernel://local/root/child1',
-                                    'kernel://local/root'],
-                            token: 'commandToken'
-                        },
-                        event:
-                        {
-                            kernelInfo:
-                            {
-                                aliases: [],
-                                languageName: 'customLanguage',
-                                languageVersion: undefined,
-                                displayName: 'child1',
-                                localName: 'child1',
-                                supportedDirectives: [],
-                                supportedKernelCommands:
-                                    [{ name: 'RequestKernelInfo' },
-                                    { name: 'SubmitCode' },
-                                    { name: 'customCommand' }],
-                                uri: 'kernel://local/root/child1'
-                            }
-                        },
-                        eventType: 'KernelInfoProduced',
-                        routingSlip: ['kernel://local/root/child1', 'kernel://local/root']
-                    }]);
+                            aliases: [],
+                            displayName: 'child1',
+                            isComposite: false,
+                            isProxy: false,
+                            languageName: 'customLanguage',
+                            languageVersion: undefined,
+                            localName: 'child1',
+                            supportedDirectives: [],
+                            supportedKernelCommands:
+                                [{ name: 'RequestKernelInfo' },
+                                { name: 'SubmitCode' },
+                                { name: 'customCommand' }],
+                            uri: 'kernel://local/root/child1'
+                        }
+                    },
+                    eventType: 'KernelInfoProduced',
+                    routingSlip: ['kernel://local/root/child1', 'kernel://local/root']
+                }]);
 
         });
 
@@ -220,9 +227,11 @@ describe("kernelInfo", () => {
                         kernelInfo:
                         {
                             aliases: [],
+                            displayName: 'child1',
+                            isComposite: false,
+                            isProxy: false,
                             languageName: 'customLanguage',
                             languageVersion: undefined,
-                            displayName: 'child1',
                             localName: 'child1',
                             supportedDirectives: [],
                             supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'SubmitCode' }],
@@ -295,10 +304,12 @@ describe("kernelInfo", () => {
                         kernelInfo:
                         {
                             aliases: ['child2Js'],
+                            displayName: 'child2',
+                            isComposite: false,
+                            isProxy: false,
                             languageName: 'customLanguage',
                             languageVersion: undefined,
                             localName: 'child2',
-                            displayName: 'child2',
                             supportedDirectives: [],
                             supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
                             uri: 'kernel://local/root/child2'

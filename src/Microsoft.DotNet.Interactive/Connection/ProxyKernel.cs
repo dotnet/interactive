@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,6 +28,7 @@ public sealed class ProxyKernel : Kernel
         IKernelCommandAndEventReceiver receiver,
         Uri remoteUri = null) : base(name)
     {
+        KernelInfo.IsProxy = true;
         _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
         _sender = sender ?? throw new ArgumentNullException(nameof(sender));
 

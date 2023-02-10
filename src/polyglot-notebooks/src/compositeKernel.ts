@@ -3,7 +3,7 @@
 
 import * as routingslip from "./routingslip";
 import * as contracts from "./contracts";
-import { getKernelUri, IKernelCommandInvocation, Kernel, KernelType } from "./kernel";
+import { getKernelUri, IKernelCommandInvocation, Kernel } from "./kernel";
 import { KernelHost } from "./kernelHost";
 import { KernelInvocationContext } from "./kernelInvocationContext";
 import { Logger } from "./logger";
@@ -17,7 +17,7 @@ export class CompositeKernel extends Kernel {
 
     constructor(name: string) {
         super(name);
-        this.kernelType = KernelType.composite;
+        this.kernelInfo.isComposite = true;
         this._childKernels = new KernelCollection(this);
     }
 
@@ -339,7 +339,7 @@ class KernelCollection implements Iterable<Kernel> {
         this._kernelsByLocalUri.set(kernel.kernelInfo.uri, kernel);
 
 
-        if (kernel.kernelType === KernelType.proxy) {
+        if (kernel.kernelInfo.isProxy) {
             this._kernelsByRemoteUri.set(kernel.kernelInfo.remoteUri!, kernel);
         }
     }
