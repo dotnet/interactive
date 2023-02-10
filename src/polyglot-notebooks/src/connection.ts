@@ -126,6 +126,10 @@ function notifyOfKernelInfoUpdates(compositeKernel: CompositeKernel) {
 }
 
 export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
+    if (kernelInfoProduced.kernelInfo.remoteUri) {
+        Logger.default.warn(`skippin creation of proxy for a proxy kernel : [${JSON.stringify(kernelInfoProduced.kernelInfo)}]`);
+        return;
+    }
     const uriToLookup = kernelInfoProduced.kernelInfo.uri ?? kernelInfoProduced.kernelInfo.remoteUri;
     if (uriToLookup) {
         let kernel = compositeKernel.findKernelByUri(uriToLookup);
