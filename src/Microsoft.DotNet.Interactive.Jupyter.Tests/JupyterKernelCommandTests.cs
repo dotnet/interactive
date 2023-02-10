@@ -11,13 +11,13 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using System;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
-using static Microsoft.DotNet.Interactive.Tests.Utility.CustomCommandTypes;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
@@ -163,7 +163,7 @@ public partial class JupyterKernelTests : IDisposable
             .Should()
             .NotContainErrors();
 
-        
+
         sentMessages
             .Should()
             .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
@@ -268,7 +268,7 @@ public partial class JupyterKernelTests : IDisposable
             .Should()
             .NotContainErrors();
 
-        
+
         sentMessages
             .Should()
             .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
@@ -473,6 +473,66 @@ public partial class JupyterKernelTests : IDisposable
             .ValueId
             .Should()
             .Be(display.Which.ValueId);
+
+        options.SaveState();
+    }
+
+    [Theory]
+    [JupyterHttpTestData("print (\"test\")", 3, "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("print (\"test\")", 3, "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n", KernelSpecName = "python3")]
+    [JupyterTestData("print (\"test\")", 3, "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n", KernelSpecName = "python3")]
+    public async Task can_request_hover_text_and_get_value_produced(JupyterConnectionTestData connectionData, string codeToInspect, int curPosition, string textValueSnippet)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+
+        var linePosition = SourceUtilities.GetPositionFromCursorOffset(codeToInspect, curPosition);
+        var command = new RequestHoverText(codeToInspect, linePosition);
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        var request = sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.InspectRequest)
+            .Which
+            .Content
+            .As<InspectRequest>();
+
+        request
+            .Code
+            .Should()
+            .Be(codeToInspect);
+
+        request
+            .CursorPos
+            .Should()
+            .Be(curPosition);
+
+        var hoverTextProduced = events.Should()
+           .ContainSingle<HoverTextProduced>();
+
+        hoverTextProduced
+            .Which
+            .LinePositionSpan
+            .Should()
+            .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(linePosition, linePosition));
+
+        hoverTextProduced
+            .Which
+            .Content
+            .Should()
+            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+            .Which
+            .Value
+            .Should()
+            .Contain(textValueSnippet);
 
         options.SaveState();
     }
