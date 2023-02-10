@@ -40,18 +40,6 @@ public class KernelInfo
         IsComposite = isComposite;
     }
 
-    [Obsolete("This constructor has been deprecated.  Please use the other constructor and directly set any remaining properties.")]
-    public KernelInfo(
-        string localName,
-        string? languageName,
-        string? languageVersion,
-        string[]? aliases)
-        : this(localName, aliases)
-    {
-        LanguageName = languageName;
-        LanguageVersion = languageVersion;
-    }
-
     private string CreateDisplayName()
     {
         if (string.IsNullOrWhiteSpace(LanguageName))
@@ -72,9 +60,9 @@ public class KernelInfo
 
     public string? LanguageVersion { get; set; }
 
-    public bool IsProxy { get; internal set; }
+    public bool IsProxy { get;  set; }
 
-    public bool IsComposite { get; internal set; }
+    public bool IsComposite { get;  set; }
 
     public string DisplayName
     {

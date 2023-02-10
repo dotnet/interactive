@@ -230,11 +230,10 @@ Microsoft.DotNet.Interactive
     public System.Void Dispose()
   public class KernelInfo
     .ctor(System.String localName, System.String[] aliases = null, System.Boolean isProxy = False, System.Boolean isComposite = False)
-    .ctor(System.String localName, System.String languageName, System.String languageVersion, System.String[] aliases)
     public System.String[] Aliases { get; set;}
     public System.String DisplayName { get; set;}
-    public System.Boolean IsComposite { get;}
-    public System.Boolean IsProxy { get;}
+    public System.Boolean IsComposite { get; set;}
+    public System.Boolean IsProxy { get; set;}
     public System.String LanguageName { get; set;}
     public System.String LanguageVersion { get; set;}
     public System.String LocalName { get;}
