@@ -145,7 +145,7 @@ internal class MessagePlayback : IMessageTracker
 
         if (commId is not null)
         {
-            if (m.Content is CommOpen commClose)
+            if (m.Content is CommClose commClose)
             {
                 return new CommClose(commId, commClose.Data as IReadOnlyDictionary<string, object>);
             }
@@ -174,7 +174,7 @@ internal class MessagePlayback : IMessageTracker
     public IObservable<Message> ReceivedMessages => _receivedMessages;
 }
 
-internal class TestJupyterKernelConnection : IJupyterKernelConnection
+public class TestJupyterKernelConnection : IJupyterKernelConnection
 {
     private IJupyterKernelConnection _kernelConnection;
     private IMessageTracker _tracker;
@@ -215,7 +215,7 @@ internal class TestJupyterKernelConnection : IJupyterKernelConnection
     }
 }
 
-internal class TestJupyterConnection : IJupyterConnection
+public class TestJupyterConnection : IJupyterConnection
 {
     private IJupyterConnection _testJupyterConnection;
     private TestJupyterKernelConnection _testKernelConnection;
@@ -268,6 +268,11 @@ public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
         Playback(messages);
     }
 
+    public TestJupyterConnectionOptions(IReadOnlyCollection<Message> messagesToPlayback)
+    {
+        Playback(messagesToPlayback);
+    }
+
     public TestJupyterConnectionOptions(IJupyterKernelConnectionOptions optionsToTest, string kernelSpecName, bool allowPlayback = false)
     {
         if (optionsToTest == null)
@@ -279,11 +284,15 @@ public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
         Record(optionsToTest);
     }
 
-    public TestJupyterConnectionOptions(IReadOnlyCollection<Message> messagesToPlayback)
+    public TestJupyterConnectionOptions(TestJupyterConnection connection)
     {
-        Playback(messagesToPlayback);
+        if (connection == null)
+        {
+            throw new ArgumentNullException(nameof(connection));
+        }
+        
+        _connection = connection;
     }
-
     public void Record(IJupyterKernelConnectionOptions options)
     {
         _testOptions = options;

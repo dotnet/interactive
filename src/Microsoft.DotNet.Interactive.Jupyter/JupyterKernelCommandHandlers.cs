@@ -28,7 +28,7 @@ internal partial class JupyterKernel
     public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
     {
         CancelCommandIfRequested(context);
-        var request = new InspectRequest(code: command.Code,
+        var request = new InspectRequest(code: command.Code.NormalizeLineEndings(),
                                          cursorPos: SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition),
                                          detailLevel: 0);
 

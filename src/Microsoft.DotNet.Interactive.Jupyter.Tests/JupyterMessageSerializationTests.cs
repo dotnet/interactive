@@ -43,14 +43,19 @@ public class JupyterMessageSerializationTests
         {
             yield return new object[] { message };
         }
+
+        // for each message test with values and null values where it's allowed
         IEnumerable<Message> messages()
         {
             yield return Message.Create(new KernelInfoRequest());
+
+            yield return Message.Create(new KernelInfoReply("protocolVersion", "implementation", null, new LanguageInfo("name", "version", "mimeType", "fileExt")));
             
             // codeMirror setting
             yield return Message.Create(new KernelInfoReply("protocolVersion", "implementation", null,
-                new LanguageInfo("name", "version", "mimeType", "fileExt", "pygmentsLexer", null, "nbConvertExplorer"), "banner", null));
-
+                new LanguageInfo("name", "version", "mimeType", "fileExt", "pygmentsLexer", null , "nbConvertExplorer"), 
+                "banner", null));
+            
             yield return Message.Create(new Status(StatusValues.Idle));
             
             yield return Message.Create(new ExecuteRequest("code"));
