@@ -164,6 +164,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         }
 
         var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
+
         if (commandId is not null)
         {
             command.SetId(commandId);

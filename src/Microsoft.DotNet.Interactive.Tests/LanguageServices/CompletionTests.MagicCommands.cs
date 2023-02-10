@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
@@ -307,6 +308,28 @@ public partial class CompletionTests
                   .Select(i => i.DisplayText)
                   .Should()
                   .Contain(new[] { "fsharp", "pwsh" });
+        }
+
+        [Fact]
+        public async Task Set_suggests_kernel_qualified_variable_name()
+        {
+            var kernel = CreateCompositeKernel();
+            await kernel.SubmitCodeAsync("var x = 123;");
+
+            var shareFrom = "#!set --name y --value ";
+
+            var result = await kernel
+                               .FindKernelByName("fsharp")
+                               .SendAsync(new RequestCompletions(shareFrom, new LinePosition(0, shareFrom.Length)));
+
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Select(i => i.DisplayText)
+                  .Should()
+                  .Contain(new[] { "@csharp:x" });
         }
 
         [Fact]

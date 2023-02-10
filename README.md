@@ -2,7 +2,9 @@
 
 ## What is .NET Interactive?
 
-.NET Interactive is an engine that can run multiple languages and share variables between them. Languages currently supported include: 
+.NET Interactive is an engine and API for running code in multiple languages and coordinating among them, including support for sharing data and variables, running code and getting its results remotely, and evaluating code in order to provide language services such as completions and diagnostics. While typically associated with notebooks such as Jupyter and the Polyglot Notebooks extension for Visual Studio Code, .NET Interactive has other uses as well, such as building REPLs and script engines.
+
+The languages currently supported by .NET Interactive include: 
 
 - C# 
 - F#
@@ -13,15 +15,7 @@
 - HTML*
 - [Mermaid](https://mermaid.js.org/intro/)*
 
-*Variable sharing not available
-
-## What can .NET Interactive be used for? 
-
-As a powerful and versatile engine, .NET Interactive can be used to create and power a number of tools and experiences such as: 
-
-- Polyglot Notebooks
-- REPLs
-- Embeddable script engines
+    (*&nbsp;_Variable sharing not available._)
 
 ### Polyglot Notebooks
 
@@ -29,16 +23,13 @@ Since .NET Interactive is capable of running as a kernel for notebooks, it enabl
 
 For the best experience when working with multi-language notebooks, we recommend installing the [Polyglot Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code. While the full .NET Interactive feature set is available in Jupyter, many features are only usable via code, whereas the Polyglot Notebooks extension provides additional features including a language/kernel picker for each cell, enhanced language services, a multi-kernel variable viewer, and more.
 
-### Jupyter and nteract
+### Jupyter
 
-There are several ways to get started using .NET Interactive with Jupyter, including Jupyter Notebook, JupyterLab, and nteract.
-
-* [Create and run notebooks on your machine](docs/NotebookswithJupyter.md).
-
+The most popular notebook platform is Jupyter, and .NET Interactive is a fully supported Jupyter kernel that you can use with Jupyter Notebook, JupyterLab, nteract, and other Jupyter frontends. You can read more about using .NET Interactive as a Jupyter kernel [here](docs/NotebookswithJupyter.md).
 
 ### REPLs
 
-.NET Interactive can be used as the execution engine for REPLs as well. The experimental [.NET REPL](https://github.com/jonsequitur/dotnet-repl) is one example of a command line REPL built on .NET Interactive. In addition, .NET REPL can actually be used to set up automation for your Polyglot Notebooks. 
+.NET Interactive can be used as the execution engine for REPLs as well. The experimental [.NET REPL](https://github.com/jonsequitur/dotnet-repl) is one example of a command line REPL built on .NET Interactive. In addition, .NET REPL can be used for automated command line execution of notebooks.
 
 ### Small factor devices
 

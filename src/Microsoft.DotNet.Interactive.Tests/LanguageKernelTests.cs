@@ -672,7 +672,6 @@ $${languageSpecificCode}
 
         var requestCompletionsCommand = new RequestCompletions(output, new LinePosition(line, column));
 
-        // var results = await Task.WhenAll(
         var diagnosticsResultTask = kernel.SendAsync(requestDiagnosticsCommand);
         await kernel.SendAsync(requestCompletionsCommand);
 

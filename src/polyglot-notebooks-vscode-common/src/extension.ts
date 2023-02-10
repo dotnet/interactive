@@ -170,7 +170,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     value = (requestInput.inputTypeHint === "file")
                         ? await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, title: prompt, canSelectMany: false })
                             .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath)
-                        : await vscode.window.showInputBox({ prompt, password });
+                        : await vscode.window.showInputBox({ prompt, password, ignoreFocusOut: true });
                 }
 
                 if (!value) {
