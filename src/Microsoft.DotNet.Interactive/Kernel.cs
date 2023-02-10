@@ -676,10 +676,6 @@ public abstract partial class Kernel :
         {
             kernelEvent.RoutingSlip.Stamp(KernelInfo.Uri);
         }
-        else
-        {
-            // FIX: (PublishEvent) when does this happen?
-        }
 
         _kernelEvents.OnNext(kernelEvent);
     }
