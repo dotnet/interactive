@@ -23,7 +23,8 @@ public partial class JupyterKernelTests
                     Message.Create(new KernelInfoRequest()))
         };
 
-        if (messages is not null) {
+        if (messages is not null)
+        {
             // replies from the kernel start and end with status messages
             foreach (var m in messages)
             {
@@ -36,20 +37,29 @@ public partial class JupyterKernelTests
         return replies;
     }
 
+    private async Task<Kernel> CreateJupyterKernelAsync(TestJupyterConnectionOptions options, string kernelSpecName = null, string connectionString = null)
+    {
+        var kernel = CreateKernelAsync(options);
+
+        await kernel.SubmitCodeAsync($"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecName ?? "testKernelSpec"} {connectionString}");
+
+        return kernel.FindKernelByName("testKernel");
+    }
+
     [Fact]
     public async Task submit_code_line_endings_are_normalized_to_LF()
     {
         string code = "\r\ntest\r\ncode\r\n";
         var request = Message.Create(new ExecuteRequest(code));
 
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] { Message.CreateReply(new ExecuteReplyOk(), request) }));
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+            Message.CreateReply(new ExecuteReplyOk(), request)
+        }));
 
-        var kernel = CreateKernelAsync(options);
-
-        await kernel.SubmitCodeAsync("#!connect jupyter --kernel-name testKernel --kernel-spec testKernelSpec");
+        var kernel = await CreateJupyterKernelAsync(options);
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var result = await kernel.FindKernelByName("testKernel").SubmitCodeAsync(code);
+        var result = await kernel.SubmitCodeAsync(code);
 
         sentMessages
             .Should()
@@ -66,24 +76,72 @@ public partial class JupyterKernelTests
     public async Task variable_sharing_not_enabled_for_unsupported_languages()
     {
         var options = new TestJupyterConnectionOptions(GenerateReplies(null, "unsupportedLanguage"));
+        
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        var kernel = await CreateJupyterKernelAsync(options);
 
-        var kernel = CreateKernelAsync(options);
+        sentMessages
+            .Select(m => m.Header.MessageType)
+            .Should()
+            .NotContain(JupyterMessageContentTypes.ExecuteRequest);
 
-        await kernel.SubmitCodeAsync("#!connect jupyter --kernel-name testKernel --kernel-spec testKernelSpec");
-
-        var testKernel = kernel.FindKernelByName("testKernel");
-
-        testKernel.KernelInfo.SupportedKernelCommands
+        kernel.KernelInfo.SupportedKernelCommands
             .Should().NotContain(new KernelCommandInfo(nameof(RequestValue)));
 
-        testKernel.KernelInfo.SupportedKernelCommands
+        kernel.KernelInfo.SupportedKernelCommands
             .Should().NotContain(new KernelCommandInfo(nameof(RequestValueInfos)));
 
-        testKernel.KernelInfo.SupportedKernelCommands
+        kernel.KernelInfo.SupportedKernelCommands
             .Should().NotContain(new KernelCommandInfo(nameof(SendValue)));
 
-        var directives = testKernel.KernelInfo.SupportedDirectives.Select(info => info.Name);
+        var directives = kernel.KernelInfo.SupportedDirectives.Select(info => info.Name);
         directives.Should().NotContain("#!who");
         directives.Should().NotContain("#!whos");
+    }
+
+    [Fact]
+    public async Task variable_sharing_not_enabled_for_when_target_not_found()
+    {
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new ExecuteReplyOk(), Message.Create(new ExecuteRequest("target_setup"))),
+                Message.Create(new CommClose("commId"), Message.Create(new CommOpen("commId", "target_setup", null)).Header)
+        }, "python"));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        kernel.KernelInfo.SupportedKernelCommands
+            .Should().NotContain(new KernelCommandInfo(nameof(RequestValue)));
+
+        kernel.KernelInfo.SupportedKernelCommands
+            .Should().NotContain(new KernelCommandInfo(nameof(RequestValueInfos)));
+
+        kernel.KernelInfo.SupportedKernelCommands
+            .Should().NotContain(new KernelCommandInfo(nameof(SendValue)));
+
+        var directives = kernel.KernelInfo.SupportedDirectives.Select(info => info.Name);
+        directives.Should().NotContain("#!who");
+        directives.Should().NotContain("#!whos");
+    }
+
+    [Fact]
+    public async Task can_setup_kernel_using_script()
+    {
+        string initScript = "kernel_setup_script";
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new ExecuteReplyOk(), Message.Create(new ExecuteRequest(initScript))),
+        }));
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        var kernel = await CreateJupyterKernelAsync(options, null, $"--init-script {initScript}");
+
+        sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.ExecuteRequest)
+            .Which
+            .Content
+            .As<ExecuteRequest>()
+            .Code
+            .Should()
+            .Be(initScript);
     }
 }

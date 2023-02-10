@@ -145,7 +145,7 @@ internal class MessagePlayback : IMessageTracker
 
         if (commId is not null)
         {
-            if (m.Content is CommOpen commClose)
+            if (m.Content is CommClose commClose)
             {
                 return new CommClose(commId, commClose.Data as IReadOnlyDictionary<string, object>);
             }
