@@ -1,8 +1,6 @@
 ﻿using FluentAssertions;
-using Microsoft.CodeAnalysis.Differencing;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
@@ -131,7 +129,7 @@ public partial class JupyterKernelTests
     }
 
     [Fact]
-    public async Task can_cancel_submit_code_and_get_interrupt_request_to_kernel()
+    public async Task can_cancel_submit_code_and_interrupt_kernel()
     {
         var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest())),
@@ -150,6 +148,12 @@ public partial class JupyterKernelTests
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         await waitForCommandReceieved;
         cts.Cancel();
+
+        // wait until task is done
+        await codeSubmissionTask.ContinueWith(t => { },
+            new CancellationToken(),
+            TaskContinuationOptions.OnlyOnCanceled,
+            TaskScheduler.Default);
 
         codeSubmissionTask
             .IsCanceled
@@ -222,15 +226,53 @@ public partial class JupyterKernelTests
     }
 
     [Fact]
+    public async Task can_cancel_hover_text_without_kernel_interrupt()
+    {
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest())),
+        }));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        var waitForCommandReceieved = options.MessageTracker.SentMessages
+                    .TakeUntil(m => m.Header.MessageType == JupyterMessageContentTypes.InspectRequest)
+                    .ToTask();
+
+        var cts = new CancellationTokenSource();
+        var request = new RequestHoverText("test", new LinePosition(0, 1));
+        var requestHoverTextTask = kernel.SendAsync(request, cts.Token);
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        await waitForCommandReceieved;
+        cts.Cancel();
+
+        // wait until task is done
+        await requestHoverTextTask.ContinueWith(t => { },
+            new CancellationToken(),
+            TaskContinuationOptions.OnlyOnCanceled,
+            TaskScheduler.Default);
+
+        sentMessages
+            .Select(m => m.Header.MessageType)
+            .Should()
+            .NotContain(JupyterMessageContentTypes.InterruptRequest);
+
+        requestHoverTextTask
+            .IsCanceled
+            .Should()
+            .BeTrue();
+    }
+
+    [Fact]
     public async Task can_handle_hover_text_not_found()
     {
         var code = "test";
         var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InspectReply(StatusValues.Ok, false), Message.Create(new InspectRequest(code, 1, 0))),
         }));
-        
+
         var kernel = await CreateJupyterKernelAsync(options);
-        
+
         var command = new RequestHoverText(code, SourceUtilities.GetPositionFromCursorOffset(code, 1));
         var result = await kernel.SendAsync(command);
         var events = result.Events;
@@ -244,7 +286,7 @@ public partial class JupyterKernelTests
             .Should()
             .BeEmpty();
     }
-    
+
     [Fact]
     public async Task can_fail_on_hover_text_status_error()
     {
@@ -252,7 +294,7 @@ public partial class JupyterKernelTests
         var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InspectReply(StatusValues.Error,
                                                      true,
-                                                     new Dictionary<string, object>{ { "text/plain", "doc-comment"} } ), 
+                                                     new Dictionary<string, object>{ { "text/plain", "doc-comment"} } ),
                 Message.Create(new InspectRequest(code, 1, 0))),
         }));
 
@@ -270,6 +312,44 @@ public partial class JupyterKernelTests
             .OfType<HoverTextProduced>()
             .Should()
             .BeEmpty();
+    }
+
+    [Fact]
+    public async Task can_cancel_signature_help_without_kernel_interrupt()
+    {
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest())),
+        }));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        var waitForCommandReceieved = options.MessageTracker.SentMessages
+                    .TakeUntil(m => m.Header.MessageType == JupyterMessageContentTypes.InspectRequest)
+                    .ToTask();
+
+        var cts = new CancellationTokenSource();
+        var request = new RequestSignatureHelp("test", new LinePosition(0, 1));
+        var requestSigHelpTask = kernel.SendAsync(request, cts.Token);
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        await waitForCommandReceieved;
+        cts.Cancel();
+
+        // wait until task is done
+        await requestSigHelpTask.ContinueWith(t => { },
+            new CancellationToken(),
+            TaskContinuationOptions.OnlyOnCanceled,
+            TaskScheduler.Default);
+
+        sentMessages
+            .Select(m => m.Header.MessageType)
+            .Should()
+            .NotContain(JupyterMessageContentTypes.InterruptRequest);
+
+        requestSigHelpTask
+            .IsCanceled
+            .Should()
+            .BeTrue();
     }
 
     [Fact]
@@ -321,6 +401,43 @@ public partial class JupyterKernelTests
             .OfType<SignatureHelpProduced>()
             .Should()
             .BeEmpty();
+    }
+
+    [Fact]
+    public async Task can_cancel_completions_without_kernel_interrupt()
+    {
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest())),
+        }));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        var waitForCommandReceieved = options.MessageTracker.SentMessages
+                    .TakeUntil(m => m.Header.MessageType == JupyterMessageContentTypes.CompleteRequest)
+                    .ToTask();
+
+        var cts = new CancellationTokenSource();
+        var request = new RequestCompletions("test", new LinePosition(0, 1));
+        var requestCompletionsTask = kernel.SendAsync(request, cts.Token);
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        await waitForCommandReceieved;
+        cts.Cancel();
+
+        await requestCompletionsTask.ContinueWith(t => { },
+            new CancellationToken(),
+            TaskContinuationOptions.OnlyOnCanceled,
+            TaskScheduler.Default);
+
+        sentMessages
+            .Select(m => m.Header.MessageType)
+            .Should()
+            .NotContain(JupyterMessageContentTypes.InterruptRequest);
+
+        requestCompletionsTask
+            .IsCanceled
+            .Should()
+            .BeTrue();
     }
 
     [Fact]
