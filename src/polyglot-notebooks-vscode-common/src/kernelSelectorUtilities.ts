@@ -30,6 +30,8 @@ export function getKernelSelectorOptions(kernel: CompositeKernel, document: vsco
     for (const item of notebookMetadata.kernelInfo.items) {
         const kernelInfo: contracts.KernelInfo = {
             localName: item.name,
+            isComposite: false,
+            isProxy: false,
             aliases: item.aliases,
             languageName: item.languageName,
             displayName: item.name,

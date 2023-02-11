@@ -16,7 +16,7 @@ public class KernelInfo
     private string? _displayName;
 
     [JsonConstructor]
-    public KernelInfo(string localName, string[]? aliases = null)
+    public KernelInfo(string localName, string[]? aliases = null, bool isProxy = false, bool isComposite = false)
     {
         if (string.IsNullOrWhiteSpace(localName))
         {
@@ -36,18 +36,8 @@ public class KernelInfo
         {
             NameAndAliases.UnionWith(aliases);
         }
-    }
-
-    [Obsolete("This constructor has been deprecated.  Please use the other constructor and directly set any remaining properties.")]
-    public KernelInfo(
-        string localName,
-        string? languageName,
-        string? languageVersion,
-        string[]? aliases)
-        : this(localName, aliases)
-    {
-        LanguageName = languageName;
-        LanguageVersion = languageVersion;
+        IsProxy = isProxy;
+        IsComposite = isComposite;
     }
 
     private string CreateDisplayName()
@@ -69,6 +59,10 @@ public class KernelInfo
     public string? LanguageName { get; set; }
 
     public string? LanguageVersion { get; set; }
+
+    public bool IsProxy { get;  set; }
+
+    public bool IsComposite { get;  set; }
 
     public string DisplayName
     {

@@ -21,6 +21,8 @@ describe('dynamic grammar tests', async () => {
 
     const defaultKernelInfos: contracts.KernelInfo[] = [
         {
+            isComposite: false,
+            isProxy: false,
             localName: 'test-csharp',
             uri: 'kernel://test-csharp',
             languageName: 'csharp',
@@ -30,6 +32,8 @@ describe('dynamic grammar tests', async () => {
             supportedDirectives: [],
         },
         {
+            isComposite: false,
+            isProxy: false,
             localName: 'test-python',
             uri: 'kernel://test-python',
             languageName: 'python',
@@ -229,6 +233,8 @@ describe('dynamic grammar tests', async () => {
         // rebuild the grammar with all new KernelInfos
         const updatedKernelInfos: contracts.KernelInfo[] = [
             {
+                isComposite: false,
+                isProxy: false,
                 localName: 'test-erlang',
                 uri: 'kernel://test-erlang',
                 languageName: 'erlang',
@@ -281,6 +287,8 @@ describe('dynamic grammar tests', async () => {
 
         // rebuild the grammar with an additional KernelInfo
         const newKernelInfo: contracts.KernelInfo = {
+            isComposite: false,
+            isProxy: false,
             localName: 'test-erlang',
             uri: 'kernel://test-erlang',
             languageName: 'erlang',
@@ -307,6 +315,8 @@ describe('dynamic grammar tests', async () => {
 
     it('tokens are parsed when kernel specifies a language alias instead of the root language name', async () => {
         const kernelInfoWithAlias: contracts.KernelInfo = {
+            isComposite: false,
+            isProxy: false,
             localName: 'test-kernel-with-alias',
             uri: 'kernel://test-kernel-with-alias',
             languageName: 'see_sharp', // this is an alias and not the real name "csharp"
@@ -333,6 +343,8 @@ describe('dynamic grammar tests', async () => {
     it('tokens are not parsed when no language name is specified in KernelInfo', async () => {
         const updatedKernelInfos: contracts.KernelInfo[] = [
             {
+                isComposite: false,
+                isProxy: false,
                 localName: 'test-perl',
                 uri: 'kernel://test-perl',
                 languageName: undefined, // not specified; no grammar should be applied
@@ -356,6 +368,8 @@ $x = "this is perl code";
     it('tokens are not parsed when language name in KernelInfo does not match any known language', async () => {
         const updatedKernelInfos: contracts.KernelInfo[] = [
             {
+                isComposite: false,
+                isProxy: false,
                 localName: 'test-perl',
                 uri: 'kernel://test-perl',
                 languageName: 'not-perl', // language name is specified, but doesn't match any known language
@@ -379,6 +393,8 @@ $x = "this is perl code";
     it('http grammar can classify code', async () => {
         const updatedKernelInfos: contracts.KernelInfo[] = [
             {
+                isComposite: false,
+                isProxy: false,
                 localName: 'httpRequest',
                 uri: 'kernel://httpRequest',
                 languageName: 'http',
@@ -493,6 +509,8 @@ This is \`markdown\`.
 
         // rebuild the grammar with an additional KernelInfo
         const newKernelInfo: contracts.KernelInfo = {
+            isComposite: false,
+            isProxy: false,
             localName: 'test-erlang',
             uri: 'kernel://test-erlang',
             languageName: 'erlang',
@@ -529,6 +547,8 @@ This is \`markdown\`.
 
         // rebuild the grammar with an additional KernelInfo
         const newKernelInfo: contracts.KernelInfo = {
+            isComposite: false,
+            isProxy: false,
             localName: 'test-erlang',
             uri: 'kernel://test-erlang',
             languageName: 'erlang',

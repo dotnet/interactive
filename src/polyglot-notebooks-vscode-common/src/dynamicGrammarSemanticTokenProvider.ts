@@ -203,6 +203,8 @@ export class DynamicGrammarSemanticTokenProvider {
         if (!hasMarkdownKernel) {
             // the markdown kernel isn't real, but still needs to be accounted for in the grammar
             documentKernelInfos.set('markdown', {
+                isComposite: false,
+                isProxy: false,
                 localName: 'markdown', // always assume it's called #!markdown
                 displayName: 'unused',
                 languageName: 'markdown',

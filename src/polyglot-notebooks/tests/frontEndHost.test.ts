@@ -65,6 +65,8 @@ describe("frontEndHost", () => {
                 {
                     aliases: [],
                     displayName: 'testKernel',
+                    isComposite: true,
+                    isProxy: false,
                     localName: 'testKernel',
                     supportedDirectives: [],
                     supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
@@ -80,8 +82,10 @@ describe("frontEndHost", () => {
                 kernelInfo:
                 {
                     aliases: ['js'],
-                    languageName: 'JavaScript',
                     displayName: 'JavaScript',
+                    isComposite: false,
+                    isProxy: false,
+                    languageName: 'JavaScript',
                     localName: 'javascript',
                     supportedDirectives: [],
                     supportedKernelCommands:
@@ -108,6 +112,8 @@ describe("frontEndHost", () => {
             eventType: contracts.KernelInfoProducedType,
             event: <contracts.KernelInfoProduced>{
                 kernelInfo: {
+                    isComposite: false,
+                    isProxy: false,
                     localName: 'sql',
                     uri: 'kernel://remote/sql',
                     aliases: [],
@@ -136,11 +142,13 @@ describe("frontEndHost", () => {
         expect(kernel).to.not.be.undefined;
         expect(kernel!.kernelInfo).to.deep.equal({
             aliases: [],
+            displayName: 'SQL',
+            isComposite: false,
+            isProxy: true,
             languageName: 'SQL',
             languageVersion: '10',
             localName: 'sql',
             remoteUri: 'kernel://remote/sql',
-            displayName: 'SQL',
             supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },
@@ -161,6 +169,8 @@ describe("frontEndHost", () => {
             eventType: contracts.KernelInfoProducedType,
             event: <contracts.KernelInfoProduced>{
                 kernelInfo: {
+                    isComposite: false,
+                    isProxy: false,
                     localName: 'sql',
                     uri: 'kernel://remote/sql',
                     aliases: [],
@@ -178,6 +188,8 @@ describe("frontEndHost", () => {
             eventType: contracts.KernelInfoProducedType,
             event: <contracts.KernelInfoProduced>{
                 kernelInfo: {
+                    isComposite: false,
+                    isProxy: false,
                     localName: 'sql',
                     uri: 'kernel://remote/sql',
                     aliases: [],
@@ -206,11 +218,13 @@ describe("frontEndHost", () => {
         expect(kernel).to.not.be.undefined;
         expect(kernel!.kernelInfo).to.deep.equal({
             aliases: [],
+            displayName: 'SQL',
+            isComposite: false,
+            isProxy: true,
             languageName: 'SQL',
             languageVersion: '10',
             localName: 'sql',
             remoteUri: 'kernel://remote/sql',
-            displayName: 'SQL',
             supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },
