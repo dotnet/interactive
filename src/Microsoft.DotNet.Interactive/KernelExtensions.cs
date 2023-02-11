@@ -272,14 +272,47 @@ public static class KernelExtensions
 
     private static void ConfigureAndAddSetMagicCommand<T>(T kernel) where T : Kernel
     {
-        var fromValueOption = new Option<string>(
+        var valueOption = new Option<string>(
             "--value",
-            description: "Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.")
+            description:
+            "The value to be set. @input:user_prompt allows you to prompt the user for this value. Values can be requested from other kernels by name, for example @csharp:variableName.")
         {
-            IsRequired = true
+            IsRequired = true,
+            ArgumentHelpName = "@source:sourceValueName"
         };
 
-        var mimeTypeOption = new Option<string>("--mime-type", "Share the value as a string formatted to the specified MIME type.")
+        valueOption.AddCompletions(_ =>
+        {
+            // FIX: (ConfigureAndAddSetMagicCommand) why is this getting invoked this option wasn't specified?
+
+            if (kernel.ParentKernel is { } composite)
+            {
+                var getValueTasks = composite.ChildKernels
+                                             .Where(
+                                                 k => k != kernel &&
+                                                      k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
+                                             .Select(async k => await k.SendAsync(new RequestValueInfos()));
+
+                var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
+
+                return tasks
+                       .Select(t => t.Events.OfType<ValueInfosProduced>())
+                       .SelectMany(events => events.Select(e => new { e.Command.TargetKernelName, e.ValueInfos }))
+                       .SelectMany(x => x.ValueInfos.Select(i => $"@{x.TargetKernelName}:{i.Name}"))
+                       .OrderBy(x => x)
+                       .Select(n => new CompletionItem(n))
+                       .ToArray();
+            }
+
+            return Array.Empty<CompletionItem>();
+        });
+
+        var mimeTypeOption = new Option<string>(
+                "--mime-type", 
+                "The MIME type by which the value should be represented. This will often determine how an object will be formatted into a string.")
+            {
+                ArgumentHelpName = "MIME-TYPE"
+            }
             .AddCompletions(
                 JsonFormatter.MimeType,
                 HtmlFormatter.MimeType,
@@ -287,23 +320,21 @@ public static class KernelExtensions
 
         var nameOption = new Option<string>(
             "--name",
-            description: "This is the name used to declare and set the value in the kernel."
-
-        )
+            description: "The name of the value")
         {
             IsRequired = true
         };
 
-        var set = new Command("#!set")
+        var set = new Command("#!set", "Sets a value in the current kernel")
         {
             nameOption,
-            fromValueOption,
+            valueOption,
             mimeTypeOption
         };
 
         set.SetHandler(cmdLineContext =>
         {
-            HandleSetMagicCommand(kernel, cmdLineContext, nameOption, fromValueOption, mimeTypeOption);
+            HandleSetMagicCommand(kernel, cmdLineContext, nameOption, valueOption, mimeTypeOption);
         });
 
         kernel.AddDirective(set);
@@ -313,7 +344,7 @@ public static class KernelExtensions
     {
         var sourceValueNameArg = new Argument<string>(
             "name",
-            "The name of the value to share. (This is also the default name value created in the destination kernel, unless --as is used to specify a different one.)");
+            "The name of the value to share. (This is also the default name of the value created in the destination kernel, unless --as is used to specify a different one.)");
 
         sourceValueNameArg.AddCompletions(_ =>
         {

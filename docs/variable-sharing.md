@@ -1,10 +1,21 @@
 # Variable sharing
 
-.NET Interactive enables you to write code in multiple languages within a single notebook and in order to take advantage of those languages' different strengths, you might find it useful to share data between them. By default, .NET Interactive provides [subkernels](kernels-overview.md) for three different languages within the same process. You can share variables between .NET subkernels using the `#!share` magic command.
+The .NET Interactive kernel enables you to write code in multiple languages within a single notebook. In order to take advantage of the different strengths of each language, you'll find it useful to share data between them. By default, .NET Interactive supports a number of different languages and most of them allow sharing using the `#!set` and `#!share` magic commands.
 
-<img src="https://user-images.githubusercontent.com/547415/82468160-55d48c00-9a77-11ea-89f6-6b167d4cf8a2.png" width="40%">
+> *&nbsp;_The `#!share` magic command has been in place since the earliest days of .NET Interactive while `#!set` is newer and provides a superset of the capabilities of `#!share`._
 
-Variables are shared by reference for reference types. A consequence of this is that if you share a mutable object, changes to its state will be visible across subkernels:
+
+
+
+
+
+## Sharing by reference
+
+In certain specific cases, variables can be shared by reference for reference types. This comes with a number of caveats. 
+
+* The source and destination kernels must be running in the same process.
+
+One consequence of this is that if you share a mutable object, changes to its state will be visible across subkernels:
 
 <img src="https://user-images.githubusercontent.com/547415/82737074-009cb280-9ce3-11ea-82a2-8ef509cb7122.png" width="40%">
 
@@ -25,7 +36,6 @@ There are three ways to use `#!value` to get data into your notebook session:
 If the data you want to read into your notebook is stored in a file, you can use `#!value` with the `--from-file` option:
 
 <img src="https://user-images.githubusercontent.com/547415/89600459-fdf82680-d816-11ea-8ba6-1d5ec4e2a7e7.png" width="40%">
-
 
 ### 3. From a URL
 

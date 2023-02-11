@@ -1,7 +1,11 @@
 {
   "folders": [
     {
-      "path": ".."
+      "path": "..",
+      "name": "(root)"
+    },
+    {
+      "path": "../src/polyglot-notebooks"
     },
     {
       "path": "../src/polyglot-notebooks-browser"
@@ -10,17 +14,11 @@
       "path": "../src/polyglot-notebooks-ui-components"
     },
     {
-      "path": "../src/polyglot-notebooks"
-    },
-    {
-      "name": "VS Code - Stable",
       "path": "../src/polyglot-notebooks-vscode"
     },
     {
-      "name": "VS Code - Insiders",
       "path": "../src/polyglot-notebooks-vscode-insiders"
     }
-  
   ],
   "settings": {}
 }

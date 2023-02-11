@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import * as contracts from './polyglot-notebooks/contracts';
 import * as metadataUtilities from './metadataUtilities';
-import * as versionSpecificFunctions from '../versionSpecificFunctions';
+import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { ClientMapper } from './clientMapper';
 import { isKernelEventEnvelope } from './polyglot-notebooks';
 import * as kernelSelectorUtilities from './kernelSelectorUtilities';
@@ -45,7 +45,7 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                             notebookCellMetadata.kernelName = selectedKernelData.kernelName;
                             const newRawMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
                             const mergedMetadata = metadataUtilities.mergeRawMetadata(cell.metadata, newRawMetadata);
-                            const _succeeded = await versionSpecificFunctions.replaceNotebookCellMetadata(codeCell.notebook.uri, codeCell.index, mergedMetadata);
+                            const _succeeded = await vscodeNotebookManagement.replaceNotebookCellMetadata(codeCell.notebook.uri, codeCell.index, mergedMetadata);
 
                             // update language configuration
                             ServiceCollection.Instance.LanguageConfigurationManager.ensureLanguageConfigurationForDocument(cell.document);

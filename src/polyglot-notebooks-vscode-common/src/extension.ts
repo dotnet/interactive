@@ -23,9 +23,9 @@ import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 import { createOutput, debounce, getDotNetVersionOrThrow, getWorkingDirectoryForNotebook, isVersionGreaterOrEqual, processArguments } from './utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
-import * as notebookControllers from '../notebookControllers';
-import * as notebookSerializers from '../notebookSerializers';
-import * as versionSpecificFunctions from '../versionSpecificFunctions';
+import * as notebookControllers from './notebookControllers';
+import * as notebookSerializers from './notebookSerializers';
+import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { ErrorOutputCreator, InteractiveClient } from './interactiveClient';
 
 import * as vscodeUtilities from './vscodeUtilities';
@@ -163,14 +163,14 @@ export async function activate(context: vscode.ExtensionContext) {
                 const password = requestInput.isPassword;
 
                 let value;
-                let customInputRequest = await versionSpecificFunctions.handleCustomInputRequest(prompt, requestInput.inputTypeHint, password);
+                let customInputRequest = await vscodeNotebookManagement.handleCustomInputRequest(prompt, requestInput.inputTypeHint, password);
                 if (customInputRequest.handled) {
                     value = customInputRequest.result;
                 } else {
                     value = (requestInput.inputTypeHint === "file")
                         ? await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, title: prompt, canSelectMany: false })
                             .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath)
-                        : await vscode.window.showInputBox({ prompt, password });
+                        : await vscode.window.showInputBox({ prompt, password, ignoreFocusOut: true });
                 }
 
                 if (!value) {
@@ -217,7 +217,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 };
                 const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
                 newCell.metadata = rawCellMetadata;
-                const succeeded = await versionSpecificFunctions.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
+                const succeeded = await vscodeNotebookManagement.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
 
                 if (!succeeded) {
                     throw new Error(`Unable to add cell to notebook '${notebookUri.toString()}'.`);

@@ -9,9 +9,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
-using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
@@ -34,6 +32,7 @@ public sealed class CompositeKernel :
 
     public CompositeKernel(string name = null) : base(name ?? ".NET")
     {
+        KernelInfo.IsComposite = true;
         _childKernels = new(this);
     }
 

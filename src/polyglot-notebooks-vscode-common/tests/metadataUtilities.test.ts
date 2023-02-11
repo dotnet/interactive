@@ -280,26 +280,28 @@ describe('metadata utility tests', async () => {
             }
         };
         const kernelInfos = metadataUtilities.getKernelInfosFromNotebookDocument(notebookDocument);
-        expect(kernelInfos).to.deep.equal([
-            {
-                localName: 'fsharp',
-                uri: 'unused',
-                aliases: [],
-                languageName: undefined,
-                displayName: 'unused',
-                supportedKernelCommands: [],
-                supportedDirectives: []
-            },
-            {
-                localName: 'snake',
-                uri: 'unused',
-                aliases: [],
-                languageName: 'python',
-                displayName: 'unused',
-                supportedKernelCommands: [],
-                supportedDirectives: []
-            }
-        ]);
+        expect(kernelInfos).to.deep.equal([{
+            aliases: [],
+            displayName: 'unused',
+            isComposite: false,
+            isProxy: false,
+            languageName: undefined,
+            localName: 'fsharp',
+            supportedDirectives: [],
+            supportedKernelCommands: [],
+            uri: 'unused'
+        },
+        {
+            aliases: [],
+            displayName: 'unused',
+            isComposite: false,
+            isProxy: false,
+            languageName: 'python',
+            localName: 'snake',
+            supportedDirectives: [],
+            supportedKernelCommands: [],
+            uri: 'unused'
+        }]);
     });
 
     it('kernel infos can be created from .ipynb notebook document', () => {
@@ -332,26 +334,28 @@ describe('metadata utility tests', async () => {
             }
         };
         const kernelInfos = metadataUtilities.getKernelInfosFromNotebookDocument(notebookDocument);
-        expect(kernelInfos).to.deep.equal([
-            {
-                localName: 'fsharp',
-                uri: 'unused',
-                aliases: [],
-                languageName: undefined,
-                displayName: 'unused',
-                supportedKernelCommands: [],
-                supportedDirectives: []
-            },
-            {
-                localName: 'snake',
-                uri: 'unused',
-                aliases: [],
-                languageName: 'python',
-                displayName: 'unused',
-                supportedKernelCommands: [],
-                supportedDirectives: []
-            }
-        ]);
+        expect(kernelInfos).to.deep.equal([{
+            aliases: [],
+            displayName: 'unused',
+            isComposite: false,
+            isProxy: false,
+            languageName: undefined,
+            localName: 'fsharp',
+            supportedDirectives: [],
+            supportedKernelCommands: [],
+            uri: 'unused'
+        },
+        {
+            aliases: [],
+            displayName: 'unused',
+            isComposite: false,
+            isProxy: false,
+            languageName: 'python',
+            localName: 'snake',
+            supportedDirectives: [],
+            supportedKernelCommands: [],
+            uri: 'unused'
+        }]);
     });
 
     it('kernelspec metadata can be created from notebook document metadata (C#)', () => {
