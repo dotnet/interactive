@@ -246,7 +246,7 @@ public partial class JupyterKernelTests
     }
     
     [Fact]
-    public async Task can_fail_on_inspect_reply_status_error()
+    public async Task can_fail_on_hover_text_status_error()
     {
         var code = "test";
         var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
@@ -268,6 +268,82 @@ public partial class JupyterKernelTests
 
         events
             .OfType<HoverTextProduced>()
+            .Should()
+            .BeEmpty();
+    }
+
+    [Fact]
+    public async Task can_handle_signature_help_not_found()
+    {
+        var code = "test";
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new InspectReply(StatusValues.Ok, false), Message.Create(new InspectRequest(code, 1, 0))),
+        }));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        var command = new RequestSignatureHelp(code, SourceUtilities.GetPositionFromCursorOffset(code, 1));
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        events
+            .OfType<SignatureHelpProduced>()
+            .Should()
+            .BeEmpty();
+    }
+
+    [Fact]
+    public async Task can_fail_on_signature_help_status_error()
+    {
+        var code = "test";
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new InspectReply(StatusValues.Error,
+                                                     true,
+                                                     new Dictionary<string, object>{ { "text/plain", "doc-comment"} } ),
+                Message.Create(new InspectRequest(code, 1, 0))),
+        }));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        var command = new RequestSignatureHelp(code, SourceUtilities.GetPositionFromCursorOffset(code, 1));
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .Contain(e => e is CommandFailed);
+
+        events
+            .OfType<SignatureHelpProduced>()
+            .Should()
+            .BeEmpty();
+    }
+
+    [Fact]
+    public async Task can_fail_on_completions_status_error()
+    {
+        var code = "test";
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new CompleteReply(0, 1, new[] {"test1", "test2"}, null, StatusValues.Error),
+                Message.Create(new CompleteRequest(code, 1))),
+        }));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        var command = new RequestCompletions(code, SourceUtilities.GetPositionFromCursorOffset(code, 1));
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .Contain(e => e is CommandFailed);
+
+        events
+            .OfType<CompletionsProduced>()
             .Should()
             .BeEmpty();
     }
