@@ -62,7 +62,9 @@ internal class MessageRecorder : IMessageTracker
         _sentMessages.Dispose();
         _receivedMessages.Dispose();
     }
-
+    
+    public bool IsDisposed => _sentMessages.IsDisposed && _receivedMessages.IsDisposed;
+    
     public IObservable<Message> SentMessages => _sentMessages;
     public IObservable<Message> ReceivedMessages => _receivedMessages;
 }
@@ -125,7 +127,7 @@ internal class MessagePlayback : IMessageTracker
                 }
                 else
                 {
-                    await Task.Delay(200);
+                    await Task.Delay(50);
                 }
             }
         }, _cts.Token);

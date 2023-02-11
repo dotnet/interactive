@@ -28,7 +28,7 @@ internal partial class JupyterKernel
     public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
     {
         CancelCommandIfRequested(context);
-        var request = new InspectRequest(code: command.Code.NormalizeLineEndings(),
+        var request = new InspectRequest(code: command.Code,
                                          cursorPos: SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition),
                                          detailLevel: 0);
 
@@ -159,6 +159,11 @@ internal partial class JupyterKernel
 
         await Sender.SendAsync(executeRequest);
         await processMessages.ToTask(context.CancellationToken);
+
+        if (results is not null && results.Status != StatusValues.Ok)
+        {
+            context.Fail(command);
+        }
     }
 
     private async Task HandleExecuteReplyMessageAsync(Protocol.Message message, SubmitCode command, KernelInvocationContext context)
