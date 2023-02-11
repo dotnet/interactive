@@ -88,7 +88,7 @@ export class ProxyKernel extends Kernel {
                             const original = [...commandInvocation.commandEnvelope?.routingSlip ?? []];
                             routingSlip.continueCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
                             envelope.command!.routingSlip = [...commandInvocation.commandEnvelope.routingSlip ?? []];//?
-                            Logger.default.warn(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, command routingSlip :${original}] has changed to: ${JSON.stringify(commandInvocation.commandEnvelope.routingSlip ?? [])}`);
+                            Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, command routingSlip :${original}] has changed to: ${JSON.stringify(commandInvocation.commandEnvelope.routingSlip ?? [])}`);
                         } catch (e: any) {
                             Logger.default.error(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, error ${e?.message}`);
                         }
