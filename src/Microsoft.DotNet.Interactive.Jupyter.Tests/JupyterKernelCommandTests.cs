@@ -225,18 +225,20 @@ public partial class JupyterKernelTests : IDisposable
             .Be(codeToRun);
 
 
+        var displayValueProduced = events.Should()
+           .ContainSingle<DisplayedValueProduced>()
+           .Which;
+
         for (int i = 0; i < mimeTypes.Length; i++)
         {
-            events.Should()
-           .ContainSingle<DisplayedValueProduced>()
-           .Which
-           .FormattedValues
-            .Should()
-            .ContainSingle(v => v.MimeType == mimeTypes[i])
-            .Which
-            .Value
-            .Should()
-            .Be(valuesToExpect[i]);
+            displayValueProduced
+            .FormattedValues
+                .Should()
+                .ContainSingle(v => v.MimeType == mimeTypes[i])
+                .Which
+                .Value
+                .Should()
+                .Be(valuesToExpect[i]);
         }
 
         options.SaveState();
@@ -533,6 +535,60 @@ public partial class JupyterKernelTests : IDisposable
             .Value
             .Should()
             .Contain(textValueSnippet);
+
+        options.SaveState();
+    }
+
+    [Theory]
+    [JupyterHttpTestData("print (\"test\")", 3, "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("print (\"test\")", 3, "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n", KernelSpecName = "python3")]
+    [JupyterTestData("print (\"test\")", 3, "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n", KernelSpecName = "python3")]
+    public async Task can_request_signature_help_and_get_value_produced(JupyterConnectionTestData connectionData, string codeToInspect, int curPosition, string textValueSnippet)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+
+        var linePosition = SourceUtilities.GetPositionFromCursorOffset(codeToInspect, curPosition);
+        var command = new RequestSignatureHelp(codeToInspect, linePosition);
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        var request = sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.InspectRequest)
+            .Which
+            .Content
+            .As<InspectRequest>();
+
+        request
+            .Code
+            .Should()
+            .Be(codeToInspect);
+
+        request
+            .CursorPos
+            .Should()
+            .Be(curPosition);
+
+        events
+             .Should()
+             .ContainSingle<SignatureHelpProduced>()
+             .Which
+             .Signatures
+             .Select(s => s.Documentation)
+             .Should()
+             .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+             .Which
+             .Value
+             .Should()
+             .Contain(textValueSnippet);
 
         options.SaveState();
     }

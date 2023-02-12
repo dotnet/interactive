@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
@@ -126,6 +127,21 @@ public partial class JupyterKernelTests
             .Code
             .Should()
             .Be(initScript);
+    }
+
+    [Fact]
+    public async Task jupyter_and_kernel_connection_is_disposed_on_dispose()
+    {
+        var options = new TestJupyterConnectionOptions(GenerateReplies());
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        options.Connection.IsDisposed.Should().BeFalse();
+        options.Connection.KernelConnection.IsDisposed.Should().BeFalse();
+        
+        kernel.Dispose();
+
+        options.Connection.IsDisposed.Should().BeTrue();
+        options.Connection.KernelConnection.IsDisposed.Should().BeTrue();
     }
 
     [Fact]
@@ -315,6 +331,49 @@ public partial class JupyterKernelTests
     }
 
     [Fact]
+    public async Task hover_text_unrecognized_text_formatting_is_removed()
+    {
+        var ansiEscapedText = 
+            "\u001b[30mBlack,\u001b[31mRed,\u001b[32mGreen,\u001b[33mYellow,\u001b[34mBlue,\u001b[35mMagenta,\u001b[36mCyan,\u001b[37mWhite,\u001b[0mReset," +
+            "\u001b[30;1mBright Black,\u001b[31;1mBright Red,\u001b[32;1mBright Green,\u001b[33;1mBright Yellow,\u001b[34;1mBright Blue,\u001b[35;1mBright Magenta,\u001b[36;1mBright Cyan,\u001b[37;1mBright White," +
+            "\u001b[1mBold,\u001b[4mUnderline,\u001b[7mReversed," +
+            "\u001b[1mm\u001b[3009567mi\u001b[30m\u001B[1mc";
+        var code = "test";
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new InspectReply(StatusValues.Ok,
+                                                     true,
+                                                     new Dictionary<string, object>{ 
+                                                         { "text/plain", ansiEscapedText} } ),
+                Message.Create(new InspectRequest(code, 1, 0))),
+        }));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        var command = new RequestHoverText(code, SourceUtilities.GetPositionFromCursorOffset(code, 1));
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        events
+            .Should()
+            .ContainSingle<HoverTextProduced>()
+            .Which
+            .Content
+            .Should()
+            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+            .Which
+            .Value
+            .Should()
+            .Be("Black,Red,Green,Yellow,Blue,Magenta,Cyan,White,Reset,"
+            + "Bright Black,Bright Red,Bright Green,Bright Yellow,Bright Blue,Bright Magenta,Bright Cyan,Bright White,"
+            + "Bold,Underline,Reversed,"
+            + "mic");
+    }
+
+    [Fact]
     public async Task can_cancel_signature_help_without_kernel_interrupt()
     {
         var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
@@ -403,6 +462,50 @@ public partial class JupyterKernelTests
             .BeEmpty();
     }
 
+    [Fact]
+    public async Task signature_help_unrecognized_text_formatting_is_removed()
+    {
+        var ansiEscapedText =
+            "\u001b[30mBlack,\u001b[31mRed,\u001b[32mGreen,\u001b[33mYellow,\u001b[34mBlue,\u001b[35mMagenta,\u001b[36mCyan,\u001b[37mWhite,\u001b[0mReset," +
+            "\u001b[30;1mBright Black,\u001b[31;1mBright Red,\u001b[32;1mBright Green,\u001b[33;1mBright Yellow,\u001b[34;1mBright Blue,\u001b[35;1mBright Magenta,\u001b[36;1mBright Cyan,\u001b[37;1mBright White," +
+            "\u001b[1mBold,\u001b[4mUnderline,\u001b[7mReversed," +
+            "\u001b[1mm\u001b[3009567mi\u001b[30m\u001B[1mc";
+        var code = "test";
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new InspectReply(StatusValues.Ok,
+                                                     true,
+                                                     new Dictionary<string, object>{
+                                                         { "text/plain", ansiEscapedText} } ),
+                Message.Create(new InspectRequest(code, 1, 0))),
+        }));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        var command = new RequestSignatureHelp(code, SourceUtilities.GetPositionFromCursorOffset(code, 1));
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        events
+            .Should()
+            .ContainSingle<SignatureHelpProduced>()
+            .Which
+            .Signatures
+            .Select(s => s.Documentation)
+            .Should()
+            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+            .Which
+            .Value
+            .Should()
+            .Be("Black,Red,Green,Yellow,Blue,Magenta,Cyan,White,Reset,"
+            + "Bright Black,Bright Red,Bright Green,Bright Yellow,Bright Blue,Bright Magenta,Bright Cyan,Bright White,"
+            + "Bold,Underline,Reversed,"
+            + "mic");
+    }
+    
     [Fact]
     public async Task can_cancel_completions_without_kernel_interrupt()
     {
