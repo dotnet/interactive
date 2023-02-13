@@ -31,7 +31,7 @@ public partial class JupyterKernelTests : IDisposable
     private const bool RECORD_FOR_PLAYBACK = false;
     private const string PythonKernelName = "python3";
     private const string RKernelName = "ir";
-    
+
     public JupyterKernelTests(ITestOutputHelper output)
     {
         _output = output;
@@ -596,7 +596,7 @@ public partial class JupyterKernelTests : IDisposable
              .Select(s => s.Documentation);
 
         signaturesProduced.Should().HaveCount(mimeTypes.Length);
-        
+
         for (int i = 0; i < mimeTypes.Length; i++)
         {
             signaturesProduced
@@ -607,6 +607,70 @@ public partial class JupyterKernelTests : IDisposable
                 .Should()
                 .Contain(textValueSnippets[i]);
         }
+
+        options.SaveState();
+    }
+
+    [Theory]
+    [JupyterHttpTestData("pr", 0, 0, 2, new[] { "print", "property" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("pr", 0, 0, 2, new[] { "print", "property" }, KernelSpecName = PythonKernelName)]
+    [JupyterTestData("pr", 0, 0, 2, new[] { "print", "property" }, KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData("pr", 0, 0, 2, new[] { "print", "predict" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("pr", 0, 0, 2, new[] { "print", "predict" }, KernelSpecName = RKernelName)]
+    [JupyterTestData("pr", 0, 0, 2, new[] { "print", "predict" }, KernelSpecName = RKernelName)]
+    public async Task can_request_completions_and_get_value_produced(JupyterConnectionTestData connectionData, string codeToInspect, int linePos, int startPos, int curPosition, string[] exampleMatches)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+
+        var linePosition = SourceUtilities.GetPositionFromCursorOffset(codeToInspect, curPosition);
+        var command = new RequestCompletions(codeToInspect, linePosition);
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        var request = sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.CompleteRequest)
+            .Which
+            .Content
+            .As<CompleteRequest>();
+
+        request
+            .Code
+            .Should()
+            .Be(codeToInspect);
+
+        request
+            .CursorPosition
+            .Should()
+            .Be(curPosition);
+
+        var completionsProduced = events
+             .Should()
+             .ContainSingle<CompletionsProduced>();
+
+        completionsProduced
+            .Which
+            .LinePositionSpan
+            .Should()
+            .BeEquivalentToRespectingRuntimeTypes(
+                    new LinePositionSpan(
+                            new LinePosition(linePos, startPos),
+                            new LinePosition(linePos, curPosition)));
+
+        completionsProduced
+            .Which
+            .Completions
+            .Select(c => c.DisplayText)
+            .Should()
+            .Contain(exampleMatches);
 
         options.SaveState();
     }
