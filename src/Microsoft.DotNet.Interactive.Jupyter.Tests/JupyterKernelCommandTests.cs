@@ -625,6 +625,7 @@ public partial class JupyterKernelTests : IDisposable
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var linePosition = SourceUtilities.GetPositionFromCursorOffset(codeToInspect, curPosition);
         var command = new RequestCompletions(codeToInspect, linePosition);
@@ -672,6 +673,26 @@ public partial class JupyterKernelTests : IDisposable
             .Should()
             .Contain(exampleMatches);
 
+        var completionsFromKernel = receivedMessages
+            .Where(m => m.Header.MessageType == JupyterMessageContentTypes.CompleteReply)
+            .FirstOrDefault()
+            .Content
+            .As<CompleteReply>();
+
+        completionsProduced
+            .Which
+            .Completions
+            .Select(c => c.DisplayText)
+            .Should()
+            .Contain(completionsFromKernel.Matches);
+
+        completionsProduced
+           .Which
+           .Completions
+           .Select(c => c.InsertText)
+           .Should()
+           .Contain(completionsFromKernel.Matches);
+        
         options.SaveState();
     }
 }
