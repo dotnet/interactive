@@ -45,7 +45,7 @@ public partial class JupyterKernelTests
 
     private async Task<Kernel> CreateJupyterKernelAsync(TestJupyterConnectionOptions options, string kernelSpecName = null, string connectionString = null)
     {
-        var kernel = CreateKernelAsync(options);
+        var kernel = CreateCompositeKernelAsync(options);
 
         var result = await kernel.SubmitCodeAsync($"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecName ?? "testKernelSpec"} {connectionString}");
 
@@ -133,8 +133,14 @@ public partial class JupyterKernelTests
     public async Task jupyter_and_kernel_connection_is_disposed_on_dispose()
     {
         var options = new TestJupyterConnectionOptions(GenerateReplies());
-        var kernel = await CreateJupyterKernelAsync(options);
+        var kernel = CreateCompositeKernelAsync(options);
 
+        var result = await kernel.SubmitCodeAsync($"#!connect jupyter --kernel-name testKernel --kernel-spec testKernelSpec");
+
+        result.Events
+            .Should()
+            .NotContainErrors();
+        
         options.Connection.IsDisposed.Should().BeFalse();
         options.Connection.KernelConnection.IsDisposed.Should().BeFalse();
         
