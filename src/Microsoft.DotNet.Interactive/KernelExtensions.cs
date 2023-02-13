@@ -283,8 +283,6 @@ public static class KernelExtensions
 
         valueOption.AddCompletions(_ =>
         {
-            // FIX: (ConfigureAndAddSetMagicCommand) why is this getting invoked this option wasn't specified?
-
             if (kernel.ParentKernel is { } composite)
             {
                 var getValueTasks = composite.ChildKernels
@@ -295,13 +293,15 @@ public static class KernelExtensions
 
                 var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
 
-                return tasks
-                       .Select(t => t.Events.OfType<ValueInfosProduced>())
-                       .SelectMany(events => events.Select(e => new { e.Command.TargetKernelName, e.ValueInfos }))
-                       .SelectMany(x => x.ValueInfos.Select(i => $"@{x.TargetKernelName}:{i.Name}"))
-                       .OrderBy(x => x)
-                       .Select(n => new CompletionItem(n))
-                       .ToArray();
+                var x = tasks
+                        .Select(t => t.Events.OfType<ValueInfosProduced>())
+                        .SelectMany(events => events.Select(e => new { e.Command.TargetKernelName, e.ValueInfos }))
+                        .SelectMany(x => x.ValueInfos.Select(i => $"@{x.TargetKernelName}:{i.Name}"))
+                        .OrderBy(x => x)
+                        .Select(n => new CompletionItem(n))
+                        .ToArray();
+
+                return x;
             }
 
             return Array.Empty<CompletionItem>();
