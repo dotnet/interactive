@@ -125,7 +125,7 @@ internal class MessagePlayback : IMessageTracker
                 }
                 else
                 {
-                    await Task.Delay(200);
+                    await Task.Delay(50);
                 }
             }
         }, _cts.Token);
@@ -178,6 +178,7 @@ public class TestJupyterKernelConnection : IJupyterKernelConnection
 {
     private IJupyterKernelConnection _kernelConnection;
     private IMessageTracker _tracker;
+    private bool _disposed = false;
 
     public TestJupyterKernelConnection(IMessageTracker messageTracker)
     {
@@ -204,6 +205,7 @@ public class TestJupyterKernelConnection : IJupyterKernelConnection
     {
         _kernelConnection?.Dispose();
         _tracker?.Dispose();
+        _disposed = true;
     }
 
     public async Task StartAsync()
@@ -213,12 +215,15 @@ public class TestJupyterKernelConnection : IJupyterKernelConnection
             await _kernelConnection.StartAsync();
         }
     }
+
+    public bool IsDisposed => _disposed;
 }
 
 public class TestJupyterConnection : IJupyterConnection
 {
     private IJupyterConnection _testJupyterConnection;
     private TestJupyterKernelConnection _testKernelConnection;
+    private bool _disposed = false;
 
     public TestJupyterConnection(TestJupyterKernelConnection testJupyterKernelConnection)
     {
@@ -240,15 +245,20 @@ public class TestJupyterConnection : IJupyterConnection
         return _testKernelConnection;
     }
 
+    public TestJupyterKernelConnection KernelConnection => _testKernelConnection;
+
     public void Dispose()
     {
-        _testJupyterConnection.Dispose();
+        _testJupyterConnection?.Dispose();
+        _disposed = true;
     }
 
     public Task<IEnumerable<KernelSpec>> GetKernelSpecsAsync()
     {
         return _testJupyterConnection.GetKernelSpecsAsync();
     }
+
+    public bool IsDisposed => _disposed;
 }
 
 public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
@@ -290,9 +300,10 @@ public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
         {
             throw new ArgumentNullException(nameof(connection));
         }
-        
+
         _connection = connection;
     }
+
     public void Record(IJupyterKernelConnectionOptions options)
     {
         _testOptions = options;
@@ -312,6 +323,8 @@ public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
     }
 
     public IMessageTracker MessageTracker { get; private set; }
+
+    public TestJupyterConnection Connection => _connection;
 
     public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
     {

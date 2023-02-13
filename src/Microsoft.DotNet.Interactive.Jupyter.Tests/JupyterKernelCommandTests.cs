@@ -29,6 +29,8 @@ public partial class JupyterKernelTests : IDisposable
 
     // to re-record the tests for simulated playback with JuptyerTestData, set this to true
     private const bool RECORD_FOR_PLAYBACK = false;
+    private const string PythonKernelName = "python3";
+    private const string RKernelName = "ir";
 
     public JupyterKernelTests(ITestOutputHelper output)
     {
@@ -40,7 +42,7 @@ public partial class JupyterKernelTests : IDisposable
         //_disposables.Dispose();
     }
 
-    private CompositeKernel CreateKernelAsync(IJupyterKernelConnectionOptions options)
+    private CompositeKernel CreateCompositeKernelAsync(IJupyterKernelConnectionOptions options)
     {
         Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
 
@@ -56,17 +58,17 @@ public partial class JupyterKernelTests : IDisposable
     }
 
     [Theory]
-    [JupyterHttpTestData("python", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterHttpTestData("R", KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("python", KernelSpecName = "python3")]
-    [JupyterZMQTestData("R", KernelSpecName = "ir")]
-    [JupyterTestData("python", KernelSpecName = "python3")]
-    [JupyterTestData("R", KernelSpecName = "ir")]
+    [JupyterHttpTestData("python", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData("R", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("python", KernelSpecName = PythonKernelName)]
+    [JupyterZMQTestData("R", KernelSpecName = RKernelName)]
+    [JupyterTestData("python", KernelSpecName = PythonKernelName)]
+    [JupyterTestData("R", KernelSpecName = RKernelName)]
     public async Task can_connect_to_and_setup_kernel(JupyterConnectionTestData connectionData, string languageName)
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = CreateKernelAsync(options);
+        var kernel = CreateCompositeKernelAsync(options);
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
@@ -141,14 +143,14 @@ public partial class JupyterKernelTests : IDisposable
 
     // note that R kernel returns display_data instead of execute_result
     [Theory]
-    [JupyterHttpTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3")]
-    [JupyterTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = "python3")]
+    [JupyterHttpTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = PythonKernelName)]
+    [JupyterTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = PythonKernelName)]
     public async Task can_submit_code_and_get_return_value_produced(JupyterConnectionTestData connectionData, string codeToRun, string mimeType, string outputReturned)
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = CreateKernelAsync(options);
+        var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
@@ -189,17 +191,17 @@ public partial class JupyterKernelTests : IDisposable
     }
 
     [Theory]
-    [JupyterHttpTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = "python3")]
-    [JupyterTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = "python3")]
-    [JupyterHttpTestData("1+1", new[] { "text/plain", "text/html", "text/latex", "text/markdown" }, new[] { "[1] 2", "2", "2", "2" }, KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("1+1", new[] { "text/plain", "text/html", "text/latex", "text/markdown" }, new[] { "[1] 2", "2", "2", "2" }, KernelSpecName = "ir")]
-    [JupyterTestData("1+1", new[] { "text/plain", "text/html", "text/latex", "text/markdown" }, new[] { "[1] 2", "2", "2", "2" }, KernelSpecName = "ir")]
+    [JupyterHttpTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = PythonKernelName)]
+    [JupyterTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData("1+1", new[] { "text/plain", "text/html", "text/latex", "text/markdown" }, new[] { "[1] 2", "2", "2", "2" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("1+1", new[] { "text/plain", "text/html", "text/latex", "text/markdown" }, new[] { "[1] 2", "2", "2", "2" }, KernelSpecName = RKernelName)]
+    [JupyterTestData("1+1", new[] { "text/plain", "text/html", "text/latex", "text/markdown" }, new[] { "[1] 2", "2", "2", "2" }, KernelSpecName = RKernelName)]
     public async Task can_submit_code_and_get_display_value_produced(JupyterConnectionTestData connectionData, string codeToRun, string[] mimeTypes, string[] valuesToExpect)
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = CreateKernelAsync(options);
+        var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
@@ -225,35 +227,37 @@ public partial class JupyterKernelTests : IDisposable
             .Be(codeToRun);
 
 
+        var displayValueProduced = events.Should()
+           .ContainSingle<DisplayedValueProduced>()
+           .Which;
+
         for (int i = 0; i < mimeTypes.Length; i++)
         {
-            events.Should()
-           .ContainSingle<DisplayedValueProduced>()
-           .Which
-           .FormattedValues
-            .Should()
-            .ContainSingle(v => v.MimeType == mimeTypes[i])
-            .Which
-            .Value
-            .Should()
-            .Be(valuesToExpect[i]);
+            displayValueProduced
+            .FormattedValues
+                .Should()
+                .ContainSingle(v => v.MimeType == mimeTypes[i])
+                .Which
+                .Value
+                .Should()
+                .Be(valuesToExpect[i]);
         }
 
         options.SaveState();
     }
 
     [Theory]
-    [JupyterHttpTestData("for i in range(2):\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("for i in range(2):\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = "python3")]
-    [JupyterTestData("for i in range(2):\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = "python3")]
-    [JupyterHttpTestData("for (x in 1:2) {\n\tprint(x);\n\tflush.console()\n}", new[] { "[1] 1\n", "[1] 2\n" }, KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("for (x in 1:2) {\n\tprint(x);\n\tflush.console()\n}", new[] { "[1] 1\n", "[1] 2\n" }, KernelSpecName = "ir")]
-    [JupyterTestData("for (x in 1:2) {\n\tprint(x);\n\tflush.console()\n}", new[] { "[1] 1\n", "[1] 2\n" }, KernelSpecName = "ir")]
+    [JupyterHttpTestData("for i in range(2):\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("for i in range(2):\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = PythonKernelName)]
+    [JupyterTestData("for i in range(2):\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData("for (x in 1:2) {\n\tprint(x);\n\tflush.console()\n}", new[] { "[1] 1\n", "[1] 2\n" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("for (x in 1:2) {\n\tprint(x);\n\tflush.console()\n}", new[] { "[1] 1\n", "[1] 2\n" }, KernelSpecName = RKernelName)]
+    [JupyterTestData("for (x in 1:2) {\n\tprint(x);\n\tflush.console()\n}", new[] { "[1] 1\n", "[1] 2\n" }, KernelSpecName = RKernelName)]
     public async Task can_submit_code_and_get_stream_stdout_produced(JupyterConnectionTestData connectionData, string codeToRun, string[] outputReturned)
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = CreateKernelAsync(options);
+        var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
@@ -301,17 +305,17 @@ public partial class JupyterKernelTests : IDisposable
 
 
     [Theory]
-    [JupyterHttpTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterHttpTestData("message('stderr')", "stderr\n", KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = "python3")]
-    [JupyterZMQTestData("message('stderr')", "stderr\n", KernelSpecName = "ir")]
-    [JupyterTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = "python3")]
-    [JupyterTestData("message('stderr')", "stderr\n", KernelSpecName = "ir")]
+    [JupyterHttpTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData("message('stderr')", "stderr\n", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = PythonKernelName)]
+    [JupyterZMQTestData("message('stderr')", "stderr\n", KernelSpecName = RKernelName)]
+    [JupyterTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = PythonKernelName)]
+    [JupyterTestData("message('stderr')", "stderr\n", KernelSpecName = RKernelName)]
     public async Task can_submit_code_and_get_stderr_produced(JupyterConnectionTestData connectionData, string codeToRun, string outputReturned)
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = CreateKernelAsync(options);
+        var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
@@ -351,17 +355,17 @@ public partial class JupyterKernelTests : IDisposable
     }
 
     [Theory]
-    [JupyterHttpTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterHttpTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = "ir", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = "python3")]
-    [JupyterZMQTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = "ir")]
-    [JupyterTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = "python3")]
-    [JupyterTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = "ir")]
+    [JupyterHttpTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = PythonKernelName)]
+    [JupyterZMQTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = RKernelName)]
+    [JupyterTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = PythonKernelName)]
+    [JupyterTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = RKernelName)]
     public async Task can_submit_code_and_get_error_produced(JupyterConnectionTestData connectionData, string codeToRun, string[] errorMessages)
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = CreateKernelAsync(options);
+        var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
@@ -409,14 +413,14 @@ public partial class JupyterKernelTests : IDisposable
     }
 
     [Theory]
-    [JupyterHttpTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = "python3")]
-    [JupyterTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = "python3")]
+    [JupyterHttpTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = PythonKernelName)]
+    [JupyterTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = PythonKernelName)]
     public async Task can_submit_code_and_get_update_display_produced(JupyterConnectionTestData connectionData, string codeToRun, string displayValue, string updateDisplayValue)
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = CreateKernelAsync(options);
+        var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
@@ -478,10 +482,13 @@ public partial class JupyterKernelTests : IDisposable
     }
 
     [Theory]
-    [JupyterHttpTestData("print (\"test\")", 3, "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n", KernelSpecName = "python3", AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("print (\"test\")", 3, "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n", KernelSpecName = "python3")]
-    [JupyterTestData("print (\"test\")", 3, "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n", KernelSpecName = "python3")]
-    public async Task can_request_hover_text_and_get_value_produced(JupyterConnectionTestData connectionData, string codeToInspect, int curPosition, string textValueSnippet)
+    [JupyterHttpTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName)]
+    [JupyterTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData("print (\"test\")", 3, new[] { "text/html", "text/latex", "text/plain" }, new[] { "<table width=\"100%\" summary=\"page for print {base}\"><tr><td>print {base}</td><td style=\"text-align: right;\">R Documentation</td>", "\\inputencoding{utf8}\n\\HeaderA{print}{Print Values}{print}\n", "print' prints its argument and returns it _invisibly_" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("print (\"test\")", 3, new[] { "text/html", "text/latex", "text/plain" }, new[] { "<table width=\"100%\" summary=\"page for print {base}\"><tr><td>print {base}</td><td style=\"text-align: right;\">R Documentation</td>", "\\inputencoding{utf8}\n\\HeaderA{print}{Print Values}{print}\n", "print' prints its argument and returns it _invisibly_" }, KernelSpecName = RKernelName)]
+    [JupyterTestData("print (\"test\")", 3, new[] { "text/html", "text/latex", "text/plain" }, new[] { "<table width=\"100%\" summary=\"page for print {base}\"><tr><td>print {base}</td><td style=\"text-align: right;\">R Documentation</td>", "\\inputencoding{utf8}\n\\HeaderA{print}{Print Values}{print}\n", "print' prints its argument and returns it _invisibly_" }, KernelSpecName = RKernelName)]
+    public async Task can_request_hover_text_and_get_value_produced(JupyterConnectionTestData connectionData, string codeToInspect, int curPosition, string[] mimeTypes, string[] textValueSnippets)
     {
         var options = connectionData.GetConnectionOptions();
 
@@ -524,16 +531,168 @@ public partial class JupyterKernelTests : IDisposable
             .Should()
             .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(linePosition, linePosition));
 
-        hoverTextProduced
+        for (int i = 0; i < mimeTypes.Length; i++)
+        {
+            hoverTextProduced
+                .Which
+                .Content
+                .Should()
+                .ContainSingle(v => v.MimeType == mimeTypes[i])
+                .Which
+                .Value
+                .Should()
+                .Contain(textValueSnippets[i]);
+        }
+
+        options.SaveState();
+    }
+
+    [Theory]
+    [JupyterHttpTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName)]
+    [JupyterTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Docstring:\nprint(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData("print (\"test\")", 3, new[] { "text/html", "text/latex", "text/plain" }, new[] { "<table width=\"100%\" summary=\"page for print {base}\"><tr><td>print {base}</td><td style=\"text-align: right;\">R Documentation</td>", "\\inputencoding{utf8}\n\\HeaderA{print}{Print Values}{print}\n", "print' prints its argument and returns it _invisibly_" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("print (\"test\")", 3, new[] { "text/html", "text/latex", "text/plain" }, new[] { "<table width=\"100%\" summary=\"page for print {base}\"><tr><td>print {base}</td><td style=\"text-align: right;\">R Documentation</td>", "\\inputencoding{utf8}\n\\HeaderA{print}{Print Values}{print}\n", "print' prints its argument and returns it _invisibly_" }, KernelSpecName = RKernelName)]
+    [JupyterTestData("print (\"test\")", 3, new[] { "text/html", "text/latex", "text/plain" }, new[] { "<table width=\"100%\" summary=\"page for print {base}\"><tr><td>print {base}</td><td style=\"text-align: right;\">R Documentation</td>", "\\inputencoding{utf8}\n\\HeaderA{print}{Print Values}{print}\n", "print' prints its argument and returns it _invisibly_" }, KernelSpecName = RKernelName)]
+    public async Task can_request_signature_help_and_get_value_produced(JupyterConnectionTestData connectionData, string codeToInspect, int curPosition, string[] mimeTypes, string[] textValueSnippets)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+
+        var linePosition = SourceUtilities.GetPositionFromCursorOffset(codeToInspect, curPosition);
+        var command = new RequestSignatureHelp(codeToInspect, linePosition);
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        var request = sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.InspectRequest)
             .Which
             .Content
-            .Should()
-            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
-            .Which
-            .Value
-            .Should()
-            .Contain(textValueSnippet);
+            .As<InspectRequest>();
 
+        request
+            .Code
+            .Should()
+            .Be(codeToInspect);
+
+        request
+            .CursorPos
+            .Should()
+            .Be(curPosition);
+
+        var signaturesProduced = events
+             .Should()
+             .ContainSingle<SignatureHelpProduced>()
+             .Which
+             .Signatures
+             .Select(s => s.Documentation);
+
+        signaturesProduced.Should().HaveCount(mimeTypes.Length);
+
+        for (int i = 0; i < mimeTypes.Length; i++)
+        {
+            signaturesProduced
+                .Should()
+                .ContainSingle(v => v.MimeType == mimeTypes[i])
+                .Which
+                .Value
+                .Should()
+                .Contain(textValueSnippets[i]);
+        }
+
+        options.SaveState();
+    }
+
+    [Theory]
+    [JupyterHttpTestData("pr", 0, 0, 2, new[] { "print", "property" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("pr", 0, 0, 2, new[] { "print", "property" }, KernelSpecName = PythonKernelName)]
+    [JupyterTestData("pr", 0, 0, 2, new[] { "print", "property" }, KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData("pr", 0, 0, 2, new[] { "print", "predict" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("pr", 0, 0, 2, new[] { "print", "predict" }, KernelSpecName = RKernelName)]
+    [JupyterTestData("pr", 0, 0, 2, new[] { "print", "predict" }, KernelSpecName = RKernelName)]
+    public async Task can_request_completions_and_get_value_produced(JupyterConnectionTestData connectionData, string codeToInspect, int linePos, int startPos, int curPosition, string[] exampleMatches)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+
+        var linePosition = SourceUtilities.GetPositionFromCursorOffset(codeToInspect, curPosition);
+        var command = new RequestCompletions(codeToInspect, linePosition);
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        var request = sentMessages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.CompleteRequest)
+            .Which
+            .Content
+            .As<CompleteRequest>();
+
+        request
+            .Code
+            .Should()
+            .Be(codeToInspect);
+
+        request
+            .CursorPosition
+            .Should()
+            .Be(curPosition);
+
+        var completionsProduced = events
+             .Should()
+             .ContainSingle<CompletionsProduced>();
+
+        completionsProduced
+            .Which
+            .LinePositionSpan
+            .Should()
+            .BeEquivalentToRespectingRuntimeTypes(
+                    new LinePositionSpan(
+                            new LinePosition(linePos, startPos),
+                            new LinePosition(linePos, curPosition)));
+
+        completionsProduced
+            .Which
+            .Completions
+            .Select(c => c.DisplayText)
+            .Should()
+            .Contain(exampleMatches);
+
+        var completionsFromKernel = receivedMessages
+            .Where(m => m.Header.MessageType == JupyterMessageContentTypes.CompleteReply)
+            .FirstOrDefault()
+            .Content
+            .As<CompleteReply>();
+
+        completionsProduced
+            .Which
+            .Completions
+            .Select(c => c.DisplayText)
+            .Should()
+            .Contain(completionsFromKernel.Matches);
+
+        completionsProduced
+           .Which
+           .Completions
+           .Select(c => c.InsertText)
+           .Should()
+           .Contain(completionsFromKernel.Matches);
+        
         options.SaveState();
     }
 }
