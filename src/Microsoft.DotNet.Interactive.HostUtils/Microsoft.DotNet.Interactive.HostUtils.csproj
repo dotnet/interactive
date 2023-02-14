@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <PackageId>Microsoft.DotNet.Interactive.HostUtils</PackageId>
+    <PackageDescription>Utilities for hosting applications providing interactive programming for .NET.</PackageDescription>
+    <PackageTags>interactive host utilities</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pocket.Disposable" Version="1.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.NetStandard20\Microsoft.DotNet.Interactive.Netstandard20.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\Microsoft.DotNet.Interactive.HostUtils.Shared\Microsoft.DotNet.Interactive.HostUtils.Shared.projitems" Label="Shared" />
+
+</Project>

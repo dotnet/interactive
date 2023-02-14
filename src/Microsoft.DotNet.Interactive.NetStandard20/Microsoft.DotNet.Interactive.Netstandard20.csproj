@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <PackageId>Microsoft.DotNet.Interactive.Netstandard20</PackageId>
-    <PackageDescription>Core types for building applications providing interactive programming for .NET. for the desktop</PackageDescription>
+    <PackageDescription>Core types for building applications providing interactive programming for .NET for the desktop.</PackageDescription>
     <PackageTags>interactive desktop</PackageTags>
   </PropertyGroup>
 

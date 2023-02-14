@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>9ea5b22e-6dee-41ca-8112-2b370e14d523</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Microsoft.DotNet.Interactive.HostUtils.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Connection\ConnectStdIO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Connection\StdIoKernelConnector.cs" />
+  </ItemGroup>
+  <ItemGroup>
+	<EmbeddedResource Include="..\polyglot-notebooks\lib\polyglot-notebooks.js" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Connection\" />
+  </ItemGroup>
+</Project>

@@ -177,6 +177,8 @@
   <Target Name="ExportVersionNumberForAzureDevOps" AfterTargets="Build">
     <Message Text="##vso[task.setvariable variable=StableToolVersionNumber]$(Version)" Importance="high" />
   </Target>
+  
+  <Import Project="..\Microsoft.DotNet.Interactive.HostUtils.Shared\Microsoft.DotNet.Interactive.HostUtils.Shared.projitems" Label="Shared" />
 
 </Project>
 

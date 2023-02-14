@@ -35,13 +35,11 @@
   <ItemGroup>
     <Folder Include="%28Recipes%29\" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <EmbeddedResource Include="..\polyglot-notebooks\lib\polyglot-notebooks.js" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
+
+  <Import Project="..\Microsoft.DotNet.Interactive.HostUtils.Shared\Microsoft.DotNet.Interactive.HostUtils.Shared.projitems" Label="Shared" />
 
 </Project>
