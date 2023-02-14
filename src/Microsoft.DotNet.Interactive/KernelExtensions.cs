@@ -289,14 +289,27 @@ public static class KernelExtensions
                                              .Where(
                                                  k => k != kernel &&
                                                       k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
-                                             .Select(async k => await k.SendAsync(new RequestValueInfos()));
+                                             .Select(async k => await k.SendAsync(new RequestValueInfos(k.Name)));
 
                 var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
 
                 var x = tasks
                         .Select(t => t.Events.OfType<ValueInfosProduced>())
-                        .SelectMany(events => events.Select(e => new { e.Command.TargetKernelName, e.ValueInfos }))
-                        .SelectMany(x => x.ValueInfos.Select(i => $"@{x.TargetKernelName}:{i.Name}"))
+                        .SelectMany(events => events.Select(e => new { e.Command, e.ValueInfos }))
+                        .SelectMany(x =>
+                        {
+                            var kernelName = x.Command.TargetKernelName;
+
+                            // TODO: (ConfigureAndAddSetMagicCommand) this is compensating for https://github.com/dotnet/interactive/issues/2728
+                            if (kernelName is null &&
+                                kernel.RootKernel is CompositeKernel root &&
+                                root.ChildKernels.TryGetByUri(x.Command.DestinationUri, out var k))
+                            {
+                                kernelName = k.Name;
+                            }
+
+                            return x.ValueInfos.Select(i => $"@{kernelName}:{i.Name}");
+                        })
                         .OrderBy(x => x)
                         .Select(n => new CompletionItem(n))
                         .ToArray();
