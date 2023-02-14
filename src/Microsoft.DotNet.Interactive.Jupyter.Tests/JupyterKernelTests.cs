@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -572,5 +573,46 @@ public partial class JupyterKernelTests
             .OfType<CompletionsProduced>()
             .Should()
             .BeEmpty();
+    }
+
+    [Fact]
+    public async Task can_translate_completion_item_metadata_for_completions_produce()
+    {
+        var code = "test";
+        var metadata = new Dictionary<string, IReadOnlyList<CompletionResultMetadata>>
+        {
+            {
+                CompletionResultMetadata.Experimental, new[]
+                {
+                    new CompletionResultMetadata(0, 1, "test1-test", "function", "TEST1TEST"),
+                    new CompletionResultMetadata(0, 1, "test2-test", "class", null)
+                }
+            }
+        };
+        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+                Message.CreateReply(new CompleteReply(0, 1, new[] {"test1", "test2"}, metadata, StatusValues.Ok),
+                Message.Create(new CompleteRequest(code, 1))),
+        }));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        var command = new RequestCompletions(code, SourceUtilities.GetPositionFromCursorOffset(code, 1));
+        var result = await kernel.SendAsync(command);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        events
+            .Should()
+            .ContainSingle<CompletionsProduced>()
+            .Which
+            .Completions
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new[] {
+                        new CompletionItem("TEST1TEST", "Method", "test1-test", "test1-test", "test1-test"),
+                        new CompletionItem("test2-test", "Class", "test2-test", "test2-test", "test2-test")
+                    });
     }
 }

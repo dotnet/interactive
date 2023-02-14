@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 public class CompletionResultMetadata
 {
     [JsonIgnore]
-    public static string Entry = "_jupyter_types_experimental";
+    public static string Experimental = "_jupyter_types_experimental";
 
     [JsonPropertyName("end")]
     public int End { get; }
