@@ -176,8 +176,13 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
     {
         if (_process is { HasExited: false })
         {
-            // todo: ensure killing process tree
-            _process?.Kill(true);
+#if NETSTANDARD2_0
+            // TODO: Kill entrie process tree.
+            _process?.Kill();
+#else
+            _process?.Kill(entireProcessTree: true);
+#endif
+
             _process?.Dispose();
             _process = null;
         }
