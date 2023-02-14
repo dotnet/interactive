@@ -1,6 +1,6 @@
 #!meta
 
-{"kernelInfo":{"defaultKernelName":null,"items":[{"name":"csharp","languageName":"C#","aliases":["c#","cs"]},{"name":"fsharp","languageName":"F#","aliases":["f#","fs"]},{"name":"pwsh","languageName":"PowerShell","aliases":["powershell"]},{"name":"javascript","languageName":"JavaScript","aliases":["js"]},{"name":"html","languageName":"HTML"},{"name":"sql","languageName":"SQL"},{"name":"kql","languageName":"KQL"},{"name":"mermaid","languageName":"Mermaid"},{"name":"http","languageName":"HTTP"},{"name":"value"}]}}
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"name":"csharp","aliases":[]}]}}
 
 #!markdown
 
@@ -188,7 +188,7 @@ Console.Error.Write("\x1b[0m");
 #!markdown
 
 # vscode kernel and user input prompts
-This cell should prompt the user for input
+This cell should prompt the user for input. Type something into the input field. Whatever you typed should be displayed in the output.
 
 #!csharp
 
@@ -221,7 +221,16 @@ value_from_input
 
 #!markdown
 
-Now check the variable explorer. Is the value there in the `#!value` kernel?
+Now check the variable explorer. Is the value there in the `value` kernel?
+
+#!markdown
+
+This should prompt you for input. Type something into the input field. Whatever you typed should be displayed in the output.
+
+#!csharp
+
+#!set --name csharpVarFromInput --value @input:"Please enter a value"
+csharpVarFromInput
 
 #!markdown
 
