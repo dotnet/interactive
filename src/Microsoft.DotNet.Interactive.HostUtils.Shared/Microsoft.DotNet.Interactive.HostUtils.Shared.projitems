@@ -13,7 +13,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Connection\StdIoKernelConnector.cs" />
   </ItemGroup>
   <ItemGroup>
-	<EmbeddedResource Include="..\polyglot-notebooks\lib\polyglot-notebooks.js" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
+	<EmbeddedResource Include="..\polyglot-notebooks\lib\polyglot-notebooks.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Connection\" />
