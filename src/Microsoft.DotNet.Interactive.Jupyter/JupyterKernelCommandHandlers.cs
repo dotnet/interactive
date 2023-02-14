@@ -94,21 +94,48 @@ internal partial class JupyterKernel
             return;
         }
 
-        bool metadataAvailable = results.MetaData.TryGetValue(CompletionResultMetadata.Entry, out IReadOnlyList<CompletionResultMetadata> resultsMetadata);
-        if (!metadataAvailable)
-        {
-            resultsMetadata = new List<CompletionResultMetadata>();
-        }
+        bool metadataAvailable = results.MetaData.TryGetValue(CompletionResultMetadata.Experimental, out IReadOnlyList<CompletionResultMetadata> resultsMetadata);
 
-        var completionItems = from match in results.Matches
-                              join metadata in resultsMetadata on match equals metadata.Text into ci
-                              from itemMetadata in ci.DefaultIfEmpty()
-                              select new CompletionItem(
-                                  displayText: itemMetadata?.DisplayText ?? match,
-                                  kind: itemMetadata?.Type ?? string.Empty,
-                                  insertText: match,
-                                  filterText: match,
-                                  sortText: match);
+        string GetCompletionKind(string type)
+        {
+            var kind = type switch
+            {
+                "keyword" => "Keyword",
+                "function" => "Method",
+                "class" => "Class",
+                "instance" => "Field",
+                "module" => "Module",
+                "type" => "Class",
+                "property" => "Property",
+                "field" => "Field",
+                "builtin" => "Method",
+                "builtinfunction" => "Method",
+                "builtinmodule" => "Module",
+                "builtintype" => "Class",
+                "value" => "Variable",
+                "constant" => "Constant",
+                "variable" => "Variable",
+                _ => string.Empty
+            };
+            return kind;
+        };
+
+        var completionItems = metadataAvailable ?
+               resultsMetadata.Select(m =>
+                             new CompletionItem(
+                                 displayText: m.DisplayText ?? m.Text,
+                                 kind: GetCompletionKind(m.Type ?? string.Empty),
+                                 insertText: m.Text,
+                                 filterText: m.Text,
+                                 sortText: m.Text))
+                 : results.Matches.Select(match =>
+                             new CompletionItem(
+                                    displayText: match,
+                                    kind: string.Empty,
+                                    insertText: match,
+                                    filterText: match,
+                                    sortText: match));
+
 
         var completion = new CompletionsProduced(
             completionItems, command,
@@ -116,7 +143,7 @@ internal partial class JupyterKernel
 
         context.Publish(completion);
     }
-
+    
     public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         CancelCommandOnKernelIfRequested(context);
@@ -126,7 +153,7 @@ internal partial class JupyterKernel
 
         var executeRequest = Messaging.Message.Create(
                                     new ExecuteRequest(
-                                        command.Code.NormalizeLineEndings(), 
+                                        command.Code.NormalizeLineEndings(),
                                         allowStdin: false, // TODO: ZMQ stdin channel is hanging. Disable until a consistent experience can be turned on. 
                                         stopOnError: true));
         var processMessages = Receiver.Messages
@@ -148,7 +175,7 @@ internal partial class JupyterKernel
                                     }
                                 })
                                 .TakeUntil(m => m.MessageType == JupyterMessageContentTypes.Error || (messagesProcessed && results is not null));
-                                // run until kernel idle or until execution is done
+        // run until kernel idle or until execution is done
 
         await Sender.SendAsync(executeRequest);
         await processMessages.ToTask(context.CancellationToken);
