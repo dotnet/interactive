@@ -1,9 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Equivalency;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -98,6 +101,42 @@ public class SetMagicCommandTests
         succeeded.Should().BeTrue();
         valueProduced.Value.Should().BeEquivalentTo("456");
     }
+
+    [Fact]
+    public async Task honors_mimetype_from_value_kernel()
+    {
+        var csharpKernel = CreateKernel(Language.CSharp);
+        var valueKernel = new KeyValueStoreKernel().UseValueSharing();
+
+        using var composite = new CompositeKernel
+        {
+            csharpKernel,
+            valueKernel
+        };
+        var jsonFragment = @"{
+    ""a"" : 123
+}";
+        await composite.SendAsync(new SubmitCode(@$"#!value --name data --mime-type application/json
+{jsonFragment}
+"));
+
+        var result = await composite.SendAsync(new SubmitCode($@"#!set --name x --value @{valueKernel.Name}:data ", targetKernelName: csharpKernel.Name));
+
+        result.Events.Should().NotContainErrors();
+        var (succeeded, valueProduced) = await csharpKernel.TryRequestValueAsync("x");
+
+        using var _ = new AssertionScope();
+
+        var expected = JsonDocument.Parse(jsonFragment);
+        succeeded.Should().BeTrue();
+        valueProduced.Value.Should()
+            .BeOfType<JsonDocument>()
+            .Which
+            .Should()
+            .BeEquivalentTo(expected, JsonEquivalenceConfig);
+    }
+
+    public EquivalencyAssertionOptions<JsonDocument> JsonEquivalenceConfig(EquivalencyAssertionOptions<JsonDocument> opt) => opt.ComparingByMembers<JsonElement>();
 
 
     [Fact]

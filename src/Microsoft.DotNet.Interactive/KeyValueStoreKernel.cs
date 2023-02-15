@@ -45,7 +45,7 @@ public class KeyValueStoreKernel :
         if (_values.TryGetValue(command.Name, out var value))
         {
             context.Publish(new ValueProduced(
-                value.Value,
+                null,
                 command.Name,
                 value,
                 command));
