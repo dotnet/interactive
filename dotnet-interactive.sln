@@ -72,7 +72,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.PackageManagement", "src\Microsoft.DotNet.Interactive.PackageManagement\Microsoft.DotNet.Interactive.PackageManagement.csproj", "{53EF46D6-5E21-4507-B8C0-779B634262AA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Netstandard20", "src\Microsoft.DotNet.Interactive.NetStandard20\Microsoft.DotNet.Interactive.Netstandard20.csproj", "{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.VisualStudio", "src\Microsoft.DotNet.Interactive.VisualStudio\Microsoft.DotNet.Interactive.VisualStudio.csproj", "{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.VSCode", "src\Microsoft.DotNet.Interactive.VSCode\Microsoft.DotNet.Interactive.VSCode.csproj", "{382C875B-2CB2-4F93-B5E9-EC14CDDB2256}"
 EndProject

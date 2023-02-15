@@ -2,17 +2,27 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>Microsoft.DotNet.Interactive.Netstandard20</PackageId>
+    <PackageId>Microsoft.DotNet.Interactive.VisualStudio</PackageId>
     <PackageDescription>Core types for building applications providing interactive programming for .NET. for the desktop</PackageDescription>
     <PackageTags>interactive desktop</PackageTags>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/Microsoft.DotNet.Interactive.csproj" />
 
-  <ItemGroup>
+  <ItemGroup Label="Core Functionality">
     <Compile Include="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/**/*.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/bin/**/*.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)../Microsoft.DotNet.Interactive/obj/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup Label="Helper Code">
+    <!-- StdIoKernelconnector et al. -->
+    <Compile Include="$(MSBuildThisFileDirectory)../dotnet-interactive/Connection/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup Label="Resources">
+    <!-- JavaScript kernel -->
+    <EmbeddedResource Include="..\polyglot-notebooks\lib\polyglot-notebooks.js" />
   </ItemGroup>
 
   <ItemGroup>
