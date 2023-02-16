@@ -100,6 +100,7 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
 
     async provideDocumentSemanticTokens(document: vscode.TextDocument, _cancellationToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
         try {
+            let tokenCount = 0;
             const tokensBuilder = new vscode.SemanticTokensBuilder(this.semanticTokensLegend);
             const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.getCells().some(cell => cell.document === document));
             if (notebookDocument) {
@@ -111,6 +112,7 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
                     const cellKernelName = cellMetadata.kernelName ?? notebookMetadata.kernelInfo.defaultKernelName;
                     const tokens = await this._dynamicTokenProvider.getTokens(notebookDocument.uri, cellKernelName, text);
                     for (const token of tokens) {
+                        tokenCount++;
                         tokensBuilder.push(
                             new vscode.Range(
                                 new vscode.Position(token.line, token.startColumn),
@@ -118,6 +120,11 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
                             ),
                             token.tokenType,
                             token.tokenModifiers);
+                    }
+
+                    if (tokenCount === 0 && text !== '') {
+                        // there was text, but nothing was produced
+                        Logger.default.info(`No tokens were produced for cell ${cell.index} of notebook ${notebookDocument.uri.toString()} with text: ${text}`);
                     }
                 }
             }
