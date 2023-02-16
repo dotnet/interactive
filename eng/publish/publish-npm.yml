@@ -12,7 +12,7 @@ stages:
   jobs:
   - job: Publish_NPM
     pool:
-      name: NetCore1ESPool-Internal
+      name: $(DncEngInternalBuildPool)
       demands: ImageOverride -equals windows.10.vs2019.amd64
     variables:
     - group: AzureDevOps-Artifact-Feeds-Pats
