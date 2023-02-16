@@ -7,6 +7,7 @@ import * as metadataUtilities from './metadataUtilities';
 import { DynamicGrammarSemanticTokenProvider, VSCodeExtensionLike } from './dynamicGrammarSemanticTokenProvider';
 import * as constants from './constants';
 import * as vscodeNotebookManagement from './vscodeNotebookManagement';
+import { Logger } from './polyglot-notebooks';
 
 // https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide#standard-token-types-and-modifiers
 const defaultTokenTypes = [
@@ -98,18 +99,18 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
     }
 
     async provideDocumentSemanticTokens(document: vscode.TextDocument, _cancellationToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
-        const tokensBuilder = new vscode.SemanticTokensBuilder(this.semanticTokensLegend);
-        const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.getCells().some(cell => cell.document === document));
-        if (notebookDocument) {
-            const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(notebookDocument);
-            const text = document.getText();
-            const cell = notebookDocument.getCells().find(cell => cell.document === document);
-            if (cell) {
-                const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
-                const cellKernelName = cellMetadata.kernelName ?? notebookMetadata.kernelInfo.defaultKernelName;
-                const tokens = await this._dynamicTokenProvider.getTokens(notebookDocument.uri, cellKernelName, text);
-                for (const token of tokens) {
-                    try {
+        try {
+            const tokensBuilder = new vscode.SemanticTokensBuilder(this.semanticTokensLegend);
+            const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.getCells().some(cell => cell.document === document));
+            if (notebookDocument) {
+                const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(notebookDocument);
+                const text = document.getText();
+                const cell = notebookDocument.getCells().find(cell => cell.document === document);
+                if (cell) {
+                    const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
+                    const cellKernelName = cellMetadata.kernelName ?? notebookMetadata.kernelInfo.defaultKernelName;
+                    const tokens = await this._dynamicTokenProvider.getTokens(notebookDocument.uri, cellKernelName, text);
+                    for (const token of tokens) {
                         tokensBuilder.push(
                             new vscode.Range(
                                 new vscode.Position(token.line, token.startColumn),
@@ -117,15 +118,17 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
                             ),
                             token.tokenType,
                             token.tokenModifiers);
-                    } catch (e) {
-                        const x = e;
                     }
                 }
             }
+
+            // TODO: agument with real semantic tokens?
+
+            const tokens = tokensBuilder.build();
+            return tokens;
+        } catch (ex) {
+            Logger.default.warn(`Error generating dynamic semantic tokens: ${JSON.stringify(ex)}`);
+            return new vscode.SemanticTokens(new Uint32Array(0));
         }
-
-        // TODO: agument with real semantic tokens?
-
-        return tokensBuilder.build();
     }
 }
