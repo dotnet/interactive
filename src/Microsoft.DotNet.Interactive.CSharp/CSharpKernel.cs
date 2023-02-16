@@ -383,19 +383,19 @@ public class CSharpKernel :
         if (ScriptState is null)
         {
             ScriptState = await CSharpScript.RunAsync(
-                    code,
-                    _scriptOptions,
-                    cancellationToken: cancellationToken)
-                .UntilCancelled(cancellationToken) ?? ScriptState;
+                              code,
+                              _scriptOptions,
+                              cancellationToken: cancellationToken)
+                          ?? ScriptState;
         }
         else
         {
             ScriptState = await ScriptState.ContinueWithAsync(
-                    code,
-                    _scriptOptions,
-                    catchException: catchException,
-                    cancellationToken: cancellationToken)
-                .UntilCancelled(cancellationToken) ?? ScriptState;
+                              code,
+                              _scriptOptions,
+                              catchException: catchException,
+                              cancellationToken: cancellationToken)
+                          ?? ScriptState;
         }
 
         if (ScriptState is not null && ScriptState.Exception is null)

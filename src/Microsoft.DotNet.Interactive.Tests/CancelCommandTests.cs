@@ -17,6 +17,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 #pragma warning disable xUnit1000
+
 public class CancelCommandTests : LanguageKernelTestBase
 {
     public CancelCommandTests(ITestOutputHelper output) : base(output)

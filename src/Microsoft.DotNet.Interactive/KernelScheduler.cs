@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,7 +15,7 @@ namespace Microsoft.DotNet.Interactive;
 
 public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TResult>
 {
-    private readonly Func<T, T, bool> _isInnerSchedule;
+    private readonly Func<T, T, bool> _isPreemptive;
     private static readonly Logger Log = new("KernelScheduler");
 
     private readonly CompositeDisposable _disposables;
@@ -25,11 +27,10 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
     private ScheduledOperation _currentlyRunningOperation;
 
-    public KernelScheduler(Func<T, T, bool> isInnerSchedule = null)
+    public KernelScheduler(Func<T, T, bool> isPreemptive = null)
     {
-        // FIX: (KernelScheduler) replace this with something more explicit
-        _isInnerSchedule = isInnerSchedule ?? IsInnerScheduleDefault;
-            
+        _isPreemptive = isPreemptive ?? DoNotPreempt;
+
         _runLoopTask = Task.Factory.StartNew(
             ScheduledOperationRunLoop,
             TaskCreationOptions.LongRunning,
@@ -40,11 +41,11 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             _topLevelScheduledOperations,
             () => _schedulerDisposalSource.Cancel()
         };
-    }
 
-    private bool IsInnerScheduleDefault(T one, T two)
-    {
-        return false;
+        static bool DoNotPreempt(T one, T two)
+        {
+            return false;
+        }
     }
 
     public void CancelCurrentOperation(Action<T> onCancellation = null)
@@ -66,7 +67,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         ThrowIfDisposed();
             
         ScheduledOperation operation;
-        if (_isInnerSchedule(_currentTopLevelOperation, value))
+        if (_isPreemptive(_currentTopLevelOperation, value))
         {
             operation = new ScheduledOperation(
                 value,
@@ -243,7 +244,34 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     private class ScheduledOperation
     {
+        private static readonly Action<Action, CancellationToken> _runWithControlledExecution;
+
+        static ScheduledOperation()
+        {
+            try
+            {
+                // ControlledExecution.Run isn't available in .NET Standard but since we're most likely actually running in .NET 7+, we can try to bind a delegate to it.
+                if (Type.GetType("System.Runtime.ControlledExecution, System.Private.CoreLib", false) is { } controlledExecutionType &&
+                    controlledExecutionType.GetMethod("Run", BindingFlags.Static | BindingFlags.Public) is { } runMethod)
+                {
+                    var actionParameter = Expression.Parameter(typeof(Action), "action");
+
+                    var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+
+                    _runWithControlledExecution = Expression.Lambda<Action<Action, CancellationToken>>(
+                                                                Expression.Call(runMethod, actionParameter, cancellationTokenParameter),
+                                                                actionParameter,
+                                                                cancellationTokenParameter)
+                                                            .Compile();
+                }
+            }
+            catch
+            {
+            }
+        }
+
         private readonly KernelSchedulerDelegate<T, TResult> _onExecuteAsync;
+        private readonly CancellationToken _cancellationToken;
 
         public ScheduledOperation(
             T value,
@@ -257,11 +285,12 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             IsDeferred = isDeferred;
             ExecutionContext = executionContext;
             _onExecuteAsync = onExecuteAsync;
+            _cancellationToken = cancellationToken;
             Scope = scope;
 
             TaskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            if (cancellationToken != default)
+            if (cancellationToken.CanBeCanceled)
             {
                 cancellationToken.Register(() =>
                 {
@@ -280,7 +309,33 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
         public string Scope { get; }
 
-        public Task<TResult> ExecuteAsync() => _onExecuteAsync(Value);
+        public Task<TResult> ExecuteAsync()
+        {
+            if (_runWithControlledExecution is not null && 
+                _cancellationToken.CanBeCanceled)
+            {
+                try
+                {
+                    TResult result = default;
+
+                    _runWithControlledExecution(() =>
+                    {
+                        var r = _onExecuteAsync(Value).GetAwaiter().GetResult();
+                        result = r;
+                    }, _cancellationToken);
+
+                    return Task.FromResult(result);
+                }
+                catch (Exception exception)
+                {
+                    return Task.FromException<TResult>(exception);
+                }
+            }
+            else
+            {
+               return _onExecuteAsync(Value);
+            }
+        }
 
         public override string ToString()
         {
