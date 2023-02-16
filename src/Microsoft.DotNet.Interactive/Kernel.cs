@@ -348,8 +348,7 @@ public abstract partial class Kernel :
         {
             disposable.Disposable = context.KernelEvents.Subscribe(PublishEvent);
 
-            if (cancellationToken != CancellationToken.None &&
-                cancellationToken != default)
+            if (cancellationToken.CanBeCanceled)
             {
                 cancellationToken.Register(context.Cancel);
             }
@@ -617,7 +616,7 @@ public abstract partial class Kernel :
         return deferredCommands;
     }
 
-    public Task HandleAsync(
+    Task IKernelCommandHandler<RequestKernelInfo>.HandleAsync(
         RequestKernelInfo command,
         KernelInvocationContext context) =>
         HandleRequestKernelInfoAsync(command, context);

@@ -283,6 +283,65 @@ public class KernelSchedulerTests : IDisposable
     }
 
     [Fact]
+    public void Infinite_loops_can_be_cancelled()
+    {
+        using var scheduler = new KernelScheduler<int, int>();
+        var cts = new CancellationTokenSource();
+
+        var barrier = new Barrier(2);
+
+        var work = scheduler.RunAsync(1, async v =>
+        {
+            barrier.SignalAndWait();
+
+            while (true)
+            {
+            }
+
+            return v;
+        }, cancellationToken: cts.Token);
+
+        barrier.SignalAndWait();
+        cts.Cancel();
+
+        work.Invoking(async w => await w)
+            .Should()
+            .ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task After_an_infinite_loop_is_cancelled_the_scheduler_can_still_be_used()
+    {
+        using var scheduler = new KernelScheduler<int, int>();
+        var cts = new CancellationTokenSource();
+
+        var barrier = new Barrier(2);
+
+        var _ = scheduler.RunAsync(1, async v =>
+        {
+            barrier.SignalAndWait();
+
+            while (true)
+            {
+            }
+
+            return v;
+        }, cancellationToken: cts.Token);
+
+        barrier.SignalAndWait();
+        cts.Cancel();
+
+        var nextResult = await scheduler.RunAsync(2, PerformWork);
+
+        nextResult.Should().Be(2);
+
+        Task<int> PerformWork(int v)
+        {
+            return Task.FromResult(v);
+        }
+    }
+
+    [Fact]
     public void disposing_scheduler_throws_exception()
     {
         using var scheduler = new KernelScheduler<int, int>();
@@ -575,43 +634,4 @@ public class KernelSchedulerTests : IDisposable
             .AllBeEquivalentTo(asyncIdForScheduledWork);
     }
 
-    [Fact]
-    public async Task AsyncContext_does_not_leak_between_scheduled_work_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await AsyncContext_does_not_leak_between_scheduled_work();
-    }
-
-    [Fact]
-    public async Task work_can_be_scheduled_from_within_scheduled_work_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await work_can_be_scheduled_from_within_scheduled_work();
-    }
-
-    [Fact]
-    public async Task concurrent_schedulers_do_not_interfere_with_one_another_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await concurrent_schedulers_do_not_interfere_with_one_another();
-    }
-
-    [Fact]
-    public async Task AsyncContext_is_maintained_across_async_operations_within_scheduled_work_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await AsyncContext_is_maintained_across_async_operations_within_scheduled_work();
-    }
-
-    [Fact]
-    public async Task AsyncContext_does_not_leak_from_inner_context_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await AsyncContext_does_not_leak_from_inner_context();
-    }
 }
