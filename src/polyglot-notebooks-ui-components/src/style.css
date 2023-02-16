@@ -15,9 +15,8 @@
 table {
     width: 100%;
     border-collapse: collapse;
-    position: relative;
+    overflow-x: auto;
     overflow-y: auto;
-    table-layout: fixed;
 }
 
 th,
@@ -52,7 +51,8 @@ td {
 }
 
 .table-container {
-    width: 98vw;
+    width: 100%;
+    margin: 5px;
 }
 
 .data-cell {
@@ -102,26 +102,6 @@ col.kernel-column {
 col.actions-column {
     width: 10%;
 }
-
-/* div.name-column-content {
-    max-width: 20vw;
-}
-
-div.type-column-content {
-    max-width: 15vw;
-}
-
-div.value-column-content {
-    max-width: 40vw;
-}
-
-div.kernel-column-content {
-    max-width: 15vw;
-}
-
-div.actions-column-content {
-    max-width: 10vw;
-} */
 
 button {
     background-color: var(--vscode-button-background);
