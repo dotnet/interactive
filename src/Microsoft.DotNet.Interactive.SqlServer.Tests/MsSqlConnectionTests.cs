@@ -71,6 +71,64 @@ SELECT TOP 100 * FROM Person.Person
     }
 
     [MsSqlFact]
+    public async Task It_does_not_add_a_kernel_on_connection_failure()
+    {
+        var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = await CreateKernelAsync();
+        var result = await kernel.SubmitCodeAsync("#!connect mssql --kernel-name adventureworks \"invalid_connection_string\"");
+
+        result.Events
+            .Should()
+            .ContainSingle<CommandFailed>();
+
+        var kqlKernel = kernel.FindKernelByName("sql-adventureworks");
+
+        kqlKernel.Should().BeNull();
+    }
+
+    [MsSqlFact]
+    public async Task It_allows_to_retry_connecting()
+    {
+        var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = await CreateKernelAsync();
+        var result = await kernel.SubmitCodeAsync("#!connect mssql --kernel-name adventureworks \"invalid_connection_string\"");
+
+        result.Events
+            .Should()
+            .ContainSingle<CommandFailed>();
+
+        result = await kernel.SubmitCodeAsync(
+            $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+
+        result.Events
+            .Should()
+            .NotContainErrors();
+    }
+
+    [MsSqlFact]
+    public async Task It_gives_error_if_kernel_name_is_already_used()
+    {
+        var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = await CreateKernelAsync();
+        var result = await kernel.SubmitCodeAsync($"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+
+        result.Events
+            .Should()
+            .NotContainErrors();
+
+        result = await kernel.SubmitCodeAsync(
+            $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+
+        result.Events
+            .Should()
+            .ContainSingle<CommandFailed>()
+            .Which
+            .Message
+            .Should()
+            .Contain("\"A kernel with name adventureworks is already present. Use a different value for the kernel-name option.\"");
+    }
+
+    [MsSqlFact]
     public async Task null_values_are_preserved_as_null_references()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
