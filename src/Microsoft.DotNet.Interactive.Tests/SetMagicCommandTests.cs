@@ -134,9 +134,11 @@ public class SetMagicCommandTests
             .Which
             .Should()
             .BeEquivalentTo(expected, JsonEquivalenceConfig);
+
+        static EquivalencyAssertionOptions<JsonDocument> JsonEquivalenceConfig(EquivalencyAssertionOptions<JsonDocument> opt) => opt.ComparingByMembers<JsonElement>();
+
     }
 
-    public EquivalencyAssertionOptions<JsonDocument> JsonEquivalenceConfig(EquivalencyAssertionOptions<JsonDocument> opt) => opt.ComparingByMembers<JsonElement>();
 
 
     [Fact]
