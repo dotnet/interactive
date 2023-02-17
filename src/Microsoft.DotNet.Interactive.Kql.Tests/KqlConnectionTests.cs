@@ -68,7 +68,7 @@ StormEvents | take 10
                                                          e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
     }
 
-    [Fact]
+    [KqlFact]
     public async Task It_does_not_add_a_kernel_on_connection_failure()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
