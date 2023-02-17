@@ -15,8 +15,9 @@
 table {
     width: 100%;
     border-collapse: collapse;
-    overflow-x: auto;
+    position: relative;
     overflow-y: auto;
+    table-layout: fixed;
 }
 
 th,
@@ -52,7 +53,6 @@ td {
 
 .table-container {
     width: 100%;
-    margin: 5px;
 }
 
 .data-cell {
@@ -84,22 +84,28 @@ td {
 }
 
 col.name-column {
+    max-width: 20%;
     width: 20%;
 }
 
 col.type-column {
+    max-width: 15%;
     width: 15%;
 }
 
 col.value-column {
+    max-width: 40%;
     width: 40%;
 }
 
 col.kernel-column {
+    max-width: 15%;
     width: 15%;
 }
 
+
 col.actions-column {
+    max-width: 10%;
     width: 10%;
 }
 
