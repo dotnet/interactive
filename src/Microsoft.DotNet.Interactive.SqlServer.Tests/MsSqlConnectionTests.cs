@@ -125,7 +125,7 @@ SELECT TOP 100 * FROM Person.Person
             .Which
             .Message
             .Should()
-            .Contain("\"A kernel with name adventureworks is already present. Use a different value for the kernel-name option.\"");
+            .Contain("\"A kernel with name adventureworks is already present. Use a different value for the --kernel-name option.\"");
     }
 
     [MsSqlFact]
