@@ -212,7 +212,9 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                     const affectedColumn: any = document.querySelector(`col.${affectedColumnClass}`)!;
 
                     targetColumn.style["width"] = `${endSizePercentage}%`;
+                    targetColumn.style["max-width"] = `${endSizePercentage}%`;
                     affectedColumn.style["width"] = `${w}%`;
+                    affectedColumn.style["max-width"] = `${w}%`;
                 }
             }
         }
