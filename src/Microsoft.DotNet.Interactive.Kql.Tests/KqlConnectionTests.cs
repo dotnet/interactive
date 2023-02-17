@@ -124,7 +124,7 @@ StormEvents | take 10
             .Which
             .Message
             .Should()
-            .Contain("A kernel with name KustoHelp is already present. Use a different value for the kernel-name option.");
+            .Contain("A kernel with name KustoHelp is already present. Use a different value for the --kernel-name option.");
     }
 
     [KqlFact]

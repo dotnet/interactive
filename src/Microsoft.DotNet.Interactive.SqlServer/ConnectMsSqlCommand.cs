@@ -49,7 +49,7 @@ public class ConnectMsSqlCommand : ConnectKernelCommand
         if (found)
         {
             throw new InvalidOperationException(
-                $"A kernel with name {localName} is already present. Use a different value for the {KernelNameOption.Name} option.");
+                $"A kernel with name {localName} is already present. Use a different value for the --{KernelNameOption.Name} option.");
         }
 
         var kernel = await connector.CreateKernelAsync(localName);
