@@ -69,6 +69,65 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    public async Task It_does_not_add_a_kernel_on_connection_failure()
+    {
+        var cluster = KqlFactAttribute.GetClusterForTests();
+        using var kernel = await CreateKernelAsync();
+        var result = await kernel.SubmitCodeAsync(
+            "#!connect kql --kernel-name KustoHelp --cluster \"invalid_cluster\" --database \"Samples\"");
+
+        result.Events
+            .Should()
+            .ContainSingle<CommandFailed>();
+
+        var kqlKernel = kernel.FindKernelByName("kql-KustoHelp");
+
+        kqlKernel.Should().BeNull();
+    }
+
+    [KqlFact]
+    public async Task It_allows_to_retry_connecting()
+    {
+        var cluster = KqlFactAttribute.GetClusterForTests();
+        using var kernel = await CreateKernelAsync();
+        var result = await kernel.SubmitCodeAsync(
+            "#!connect kql --kernel-name KustoHelp --cluster \"invalid_cluster\" --database \"Samples\"");
+
+        result.Events
+            .Should()
+            .ContainSingle<CommandFailed>();
+
+        result = await kernel.SubmitCodeAsync(
+            $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
+
+        result.Events
+            .Should()
+            .NotContainErrors();
+    }
+
+    [KqlFact]
+    public async Task It_gives_error_if_kernel_name_is_already_used()
+    {
+        var cluster = KqlFactAttribute.GetClusterForTests();
+        using var kernel = await CreateKernelAsync();
+        var result = await kernel.SubmitCodeAsync($"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
+
+        result.Events
+            .Should()
+            .NotContainErrors();
+
+        result = await kernel.SubmitCodeAsync($"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
+
+        result.Events
+            .Should()
+            .ContainSingle<CommandFailed>()
+            .Which
+            .Message
+            .Should()
+            .Contain("A kernel with name KustoHelp is already present. Use a different value for the --kernel-name option.");
+    }
+
+    [KqlFact]
     public async Task It_can_store_result_set_with_a_name()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
