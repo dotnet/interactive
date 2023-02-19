@@ -73,9 +73,18 @@ class TestCoeCommHandler(unittest.TestCase):
         
     def test_can_get_kernel_ready_on_comm_open(self):
         self.assertEqual(self.comm.msg_sent, self.create_msg_sent("KernelReady"))
+    
+    def test_can_handle_invalid_json(self):
+        msg_received = {"content": { "data": {'type': 'command', 'commandOrEvent': 'just a string'}}};
         
+        msg_sent = self.create_msg_sent("CommandFailed", {
+            "message": "failed to process comm data. Expecting value: line 1 column 1 (char 0)"
+        })
+        self.comm.handle_msg(msg_received)
+        self.assertEqual(self.comm.msg_sent, msg_sent)
+    
     def test_can_handle_send_value(self):
-        msg_recieved = self.create_msg_received("SendValue", {
+        msg_received = self.create_msg_received("SendValue", {
             "formattedValue":{
                 "mimeType":"application/json",
                 "value":"\"test\""
@@ -84,14 +93,14 @@ class TestCoeCommHandler(unittest.TestCase):
         });
         
         msg_sent = self.create_msg_sent("CommandSucceeded")
-        self.comm.handle_msg(msg_recieved)
+        self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
         # below is just a test workaround as tests are not sharing the same 
         # namespace as the handlers. With .net interactive they will be.
         self.assertEqual(coe_comm_handler.x, "test", "variable is not set")
         
     def test_can_handle_unsupported_mimetype_in_send_value(self):
-        msg_recieved = self.create_msg_received("SendValue", {
+        msg_received = self.create_msg_received("SendValue", {
             "formattedValue":{
                 "mimeType":"application/unsupported",
                 "value":"\"test\""
@@ -102,11 +111,11 @@ class TestCoeCommHandler(unittest.TestCase):
         msg_sent = self.create_msg_sent("CommandFailed", {
             "message": "Failed to set value for \"x\". \"application/unsupported\" mimetype not supported."
         })
-        self.comm.handle_msg(msg_recieved)
+        self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
     
     def test_can_handle_invalid_value_for_dataframe_in_send_value(self):
-        msg_recieved = self.create_msg_received("SendValue", {
+        msg_received = self.create_msg_received("SendValue", {
             "formattedValue":{
                 "mimeType":"application/table-schema+json",
                 "value":"\"test\""
@@ -117,11 +126,11 @@ class TestCoeCommHandler(unittest.TestCase):
         msg_sent = self.create_msg_sent("CommandFailed", {
             "message": "Cannot create pandas dataframe for: \"x\". string indices must be integers"
         })
-        self.comm.handle_msg(msg_recieved)
+        self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
     
     def test_can_handle_invalid_identifier_in_send_value(self):
-        msg_recieved = self.create_msg_received("SendValue", {
+        msg_received = self.create_msg_received("SendValue", {
             "formattedValue":{
                 "mimeType":"application/json",
                 "value":"\"test\""
@@ -132,14 +141,14 @@ class TestCoeCommHandler(unittest.TestCase):
         msg_sent = self.create_msg_sent("CommandFailed", {
             "message": "Invalid Identifier: \"x.y\""
         })
-        self.comm.handle_msg(msg_recieved)
+        self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
-        
+    
     def test_can_handle_request_value_and_get_value(self):
         # below is just a test workaround as tests are not sharing the same 
         # namespace as the handlers. With .net interactive they will be.
         coe_comm_handler.x = "test"
-        msg_recieved = self.create_msg_received("RequestValue", {"name": "x", "mimeType": "application/json"});
+        msg_received = self.create_msg_received("RequestValue", {"name": "x", "mimeType": "application/json"});
         msg_sent = self.create_msg_sent("ValueProduced", {
             "name":"x",
             "value":"test",
@@ -147,24 +156,24 @@ class TestCoeCommHandler(unittest.TestCase):
                 "mimeType":"application/json",
                 "value":None
             }
-        }, msg_recieved["content"]["data"]["commandOrEvent"])
-        self.comm.handle_msg(msg_recieved)
+        }, msg_received["content"]["data"]["commandOrEvent"])
+        self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
         
     def test_can_handle_unknown_variable_request_value(self):
-        msg_recieved = self.create_msg_received("RequestValue", {"name": "unknown_var", "mimeType": "application/json"});
+        msg_received = self.create_msg_received("RequestValue", {"name": "unknown_var", "mimeType": "application/json"});
         msg_sent = self.create_msg_sent("CommandFailed", {
             "message": "Variable \"unknown_var\" not found."
         })
-        self.comm.handle_msg(msg_recieved)
+        self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
         
     def test_can_fail_on_unsupported_command_type(self):
-        msg_recieved = self.create_msg_received("UnsupportedCommand", {"name":"x"});
+        msg_received = self.create_msg_received("UnsupportedCommand", {"name":"x"});
         msg_sent = self.create_msg_sent("CommandFailed", {
             "message": "command \"UnsupportedCommand\" not supported"
         })
-        self.comm.handle_msg(msg_recieved)
+        self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
     
     def test_can_handle_request_value_infos_and_get_values(self):
@@ -176,11 +185,11 @@ class TestCoeCommHandler(unittest.TestCase):
         x = 456
         coe_comm_handler.x = x
         
-        msg_recieved = self.create_msg_received("RequestValueInfos");
+        msg_received = self.create_msg_received("RequestValueInfos");
         msg_sent = self.create_msg_sent("ValueInfosProduced", {
             "valueInfos": [{"name": "x", "nativeType": "<class \'int\'>"}]
-        }, msg_recieved["content"]["data"]["commandOrEvent"])
-        self.comm.handle_msg(msg_recieved)
+        }, msg_received["content"]["data"]["commandOrEvent"])
+        self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
         
 unittest.main(argv=[''], verbosity=2, exit=False)
