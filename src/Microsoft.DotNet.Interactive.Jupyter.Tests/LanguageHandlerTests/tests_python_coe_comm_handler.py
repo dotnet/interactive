@@ -27,13 +27,14 @@ class testComm:
 
 class TestCoeCommHandler(unittest.TestCase):
     @staticmethod
-    def create_msg_received(commandType, commandReceived):
+    def create_msg_received(commandType, commandReceived = None):
         command = {
              "targetKernelName":"python",
              "originUri":None,
              "destinationUri":None
         }
-        command.update(commandReceived)
+        if commandReceived is not None:
+            command.update(commandReceived)
         msg = {
              "content": { 
                  "data": {
@@ -85,6 +86,9 @@ class TestCoeCommHandler(unittest.TestCase):
         msg_sent = self.create_msg_sent("CommandSucceeded")
         self.comm.handle_msg(msg_recieved)
         self.assertEqual(self.comm.msg_sent, msg_sent)
+        # below is just a test workaround as tests are not sharing the same 
+        # namespace as the handlers. With .net interactive they will be.
+        self.assertEqual(coe_comm_handler.x, "test", "variable is not set")
         
     def test_can_handle_unsupported_mimetype_in_send_value(self):
         msg_recieved = self.create_msg_received("SendValue", {
@@ -132,6 +136,8 @@ class TestCoeCommHandler(unittest.TestCase):
         self.assertEqual(self.comm.msg_sent, msg_sent)
         
     def test_can_handle_request_value_and_get_value(self):
+        # below is just a test workaround as tests are not sharing the same 
+        # namespace as the handlers. With .net interactive they will be.
         coe_comm_handler.x = "test"
         msg_recieved = self.create_msg_received("RequestValue", {"name": "x", "mimeType": "application/json"});
         msg_sent = self.create_msg_sent("ValueProduced", {
@@ -160,5 +166,21 @@ class TestCoeCommHandler(unittest.TestCase):
         })
         self.comm.handle_msg(msg_recieved)
         self.assertEqual(self.comm.msg_sent, msg_sent)
-
+    
+    def test_can_handle_request_value_infos_and_get_values(self):
+    
+        # below is just a test workaround as tests are not sharing the same 
+        # namespace as the handlers, so for now we inject the same variable in both.
+        # With .net interactive they will be.
+        global x 
+        x = 456
+        coe_comm_handler.x = x
+        
+        msg_recieved = self.create_msg_received("RequestValueInfos");
+        msg_sent = self.create_msg_sent("ValueInfosProduced", {
+            "valueInfos": [{"name": "x", "nativeType": "<class \'int\'>"}]
+        }, msg_recieved["content"]["data"]["commandOrEvent"])
+        self.comm.handle_msg(msg_recieved)
+        self.assertEqual(self.comm.msg_sent, msg_sent)
+        
 unittest.main(argv=[''], verbosity=2, exit=False)

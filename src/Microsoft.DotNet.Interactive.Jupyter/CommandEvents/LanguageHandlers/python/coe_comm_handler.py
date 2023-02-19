@@ -68,9 +68,9 @@ def __get_dotnet_coe_comm_handler():
         def __handle_request_value_infos(self, command):
             results_who_ls = get_ipython().magic('who_ls')
             variables = globals()
-            results = [KernelValueInfo(x, str(type(variables[x]))) for x in results_who_ls ]
+            results = [KernelValueInfo(x, str(type(variables[x]))) for x in results_who_ls if x in variables]
             results = list(filter(lambda v: v.nativeType not in self.__exclude_types, results))
-            
+
             return EventEnvelope(ValueInfosProduced(results), command)
             
         def __handle_request_value(self, command):
