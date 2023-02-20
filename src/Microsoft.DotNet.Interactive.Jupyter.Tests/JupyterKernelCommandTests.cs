@@ -46,7 +46,10 @@ public partial class JupyterKernelTests : IDisposable
     {
         Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
 
-        var csharpKernel = new CSharpKernel();
+        var csharpKernel = new CSharpKernel()
+                                .UseKernelHelpers()
+                                .UseValueSharing();
+
         var kernel = new CompositeKernel { csharpKernel };
         kernel.DefaultKernelName = csharpKernel.Name;
 
@@ -692,7 +695,7 @@ public partial class JupyterKernelTests : IDisposable
            .Select(c => c.InsertText)
            .Should()
            .Contain(completionsFromKernel.Matches);
-        
+
         options.SaveState();
     }
 }
