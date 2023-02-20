@@ -132,7 +132,7 @@ library(jsonlite);
         resultValue <- fromJSON(rawValue)
     }
     
-    if (!is.null(resultValue)) {
+    if (!is.na(resultValue)) {
         assign(name, resultValue, globalenv());
         return (.dotnet_coe_comm_hander_env$pass())
     }
