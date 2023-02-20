@@ -106,7 +106,41 @@ class TestCoeCommHandler(unittest.TestCase):
         # below is just a test workaround as tests are not sharing the same 
         # namespace as the handlers. With .net interactive they will be.
         self.assertEqual(coe_comm_handler.x, "test", "variable is not set")
+    
+    def test_can_handle_send_value_with_dataframe(self):
+        data = [
+            {"CategoryName":"Road Frames","ProductName":"HL Road Frame - Black, 58"},
+            {"CategoryName":"Road Frames","ProductName":"HL Road Frame - Red, 58"},
+            {"CategoryName":"Helmets","ProductName":"Sport-100 Helmet, Red"},
+            {"CategoryName":"Helmets","ProductName":"Sport-100 Helmet, Black"}
+        ];
         
+        import pandas as pd
+        df_expected = pd.DataFrame(data)
+        from pandas.testing import assert_frame_equal
+        
+        msg_received = self.create_msg_received("SendValue", {
+            "formattedValue":{
+                "mimeType":"application/table-schema+json",
+                "value": json.dumps({
+                    "schema": {
+                        "fields":[
+                            {"name":"CategoryName","type":"string"},
+                            {"name":"ProductName","type":"string"}
+                        ],
+                        "primaryKey":[]
+                    },
+                    "data": data
+                })
+            },
+            "name":"df_sent"
+        });
+        
+        msg_sent = self.create_msg_sent("CommandSucceeded")
+        self.comm.handle_msg(msg_received)
+        self.assertEqual(self.comm.msg_sent, msg_sent)
+        assert_frame_equal(coe_comm_handler.df_sent, df_expected)
+                
     def test_can_handle_unsupported_mimetype_in_send_value(self):
         msg_received = self.create_msg_received("SendValue", {
             "formattedValue":{
@@ -168,6 +202,28 @@ class TestCoeCommHandler(unittest.TestCase):
         self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
         
+    def test_can_handle_request_dataframe_and_get_value(self):
+        data = [
+            {"CategoryName":"Road Frames","ProductName":"HL Road Frame - Black, 58"},
+            {"CategoryName":"Road Frames","ProductName":"HL Road Frame - Red, 58"},
+            {"CategoryName":"Helmets","ProductName":"Sport-100 Helmet, Red"},
+            {"CategoryName":"Helmets","ProductName":"Sport-100 Helmet, Black"}
+        ];
+        
+        import pandas as pd
+        coe_comm_handler.df_set = pd.DataFrame(data)
+        msg_received = self.create_msg_received("RequestValue", {"name": "df_set", "mimeType": "application/json"});
+        msg_sent = self.create_msg_sent("ValueProduced", {
+            "name":"df_set",
+            "value":data,
+            "formattedValue":{
+                "mimeType":"application/table-schema+json",
+                "value": None
+            }
+        }, msg_received["content"]["data"]["commandOrEvent"])
+        self.comm.handle_msg(msg_received)
+        self.assertEqual(self.comm.msg_sent, msg_sent)
+    
     def test_can_handle_unknown_variable_request_value(self):
         msg_received = self.create_msg_received("RequestValue", {"name": "unknown_var", "mimeType": "application/json"});
         msg_sent = self.create_msg_sent("CommandFailed", {
@@ -177,7 +233,6 @@ class TestCoeCommHandler(unittest.TestCase):
         self.assertEqual(self.comm.msg_sent, msg_sent)
         
     def test_can_handle_request_value_infos_and_get_values(self):
-    
         # below is just a test workaround as tests are not sharing the same 
         # namespace as the handlers, so for now we inject the same variable in both.
         # With .net interactive they will be.
@@ -185,9 +240,14 @@ class TestCoeCommHandler(unittest.TestCase):
         x = 456
         coe_comm_handler.x = x
         
+        import pandas as pd
+        global df
+        df = pd.DataFrame([{"x": 123}, {"x": 456}])
+        coe_comm_handler.df = df
+        
         msg_received = self.create_msg_received("RequestValueInfos");
         msg_sent = self.create_msg_sent("ValueInfosProduced", {
-            "valueInfos": [{"name": "x", "nativeType": "<class \'int\'>"}]
+            "valueInfos": [{"name": "df", "nativeType": "<class \'pandas.core.frame.DataFrame\'>"},{"name": "x", "nativeType": "<class \'int\'>"}]
         }, msg_received["content"]["data"]["commandOrEvent"])
         self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
