@@ -52,7 +52,7 @@ td {
 }
 
 .table-container {
-    width: 98vw;
+    width: 100%;
 }
 
 .data-cell {
@@ -84,44 +84,30 @@ td {
 }
 
 col.name-column {
+    max-width: 20%;
     width: 20%;
 }
 
 col.type-column {
+    max-width: 15%;
     width: 15%;
 }
 
 col.value-column {
+    max-width: 40%;
     width: 40%;
 }
 
 col.kernel-column {
+    max-width: 15%;
     width: 15%;
 }
 
+
 col.actions-column {
+    max-width: 10%;
     width: 10%;
 }
-
-/* div.name-column-content {
-    max-width: 20vw;
-}
-
-div.type-column-content {
-    max-width: 15vw;
-}
-
-div.value-column-content {
-    max-width: 40vw;
-}
-
-div.kernel-column-content {
-    max-width: 15vw;
-}
-
-div.actions-column-content {
-    max-width: 10vw;
-} */
 
 button {
     background-color: var(--vscode-button-background);

@@ -48,6 +48,7 @@
     "onNotebook:polyglot-notebook-window",
     "onNotebook:jupyter-notebook",
     "onCommand:dotnet-interactive.acquire",
+    "onCommand:polyglot-notebook.fileNew",
     "onCommand:polyglot-notebook.newNotebook",
     "onCommand:polyglot-notebook.openNotebook",
     "onCommand:polyglot-notebook.saveAsNotebook",
@@ -98,6 +99,56 @@
     "configuration": {
       "title": "Polyglot Notebook",
       "properties": {
+        "polyglot-notebook.suppressPromptToSaveDefaults": {
+          "type": "boolean",
+          "default": false,
+          "description": "Suppresses the prompt to save the default notebook extension and language."
+        },
+        "polyglot-notebook.defaultNotebookExtension": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "enum": [
+            ".dib",
+            ".ipynb"
+          ],
+          "enumDescriptions": [
+            "Use .dib files for notebooks.",
+            "Use .ipynb files for notebooks."
+          ]
+        },
+        "polyglot-notebook.defaultNotebookLanguage": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "The default starting language for new notebooks.",
+          "enum": [
+            "csharp",
+            "fsharp",
+            "html",
+            "javascript",
+            "kql",
+            "markdown",
+            "mermaid",
+            "pwsh",
+            "sql"
+          ],
+          "enumDescriptions": [
+            "C#",
+            "F#",
+            "HTML",
+            "JavaScript",
+            "KQL",
+            "Markdown",
+            "Mermaid",
+            "PowerShell",
+            "SQL"
+          ]
+        },
         "polyglot-notebook.kernelEnvironmentVariables": {
           "type": "object",
           "default": {},
@@ -205,8 +256,22 @@
         "title": "Polyglot Notebook: Save notebook as..."
       },
       {
+        "command": "polyglot-notebook.fileNew",
+        "enablement": "false",
+        "title": "New Polyglot Notebook",
+        "shortTitle": "Polyglot Notebook"
+      },
+      {
         "command": "polyglot-notebook.newNotebook",
+        "title": "Polyglot Notebook: Create default notebook"
+      },
+      {
+        "command": "polyglot-notebook.newNotebookNoDefaults",
         "title": "Polyglot Notebook: Create new blank notebook"
+      },
+      {
+        "command": "polyglot-notebook.setNewNotebookDefaults",
+        "title": "Polyglot Notebook: Set new notebook default values"
       },
       {
         "command": "polyglot-notebook.restartCurrentNotebookKernel",
@@ -258,6 +323,12 @@
       }
     ],
     "menus": {
+      "file/newFile": [
+        {
+          "command": "polyglot-notebook.fileNew",
+          "group": "notebook"
+        }
+      ],
       "notebook/toolbar": [
         {
           "command": "polyglot-notebook.notebookEditor.restartKernel",

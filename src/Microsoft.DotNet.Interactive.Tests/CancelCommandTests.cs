@@ -17,7 +17,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 #pragma warning disable xUnit1000
-internal class CancelCommandTests : LanguageKernelTestBase
+public class CancelCommandTests : LanguageKernelTestBase
 {
     public CancelCommandTests(ITestOutputHelper output) : base(output)
     {
@@ -167,6 +167,48 @@ while(!cancellationToken.IsCancellationRequested){
                       .Command
                       .Should()
                       .Be(commandToCancel);
+                break;
+            }
+            catch (TimeoutException)
+            {
+            }
+        }
+    }
+
+    [Fact]
+    public async Task can_cancel_user_code_when_commands_are_split()
+    {
+        // todo: this test is flaky and timeouts in CI
+        while (true)
+        {
+            using var kernel = CreateKernel();
+
+            var cancelCommand = new Cancel();
+
+            var commandToCancel = new SubmitCode(@"
+#!csharp 
+using Microsoft.DotNet.Interactive;
+var cancellationToken = KernelInvocationContext.Current.CancellationToken;
+while(!cancellationToken.IsCancellationRequested){ 
+    await Task.Delay(10); 
+}");
+            try
+            {
+                var resultForCommandToCancel = kernel.SendAsync(commandToCancel);
+
+                await Task.Delay(200);
+
+                await kernel.SendAsync(cancelCommand).Timeout(10.Seconds());
+
+                var result = await resultForCommandToCancel.Timeout(10.Seconds());
+
+                result.Events
+                    .Should()
+                    .ContainSingle<CommandFailed>()
+                    .Which
+                    .Command
+                    .Should()
+                    .Be(commandToCancel);
                 break;
             }
             catch (TimeoutException)

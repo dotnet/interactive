@@ -74,7 +74,9 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    StandardOutputEncoding = Encoding.UTF8
+                    StandardOutputEncoding = Encoding.UTF8,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
                 },
                 EnableRaisingEvents = true
             };
@@ -87,7 +89,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                     stdOutObservable.OnNext(args.Data);
                 }
             };
-            
+
             var stdErr = new StringBuilder();
             _process.ErrorDataReceived += (_, args) =>
             {
@@ -176,8 +178,13 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
     {
         if (_process is { HasExited: false })
         {
-            // todo: ensure killing process tree
-            _process?.Kill(true);
+#if NETSTANDARD2_0
+            // TODO: Kill entire process tree.
+            _process?.Kill();
+#else
+            _process?.Kill(entireProcessTree: true);
+#endif
+
             _process?.Dispose();
             _process = null;
         }
