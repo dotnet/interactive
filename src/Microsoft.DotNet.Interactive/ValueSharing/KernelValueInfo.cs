@@ -18,7 +18,7 @@ public class KernelValueInfo
         Name = name;
         Type = type;
         TypeName = typeName;
-        FormattedValue = formattedValue;
+        FormattedValue = formattedValue ?? throw new ArgumentNullException(nameof(formattedValue));
     }
 
     /// <summary>
