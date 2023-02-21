@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
@@ -15,12 +14,10 @@ public sealed class ProxyKernel : Kernel
 {
     private readonly IKernelCommandAndEventSender _sender;
     private readonly IKernelCommandAndEventReceiver _receiver;
-    private ExecutionContext _executionContext;
     private bool _requiresRequestKernelInfoOnFirstCommand = true;
     private string _suppressCompletionsForCommandId;
 
-    private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext
-        invocationContext)> _inflight = new();
+    private readonly Dictionary<string, (KernelCommand command, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext invocationContext)> _inflight = new();
 
     public ProxyKernel(
         string name,
@@ -49,7 +46,7 @@ public sealed class ProxyKernel : Kernel
         {
             if (coe.Event is { } e)
             {
-                if (e is KernelInfoProduced {Command: NoCommand} kip && kip.KernelInfo.Uri == KernelInfo.RemoteUri)
+                if (e is KernelInfoProduced { Command: NoCommand } kip && kip.KernelInfo.Uri == KernelInfo.RemoteUri)
                 {
                     UpdateKernelInfoFromEvent(kip);
                     PublishEvent(new KernelInfoProduced(KernelInfo, e.Command));
@@ -73,7 +70,7 @@ public sealed class ProxyKernel : Kernel
         ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfoProduced.KernelInfo.SupportedDirectives);
         ((HashSet<KernelCommandInfo>)KernelInfo.SupportedKernelCommands).UnionWith(kernelInfoProduced.KernelInfo.SupportedKernelCommands);
     }
-    
+
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
     {
         if (command.OriginUri is null)
@@ -83,13 +80,12 @@ public sealed class ProxyKernel : Kernel
                 command.OriginUri = KernelInfo.Uri;
             }
         }
-       
-        _executionContext = ExecutionContext.Capture();
+
         var token = command.GetOrCreateToken();
         command.GetOrCreateId();
 
         command.OriginUri ??= KernelInfo.Uri;
-        
+
         if (command.DestinationUri is null)
         {
             command.DestinationUri = KernelInfo.RemoteUri;
@@ -106,10 +102,8 @@ public sealed class ProxyKernel : Kernel
         var targetKernelName = command.TargetKernelName;
         command.TargetKernelName = null;
         var completionSource = new TaskCompletionSource<KernelEvent>();
-       
-        _inflight[token] = (command, _executionContext, completionSource, context);
-        
-        ExecutionContext.SuppressFlow();
+
+        _inflight[token] = (command, completionSource, context);
 
         EnsureKernelInfoIsLoaded(command, context);
 
@@ -229,34 +223,16 @@ public sealed class ProxyKernel : Kernel
                     {
                         UpdateKernelInfoFromEvent(kip);
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
-                        
+
                         newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
-                        
-                        if (pending.executionContext is { } ec)
-                        {
-                            ExecutionContext.Run(ec, _ =>
-                            {
-                                pending.invocationContext.Publish(newEvent);
-                                pending.invocationContext.Publish(kip);
-                            }, null);
-                        }
-                        else
-                        {
-                            pending.invocationContext.Publish(newEvent);
-                            pending.invocationContext.Publish(kip);
-                        }
+
+                        pending.invocationContext.Publish(newEvent);
+                        pending.invocationContext.Publish(kip);
                     }
                     break;
                 default:
                     {
-                        if (pending.executionContext is { } ec)
-                        {
-                            ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
-                        }
-                        else
-                        {
-                            pending.invocationContext.Publish(kernelEvent);
-                        }
+                        pending.invocationContext.Publish(kernelEvent);
                     }
                     break;
             }
