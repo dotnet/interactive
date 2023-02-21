@@ -108,7 +108,7 @@ public class KernelInvocationContext : IDisposable
             TryCancel();
             Fail(
                 Command,
-                new OperationCanceledException($"Command :{Command} cancelled."));
+                message:"Command cancelled.");
         }
     }
 
