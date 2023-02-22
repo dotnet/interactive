@@ -39,7 +39,7 @@ public class KeyValueStoreKernelTests
     }
 
     [Fact]
-    public async Task SubmitCode_stores_code_as_a_string()
+    public async Task SubmitCode_stores_code_as_a_formatted_value()
     {
         using var kernel = CreateKernel();
 
@@ -54,10 +54,7 @@ public class KeyValueStoreKernelTests
 
         var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
 
-        valueProduced.Value
-            .Should()
-            .BeOfType<string>()
-            .Which
+        valueProduced.FormattedValue.Value
             .Should()
             .Be(storedValue);
     }
@@ -184,10 +181,7 @@ public class KeyValueStoreKernelTests
 
         var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
 
-        valueProduced.Value
-            .Should()
-            .BeOfType<string>()
-            .Which
+        valueProduced.FormattedValue.Value
             .Should()
             .Be(fileContents);
     }
@@ -203,10 +197,7 @@ public class KeyValueStoreKernelTests
 
         var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
 
-        valueProduced.Value
-            .Should()
-            .BeOfType<string>()
-            .Which
+        valueProduced.FormattedValue.Value
             .Should()
             .Contain("<html");
     }
@@ -229,10 +220,7 @@ public class KeyValueStoreKernelTests
 
         var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
 
-        valueProduced.Value
-            .Should()
-            .BeOfType<string>()
-            .Which
+        valueProduced.FormattedValue.Value
             .Should()
             .Be("hello!");
     }
@@ -302,7 +290,7 @@ public class KeyValueStoreKernelTests
         var (success, valueProduced) = await valueKernel.TryRequestValueAsync("x");
         success.Should().BeTrue();
 
-        valueProduced.Value.Should().Be("#!share --from fsharp f");
+        valueProduced.FormattedValue.Value.Should().Be("#!share --from fsharp f");
     }
 
     [Fact]
@@ -416,7 +404,7 @@ public class KeyValueStoreKernelTests
             .Should()
             .BeTrue();
 
-        valueProduced.Value
+        valueProduced.FormattedValue.Value
             .Should()
             .Be("// previous content");
     }

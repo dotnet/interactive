@@ -68,7 +68,9 @@ library(jsonlite);
     for (var in variables) {
         if (!startsWith(var, '.')) {
             type <- toString(typeof(get(var)));
-            results <- append(results, list(list(name=var, nativeType=type)));
+            if (type != 'closure') {
+                results <- append(results, list(list(name=var, nativeType=type)));
+            }
         };
     };
                 
@@ -130,17 +132,16 @@ library(jsonlite);
         resultValue <- data.frame(resultValue$data)
     } else if (mimeType == 'application/json') {
         resultValue <- fromJSON(rawValue)
-    }
-    
-    if (!is.null(resultValue)) {
-        assign(name, resultValue, globalenv());
-        return (.dotnet_coe_comm_hander_env$pass())
-    }
-    
-    return (
+    } else {
+        return (
             .dotnet_coe_comm_hander_env$fail(
-                    sprintf('Failed to set value for "%s". "%s" mimetype not supported.', name, mimeType))
-    )
+                        sprintf('Failed to set value for "%s". "%s" mimetype not supported.', name, mimeType))
+        )
+    }
+    
+    
+    assign(name, resultValue, globalenv());
+    return (.dotnet_coe_comm_hander_env$pass())
 }
 
 .dotnet_coe_comm_hander_env$handle_command <- function(commandOrEvent) {

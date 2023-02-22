@@ -179,39 +179,89 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         'Jupyter Notebooks': ['ipynb'],
     };
 
-    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebook', async () => {
-        // offer to create either `.dib` or `.ipynb`
-        const newDibNotebookText = `Create as '.dib'`;
-        const newIpynbNotebookText = `Create as '.ipynb'`;
-        const selected = await vscode.window.showQuickPick([newDibNotebookText, newIpynbNotebookText]);
-        switch (selected) {
-            case newDibNotebookText:
-                await vscode.commands.executeCommand('polyglot-notebook.newNotebookDib');
-                break;
-            case newIpynbNotebookText:
-                await vscode.commands.executeCommand('polyglot-notebook.newNotebookIpynb');
-                break;
-            default:
-                break;
+    async function newNotebookCommandHandler(preferDefaults: boolean): Promise<void> {
+        const extension = await getNewNotebookExtension(preferDefaults);
+        if (!extension) {
+            return;
         }
-    }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebookDib', async () => {
-        await newNotebook('.dib');
-    }));
+        const language = await getNewNotebookLanguage(preferDefaults);
+        if (!language) {
+            return;
+        }
 
-    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebookIpynb', async () => {
-        // note, new .ipynb notebooks are currently affected by this bug: https://github.com/microsoft/vscode/issues/121974
-        await newNotebook('.ipynb');
-        await selectDotNetInteractiveKernelForJupyter();
-    }));
+        await newNotebookWithLanguage(extension, language);
 
-    async function newNotebook(extension: string): Promise<void> {
-        const viewType = extension === '.dib'
-            ? constants.NotebookViewType
-            : constants.JupyterViewType;
+        if (preferDefaults) {
+            // if the defaults were even in play, ask the user if they want to save them
+            // don't await this, since it's not critical
+            promptToSaveDefaults(extension, language);
+        }
+    }
 
-        // get language
+    async function promptToSaveDefaults(extension: string, language: string): Promise<void> {
+        const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
+
+        // check to see if the user doesn't want to see this
+        const suppressPromptToSaveDefaults = polyglotConfig.get<boolean>('suppressPromptToSaveDefaults');
+        if (suppressPromptToSaveDefaults) {
+            return;
+        }
+
+        // if some default settings were missing...
+        const defaultExtension = polyglotConfig.get<string>('defaultNotebookExtension');
+        const defaultLanguage = polyglotConfig.get<string>('defaultNotebookLanguage');
+        if (!defaultExtension || !defaultLanguage) {
+            // ...ask if they want to save the defaults
+            const setDefaultsOption = 'Set defaults';
+            const dontAskOption = "Don't ask again";
+            const saveDefaults = await vscode.window.showInformationMessage('Would you like to set default values for future notebooks?', setDefaultsOption, 'Dismiss', dontAskOption);
+            if (saveDefaults === setDefaultsOption) {
+                // set the values the user just selected...
+                await polyglotConfig.update('defaultNotebookExtension', extension, vscode.ConfigurationTarget.Global);
+                await polyglotConfig.update('defaultNotebookLanguage', language, vscode.ConfigurationTarget.Global);
+                // ...then open the settings so they can make any additional changes
+                vscode.commands.executeCommand('polyglot-notebook.setNewNotebookDefaults');
+            } else if (saveDefaults === dontAskOption) {
+                // set the value to suppress the prompt
+                await polyglotConfig.update('suppressPromptToSaveDefaults', true, vscode.ConfigurationTarget.Global);
+            } else {
+                // anything else was either 'Dismiss' or the dialog was closed
+            }
+        }
+    }
+
+    async function getNewNotebookExtension(preferDefault: boolean): Promise<string | undefined> {
+        const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
+        if (preferDefault) {
+            // try to get the default notebook type
+            const defaultNotebookExtension = polyglotConfig.get<string>('defaultNotebookExtension');
+            if (defaultNotebookExtension) {
+                return defaultNotebookExtension;
+            }
+        }
+
+        // either wanted a fresh value, or no default was set; directly ask the user
+        const availableNotebookExtensions = ['.dib', '.ipynb'];
+        const selectedExtension = await vscode.window.showQuickPick(availableNotebookExtensions, { title: 'Create as...' });
+        if (selectedExtension) {
+            return selectedExtension;
+        }
+
+        return undefined;
+    }
+
+    async function getNewNotebookLanguage(preferDefault: boolean): Promise<string | undefined> {
+        const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
+        if (preferDefault) {
+            // try to get the default notebook type
+            const defaultNotebookLanguage = polyglotConfig.get<string>('defaultNotebookLanguage');
+            if (defaultNotebookLanguage) {
+                return defaultNotebookLanguage;
+            }
+        }
+
+        // either wanted a fresh value, or no default was set; directly ask the user
         const languagesAndKernelNames: { [key: string]: string } = {
             'C#': 'csharp',
             'F#': 'fsharp',
@@ -230,11 +280,28 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         }
 
         const notebookLanguage = await vscode.window.showQuickPick(newLanguageOptions, { title: 'Default Language' });
-        if (!notebookLanguage) {
+        if (notebookLanguage) {
+            return languagesAndKernelNames[notebookLanguage];
+        }
+
+        return undefined;
+    }
+
+    async function newNotebookFromExtension(extension: string): Promise<void> {
+        const language = await getNewNotebookLanguage(true);
+        if (!language) {
             return;
         }
 
-        const kernelName = languagesAndKernelNames[notebookLanguage];
+        await newNotebookWithLanguage(extension, language);
+    }
+
+    async function newNotebookWithLanguage(extension: string, kernelName: string): Promise<void> {
+        const extensionViewTypeMap: { [key: string]: string } = {
+            '.dib': constants.NotebookViewType,
+            '.ipynb': constants.JupyterViewType,
+        };
+        const viewType = extensionViewTypeMap[extension];
         const isMarkdown = kernelName.toLowerCase() === 'markdown';
 
         // the metadata needs an actual kernel name, not the special-cased 'markdown'
@@ -265,7 +332,37 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         content.metadata = rawNotebookMetadata;
         const notebook = await vscode.workspace.openNotebookDocument(viewType, content);
         const _editor = await vscode.window.showNotebookDocument(notebook);
+
+        if (viewType === constants.JupyterViewType) {
+            // note, new .ipynb notebooks are currently affected by this bug: https://github.com/microsoft/vscode/issues/121974
+            await selectDotNetInteractiveKernelForJupyter();
+        }
     }
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.setNewNotebookDefaults', async () => {
+        await vscode.commands.executeCommand('workbench.action.openGlobalSettings', { query: 'polyglot-notebook.defaultNotebook' });
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebook', async () => {
+        await newNotebookCommandHandler(true);
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebookNoDefaults', async () => {
+        await newNotebookCommandHandler(false);
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.fileNew', async () => {
+        // this command exists purely to forward to the polyglot-notebook.newNotebook command, but we need a separate `title`/`shortTitle` for the command palette
+        await vscode.commands.executeCommand('polyglot-notebook.newNotebook');
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebookDib', async () => {
+        await newNotebookFromExtension('.dib');
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.newNotebookIpynb', async () => {
+        await newNotebookFromExtension('.ipynb');
+    }));
 
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
         // ensure we have a notebook uri

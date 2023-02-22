@@ -4,7 +4,7 @@ _Our documentation is still a work in progress. There are a number of topics lis
 
 ## FAQ
 
-If you're just starting out here, please refer to our [FAQ](./docs/FAQ.md).
+If you're just starting out here, please refer to our [FAQ](./FAQ.md).
 
 ## Using notebooks
 

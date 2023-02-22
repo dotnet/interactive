@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
@@ -478,11 +479,15 @@ public class SubmissionParser
                         JsonValueKind.False => false,
                         JsonValueKind.String => jsonDoc.Deserialize<string>(),
                         JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-
+                        JsonValueKind.Object => stringValue,
                         _ => null
                     };
 
                     interpolatedValue = jsonValue?.ToString();
+                }
+                else if (valueProduced.FormattedValue.MimeType == "text/plain")
+                {
+                    interpolatedValue = valueProduced.FormattedValue.Value;
                 }
                 else
                 {

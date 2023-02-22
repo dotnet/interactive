@@ -1,6 +1,11 @@
 ﻿# Copyright (c) .NET Foundation and contributors. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+try:
+    get_ipython().__class__.__name__
+except NameError:
+    raise Exception("This script needs to be run in ipython")
+    
 import json
 def __get_dotnet_coe_comm_handler(): 
     
@@ -61,11 +66,11 @@ def __get_dotnet_coe_comm_handler():
             return envelop.payload()
 
         def __handle_request_value_infos(self, command):
-            results_who_ls = %who_ls
+            results_who_ls = get_ipython().magic('who_ls')
             variables = globals()
-            results = [KernelValueInfo(x, str(type(variables[x]))) for x in results_who_ls ]
+            results = [KernelValueInfo(x, str(type(variables[x]))) for x in results_who_ls if x in variables]
             results = list(filter(lambda v: v.nativeType not in self.__exclude_types, results))
-            
+
             return EventEnvelope(ValueInfosProduced(results), command)
             
         def __handle_request_value(self, command):
@@ -198,4 +203,5 @@ def __get_dotnet_coe_comm_handler():
     
     return CommandEventCommTarget()
 
-get_ipython().kernel.comm_manager.register_target('dotnet_coe_handler_comm', __get_dotnet_coe_comm_handler().handle_control_comm_opened)
+if hasattr(get_ipython(), 'kernel'):
+    get_ipython().kernel.comm_manager.register_target('dotnet_coe_handler_comm', __get_dotnet_coe_comm_handler().handle_control_comm_opened)

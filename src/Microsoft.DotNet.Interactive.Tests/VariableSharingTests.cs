@@ -299,7 +299,7 @@ public class VariableSharingTests : IDisposable
             .Should()
             .BeTrue();
 
-        valueProduced.Value.Should().Be("hello!");
+        valueProduced.FormattedValue.Value.Should().Be("hello!");
     }
 
     [Fact]

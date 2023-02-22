@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -21,6 +22,7 @@ namespace Microsoft.DotNet.Interactive;
 public class KernelInvocationContext : IDisposable
 {
     private static readonly AsyncLocal<KernelInvocationContext> _current = new();
+    private static readonly ConcurrentDictionary<string, CancellationTokenSource>  _cancellationTokenSources = new ();
 
     private readonly ReplaySubject<KernelEvent> _events = new();
 
@@ -31,6 +33,8 @@ public class KernelInvocationContext : IDisposable
     private List<Action<KernelInvocationContext>> _onCompleteActions;
 
     private readonly CancellationTokenSource _cancellationTokenSource;
+
+    private bool _ownsCancellationTokenSource;
 
     private KernelInvocationContext(KernelCommand command)
     {
@@ -47,15 +51,21 @@ public class KernelInvocationContext : IDisposable
             category: nameof(KernelInvocationContext),
             logOnStart: true);
 
-        _cancellationTokenSource = new CancellationTokenSource();
+        _cancellationTokenSource =
+            _cancellationTokenSources.GetOrAdd(
+                command.GetOrCreateToken(),
+                s =>
+                {
+                    _ownsCancellationTokenSource = true;
+                    return new CancellationTokenSource();
+                } 
+        );
 
         Command = command;
 
         Result = new KernelCommandResult(command);
 
         _disposables.Add(_events.Subscribe(Result.AddEvent));
-
-        _disposables.Add(_cancellationTokenSource);
 
         _disposables.Add(ConsoleOutput.Subscribe(c =>
         {
@@ -321,7 +331,11 @@ public class KernelInvocationContext : IDisposable
         }
 
         Complete(Command);
-
+        if (_ownsCancellationTokenSource)
+        {
+            _cancellationTokenSources.TryRemove(Command.GetOrCreateToken(), out _);
+            _cancellationTokenSource.Dispose();
+        }
         _disposables.Dispose();
     }
 

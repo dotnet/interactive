@@ -333,7 +333,7 @@ export class InteractiveClient {
             token = token || this.getNextToken();
             const id = Guid.create().toString();
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
-                if (eventEnvelope.command?.token === token) {
+                if (eventEnvelope.command?.token === token && eventEnvelope.eventType === expectedEventType) {
                     switch (eventEnvelope.eventType) {
                         case CommandFailedType:
                             if (!handled) {
