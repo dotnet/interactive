@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -38,6 +37,9 @@ public static class KernelExtensions
                 return (true, valueProduced);
             }
         }
+
+        // FIX: (TryRequestValueAsync) this doesn't need to be a Try method since we never return false in actual usage. we should throw and clean up the associated tests.
+
 
         return (false, default);
     }
