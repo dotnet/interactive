@@ -25683,7 +25683,7 @@ For more information, please refer to <http://unlicense.org/>
 
 ---------------------------------------------------------
 
-Some parts of Jupyter messaging protocol handling and Jupyter Kernel creation are inspired from the nteract OSS project. 
+Some parts of Jupyter messaging protocol handling and Jupyter Kernel creation implementation were developed with knowledge of patterns used effectively in the nteract OSS project. 
 
 nteract
 https://github.com/nteract/nteract
