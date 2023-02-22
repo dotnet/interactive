@@ -6,9 +6,11 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
+using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,6 +18,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -210,56 +213,45 @@ public static class KernelExtensions
         return kernel;
     }
 
-    private static void HandleSetMagicCommand<T>(T kernel,
+    private static async Task HandleSetMagicCommand<T>(
+        T kernel,
         InvocationContext cmdLineContext,
         Option<string> nameOption,
-        Option<string> fromValueOption,
-        Option<string> mimeTypeOption)
+        Option<object> valueOption,
+        Option<string> mimeTypeOption,
+        Option<bool> byrefOption)
         where T : Kernel
     {
         var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
         var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
         var context = cmdLineContext.GetService<KernelInvocationContext>();
+        var isByref = cmdLineContext.ParseResult.GetValueForOption(byrefOption);
 
-        SetValueFromValueProduced(mimeType);
-
-        void SetValueFromValueProduced(string mimetype)
+        if (kernel.SupportsCommandType(typeof(SendValue)))
         {
-            if (kernel.SupportsCommandType(typeof(SendValue)))
+            var events = new List<ValueProduced>();
+
+            using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(events.Add);
+
+            var valueProduced = events.SingleOrDefault();
+
+            if (valueProduced is { })
             {
-                var events = new List<ValueProduced>();
+                var referenceValue = isByref ? valueProduced.Value : null;
+                var formattedValue = valueProduced.FormattedValue;
 
-                using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(events.Add);
-
-                var valueProduced = events.SingleOrDefault();
-
-                if (valueProduced is { })
-                {
-                    var referenceValue = mimetype is not null ? null : valueProduced.Value;
-                    var formattedValue = valueProduced.FormattedValue;
-
-                    if (mimeType is not null && formattedValue.MimeType != mimeType)
-                    {
-                        var fromKernelUri = new Uri(valueProduced.RoutingSlip.ToUriArray().First());
-                        var fromKernel = kernel.RootKernel.FindKernel(k => k.KernelInfo.Uri == fromKernelUri || kernel.KernelInfo.RemoteUri == fromKernelUri
-                    );
-                        var v = GetValue(fromKernel, valueProduced.Name, mimeType).GetAwaiter().GetResult();
-                        formattedValue = v.FormattedValue;
-                    }
-                    SendValue(kernel, referenceValue, formattedValue, valueName)
-                        .GetAwaiter().GetResult();
-                }
-                else
-                {
-                    var interpolatedValue = cmdLineContext.ParseResult.GetValueForOption(fromValueOption);
-                    SendValue(kernel, interpolatedValue, null, valueName)
-                        .GetAwaiter().GetResult();
-                }
+                await SendValue(kernel, referenceValue, formattedValue, valueName);
             }
             else
             {
-                context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
+                var interpolatedValue = cmdLineContext.ParseResult.GetValueForOption(valueOption);
+
+                await SendValue(kernel, interpolatedValue, null, valueName);
             }
+        }
+        else
+        {
+            context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
         }
     }
 
@@ -270,12 +262,44 @@ public static class KernelExtensions
         return kernel;
     }
 
-    private static void ConfigureAndAddSetMagicCommand<T>(T kernel) where T : Kernel
+    private static void ConfigureAndAddSetMagicCommand<T>(T destinationKernel) where T : Kernel
     {
-        var valueOption = new Option<string>(
+        var nameOption = new Option<string>(
+            "--name",
+            description: "The name of the value to be created in the current kernel.")
+        {
+            IsRequired = true
+        };
+
+        var byrefOption = new Option<bool>(
+            "--byref",
+            "Shares the specified value by reference if kernels are in the same process.");
+
+        var mimeTypeOption = new Option<string>(
+                "--mime-type", 
+                description: "The MIME type by which the value should be represented. This will often determine how an object will be formatted into a string.",
+                parseArgument: result =>
+                {
+                    if (result.GetValueForOption(byrefOption))
+                    {
+                        result.ErrorMessage = "The --mime-type and --byref options cannot be used together.";
+                    }
+
+                    return result.Tokens.FirstOrDefault()?.Value;
+                })
+            {
+                ArgumentHelpName = "MIME-TYPE"
+            }
+            .AddCompletions(
+                JsonFormatter.MimeType,
+                HtmlFormatter.MimeType,
+                PlainTextFormatter.MimeType);
+
+        var valueOption = new Option<object>(
             "--value",
             description:
-            "The value to be set. @input:user_prompt allows you to prompt the user for this value. Values can be requested from other kernels by name, for example @csharp:variableName.")
+            "The value to be set. @input:user_prompt allows you to prompt the user for this value. Values can be requested from other kernels by name, for example @csharp:variableName.",
+            parseArgument: ParseValueOption)
         {
             IsRequired = true,
             ArgumentHelpName = "@source:sourceValueName"
@@ -283,11 +307,11 @@ public static class KernelExtensions
 
         valueOption.AddCompletions(_ =>
         {
-            if (kernel.ParentKernel is { } composite)
+            if (destinationKernel.ParentKernel is { } composite)
             {
                 var getValueTasks = composite.ChildKernels
                                              .Where(
-                                                 k => k != kernel &&
+                                                 k => k != destinationKernel &&
                                                       k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
                                              .Select(async k => await k.SendAsync(new RequestValueInfos(k.Name)));
 
@@ -302,7 +326,7 @@ public static class KernelExtensions
 
                             // TODO: (ConfigureAndAddSetMagicCommand) this is compensating for https://github.com/dotnet/interactive/issues/2728
                             if (kernelName is null &&
-                                kernel.RootKernel is CompositeKernel root &&
+                                destinationKernel.RootKernel is CompositeKernel root &&
                                 root.ChildKernels.TryGetByUri(x.Command.DestinationUri, out var k))
                             {
                                 kernelName = k.Name;
@@ -320,37 +344,83 @@ public static class KernelExtensions
             return Array.Empty<CompletionItem>();
         });
 
-        var mimeTypeOption = new Option<string>(
-                "--mime-type", 
-                "The MIME type by which the value should be represented. This will often determine how an object will be formatted into a string.")
-            {
-                ArgumentHelpName = "MIME-TYPE"
-            }
-            .AddCompletions(
-                JsonFormatter.MimeType,
-                HtmlFormatter.MimeType,
-                PlainTextFormatter.MimeType);
-
-        var nameOption = new Option<string>(
-            "--name",
-            description: "The name of the value")
-        {
-            IsRequired = true
-        };
-
         var set = new Command("#!set", "Sets a value in the current kernel")
         {
             nameOption,
             valueOption,
-            mimeTypeOption
+            mimeTypeOption,
+            byrefOption
         };
 
-        set.SetHandler(cmdLineContext =>
-        {
-            HandleSetMagicCommand(kernel, cmdLineContext, nameOption, valueOption, mimeTypeOption);
-        });
+        set.SetHandler(async cmdLineContext => 
+                           await HandleSetMagicCommand(destinationKernel, cmdLineContext, nameOption, valueOption, mimeTypeOption, byrefOption));
 
-        kernel.AddDirective(set);
+        destinationKernel.AddDirective(set);
+
+        object ParseValueOption(ArgumentResult argResult)
+        {
+            var valueOptionValue = argResult.Tokens.Single().Value;
+
+            if (!valueOptionValue.StartsWith("@"))
+            {
+                return valueOptionValue;
+            }
+
+            bool isByref;
+            var mimeTypeOptionResult = argResult.FindResultFor(mimeTypeOption);
+            RequestValue requestValue;
+
+            var (sourceKernelName, sourceValueName) = SubmissionParser.SplitKernelDesignatorToken(valueOptionValue[1..], destinationKernel.Name);
+
+            if (argResult.GetValueForOption(byrefOption))
+            {
+                if (destinationKernel.KernelInfo.IsProxy)
+                {
+                    argResult.ErrorMessage = "Sharing by reference is not allowed when kernels are remote.";
+                    return null;
+                }
+
+                if (destinationKernel.RootKernel.FindKernelByName(sourceKernelName) is { } sourceKernel &&
+                    sourceKernel.KernelInfo.IsProxy)
+                {
+                    argResult.ErrorMessage = "Sharing by reference is not allowed when kernels are remote.";
+                    return null;
+                }
+
+                requestValue = new RequestValue(sourceValueName, "text/plain", sourceKernelName);
+                isByref = true;
+            }
+            else if (mimeTypeOptionResult is { ErrorMessage: null })
+            {
+                var mimeType = mimeTypeOptionResult.GetValueForOption(mimeTypeOption);
+                requestValue = new RequestValue(sourceValueName, mimeType, sourceKernelName);
+                isByref = false;
+            }
+            else
+            {
+                requestValue = new RequestValue(sourceValueName, JsonFormatter.MimeType, sourceKernelName);
+                isByref = false;
+            }
+
+            var result = destinationKernel.RootKernel.SendAsync(requestValue).GetAwaiter().GetResult();
+
+            if (result.Events.LastOrDefault() is CommandFailed failed)
+            {
+                argResult.ErrorMessage = failed.Message;
+                return null;
+            }
+
+            var valueProduced = result.Events.OfType<ValueProduced>().Single();
+
+            if (isByref)
+            {
+                return valueProduced.Value;
+            }
+            else
+            {
+                return valueProduced.FormattedValue;
+            }
+        }
     }
 
     private static void ConfigureAndAddShareMagicCommand<T>(T kernel) where T : Kernel

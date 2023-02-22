@@ -9,9 +9,7 @@ using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
@@ -383,6 +381,18 @@ public class SubmissionParser
         return _directiveParser;
     }
 
+    internal static (string targetKernelName, string valueName) SplitKernelDesignatorToken(string tokenToReplace, string kernelNameIfNotSpecified)
+    {
+        var parts = tokenToReplace.Split(':');
+
+        var (targetKernelName, valueName) =
+            parts.Length == 1
+                ? (kernelNameIfNotSpecified, parts[0])
+                : (parts[0], parts[1]);
+
+        return (targetKernelName, valueName);
+    }
+
     private bool InterpolateValueFromKernel(
         string tokenToReplace,
         out IReadOnlyList<string> replacementTokens,
@@ -404,14 +414,17 @@ public class SubmissionParser
             return false;
         }
 
-        var parts = tokenToReplace.Split(':');
-
-        var (targetKernelName, valueName) =
-            parts.Length == 1
-                ? (_kernel.Name, parts[0])
-                : (parts[0], parts[1]);
+        var (targetKernelName, valueName) = SplitKernelDesignatorToken(tokenToReplace, _kernel.Name);
 
         if (targetKernelName is "input" or "password")
+        {
+            InterpolateUserInput(out replacementTokens);
+            return true;
+        }
+
+        return false;
+
+        void InterpolateUserInput(out IReadOnlyList<string> replacementTokens)
         {
             string typeHint = null;
 
@@ -425,15 +438,15 @@ public class SubmissionParser
                 var replaceMe = "{2AB89A6C-88D9-4C53-8392-A3A4F902A1CA}";
 
                 var fixedUpText = currentDirectiveNode
-                    .Text
-                    .Replace($"@{tokenToReplace}", replaceMe)
-                    .Replace(" @", "");
+                                  .Text
+                                  .Replace($"@{tokenToReplace}", replaceMe)
+                                  .Replace(" @", "");
 
                 var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
 
                 var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe));
 
-                if (c is { Symbol: {} symbol })
+                if (c is { Symbol: { } symbol })
                 {
                     typeHint = GetTypeHint(symbol);
                 }
@@ -450,67 +463,9 @@ public class SubmissionParser
             {
                 replacementTokens = new[] { valueProduced.Value };
             }
-
-            return true;
-        }
-        else
-        {
-            var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, mimeType: "application/json" , targetKernelName: targetKernelName)).GetAwaiter().GetResult();
-
-            var valueProduced = result.Events.OfType<ValueProduced>().SingleOrDefault();
-
-            if (valueProduced is { })
-            {
-                string interpolatedValue = null;
-
-                if (valueProduced.Value is { } value)
-                {
-                    interpolatedValue = value.ToString();
-                }
-                else if (valueProduced.FormattedValue.MimeType == "application/json")
-                {
-                    var stringValue = valueProduced.FormattedValue.Value;
-
-                    var jsonDoc = JsonDocument.Parse(stringValue);
-
-                    object jsonValue = jsonDoc.RootElement.ValueKind switch
-                    {
-                        JsonValueKind.True => true,
-                        JsonValueKind.False => false,
-                        JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                        JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-                        JsonValueKind.Object => stringValue,
-                        _ => null
-                    };
-
-                    interpolatedValue = jsonValue?.ToString();
-                }
-                else if (valueProduced.FormattedValue.MimeType == "text/plain")
-                {
-                    interpolatedValue = valueProduced.FormattedValue.Value;
-                }
-                else
-                {
-                    errorMessage = result.Events.OfType<CommandFailed>().Last().Message;
-
-                    return false;
-                }
-
-                if (interpolatedValue is { })
-                {
-                    replacementTokens = new[] { $"{interpolatedValue}" };
-                    return true;
-                }
-                else
-                {
-                    errorMessage = $"Value @{tokenToReplace} cannot be interpolated into magic command:\n{valueProduced.Value ?? valueProduced.FormattedValue.Value}";
-                    return false;
-                }
-            }
             else
             {
-                errorMessage = result.Events.OfType<CommandFailed>().Last().Message;
-                return false;
+                replacementTokens = null;
             }
         }
 
