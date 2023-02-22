@@ -207,7 +207,10 @@ Some tests require additional setup or will be skipped. `JupyterKernel` tests fo
 ### Run tests with a local Jupyter Server
 
 1. Install [Jupyter server](https://docs.jupyter.org/en/latest/install.html) or [Anaconda](https://www.anaconda.com/products/distribution)
-2. [Install R kernel](https://irkernel.github.io/installation/) for R tests
+2. [Install R kernel](https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/) for R tests by calling 
+```
+conda install -c r r-irkernel
+```
 3. Start the server locally as mentioned [here](https://docs.jupyter.org/en/latest/running.html)
 ```
 jupyter notebook --no-browser --NotebookApp.token=<your_token> --port=8888
@@ -221,7 +224,10 @@ jupyter notebook --no-browser --NotebookApp.token=<your_token> --port=8888
 ### Run tests with a Jupyter Kernel over ZMQ
 
 1. Install [Anaconda](https://www.anaconda.com/products/distribution)
-2. [Install R kernel](https://irkernel.github.io/installation/) for R tests
+2. [Install R kernel](https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/) for R tests by calling 
+```
+conda install -c r r-irkernel
+```
 3. Start Anaconda Bash prompt and create an environment variable `TEST_DOTNET_JUPYTER_ZMQ_CONN` and set to `true` and reactivate your conda environment
 ```bash
 conda env config vars set TEST_DOTNET_JUPYTER_ZMQ_CONN=true 
@@ -230,5 +236,10 @@ conda activate base
 3. Restart `dotnet-interactive.sln` from the Anaconda Bash prompt. 
 4. The tests will now use the environment variable to connect to your server. 
 
+### Run tests directly against the language handler scripts
 
+These tests can be run directly against the language handler scripts. This is useful for when making changes on the scripts sent to the jupyter kernel without needing a full integration.
+
+1. Python tests can be run directly in the Anancoda prompt by calling `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\run_tests.bat`
+2. R tests (for now) can be run in a Jupyter R notebook. Copy the code from `src\Microsoft.DotNet.Interactive.Jupyter\CommandEvents\LanguageHandlers\r\coe_comm_handler.r` and `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\tests_r_coe_comm_handler.r` into cells in an R notebook and run the cells.
 
