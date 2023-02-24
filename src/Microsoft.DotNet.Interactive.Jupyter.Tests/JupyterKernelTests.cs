@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -17,46 +16,8 @@ using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-public partial class JupyterKernelTests
+public class JupyterKernelTests : JupyterKernelTestBase
 {
-    private static List<Message> GenerateReplies(IReadOnlyCollection<Message> messages = null, string languageName = "name")
-    {
-        var replies = new List<Message>()
-        {
-            // always sent as a first request
-            Message.CreateReply(
-                new KernelInfoReply("protocolVersion", "implementation", null,
-                    new LanguageInfo(languageName, "version", "mimeType", "fileExt")),
-                    Message.Create(new KernelInfoRequest()))
-        };
-
-        if (messages is not null)
-        {
-            // replies from the kernel start and end with status messages
-            foreach (var m in messages)
-            {
-                replies.Add(Message.Create(new Status(StatusValues.Busy), m.ParentHeader));
-                replies.Add(m);
-                replies.Add(Message.Create(new Status(StatusValues.Idle), m.ParentHeader));
-            }
-        }
-
-        return replies;
-    }
-
-    private async Task<Kernel> CreateJupyterKernelAsync(TestJupyterConnectionOptions options, string kernelSpecName = null, string connectionString = null)
-    {
-        var kernel = CreateCompositeKernelAsync(options);
-
-        var result = await kernel.SubmitCodeAsync($"#!connect jupyter --kernel-name testKernel --kernel-spec {kernelSpecName ?? "testKernelSpec"} {connectionString}");
-
-        result.Events
-            .Should()
-            .NotContainErrors();
-
-        return kernel.FindKernelByName("testKernel");
-    }
-
     [Fact]
     public async Task variable_sharing_not_enabled_for_unsupported_languages()
     {

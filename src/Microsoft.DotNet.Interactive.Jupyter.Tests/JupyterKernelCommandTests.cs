@@ -3,63 +3,19 @@
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.Csv;
-using Microsoft.DotNet.Interactive.Formatting.TabularData;
-using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
-using System;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-public partial class JupyterKernelTests : IDisposable
+public class JupyterKernelCommandTests : JupyterKernelTestBase
 {
-    private readonly ITestOutputHelper _output;
-    private CompositeDisposable _disposables = new();
-
-    // to re-record the tests for simulated playback with JuptyerTestData, set this to true
-    private const bool RECORD_FOR_PLAYBACK = false;
-    private const string PythonKernelName = "python3";
-    private const string RKernelName = "ir";
-
-    public JupyterKernelTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
-    public void Dispose()
-    {
-        //_disposables.Dispose();
-    }
-
-    private CompositeKernel CreateCompositeKernelAsync(IJupyterKernelConnectionOptions options)
-    {
-        Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
-
-        var csharpKernel = new CSharpKernel()
-                                .UseKernelHelpers()
-                                .UseValueSharing();
-
-        var kernel = new CompositeKernel { csharpKernel };
-        kernel.DefaultKernelName = csharpKernel.Name;
-
-        var jupyterKernelCommand = new ConnectJupyterKernelCommand();
-        kernel.AddKernelConnector(jupyterKernelCommand.AddConnectionOptions(options));
-
-        _disposables.Add(kernel);
-        return kernel;
-    }
-
     [Theory]
     [JupyterHttpTestData("python", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData("R", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
