@@ -164,7 +164,7 @@ public class SubmissionParser
 
                     if (directiveNode is KernelNameDirectiveNode kernelNameNode)
                     {
-                        targetKernelName = kernelNameNode.KernelName;
+                        targetKernelName = kernelNameNode.Name;
                         lastKernelNameNode = kernelNameNode;
                     }
 
@@ -420,6 +420,59 @@ public class SubmissionParser
         {
             InterpolateUserInput(out replacementTokens);
             return true;
+        }
+
+        if (context is { CurrentlyParsingDirectiveNode: ActionDirectiveNode { AllowValueSharingByInterpolation: true } })
+        {
+            var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, mimeType: "application/json", targetKernelName: targetKernelName)).GetAwaiter().GetResult();
+
+            var valueProduced = result.Events.OfType<ValueProduced>().SingleOrDefault();
+
+            if (valueProduced is { })
+            {
+                // FIX: (InterpolateValueFromKernel) clean up
+                string interpolatedValue = null;
+
+                if (valueProduced.Value is { } value)
+                {
+                    interpolatedValue = value.ToString();
+                }
+                else if (valueProduced.FormattedValue.MimeType == "application/json")
+                {
+                    var stringValue = valueProduced.FormattedValue.Value;
+
+                    var jsonDoc = JsonDocument.Parse(stringValue);
+
+                    object jsonValue = jsonDoc.RootElement.ValueKind switch
+                    {
+                        JsonValueKind.True => true,
+                        JsonValueKind.False => false,
+                        JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                        JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+                        JsonValueKind.Object => stringValue,
+                        _ => null
+                    };
+
+                    interpolatedValue = jsonValue?.ToString();
+                }
+                else if (valueProduced.FormattedValue.MimeType == "text/plain")
+                {
+                    interpolatedValue = valueProduced.FormattedValue.Value;
+                }
+                else
+                {
+                    errorMessage = result.Events.OfType<CommandFailed>().Last().Message;
+                    return false;
+                }
+
+                replacementTokens = new[] { $"{interpolatedValue}" };
+                return true;
+            }
+            else
+            {
+                errorMessage = $"Value '{tokenToReplace}' not found in kernel {targetKernelName}";
+                return false;
+            }
         }
 
         return false;

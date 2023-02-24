@@ -63,7 +63,7 @@ public class NotebookLessonParser
         var response = await client.GetAsync(uri);
         var content = await response.Content.ReadAsStringAsync();
 
-        // FIX: (LoadNotebookFromUrl) differentiate file formats
+        // TODO: (LoadNotebookFromUrl) differentiate file formats
 
         return CodeSubmission.Parse(content, GetKernelInfoFromKernel(kernel));
     }

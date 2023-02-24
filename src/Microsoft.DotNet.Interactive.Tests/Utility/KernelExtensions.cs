@@ -3,6 +3,7 @@
 
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -26,21 +27,12 @@ public static class KernelExtensions
         return (false, default);
     }
 
-    public static async Task<(bool success, ValueProduced valueProduced)> TryRequestValueAsync(this Kernel kernel, string valueName)
+    public static async Task<ValueProduced> RequestValueAsync(this Kernel kernel, string valueName)
     {
-        if (kernel.SupportsCommandType(typeof(RequestValue)))
-        {
-            var commandResult = await kernel.SendAsync(new RequestValue(valueName));
+        var commandResult = await kernel.SendAsync(new RequestValue(valueName));
 
-            if (commandResult.Events.OfType<ValueProduced>().FirstOrDefault() is { } valueProduced)
-            {
-                return (true, valueProduced);
-            }
-        }
+        commandResult.Events.Should().Contain(e => e is ValueProduced);
 
-        // FIX: (TryRequestValueAsync) this doesn't need to be a Try method since we never return false in actual usage. we should throw and clean up the associated tests.
-
-
-        return (false, default);
+        return commandResult.Events.OfType<ValueProduced>().First();
     }
 }
