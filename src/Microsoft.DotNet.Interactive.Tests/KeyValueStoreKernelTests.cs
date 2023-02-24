@@ -52,11 +52,11 @@ public class KeyValueStoreKernelTests
 
         var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
 
         valueProduced.FormattedValue.Value
-            .Should()
-            .Be(storedValue);
+                     .Should()
+                     .Be(storedValue);
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class KeyValueStoreKernelTests
 
         var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
 
         valueProduced.FormattedValue.Value
             .Should()
@@ -195,7 +195,7 @@ public class KeyValueStoreKernelTests
 
         var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
 
         valueProduced.FormattedValue.Value
             .Should()
@@ -218,7 +218,7 @@ public class KeyValueStoreKernelTests
 
         var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
 
         valueProduced.FormattedValue.Value
             .Should()
@@ -287,8 +287,7 @@ public class KeyValueStoreKernelTests
 
         var valueKernel = (KeyValueStoreKernel)kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await valueKernel.TryRequestValueAsync("x");
-        success.Should().BeTrue();
+        var valueProduced = await valueKernel.RequestValueAsync("x");
 
         valueProduced.FormattedValue.Value.Should().Be("#!share --from fsharp f");
     }
@@ -398,12 +397,8 @@ public class KeyValueStoreKernelTests
 
         var valueKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await valueKernel.TryRequestValueAsync("hi");
-
-        success
-            .Should()
-            .BeTrue();
-
+        var valueProduced = await valueKernel.RequestValueAsync("hi");
+        
         valueProduced.FormattedValue.Value
             .Should()
             .Be("// previous content");

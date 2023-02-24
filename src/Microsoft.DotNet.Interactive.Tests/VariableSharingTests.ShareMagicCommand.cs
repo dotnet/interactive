@@ -3,11 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -24,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Tests;
 [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public partial class VariableSharingTests
 {
-    public class ShareMagicCommand
+    public class ShareMagicCommand : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
 
@@ -297,12 +295,8 @@ public partial class VariableSharingTests
 
             result.Events.Should().NotContainErrors();
 
-            var (success, valueProduced) = await valueKernel.TryRequestValueAsync(valueName);
-
-            success
-                .Should()
-                .BeTrue();
-
+            var valueProduced = await valueKernel.RequestValueAsync(valueName);
+            
             valueProduced.FormattedValue.Value.Should().Be("hello!");
         }
 
@@ -373,12 +367,9 @@ stringType");
             var result = await composite.SendAsync(new SubmitCode("#!share --from value --as x data ", targetKernelName: csharpKernel.Name));
 
             result.Events.Should().NotContainErrors();
-            var (succeeded, valueProduced) = await csharpKernel.TryRequestValueAsync("x");
-
-            using var _ = new AssertionScope();
+            var valueProduced = await csharpKernel.RequestValueAsync("x");
 
             var expected = JsonDocument.Parse(jsonFragment);
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should()
                          .BeOfType<JsonDocument>()
                          .Which
@@ -427,11 +418,8 @@ y");
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+            var valueProduced = await kernel.RequestValueAsync("x");
 
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should().Be(123);
         }
 
@@ -481,11 +469,8 @@ y");
 
             await kernel.SendAsync(new SendValue("x", 123));
 
-            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+            var valueProduced = await kernel.RequestValueAsync("x");
 
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should().Be(123);
         }
 
@@ -500,11 +485,8 @@ y");
             await kernel.SendAsync(new SendValue("x", 123));
             await kernel.SendAsync(new SendValue("x", 456));
 
-            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+            var valueProduced = await kernel.RequestValueAsync("x");
 
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should().Be(456);
         }
 
@@ -519,11 +501,8 @@ y");
             await kernel.SendAsync(new SendValue("x", 123));
             await kernel.SendAsync(new SendValue("x", "hello"));
 
-            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+            var valueProduced = await kernel.RequestValueAsync("x");
 
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should().Be("hello");
         }
 
@@ -534,11 +513,8 @@ y");
 
             await kernel.SendAsync(new SendValue("x", new int[] { 42 }));
 
-            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
+            var valueProduced = await kernel.RequestValueAsync("x");
 
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should().BeEquivalentTo(new int[] { 42 });
         }
 

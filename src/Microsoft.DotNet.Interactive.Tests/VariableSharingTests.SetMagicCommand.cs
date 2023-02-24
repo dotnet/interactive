@@ -48,11 +48,8 @@ public partial class VariableSharingTests
 
 
             await composite.SendAsync(new SubmitCode("#!set --name x --value @input:input-please"));
-            var (succeeded, valueProduced) = await kernel.TryRequestValueAsync("x");
-
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
+            var valueProduced = await kernel.RequestValueAsync("x");
+            
             valueProduced.Value.Should().BeEquivalentTo("hello!");
         }
 
@@ -217,11 +214,8 @@ public partial class VariableSharingTests
 
             await composite.SendAsync(new SubmitCode("#!set --name destination --value @fsharp:source", targetKernelName: "csharp"));
 
-            var (succeeded, valueProduced) = await composite.FindKernelByName("csharp").TryRequestValueAsync("destination");
+            var valueProduced = await composite.FindKernelByName("csharp").RequestValueAsync("destination");
 
-            using var _ = new AssertionScope();
-
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should().Be(expectedDestinationValue);
         }
 
@@ -236,9 +230,8 @@ public partial class VariableSharingTests
 
             await composite.SendAsync(new SubmitCode("#!set --name destination --value @fsharp:source", targetKernelName: "csharp"));
 
-            var (succeeded, valueProduced) = await composite.FindKernelByName("csharp").TryRequestValueAsync("destination");
+            var valueProduced = await composite.FindKernelByName("csharp").RequestValueAsync("destination");
 
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should()
                          .BeOfType<JsonDocument>()
                          .Which
@@ -258,9 +251,8 @@ public partial class VariableSharingTests
 
             await composite.SendAsync(new SubmitCode("#!set --name destination --value @fsharp:source", targetKernelName: "csharp"));
 
-            var (succeeded, valueProduced) = await composite.FindKernelByName("csharp").TryRequestValueAsync("destination");
+            var valueProduced = await composite.FindKernelByName("csharp").RequestValueAsync("destination");
 
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should()
                          .BeOfType<JsonDocument>()
                          .Which
@@ -439,12 +431,10 @@ public partial class VariableSharingTests
             var result = await composite.SendAsync(new SubmitCode($"#!set --name x --value @{valueKernel.Name}:data ", targetKernelName: csharpKernel.Name));
 
             result.Events.Should().NotContainErrors();
-            var (succeeded, valueProduced) = await csharpKernel.TryRequestValueAsync("x");
+            var valueProduced = await csharpKernel.RequestValueAsync("x");
 
-            using var _ = new AssertionScope();
 
             var expected = JsonDocument.Parse(jsonFragment);
-            succeeded.Should().BeTrue();
             valueProduced.Value.Should()
                          .BeOfType<JsonDocument>()
                          .Which

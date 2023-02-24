@@ -171,14 +171,12 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         await kernel.SubmitCodeAsync("$currentUserCurrentHost = $PROFILE.CurrentUserCurrentHost");
         await kernel.SubmitCodeAsync("$allUsersCurrentHost = $PROFILE.AllUsersCurrentHost");
 
-        var (success, valueProduced) = await kernel.TryRequestValueAsync("currentUserCurrentHost");
-        success.Should().BeTrue();
+        var valueProduced = await kernel.RequestValueAsync("currentUserCurrentHost");
         valueProduced.Value.Should().BeOfType<string>();
         string currentUserCurrentHost = valueProduced.Value.As<string>();
 
         // Get $PROFILE default.
-        (success, valueProduced) = await kernel.TryRequestValueAsync("PROFILE");
-        success.Should().BeTrue();
+        valueProduced = await kernel.RequestValueAsync("PROFILE");
         valueProduced.Value.Should().BeOfType<string>();
         string profileDefault = valueProduced.Value.As<string>();
 
@@ -187,8 +185,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         profileDefault.Should().NotBeNullOrEmpty();
         profileDefault.Should().Be(currentUserCurrentHost);
 
-        (success, valueProduced) = await kernel.TryRequestValueAsync("allUsersCurrentHost");
-        success.Should().BeTrue();
+        valueProduced = await kernel.RequestValueAsync("allUsersCurrentHost");
         valueProduced.Value.Should().BeOfType<string>();
         string allUsersCurrentHost = valueProduced.Value.As<string>();
 
@@ -210,8 +207,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             // trigger first time setup.
             await kernel.SubmitCodeAsync("Get-Date");
 
-            var (success, valueProduced) = await kernel.TryRequestValueAsync(randomVariableName);
-            success.Should().BeTrue();
+            var valueProduced = await kernel.RequestValueAsync(randomVariableName);
 
             valueProduced.Value.Should().BeOfType<bool>();
             valueProduced.Value.As<bool>().Should().BeTrue();
