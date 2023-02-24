@@ -2,17 +2,19 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using System;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-public partial class JupyterKernelTests : IDisposable
+public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 {
     private async Task SharedValueShouldBeReturnedBackSame<T>(T expectedValue, string csharpDeclaration, Kernel kernel, TestJupyterConnectionOptions options)
     {
@@ -25,9 +27,6 @@ public partial class JupyterKernelTests : IDisposable
         events = result.Events;
 
         events.Should().NotContainErrors();
-
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         result = await kernel.SubmitCodeAsync($"#!share --from testKernel x");
         events = result.Events;
@@ -125,9 +124,6 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
             .Should()
             .NotContainErrors();
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
-
         result = await kernel.SubmitCodeAsync($"#!share --from testKernel df --as df_shared");
         events = result.Events;
 
@@ -166,6 +162,339 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
                 .Should()
                 .Be(expectedAssertionResult);
         // kernel was able to validate that round-tripped dataframes were equal
+
+        options.SaveState();
+    }
+
+    // No test data only because this is a full kernel end-to-end test
+    [Theory]
+    [JupyterHttpTestData(KernelSpecName = PythonKernelName)]
+    [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData(KernelSpecName = RKernelName)]
+    [JupyterZMQTestData(KernelSpecName = RKernelName)]
+    public async Task can_handle_setting_multiple_df_on_kernel(JupyterConnectionTestData connectionData)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var dfs = new[] {
+            JsonDocument.Parse(@"
+[
+  {
+        ""name"": ""Granny Smith apple"",
+        ""deliciousness"": 0,
+        ""color"":""red""
+  },
+  {
+        ""name"": ""Rainier cherry"",
+        ""deliciousness"": 9000,
+        ""color"":""yellow""
+  }
+]").ToTabularDataResource(),
+            JsonDocument.Parse(@"
+[
+  {
+        ""a"": ""1"",
+        ""b"": 1
+  },
+  {
+        ""a"": ""2"",
+        ""b"": 2
+  }
+]").ToTabularDataResource()
+        };
+
+        var sendCommand = new SendValue("df", dfs, new FormattedValue("application/json", null));
+        var result = await kernel.SendAsync(sendCommand);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        events
+            .Should()
+            .ContainSingle<DisplayedValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+                .Which
+                .Value
+                .Should()
+                .ContainAll("df1", "df2");
+
+        var df1Result = await kernel.SendAsync(new RequestValue("df1"));
+        
+        df1Result
+            .Events
+            .Should()
+            .NotContainErrors();
+
+        df1Result
+            .Events
+            .Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .BeAssignableTo<TabularDataResource>()
+            .Which
+            .Data
+            .Should()
+            .BeEquivalentTo(dfs[0].Data);
+
+        var df2Result = await kernel.SendAsync(new RequestValue("df2"));
+
+        df2Result
+            .Events
+            .Should()
+            .NotContainErrors();
+
+        df2Result
+            .Events
+            .Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .BeAssignableTo<TabularDataResource>()
+            .Which
+            .Data
+            .Should()
+            .BeEquivalentTo(dfs[1].Data);
+    }
+
+    // No test data only because this is a full kernel end-to-end test
+    [Theory]
+    [JupyterHttpTestData(KernelSpecName = PythonKernelName)]
+    [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData(KernelSpecName = RKernelName)]
+    [JupyterZMQTestData(KernelSpecName = RKernelName)]
+    public async Task can_handle_setting_single_df_in_enumerable_on_kernel(JupyterConnectionTestData connectionData)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var dfs = new[] {
+            JsonDocument.Parse(@"
+[
+  {
+        ""name"": ""Granny Smith apple"",
+        ""deliciousness"": 0,
+        ""color"":""red""
+  },
+  {
+        ""name"": ""Rainier cherry"",
+        ""deliciousness"": 9000,
+        ""color"":""yellow""
+  }
+]").ToTabularDataResource()
+        };
+
+        var sendCommand = new SendValue("df", dfs, new FormattedValue("application/json", null));
+        var result = await kernel.SendAsync(sendCommand);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        events
+            .Should()
+            .NotContain(e => e is DisplayedValueProduced);
+
+        var dfResult = await kernel.SendAsync(new RequestValue("df"));
+
+        dfResult
+            .Events
+            .Should()
+            .NotContainErrors();
+
+        dfResult
+            .Events
+            .Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .BeAssignableTo<TabularDataResource>()
+            .Which
+            .Data
+            .Should()
+            .BeEquivalentTo(dfs[0].Data);
+    }
+
+    // No test data only because this is a full kernel end-to-end test
+    [Theory]
+    [JupyterHttpTestData(KernelSpecName = PythonKernelName)]
+    [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData(KernelSpecName = RKernelName)]
+    [JupyterZMQTestData(KernelSpecName = RKernelName)]
+    public async Task can_handle_setting_single_df_on_kernel(JupyterConnectionTestData connectionData)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var df = JsonDocument.Parse(@"
+[
+  {
+        ""name"": ""Granny Smith apple"",
+        ""deliciousness"": 0,
+        ""color"":""red""
+  },
+  {
+        ""name"": ""Rainier cherry"",
+        ""deliciousness"": 9000,
+        ""color"":""yellow""
+  }
+]").ToTabularDataResource();
+
+        var sendCommand = new SendValue("df", df, new FormattedValue("application/json", null));
+        var result = await kernel.SendAsync(sendCommand);
+        var events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        events
+            .Should()
+            .NotContain(e => e is DisplayedValueProduced);
+
+        var dfResult = await kernel.SendAsync(new RequestValue("df"));
+
+        dfResult
+            .Events
+            .Should()
+            .NotContainErrors();
+
+        dfResult
+            .Events
+            .Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .BeAssignableTo<TabularDataResource>()
+            .Which
+            .Data
+            .Should()
+            .BeEquivalentTo(df.Data);
+    }
+
+    [Theory]
+    [JupyterHttpTestData("a.b", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData("_ab", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("a.b", KernelSpecName = PythonKernelName)]
+    [JupyterZMQTestData("_ab", KernelSpecName = RKernelName)]
+    [JupyterTestData("a.b", KernelSpecName = PythonKernelName)]
+    [JupyterTestData("_ab", KernelSpecName = RKernelName)]
+    public async Task can_handle_errors_for_send_value_from_kernel(JupyterConnectionTestData connectionData, string invalidId)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var sendCommand = new SendValue(invalidId, "1", new FormattedValue("application/json", "1"));
+        var result = await kernel.SendAsync(sendCommand);
+        var events = result.Events;
+
+        events
+            .Should()
+            .ContainSingle<CommandFailed>()
+            .Which
+            .Message
+            .Should()
+            .ContainAll("Invalid Identifier", invalidId);
+
+        options.SaveState();
+    }
+
+    [Theory]
+    [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
+    [JupyterZMQTestData(KernelSpecName = RKernelName)]
+    [JupyterTestData(KernelSpecName = PythonKernelName)]
+    [JupyterTestData(KernelSpecName = RKernelName)]
+    public async Task can_handle_errors_for_request_value_from_kernel(JupyterConnectionTestData connectionData)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        var result = await kernel.SendAsync(new RequestValue("unknownVar"));
+        var events = result.Events;
+
+        events
+            .Should()
+            .ContainSingle<CommandFailed>()
+            .Which
+            .Message
+            .Should()
+            .ContainAll("not found", "unknownVar");
+
+        options.SaveState();
+    }
+
+    [Theory]
+    [JupyterHttpTestData("a = 12345", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData("a <- 12345", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("a = 12345", KernelSpecName = PythonKernelName)]
+    [JupyterZMQTestData("a <- 12345", KernelSpecName = RKernelName)]
+    [JupyterTestData("a = 12345", KernelSpecName = PythonKernelName)]
+    [JupyterTestData("a <- 12345", KernelSpecName = RKernelName)]
+    public async Task can_request_value_infos_for_shared_and_kernel_variables(JupyterConnectionTestData connectionData, string kernelVarDeclare)
+    {
+        var options = connectionData.GetConnectionOptions();
+
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+
+        // setting variable on kernel
+        await kernel.SubmitCodeAsync(kernelVarDeclare);
+
+        // share a variable
+        await kernel.SendAsync(new SendValue("b", 6789, new FormattedValue("application/json", "6789")));
+
+        var df = JsonDocument.Parse(@"
+[
+  {
+        ""name"": ""Granny Smith apple"",
+        ""deliciousness"": 0,
+        ""color"":""red""
+  },
+  {
+        ""name"": ""Rainier cherry"",
+        ""deliciousness"": 9000,
+        ""color"":""yellow""
+  }
+]").ToTabularDataResource();
+
+        // share a dataframe
+        await kernel.SendAsync(new SendValue("df", df,
+            new FormattedValue(TabularDataResourceFormatter.MimeType,
+                        JsonSerializer.Serialize(df, TabularDataResourceFormatter.JsonSerializerOptions))));
+
+
+        var results = await kernel.SendAsync(new RequestValueInfos());
+        var events = results.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        events
+            .Should()
+            .ContainSingle<ValueInfosProduced>()
+            .Which
+            .ValueInfos
+            .Select(v => v.Name)
+            .Should()
+            .Contain("a", "b", "df");
 
         options.SaveState();
     }

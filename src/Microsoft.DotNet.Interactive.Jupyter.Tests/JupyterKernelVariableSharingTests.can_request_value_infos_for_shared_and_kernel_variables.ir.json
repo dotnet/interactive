@@ -1,0 +1,567 @@
+[
+  {
+    "header": {
+      "msg_id": "910759fa-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "149a5da2-08df-4c68-a434-21f1a92bab79",
+      "date": "2023-02-24T01:35:49.049961Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "0fd3ae88-af51-442b-b2fe-d79557b9fea4",
+      "username": "dotnet_kernel",
+      "session": "149a5da2-08df-4c68-a434-21f1a92bab79",
+      "date": "2023-02-24T01:35:48.9565725Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9107a81a-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "149a5da2-08df-4c68-a434-21f1a92bab79",
+      "date": "2023-02-24T01:35:49.053991Z",
+      "msg_type": "kernel_info_reply",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "0fd3ae88-af51-442b-b2fe-d79557b9fea4",
+      "username": "dotnet_kernel",
+      "session": "149a5da2-08df-4c68-a434-21f1a92bab79",
+      "date": "2023-02-24T01:35:48.9565725Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "protocol_version": "5.0",
+      "implementation": "IRkernel",
+      "implementation_version": "0.8.15",
+      "language_info": {
+        "name": "R",
+        "version": "3.6.1",
+        "mimetype": "text/x-r-source",
+        "file_extension": ".r",
+        "pygments_lexer": "r",
+        "codemirror_mode": "r"
+      },
+      "banner": "R version 3.6.1 (2019-07-05)",
+      "status": "ok",
+      "help_links": []
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "91084586-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "149a5da2-08df-4c68-a434-21f1a92bab79",
+      "date": "2023-02-24T01:35:49.055999Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "0fd3ae88-af51-442b-b2fe-d79557b9fea4",
+      "username": "dotnet_kernel",
+      "session": "149a5da2-08df-4c68-a434-21f1a92bab79",
+      "date": "2023-02-24T01:35:48.9565725Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9109cc12-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "163418d1-f890-4271-8339-797606f75c33",
+      "date": "2023-02-24T01:35:49.064985Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "99088364-e5e8-4c35-9c8e-885681279422",
+      "username": "dotnet_kernel",
+      "session": "163418d1-f890-4271-8339-797606f75c33",
+      "date": "2023-02-24T01:35:49.0571520Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9109f2fa-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "163418d1-f890-4271-8339-797606f75c33",
+      "date": "2023-02-24T01:35:49.067541Z",
+      "msg_type": "execute_input",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "99088364-e5e8-4c35-9c8e-885681279422",
+      "username": "dotnet_kernel",
+      "session": "163418d1-f890-4271-8339-797606f75c33",
+      "date": "2023-02-24T01:35:49.0571520Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "code": "# Copyright (c) .NET Foundation and contributors. All rights reserved.\n# Licensed under the MIT license. See LICENSE file in the project root for full license information.\n\nlibrary(IRkernel);\nlibrary(jsonlite);\n\n.dotnet_coe_comm_hander_env <- new.env();\n\n.dotnet_coe_comm_hander_env$emptyEvent <- fromJSON(\"{}\")\n\n# events\n.dotnet_coe_comm_hander_env$KernelReady <- 'KernelReady';\n.dotnet_coe_comm_hander_env$CommandSucceeded <- 'CommandSucceeded';\n.dotnet_coe_comm_hander_env$CommandFailed <- 'CommandFailed';\n.dotnet_coe_comm_hander_env$ValueProduced <- 'ValueProduced';\n.dotnet_coe_comm_hander_env$ValueInfosProduced <- 'ValueInfosProduced';\n\n#commands\n.dotnet_coe_comm_hander_env$SendValue <- 'SendValue';\n.dotnet_coe_comm_hander_env$RequestValue <- 'RequestValue';\n.dotnet_coe_comm_hander_env$RequestValueInfos <- 'RequestValueInfos';\n\n.dotnet_coe_comm_hander_env$payload <- function(envelope, type) {\n    payload <- list(commandOrEvent = toJSON(envelope, auto_unbox = TRUE, null=\"null\"), type = type);\n    return (payload);\n}\n\n.dotnet_coe_comm_hander_env$eventEnvelope <- function(event, eventType, command = NA) {\n    if (!is.na(command) && !is.null(command)) {\n        # we don't care about routing slip here and there are some json serialization issues with R un-boxing\n        # for now, let's remove it or make it empty\n        command$routingSlip <- list()\n    }\n    envelope <- list(event=event, eventType=eventType, command=command);\n    return (.dotnet_coe_comm_hander_env$payload(envelope, 'event'));\n}\n\n.dotnet_coe_comm_hander_env$is_ready <- function() {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                .dotnet_coe_comm_hander_env$emptyEvent, \n                .dotnet_coe_comm_hander_env$KernelReady)\n    );\n}\n\n.dotnet_coe_comm_hander_env$fail <- function(message = NA, command = NA) {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                list(message=message), \n                .dotnet_coe_comm_hander_env$CommandFailed, \n                command)\n    );\n}\n\n.dotnet_coe_comm_hander_env$pass <- function(command = NA) {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                .dotnet_coe_comm_hander_env$emptyEvent, \n                .dotnet_coe_comm_hander_env$CommandSucceeded, \n                command)\n    );\n}\n\n.dotnet_coe_comm_hander_env$handle_request_value_infos <- function(commandOrEvent) {\n    variables <- ls(all=TRUE, globalenv()) # we only retrieve the global variables \n    results <- list();\n    \n    for (var in variables) {\n        if (!startsWith(var, '.')) {\n            type <- toString(typeof(get(var)));\n            if (type != 'closure') {\n                results <- append(results, list(list(name=var, nativeType=type)));\n            }\n        };\n    };\n                \n    \n    valueInfosProduced = list(valueInfos=results)\n    \n    response <- .dotnet_coe_comm_hander_env$eventEnvelope(\n                valueInfosProduced, \n                .dotnet_coe_comm_hander_env$ValueInfosProduced, \n                commandOrEvent)\n}\n\n.dotnet_coe_comm_hander_env$handle_request_value <- function(commandOrEvent) {\n    requestValue <- commandOrEvent$command\n    mimeType <- requestValue$mimeType\n    name <- requestValue$name\n    \n    if (is.na(name) || name == '' || !exists(name)) {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                    sprintf('Variable \"%s\" not found.', name))\n        )\n    }\n    \n    rawValue = get(name);\n    mimeType = if (is.data.frame(rawValue)) 'application/table-schema+json' else mimeType;\n\n    valueProduced = list(\n                        name=name, \n                        value=rawValue, \n                        formattedValue=list(\n                            mimeType=mimeType\n                        )\n                    )\n    response <- .dotnet_coe_comm_hander_env$eventEnvelope(\n                valueProduced, \n                .dotnet_coe_comm_hander_env$ValueProduced, \n                commandOrEvent)\n    \n    return (response)\n}\n\n.dotnet_coe_comm_hander_env$handle_send_value <- function(commandOrEvent) {\n    sendValue <- commandOrEvent$command\n    mimeType <- sendValue$formattedValue$mimeType\n    name <- sendValue$name\n    rawValue <- sendValue$formattedValue$value\n    resultValue = NA\n    \n    if (make.names(name) != name) {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                    sprintf('Invalid Identifier: \"%s\"', name))\n        )\n    }\n    \n    if (mimeType == 'application/table-schema+json') {\n        resultValue <- fromJSON(rawValue)\n        resultValue <- data.frame(resultValue$data)\n    } else if (mimeType == 'application/json') {\n        resultValue <- fromJSON(rawValue)\n    } else {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                        sprintf('Failed to set value for \"%s\". \"%s\" mimetype not supported.', name, mimeType))\n        )\n    }\n    \n    \n    assign(name, resultValue, globalenv());\n    return (.dotnet_coe_comm_hander_env$pass())\n}\n\n.dotnet_coe_comm_hander_env$handle_command <- function(commandOrEvent) {\n    commandType <- commandOrEvent$commandType\n\n    result <- .dotnet_coe_comm_hander_env$fail(\n                sprintf('command \"%s\" not supported', commandType)\n            )\n\n    if (commandType == .dotnet_coe_comm_hander_env$SendValue) {\n        result <- .dotnet_coe_comm_hander_env$handle_send_value(commandOrEvent)\n    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValue) {\n        result <- .dotnet_coe_comm_hander_env$handle_request_value(commandOrEvent)\n    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValueInfos) {\n        result <- .dotnet_coe_comm_hander_env$handle_request_value_infos(commandOrEvent)\n    }\n\n    return (result)\n}\n\n.dotnet_coe_comm_hander_env$handle_command_or_event <- function(msg) {\n    response <- tryCatch({\n            msg_type <- msg$type\n            commandOrEvent <- fromJSON(msg$commandOrEvent)\n        \n            if (msg_type == 'command') {\n                return (.dotnet_coe_comm_hander_env$handle_command(commandOrEvent))\n            } \n        },\n        error=function(cond) {\n            return (\n                .dotnet_coe_comm_hander_env$fail(\n                    sprintf('failed to process comm data. %s', cond$message))\n                )\n        })    \n    \n    return(response)\n}\n\n.dotnet_coe_comm_hander_env$coe_handler_connect_to_comm <- function(comm, data) {\n    comm$on_msg(function(msg) {\n        # assign('.debug.onmsg', msg, globalenv());\n        response <- .dotnet_coe_comm_hander_env$handle_command_or_event(msg);\n        comm$send(response);  \n    })\n\n    ready <- .dotnet_coe_comm_hander_env$is_ready()\n    comm$send(ready);  \n    \n};\n\ncomm_manager()$register_target('dotnet_coe_handler_comm', .dotnet_coe_comm_hander_env$coe_handler_connect_to_comm);\n",
+      "execution_count": 1
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "911fea24-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "163418d1-f890-4271-8339-797606f75c33",
+      "date": "2023-02-24T01:35:49.211935Z",
+      "msg_type": "execute_reply",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "99088364-e5e8-4c35-9c8e-885681279422",
+      "username": "dotnet_kernel",
+      "session": "163418d1-f890-4271-8339-797606f75c33",
+      "date": "2023-02-24T01:35:49.0571520Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "payload": [],
+      "user_expressions": {},
+      "status": "ok",
+      "execution_count": 1
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "91203826-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "163418d1-f890-4271-8339-797606f75c33",
+      "date": "2023-02-24T01:35:49.213943Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "99088364-e5e8-4c35-9c8e-885681279422",
+      "username": "dotnet_kernel",
+      "session": "163418d1-f890-4271-8339-797606f75c33",
+      "date": "2023-02-24T01:35:49.0571520Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "91214982-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "3d95edd9-8cf6-4855-94f3-04bbc0b379ef",
+      "date": "2023-02-24T01:35:49.219934Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "b35de81f-f68c-428f-9961-db924e2ae3a6",
+      "username": "dotnet_kernel",
+      "session": "3d95edd9-8cf6-4855-94f3-04bbc0b379ef",
+      "date": "2023-02-24T01:35:49.2148966Z",
+      "msg_type": "comm_open",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "912270d2-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "3d95edd9-8cf6-4855-94f3-04bbc0b379ef",
+      "date": "2023-02-24T01:35:49.227495Z",
+      "msg_type": "comm_msg",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "b35de81f-f68c-428f-9961-db924e2ae3a6",
+      "username": "dotnet_kernel",
+      "session": "3d95edd9-8cf6-4855-94f3-04bbc0b379ef",
+      "date": "2023-02-24T01:35:49.2148966Z",
+      "msg_type": "comm_open",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "a0d7de7d-2d80-4db4-badc-7520528b45fb",
+      "data": {
+        "commandOrEvent": "{\"event\":{},\"eventType\":\"KernelReady\",\"command\":null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9122bf06-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "3d95edd9-8cf6-4855-94f3-04bbc0b379ef",
+      "date": "2023-02-24T01:35:49.229496Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "b35de81f-f68c-428f-9961-db924e2ae3a6",
+      "username": "dotnet_kernel",
+      "session": "3d95edd9-8cf6-4855-94f3-04bbc0b379ef",
+      "date": "2023-02-24T01:35:49.2148966Z",
+      "msg_type": "comm_open",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9124942a-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "7946295f-5d0c-49ef-94e1-1c8da0c7e419",
+      "date": "2023-02-24T01:35:49.240503Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "125c9d39-9306-46e4-a922-e1462efd68a7",
+      "username": "dotnet_kernel",
+      "session": "7946295f-5d0c-49ef-94e1-1c8da0c7e419",
+      "date": "2023-02-24T01:35:49.2377529Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9128eeb2-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "7946295f-5d0c-49ef-94e1-1c8da0c7e419",
+      "date": "2023-02-24T01:35:49.270034Z",
+      "msg_type": "execute_input",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "125c9d39-9306-46e4-a922-e1462efd68a7",
+      "username": "dotnet_kernel",
+      "session": "7946295f-5d0c-49ef-94e1-1c8da0c7e419",
+      "date": "2023-02-24T01:35:49.2377529Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "code": "a <- 12345",
+      "execution_count": 1
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "912c111e-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "7946295f-5d0c-49ef-94e1-1c8da0c7e419",
+      "date": "2023-02-24T01:35:49.291587Z",
+      "msg_type": "execute_reply",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "125c9d39-9306-46e4-a922-e1462efd68a7",
+      "username": "dotnet_kernel",
+      "session": "7946295f-5d0c-49ef-94e1-1c8da0c7e419",
+      "date": "2023-02-24T01:35:49.2377529Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "payload": [],
+      "user_expressions": {},
+      "status": "ok",
+      "execution_count": 1
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "912c869e-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "7946295f-5d0c-49ef-94e1-1c8da0c7e419",
+      "date": "2023-02-24T01:35:49.293582Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "125c9d39-9306-46e4-a922-e1462efd68a7",
+      "username": "dotnet_kernel",
+      "session": "7946295f-5d0c-49ef-94e1-1c8da0c7e419",
+      "date": "2023-02-24T01:35:49.2377529Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "912d97e6-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "05ebd4ab-ce04-4012-a088-074255f34e1f",
+      "date": "2023-02-24T01:35:49.301597Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "07850181-64fd-45d8-9ddd-7c9fde09b8f5",
+      "username": "dotnet_kernel",
+      "session": "05ebd4ab-ce04-4012-a088-074255f34e1f",
+      "date": "2023-02-24T01:35:49.2953137Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "913306d6-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "05ebd4ab-ce04-4012-a088-074255f34e1f",
+      "date": "2023-02-24T01:35:49.337185Z",
+      "msg_type": "comm_msg",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "07850181-64fd-45d8-9ddd-7c9fde09b8f5",
+      "username": "dotnet_kernel",
+      "session": "05ebd4ab-ce04-4012-a088-074255f34e1f",
+      "date": "2023-02-24T01:35:49.2953137Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "a0d7de7d-2d80-4db4-badc-7520528b45fb",
+      "data": {
+        "commandOrEvent": "{\"event\":{},\"eventType\":\"CommandSucceeded\",\"command\":null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "913354a6-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "05ebd4ab-ce04-4012-a088-074255f34e1f",
+      "date": "2023-02-24T01:35:49.339187Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "07850181-64fd-45d8-9ddd-7c9fde09b8f5",
+      "username": "dotnet_kernel",
+      "session": "05ebd4ab-ce04-4012-a088-074255f34e1f",
+      "date": "2023-02-24T01:35:49.2953137Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "91346648-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "1e979fb9-dcb3-4353-b12d-ecf510540952",
+      "date": "2023-02-24T01:35:49.345199Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "b1dc0aa1-242e-459d-8559-3e51869a62d3",
+      "username": "dotnet_kernel",
+      "session": "1e979fb9-dcb3-4353-b12d-ecf510540952",
+      "date": "2023-02-24T01:35:49.3393944Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9138c314-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "1e979fb9-dcb3-4353-b12d-ecf510540952",
+      "date": "2023-02-24T01:35:49.372760Z",
+      "msg_type": "comm_msg",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "b1dc0aa1-242e-459d-8559-3e51869a62d3",
+      "username": "dotnet_kernel",
+      "session": "1e979fb9-dcb3-4353-b12d-ecf510540952",
+      "date": "2023-02-24T01:35:49.3393944Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "a0d7de7d-2d80-4db4-badc-7520528b45fb",
+      "data": {
+        "commandOrEvent": "{\"event\":{},\"eventType\":\"CommandSucceeded\",\"command\":null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9138e970-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "1e979fb9-dcb3-4353-b12d-ecf510540952",
+      "date": "2023-02-24T01:35:49.374769Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "b1dc0aa1-242e-459d-8559-3e51869a62d3",
+      "username": "dotnet_kernel",
+      "session": "1e979fb9-dcb3-4353-b12d-ecf510540952",
+      "date": "2023-02-24T01:35:49.3393944Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9139d420-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "64faa5d1-b23b-4ed4-9b31-eef5ba1235ba",
+      "date": "2023-02-24T01:35:49.380315Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "c6127be0-9945-4c2e-8f97-f1f36294f164",
+      "username": "dotnet_kernel",
+      "session": "64faa5d1-b23b-4ed4-9b31-eef5ba1235ba",
+      "date": "2023-02-24T01:35:49.3753701Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "913be576-b3e3-11ed-be79-793e791ed72e",
+      "username": "dotnet_kernel",
+      "session": "64faa5d1-b23b-4ed4-9b31-eef5ba1235ba",
+      "date": "2023-02-24T01:35:49.394307Z",
+      "msg_type": "comm_msg",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "c6127be0-9945-4c2e-8f97-f1f36294f164",
+      "username": "dotnet_kernel",
+      "session": "64faa5d1-b23b-4ed4-9b31-eef5ba1235ba",
+      "date": "2023-02-24T01:35:49.3753701Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "a0d7de7d-2d80-4db4-badc-7520528b45fb",
+      "data": {
+        "commandOrEvent": "{\"event\":{\"valueInfos\":[{\"name\":\"a\",\"nativeType\":\"double\"},{\"name\":\"b\",\"nativeType\":\"integer\"},{\"name\":\"df\",\"nativeType\":\"list\"}]},\"eventType\":\"ValueInfosProduced\",\"command\":{\"token\":\"Z1fL+WJ6HHqvqRl2zBXpc6Ki+YeVjunR4/lwVc19aDc=\",\"id\":\"91e09eb26bc04805a748a7dac6d183fa\",\"commandType\":\"RequestValueInfos\",\"command\":{\"mimeType\":\"text/plain+summary\",\"targetKernelName\":\"testKernel\",\"originUri\":null,\"destinationUri\":null},\"routingSlip\":[]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  }
+]
