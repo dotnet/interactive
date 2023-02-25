@@ -143,7 +143,7 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
                         ms.Seek(0, SeekOrigin.Begin);
 
                         var message = JsonSerializer.Deserialize<JupyterMessage>(ms, MessageFormatter.SerializerOptions);
-                        _subject.OnNext(message);
+                        PostMessage(message);
                     }
                     catch (Exception e)
                     {
@@ -164,7 +164,7 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
             handled = await InterruptKernelAsync();
             if (handled)
             {
-                _subject.OnNext(JupyterMessage.CreateReply(new InterruptReply(), message, message.Channel));
+                PostMessage(JupyterMessage.CreateReply(new InterruptReply(), message, message.Channel));
             }
         }
 
@@ -188,5 +188,10 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
         uriBuilder.Scheme = uri.Scheme == "http" ? "ws" : "wss";
 
         return uriBuilder.Uri;
+    }
+
+    private void PostMessage(JupyterMessage message)
+    {
+        _subject.OnNext(message);
     }
 }
