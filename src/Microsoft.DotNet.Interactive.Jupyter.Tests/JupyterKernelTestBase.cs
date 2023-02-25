@@ -29,7 +29,7 @@ public abstract class JupyterKernelTestBase : IDisposable
 
     public virtual void Dispose()
     {
-        // _disposables.Dispose();
+        _disposables.Dispose();
     }
 
     protected CompositeKernel CreateCompositeKernelAsync(IJupyterKernelConnectionOptions options)
