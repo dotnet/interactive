@@ -53,6 +53,7 @@ internal class JupyterHttpConnection : IJupyterConnection
     private readonly IAuthorizationProvider _authProvider;
     private readonly CompositeDisposable _disposables;
     private IEnumerable<KernelSpec> _availableKernels;
+    private List<string> _activeSessions = new();
 
     public JupyterHttpConnection(Uri serverUri, IAuthorizationProvider authProvider) :
         this(new HttpApiClient(serverUri, authProvider), authProvider)
@@ -71,6 +72,7 @@ internal class JupyterHttpConnection : IJupyterConnection
 
     public void Dispose()
     {
+        Task.Run(ShutdownJupyterSessionsAsync).Wait();
         _disposables.Dispose();
     }
 
@@ -131,7 +133,7 @@ internal class JupyterHttpConnection : IJupyterConnection
 
             byte[] bytes = await response.Content.ReadAsByteArrayAsync();
             var session = JsonSerializer.Deserialize<KernelSessionInfo>(bytes);
-
+            _activeSessions.Add(session.id);
             var kernelApiClient = _apiClient.CreateClient($"api/kernels/{session.kernel.id}");
 
             return new JupyterKernelHttpConnection(kernelApiClient, _authProvider);
@@ -142,4 +144,21 @@ internal class JupyterHttpConnection : IJupyterConnection
         }
     }
 
+    private async Task<bool> ShutdownJupyterSessionsAsync()
+    {
+        bool success = true;
+        foreach (var session in _activeSessions)
+        {
+            HttpResponseMessage response = await _apiClient.SendRequestAsync(
+                    relativeApiPath: $"api/sessions/{session}",
+                    content: null,
+                    method: HttpMethod.Delete
+                );
+
+
+            success &= response.IsSuccessStatusCode;
+        }
+
+        return success;
+    }
 }
