@@ -297,7 +297,11 @@ internal partial class JupyterKernel
     {
         context.CancellationToken.Register(async () =>
         {
-            await InterruptKernelExecutionAsync();
+            try
+            {
+                await InterruptKernelExecutionAsync();
+            }
+            catch (ObjectDisposedException) { }
         });
     }
 }
