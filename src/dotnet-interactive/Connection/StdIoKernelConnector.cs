@@ -17,6 +17,8 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Connection.StdIoKernelConnector>;
 using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive.App.Connection;
@@ -44,6 +46,8 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
     public async Task<Kernel> CreateKernelAsync(string kernelName)
     {
         ProxyKernel? proxyKernel;
+
+        using var activity = Log.OnEnterAndExit();
 
         if (_receiver is null)
         {
@@ -99,6 +103,8 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             await Task.Yield();
 
             _process.Start();
+
+            activity.Info("Process id: {0}", _process.Id);
 
             _receiver = KernelCommandAndEventReceiver.FromObservable(stdOutObservable);
 

@@ -5,7 +5,7 @@ $thisDir = Split-Path -Parent $PSCommandPath
 $toolLocation = ""
 $toolVersion = ""
 
-dotnet run -p (Join-Path -Path $thisDir ".." "interface-generator") --out-file (Join-Path $thisDir ".." "microsoft-dotnet-interactive" "src" "contracts.ts")
+dotnet run --project (Join-Path -Path $thisDir ".." "interface-generator") --out-file (Join-Path $thisDir ".." "polyglot-notebooks" "src" "contracts.ts")
 
 if (Test-Path 'env:DisableArcade') {
      dotnet pack (Join-Path $thisDir "dotnet-interactive.csproj") /p:Version=1.0.0
@@ -23,6 +23,6 @@ if (Test-Path 'env:DisableArcade') {
 }
 
 if (Get-Command dotnet-interactive -ErrorAction SilentlyContinue) {
-    dotnet tool uninstall -g Microsoft.dotnet-interactive
+    dotnet tool uninstall -g Microsoft.dotnet-interactive 
 }
 dotnet tool install -g --add-source "$toolLocation" --version $toolVersion Microsoft.dotnet-interactive
