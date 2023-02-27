@@ -191,7 +191,7 @@ public class KeyValueStoreKernelTests
     {
         using var kernel = CreateKernel();
 
-        await kernel.SubmitCodeAsync("#!value --name hi --from-url http://bing.com");
+        await kernel.SubmitCodeAsync("#!value --name hi --from-url https://bing.com");
 
         var keyValueStoreKernel = kernel.FindKernelByName("value");
 
@@ -200,6 +200,22 @@ public class KeyValueStoreKernelTests
         valueProduced.FormattedValue.Value
             .Should()
             .Contain("<html");
+    }
+
+    [Fact]
+    public async Task When_import_URL_contents_the_mimetype_is_preserved()
+    {
+        using var kernel = CreateKernel();
+
+        await kernel.SubmitCodeAsync("#!value --name hi --from-url https://bing.com");
+
+        var keyValueStoreKernel = kernel.FindKernelByName("value");
+
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
+
+        valueProduced.FormattedValue.MimeType
+            .Should()
+            .Be("text/html");
     }
 
     [Fact]
