@@ -499,7 +499,6 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
                 new FakeKernel("fsharp")
             };
 
-
         using var remoteCompositeKernel = new CompositeKernel("REMOTE")
             {
                 new CSharpKernel(),

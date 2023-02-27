@@ -12,14 +12,19 @@ using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket;
 using Xunit;
 using Xunit.Abstractions;
+using Pocket.For.Xunit;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests>;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 {
     private readonly StdioConnectionTestConfiguration _configuration;
@@ -106,6 +111,46 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
            .EventuallyContainSingle<DisplayEvent>(
                where: d => d.FormattedValues.Any(FormattedValue => FormattedValue.Value == expected),
                timeout: 10_000);
+    }
+
+    [Fact]
+    public async Task issue_2726()
+    {
+        var workingDirectoryPath = @"c:\temp\deadlocks";
+
+        // I installed the latest dotnet-interactive tool in the above directory by running the following commands
+        // dotnet new tool-manifest
+        // dotnet tool install Microsoft.dotnet-interactive --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" --version 1.0.410905
+
+        var connector = new StdIoKernelConnector(
+            new[] { "dotnet", """
+                C:\dev\interactive\src\dotnet-interactive\bin\Debug\net7.0\Microsoft.DotNet.Interactive.App.dll stdio --default-kernel csharp --verbose --log-path "c:\temp\testlogs"
+                """ },
+            KernelHost.CreateHostUri("VS"),
+            new DirectoryInfo(workingDirectoryPath));
+
+        var kernel = 
+            new CompositeKernel("LocalComposite")
+            {
+                await connector.CreateKernelAsync("proxy")
+            };
+
+        var events = kernel.KernelEvents.Subscribe(e =>
+        {
+            Log.Info(e.ToDisplayString());
+        });
+
+        // await kernel.SendAsync(new SubmitCode("System.Diagnostics.Debugger.Launch();"));
+
+        await Task.Delay(2000);
+
+        await kernel.SendAsync(new RequestKernelInfo());
+
+        Log.Info(kernel.KernelInfo.ToDisplayString("text/plain"));
+        
+
+        // TODO (testname) write test
+        throw new NotImplementedException();
     }
 
     protected override SubmitCode CreateConnectCommand(string localKernelName)

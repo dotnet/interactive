@@ -3,6 +3,7 @@
 
 using System;
 using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -67,17 +68,19 @@ public class Program
     }
 
     public static IWebHostBuilder ConstructWebHostBuilder(
-        StartupOptions options, 
+        StartupOptions options,
         IServiceCollection serviceCollection)
     {
-        using var _ = Log.OnEnterAndExit();
+        Debugger.Launch();
 
         // TODO: (ConstructWebHostBuilder) dispose me
         var disposables = new CompositeDisposable
         {
             StartToolLogging(options)
         };
-            
+
+        using var _ = Log.OnEnterAndExit();
+
         HttpProbingSettings probingSettings = null;
 
         if (options.EnableHttpApi)
