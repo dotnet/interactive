@@ -128,9 +128,14 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
             {
                 var json = reader.ReadLine();
 
-                var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
+                if (!string.IsNullOrWhiteSpace(json))
+                {
 
-                return commandOrEvent;
+                    var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
+                    return commandOrEvent;
+                }
+
+                return null;
             }
             catch (ObjectDisposedException)
             {
