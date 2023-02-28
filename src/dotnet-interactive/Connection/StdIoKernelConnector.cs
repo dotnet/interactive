@@ -79,6 +79,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 },
@@ -137,7 +138,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             proxyKernel.RegisterForDisposal(_refCountDisposable);
 
             _process.BeginOutputReadLine();
-            _process.BeginErrorReadLine();
+           // _process.BeginErrorReadLine();
 
             while (!kernelReadyReceived)
             {
