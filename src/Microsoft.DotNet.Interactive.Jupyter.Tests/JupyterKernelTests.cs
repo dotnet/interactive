@@ -95,6 +95,25 @@ public class JupyterKernelTests : JupyterKernelTestBase
     }
 
     [Fact]
+    public void can_get_a_list_of_kernelspecs_from_completions()
+    {
+        var specs = new List<KernelSpec>
+        {
+            new KernelSpec() { Name = "testKernelSpec", DisplayName = "Test Kernel Spec", Language = "testLanguage" },
+            new KernelSpec() { Name = "sampleSpec", DisplayName = "Sample Spec", Language = "sampleLanguage" }
+        };
+
+        var options = new TestJupyterConnectionOptions(new TestJupyterConnection(new TestJupyterKernelConnection(null), specs));
+        var jupyterKernelCommand = new ConnectJupyterKernelCommand();
+        jupyterKernelCommand.AddConnectionOptions(options);
+
+        var kernelSpecCompletions = jupyterKernelCommand.KernelSpecName.GetCompletions();
+        kernelSpecCompletions
+            .Should()
+            .BeEquivalentTo(specs.Select(s => new System.CommandLine.Completions.CompletionItem(s.Name)));
+    }
+
+    [Fact]
     public async Task jupyter_and_kernel_connection_is_disposed_on_dispose()
     {
         var options = new TestJupyterConnectionOptions(GenerateReplies());

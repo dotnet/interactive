@@ -224,10 +224,15 @@ public class TestJupyterConnection : IJupyterConnection
     private IJupyterConnection _testJupyterConnection;
     private TestJupyterKernelConnection _testKernelConnection;
     private bool _disposed = false;
+    private List<KernelSpec> _kernelSpecs = new();
 
-    public TestJupyterConnection(TestJupyterKernelConnection testJupyterKernelConnection)
+    public TestJupyterConnection(TestJupyterKernelConnection testJupyterKernelConnection, List<KernelSpec> kernelSpecs = null)
     {
         _testKernelConnection = testJupyterKernelConnection;
+        if (kernelSpecs != null)
+        {
+            _kernelSpecs = kernelSpecs;
+        }
     }
 
     public void Attach(IJupyterConnection connection)
@@ -255,6 +260,11 @@ public class TestJupyterConnection : IJupyterConnection
 
     public Task<IEnumerable<KernelSpec>> GetKernelSpecsAsync()
     {
+        if (_testJupyterConnection == null)
+        {
+            return Task.FromResult(_kernelSpecs.AsEnumerable());
+        }
+
         return _testJupyterConnection.GetKernelSpecsAsync();
     }
 
