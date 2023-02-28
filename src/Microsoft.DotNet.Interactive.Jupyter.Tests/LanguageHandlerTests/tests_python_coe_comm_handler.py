@@ -26,6 +26,11 @@ class testComm:
         self.msg_sent = msg
 
 class TestCoeCommHandler(unittest.TestCase):
+
+    def __init__(self, methodName: str = ...) -> None:
+        super().__init__(methodName)
+        self.maxDiff = None
+
     @staticmethod
     def create_msg_received(commandType, commandReceived = None):
         command = {
@@ -196,7 +201,7 @@ class TestCoeCommHandler(unittest.TestCase):
             "value":"test",
             "formattedValue":{
                 "mimeType":"application/json",
-                "value":None
+                "value": json.dumps("test")
             }
         }, msg_received["content"]["data"]["commandOrEvent"])
         self.comm.handle_msg(msg_received)
@@ -218,7 +223,7 @@ class TestCoeCommHandler(unittest.TestCase):
             "value":data,
             "formattedValue":{
                 "mimeType":"application/table-schema+json",
-                "value": None
+                "value": coe_comm_handler.df_set.to_string(index=False, max_rows=5)
             }
         }, msg_received["content"]["data"]["commandOrEvent"])
         self.comm.handle_msg(msg_received)
@@ -247,7 +252,23 @@ class TestCoeCommHandler(unittest.TestCase):
         
         msg_received = self.create_msg_received("RequestValueInfos");
         msg_sent = self.create_msg_sent("ValueInfosProduced", {
-            "valueInfos": [{"name": "df", "nativeType": "<class \'pandas.core.frame.DataFrame\'>"},{"name": "x", "nativeType": "<class \'int\'>"}]
+            "valueInfos": [
+                {
+                    "name": "df", 
+                    "formattedValue": {
+                        "mimeType":"application/table-schema+json",
+                        "value": df.to_string(index=False, max_rows=5)
+                    }, 
+                    "typeName": "<class \'pandas.core.frame.DataFrame\'>"
+                },
+                {
+                    "name": "x", 
+                    "formattedValue": {
+                        "mimeType":"application/json",
+                        "value": "456"
+                    }, 
+                    "typeName": "<class \'int\'>"
+                }]
         }, msg_received["content"]["data"]["commandOrEvent"])
         self.comm.handle_msg(msg_received)
         self.assertEqual(self.comm.msg_sent, msg_sent)
