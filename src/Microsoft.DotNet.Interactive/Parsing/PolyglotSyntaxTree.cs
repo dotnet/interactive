@@ -53,7 +53,7 @@ public class PolyglotSyntaxTree
         switch (node)
         {
             case LanguageNode languageNode:
-                return languageNode.KernelName;
+                return languageNode.Name;
 
             case PolyglotSubmissionNode submissionNode:
                 return submissionNode.DefaultLanguage;

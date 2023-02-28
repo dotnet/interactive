@@ -253,7 +253,7 @@ public abstract partial class Kernel :
             offsetLanguageServiceCommand.TargetKernelName = node switch
             {
                 DirectiveNode => Name,
-                _ => node.KernelName,
+                _ => node.Name,
             };
 
             adjustedCommand = offsetLanguageServiceCommand;
