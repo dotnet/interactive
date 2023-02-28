@@ -7,6 +7,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -442,13 +443,13 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
     }
 
     [Theory]
-    [JupyterHttpTestData("a = 12345", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterHttpTestData("a <- 12345", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("a = 12345", KernelSpecName = PythonKernelName)]
-    [JupyterZMQTestData("a <- 12345", KernelSpecName = RKernelName)]
-    [JupyterTestData("a = 12345", KernelSpecName = PythonKernelName)]
-    [JupyterTestData("a <- 12345", KernelSpecName = RKernelName)]
-    public async Task can_request_value_infos_for_shared_and_kernel_variables(JupyterConnectionTestData connectionData, string kernelVarDeclare)
+    [JupyterHttpTestData("a = 12345", new[] {"a", "b", "df"}, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] {"12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>"}, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName)]
+    [JupyterTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "[{\"name\":\"Granny Smith apple\",\"deliciousness\":0,\"color\":\"red\"},{\"name\":\"Rainier cherry\",\"deliciousness\":9000,\"color\":\"yellow\"}]" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "[{\"name\":\"Granny Smith apple\",\"deliciousness\":0,\"color\":\"red\"},{\"name\":\"Rainier cherry\",\"deliciousness\":9000,\"color\":\"yellow\"}]" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName)]
+    [JupyterTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "[{\"name\":\"Granny Smith apple\",\"deliciousness\":0,\"color\":\"red\"},{\"name\":\"Rainier cherry\",\"deliciousness\":9000,\"color\":\"yellow\"}]" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName)]
+    public async Task can_request_value_infos_for_shared_and_kernel_variables(JupyterConnectionTestData connectionData, string kernelVarDeclare, string[] variables, string[] mimeTypes, string[] formattedValues, string[] typeNames)
     {
         var options = connectionData.GetConnectionOptions();
 
@@ -487,15 +488,29 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
             .Should()
             .NotContainErrors();
 
-        events
+        var valueInfos = events
             .Should()
             .ContainSingle<ValueInfosProduced>()
             .Which
-            .ValueInfos
+            .ValueInfos;
+        
+        valueInfos
             .Select(v => v.Name)
             .Should()
             .Contain("a", "b", "df");
 
+        Assert.Equal(variables.Length, valueInfos.Count());
+
+        for (int i = 0; i < variables.Length; i++)
+        {
+            valueInfos
+                .First(v => v.Name == variables[i])
+                .Should()
+                .BeEquivalentTo(
+                    new KernelValueInfo(variables[i],
+                            new FormattedValue(mimeTypes[i], formattedValues[i]),
+                            null, typeNames[i]));
+        }
         options.SaveState();
     }
 }

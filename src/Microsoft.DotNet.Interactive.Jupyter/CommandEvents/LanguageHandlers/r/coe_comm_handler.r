@@ -20,8 +20,12 @@ library(jsonlite);
 .dotnet_coe_comm_hander_env$RequestValue <- 'RequestValue';
 .dotnet_coe_comm_hander_env$RequestValueInfos <- 'RequestValueInfos';
 
+.dotnet_coe_comm_hander_env$json <- function(value) {
+    return (toJSON(value, auto_unbox = TRUE, null="null", force = TRUE))
+}
+    
 .dotnet_coe_comm_hander_env$payload <- function(envelope, type) {
-    payload <- list(commandOrEvent = toJSON(envelope, auto_unbox = TRUE, null="null"), type = type);
+    payload <- list(commandOrEvent = .dotnet_coe_comm_hander_env$json(envelope), type = type);
     return (payload);
 }
 
@@ -61,15 +65,31 @@ library(jsonlite);
     );
 }
 
+.dotnet_coe_comm_hander_env$get_formatted_value <- function(value, mimeType = 'application/json') {
+    formattedValue = NULL
+    if (is.data.frame(value)) {
+        mimeType <- 'application/table-schema+json'
+        formattedValue <- .dotnet_coe_comm_hander_env$json(head(value))
+    } else if (mimeType == 'application/json') {
+        formattedValue <- .dotnet_coe_comm_hander_env$json(value)
+    }
+    return (list(
+        mimeType=mimeType,
+        value=formattedValue
+       ))
+}
+
 .dotnet_coe_comm_hander_env$handle_request_value_infos <- function(commandOrEvent) {
     variables <- ls(all=TRUE, globalenv()) # we only retrieve the global variables 
     results <- list();
     
     for (var in variables) {
         if (!startsWith(var, '.')) {
-            type <- toString(typeof(get(var)));
+            value <- get(var);
+            type <- if (is.data.frame(value)) 'data.frame' else toString(typeof(value));
             if (type != 'closure') {
-                results <- append(results, list(list(name=var, nativeType=type)));
+                formattedValue <- .dotnet_coe_comm_hander_env$get_formatted_value(value);
+                results <- append(results, list(list(name=var, formattedValue=formattedValue, typeName=type)));
             }
         };
     };
@@ -95,15 +115,14 @@ library(jsonlite);
         )
     }
     
-    rawValue = get(name);
-    mimeType = if (is.data.frame(rawValue)) 'application/table-schema+json' else mimeType;
+    rawValue <- get(name);
+    mimeType <- if (is.data.frame(rawValue)) 'application/table-schema+json' else mimeType;
+    formattedValue <- .dotnet_coe_comm_hander_env$get_formatted_value(rawValue, mimeType);
 
     valueProduced = list(
                         name=name, 
                         value=rawValue, 
-                        formattedValue=list(
-                            mimeType=mimeType
-                        )
+                        formattedValue=formattedValue
                     )
     response <- .dotnet_coe_comm_hander_env$eventEnvelope(
                 valueProduced, 
