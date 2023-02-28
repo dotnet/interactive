@@ -13,12 +13,16 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
+
 using Pocket;
+
 using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Connection.StdIoKernelConnector>;
+
 using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive.App.Connection;
@@ -138,7 +142,7 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             proxyKernel.RegisterForDisposal(_refCountDisposable);
 
             _process.BeginOutputReadLine();
-           // _process.BeginErrorReadLine();
+            _process.BeginErrorReadLine();
 
             while (!kernelReadyReceived)
             {
