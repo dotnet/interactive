@@ -18,7 +18,7 @@ export function getKernelInfoDisplayValue(kernelInfo: { localName: string, displ
     if (localName === displayName) {
         return localName;
     } else {
-        return `${kernelInfo.displayName}`;
+        return kernelInfo.displayName;
     }
 }
 
