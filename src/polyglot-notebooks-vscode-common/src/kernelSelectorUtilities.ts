@@ -22,6 +22,15 @@ export function getKernelInfoDisplayValue(kernelInfo: { localName: string, displ
     }
 }
 
+function extractInfo(kernelInfo: contracts.KernelInfo) {
+    return {
+        localName: kernelInfo.localName,
+        displayName: kernelInfo.displayName,
+        languageName: kernelInfo.languageName,
+        supportedKernelCommands: Array.from(kernelInfo.supportedKernelCommands.map(c => c.name))
+    };
+}
+
 export function getKernelSelectorOptions(kernel: CompositeKernel, document: vscodeLike.NotebookDocument, requiredSupportedCommandType: contracts.KernelCommandType): KernelSelectorOption[] {
     const kernelInfos: Map<string, { localName: string, displayName: string, languageName?: string, supportedKernelCommands: string[] }> = new Map();
 
@@ -40,19 +49,9 @@ export function getKernelSelectorOptions(kernel: CompositeKernel, document: vsco
     }
 
     // ...overwrite with any "real" `KernelInfo` that we might actually have...
-    kernelInfos.set(kernel.name, {
-        localName: kernel.kernelInfo.localName,
-        displayName: kernel.kernelInfo.displayName,
-        languageName: kernel.kernelInfo.languageName,
-        supportedKernelCommands: Array.from(kernel.kernelInfo.supportedKernelCommands.map(c => c.name))
-    });
+    kernelInfos.set(kernel.name, extractInfo(kernel.kernelInfo));
     for (const childKernel of kernel.childKernels) {
-        kernelInfos.set(childKernel.name, {
-            localName: childKernel.kernelInfo.localName,
-            displayName: childKernel.kernelInfo.displayName,
-            languageName: childKernel.kernelInfo.languageName,
-            supportedKernelCommands: Array.from(childKernel.kernelInfo.supportedKernelCommands.map(c => c.name))
-        });
+        kernelInfos.set(childKernel.name, extractInfo(childKernel.kernelInfo));
     }
 
     // ...order by kernel name...
