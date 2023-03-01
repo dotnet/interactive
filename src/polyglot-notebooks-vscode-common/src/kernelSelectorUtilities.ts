@@ -50,7 +50,6 @@ export function getKernelSelectorOptions(kernel: CompositeKernel, document: vsco
         kernelInfos.set(childKernel.name, childKernel.kernelInfo);
     }
 
-
     // ...order by kernel name...
     const orderedKernels = [...kernelInfos.values()].sort((a, b) => a.localName.localeCompare(b.localName));
 
