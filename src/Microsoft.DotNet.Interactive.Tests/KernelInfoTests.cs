@@ -38,12 +38,12 @@ public class KernelInfoTests
         }
 
         [Fact]
-        public void By_default_DisplayName_is_derived_from_local_and_language_names()
+        public void By_default_DisplayName_is_derived_from_language_name()
         {
             var kernelInfo = new KernelInfo("csharp");
             kernelInfo.LanguageName = "C#";
 
-            kernelInfo.DisplayName.Should().Be("csharp - C#");
+            kernelInfo.DisplayName.Should().Be("C#");
         }
 
         [Fact]

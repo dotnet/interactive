@@ -47,7 +47,7 @@ public class KernelInfo
             return LocalName;
         }
 
-        return $"{LocalName} - {LanguageName}";
+        return $"{LanguageName}";
     }
 
     public string[] Aliases
