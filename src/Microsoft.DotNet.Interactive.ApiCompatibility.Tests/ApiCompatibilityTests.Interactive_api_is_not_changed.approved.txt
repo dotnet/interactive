@@ -695,7 +695,7 @@ Microsoft.DotNet.Interactive.Parsing
     public System.String DirectiveName { get;}
   public class KernelNameDirectiveNode : DirectiveNode
   public class LanguageNode : SyntaxNode
-    public System.String KernelName { get;}
+    public System.String Name { get;}
     public System.Collections.Generic.IEnumerable<Diagnostic> GetDiagnostics()
   public class LanguageSpecificParseResult
     public static LanguageSpecificParseResult None { get;}

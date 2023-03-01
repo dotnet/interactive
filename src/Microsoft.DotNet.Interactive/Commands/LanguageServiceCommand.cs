@@ -22,7 +22,7 @@ public abstract class LanguageServiceCommand : KernelCommand
         LanguageNode languageNode,
         LinePosition linePosition,
         KernelCommand parent = null)
-        : base(languageNode.KernelName, parent)
+        : base(languageNode.Name, parent)
     {
         Code = languageNode.Text;
         LanguageNode = languageNode;

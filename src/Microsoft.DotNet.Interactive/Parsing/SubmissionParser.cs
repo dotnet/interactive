@@ -9,7 +9,6 @@ using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -166,7 +165,7 @@ public class SubmissionParser
 
                     if (directiveNode is KernelNameDirectiveNode kernelNameNode)
                     {
-                        targetKernelName = kernelNameNode.KernelName;
+                        targetKernelName = kernelNameNode.Name;
                         lastKernelNameNode = kernelNameNode;
                     }
 
@@ -383,6 +382,18 @@ public class SubmissionParser
         return _directiveParser;
     }
 
+    internal static (string targetKernelName, string valueName) SplitKernelDesignatorToken(string tokenToReplace, string kernelNameIfNotSpecified)
+    {
+        var parts = tokenToReplace.Split(':');
+
+        var (targetKernelName, valueName) =
+            parts.Length == 1
+                ? (kernelNameIfNotSpecified, parts[0])
+                : (parts[0], parts[1]);
+
+        return (targetKernelName, valueName);
+    }
+
     private bool InterpolateValueFromKernel(
         string tokenToReplace,
         out IReadOnlyList<string> replacementTokens,
@@ -404,63 +415,23 @@ public class SubmissionParser
             return false;
         }
 
-        var parts = tokenToReplace.Split(':');
-
-        var (targetKernelName, valueName) =
-            parts.Length == 1
-                ? (_kernel.Name, parts[0])
-                : (parts[0], parts[1]);
+        var (targetKernelName, valueName) = SplitKernelDesignatorToken(tokenToReplace, _kernel.Name);
 
         if (targetKernelName is "input" or "password")
         {
-            string typeHint = null;
-
-            if (targetKernelName == "password")
-            {
-                typeHint = "password";
-            }
-            else if (context is { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
-            {
-                // use the parser to infer a type hint based on the expected type of the argument at the position of the input token
-                var replaceMe = "{2AB89A6C-88D9-4C53-8392-A3A4F902A1CA}";
-
-                var fixedUpText = currentDirectiveNode
-                    .Text
-                    .Replace($"@{tokenToReplace}", replaceMe)
-                    .Replace(" @", "");
-
-                var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
-
-                var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe));
-
-                if (c is { Symbol: {} symbol })
-                {
-                    typeHint = GetTypeHint(symbol);
-                }
-            }
-
-            var inputRequest = new RequestInput(
-                valueName: valueName,
-                prompt: $"Please enter a value for field \"{valueName}\".",
-                inputTypeHint: typeHint);
-
-            var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
-
-            if (result.Events.OfType<InputProduced>().SingleOrDefault() is { } valueProduced)
-            {
-                replacementTokens = new[] { valueProduced.Value };
-            }
-
+            InterpolateUserInput(out replacementTokens);
             return true;
         }
-        else
+
+        if (context is { CurrentlyParsingDirectiveNode: ActionDirectiveNode { AllowValueSharingByInterpolation: true } })
         {
-            var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, mimeType: "application/json" , targetKernelName: targetKernelName)).GetAwaiter().GetResult();
+            var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, mimeType: "application/json", targetKernelName: targetKernelName)).GetAwaiter().GetResult();
 
             var valueProduced = result.Events.OfType<ValueProduced>().SingleOrDefault();
 
             if (valueProduced is { })
             {
+                // FIX: (InterpolateValueFromKernel) clean up
                 string interpolatedValue = null;
 
                 if (valueProduced.Value is { } value)
@@ -492,25 +463,63 @@ public class SubmissionParser
                 else
                 {
                     errorMessage = result.Events.OfType<CommandFailed>().Last().Message;
-
                     return false;
                 }
 
-                if (interpolatedValue is { })
-                {
-                    replacementTokens = new[] { $"{interpolatedValue}" };
-                    return true;
-                }
-                else
-                {
-                    errorMessage = $"Value @{tokenToReplace} cannot be interpolated into magic command:\n{valueProduced.Value ?? valueProduced.FormattedValue.Value}";
-                    return false;
-                }
+                replacementTokens = new[] { $"{interpolatedValue}" };
+                return true;
             }
             else
             {
-                errorMessage = result.Events.OfType<CommandFailed>().Last().Message;
+                errorMessage = $"Value '{tokenToReplace}' not found in kernel {targetKernelName}";
                 return false;
+            }
+        }
+
+        return false;
+
+        void InterpolateUserInput(out IReadOnlyList<string> replacementTokens)
+        {
+            string typeHint = null;
+
+            if (targetKernelName == "password")
+            {
+                typeHint = "password";
+            }
+            else if (context is { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
+            {
+                // use the parser to infer a type hint based on the expected type of the argument at the position of the input token
+                var replaceMe = "{2AB89A6C-88D9-4C53-8392-A3A4F902A1CA}";
+
+                var fixedUpText = currentDirectiveNode
+                                  .Text
+                                  .Replace($"@{tokenToReplace}", replaceMe)
+                                  .Replace(" @", "");
+
+                var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
+
+                var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe));
+
+                if (c is { Symbol: { } symbol })
+                {
+                    typeHint = GetTypeHint(symbol);
+                }
+            }
+
+            var inputRequest = new RequestInput(
+                valueName: valueName,
+                prompt: $"Please enter a value for field \"{valueName}\".",
+                inputTypeHint: typeHint);
+
+            var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
+
+            if (result.Events.OfType<InputProduced>().SingleOrDefault() is { } valueProduced)
+            {
+                replacementTokens = new[] { valueProduced.Value };
+            }
+            else
+            {
+                replacementTokens = null;
             }
         }
 

@@ -91,6 +91,7 @@ public class KeyValueStoreKernel :
         KernelInvocationContext context,
         ValueDirectiveOptions options)
     {
+        var mimeType = options.MimeType;
         string newValue = null;
         var loadedFromOptions = false;
 
@@ -104,6 +105,7 @@ public class KeyValueStoreKernel :
             var client = new HttpClient();
             var response = await client.GetAsync(uri, context.CancellationToken);
             newValue = await response.Content.ReadAsStringAsync();
+            mimeType ??= response.Content.Headers?.ContentType?.MediaType;
             loadedFromOptions = true;
         }
         else if (options.FromValue is { } value)
@@ -118,7 +120,7 @@ public class KeyValueStoreKernel :
 
             _lastOperation = (hadValue, previousValue, newValue);
 
-            StoreValue(newValue, options, context);
+            StoreValue(newValue, options, context, mimeType: mimeType);
         }
         else
         {
@@ -130,7 +132,8 @@ public class KeyValueStoreKernel :
         KernelCommand command, 
         KernelInvocationContext context, 
         ValueDirectiveOptions options,
-        string value = null)
+        string value = null,
+        string mimeType = null)
     {
         if (options.FromFile is { })
         {
@@ -153,7 +156,7 @@ public class KeyValueStoreKernel :
         }
         else
         {
-            StoreValue(value, options, context);
+            StoreValue(value, options, context, mimeType: mimeType);
         }
 
         _lastOperation = default;
@@ -181,13 +184,16 @@ public class KeyValueStoreKernel :
     private void StoreValue(
         string value,
         ValueDirectiveOptions options,
-        KernelInvocationContext context)
-    {
-        _values[options.Name] = new FormattedValue(options.MimeType ?? PlainTextFormatter.MimeType, value);
+        KernelInvocationContext context,
+        string mimeType = null)
 
-        if (options.MimeType is { } mimeType)
+    {
+        mimeType ??= ( options.MimeType ?? PlainTextFormatter.MimeType);
+        _values[options.Name] = new FormattedValue(mimeType, value);
+
+        if (options.MimeType is {} displayMimeType)
         {
-            context.DisplayAs(value, mimeType);
+            context.DisplayAs(value, displayMimeType);
         }
     }
 }

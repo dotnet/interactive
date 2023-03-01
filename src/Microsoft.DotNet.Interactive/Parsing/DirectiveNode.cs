@@ -24,6 +24,8 @@ public abstract class DirectiveNode : LanguageNode
 
     internal Parser? DirectiveParser { get; set; }
 
+    internal bool AllowValueSharingByInterpolation { get; set; }
+
     public ParseResult GetDirectiveParseResult()
     {
         if (DirectiveParser is null)

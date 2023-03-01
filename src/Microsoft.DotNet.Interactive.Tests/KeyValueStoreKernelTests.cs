@@ -52,11 +52,11 @@ public class KeyValueStoreKernelTests
 
         var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
 
         valueProduced.FormattedValue.Value
-            .Should()
-            .Be(storedValue);
+                     .Should()
+                     .Be(storedValue);
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class KeyValueStoreKernelTests
 
         var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
 
         valueProduced.FormattedValue.Value
             .Should()
@@ -191,15 +191,31 @@ public class KeyValueStoreKernelTests
     {
         using var kernel = CreateKernel();
 
-        await kernel.SubmitCodeAsync("#!value --name hi --from-url http://bing.com");
+        await kernel.SubmitCodeAsync("#!value --name hi --from-url https://bing.com");
 
         var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
 
         valueProduced.FormattedValue.Value
             .Should()
             .Contain("<html");
+    }
+
+    [Fact]
+    public async Task When_import_URL_contents_the_mimetype_is_preserved()
+    {
+        using var kernel = CreateKernel();
+
+        await kernel.SubmitCodeAsync("#!value --name hi --from-url https://bing.com");
+
+        var keyValueStoreKernel = kernel.FindKernelByName("value");
+
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
+
+        valueProduced.FormattedValue.MimeType
+            .Should()
+            .Be("text/html");
     }
 
     [Fact]
@@ -218,7 +234,7 @@ public class KeyValueStoreKernelTests
 
         var keyValueStoreKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await keyValueStoreKernel.TryRequestValueAsync("hi");
+        var valueProduced = await keyValueStoreKernel.RequestValueAsync("hi");
 
         valueProduced.FormattedValue.Value
             .Should()
@@ -287,8 +303,7 @@ public class KeyValueStoreKernelTests
 
         var valueKernel = (KeyValueStoreKernel)kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await valueKernel.TryRequestValueAsync("x");
-        success.Should().BeTrue();
+        var valueProduced = await valueKernel.RequestValueAsync("x");
 
         valueProduced.FormattedValue.Value.Should().Be("#!share --from fsharp f");
     }
@@ -398,12 +413,8 @@ public class KeyValueStoreKernelTests
 
         var valueKernel = kernel.FindKernelByName("value");
 
-        var (success, valueProduced) = await valueKernel.TryRequestValueAsync("hi");
-
-        success
-            .Should()
-            .BeTrue();
-
+        var valueProduced = await valueKernel.RequestValueAsync("hi");
+        
         valueProduced.FormattedValue.Value
             .Should()
             .Be("// previous content");
