@@ -5,7 +5,6 @@ import * as contracts from "./contracts";
 import { ConsoleCapture } from "./consoleCapture";
 import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
-import { TruthyTypesOf } from "rxjs";
 
 export class JavascriptKernel extends Kernel {
     private suppressedLocals: Set<string>;
@@ -13,7 +12,7 @@ export class JavascriptKernel extends Kernel {
 
     constructor(name?: string) {
         super(name ?? "javascript", "JavaScript");
-        this.kernelInfo.displayName = 'JavaScript';
+        this.kernelInfo.displayName = `${this.kernelInfo.localName} - ${this.kernelInfo.languageName}`;
         this.suppressedLocals = new Set<string>(this.allLocalVariableNames());
         this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
         this.registerCommandHandler({ commandType: contracts.RequestValueInfosType, handle: invocation => this.handleRequestValueInfos(invocation) });

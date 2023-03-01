@@ -37,7 +37,7 @@ type FSharpKernel () as this =
 
     do this.KernelInfo.LanguageName <- "F#"
     do this.KernelInfo.LanguageVersion <- "7.0"
-    do this.KernelInfo.DisplayName <- "F# Script"
+    do this.KernelInfo.DisplayName <- $"{this.KernelInfo.LocalName} - F# Script"
 
     static let lockObj = Object();
 

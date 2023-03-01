@@ -82,7 +82,7 @@ describe("frontEndHost", () => {
                 kernelInfo:
                 {
                     aliases: ['js'],
-                    displayName: 'JavaScript',
+                    displayName: 'javascript - JavaScript',
                     isComposite: false,
                     isProxy: false,
                     languageName: 'JavaScript',
