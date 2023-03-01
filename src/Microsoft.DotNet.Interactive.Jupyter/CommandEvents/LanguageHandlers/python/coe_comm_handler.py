@@ -8,7 +8,7 @@ except NameError:
     
 import json
 def __get_dotnet_coe_comm_handler(): 
-    
+
     class CommandEventCommTarget:
         __control_comm = None
         __coe_handler = None
@@ -33,9 +33,9 @@ def __get_dotnet_coe_comm_handler():
             self.__control_comm.send(response)
             
     
-    class CommandEventHandler:          
-        __exclude_types = ["<class 'module'>"]        
-        
+    class CommandEventHandler:
+        __exclude_types = ["<class 'module'>"]
+
         
         def handle_command_or_event(self, data):
             try:
@@ -68,8 +68,10 @@ def __get_dotnet_coe_comm_handler():
         def __handle_request_value_infos(self, command):
             results_who_ls = get_ipython().magic('who_ls')
             variables = globals()
-            results = [KernelValueInfo(x, str(type(variables[x]))) for x in results_who_ls if x in variables]
-            results = list(filter(lambda v: v.nativeType not in self.__exclude_types, results))
+            results = [KernelValueInfo(x, FormattedValue.fromValue(variables[x]), str(type(variables[x]))) 
+                                    for x in results_who_ls 
+                                    if x in variables and str(type(variables[x])) not in self.__exclude_types]
+
 
             return EventEnvelope(ValueInfosProduced(results), command)
             
@@ -82,19 +84,20 @@ def __get_dotnet_coe_comm_handler():
                 return EventEnvelope(CommandFailed(f'Variable "{name}" not found.'))
             
             rawValue = globals()[name]
-            
+            updatedValue = None
+
             try: 
                 import pandas as pd; 
                 if (isinstance(rawValue, pd.DataFrame)):
                     mimeType = 'application/table-schema+json'
-                    rawValue = rawValue.to_dict('records')
+                    updatedValue = rawValue.to_dict('records')
             except Exception as e: 
                 self. __debugLog('__handle_request_value.dataframe.error', e)
                 pass
 
-            formattedValue = FormattedValue(mimeType) # This will be formatted in the .NET kernel
-            
-            return EventEnvelope(ValueProduced(name, rawValue, formattedValue), command)
+            formattedValue = FormattedValue.fromValue(rawValue, mimeType) 
+
+            return EventEnvelope(ValueProduced(name, rawValue if updatedValue is None else updatedValue, formattedValue), command)
         
         def __handle_send_value(self, command):
             sendValue = SendValue(command['command'])
@@ -153,12 +156,30 @@ def __get_dotnet_coe_comm_handler():
         def __init__(self, mimeType = 'application/json', value = None):
             self.mimeType = mimeType
             self.value = value
-    
+        
+        @staticmethod
+        def fromValue(value, mimeType = 'application/json'):
+            formattedValue = None
+            try: 
+                import pandas as pd; 
+                if (isinstance(value, pd.DataFrame)):
+                    mimeType = 'application/table-schema+json'
+            except Exception: 
+                pass
+
+            if (mimeType == 'application/json'):
+                import json; formattedValue = json.dumps(value)
+            elif (mimeType == 'application/table-schema+json'):
+                formattedValue = value.to_string(index=False, max_rows=5)
+
+            return FormattedValue(mimeType, formattedValue)
+
     class KernelValueInfo:
-        def __init__(self, name, nativeType = None):
+        def __init__(self, name, formattedValue: FormattedValue, typeName = None):
             self.name = name
-            self.nativeType = nativeType
-            
+            self.formattedValue = formattedValue
+            self.typeName = typeName
+        
     class KernelEvent:
         pass
 
@@ -179,7 +200,7 @@ def __get_dotnet_coe_comm_handler():
             self.formattedValue = formattedValue
     
     class ValueInfosProduced(KernelEvent):
-        def __init__(self, valueInfos: [KernelValueInfo]):
+        def __init__(self, valueInfos: list[KernelValueInfo]):
             self.valueInfos = valueInfos
             
     class Envelope:

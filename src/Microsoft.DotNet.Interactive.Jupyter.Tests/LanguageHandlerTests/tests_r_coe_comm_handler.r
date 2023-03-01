@@ -208,7 +208,7 @@ test_that("test_can_handle_request_value_and_get_value", {
         
     msg_received <- create_msg_received("RequestValue", list(mimeType="application/json", name="test_var"))
     msg_sent <- create_msg_sent("ValueProduced", 
-                                list(name="test_var", value="test_value", formattedValue=list(mimeType="application/json")),
+                                list(name="test_var", value="test_value", formattedValue=list(mimeType="application/json", value=wrap_as_json("test_value"))),
                                 msg_received
                                )
     
@@ -235,7 +235,7 @@ test_that("test_can_handle_request_dataframe_and_get_value", {
     msg_sent <- create_msg_sent("ValueProduced", list(
                     name="df_set",
                     value=data,
-                    formattedValue=list(mimeType="application/table-schema+json")
+                    formattedValue=list(mimeType="application/table-schema+json", value=wrap_as_json(df_set))
                 ), msg_received)
     
     t$handle_msg(msg_received)
@@ -264,7 +264,7 @@ test_that("test_can_handle_request_value_infos_and_get_values", {
     
     msg_received <- create_msg_received("RequestValueInfos")
     msg_sent <- create_msg_sent("ValueInfosProduced", 
-                                list(valueInfos=fromJSON('[{"name":"df_var","nativeType":"list"}, {"name":"test_var","nativeType":"character"}]')),
+                                list(valueInfos=fromJSON('[{"name":"df_var", "formattedValue":{"mimeType":"application/table-schema+json", "value":"[{\\"x\\":123},{\\"x\\":456}]"}, "typeName":"data.frame"}, {"name":"test_var","formattedValue":{"mimeType":"application/json", "value":"\\"test_value\\""},"typeName":"character"}]')),
                                 msg_received
                                )
     
