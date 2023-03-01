@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Buildalyzer;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Utility;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;

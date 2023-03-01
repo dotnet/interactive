@@ -9,7 +9,6 @@ using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.Linq;
 using Markdig;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
 

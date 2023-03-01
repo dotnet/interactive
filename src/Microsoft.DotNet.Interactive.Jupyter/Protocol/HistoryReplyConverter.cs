@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 

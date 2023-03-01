@@ -6,7 +6,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using Microsoft.DotNet.Interactive.CSharpProject.Utility;
 using Xunit;

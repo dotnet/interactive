@@ -3,7 +3,6 @@
 
 using System;
 using System.Text.Json.Serialization;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;
 

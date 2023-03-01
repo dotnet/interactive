@@ -6,9 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
-using Microsoft.DotNet.Interactive.CSharpProject.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
