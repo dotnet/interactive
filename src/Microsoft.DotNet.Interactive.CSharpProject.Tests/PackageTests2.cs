@@ -8,7 +8,6 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Xunit;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 

@@ -6,9 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FluentAssertions;
-using FSharp.Compiler.Text;
-
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Newtonsoft.Json;
 

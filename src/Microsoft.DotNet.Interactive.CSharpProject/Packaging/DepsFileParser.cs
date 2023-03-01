@@ -4,7 +4,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;

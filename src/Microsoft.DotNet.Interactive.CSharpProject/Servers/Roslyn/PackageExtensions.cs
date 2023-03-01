@@ -12,7 +12,6 @@ using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using static System.Environment;
 using Package = Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package;
-using Workspace = Microsoft.DotNet.Interactive.CSharpProject.Workspace;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 

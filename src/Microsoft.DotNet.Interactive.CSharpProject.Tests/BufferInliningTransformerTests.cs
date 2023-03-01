@@ -8,9 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
-using Buffer = Microsoft.DotNet.Interactive.CSharpProject.Buffer;
 using File = System.IO.File;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
