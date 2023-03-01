@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.Linq;
@@ -14,7 +13,6 @@ using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;

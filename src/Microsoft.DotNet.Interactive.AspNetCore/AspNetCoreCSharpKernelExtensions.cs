@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.DotNet.Interactive.AspNetCore;

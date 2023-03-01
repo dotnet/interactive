@@ -156,7 +156,7 @@ var {variableName} = new {frameTypeName}();
 
 namespace Microsoft.ML
 {
-   
+
     public static class DataViewExtensions
     {
         private static T GetValue<T>(ValueGetter<T> valueGetter)

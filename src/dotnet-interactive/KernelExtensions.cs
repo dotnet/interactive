@@ -7,7 +7,6 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
@@ -15,9 +14,6 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Utility;
-using Microsoft.FSharp.Control;
-
-using static FSharp.Compiler.EditorServices.FindDeclExternalSymbol;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.App;
