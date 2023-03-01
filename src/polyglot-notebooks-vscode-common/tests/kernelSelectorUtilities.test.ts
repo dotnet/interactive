@@ -49,7 +49,7 @@ describe('kernel selector utility tests', async () => {
         expect(kernelSelectorOptions).to.deep.equal([
             {
                 kernelName: 'csharp',
-                displayValue: 'csharp - See Sharp',
+                displayValue: 'See Sharp',
                 languageName: 'csharp'
             },
             {
