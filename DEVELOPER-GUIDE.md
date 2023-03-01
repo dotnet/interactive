@@ -114,7 +114,7 @@ To get started, you'll need:
 
 5. Press F5 to launch the Visual Studio Code Extension Development Host.
 
-6. Run `.NET Interactive: Create new blank notebook` or open a file with the `.ipynb` extension.
+6. Run `Polyglot Notebook: Create new blank notebook` or open a file with the `.ipynb` extension.
 
 ### Use a local build of the `dotnet-interactive` tool
 
