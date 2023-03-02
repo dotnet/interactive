@@ -63,7 +63,6 @@ public class CSharpKernel :
     {
         KernelInfo.LanguageName = "C#";
         KernelInfo.LanguageVersion = "11.0";
-        KernelInfo.LanguageName = "C#";
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - C# Script";
         _workspace = new InteractiveWorkspace();
 
