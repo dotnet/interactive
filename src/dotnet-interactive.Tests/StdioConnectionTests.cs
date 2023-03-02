@@ -3,24 +3,24 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
-using Pocket;
 using Xunit;
 using Xunit.Abstractions;
 using Pocket.For.Xunit;
-using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests>;
+using Serilog;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
@@ -116,42 +116,80 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
     [Fact]
     public async Task issue_2726()
     {
-        var workingDirectoryPath = @"c:\temp\deadlocks";
-
-        // I installed the latest dotnet-interactive tool in the above directory by running the following commands
-        // dotnet new tool-manifest
-        // dotnet tool install Microsoft.dotnet-interactive --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" --version 1.0.410905
-
-        var connector = new StdIoKernelConnector(
-            new[] { "dotnet", """
-                C:\dev\interactive\src\dotnet-interactive\bin\Debug\net7.0\Microsoft.DotNet.Interactive.App.dll stdio --default-kernel csharp --verbose --log-path "c:\temp\testlogs"
-                """ },
-            KernelHost.CreateHostUri("VS"),
-            new DirectoryInfo(workingDirectoryPath));
-
-        var kernel = 
-            new CompositeKernel("LocalComposite")
-            {
-                await connector.CreateKernelAsync("proxy")
-            };
-
-        var events = kernel.KernelEvents.Subscribe(e =>
-        {
-            Log.Info(e.ToDisplayString());
-        });
-
-        // await kernel.SendAsync(new SubmitCode("System.Diagnostics.Debugger.Launch();"));
-
-        await Task.Delay(2000);
+        var kernel = await CreateKernelAsync();
 
         await kernel.SendAsync(new RequestKernelInfo());
-
-        Log.Info(kernel.KernelInfo.ToDisplayString("text/plain"));
-        
 
         // TODO (testname) write test
         throw new NotImplementedException();
     }
+
+    private static async Task<Kernel> CreateKernelAsync()
+    {
+        var connector = CreateConnector();
+
+        var kernel = await connector.CreateKernelAsync("proxy");
+
+        return kernel;
+    }
+
+    private static StdIoKernelConnector CreateConnector()
+    {
+        var pocketLoggerPath = Environment.GetEnvironmentVariable("POCKETLOGGER_LOG_PATH");
+        string loggingArgs = null;
+
+        if (File.Exists(pocketLoggerPath))
+        {
+            var logDir = Path.GetDirectoryName(pocketLoggerPath);
+            loggingArgs = $"--verbose --log-path {logDir}";
+        }
+
+        var dotnetInteractive = typeof(Program).Assembly.Location;
+        var hostUri = KernelHost.CreateHostUri("VS");
+        var connector = new StdIoKernelConnector(
+            new[] { "dotnet", $""" "{dotnetInteractive}" stdio {loggingArgs}""" },
+            hostUri);
+        return connector;
+    }
+
+    [Fact]
+    public void when_all_created_proxies_have_been_disposed_then_the_remote_process_is_killed()
+    {
+     
+        
+
+
+        // TODO (when______then_remote_process_is_killed) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact]
+    public async Task it_can_return_a_proxy_to_a_remote_composite()
+    {
+        var connector = CreateConnector();
+        
+        var kernel = await connector.CreateKernelAsync("Proxy");
+
+        kernel.Should().BeEquivalentTo(new { x = 123 });
+
+        using var _ = new AssertionScope();
+
+        kernel.KernelInfo.IsProxy.Should().BeTrue();
+        kernel.KernelInfo.IsComposite.Should().BeTrue();
+    }
+
+    [Fact]
+    public void it_can_create_a_proxy_kernel_with_a_different_name_than_the_remote()
+    {
+        
+
+
+
+
+        // TODO (it_can_create_a_proxy_kernel_with_a_differnet_local_name_than_its_remote_name) write test
+        throw new NotImplementedException();
+    }
+
 
     protected override SubmitCode CreateConnectCommand(string localKernelName)
     {
