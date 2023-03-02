@@ -16,7 +16,7 @@ try {
     DownloadVsCodeApi -branchName "release/$version" -destinationDirectory "src"
 
     # insiders
-    DownloadVsCodeApi -branchName "main" -destinationDirectory "..\polyglot-notebooks-insiders\src" -isInsiders $true
+    DownloadVsCodeApi -branchName "main" -destinationDirectory "..\polyglot-notebooks-vscode-insiders\src" -isInsiders $true
 }
 catch {
     Write-Host $_
