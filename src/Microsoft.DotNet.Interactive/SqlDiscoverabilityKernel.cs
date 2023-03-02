@@ -26,7 +26,6 @@ public class SqlDiscoverabilityKernel :
             "SQLiteKernel"
         };
         KernelInfo.LanguageName = "SQL";
-        KernelInfo.DisplayName = "SQL";
     }
 
     Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)

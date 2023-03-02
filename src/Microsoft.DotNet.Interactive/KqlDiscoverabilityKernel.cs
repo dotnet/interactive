@@ -25,7 +25,6 @@ public class KqlDiscoverabilityKernel :
             "MsKqlKernel"
         };
         KernelInfo.LanguageName = "KQL";
-        KernelInfo.DisplayName = "Kusto Query Language";
     }
 
     Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
