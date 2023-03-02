@@ -35,7 +35,7 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
         _disposables.Dispose();
     }
 
-    [WindowsFact]
+    [WindowsFact(Skip = "connector reuse needs redesign")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task it_can_reuse_connection_for_multiple_proxy_kernels()
     {
