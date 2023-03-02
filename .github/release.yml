@@ -17,7 +17,7 @@ changelog:
     - title: Bug fixes🛠️
       labels:
         - bug
-    - title: Area-Automation 
+    - title: Area-Automation
       labels:
         - Area-Automation
     - title: Area-Auth
@@ -77,6 +77,9 @@ changelog:
     - title: Area-VS Code Extension
       labels:
         - Area-VS Code Extension
+    - title: Area-Polyglot Notebooks Extension
+      labels:
+        - Area-Polyglot Notebooks Extension
     - title: Area-VS Code Jupyter Extension Interop
       labels:
         - Area-VS Code Jupyter Extension Interop

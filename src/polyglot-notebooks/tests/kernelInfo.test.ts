@@ -39,7 +39,7 @@ describe("kernelInfo", () => {
             },
             {
                 aliases: ['child1Js'],
-                displayName: 'JavaScript',
+                displayName: 'child1 - JavaScript',
                 isComposite: false,
                 isProxy: false,
                 languageName: 'JavaScript',
@@ -56,7 +56,7 @@ describe("kernelInfo", () => {
             },
             {
                 aliases: ['child2Js'],
-                displayName: 'JavaScript',
+                displayName: 'child2 - JavaScript',
                 isComposite: false,
                 isProxy: false,
                 languageName: 'JavaScript',
@@ -111,7 +111,7 @@ describe("kernelInfo", () => {
                     kernelInfo:
                     {
                         aliases: ['child1Js'],
-                        displayName: 'JavaScript',
+                        displayName: 'child1 - JavaScript',
                         isComposite: false,
                         isProxy: false,
                         languageName: 'JavaScript',

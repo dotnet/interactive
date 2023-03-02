@@ -14,7 +14,6 @@ public class MermaidKernel : Kernel,
     public MermaidKernel() : base("mermaid")
     {
         KernelInfo.LanguageName = "Mermaid";
-        KernelInfo.DisplayName = "Mermaid";
     }
 
     Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)

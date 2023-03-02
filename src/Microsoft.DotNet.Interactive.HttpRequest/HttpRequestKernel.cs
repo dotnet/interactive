@@ -53,7 +53,7 @@ public class HttpRequestKernel :
         : base(name ?? "http")
     {
         KernelInfo.LanguageName = "HTTP";
-        KernelInfo.DisplayName = "HTTP Request";
+        KernelInfo.DisplayName = $"{KernelInfo.LocalName} - HTTP Request";
 
         _client = client ?? new HttpClient();
         var setHost = new Command("#!set-host", "Sets the host name to be used when sending requests using relative URLs");

@@ -84,7 +84,7 @@ public class PowerShellKernel :
     public PowerShellKernel() : base(DefaultKernelName)
     {
         KernelInfo.LanguageName = LanguageName;
-        KernelInfo.DisplayName = LanguageName;
+
         _psHost = new PSKernelHost(this);
         _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
 
