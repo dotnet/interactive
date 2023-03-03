@@ -18,18 +18,18 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 
 internal class JupyterConnection : IJupyterConnection
 {
-    private static JupyterConnection _localJupyterConnection;
+    private static JupyterConnection _currentJupyterConnection;
 
-    public static JupyterConnection Local
+    public static JupyterConnection CurrentEnvironment
     {
         get
         {
-            if (_localJupyterConnection == null)
+            if (_currentJupyterConnection == null)
             {
-                _localJupyterConnection = new(new JupyterKernelSpecModule());
+                _currentJupyterConnection = new(new JupyterKernelSpecModule());
             }
 
-            return _localJupyterConnection;
+            return _currentJupyterConnection;
         }
     }
 

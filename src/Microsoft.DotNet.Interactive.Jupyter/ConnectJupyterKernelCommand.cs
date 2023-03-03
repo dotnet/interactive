@@ -66,15 +66,10 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         
         JupyterKernelConnector connector = new JupyterKernelConnector(connection, kernelSpecName, initScript);
 
-        CompositeDisposable disposables = new CompositeDisposable
-        {
-            connection
-        };
-
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
         var kernel = await connector?.CreateKernelAsync(localName);
-        kernel?.RegisterForDisposal(disposables);
+        kernel?.RegisterForDisposal(connection);
         return kernel;
     }
 
@@ -144,7 +139,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
 
 public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnectionOptions
 {
-    private readonly IJupyterConnection _defaultConnection = JupyterConnection.Local;
+    private readonly IJupyterConnection _defaultConnection = JupyterConnection.CurrentEnvironment;
 
     public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
     {
@@ -161,12 +156,12 @@ public sealed class JupyterHttpKernelConnectionOptions : IJupyterKernelConnectio
 {
     private readonly IReadOnlyCollection<Option> _options;
 
-    private Option<string> TargetUrl { get; } =
+    public Option<string> TargetUrl { get; } =
     new("--url", "URl to connect to the jupyter server")
     {
     };
 
-    private Option<string> Token { get; } =
+    public Option<string> Token { get; } =
     new("--token", "token to connect to the jupyter server")
     {
     };

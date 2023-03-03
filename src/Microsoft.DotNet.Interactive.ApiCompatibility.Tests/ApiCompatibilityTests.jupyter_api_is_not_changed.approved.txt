@@ -51,6 +51,8 @@ Microsoft.DotNet.Interactive.Jupyter
     public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
   public class JupyterHttpKernelConnectionOptions, Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions
     .ctor()
+    public System.CommandLine.Option<System.String> TargetUrl { get;}
+    public System.CommandLine.Option<System.String> Token { get;}
     public Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
     public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
   public class JupyterKernelSpecModule, IJupyterKernelSpecModule
