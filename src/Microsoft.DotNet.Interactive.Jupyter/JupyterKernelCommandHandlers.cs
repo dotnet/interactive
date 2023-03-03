@@ -234,6 +234,8 @@ internal partial class JupyterKernel
                     builder.AppendLine(item);
                 }
 
+                // TODO: Change to use ErrorProduced once the extension bug is fixed to ensure error message is displayed correctly. 
+                // For now, use StandardErrorValueProduced instead to provide the tracebacks.
                 context.Publish(
                         new StandardErrorValueProduced(
                             command,
@@ -301,7 +303,7 @@ internal partial class JupyterKernel
             {
                 await InterruptKernelExecutionAsync();
             }
-            catch (ObjectDisposedException) { }
+            catch (ObjectDisposedException) { } // TODO: workaround as object dispose is unpredictable and cell cancellation is ending up hitting disposed objects. 
         });
     }
 }

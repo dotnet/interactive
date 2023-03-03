@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -61,28 +62,31 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
 
-        await SharedValueShouldBeReturnedBackSame((long)2, $"var x = 2;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(int.MinValue, $"int x = {int.MinValue};", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(int.MaxValue, $"int x = {int.MaxValue};", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(-123456789012345, $"long x = -123456789012345;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(123456789012345, $"long x = 123456789012345;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(true, $"bool x = true;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame("hi!", $"var x = \"hi!\";", kernel, options);
-        await SharedValueShouldBeReturnedBackSame("hi!", $"string x = \"hi!\";", kernel, options);
-        await SharedValueShouldBeReturnedBackSame("", $"string x = \"\";", kernel, options);
-        await SharedValueShouldBeReturnedBackSame("«ταБЬℓσ»", $"string x = \"«ταБЬℓσ»\";", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(-123456.789, $"double x = -123456.789;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(123456.789, $"double x = 123456.789;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(123.789, $"float x = 123.789f;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(123456.789, $"decimal x = 123456.789M;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame("a", $"char x = 'a';", kernel, options);
-        await SharedValueShouldBeReturnedBackSame("'", $"char x = '\\'';", kernel, options);
-        await SharedValueShouldBeReturnedBackSame((long)123, $"byte x = 123;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame((long)123, $"short x = 123;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame((long)123, $"sbyte x = 123;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame((long)123, $"ushort x = 123;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame((long)123456, $"uint x = 123456;", kernel, options);
-        await SharedValueShouldBeReturnedBackSame(123456789012345, $"ulong x = 123456789012345;", kernel, options);
+        using (new AssertionScope())
+        {
+            await SharedValueShouldBeReturnedBackSame((long)2, $"var x = 2;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(int.MinValue, $"int x = {int.MinValue};", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(int.MaxValue, $"int x = {int.MaxValue};", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(-123456789012345, $"long x = -123456789012345;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(123456789012345, $"long x = 123456789012345;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(true, $"bool x = true;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("hi!", $"var x = \"hi!\";", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("hi!", $"string x = \"hi!\";", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("", $"string x = \"\";", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("«ταБЬℓσ»", $"string x = \"«ταБЬℓσ»\";", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(-123456.789, $"double x = -123456.789;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(123456.789, $"double x = 123456.789;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(123.789, $"float x = 123.789f;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(123456.789, $"decimal x = 123456.789M;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("a", $"char x = 'a';", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("'", $"char x = '\\'';", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123, $"byte x = 123;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123, $"short x = 123;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123, $"sbyte x = 123;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123, $"ushort x = 123;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123456, $"uint x = 123456;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(123456789012345, $"ulong x = 123456789012345;", kernel, options);
+        }
 
         options.SaveState();
     }
