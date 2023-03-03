@@ -20,7 +20,10 @@ internal class JupyterConnection : IJupyterConnection
 {
     private static JupyterConnection _currentJupyterConnection;
 
-    public static JupyterConnection CurrentEnvironment
+    /// <summary>
+    /// Represents connection to the kernels in the current environment
+    /// </summary>
+    public static JupyterConnection Current
     {
         get
         {

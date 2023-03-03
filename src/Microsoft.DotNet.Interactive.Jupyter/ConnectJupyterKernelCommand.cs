@@ -139,7 +139,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
 
 public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnectionOptions
 {
-    private readonly IJupyterConnection _defaultConnection = JupyterConnection.CurrentEnvironment;
+    private readonly IJupyterConnection _defaultConnection = JupyterConnection.Current;
 
     public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
     {
