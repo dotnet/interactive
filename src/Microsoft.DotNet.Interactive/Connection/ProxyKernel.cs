@@ -67,6 +67,7 @@ public sealed class ProxyKernel : Kernel
     private void UpdateKernelInfoFromEvent(KernelInfoProduced kernelInfoProduced)
     {
         _requiresRequestKernelInfoOnFirstCommand = false;
+        KernelInfo.IsComposite = kernelInfoProduced.KernelInfo.IsComposite;
         KernelInfo.LanguageName = kernelInfoProduced.KernelInfo.LanguageName;
         KernelInfo.LanguageVersion = kernelInfoProduced.KernelInfo.LanguageVersion;
         KernelInfo.DisplayName = kernelInfoProduced.KernelInfo.DisplayName;
