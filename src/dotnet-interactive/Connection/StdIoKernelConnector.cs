@@ -177,6 +177,13 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
         return proxyKernel;
     }
 
+    public async Task<ProxyKernel> CreateRootKernelProxyAsync(string localName)
+    {
+        var kernel = await CreateKernelAsync(localName);
+
+        return (ProxyKernel)kernel;
+    }
+
     private void SendQuitCommand()
     {
         if (_sender is not null)

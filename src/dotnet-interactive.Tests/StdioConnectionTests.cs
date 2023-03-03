@@ -155,7 +155,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
     [Fact]
     public void when_all_created_proxies_have_been_disposed_then_the_remote_process_is_killed()
     {
-     
+        
         
 
 
@@ -168,14 +168,28 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
     {
         var connector = CreateConnector();
         
-        var kernel = await connector.CreateKernelAsync("Proxy");
-
-        kernel.Should().BeEquivalentTo(new { x = 123 });
+        using var kernel = await connector.CreateRootKernelProxyAsync("Proxy");
 
         using var _ = new AssertionScope();
 
         kernel.KernelInfo.IsProxy.Should().BeTrue();
         kernel.KernelInfo.IsComposite.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task it_can_create_a_proxy_to_a_specific_remote_subkernel()
+    {
+         var connector = CreateConnector();
+        
+        using var kernel = await connector.CreateRootKernelProxyAsync("root");
+
+
+        var result = await kernel.SendAsync(new RequestKernelInfo("csharp"));
+
+        
+
+        // TODO (it_can_create_a_proxy_to_a_specific_remote_subkernel) write test
+        throw new NotImplementedException();
     }
 
     [Fact]
@@ -189,7 +203,6 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
         // TODO (it_can_create_a_proxy_kernel_with_a_differnet_local_name_than_its_remote_name) write test
         throw new NotImplementedException();
     }
-
 
     protected override SubmitCode CreateConnectCommand(string localKernelName)
     {
