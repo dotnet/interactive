@@ -86,9 +86,6 @@ export function getCellKernelName(cell: vscode.NotebookCell): string {
 }
 
 export async function setCellKernelName(cell: vscode.NotebookCell, kernelName: string): Promise<void> {
-    if (cell.index < 0) {
-        const x = cell;
-    }
     const cellMetadata: metadataUtilities.NotebookCellMetadata = {
         kernelName
     };
