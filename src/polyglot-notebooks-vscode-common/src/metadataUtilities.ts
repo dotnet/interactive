@@ -498,7 +498,7 @@ function createDefaultNotebookCellMetadata(): NotebookCellMetadata {
     return {};
 }
 
-export function areEquivalentObjects(object1: { [key: string]: any }, object2: { [key: string]: any }, ingoreKeys?: Set<string>): boolean {
+export function areEquivalentObjects(object1: { [key: string]: any }, object2: { [key: string]: any }, keysToIgnore?: Set<string>): boolean {
     sortInPlace(object1);
     sortInPlace(object2);
 
@@ -506,8 +506,8 @@ export function areEquivalentObjects(object1: { [key: string]: any }, object2: {
         return object !== null && typeof object === 'object';
     };
 
-    const object1Keys = Object.keys(object1).filter(k => !(ingoreKeys?.has(k)));
-    const object2Keys = Object.keys(object2).filter(k => !(ingoreKeys?.has(k)));
+    const object1Keys = Object.keys(object1).filter(k => !(keysToIgnore?.has(k)));
+    const object2Keys = Object.keys(object2).filter(k => !(keysToIgnore?.has(k)));
 
     if (object1Keys.length !== object2Keys.length) {
         return false;
