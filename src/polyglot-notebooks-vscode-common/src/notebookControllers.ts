@@ -349,7 +349,7 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
                 for (const item of notebookMetadata.kernelInfo.items) {
                     if (item.name === kernelInfoProduced.kernelInfo.localName) {
                         metadataChanged = true;
-                        if (kernelInfoProduced.kernelInfo.languageName !== undefined && kernelInfoProduced.kernelInfo.languageName !== null) {
+                        if (kernelInfoProduced.kernelInfo.languageName) {
                             item.languageName = kernelInfoProduced.kernelInfo.languageName;
                         }
                         item.aliases = kernelInfoProduced.kernelInfo.aliases;
