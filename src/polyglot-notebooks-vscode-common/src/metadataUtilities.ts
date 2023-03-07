@@ -107,6 +107,7 @@ export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDo
     }
 
     notebookMetadata.kernelInfo.items = notebookMetadata.kernelInfo.items.map(item => ensureProperShapeForDocumentKernelInfo(item));
+    cleanupMedata(notebookMetadata);
     return notebookMetadata;
 }
 
@@ -154,20 +155,25 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
     }
 
     notebookMetadata.kernelInfo.items = notebookMetadata.kernelInfo.items.map(item => ensureProperShapeForDocumentKernelInfo(item));
+    cleanupMedata(notebookMetadata);
     return notebookMetadata;
 }
 
 export function getNotebookDocumentMetadataFromCompositeKernel(kernel: CompositeKernel): NotebookDocumentMetadata {
     const notebookMetadata = createDefaultNotebookDocumentMetadata();
     notebookMetadata.kernelInfo.defaultKernelName = kernel.defaultKernelName ?? notebookMetadata.kernelInfo.defaultKernelName;
-    notebookMetadata.kernelInfo.items = kernel.childKernels.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0).map(k => ({ name: k.name, aliases: k.kernelInfo.aliases, languageName: k.kernelInfo.languageName }));
-
+    notebookMetadata.kernelInfo.items = kernel.childKernels.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0).filter(k => k.supportsCommand(contracts.SubmitCodeType)).map(k => ({ name: k.name, aliases: k.kernelInfo.aliases, languageName: k.kernelInfo.languageName }));
+    cleanupMedata(notebookMetadata);
     return notebookMetadata;
 }
 
 function ensureProperShapeForDocumentKernelInfo(kernelInfo: contracts.DocumentKernelInfo) {
     if (!kernelInfo.aliases) {
         kernelInfo.aliases = [];
+    }
+
+    if (kernelInfo.languageName === undefined) {
+        delete kernelInfo.languageName;
     }
 
     return kernelInfo;
@@ -223,6 +229,12 @@ export function getKernelInfosFromNotebookDocument(notebookDocument: vscodeLike.
         supportedKernelCommands: [],
         supportedDirectives: []
     }));
+
+    kernelInfos.forEach(ki => {
+        if (ki.languageName === undefined || ki.languageName === null) {
+            delete ki["languageName"];
+        }
+    });
     return kernelInfos;
 }
 
@@ -286,7 +298,7 @@ export function getRawInteractiveDocumentMetadataFromNotebookDocumentMetadata(no
     return notebookDocumentMetadata;
 }
 
-export function getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata, createForIpynb: boolean): { [key: string]: any } {
+export function getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata, documentRawMetadata: { [key: string]: any }, createForIpynb: boolean): { [key: string]: any } {
     const rawMetadata: { [key: string]: any } = {};
 
     if (createForIpynb) {
@@ -301,7 +313,138 @@ export function getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(noteb
         rawMetadata.polyglot_notebook = notebookDocumentMetadata;
     }
 
+    sortAndMerge(rawMetadata, documentRawMetadata);
     return rawMetadata;
+}
+
+export function sortAndMerge(destination: { [key: string]: any }, source: { [key: string]: any }) {
+
+    if (destination === null) {
+        return;
+    }
+    if (source === null) {
+        if (destination !== null) {
+            sortInPlace(destination);
+        }
+    }
+    else {
+        sortInPlace(destination);//?
+        sortInPlace(source);//?
+
+        const sourceKeys = Object.keys(source);//?
+        for (const key of sourceKeys) {
+            key;//?
+            destination[key];//?
+            if (destination[key] === undefined) {
+                destination;
+                destination[key] = source[key];
+
+            } else {
+                if (source[key] !== undefined && source[key] !== null) {
+                    if (Array.isArray(destination[key])) {
+                        mergeArray(destination[key], source[key]);
+                    } else if (typeof destination[key] === 'object') {
+                        sortAndMerge(destination[key], source[key]);
+                    }
+                }
+            }
+        }
+    }
+
+    destination;//?
+}
+
+function mergeArray(destination: any[], source: any[]) {
+    source;//?
+    for (let i = 0; i < source.length; i++) {
+        let srcValue = source[i];
+        if (srcValue !== null) {
+            srcValue;//?
+            if (isKernelInfo(srcValue)) {
+                const found = destination.find(e => srcValue.localName.localeCompare(e.localName) === 0);
+                if (found) {
+                    sortAndMerge(found, srcValue);
+                } else {
+                    destination.push(srcValue);
+                }
+            } else if (isDocumentKernelInfo(srcValue)) {
+                const found = destination.find(e => srcValue.name.localeCompare(e.name) === 0);
+                if (found) {
+                    found;//?
+                    srcValue;//?
+                    sortAndMerge(found, srcValue);
+                } else {
+                    destination.push(srcValue);
+                }
+            } else {
+                const found = destination.find(e => e === srcValue);
+                if (found) {
+                    sortAndMerge(found, srcValue);
+                } else {
+                    destination.push(srcValue);
+                }
+            }
+            destination;//?
+        }
+    }
+}
+
+function isKernelInfo(k: any): k is contracts.KernelInfo {
+    return k.localName !== undefined;
+}
+
+function isDocumentKernelInfo(k: any): k is contracts.DocumentKernelInfo {
+    return k.name !== undefined;
+}
+
+export function sortInPlace(value: any): any {
+    if (value === null) {
+        return value;
+    }
+    else if (value === undefined) {
+        return value;
+    }
+    else if (Array.isArray(value)) {
+        if (value.length > 0) {
+            for (let i = 0; i < value.length; i++) {
+                value[i] = sortInPlace(value[i]);
+            }
+            return value.sort((a, b) => {
+                if (isKernelInfo(a) && isKernelInfo(b)) {
+                    return a.localName.localeCompare(b.localName);
+                } else if (isDocumentKernelInfo(a) && isDocumentKernelInfo(b)) {
+                    return a.name.localeCompare(b.name);
+                }
+                else {
+                    return a > b ? 1 : (a < b ? -1 : 0);
+                }
+            });
+        }
+        else {
+            return value;
+        }
+    } else if (typeof value === 'object') {
+        const sourceKeys = Object.keys(value).sort();
+        let sorted: { [key: string]: any } = {};
+        for (const key of sourceKeys) {
+            const sourceValue = value[key];
+            sorted[key] = sortInPlace(sourceValue);
+            if (isWritable(value, key)) {
+                delete value[key];
+                value[key] = sorted[key];
+            }
+
+        }
+
+        return value;
+    } else {
+        return value;
+    }
+}
+
+function isWritable<T extends Object>(obj: T, key: keyof T) {
+    const desc = Object.getOwnPropertyDescriptor(obj, key) || {};
+    return Boolean(desc.writable);
 }
 
 export function mergeNotebookCellMetadata(baseMetadata: NotebookCellMetadata, metadataWithNewValues: NotebookCellMetadata): NotebookCellMetadata {
@@ -310,7 +453,7 @@ export function mergeNotebookCellMetadata(baseMetadata: NotebookCellMetadata, me
         resultMetadata.kernelName = metadataWithNewValues.kernelName;
     }
 
-    return resultMetadata;
+    return sortInPlace(resultMetadata);
 }
 
 export function mergeNotebookDocumentMetadata(baseMetadata: NotebookDocumentMetadata, metadataWithNewValues: NotebookDocumentMetadata): NotebookDocumentMetadata {
@@ -324,7 +467,8 @@ export function mergeNotebookDocumentMetadata(baseMetadata: NotebookDocumentMeta
     }
 
     resultMetadata.kernelInfo.items = [...kernelInfoItems.values()];
-    return resultMetadata;
+    cleanupMedata(resultMetadata);
+    return sortInPlace(resultMetadata);
 }
 
 export function mergeRawMetadata(baseMetadata: { [key: string]: any }, metadataWithNewValues: { [key: string]: any }): { [key: string]: any } {
@@ -333,7 +477,7 @@ export function mergeRawMetadata(baseMetadata: { [key: string]: any }, metadataW
         resultMetadata[key] = metadataWithNewValues[key];
     }
 
-    return resultMetadata;
+    return sortInPlace(resultMetadata);
 }
 
 export function createDefaultNotebookDocumentMetadata(): NotebookDocumentMetadata {
@@ -347,9 +491,65 @@ export function createDefaultNotebookDocumentMetadata(): NotebookDocumentMetadat
                 }
             ],
         }
-    };;
+    };
 }
 
 function createDefaultNotebookCellMetadata(): NotebookCellMetadata {
     return {};
+}
+
+export function areEquivalentObjects(object1: { [key: string]: any }, object2: { [key: string]: any }, keysToIgnore?: Set<string>): boolean {
+    sortInPlace(object1);
+    sortInPlace(object2);
+
+    const isObject = (object: any) => {
+        return object !== null && typeof object === 'object';
+    };
+
+    const object1Keys = Object.keys(object1).filter(k => !(keysToIgnore?.has(k)));
+    const object2Keys = Object.keys(object2).filter(k => !(keysToIgnore?.has(k)));
+
+    if (object1Keys.length !== object2Keys.length) {
+        return false;
+    }
+
+    for (const key of object1Keys) {
+        key;//?
+        const value1 = object1[key];//?
+        const value2 = object2[key];//?
+        const bothAreObjects = isObject(value1) && isObject(value2); //?
+        const bothAreArrays = Array.isArray(value1) && Array.isArray(value2);
+
+        if (bothAreArrays) {
+            if (value1.length !== value2.length) {//?
+                return false;
+            }
+            for (let index = 0; index < value1.length; index++) {
+                const element1 = value1[index];//?
+                const element2 = value2[index];//?
+                if (!areEquivalentObjects(element1, element2)) {
+                    return false;
+                }
+            }
+        } else if (bothAreObjects) {
+            const equivalent = areEquivalentObjects(value1, value2);
+            if (!equivalent) {
+                return false;
+            }
+        } else if (value1 !== value2) //?
+        {
+            value1;//?
+            value2;//?
+            return false;
+        }
+    }
+    return true;
+}
+
+function cleanupMedata(notebookMetadata: NotebookDocumentMetadata) {
+    notebookMetadata.kernelInfo.items.forEach(ki => {
+        if (ki.languageName === undefined || ki.languageName === null) {
+            delete ki.languageName;
+        }
+    });
 }

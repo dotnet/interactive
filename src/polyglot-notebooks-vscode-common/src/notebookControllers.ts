@@ -196,6 +196,14 @@ export class DotNetNotebookKernel {
 
                 return client.execute(source, vscodeUtilities.getCellKernelName(cell), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async (success) => {
                     await outputUpdatePromise;
+
+                    const isIpynb = metadataUtilities.isIpynbNotebook(cell.notebook);
+                    const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(cell.notebook);
+                    const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
+                    const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
+                    const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, cell.notebook.metadata, isIpynb);
+
+                    await vscodeNotebookManagement.replaceNotebookMetadata(cell.notebook.uri, rawNotebookDocumentMetadata);
                     endExecution(client, cell, success);
                 }).catch(async () => {
                     await outputUpdatePromise;
@@ -328,6 +336,7 @@ async function updateNotebookMetadata(notebook: vscode.NotebookDocument, clientM
     }
 }
 
+
 async function updateKernelInfoMetadata(client: InteractiveClient, document: vscode.NotebookDocument): Promise<void> {
     const isIpynb = metadataUtilities.isIpynbNotebook(document);
     client.channel.receiver.subscribe({
@@ -340,22 +349,29 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
                 for (const item of notebookMetadata.kernelInfo.items) {
                     if (item.name === kernelInfoProduced.kernelInfo.localName) {
                         metadataChanged = true;
-                        item.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        if (kernelInfoProduced.kernelInfo.languageName) {
+                            item.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        }
                         item.aliases = kernelInfoProduced.kernelInfo.aliases;
                     }
                 }
 
                 if (!metadataChanged) {
-                    // nothing changed, must be a new kernel
-                    notebookMetadata.kernelInfo.items.push({
-                        name: kernelInfoProduced.kernelInfo.localName,
-                        languageName: kernelInfoProduced.kernelInfo.languageName,
-                        aliases: kernelInfoProduced.kernelInfo.aliases
-                    });
+                    if (kernelInfoProduced.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.SubmitCodeType)) {
+                        const kernelInfo: contracts.DocumentKernelInfo = {
+                            name: kernelInfoProduced.kernelInfo.localName,
+                            aliases: kernelInfoProduced.kernelInfo.aliases
+                        };
+                        if (kernelInfoProduced.kernelInfo.languageName !== undefined && kernelInfoProduced.kernelInfo.languageName !== null) {
+                            kernelInfo.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        }
+                        // nothing changed, must be a new kernel
+                        notebookMetadata.kernelInfo.items.push(kernelInfo);
+                    }
                 }
 
                 const existingRawNotebookDocumentMetadata = document.metadata;
-                const updatedRawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, isIpynb);
+                const updatedRawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, existingRawNotebookDocumentMetadata, isIpynb);
                 const newRawNotebookDocumentMetadata = metadataUtilities.mergeRawMetadata(existingRawNotebookDocumentMetadata, updatedRawNotebookDocumentMetadata);
                 await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, newRawNotebookDocumentMetadata);
             }
@@ -365,7 +381,7 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
     const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
     const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
     const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
-    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, isIpynb);
+    const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, document.metadata, isIpynb);
     await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, rawNotebookDocumentMetadata);
 }
 

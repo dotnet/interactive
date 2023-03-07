@@ -8,6 +8,7 @@ import { createUri, debounce, executeSafe, getVersionNumber, getWorkingDirectory
 import { decodeToString } from './utilities';
 
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
+import { areEquivalentObjects, sortInPlace } from '../../src/vscode-common/metadataUtilities';
 
 describe('Miscellaneous tests', () => {
 
@@ -212,5 +213,175 @@ describe('Miscellaneous tests', () => {
                 expect(version).to.equal('5.0.101');
             });
         }
+    });
+
+    describe('sorted objects', () => {
+        it('sorts object keys', () => {
+            const source = {
+                'key2': "value",
+                'key1': [1, 2, 3, 4]
+            };
+
+            const sorted = sortInPlace(source);
+
+            expect(sorted).to.deep.equal({
+                key1: [1, 2, 3, 4],
+                key2: 'value'
+            });
+        });
+
+        it('sorts object recursively', () => {
+            const source = {
+                'key2': "value",
+                'key1': [1, 2, 3, 4],
+                'key3': {
+                    'key2': "value",
+                    'key1': [1, 2, 3, 4],
+                }
+            };
+
+            const sorted = sortInPlace(source);
+
+            expect(sorted).to.deep.equal({
+                key1: [1, 2, 3, 4],
+                key2: 'value',
+                key3: {
+                    key1: [1, 2, 3, 4],
+                    key2: 'value'
+                }
+            });
+        });
+
+        it('sorts object containing arrays', () => {
+            const source = {
+                'key2': "value",
+                'key1': [6, 2, 3, 4],
+                'key3': {
+                    'key2': "value",
+                    'key1': [1, 5, 3, 4],
+                }
+            };
+
+            const sorted = sortInPlace(source);
+
+            expect(sorted).to.deep.equal({
+                key1: [2, 3, 4, 6],
+                key2: 'value',
+                key3: {
+                    key1: [1, 3, 4, 5],
+                    key2: 'value'
+                }
+            });
+        });
+
+        it('sorts kernel infos by local name', () => {
+            const source = {
+                'key2': "value",
+                'key1': [6, 2, 3, 4],
+                'key3': {
+                    'key2': "value",
+                    'key1': [{ localName: "d", displayName: "1" }, { localName: "a", displayName: "3" }, { localName: "b", displayName: "2" }],
+                }
+            };
+
+            const sorted = sortInPlace(source);
+
+            expect(sorted).to.deep.equal({
+                key1: [2, 3, 4, 6],
+                key2: 'value',
+                key3:
+                {
+                    key1:
+                        [
+                            { displayName: '3', localName: 'a' },
+                            { displayName: '2', localName: 'b' },
+                            { displayName: '1', localName: 'd' }
+                        ],
+                    key2: 'value'
+                }
+            });
+        });
+    });
+
+    describe('comparing objects', () => {
+        it('objects are equivalent regardles of key order', () => {
+            const data1 = {
+                'key2': "value",
+                'key1': [1, 2, 3, 4]
+            };
+
+            const data2 = {
+                'key1': [1, 2, 3, 4],
+                'key2': "value"
+            };
+
+            const d = areEquivalentObjects(data1, data2); //?
+            expect(d).to.be.true;
+        });
+
+        it('objects are equivalent regardles of array order', () => {
+            const data1 = {
+                'key2': "value",
+                'key1': [1, 2, 3, 4]
+            };
+
+            const data2 = {
+                'key1': [1, 3, 2, 4],
+                'key2': "value"
+            };
+
+            const d = areEquivalentObjects(data1, data2); //?
+            expect(d).to.be.true;
+        });
+
+        it('can ingore keys when checking if objects are equivalent', () => {
+            const data1 = {
+                'key2': "value",
+                'key1': [1, 2, 3, 4],
+                'key5': "value"
+            };
+
+            const data2 = {
+                'key1': [1, 3, 2, 4],
+                'key2': "value",
+                'key4': "value"
+            };
+
+            const ingoreKeys = new Set<string>();
+            ingoreKeys.add("key4");
+            ingoreKeys.add("key5");
+            const d = areEquivalentObjects(data1, data2, ingoreKeys); //?
+            expect(d).to.be.true;
+        });
+
+        it('objects are not equivalent if they have different data', () => {
+            const data1 = {
+                'key2': "value",
+                'key1': [1, 2, 3, 4]
+            };
+
+            const data2 = {
+                'key1': [1, 2, 3, 4, 5],
+                'key2': "value"
+            };
+
+            const d = areEquivalentObjects(data1, data2); //?
+            expect(d).to.be.false;
+        });
+
+        it('objects are not equivalent if they have different keys', () => {
+            const data1 = {
+                'key2': "value",
+                'key1': [1, 2, 3, 4]
+            };
+
+            const data2 = {
+                'key12': [1, 2, 3, 4],
+                'key22': "value"
+            };
+
+            const d = areEquivalentObjects(data1, data2); //?
+            expect(d).to.be.false;
+        });
     });
 });
