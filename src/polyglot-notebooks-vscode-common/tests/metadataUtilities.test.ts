@@ -456,11 +456,14 @@ describe('metadata utility tests', async () => {
     it('notebook metadata can be extracted from a composite kernel', () => {
         const kernel = new CompositeKernel('composite');
         const cs = new Kernel('csharp', 'csharp');
+        cs.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: (_invocation) => Promise.resolve() });
         cs.kernelInfo.aliases.push('cs');
         kernel.add(cs);
         const fs = new Kernel('fsharp', 'fsharp');
+        fs.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: (_invocation) => Promise.resolve() });
         fs.kernelInfo.aliases.push('fs');
         kernel.add(fs);
+        const value = new Kernel('value', 'value');
         kernel.defaultKernelName = fs.name;
 
         const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(kernel);

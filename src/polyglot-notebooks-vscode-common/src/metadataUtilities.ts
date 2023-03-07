@@ -162,7 +162,7 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
 export function getNotebookDocumentMetadataFromCompositeKernel(kernel: CompositeKernel): NotebookDocumentMetadata {
     const notebookMetadata = createDefaultNotebookDocumentMetadata();
     notebookMetadata.kernelInfo.defaultKernelName = kernel.defaultKernelName ?? notebookMetadata.kernelInfo.defaultKernelName;
-    notebookMetadata.kernelInfo.items = kernel.childKernels.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0).map(k => ({ name: k.name, aliases: k.kernelInfo.aliases, languageName: k.kernelInfo.languageName }));
+    notebookMetadata.kernelInfo.items = kernel.childKernels.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0).filter(k => k.supportsCommand(contracts.SubmitCodeType)).map(k => ({ name: k.name, aliases: k.kernelInfo.aliases, languageName: k.kernelInfo.languageName }));
     cleanupMedata(notebookMetadata);
     return sortInPlace(notebookMetadata);
 }
@@ -170,6 +170,10 @@ export function getNotebookDocumentMetadataFromCompositeKernel(kernel: Composite
 function ensureProperShapeForDocumentKernelInfo(kernelInfo: contracts.DocumentKernelInfo) {
     if (!kernelInfo.aliases) {
         kernelInfo.aliases = [];
+    }
+
+    if (kernelInfo.languageName === undefined) {
+        delete kernelInfo.languageName;
     }
 
     return kernelInfo;
@@ -227,7 +231,7 @@ export function getKernelInfosFromNotebookDocument(notebookDocument: vscodeLike.
     }));
 
     kernelInfos.forEach(ki => {
-        if (ki.languageName === undefined) {
+        if (ki.languageName === undefined || ki.languageName === null) {
             delete ki["languageName"];
         }
     });
@@ -544,7 +548,7 @@ export function areEquivalentObjects(object1: { [key: string]: any }, object2: {
 
 function cleanupMedata(notebookMetadata: NotebookDocumentMetadata) {
     notebookMetadata.kernelInfo.items.forEach(ki => {
-        if (ki.languageName === undefined) {
+        if (ki.languageName === undefined || ki.languageName === null) {
             delete ki.languageName;
         }
     });

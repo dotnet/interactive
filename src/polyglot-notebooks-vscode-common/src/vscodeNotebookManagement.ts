@@ -10,7 +10,6 @@ import * as rxjs from 'rxjs';
 import * as connection from './polyglot-notebooks/connection';
 import * as contracts from './polyglot-notebooks/contracts';
 import { areEquivalentObjects, isIpynbNotebook } from './metadataUtilities';
-import { Hash } from 'crypto';
 
 export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
     return notebookEditor.notebook;

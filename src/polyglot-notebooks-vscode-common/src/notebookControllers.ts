@@ -340,18 +340,25 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
                 for (const item of notebookMetadata.kernelInfo.items) {
                     if (item.name === kernelInfoProduced.kernelInfo.localName) {
                         metadataChanged = true;
-                        item.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        if (kernelInfoProduced.kernelInfo.languageName !== undefined && kernelInfoProduced.kernelInfo.languageName !== null) {
+                            item.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        }
                         item.aliases = kernelInfoProduced.kernelInfo.aliases;
                     }
                 }
 
                 if (!metadataChanged) {
-                    // nothing changed, must be a new kernel
-                    notebookMetadata.kernelInfo.items.push({
-                        name: kernelInfoProduced.kernelInfo.localName,
-                        languageName: kernelInfoProduced.kernelInfo.languageName,
-                        aliases: kernelInfoProduced.kernelInfo.aliases
-                    });
+                    if (kernelInfoProduced.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.SubmitCodeType)) {
+                        const kernelInfo: contracts.DocumentKernelInfo = {
+                            name: kernelInfoProduced.kernelInfo.localName,
+                            aliases: kernelInfoProduced.kernelInfo.aliases
+                        };
+                        if (kernelInfoProduced.kernelInfo.languageName !== undefined && kernelInfoProduced.kernelInfo.languageName !== null) {
+                            kernelInfo.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        }
+                        // nothing changed, must be a new kernel
+                        notebookMetadata.kernelInfo.items.push(kernelInfo);
+                    }
                 }
 
                 const existingRawNotebookDocumentMetadata = document.metadata;
