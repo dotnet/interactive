@@ -30,6 +30,40 @@ The PR build definition can be found [here](https://dev.azure.com/dnceng-public/
 
 NuGet packages produced from every build of `main` are auto-published to the NuGet feed `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json`
 
+## Consuming NPM Packages
+
+The signed build and CI machines aren't allowed to access npmjs.org directly.  If you add or update a Node package and your PR fails with:
+
+```
+Building NPM in directory src\polyglot-notebooks-vscode-insiders
+npm ERR! code E401
+npm ERR! Unable to authenticate, your authentication token seems to be invalid.
+npm ERR! To correct this please trying logging in again with:
+npm ERR!     npm login
+
+npm ERR! A complete log of this run can be found in:
+npm ERR!     C:\Users\cloudtest\AppData\Local\npm-cache\_logs\2023-03-07T20_48_41_356Z-debug.log
+```
+
+...then you'll need to ensure the new packages are added to the internal NPM mirror.
+
+To do this:
+
+(this part only happens once)
+
+1. Navigate to the internal NPM package feed: https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-public-npm
+2. Click "Connect to Feed".
+3. Select "npm".
+4. Follow the "Project setup" instructions shown.
+
+(this part may need to happen multiple times)
+
+1. Clear your local NPM cache with `npm cache clean --force`.
+2. Delete the `node_modules` directory in the directory where you added/updated the packages.
+3. Re-run `npm install` in the directory where you added/updated the packages.
+
+When you do this locally while authenticated, any packages _not_ on the internal mirror will be copied from npmjs.org.
+
 ## Publish VS Code Extension
 
 The signed build produces three versions of the VS Code extension, 2 against Stable VS Code and 1 against Insiders.  Both versions against Stable append a `"0"` character to the extension version number and Insiders appends a `"1"` character.
