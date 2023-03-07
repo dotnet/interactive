@@ -298,7 +298,7 @@ export function getRawInteractiveDocumentMetadataFromNotebookDocumentMetadata(no
     return notebookDocumentMetadata;
 }
 
-export function getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata, documentRawMetadata: { [key: string]: any }, createForIpynb: boolean): { [key: string]: any } {
+export function getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata, documentRawMetadata: { [key: string]: any }, createForIpynb: boolean): { [key: string]: any } {
     const rawMetadata: { [key: string]: any } = {};
 
     if (createForIpynb) {

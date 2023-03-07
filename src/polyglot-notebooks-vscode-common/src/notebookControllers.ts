@@ -201,7 +201,7 @@ export class DotNetNotebookKernel {
                     const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(cell.notebook);
                     const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
                     const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
-                    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, cell.notebook.metadata, isIpynb);
+                    const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, cell.notebook.metadata, isIpynb);
 
                     await vscodeNotebookManagement.replaceNotebookMetadata(cell.notebook.uri, rawNotebookDocumentMetadata);
                     endExecution(client, cell, success);
@@ -371,7 +371,7 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
                 }
 
                 const existingRawNotebookDocumentMetadata = document.metadata;
-                const updatedRawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, existingRawNotebookDocumentMetadata, isIpynb);
+                const updatedRawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, existingRawNotebookDocumentMetadata, isIpynb);
                 const newRawNotebookDocumentMetadata = metadataUtilities.mergeRawMetadata(existingRawNotebookDocumentMetadata, updatedRawNotebookDocumentMetadata);
                 await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, newRawNotebookDocumentMetadata);
             }
@@ -381,7 +381,7 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
     const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
     const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
     const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
-    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, document.metadata, isIpynb);
+    const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, document.metadata, isIpynb);
     await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, rawNotebookDocumentMetadata);
 }
 

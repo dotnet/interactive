@@ -564,7 +564,7 @@ describe('metadata utility tests', async () => {
                 ]
             }
         };
-        const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, {}, true);
+        const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, {}, true);
         expect(rawNotebookDocumentMetadata).to.deep.equal({
             custom: {
                 metadata: {
@@ -613,7 +613,7 @@ describe('metadata utility tests', async () => {
                 ]
             }
         };
-        const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, {}, false);
+        const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, {}, false);
         expect(rawNotebookDocumentMetadata).to.deep.equal({
             polyglot_notebook: {
                 kernelInfo: {

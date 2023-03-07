@@ -32,7 +32,7 @@ async function deserializeNotebookByType(parserServer: NotebookParserServer, ser
     const interactiveDocument = await parserServer.parseInteractiveDocument(serializationType, rawData);
     const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromInteractiveDocument(interactiveDocument);
     const createForIpynb = serializationType === contracts.DocumentSerializationType.Ipynb;
-    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, {}, createForIpynb);
+    const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, {}, createForIpynb);
     const notebookData: vscode.NotebookData = {
         cells: interactiveDocument.elements.map(element => toVsCodeNotebookCellData(element)),
         metadata: rawNotebookDocumentMetadata
