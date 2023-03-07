@@ -536,20 +536,12 @@ describe('metadata utility tests', async () => {
         };
         const interactiveDocumentMetadata = metadataUtilities.getRawInteractiveDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata);
         expect(interactiveDocumentMetadata).to.deep.equal({
-            kernelInfo: {
+            kernelInfo:
+            {
                 defaultKernelName: 'fsharp',
-                items: [
-                    {
-                        name: 'csharp',
-                        aliases: ['cs'],
-                        languageName: 'csharp'
-                    },
-                    {
-                        name: 'fsharp',
-                        aliases: ['fs'],
-                        languageName: 'fsharp'
-                    }
-                ]
+                items:
+                    [{ aliases: ['fs'], languageName: 'fsharp', name: 'fsharp' },
+                    { aliases: ['cs'], languageName: 'csharp', name: 'csharp' }]
             }
         });
     });
