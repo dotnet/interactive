@@ -60,7 +60,7 @@ export function getNotebookCellMetadataFromInteractiveDocumentElement(interactiv
         }
     }
 
-    return sortInPlace(cellMetadata);
+    return cellMetadata;
 }
 
 export function getNotebookCellMetadataFromNotebookCellElement(notebookCell: vscodeLike.NotebookCell): NotebookCellMetadata {
@@ -89,7 +89,7 @@ export function getNotebookCellMetadataFromNotebookCellElement(notebookCell: vsc
         }
     }
 
-    return sortInPlace(cellMetadata);
+    return cellMetadata;
 }
 
 export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDocument: contracts.InteractiveDocument): NotebookDocumentMetadata {
@@ -108,7 +108,7 @@ export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDo
 
     notebookMetadata.kernelInfo.items = notebookMetadata.kernelInfo.items.map(item => ensureProperShapeForDocumentKernelInfo(item));
     cleanupMedata(notebookMetadata);
-    return sortInPlace(notebookMetadata);
+    return notebookMetadata;
 }
 
 export function getNotebookDocumentMetadataFromNotebookDocument(document: vscodeLike.NotebookDocument): NotebookDocumentMetadata {
@@ -156,7 +156,7 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
 
     notebookMetadata.kernelInfo.items = notebookMetadata.kernelInfo.items.map(item => ensureProperShapeForDocumentKernelInfo(item));
     cleanupMedata(notebookMetadata);
-    return sortInPlace(notebookMetadata);
+    return notebookMetadata;
 }
 
 export function getNotebookDocumentMetadataFromCompositeKernel(kernel: CompositeKernel): NotebookDocumentMetadata {
@@ -164,7 +164,7 @@ export function getNotebookDocumentMetadataFromCompositeKernel(kernel: Composite
     notebookMetadata.kernelInfo.defaultKernelName = kernel.defaultKernelName ?? notebookMetadata.kernelInfo.defaultKernelName;
     notebookMetadata.kernelInfo.items = kernel.childKernels.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0).filter(k => k.supportsCommand(contracts.SubmitCodeType)).map(k => ({ name: k.name, aliases: k.kernelInfo.aliases, languageName: k.kernelInfo.languageName }));
     cleanupMedata(notebookMetadata);
-    return sortInPlace(notebookMetadata);
+    return notebookMetadata;
 }
 
 function ensureProperShapeForDocumentKernelInfo(kernelInfo: contracts.DocumentKernelInfo) {
@@ -211,7 +211,7 @@ export function getKernelspecMetadataFromIpynbNotebookDocument(notebook: vscodeL
         }
     }
 
-    return sortInPlace(kernelspecMetadata);
+    return kernelspecMetadata;
 }
 
 export function getKernelInfosFromNotebookDocument(notebookDocument: vscodeLike.NotebookDocument): contracts.KernelInfo[] {
@@ -235,7 +235,7 @@ export function getKernelInfosFromNotebookDocument(notebookDocument: vscodeLike.
             delete ki["languageName"];
         }
     });
-    return sortInPlace(kernelInfos);
+    return kernelInfos;
 }
 
 export function getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata): KernelspecMetadata {
@@ -272,15 +272,15 @@ export function createNewIpynbMetadataWithNotebookDocumentMetadata(existingMetad
     resultMetadata.custom.metadata = resultMetadata.custom.metadata ?? {};
     resultMetadata.custom.metadata.kernelspec = kernelspec;
     resultMetadata.custom.metadata.polyglot_notebook = notebookDocumentMetadata;
-    return sortInPlace(resultMetadata);
+    return resultMetadata;
 }
 
 export function getRawInteractiveDocumentElementMetadataFromNotebookCellMetadata(notebookCellMetadata: NotebookCellMetadata): { [key: string]: any } {
-    return sortInPlace(notebookCellMetadata);
+    return notebookCellMetadata;
 }
 
 export function getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata: NotebookCellMetadata): { [key: string]: any } {
-    return sortInPlace({
+    return {
         custom: {
             metadata: {
                 // this is the canonical metadata
@@ -291,11 +291,11 @@ export function getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellM
                 }
             }
         }
-    });
+    };
 }
 
 export function getRawInteractiveDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata): { [key: string]: any } {
-    return sortInPlace(notebookDocumentMetadata);
+    return notebookDocumentMetadata;
 }
 
 export function getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata, documentRawMetadata: { [key: string]: any }, createForIpynb: boolean): { [key: string]: any } {
