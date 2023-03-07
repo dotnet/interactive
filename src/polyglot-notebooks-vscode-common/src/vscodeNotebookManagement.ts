@@ -36,7 +36,7 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
     const notebook = vscode.workspace.notebookDocuments.find(d => d.uri === notebookUri);
     if (notebook) {
         const metadata = notebook.metadata;
-        const ingoreKeys = new Set<string>;
+        const ingoreKeys = new Set<string>();
         if (!isIpynbNotebook(notebook)) {
             // dib format doesn't use the proeprty 'custom' so this should not be involved in the diff.
             ingoreKeys.add("custom");
