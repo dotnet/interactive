@@ -1,6 +1,6 @@
 #!meta
 
-{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"Mermaid","name":"mermaid"}]}}
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"Mermaid","name":"mermaid"},{"aliases":[],"name":"value"}]}}
 
 #!csharp
 
