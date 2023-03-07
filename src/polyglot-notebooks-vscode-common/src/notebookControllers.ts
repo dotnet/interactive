@@ -196,6 +196,14 @@ export class DotNetNotebookKernel {
 
                 return client.execute(source, vscodeUtilities.getCellKernelName(cell), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async (success) => {
                     await outputUpdatePromise;
+
+                    const isIpynb = metadataUtilities.isIpynbNotebook(cell.notebook);
+                    const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(cell.notebook);
+                    const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
+                    const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
+                    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, cell.notebook.metadata, isIpynb);
+
+                    await vscodeNotebookManagement.replaceNotebookMetadata(cell.notebook.uri, rawNotebookDocumentMetadata);
                     endExecution(client, cell, success);
                 }).catch(async () => {
                     await outputUpdatePromise;
@@ -327,6 +335,7 @@ async function updateNotebookMetadata(notebook: vscode.NotebookDocument, clientM
         vscode.window.showErrorMessage(`Failed to set document metadata for '${notebook.uri}': ${err}`);
     }
 }
+
 
 async function updateKernelInfoMetadata(client: InteractiveClient, document: vscode.NotebookDocument): Promise<void> {
     const isIpynb = metadataUtilities.isIpynbNotebook(document);
