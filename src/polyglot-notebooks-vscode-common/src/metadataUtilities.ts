@@ -128,11 +128,6 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
 
             const items = kernelInfo.items;
             if (Array.isArray(items) && items.every(item => typeof item === 'object')) {
-                items.forEach(ki => {
-                    if (ki.languageName === null || ki.languageName === undefined) {
-                        delete ki["languageName"];
-                    }
-                });
                 notebookMetadata.kernelInfo.items = items;
                 setItems = true;
             }
@@ -175,10 +170,6 @@ export function getNotebookDocumentMetadataFromCompositeKernel(kernel: Composite
 function ensureProperShapeForDocumentKernelInfo(kernelInfo: contracts.DocumentKernelInfo) {
     if (!kernelInfo.aliases) {
         kernelInfo.aliases = [];
-    }
-
-    if (kernelInfo.languageName === undefined) {
-        delete kernelInfo["languageName"];
     }
 
     return kernelInfo;
