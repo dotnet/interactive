@@ -15,7 +15,7 @@ import * as constants from './constants';
 function toInteractiveDocumentElement(cell: vscode.NotebookCellData): contracts.InteractiveDocumentElement {
     // just need to match the shape
     const fakeCell: vscodeLike.NotebookCell = {
-        kind: 0,
+        kind: vscodeLike.NotebookCellKind.Code,
         metadata: cell.metadata ?? {}
     };
     const notebookCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(fakeCell);
@@ -32,7 +32,7 @@ async function deserializeNotebookByType(parserServer: NotebookParserServer, ser
     const interactiveDocument = await parserServer.parseInteractiveDocument(serializationType, rawData);
     const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromInteractiveDocument(interactiveDocument);
     const createForIpynb = serializationType === contracts.DocumentSerializationType.Ipynb;
-    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, createForIpynb);
+    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, {}, createForIpynb);
     const notebookData: vscode.NotebookData = {
         cells: interactiveDocument.elements.map(element => toVsCodeNotebookCellData(element)),
         metadata: rawNotebookDocumentMetadata
@@ -70,7 +70,12 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
                 return serializeNotebookByType(parserServer, serializationType, eol, data);
             },
         };
-        const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer);
+
+        const notebookoptions: vscode.NotebookDocumentContentOptions = notebookType === contracts.DocumentSerializationType.Dib
+            ? { transientOutputs: true, transientDocumentMetadata: { custom: true } }
+            : {};
+
+        const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer, notebookoptions);
         context.subscriptions.push(notebookSerializer);
         return serializer;
     };

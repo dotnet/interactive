@@ -327,7 +327,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         };
 
         const createForIpynb = viewType === constants.JupyterViewType;
-        const rawNotebookMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, createForIpynb);
+        const rawNotebookMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, {}, createForIpynb);
         const content = new vscode.NotebookData([cell]);
         content.metadata = rawNotebookMetadata;
         const notebook = await vscode.workspace.openNotebookDocument(viewType, content);

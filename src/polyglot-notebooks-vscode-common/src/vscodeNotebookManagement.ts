@@ -9,6 +9,8 @@ import { extractHostAndNomalize, isKernelCommandEnvelope, isKernelEventEnvelope,
 import * as rxjs from 'rxjs';
 import * as connection from './polyglot-notebooks/connection';
 import * as contracts from './polyglot-notebooks/contracts';
+import { areEquivalentObjects, isIpynbNotebook } from './metadataUtilities';
+import { Hash } from 'crypto';
 
 export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
     return notebookEditor.notebook;
@@ -31,11 +33,26 @@ export async function replaceNotebookCellMetadata(notebookUri: vscode.Uri, cellI
 }
 
 export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentMetadata: { [key: string]: any }): Promise<boolean> {
-    const notebookEdit = vscode.NotebookEdit.updateNotebookMetadata(documentMetadata);
-    const edit = new vscode.WorkspaceEdit();
-    edit.set(notebookUri, [notebookEdit]);
-    const succeeded = await vscode.workspace.applyEdit(edit);
-    return succeeded;
+    const notebook = vscode.workspace.notebookDocuments.find(d => d.uri === notebookUri);
+    if (notebook) {
+        const metadata = notebook.metadata;
+        const ingoreKeys = new Set<string>;
+        if (!isIpynbNotebook(notebook)) {
+            // dib format doesn't use the proeprty 'custom' so this should not be involved in the diff.
+            ingoreKeys.add("custom");
+        }
+        const shouldUpdate = !areEquivalentObjects(metadata, documentMetadata, ingoreKeys);
+
+        if (shouldUpdate) {
+            const notebookEdit = vscode.NotebookEdit.updateNotebookMetadata(documentMetadata);
+            const edit = new vscode.WorkspaceEdit();
+            edit.set(notebookUri, [notebookEdit]);
+            const succeeded = await vscode.workspace.applyEdit(edit);
+            return succeeded;
+        }
+        return false;
+    }
+    return false;
 }
 
 export async function handleCustomInputRequest(prompt: string, inputTypeHint: string, password: boolean): Promise<{ handled: boolean, result: string | null | undefined }> {

@@ -285,7 +285,6 @@ describe('metadata utility tests', async () => {
             displayName: 'unused',
             isComposite: false,
             isProxy: false,
-            languageName: undefined,
             localName: 'fsharp',
             supportedDirectives: [],
             supportedKernelCommands: [],
@@ -339,7 +338,6 @@ describe('metadata utility tests', async () => {
             displayName: 'unused',
             isComposite: false,
             isProxy: false,
-            languageName: undefined,
             localName: 'fsharp',
             supportedDirectives: [],
             supportedKernelCommands: [],
@@ -519,15 +517,16 @@ describe('metadata utility tests', async () => {
             kernelInfo: {
                 defaultKernelName: 'fsharp',
                 items: [
-                    {
-                        name: 'csharp',
-                        aliases: ['cs'],
-                        languageName: 'csharp'
-                    },
+
                     {
                         name: 'fsharp',
                         aliases: ['fs'],
                         languageName: 'fsharp'
+                    },
+                    {
+                        name: 'csharp',
+                        aliases: ['cs'],
+                        languageName: 'csharp'
                     }
                 ]
             }
@@ -570,7 +569,7 @@ describe('metadata utility tests', async () => {
                 ]
             }
         };
-        const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, true);
+        const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, {}, true);
         expect(rawNotebookDocumentMetadata).to.deep.equal({
             custom: {
                 metadata: {
@@ -619,7 +618,7 @@ describe('metadata utility tests', async () => {
                 ]
             }
         };
-        const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, false);
+        const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, {}, false);
         expect(rawNotebookDocumentMetadata).to.deep.equal({
             polyglot_notebook: {
                 kernelInfo: {
@@ -703,6 +702,227 @@ describe('metadata utility tests', async () => {
         });
     });
 
+    it("merges metadata correctly", () => {
+        let destination = {
+            "custom": {
+                "metadata": {
+                    "kernelspec": {
+                        "display_name": ".NET (C#)",
+                        "language": "C#",
+                        "name": ".net-csharp"
+                    },
+                    "polyglot_notebook": {
+                        "kernelInfo": {
+                            "defaultKernelName": "powershell",
+                            "items": [
+                                {
+                                    "aliases": [
+                                    ],
+                                    "languageName": null,
+                                    "name": ".NET"
+                                },
+                                {
+                                    "aliases": [
+                                        "C#",
+                                        "c#"
+                                    ],
+                                    "languageName": "C#",
+                                    "name": "csharp"
+                                },
+                                {
+                                    "aliases": [
+                                        "F#",
+                                        "f#"
+                                    ],
+                                    "languageName": "F#",
+                                    "name": "fsharp"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "languageName": "HTML",
+                                    "name": "html"
+                                },
+                                {
+                                    "aliases": [
+                                        "js"
+                                    ],
+                                    "languageName": "JavaScript",
+                                    "name": "javascript"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "languageName": "Mermaid",
+                                    "name": "mermaid"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "name": "powershell"
+                                },
+                                {
+                                    "aliases": [
+                                        "powershell"
+                                    ],
+                                    "languageName": "PowerShell",
+                                    "name": "pwsh"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "languageName": null,
+                                    "name": "value"
+                                },
+                                {
+                                    "aliases": [
+                                        "frontend"
+                                    ],
+                                    "languageName": null,
+                                    "name": "vscode"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "name": "webview"
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        };
+
+        let source = {
+            "custom": {
+                "metadata": {
+                    "kernelspec": {
+                        "display_name": ".NET (C#)",
+                        "language": "C#",
+                        "name": ".net-csharp"
+                    },
+                    "polyglot_notebook": {
+                        "kernelInfo": {
+                            "defaultKernelName": "powershell",
+                            "items": [
+                                {
+                                    "aliases": [
+                                        "C#",
+                                        "c#"
+                                    ],
+                                    "languageName": "C#",
+                                    "name": "csharp"
+                                },
+                                {
+                                    "aliases": [
+                                        "F#",
+                                        "f#"
+                                    ],
+                                    "languageName": "F#",
+                                    "name": "fsharp"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "languageName": "HTML",
+                                    "name": "html"
+                                },
+                                {
+                                    "aliases": [
+                                        "js"
+                                    ],
+                                    "languageName": "JavaScript",
+                                    "name": "javascript"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "languageName": "Mermaid",
+                                    "name": "mermaid"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "name": "powershell"
+                                },
+                                {
+                                    "aliases": [
+                                        "powershell"
+                                    ],
+                                    "languageName": "PowerShell",
+                                    "name": "pwsh"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "languageName": null,
+                                    "name": "value"
+                                },
+                                {
+                                    "aliases": [
+                                        "frontend"
+                                    ],
+                                    "languageName": null,
+                                    "name": "vscode"
+                                },
+                                {
+                                    "aliases": [
+                                    ],
+                                    "name": "webview"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "cells": [
+                ],
+                "nbformat": 4,
+                "nbformat_minor": 2
+            },
+            "indentAmount": " "
+        };
+
+        metadataUtilities.sortAndMerge(destination, source);
+
+        expect(destination).to.deep.equal({
+            custom:
+            {
+                cells: [],
+                metadata:
+                {
+                    kernelspec:
+                    {
+                        display_name: '.NET (C#)',
+                        language: 'C#',
+                        name: '.net-csharp'
+                    },
+                    polyglot_notebook:
+                    {
+                        kernelInfo:
+                        {
+                            defaultKernelName: 'powershell',
+                            items:
+                                [{ aliases: [], languageName: null, name: '.NET' },
+                                { aliases: ['C#', 'c#'], languageName: 'C#', name: 'csharp' },
+                                { aliases: ['F#', 'f#'], languageName: 'F#', name: 'fsharp' },
+                                { aliases: [], languageName: 'HTML', name: 'html' },
+                                { aliases: ['js'], languageName: 'JavaScript', name: 'javascript' },
+                                { aliases: [], languageName: 'Mermaid', name: 'mermaid' },
+                                { aliases: [], name: 'powershell' },
+                                { aliases: ['powershell'], languageName: 'PowerShell', name: 'pwsh' },
+                                { aliases: [], languageName: null, name: 'value' },
+                                { aliases: ['frontend'], languageName: null, name: 'vscode' },
+                                { aliases: [], name: 'webview' }]
+                        }
+                    }
+                },
+                nbformat: 4,
+                nbformat_minor: 2
+            },
+            indentAmount: ' '
+        });
+    });
+
     it('raw metadata can be merged', () => {
         const baseMetadata: { [key: string]: any } = {
             custom: {
@@ -745,5 +965,4 @@ describe('metadata utility tests', async () => {
             }
         });
     });
-
 });
