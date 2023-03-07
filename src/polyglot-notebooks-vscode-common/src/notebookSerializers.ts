@@ -72,7 +72,7 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
         };
 
         const notebookoptions: vscode.NotebookDocumentContentOptions = notebookType === contracts.DocumentSerializationType.Dib
-            ? { transientOutputs: true, transientDocumentMetadata: { custom: true } }
+            ? { transientOutputs: true, transientDocumentMetadata: { custom: true }, transientCellMetadata: { custom: true } }
             : {};
 
         const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer, notebookoptions);
