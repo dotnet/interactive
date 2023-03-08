@@ -116,14 +116,6 @@ The following global settings can be set to change formatting behaviors:
 
   An optional type-specific list expansion limit
 
-* `PlainTextFormatter.MaxProperties` = 20
-
-  Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects. If set to zero no properties are shown.
-
-* `HtmlFormatter.MaxProperties` = 20
-
-  Indicates the maximum number of properties to show in HTML table displays of arbitrary objects. If set to zero no properties are shown.
-
 ## HTML Formatting
 
 ### The `CSS` function
