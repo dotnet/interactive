@@ -17,7 +17,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.App.Connection;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
@@ -144,7 +143,6 @@ public static class CommandLineParser
             .CancelOnProcessTermination()
             .AddMiddleware(async (context, next) =>
             {
-
                 if (context.ParseResult.Errors.Count == 0)
                 {
                     telemetrySender.TrackStartupEvent(context.ParseResult, filter);
@@ -216,7 +214,7 @@ public static class CommandLineParser
                 var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                 var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
                 cancellationToken.Register(() => kernel.Dispose());
-                
+
                 await new JupyterClientKernelExtension().OnLoadAsync(kernel);
 
                 services.AddKernel(kernel);
@@ -235,7 +233,7 @@ public static class CommandLineParser
                     .AddSingleton<IHostedService, Heartbeat>();
 
                 var result = await jupyter(startupOptions, console, startServer, context);
-                
+
                 return result;
             }
 
@@ -367,7 +365,7 @@ public static class CommandLineParser
                         var vscodeSetup = new VSCodeClientKernelExtension();
                         await vscodeSetup.OnLoadAsync(kernel);
                     }
-                       
+
                     if (startupOptions.EnableHttpApi)
                     {
                         var clientSideKernelClient = new SignalRBackchannelKernelClient();
@@ -393,12 +391,6 @@ public static class CommandLineParser
                     }
                     else
                     {
-                        if (!isVSCode)
-                        {
-                            var proxy = await host.ConnectProxyKernelOnDefaultConnectorAsync("javascript", new Uri("kernel://webview/javascript"));
-
-                            proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
-                        }
                         await startKernelHost(startupOptions, host, console);
                     }
 
@@ -558,7 +550,5 @@ public static class CommandLineParser
             default:
                 throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
         }
-
-      
     }
 }

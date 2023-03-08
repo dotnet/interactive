@@ -3,7 +3,6 @@
 
 using System;
 using System.CommandLine.Parsing;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -17,8 +16,8 @@ using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
 using Serilog.Sinks.RollingFileAlternate;
-using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Program>;
+using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 
 namespace Microsoft.DotNet.Interactive.App;
 
@@ -71,8 +70,6 @@ public class Program
         StartupOptions options,
         IServiceCollection serviceCollection)
     {
-        Debugger.Launch();
-
         // TODO: (ConstructWebHostBuilder) dispose me
         var disposables = new CompositeDisposable
         {
@@ -141,9 +138,9 @@ public class Program
 
     public static IWebHost ConstructWebHost(StartupOptions options)
     {
-        var webHost = ConstructWebHostBuilder(options,_serviceCollection)
+        var webHost = ConstructWebHostBuilder(options, _serviceCollection)
             .Build();
-           
+
         return webHost;
     }
 }

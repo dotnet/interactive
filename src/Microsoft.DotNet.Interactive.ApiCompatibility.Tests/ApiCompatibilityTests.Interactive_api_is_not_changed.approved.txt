@@ -545,6 +545,7 @@ Microsoft.DotNet.Interactive.Connection
     public System.Void Dispose()
   public class ProxyKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.IDisposable
     .ctor(System.String name, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, System.Uri remoteUri = null)
+    .ctor(System.String name, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, System.Uri remoteUri, System.String displayName, System.Boolean isComposite, System.String languageName, System.String languageVersion, System.Collections.Generic.ICollection<Microsoft.DotNet.Interactive.KernelCommandInfo> supportedKernelCommands, System.Collections.Generic.ICollection<Microsoft.DotNet.Interactive.KernelDirectiveInfo> supportedDirectives)
     protected Func<TCommand,Microsoft.DotNet.Interactive.KernelInvocationContext,System.Threading.Tasks.Task> CreateDefaultHandlerForCommandType<TCommand>()
      System.Threading.Tasks.Task HandleRequestKernelInfoAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public delegate ReadCommandOrEvent : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable

@@ -3,13 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
-using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
@@ -17,10 +15,9 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket.For.Xunit;
 using Xunit;
 using Xunit.Abstractions;
-using Pocket.For.Xunit;
-using Serilog;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
@@ -45,10 +42,9 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 
         var connector = new StdIoKernelConnector(
             command.ToArray(),
+            rootProxyKernelLocalName: "rootProxy",
             kernelHostUri: new Uri("kernel://test-kernel"),
             workingDirectory: _configuration.WorkingDirectory);
-
-        RegisterForDisposal(connector);
 
         return Task.FromResult<IKernelConnector>(connector);
     }
@@ -103,7 +99,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
         await localCompositeKernel.SendAsync(connectToRemoteKernel);
 
         var result = await localCompositeKernel.SendAsync(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName", "newKernelName"));
-        
+
         var expected = Encoding.UTF8.EncodingName + "/" + Encoding.UTF8.EncodingName;
 
         result.Events
@@ -111,97 +107,6 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
            .EventuallyContainSingle<DisplayEvent>(
                where: d => d.FormattedValues.Any(FormattedValue => FormattedValue.Value == expected),
                timeout: 10_000);
-    }
-
-    [Fact]
-    public async Task issue_2726()
-    {
-        var kernel = await CreateKernelAsync();
-
-        await kernel.SendAsync(new RequestKernelInfo());
-
-        // TODO (testname) write test
-        throw new NotImplementedException();
-    }
-
-    private static async Task<Kernel> CreateKernelAsync()
-    {
-        var connector = CreateConnector();
-
-        var kernel = await connector.CreateKernelAsync("proxy");
-
-        return kernel;
-    }
-
-    private static StdIoKernelConnector CreateConnector()
-    {
-        var pocketLoggerPath = Environment.GetEnvironmentVariable("POCKETLOGGER_LOG_PATH");
-        string loggingArgs = null;
-
-        if (File.Exists(pocketLoggerPath))
-        {
-            var logDir = Path.GetDirectoryName(pocketLoggerPath);
-            loggingArgs = $"--verbose --log-path {logDir}";
-        }
-
-        var dotnetInteractive = typeof(Program).Assembly.Location;
-        var hostUri = KernelHost.CreateHostUri("VS");
-        var connector = new StdIoKernelConnector(
-            new[] { "dotnet", $""" "{dotnetInteractive}" stdio {loggingArgs}""" },
-            hostUri);
-        return connector;
-    }
-
-    [Fact]
-    public void when_all_created_proxies_have_been_disposed_then_the_remote_process_is_killed()
-    {
-        
-        
-
-
-        // TODO (when______then_remote_process_is_killed) write test
-        throw new NotImplementedException();
-    }
-
-    [Fact]
-    public async Task it_can_return_a_proxy_to_a_remote_composite()
-    {
-        var connector = CreateConnector();
-        
-        using var kernel = await connector.CreateRootKernelProxyAsync("Proxy");
-
-        using var _ = new AssertionScope();
-
-        kernel.KernelInfo.IsProxy.Should().BeTrue();
-        kernel.KernelInfo.IsComposite.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task it_can_create_a_proxy_to_a_specific_remote_subkernel()
-    {
-         var connector = CreateConnector();
-        
-        using var kernel = await connector.CreateRootKernelProxyAsync("root");
-
-
-        var result = await kernel.SendAsync(new RequestKernelInfo("csharp"));
-
-        
-
-        // TODO (it_can_create_a_proxy_to_a_specific_remote_subkernel) write test
-        throw new NotImplementedException();
-    }
-
-    [Fact]
-    public void it_can_create_a_proxy_kernel_with_a_different_name_than_the_remote()
-    {
-        
-
-
-
-
-        // TODO (it_can_create_a_proxy_kernel_with_a_differnet_local_name_than_its_remote_name) write test
-        throw new NotImplementedException();
     }
 
     protected override SubmitCode CreateConnectCommand(string localKernelName)
@@ -221,6 +126,6 @@ public class StdioConnectionTestConfiguration
     public string Command { get; set; }
 
     public string[] Args { get; set; }
-    
+
     public DirectoryInfo WorkingDirectory { get; set; }
 }

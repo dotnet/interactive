@@ -5,6 +5,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -27,34 +28,59 @@ using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive.App.Connection;
 
-public class StdIoKernelConnector : IKernelConnector, IDisposable
+public class StdIoKernelConnector : IKernelConnector
 {
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
+    private ProxyKernel? _rootProxyKernel;
+
     private RefCountDisposable? _refCountDisposable = null;
 
-    public StdIoKernelConnector(string[] command, Uri kernelHostUri, DirectoryInfo? workingDirectory = null)
+    public string[] Command { get; }
+
+    public string RootProxyKernelLocalName { get; }
+
+    public Uri KernelHostUri { get; }
+
+    public DirectoryInfo WorkingDirectory { get; }
+
+    public int? ProcessId => _process?.Id;
+
+    public StdIoKernelConnector(
+        string[] command,
+        string rootProxyKernelLocalName,
+        Uri kernelHostUri,
+        DirectoryInfo? workingDirectory = null)
     {
         Command = command;
+        RootProxyKernelLocalName = rootProxyKernelLocalName;
         KernelHostUri = kernelHostUri;
         WorkingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
     }
 
-    public string[] Command { get; }
+    /// <remarks>
+    /// TODO: Does it even make sense to implement <see cref="IKernelConnector"/> here considering that we have
+    /// concepts (such as a single root <see cref="ProxyKernel"/>, and zero or more (child) <see cref="ProxyKernel"/>s)
+    /// that the <see cref="IKernelConnector"/> abstraction does not understand / support? Should the '#!connect stdio'
+    /// command be removed?
+    /// 
+    /// The current implementation only supports creating / retrieving the root <see cref="ProxyKernel"/>.
+    /// </remarks>
+    async Task<Kernel> IKernelConnector.CreateKernelAsync(string kernelName)
+        => await CreateRootProxyKernelAsync();
 
-    public DirectoryInfo WorkingDirectory { get; }
-
-    public Uri KernelHostUri { get; }
-
-    public async Task<Kernel> CreateKernelAsync(string kernelName)
+    public async Task<ProxyKernel> CreateRootProxyKernelAsync()
     {
-        ProxyKernel? proxyKernel;
-
-        using var activity = Log.OnEnterAndExit();
-
-        if (_receiver is null)
+        if (_rootProxyKernel is null)
         {
+            using var activity = Log.OnEnterAndExit();
+
+            Debug.Assert(_receiver is null);
+            Debug.Assert(_sender is null);
+            Debug.Assert(_process is null);
+            Debug.Assert(_refCountDisposable is null);
+
             var command = Command[0];
             var arguments = Command.Skip(1).ToArray();
             if (KernelHostUri is { })
@@ -133,13 +159,13 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 _receiver.Dispose
             });
 
-            proxyKernel = new ProxyKernel(
-                kernelName,
+            _rootProxyKernel = new ProxyKernel(
+                RootProxyKernelLocalName,
                 _sender,
                 _receiver,
                 KernelHostUri);
 
-            proxyKernel.RegisterForDisposal(_refCountDisposable);
+            _rootProxyKernel.RegisterForDisposal(_refCountDisposable);
 
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
@@ -163,25 +189,75 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 }
             }
         }
+
+        return _rootProxyKernel;
+    }
+
+    public async Task<ProxyKernel> CreateProxyKernelAsync(string remoteName, string? localNameOverride = null)
+    {
+        ThrowIfRootProxyKernelIsNotCreated();
+
+        ProxyKernel proxyKernel;
+        var result = await _rootProxyKernel.SendAsync(new RequestKernelInfo(remoteName));
+        var infoEvents = result.Events.OfType<KernelInfoProduced>().ToArray();
+
+        if (infoEvents.Length == 1)
+        {
+            var remoteInfo = infoEvents[0].KernelInfo;
+            proxyKernel = await CreateProxyKernelAsync(remoteInfo, localNameOverride);
+        }
         else
         {
-            proxyKernel = new ProxyKernel(
-                kernelName,
-                _sender,
-                _receiver,
-                KernelHostUri);
+            var message = $"Found {infoEvents.Length} remote {nameof(Kernel)}s matching name '{remoteName}'.";
+            var failureEvents = result.Events.OfType<CommandFailed>().ToArray();
+            var innerException = failureEvents.Length == 1
+                ? failureEvents[0].Exception
+                : new AggregateException(failureEvents.Select(f => f.Exception));
 
-            proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
+            throw new InvalidOperationException(message, innerException);
         }
 
         return proxyKernel;
     }
 
-    public async Task<ProxyKernel> CreateRootKernelProxyAsync(string localName)
+    public Task<ProxyKernel> CreateProxyKernelAsync(KernelInfo remoteInfo, string? localNameOverride = null)
     {
-        var kernel = await CreateKernelAsync(localName);
+        ThrowIfRootProxyKernelIsNotCreated();
 
-        return (ProxyKernel)kernel;
+        var localName =
+            string.IsNullOrWhiteSpace(localNameOverride) ? remoteInfo.LocalName : localNameOverride;
+
+        var proxyKernel =
+            new ProxyKernel(
+                localName,
+                _sender,
+                _receiver,
+                remoteInfo.Uri,
+                remoteInfo.DisplayName,
+                remoteInfo.IsComposite,
+                remoteInfo.LanguageName,
+                remoteInfo.LanguageVersion,
+                remoteInfo.SupportedKernelCommands,
+                remoteInfo.SupportedDirectives);
+
+        proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
+
+        return Task.FromResult(proxyKernel);
+    }
+
+    [MemberNotNull(nameof(_rootProxyKernel))]
+    private void ThrowIfRootProxyKernelIsNotCreated()
+    {
+        if (_rootProxyKernel is null)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(CreateRootProxyKernelAsync)} must be called before {nameof(CreateProxyKernelAsync)}.");
+        }
+
+        Debug.Assert(_receiver is not null);
+        Debug.Assert(_sender is not null);
+        Debug.Assert(_process is not null);
+        Debug.Assert(_refCountDisposable is not null);
     }
 
     private void SendQuitCommand()
@@ -207,6 +283,4 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _process = null;
         }
     }
-
-    public void Dispose() => _refCountDisposable?.Dispose();
 }

@@ -58,10 +58,10 @@ public class ConnectStdIoCommand : ConnectKernelCommand
         var workingDir = commandLineContext.ParseResult.GetValueForOption(WorkingDirectoryOption);
         var kernelHostAuthority = commandLineContext.ParseResult.GetValueForOption(KernelHostUriOption) ?? CreateKernelHostAuthority();
         var kernelHostUri = KernelHost.CreateHostUri(kernelHostAuthority);
-            
-        var connector = new StdIoKernelConnector(command, kernelHostUri, workingDir);
-            
+
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+
+        var connector = new StdIoKernelConnector(command, rootProxyKernelLocalName: localName, kernelHostUri, workingDir) as IKernelConnector;
 
         return connector.CreateKernelAsync(localName);
     }
