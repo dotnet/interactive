@@ -14,3 +14,12 @@ export interface VariableInfo {
     sourceKernelName: string;
     valueName: string;
 }
+
+export interface GridLocalization {
+    typeColumnHeader: string;
+    valueColumnHeader: string;
+    nameColumnHeader: string;
+    actionsColumnHeader: string;
+    kernelNameColumnHeader: string;
+    shareTemplate: string;
+}
