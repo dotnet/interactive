@@ -6,6 +6,7 @@ import * as rxjs from "rxjs";
 import * as connection from "../connection";
 import { Logger } from "../logger";
 import { KernelHost } from '../kernelHost';
+import { v4 as uuid } from 'uuid';
 
 type KernelMessagingApi = {
     onDidReceiveKernelMessage: (arg: any) => any;
@@ -31,8 +32,9 @@ function configure(global: any, context: KernelMessagingApi) {
         }
     });
 
+    const webViewId = uuid();
     context.onDidReceiveKernelMessage((arg: any) => {
-        if (arg.envelope) {
+        if (arg.envelope && arg.webViewId === webViewId) {
             const envelope = <connection.KernelCommandOrEventEnvelope><any>(arg.envelope);
             if (connection.isKernelEventEnvelope(envelope)) {
                 Logger.default.info(`channel got ${envelope.eventType} with token ${envelope.command?.token} and id ${envelope.command?.id}`);
@@ -54,7 +56,7 @@ function configure(global: any, context: KernelMessagingApi) {
         () => {
             const kernelInfoProduced = (<KernelHost>(global['webview'].kernelHost)).getKernelInfoProduced();
             const hostUri = (<KernelHost>(global['webview'].kernelHost)).uri;
-            context.postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri });
+            context.postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri, webViewId });
         }
     );
 }
