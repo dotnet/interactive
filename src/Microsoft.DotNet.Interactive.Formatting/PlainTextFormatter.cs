@@ -21,13 +21,6 @@ namespace Microsoft.DotNet.Interactive.Formatting;
 
 public static class PlainTextFormatter
 {
-    static PlainTextFormatter()
-    {
-        Formatter.Clearing += Initialize;
-
-        void Initialize() => MaxProperties = DefaultMaxProperties;
-    }
-
     public const string MimeType = "text/plain";
 
     public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
@@ -35,14 +28,6 @@ public static class PlainTextFormatter
 
     public static ITypeFormatter GetPreferredFormatterFor<T>() =>
         GetPreferredFormatterFor(typeof(T));
-
-    /// <summary>
-    ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
-    ///   If set to zero no properties are shown.
-    /// </summary>
-    public static int MaxProperties { get; set; } = DefaultMaxProperties;
-
-    private const int DefaultMaxProperties = 20;
 
     private const int NumberOfSpacesToIndent = 2;
 
@@ -72,10 +57,8 @@ public static class PlainTextFormatter
 
         bool FormatObject(T target, FormatContext context)
         {
-            var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
-
             // If we haven't got any members to show, just resort to ToString()
-            if (reducedAccessors.Length == 0)
+            if (accessors.Length == 0)
             {
                 context.Writer.Write(target.ToString());
                 return true;
@@ -90,9 +73,9 @@ public static class PlainTextFormatter
                 context.Writer.WriteLine();
             }
 
-            for (var i = 0; i < reducedAccessors.Length; i++)
+            for (var i = 0; i < accessors.Length; i++)
             {
-                var accessor = reducedAccessors[i];
+                var accessor = accessors[i];
 
                 object value = accessor.GetValueOrException(target);
 
@@ -107,7 +90,7 @@ public static class PlainTextFormatter
                 }
             }
 
-            if (reducedAccessors.Length < accessors.Length)
+            if (accessors.Length < accessors.Length)
             {
                 WriteIndent(context);
                 context.Writer.Write("...");

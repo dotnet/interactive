@@ -151,7 +151,6 @@ Microsoft.DotNet.Interactive.Formatting
   public class JsonString : Microsoft.AspNetCore.Html.HtmlString, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String json)
   public static class PlainTextFormatter
-    public static System.Int32 MaxProperties { get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
     public static System.Void WriteStartProperty(FormatContext context)
