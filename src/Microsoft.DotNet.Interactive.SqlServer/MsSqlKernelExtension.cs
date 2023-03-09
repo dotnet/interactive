@@ -4,6 +4,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
@@ -16,8 +17,7 @@ public class MsSqlKernelExtension : IKernelExtension
             var sqlToolName = "MicrosoftSqlToolsServiceLayer";
             await Utils.CheckAndInstallGlobalToolAsync(sqlToolName, "1.2.0", "Microsoft.SqlServer.SqlToolsServiceLayer.Tool");
 
-            var userFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
-            var sqlToolPath = Path.Join(userFolder, ".dotnet", "tools", sqlToolName);
+            var sqlToolPath = Path.Combine(Paths.DotnetToolsPath, sqlToolName);
             compositeKernel
                 .AddKernelConnector(new ConnectMsSqlCommand(sqlToolPath));
 
