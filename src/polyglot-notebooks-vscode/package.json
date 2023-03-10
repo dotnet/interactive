@@ -290,10 +290,6 @@
         "title": "Share value with..."
       },
       {
-        "command": "polyglot-notebook.selectCellKernel",
-        "title": "Polyglot Notebook: Select cell kernel"
-      },
-      {
         "command": "polyglot-notebook.notebookEditor.restartKernel",
         "title": "Restart",
         "icon": {
