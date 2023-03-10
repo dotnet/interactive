@@ -140,7 +140,7 @@ export class DotNetNotebookKernel {
                     this.config.clientMapper.getOrAddClient(notebookUri).then(() => {
                         const kernelInfoProduced = (<contracts.KernelEventEnvelope[]>(e.message.kernelInfoProduced)).map(e => <contracts.KernelInfoProduced>e.event);
                         const hostUri = e.message.hostUri;
-                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, kernelInfoProduced, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), notebookUri);
+                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, kernelInfoProduced, this.uriMessageHandlerMap, (arg) => controller.postMessage({ ...arg, webViewId: e.message.webViewId }), notebookUri);
                     });
                     break;
             }
