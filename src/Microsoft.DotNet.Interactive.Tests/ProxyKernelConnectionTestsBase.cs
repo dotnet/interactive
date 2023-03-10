@@ -39,8 +39,8 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task it_can_reuse_connection_for_multiple_proxy_kernels()
     {
-        var connector = await CreateConnectorAsync();
-        
+        var connector = CreateConnector();
+
         // use same connection to create 2 proxy kernel
         using var proxyKernel1 = await connector.CreateKernelAsync("kernel1");
         proxyKernel1.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
@@ -95,8 +95,8 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
         };
         localCompositeKernel.DefaultKernelName = "fsharp";
 
-        await CreateConnectorAsync();
-        
+        CreateConnector();
+
         AddKernelConnector(localCompositeKernel);
 
         var localKernelName = "newKernelName";
@@ -131,7 +131,7 @@ x.Display(""text/plain"");");
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task fast_path_commands_over_proxy_can_be_handled()
     {
-        var connector = await CreateConnectorAsync();
+        var connector = CreateConnector();
 
         using var kernel = await connector.CreateKernelAsync("newKernelName");
         kernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestHoverText)));
@@ -147,7 +147,7 @@ x.Display(""text/plain"");");
               .EventuallyContainSingle<HoverTextProduced>();
     }
 
-    protected abstract Task<IKernelConnector> CreateConnectorAsync();
+    protected abstract IKernelConnector CreateConnector();
 
     protected abstract SubmitCode CreateConnectCommand(string localKernelName);
 
