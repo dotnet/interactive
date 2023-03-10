@@ -47,9 +47,10 @@ changelog:
     - title: Area-Language Services
       labels:
         - Area-Language Services
-    - title: Area-Messaging and Comms
+    - title: Area-Messaging, Comms, and Scheduling
       labels:
         - Area-Messaging and Comms
+        - Area-Messaging / scheduling / comms
     - title: Area-Packages and Extensions
       labels:
         - Area-Packages and Extensions
