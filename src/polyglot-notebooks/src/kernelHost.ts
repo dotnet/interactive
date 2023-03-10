@@ -19,6 +19,7 @@ export class KernelHost {
     private _kernel: CompositeKernel;
     private _defaultConnector: connection.Connector;
     private readonly _connectors: connection.Connector[] = [];
+    private commandQueue: contracts.KernelCommandEnvelope[] = [];
 
     constructor(kernel: CompositeKernel, sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver, hostUri: string) {
         this._kernel = kernel;
@@ -141,11 +142,10 @@ export class KernelHost {
         this._defaultConnector.receiver.subscribe({
             next: (kernelCommandOrEventEnvelope: connection.KernelCommandOrEventEnvelope) => {
                 if (connection.isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
-                    Logger.default.info(`KernelHost dispacthing command: ${JSON.stringify(kernelCommandOrEventEnvelope)}`);
-                    this._scheduler.runAsync(kernelCommandOrEventEnvelope, commandEnvelope => {
-                        const kernel = this._kernel;
-                        return kernel.send(commandEnvelope);
-                    });
+                    this.commandQueue.push(kernelCommandOrEventEnvelope);
+                    if (this.commandQueue.length === 1) {
+                        this.commandRunner();
+                    }
                 }
             }
         });
@@ -153,6 +153,22 @@ export class KernelHost {
         this._defaultConnector.sender.send({ eventType: contracts.KernelReadyType, event: {}, routingSlip: [this._kernel.kernelInfo.uri!] });
 
         this.publishKerneInfo();
+    }
+
+    private commandRunner() {
+        const kernelCommandOrEventEnvelope = this.commandQueue[0];
+        Logger.default.info(`KernelHost dispacthing command: ${JSON.stringify(kernelCommandOrEventEnvelope)}`);
+        this._scheduler.runAsync(kernelCommandOrEventEnvelope, commandEnvelope => {
+            const kernel = this._kernel;
+            return kernel.send(commandEnvelope);
+        }).then(() => {
+            this.commandQueue.shift();
+            setTimeout(() => {
+                if (this.commandQueue.length > 0) {
+                    this.commandRunner();
+                }
+            }, 0); // 0ms to give an opportunity for other async functions to run
+        });
     }
 
     public publishKerneInfo() {
