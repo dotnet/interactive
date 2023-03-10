@@ -26,14 +26,14 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
         });
     });
     context.subscriptions.push(vscode.notebooks.registerNotebookCellStatusBarItemProvider(constants.NotebookViewType, cellItemProvider));
-    context.subscriptions.push(vscode.notebooks.registerNotebookCellStatusBarItemProvider(constants.JupyterViewType, cellItemProvider)); // TODO: fix this
+    context.subscriptions.push(vscode.notebooks.registerNotebookCellStatusBarItemProvider(constants.JupyterViewType, cellItemProvider));
     context.subscriptions.push(vscode.commands.registerCommand(selectKernelCommandName, async (cell?: vscode.NotebookCell) => {
         if (cell) {
             const client = await clientMapper.tryGetClient(cell.notebook.uri);
             if (client) {
                 const availableOptions = kernelSelectorUtilities.getKernelSelectorOptions(client.kernel, cell.notebook, contracts.SubmitCodeType);
                 const availableDisplayOptions = availableOptions.map(o => o.displayValue);
-                const selectedDisplayOption = await vscode.window.showQuickPick(availableDisplayOptions, { title: 'Select kernel' });
+                const selectedDisplayOption = await vscode.window.showQuickPick(availableDisplayOptions, { title: 'Select cell kernel' });
                 if (selectedDisplayOption) {
                     const selectedValueIndex = availableDisplayOptions.indexOf(selectedDisplayOption);
                     if (selectedValueIndex >= 0) {
@@ -93,12 +93,8 @@ class DotNetNotebookCellStatusBarItemProvider {
         }
 
         const item = new vscode.NotebookCellStatusBarItem(displayText, vscode.NotebookCellStatusBarAlignment.Right);
-        const command: vscode.Command = {
-            title: '<unused>',
-            command: selectKernelCommandName,
-            arguments: [],
-        };
-        item.command = command;
+        item.command = selectKernelCommandName;
+        item.tooltip = "Select cell kernel";
         return [item];
     }
 
