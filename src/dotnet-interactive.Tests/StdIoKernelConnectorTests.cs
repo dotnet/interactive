@@ -82,31 +82,42 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var result = await rootProxyKernel.SendAsync(new RequestKernelInfo());
             var kernelInfos = result.Events.OfType<KernelInfoProduced>().Select(e => e.KernelInfo);
-            var csharpKernelInfo = kernelInfos.Should().ContainSingle(i => i.LanguageName == "C#").Which;
-            var fsharpKernelInfo = kernelInfos.Should().ContainSingle(i => i.LanguageName == "F#").Which;
-
-            using var csharpProxyKernel = await connector.CreateProxyKernelAsync(remoteInfo: csharpKernelInfo);
-            using var fsharpProxyKernel = await connector.CreateProxyKernelAsync(remoteInfo: fsharpKernelInfo, localNameOverride: "fsharp2");
 
             using var _ = new AssertionScope();
 
+            var csharpKernelInfo = kernelInfos.Should().ContainSingle(i => i.LanguageName == "C#").Which;
+            using var csharpProxyKernel = await connector.CreateProxyKernelAsync(remoteInfo: csharpKernelInfo);
+            var expectedCSharpKernelInfo = new KernelInfo(csharpKernelInfo.LocalName)
+            {
+                DisplayName = csharpKernelInfo.DisplayName,
+                IsProxy = true,
+                IsComposite = false,
+                LanguageName = csharpKernelInfo.LanguageName,
+                LanguageVersion = csharpKernelInfo.LanguageVersion,
+                RemoteUri = csharpKernelInfo.Uri,
+                SupportedDirectives = csharpKernelInfo.SupportedDirectives,
+                SupportedKernelCommands = csharpKernelInfo.SupportedKernelCommands
+            };
+
+            var fsharpKernelInfo = kernelInfos.Should().ContainSingle(i => i.LanguageName == "F#").Which;
+            using var fsharpProxyKernel = await connector.CreateProxyKernelAsync(remoteInfo: fsharpKernelInfo, localNameOverride: "fsharp2");
+            var expectedFSharpKernelInfo = new KernelInfo("fsharp2")
+            {
+                DisplayName = fsharpKernelInfo.DisplayName,
+                IsProxy = true,
+                IsComposite = false,
+                LanguageName = fsharpKernelInfo.LanguageName,
+                LanguageVersion = fsharpKernelInfo.LanguageVersion,
+                RemoteUri = fsharpKernelInfo.Uri,
+                SupportedDirectives = fsharpKernelInfo.SupportedDirectives,
+                SupportedKernelCommands = fsharpKernelInfo.SupportedKernelCommands
+            };
+
             csharpProxyKernel.Name.Should().Be(csharpKernelInfo.LocalName);
-            csharpProxyKernel.KernelInfo.DisplayName.Should().Be(csharpKernelInfo.DisplayName);
-            csharpProxyKernel.KernelInfo.IsProxy.Should().BeTrue();
-            csharpProxyKernel.KernelInfo.IsComposite.Should().BeFalse();
-            csharpProxyKernel.KernelInfo.LanguageName.Should().Be(csharpKernelInfo.LanguageName);
-            csharpProxyKernel.KernelInfo.LanguageVersion.Should().Be(csharpKernelInfo.LanguageVersion);
-            csharpProxyKernel.KernelInfo.SupportedKernelCommands.Should().BeEquivalentTo(csharpKernelInfo.SupportedKernelCommands);
-            csharpProxyKernel.KernelInfo.SupportedDirectives.Should().BeEquivalentTo(csharpKernelInfo.SupportedDirectives);
+            csharpProxyKernel.KernelInfo.Should().BeEquivalentTo(expectedCSharpKernelInfo);
 
             fsharpProxyKernel.Name.Should().Be("fsharp2");
-            fsharpProxyKernel.KernelInfo.DisplayName.Should().Be(fsharpKernelInfo.DisplayName);
-            fsharpProxyKernel.KernelInfo.IsProxy.Should().BeTrue();
-            fsharpProxyKernel.KernelInfo.IsComposite.Should().BeFalse();
-            fsharpProxyKernel.KernelInfo.LanguageName.Should().Be(fsharpKernelInfo.LanguageName);
-            fsharpProxyKernel.KernelInfo.LanguageVersion.Should().Be(fsharpKernelInfo.LanguageVersion);
-            fsharpProxyKernel.KernelInfo.SupportedKernelCommands.Should().BeEquivalentTo(fsharpKernelInfo.SupportedKernelCommands);
-            fsharpProxyKernel.KernelInfo.SupportedDirectives.Should().BeEquivalentTo(fsharpKernelInfo.SupportedDirectives);
+            fsharpProxyKernel.KernelInfo.Should().BeEquivalentTo(expectedFSharpKernelInfo);
         }
 
         [Fact]
