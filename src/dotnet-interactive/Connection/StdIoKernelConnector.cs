@@ -5,7 +5,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -33,7 +32,6 @@ public class StdIoKernelConnector : IKernelConnector
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
-    private ProxyKernel? _rootProxyKernel;
 
     private RefCountDisposable? _refCountDisposable = null;
 
@@ -72,14 +70,11 @@ public class StdIoKernelConnector : IKernelConnector
 
     public async Task<ProxyKernel> CreateRootProxyKernelAsync()
     {
-        if (_rootProxyKernel is null)
+        ProxyKernel rootProxyKernel;
+
+        if (_receiver is null)
         {
             using var activity = Log.OnEnterAndExit();
-
-            Debug.Assert(_receiver is null);
-            Debug.Assert(_sender is null);
-            Debug.Assert(_process is null);
-            Debug.Assert(_refCountDisposable is null);
 
             var command = Command[0];
             var arguments = Command.Skip(1).ToArray();
@@ -159,13 +154,13 @@ public class StdIoKernelConnector : IKernelConnector
                 _receiver.Dispose
             });
 
-            _rootProxyKernel = new ProxyKernel(
+            rootProxyKernel = new ProxyKernel(
                 RootProxyKernelLocalName,
                 _sender,
                 _receiver,
                 KernelHostUri);
 
-            _rootProxyKernel.RegisterForDisposal(_refCountDisposable);
+            rootProxyKernel.RegisterForDisposal(_refCountDisposable);
 
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
@@ -189,16 +184,26 @@ public class StdIoKernelConnector : IKernelConnector
                 }
             }
         }
+        else
+        {
+            rootProxyKernel = new ProxyKernel(
+                RootProxyKernelLocalName,
+                _sender,
+                _receiver,
+                KernelHostUri);
 
-        return _rootProxyKernel;
+            rootProxyKernel.RegisterForDisposal(_refCountDisposable);
+        }
+
+        return rootProxyKernel;
     }
 
     public async Task<ProxyKernel> CreateProxyKernelAsync(string remoteName, string? localNameOverride = null)
     {
-        ThrowIfRootProxyKernelIsNotCreated();
+        using var rootProxyKernel = await CreateRootProxyKernelAsync();
 
         ProxyKernel proxyKernel;
-        var result = await _rootProxyKernel.SendAsync(new RequestKernelInfo(remoteName));
+        var result = await rootProxyKernel.SendAsync(new RequestKernelInfo(remoteName));
         var infoEvents = result.Events.OfType<KernelInfoProduced>().ToArray();
 
         if (infoEvents.Length == 1)
@@ -220,9 +225,9 @@ public class StdIoKernelConnector : IKernelConnector
         return proxyKernel;
     }
 
-    public Task<ProxyKernel> CreateProxyKernelAsync(KernelInfo remoteInfo, string? localNameOverride = null)
+    public async Task<ProxyKernel> CreateProxyKernelAsync(KernelInfo remoteInfo, string? localNameOverride = null)
     {
-        ThrowIfRootProxyKernelIsNotCreated();
+        using var _ = await CreateRootProxyKernelAsync();
 
         var localName =
             string.IsNullOrWhiteSpace(localNameOverride) ? remoteInfo.LocalName : localNameOverride;
@@ -242,22 +247,7 @@ public class StdIoKernelConnector : IKernelConnector
 
         proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
 
-        return Task.FromResult(proxyKernel);
-    }
-
-    [MemberNotNull(nameof(_rootProxyKernel))]
-    private void ThrowIfRootProxyKernelIsNotCreated()
-    {
-        if (_rootProxyKernel is null)
-        {
-            throw new InvalidOperationException(
-                $"{nameof(CreateRootProxyKernelAsync)} must be called before {nameof(CreateProxyKernelAsync)}.");
-        }
-
-        Debug.Assert(_receiver is not null);
-        Debug.Assert(_sender is not null);
-        Debug.Assert(_process is not null);
-        Debug.Assert(_refCountDisposable is not null);
+        return proxyKernel;
     }
 
     private void SendQuitCommand()

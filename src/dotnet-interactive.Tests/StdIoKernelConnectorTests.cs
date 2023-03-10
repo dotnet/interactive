@@ -50,7 +50,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task it_can_create_a_proxy_to_a_specific_remote_subkernel()
         {
             var connector = CreateConnector();
-            using var rootProxyKernel = await connector.CreateRootProxyKernelAsync();
             using var proxyKernel = await connector.CreateProxyKernelAsync(remoteName: "csharp");
 
             using var _ = new AssertionScope();
@@ -64,7 +63,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task it_can_create_a_proxy_kernel_with_a_different_name_than_the_remote()
         {
             var connector = CreateConnector();
-            using var rootProxyKernel = await connector.CreateRootProxyKernelAsync();
             using var proxyKernel = await connector.CreateProxyKernelAsync(remoteName: "fsharp", localNameOverride: "fsharp2");
 
             using var _ = new AssertionScope();
@@ -121,14 +119,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
-        public async Task it_throws_if_proxy_to_the_remote_composite_is_not_created_before_creating_a_proxy_to_a_specific_remote_subkernel()
-        {
-            var connector = CreateConnector();
-            var action = async () => await connector.CreateProxyKernelAsync(remoteName: "csharp");
-            await action.Should().ThrowAsync<InvalidOperationException>();
-        }
-
-        [Fact]
         public async Task it_throws_if_there_is_no_remote_subkernel_with_the_specified_name()
         {
             var connector = CreateConnector();
@@ -137,7 +127,49 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
+        public async Task when_only_root_proxy_is_created_and_disposed_then_the_remote_process_is_killed()
+        {
+            var connector = CreateConnector();
+            var rootProxyKernel = await connector.CreateRootProxyKernelAsync();
+
+            using var _ = new AssertionScope();
+
+            var processId = connector.ProcessId;
+            processId.Should().NotBeNull();
+            var process = Process.GetProcessById(processId.Value);
+            process.HasExited.Should().BeFalse();
+
+            rootProxyKernel.Dispose();
+            process.HasExited.Should().BeTrue();
+        }
+
+        [Fact]
         public async Task when_all_created_proxies_have_been_disposed_then_the_remote_process_is_killed()
+        {
+            var connector = CreateConnector();
+            var pwshProxyKernel = await connector.CreateProxyKernelAsync("pwsh");
+            var csharpProxyKernel = await connector.CreateProxyKernelAsync("csharp");
+            var fsharpProxyKernel = await connector.CreateProxyKernelAsync("fsharp");
+
+            using var _ = new AssertionScope();
+
+            var processId = connector.ProcessId;
+            processId.Should().NotBeNull();
+            var process = Process.GetProcessById(processId.Value);
+            process.HasExited.Should().BeFalse();
+
+            pwshProxyKernel.Dispose();
+            process.HasExited.Should().BeFalse();
+
+            csharpProxyKernel.Dispose();
+            process.HasExited.Should().BeFalse();
+
+            fsharpProxyKernel.Dispose();
+            process.HasExited.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task when_all_created_proxies_including_the_root_proxy_have_been_disposed_then_the_remote_process_is_killed()
         {
             var connector = CreateConnector();
             var rootProxyKernel = await connector.CreateRootProxyKernelAsync();
