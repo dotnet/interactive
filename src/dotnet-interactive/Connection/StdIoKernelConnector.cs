@@ -29,19 +29,15 @@ namespace Microsoft.DotNet.Interactive.App.Connection;
 
 public class StdIoKernelConnector : IKernelConnector
 {
+    private readonly string[] _command;
+    private readonly string _rootProxyKernelLocalName;
+    private readonly Uri _kernelHostUri;
+    private readonly DirectoryInfo _workingDirectory;
+
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
-
     private RefCountDisposable? _refCountDisposable = null;
-
-    public string[] Command { get; }
-
-    public string RootProxyKernelLocalName { get; }
-
-    public Uri KernelHostUri { get; }
-
-    public DirectoryInfo WorkingDirectory { get; }
 
     public int? ProcessId => _process?.Id;
 
@@ -51,10 +47,10 @@ public class StdIoKernelConnector : IKernelConnector
         Uri kernelHostUri,
         DirectoryInfo? workingDirectory = null)
     {
-        Command = command;
-        RootProxyKernelLocalName = rootProxyKernelLocalName;
-        KernelHostUri = kernelHostUri;
-        WorkingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
+        _command = command;
+        _rootProxyKernelLocalName = rootProxyKernelLocalName;
+        _kernelHostUri = kernelHostUri;
+        _workingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
     }
 
     /// <remarks>
@@ -76,14 +72,14 @@ public class StdIoKernelConnector : IKernelConnector
         {
             using var activity = Log.OnEnterAndExit();
 
-            var command = Command[0];
-            var arguments = Command.Skip(1).ToArray();
-            if (KernelHostUri is { })
+            var command = _command[0];
+            var arguments = _command.Skip(1).ToArray();
+            if (_kernelHostUri is { })
             {
                 arguments = arguments.Concat(new[]
                 {
                     "--kernel-host",
-                    KernelHostUri.Authority
+                    _kernelHostUri.Authority
                 }).ToArray();
             }
 
@@ -99,7 +95,7 @@ public class StdIoKernelConnector : IKernelConnector
                         ["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
                         ["DOTNET_DbgEnableMiniDump"] = "0" // https://docs.microsoft.com/en-us/dotnet/core/diagnostics/dumps
                     },
-                    WorkingDirectory = WorkingDirectory.FullName,
+                    WorkingDirectory = _workingDirectory.FullName,
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -145,7 +141,7 @@ public class StdIoKernelConnector : IKernelConnector
 
             _sender = KernelCommandAndEventSender.FromTextWriter(
                _process.StandardInput,
-               KernelHostUri);
+               _kernelHostUri);
 
             _refCountDisposable = new RefCountDisposable(new CompositeDisposable
             {
@@ -155,10 +151,10 @@ public class StdIoKernelConnector : IKernelConnector
             });
 
             rootProxyKernel = new ProxyKernel(
-                RootProxyKernelLocalName,
+                _rootProxyKernelLocalName,
                 _sender,
                 _receiver,
-                KernelHostUri);
+                _kernelHostUri);
 
             rootProxyKernel.RegisterForDisposal(_refCountDisposable);
 
@@ -187,10 +183,10 @@ public class StdIoKernelConnector : IKernelConnector
         else
         {
             rootProxyKernel = new ProxyKernel(
-                RootProxyKernelLocalName,
+                _rootProxyKernelLocalName,
                 _sender,
                 _receiver,
-                KernelHostUri);
+                _kernelHostUri);
 
             rootProxyKernel.RegisterForDisposal(_refCountDisposable);
         }
