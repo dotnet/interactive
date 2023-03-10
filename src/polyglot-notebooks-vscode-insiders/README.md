@@ -91,3 +91,4 @@ Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to 
 Copyright © .NET Foundation, and contributors.
 
 The source code to this extension is available on [https://github.com/dotnet/interactive](https://github.com/dotnet/interactive) and licensed under the [MIT license](https://github.com/dotnet/interactive/blob/main/License.txt).
+
