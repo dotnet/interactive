@@ -2,10 +2,15 @@
 
 ## What is .NET Interactive?
 
-.NET Interactive is an engine and API for running code in multiple languages and coordinating among them, including support for sharing data and variables, running code and getting its results remotely, and evaluating code in order to provide language services such as completions and diagnostics. While typically associated with notebooks such as Jupyter and the [Polyglot Notebooks extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode), .NET Interactive has other uses as well, such as building REPLs and script engines.
+.NET Interactive is an engine and API for running and editing code interactively, including:
 
+* Running code and getting its results.
+* Evaluating code to provide language services such as completions and diagnostics.
+* Sharing data and variables between multiple languages and across remote machines.
 
-The following languages are supported by Polyglot Notebooks:
+While typically associated with notebook technologies such as Jupyter and the [Polyglot Notebooks extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode), .NET Interactive has other uses as well, such as building REPLs and embedded script engines.
+
+The following languages are supported by Polyglot Notebooks and .NET Interactive:
 
 | Language                      | Variable sharing |
 |-------------------------------|------------------|
@@ -42,18 +47,19 @@ For more information, please refer to our [FAQ](./docs/FAQ.md).
 
 ## Acknowledgements 
 
-The multi-language experience of .NET Interactive is truly a collaborative effort amongst other groups at Microsoft. We'd like to thank the following teams for contributing their time and expertise to helping light up functionality for other languages. 
+The multi-language experience of .NET Interactive is truly a collaborative effort among differemt teams at Microsoft and in the community. We'd like to thank the following teams for contributing their time and expertise to helping bring support for other languages:
 
 - **PowerShell Team:** PowerShell support
 - **Azure Data Team:** SQL and KQL support
+- **Azure Notebooks Team**: Python, R, and Jupyter subkernel support (coming soon...)
 
 ## Telemetry
 
-Telemetry is collected when .NET Interactive is started. Once .NET Interactive is running, we collect hashed versions of packages imported into the notebook and the languages used to run individual cells. We do not collect any additional code or clear text from cells. The telemetry is anonymous and reports only the values for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
+Telemetry is collected when the `dotnet-interactive` tool is started. (If you are using the .NET Interactive libraries directly, they do not emit telemetry.) Once `dotnet-interactive` is running, it emits the names of packages imported into the notebook and the languages used to run individual cells. This data is hashed, allowing us to count unique values, but the pre-hashed values cannot be obtained from the telemetry. We do not collect any additional code or clear text from cells. All telemetry is anonymous. In addition, `dotnet-interactive` reports the usage for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`
-* `dotnet interactive stdio`
+* `dotnet interactive stdio` 
 
 ### How to opt out
 
