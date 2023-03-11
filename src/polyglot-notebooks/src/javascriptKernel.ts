@@ -30,7 +30,8 @@ export class JavascriptKernel extends Kernel {
                     (<any>globalThis)[sendValue.name] = JSON.parse(sendValue.formattedValue.value);
                     break;
                 default:
-                    throw new Error(`mimetype ${sendValue.formattedValue.mimeType} not supported`);
+                    (<any>globalThis)[sendValue.name] = sendValue.formattedValue.value;
+                    break;
             }
             return Promise.resolve();
         }
