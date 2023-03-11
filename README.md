@@ -2,20 +2,21 @@
 
 ## What is .NET Interactive?
 
-.NET Interactive is an engine and API for running code in multiple languages and coordinating among them, including support for sharing data and variables, running code and getting its results remotely, and evaluating code in order to provide language services such as completions and diagnostics. While typically associated with notebooks such as Jupyter and the Polyglot Notebooks extension for Visual Studio Code, .NET Interactive has other uses as well, such as building REPLs and script engines.
+.NET Interactive is an engine and API for running code in multiple languages and coordinating among them, including support for sharing data and variables, running code and getting its results remotely, and evaluating code in order to provide language services such as completions and diagnostics. While typically associated with notebooks such as Jupyter and the [Polyglot Notebooks extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode), .NET Interactive has other uses as well, such as building REPLs and script engines.
 
-The languages currently supported by .NET Interactive include: 
 
-- C# 
-- F#
-- PowerShell
-- JavaScript
-- SQL 
-- KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))
-- HTML*
-- [Mermaid](https://mermaid.js.org/intro/)*
+The following languages are supported by Polyglot Notebooks:
 
-    (*&nbsp;_Variable sharing not available._)
+| Language                      | Variable sharing |
+|-------------------------------|------------------|
+| C#                            |        ✅       |
+| F#                            |        ✅       |   
+| PowerShell                    |        ✅       |          
+| JavaScript                    |        ✅       |          
+| SQL                           |        ✅       |   
+| KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))    |        ✅       |       
+| HTML*                         |        ⛔       |     
+| [Mermaid](https://mermaid.js.org/intro/)*                      |        ⛔       |        
 
 ### Polyglot Notebooks
 
@@ -52,7 +53,6 @@ Telemetry is collected when .NET Interactive is started. Once .NET Interactive i
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`
-* `dotnet interactive http`
 * `dotnet interactive stdio`
 
 ### How to opt out

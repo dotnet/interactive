@@ -1,8 +1,8 @@
-# Using .NET notebooks with Jupyter Notebook / JupyterLab
+# Using .NET Interactive with Jupyter 
 
 To use the .NET Interactive kernel for your multi-language notebooks in Jupyter Notebook, JupyterLab, and other Jupyter frontends, you first need to register .NET Interactive as a kernel with Jupyter.  
 
-First, make sure you have the following installed:
+Make sure you have the following installed:
 
 * The [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download).
 * **Jupyter**. An easy way to install Jupyter is through [Anaconda](https://www.anaconda.com/distribution).
@@ -13,10 +13,10 @@ First, make sure you have the following installed:
 > jupyter kernelspec list
   python3        ~\jupyter\kernels\python3
 > dotnet --version
-  6.0.100
+  7.0.200
 ```
 
-(The minor version isn't important.)
+(The `dotnet` minor version isn't important.)
 
 * Next, in an **ordinary console**, install the `dotnet interactive` global tool:
 
@@ -24,7 +24,7 @@ First, make sure you have the following installed:
 > dotnet tool install -g Microsoft.dotnet-interactive
 ```
 
-* **Switch back to your Anaconda prompt** and install the .NET kernel by running the following:
+* **Switch back to your Anaconda prompt** and install the .NET kernel by running `dotnet interactive jupyter install`:
 
 ```console
 > dotnet interactive jupyter install
@@ -48,7 +48,7 @@ Installed ".NET (PowerShell)" kernel.
 
 ## Updating .NET Interactive
 
-To update to the latest version of .NET Interactive open an **ordinary console** and run the following code: 
+To update to the latest version of .NET Interactive, open an **ordinary console** and run the following code: 
 
 ```console
 > dotnet tool update -g Microsoft.dotnet-interactive

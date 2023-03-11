@@ -1,42 +1,44 @@
-This extension is currently **_in preview_**.
----
-
 # Polyglot Notebooks
 
-With the Polyglot Notebooks extension, you can use multiple languages in the same notebook and share variables between them. No more installing different Jupyter kernels, using wrapper libraries, or different tools to get the best language server support for the language of your choice. Always use the best language for the job and seamlessly transition between different states of your workflow, all within one notebook. 
+The [Polyglot Notebooks extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode), powered by [.NET Interactive](https://github.com/dotnet/interactive), brings support for multi-language notebooks to Visual Studio Code. Classic notebook software typically supports notebooks that use only one language at a time. With Polyglot Notebooks, features such as completions, documentation, syntax highlighting, and diagnostics are available for many languages in one notebook. In addition, different cells in the same notebook can run in separate processes or on different machines, allowing a notebook to span local and cloud environments in one combined workflow.
 
-## Languages Supported
+## Fully Interoperable with Jupyter
 
-- C#
-- F# 
-- PowerShell
-- JavaScript
-- SQL
-- KQL (Kusto Query Language)
-- HTML*
-- Mermaid*
+Polylgot Notebooks are fully interoperable with Jupyter and support the `.ipynb` file extension. You don't need to choose between the capabilities of Polyglot Notebooks and the rich Jupyter ecosystem. If your notebook is saved in the `.ipynb` format, you can open it in Jupyter and the cell languages will still be recognized. When working in Jupyter using the .NET Interactive kernel, you can switch cell languages using magic commands. 
 
-*Variable sharing not available
+## Supported Languages
 
+The following languages are supported by Polyglot Notebooks:
+
+| Language                                    | Variable sharing supported |
+|---------------------------------------------|-------------------------------------------------------|
+| C#                                          |        ✅                 |
+| F#                                          |        ✅                 |   
+| PowerShell                                  |        ✅                 |          
+| JavaScript                                  |        ✅                 |          
+| SQL                                         |        ✅                 |   
+| KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))    |        ✅       |       
+| HTML                                        |        ⛔                 |     
+| [Mermaid](https://mermaid.js.org/intro/)    |        ⛔                 |        
+  
 ## Features
 
-- Connect to and query from Microsoft SQL Server databases and Kusto clusters
 - Run and execute code for all featured languages
-- Language server support such as completions, syntax highlighting, and signature help for each language
-- Variable sharing between languages
-- Variable Explorer to check value and state of variables 
+- Share variables between languages
+- Connect to and query Microsoft SQL Server
+- Connect to and query Kusto clusters
+- Language server support such as completions, syntax highlighting, signature help, and diagnostics for each language
+- See the state of all variables using the Variables View
 - Create detailed diagrams and visualizations using [Mermaid](https://mermaid-js.github.io/mermaid/#/)
-- Integration with your favorite VS Code extensions such as [VIM](https://marketplace.visualstudio.com/items?itemName=vscodevim.vim) and [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
+- Integrate with your favorite VS Code extensions such as [VIM](https://marketplace.visualstudio.com/items?itemName=vscodevim.vim) and [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 - Notebook-friendly diffing tool that makes it easy to visually compare inputs, outputs, and metadata
-- Quick navigation via Table of Contents (Outline)
+- Navigate via Outline View
 - Customizable notebook layout
 
 ## Getting Started
 
 1.  Install the latest [Visual Studio Code](https://code.visualstudio.com/).
-
 2.  Install the latest [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download).
-
 3.  Install the Polyglot Notebooks extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
 ## Creating Notebooks
@@ -45,33 +47,33 @@ To create a new polyglot notebook, open the Command Palette(`Ctrl+Shift+P`) on W
 
 ## Running Code
 
-Execute code by selecting the subkernel in the bottom right of each cell, or use language magic commands to mix languages in one cell regardless of the chosen subkernel. 
+Execute code by selecting the cell kernel in the bottom right of each cell, or use language magic commands to mix languages in one cell regardless of the chosen cell kernel. 
 
 ![Running Code](https://github.com/dotnet/interactive/raw/main/images/RunningCodeExample.gif)
 
-## Variable Sharing + Variable Explorer 
+## Variable Sharing and Variables View 
 
-Share variables from subkernel to subkernel via the `#!share` magic command that is easily generated from the Variable Explorer. Use the Variable Explorer to manage the state and value of your variables. 
+Share variables between languages using the `#!set` magic command. If you can't remember the syntax, you can always generate it using the `Share` action in the Polyglot Notebooks Variables View. 
 
-![Variable Sharing via Variable Explorer](https://github.com/dotnet/interactive/raw/main/images/VariableSharingExample.gif)
+![Variable Sharing with the Variables View](https://github.com/dotnet/interactive/raw/main/images/variable-sharing-with-variables-view.gif)
 
 ## Examples 
 
- - Connect to a SQL database, share the tabular result to JavaScript, and create your own custom visualizations.
+ - Connect to a SQL database, share query results with JavaScript, and create your own custom visualizations.
 
 ![SQL and JavaScript Example](https://github.com/dotnet/interactive/raw/main/images/SQLJavaScript.gif)
 
- - Create powerful advanced diagrams and visualizations such as Class diagrams using code and text by leveraging [Mermaid](https://mermaid-js.github.io/mermaid/#/).
+ - Create powerful diagrams and visualizations using code and text using [Mermaid](https://mermaid-js.github.io/mermaid/#/).
 
 ![Mermaid Example](https://github.com/dotnet/interactive/raw/main/images/MermaidExample.gif)
 
 ## Why do I need the .NET SDK? 
 
-Polyglot Notebooks is powered by .NET Interactive. .NET Interactive is an engine that can run multiple languages and share variables between them and is built using .NET technology. At this time, it is required for the extension to function. 
+Polyglot Notebooks is powered by .NET Interactive, an engine that can connect multiple kernels and share variables between them, which is built using .NET technology. At this time, it is required for the extension to function.
 
-## Filing Issues + Feature Requests
+## Filing Issues and Feature Requests
 
-You can file issues or feature requests on the [.NET Interactive](https://github.com/dotnet/interactive/issues) GitHub repository. 
+You can file issues or feature requests on the [.NET Interactive](https://github.com/dotnet/interactive/issues/new/choose) GitHub repository. 
 
 ## Telemetry
 
@@ -81,7 +83,6 @@ Telemetry is collected when .NET Interactive is started. Once .NET Interactive i
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`
-* `dotnet interactive http`
 * `dotnet interactive stdio`
 
 Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in Polyglot Notebooks. 
