@@ -16,7 +16,7 @@ public sealed class ProxyKernel : Kernel
     private readonly IKernelCommandAndEventSender _sender;
     private readonly IKernelCommandAndEventReceiver _receiver;
     private ExecutionContext _executionContext;
-    private bool _requiresRequestKernelInfoOnFirstCommand = true;
+    private bool _requiresRequestKernelInfoOnFirstCommand;
     private string _suppressCompletionsForCommandId;
 
     private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext
@@ -26,11 +26,13 @@ public sealed class ProxyKernel : Kernel
         string name,
         IKernelCommandAndEventSender sender,
         IKernelCommandAndEventReceiver receiver,
-        Uri remoteUri = null) : base(name)
+        Uri remoteUri = null,
+        bool requiresRequestKernelInfoOnFirstCommand = true) : base(name)
     {
         KernelInfo.IsProxy = true;
         _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
         _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+        _requiresRequestKernelInfoOnFirstCommand = requiresRequestKernelInfoOnFirstCommand;
 
         if (remoteUri is not null)
         {
@@ -64,54 +66,17 @@ public sealed class ProxyKernel : Kernel
         RegisterForDisposal(subscription);
     }
 
-    public ProxyKernel(
-        string name,
-        IKernelCommandAndEventSender sender,
-        IKernelCommandAndEventReceiver receiver,
-        Uri remoteUri,
-        string displayName,
-        bool isComposite,
-        string languageName,
-        string languageVersion,
-        ICollection<KernelCommandInfo> supportedKernelCommands,
-        ICollection<KernelDirectiveInfo> supportedDirectives) : this(name, sender, receiver, remoteUri) =>
-            UpdateKernelInfo(
-                displayName,
-                isComposite,
-                languageName,
-                languageVersion,
-                supportedKernelCommands,
-                supportedDirectives);
-
-    private void UpdateKernelInfo(
-        string displayName,
-        bool isComposite,
-        string languageName,
-        string languageVersion,
-        ICollection<KernelCommandInfo> supportedKernelCommands,
-        ICollection<KernelDirectiveInfo> supportedDirectives)
+    private void UpdateKernelInfoFromEvent(KernelInfoProduced kernelInfoProduced)
     {
         _requiresRequestKernelInfoOnFirstCommand = false;
 
-        KernelInfo.DisplayName = displayName;
-        KernelInfo.IsComposite = isComposite;
-        KernelInfo.LanguageName = languageName;
-        KernelInfo.LanguageVersion = languageVersion;
-        ((HashSet<KernelCommandInfo>)KernelInfo.SupportedKernelCommands).UnionWith(supportedKernelCommands);
-        ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(supportedDirectives);
-    }
-
-    private void UpdateKernelInfoFromEvent(KernelInfoProduced kernelInfoProduced)
-    {
         var kernelInfo = kernelInfoProduced.KernelInfo;
-
-        UpdateKernelInfo(
-            kernelInfo.DisplayName,
-            kernelInfo.IsComposite,
-            kernelInfo.LanguageName,
-            kernelInfo.LanguageVersion,
-            kernelInfo.SupportedKernelCommands,
-            kernelInfo.SupportedDirectives);
+        KernelInfo.DisplayName = kernelInfo.DisplayName;
+        KernelInfo.IsComposite = kernelInfo.IsComposite;
+        KernelInfo.LanguageName = kernelInfo.LanguageName;
+        KernelInfo.LanguageVersion = kernelInfo.LanguageVersion;
+        ((HashSet<KernelCommandInfo>)KernelInfo.SupportedKernelCommands).UnionWith(kernelInfo.SupportedKernelCommands);
+        ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfo.SupportedDirectives);
     }
 
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)

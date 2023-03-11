@@ -233,17 +233,31 @@ public class StdIoKernelConnector : IKernelConnector
                 localName,
                 _sender,
                 _receiver,
-                remoteInfo.Uri,
-                remoteInfo.DisplayName,
-                remoteInfo.IsComposite,
-                remoteInfo.LanguageName,
-                remoteInfo.LanguageVersion,
-                remoteInfo.SupportedKernelCommands,
-                remoteInfo.SupportedDirectives);
+                remoteInfo.Uri);
+
+        UpdateKernelInfo(proxyKernel, remoteInfo);
 
         proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
 
         return proxyKernel;
+    }
+
+    private static void UpdateKernelInfo(ProxyKernel proxyKernel, KernelInfo remoteInfo)
+    {
+        proxyKernel.KernelInfo.DisplayName = remoteInfo.DisplayName;
+        proxyKernel.KernelInfo.IsComposite = remoteInfo.IsComposite;
+        proxyKernel.KernelInfo.LanguageName = remoteInfo.LanguageName;
+        proxyKernel.KernelInfo.LanguageVersion = remoteInfo.LanguageVersion;
+
+        foreach (var directive in remoteInfo.SupportedDirectives)
+        {
+            proxyKernel.KernelInfo.SupportedDirectives.Add(directive);
+        }
+
+        foreach (var command in remoteInfo.SupportedKernelCommands)
+        {
+            proxyKernel.KernelInfo.SupportedKernelCommands.Add(command);
+        }
     }
 
     private void SendQuitCommand()
