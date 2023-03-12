@@ -137,10 +137,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var processId = connector.ProcessId;
             processId.Should().NotBeNull();
             var process = Process.GetProcessById(processId.Value);
-            process.HasExited.Should().BeFalse();
+            HasProcessExited(process).Should().BeFalse();
 
             rootProxyKernel.Dispose();
-            process.HasExited.Should().BeTrue();
+            HasProcessExited(process).Should().BeTrue();
         }
 
         [Fact]
@@ -156,16 +156,16 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var processId = connector.ProcessId;
             processId.Should().NotBeNull();
             var process = Process.GetProcessById(processId.Value);
-            process.HasExited.Should().BeFalse();
+            HasProcessExited(process).Should().BeFalse();
 
             pwshProxyKernel.Dispose();
-            process.HasExited.Should().BeFalse();
+            HasProcessExited(process).Should().BeFalse();
 
             csharpProxyKernel.Dispose();
-            process.HasExited.Should().BeFalse();
+            HasProcessExited(process).Should().BeFalse();
 
             fsharpProxyKernel.Dispose();
-            process.HasExited.Should().BeTrue();
+            HasProcessExited(process).Should().BeTrue();
         }
 
         [Fact]
@@ -181,16 +181,31 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var processId = connector.ProcessId;
             processId.Should().NotBeNull();
             var process = Process.GetProcessById(processId.Value);
-            process.HasExited.Should().BeFalse();
+            HasProcessExited(process).Should().BeFalse();
 
             csharpProxyKernel.Dispose();
-            process.HasExited.Should().BeFalse();
+            HasProcessExited(process).Should().BeFalse();
 
             rootProxyKernel.Dispose();
-            process.HasExited.Should().BeFalse();
+            HasProcessExited(process).Should().BeFalse();
 
             fsharpProxyKernel.Dispose();
-            process.HasExited.Should().BeTrue();
+            HasProcessExited(process).Should().BeTrue();
+        }
+
+        private static bool HasProcessExited(Process process)
+        {
+            if (process.HasExited)
+            {
+                return true;
+            }
+            else
+            {
+                /// Since <see cref="Process.Kill"/> executes asynchronously, we may encounter a race where the process
+                /// has not exited yet. So we try once more after a short delay.
+                process.WaitForExit(500);
+                return process.HasExited;
+            }
         }
     }
 }
