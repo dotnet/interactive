@@ -363,7 +363,7 @@ This command is not currently supported in other notebook frontends such as Jupy
 
 ### A cell runs forever
 
-It common for a notebook's kernel to get into a stuck state. Maybe you tried to load too much data or accidentally ran code containing an infinite loop. This happens often enough that a way to restart the kernel is a feature of most notebook providers.
+It is common for a notebook's kernel to get into a stuck state. Maybe you tried to load too much data or accidentally ran code containing an infinite loop. This happens often enough that a way to restart the kernel is a feature of most notebook providers.
 
 In Polyglot Notebooks, you can restart the kernel by running the `Polyglot Notebook: Restart the current notebook's kernel` command from the Command Palette. Note that after you do this, you'll need to rerun the notebook's cells, including reloading packages using `#r`.
 
