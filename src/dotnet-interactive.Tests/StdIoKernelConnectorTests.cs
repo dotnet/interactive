@@ -47,6 +47,17 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
+        public async Task it_can_return_a_proxy_to_a_specific_remote_composite()
+        {
+            var connector = CreateConnector();
+            using var proxyKernel = await connector.CreateProxyKernelAsync(remoteName: ".NET");
+
+            using var _ = new AssertionScope();
+            proxyKernel.KernelInfo.IsProxy.Should().BeTrue();
+            proxyKernel.KernelInfo.IsComposite.Should().BeTrue();
+        }
+
+        [Fact]
         public async Task it_can_create_a_proxy_to_a_specific_remote_subkernel()
         {
             var connector = CreateConnector();

@@ -200,16 +200,20 @@ public class StdIoKernelConnector : IKernelConnector
 
         ProxyKernel proxyKernel;
         var result = await rootProxyKernel.SendAsync(new RequestKernelInfo(remoteName));
-        var infoEvents = result.Events.OfType<KernelInfoProduced>().ToArray();
+        var remoteInfos = result.Events
+            .OfType<KernelInfoProduced>()
+            .Select(e => e.KernelInfo)
+            .Where(info => info.LocalName == remoteName)
+            .ToArray();
 
-        if (infoEvents.Length == 1)
+        if (remoteInfos.Length == 1)
         {
-            var remoteInfo = infoEvents[0].KernelInfo;
+            var remoteInfo = remoteInfos[0];
             proxyKernel = await CreateProxyKernelAsync(remoteInfo, localNameOverride);
         }
         else
         {
-            var message = $"Found {infoEvents.Length} remote {nameof(Kernel)}s matching name '{remoteName}'.";
+            var message = $"Found {remoteInfos.Length} remote {nameof(Kernel)}s matching name '{remoteName}'.";
             var failureEvents = result.Events.OfType<CommandFailed>().ToArray();
             var innerException = failureEvents.Length == 1
                 ? failureEvents[0].Exception
