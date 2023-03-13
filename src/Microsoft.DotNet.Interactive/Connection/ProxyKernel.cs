@@ -16,7 +16,6 @@ public sealed class ProxyKernel : Kernel
     private readonly IKernelCommandAndEventSender _sender;
     private readonly IKernelCommandAndEventReceiver _receiver;
     private ExecutionContext _executionContext;
-    private bool _requiresRequestKernelInfoOnFirstCommand;
     private string _suppressCompletionsForCommandId;
 
     private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext
@@ -26,13 +25,11 @@ public sealed class ProxyKernel : Kernel
         string name,
         IKernelCommandAndEventSender sender,
         IKernelCommandAndEventReceiver receiver,
-        Uri remoteUri = null,
-        bool requiresRequestKernelInfoOnFirstCommand = true) : base(name)
+        Uri remoteUri = null) : base(name)
     {
         KernelInfo.IsProxy = true;
         _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
         _sender = sender ?? throw new ArgumentNullException(nameof(sender));
-        _requiresRequestKernelInfoOnFirstCommand = requiresRequestKernelInfoOnFirstCommand;
 
         if (remoteUri is not null)
         {
@@ -68,8 +65,6 @@ public sealed class ProxyKernel : Kernel
 
     private void UpdateKernelInfoFromEvent(KernelInfoProduced kernelInfoProduced)
     {
-        _requiresRequestKernelInfoOnFirstCommand = false;
-
         var kernelInfo = kernelInfoProduced.KernelInfo;
         KernelInfo.DisplayName = kernelInfo.DisplayName;
         KernelInfo.IsComposite = kernelInfo.IsComposite;
@@ -120,8 +115,6 @@ public sealed class ProxyKernel : Kernel
 
         ExecutionContext.SuppressFlow();
 
-        EnsureKernelInfoIsLoaded(command, context);
-
         var t = _sender.SendAsync(command, context.CancellationToken);
         t.ContinueWith(task =>
         {
@@ -143,25 +136,6 @@ public sealed class ProxyKernel : Kernel
                 context.Fail(command, cf.Exception, cf.Message);
             }
         });
-    }
-
-    private void EnsureKernelInfoIsLoaded(KernelCommand command, KernelInvocationContext context)
-    {
-        if (_requiresRequestKernelInfoOnFirstCommand)
-        {
-            _requiresRequestKernelInfoOnFirstCommand = false;
-            if (command is not RequestKernelInfo)
-            {
-                var r = new RequestKernelInfo(KernelInfo.RemoteUri);
-
-                _suppressCompletionsForCommandId = r.GetOrCreateId();
-                r.Parent = command.Parent ?? command;
-                r.OriginUri = KernelInfo.Uri;
-                r.DestinationUri = KernelInfo.RemoteUri;
-
-                _sender.SendAsync(r, context.CancellationToken).GetAwaiter().GetResult();
-            }
-        }
     }
 
     private bool CanHandleLocally(KernelCommand command)
