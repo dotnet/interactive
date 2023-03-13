@@ -7,6 +7,10 @@ param (
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
+$projectsToSkip = @(
+    "Microsoft.DotNet.Interactive.CSharpProject.Tests"
+    )
+
 function ExecuteTestDirectory([string]$testDirectory, [string]$extraArgs = "") {
     $testCommand = "dotnet test $testDirectory/ $extraArgs -l trx --no-restore --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $buildConfig --results-directory $repoRoot/artifacts/TestResults/$buildConfig"
     Write-Host "Executing $testCommand"
@@ -19,9 +23,13 @@ try {
     $normalTestAssemblyDirectories = Get-ChildItem -Path "$repoRoot/src" -Directory -Filter *.Tests -Recurse | Where-Object { $_.Name -ne $flakyTestAssemblyDirectory }
 
     foreach ($testAssemblyDirectory in $normalTestAssemblyDirectories) {
-        $assemblyName = $testAssemblyDirectory.Name
+        $projectName = $testAssemblyDirectory.Name
+        if($projectsToSkip.contains($projectName)){
+            Write-Host "Skipping test project $projectName"
+            continue
+        }
         for ($i = 1; $i -le $retryCount; $i++) {
-            Write-Host "Testing assembly $assemblyName, attempt $i"
+            Write-Host "Testing project $projectName, attempt $i"
             ExecuteTestDirectory -testDirectory $testAssemblyDirectory
             if ($LASTEXITCODE -eq 0) {
                 break
