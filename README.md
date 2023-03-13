@@ -47,7 +47,7 @@ For more information, please refer to our [FAQ](./docs/FAQ.md).
 
 ## Acknowledgements 
 
-The multi-language experience of .NET Interactive is truly a collaborative effort among differemt teams at Microsoft and in the community. We'd like to thank the following teams for contributing their time and expertise to helping bring support for other languages:
+The multi-language experience of .NET Interactive is truly a collaborative effort among different teams at Microsoft and in the community. We'd like to thank the following teams for contributing their time and expertise to helping bring support for other languages:
 
 - **PowerShell Team:** PowerShell support
 - **Azure Data Team:** SQL and KQL support
