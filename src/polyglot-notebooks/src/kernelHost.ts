@@ -19,7 +19,6 @@ export class KernelHost {
     private _kernel: CompositeKernel;
     private _defaultConnector: connection.Connector;
     private readonly _connectors: connection.Connector[] = [];
-    private commandQueue: contracts.KernelCommandEnvelope[] = [];
 
     constructor(kernel: CompositeKernel, sender: connection.IKernelCommandAndEventSender, receiver: connection.IKernelCommandAndEventReceiver, hostUri: string) {
         this._kernel = kernel;
@@ -27,6 +26,10 @@ export class KernelHost {
 
         this._kernel.host = this;
         this._scheduler = new KernelScheduler<contracts.KernelCommandEnvelope>();
+
+        this._scheduler.setMustTrampoline((c => {
+            return (c.commandType === contracts.RequestInputType) || (c.commandType === contracts.SendEditableCodeType);
+        }));
 
         this._defaultConnector = new connection.Connector({ sender, receiver });
         this._connectors.push(this._defaultConnector);
