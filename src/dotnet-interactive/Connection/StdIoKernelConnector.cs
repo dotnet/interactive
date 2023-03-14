@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -202,16 +203,19 @@ public class StdIoKernelConnector : IKernelConnector
             rootProxyKernel.RegisterForDisposal(_refCountDisposable);
         }
 
-        var remoteRootKernelInfo = _remoteKernelInfoCache.Values.Single(k => k.Uri == _kernelHostUri);
+        var remoteRootKernelInfo = GetCachedKernelInfoForRemoteRoot();
         rootProxyKernel.UpdateKernelInfo(remoteRootKernelInfo);
         return rootProxyKernel;
     }
 
     private void UpdateRemoteKernelInfoCache(IEnumerable<KernelInfo> infos)
     {
-        foreach (var info in infos)
+        lock (_remoteKernelInfoCache)
         {
-            UpdateRemoteKernelInfoCache(info);
+            foreach (var info in infos)
+            {
+                UpdateRemoteKernelInfoCache(info);
+            }
         }
     }
 
@@ -225,13 +229,29 @@ public class StdIoKernelConnector : IKernelConnector
         }
     }
 
+    private KernelInfo GetCachedKernelInfoForRemoteRoot()
+    {
+        lock (_remoteKernelInfoCache)
+        {
+            return _remoteKernelInfoCache.Values.Single(k => k.Uri == _kernelHostUri);
+        }
+    }
+
+    private bool TryGetCachedKernelInfoByRemoteName(string remoteName, [NotNullWhen(true)] out KernelInfo? remoteInfo)
+    {
+        lock (_remoteKernelInfoCache)
+        {
+            return _remoteKernelInfoCache.TryGetValue(remoteName, out remoteInfo);
+        }
+    }
+
     public async Task<ProxyKernel> CreateProxyKernelAsync(string remoteName, string? localNameOverride = null)
     {
         using var rootProxyKernel = await CreateRootProxyKernelAsync();
 
         ProxyKernel proxyKernel;
 
-        if (_remoteKernelInfoCache.TryGetValue(remoteName, out var remoteInfo))
+        if (TryGetCachedKernelInfoByRemoteName(remoteName, out var remoteInfo))
         {
             proxyKernel = await CreateProxyKernelAsync(remoteInfo, localNameOverride);
         }
