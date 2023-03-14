@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -34,6 +35,7 @@ public class StdIoKernelConnector : IKernelConnector
     private readonly Uri _kernelHostUri;
     private readonly DirectoryInfo _workingDirectory;
 
+    private Dictionary<string, KernelInfo> _remoteKernelInfos;
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
@@ -51,6 +53,8 @@ public class StdIoKernelConnector : IKernelConnector
         _rootProxyKernelLocalName = rootProxyKernelLocalName;
         _kernelHostUri = kernelHostUri;
         _workingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
+
+        _remoteKernelInfos = new Dictionary<string, KernelInfo>();
     }
 
     /// <remarks>
@@ -139,6 +143,19 @@ public class StdIoKernelConnector : IKernelConnector
                                        kernelReadyReceived = true;
                                    });
 
+            _receiver.Select(coe => coe.Event)
+                                   .OfType<KernelInfoProduced>()
+                                   .Subscribe(e =>
+                                   {
+                                       var info = e.KernelInfo;
+                                       var name = info.LocalName;
+
+                                       lock (_remoteKernelInfos)
+                                       {
+                                           _remoteKernelInfos[name] = info;
+                                       }
+                                   });
+
             _sender = KernelCommandAndEventSender.FromTextWriter(
                _process.StandardInput,
                _kernelHostUri);
@@ -199,27 +216,36 @@ public class StdIoKernelConnector : IKernelConnector
         using var rootProxyKernel = await CreateRootProxyKernelAsync();
 
         ProxyKernel proxyKernel;
-        var result = await rootProxyKernel.SendAsync(new RequestKernelInfo(remoteName));
-        var remoteInfos = result.Events
-            .OfType<KernelInfoProduced>()
-            .Select(e => e.KernelInfo)
-            .Where(info => info.LocalName == remoteName)
-            .ToArray();
 
-        if (remoteInfos.Length == 1)
+        if (_remoteKernelInfos.TryGetValue(remoteName, out var remoteInfo))
         {
-            var remoteInfo = remoteInfos[0];
             proxyKernel = await CreateProxyKernelAsync(remoteInfo, localNameOverride);
         }
         else
         {
-            var message = $"Found {remoteInfos.Length} remote {nameof(Kernel)}s matching name '{remoteName}'.";
-            var failureEvents = result.Events.OfType<CommandFailed>().ToArray();
-            var innerException = failureEvents.Length == 1
-                ? failureEvents[0].Exception
-                : new AggregateException(failureEvents.Select(f => f.Exception));
+            var result = await rootProxyKernel.SendAsync(new RequestKernelInfo(remoteName));
 
-            throw new InvalidOperationException(message, innerException);
+            var remoteInfos = result.Events
+                .OfType<KernelInfoProduced>()
+                .Select(e => e.KernelInfo)
+                .Where(info => info.LocalName == remoteName)
+                .ToArray();
+
+            if (remoteInfos.Length == 1)
+            {
+                remoteInfo = remoteInfos[0];
+                proxyKernel = await CreateProxyKernelAsync(remoteInfo, localNameOverride);
+            }
+            else
+            {
+                var message = $"Found {remoteInfos.Length} remote {nameof(Kernel)}s matching name '{remoteName}'.";
+                var failureEvents = result.Events.OfType<CommandFailed>().ToArray();
+                var innerException = failureEvents.Length == 1
+                    ? failureEvents[0].Exception
+                    : new AggregateException(failureEvents.Select(f => f.Exception));
+
+                throw new InvalidOperationException(message, innerException);
+            }
         }
 
         return proxyKernel;
