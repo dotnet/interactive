@@ -4,7 +4,7 @@ The [Polyglot Notebooks extension](https://marketplace.visualstudio.com/items?it
 
 ## Fully Interoperable with Jupyter
 
-Polylgot Notebooks are fully interoperable with Jupyter and support the `.ipynb` file extension. You don't need to choose between the capabilities of Polyglot Notebooks and the rich Jupyter ecosystem. If your notebook is saved in the `.ipynb` format, you can open it in Jupyter and the cell languages will still be recognized. When working in Jupyter using the .NET Interactive kernel, you can switch cell languages using magic commands. 
+Polyglot Notebooks are fully interoperable with Jupyter and support the `.ipynb` file extension. You don't need to choose between the capabilities of Polyglot Notebooks and the rich Jupyter ecosystem. If your notebook is saved in the `.ipynb` format, you can open it in Jupyter and the cell languages will still be recognized. When working in Jupyter using the .NET Interactive kernel, you can switch cell languages using magic commands. 
 
 ## Supported Languages
 
