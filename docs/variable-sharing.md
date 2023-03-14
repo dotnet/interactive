@@ -2,7 +2,7 @@
 
 The .NET Interactive kernel enables you to write code in multiple languages within a single notebook. In order to take advantage of the different strengths of each language, you'll find it useful to share data between them. By default, .NET Interactive supports a number of different languages and most of them allow sharing using the `#!set` and `#!share` magic commands. The documentation will focus on the use of `#!set`, which provides all of the capabilities of `#!share` as well as some additional ones.
 
-> *&nbsp;_The `#!share` magic command has been in place since the earliest days of .NET Interactive, while `#!set` is newer and provides a superset of the capabilities of `#!share`. Since `#!set` has richer capabilities and is a little more readable, you might prefer it to `#!share`. It's easy to rewrite a `#!share` command to use `@!set`. Here's an example of `#!share` usage:_
+> *&nbsp;_The `#!share` magic command has been in place since the earliest days of .NET Interactive, while `#!set` is newer and provides a superset of the capabilities of `#!share`. Since `#!set` has richer capabilities and is a little more readable, you might prefer it to `#!share`. It's easy to rewrite a `#!share` command to use `#!set`. Here's an example of `#!share` usage:_
 > ```
 > #!share --from javascript jsVar --as csVarFromJs
 > ```
