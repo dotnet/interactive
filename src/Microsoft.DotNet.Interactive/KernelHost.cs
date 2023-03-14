@@ -129,7 +129,10 @@ public class KernelHost : IDisposable
 
         _kernel.VisitSubkernelsAndSelf(k =>
         {
-            kernelInfos.Add(k.KernelInfo);
+            if (k.KernelInfo.IsProxy == false)
+            {
+                kernelInfos.Add(k.KernelInfo);
+            }
         }, true);
 
         await _defaultSender.SendAsync(
