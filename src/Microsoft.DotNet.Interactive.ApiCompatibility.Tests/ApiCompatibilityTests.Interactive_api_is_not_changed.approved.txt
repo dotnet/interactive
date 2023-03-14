@@ -547,6 +547,7 @@ Microsoft.DotNet.Interactive.Connection
     .ctor(System.String name, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, System.Uri remoteUri = null)
     protected Func<TCommand,Microsoft.DotNet.Interactive.KernelInvocationContext,System.Threading.Tasks.Task> CreateDefaultHandlerForCommandType<TCommand>()
      System.Threading.Tasks.Task HandleRequestKernelInfoAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+    public System.Void UpdateKernelInfo(Microsoft.DotNet.Interactive.KernelInfo kernelInfo)
   public delegate ReadCommandOrEvent : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
     .ctor(System.Object object, System.IntPtr method)
     public System.IAsyncResult BeginInvoke(System.Threading.CancellationToken cancellationToken, System.AsyncCallback callback, System.Object object)
@@ -640,7 +641,8 @@ Microsoft.DotNet.Interactive.Events
     .ctor(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public Microsoft.DotNet.Interactive.KernelInfo KernelInfo { get;}
   public class KernelReady : KernelEvent
-    .ctor()
+    .ctor(Microsoft.DotNet.Interactive.KernelInfo[] kernelInfos)
+    public Microsoft.DotNet.Interactive.KernelInfo[] KernelInfos { get;}
   public class PackageAdded : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.ResolvedPackageReference packageReference, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public Microsoft.DotNet.Interactive.ResolvedPackageReference PackageReference { get;}

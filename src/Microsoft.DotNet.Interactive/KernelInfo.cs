@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
+using Microsoft.DotNet.Interactive.Documents;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,10 +68,7 @@ public class KernelInfo
 
     public string DisplayName
     {
-        get
-        {
-            return _displayName ?? CreateDisplayName();
-        }
+        get => _displayName ?? CreateDisplayName();
         set => _displayName = value;
     }
 
@@ -117,6 +116,6 @@ public class KernelInfo
     internal bool SupportsCommand(string commandName) =>
         _supportedKernelCommands.Contains(new(commandName));
 
-    internal void UpdateFrom(KernelInfo source) =>
+    internal void UpdateSupportedKernelCommandsFrom(KernelInfo source) =>
         _supportedKernelCommands.UnionWith(source.SupportedKernelCommands);
 }

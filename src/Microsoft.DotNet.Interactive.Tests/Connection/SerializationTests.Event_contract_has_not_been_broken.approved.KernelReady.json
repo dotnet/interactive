@@ -1,5 +1,50 @@
 {
-  "event": {},
+  "event": {
+    "kernelInfos": [
+      {
+        "aliases": [
+          "js"
+        ],
+        "languageName": "JavaScript",
+        "languageVersion": null,
+        "isProxy": false,
+        "isComposite": false,
+        "displayName": "javascript - JavaScript",
+        "localName": "javascript",
+        "uri": "kernel://vscode/javascript",
+        "remoteUri": null,
+        "supportedKernelCommands": [
+          {
+            "name": "SubmitCode"
+          }
+        ],
+        "supportedDirectives": []
+      },
+      {
+        "aliases": [
+          "cs"
+        ],
+        "languageName": "CSharp",
+        "languageVersion": null,
+        "isProxy": false,
+        "isComposite": false,
+        "displayName": "csharp - CSharp",
+        "localName": "csharp",
+        "uri": "kernel://pid/csharp",
+        "remoteUri": null,
+        "supportedKernelCommands": [
+          {
+            "name": "SubmitCode"
+          }
+        ],
+        "supportedDirectives": [
+          {
+            "name": "#r"
+          }
+        ]
+      }
+    ]
+  },
   "eventType": "KernelReady",
   "command": null,
   "routingSlip": [

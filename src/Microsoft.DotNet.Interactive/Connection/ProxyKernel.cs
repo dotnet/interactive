@@ -66,12 +66,7 @@ public sealed class ProxyKernel : Kernel
     private void UpdateKernelInfoFromEvent(KernelInfoProduced kernelInfoProduced)
     {
         var kernelInfo = kernelInfoProduced.KernelInfo;
-        KernelInfo.DisplayName = kernelInfo.DisplayName;
-        KernelInfo.IsComposite = kernelInfo.IsComposite;
-        KernelInfo.LanguageName = kernelInfo.LanguageName;
-        KernelInfo.LanguageVersion = kernelInfo.LanguageVersion;
-        ((HashSet<KernelCommandInfo>)KernelInfo.SupportedKernelCommands).UnionWith(kernelInfo.SupportedKernelCommands);
-        ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfo.SupportedDirectives);
+        UpdateKernelInfo(kernelInfo);
     }
 
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
@@ -262,5 +257,14 @@ public sealed class ProxyKernel : Kernel
         }
 
         return commandOriginUri is null;
+    }
+
+    public void UpdateKernelInfo(KernelInfo kernelInfo)
+    {
+        KernelInfo.IsComposite = kernelInfo.IsComposite;
+        KernelInfo.LanguageName = kernelInfo.LanguageName;
+        KernelInfo.LanguageVersion = kernelInfo.LanguageVersion;
+        KernelInfo.UpdateSupportedKernelCommandsFrom(kernelInfo);
+        ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfo.SupportedDirectives);
     }
 }

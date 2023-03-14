@@ -3,7 +3,7 @@
 
 import * as rxjs from 'rxjs';
 import { IKernelCommandAndEventSender, IKernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope, KernelCommandAndEventReceiver, isKernelCommandEnvelope } from '../../src/vscode-common/polyglot-notebooks';
-import { CommandFailed, CommandFailedType, KernelEventEnvelope } from '../../src/vscode-common/polyglot-notebooks/contracts';
+import { CommandFailed, CommandFailedType, KernelEventEnvelope, KernelReady } from '../../src/vscode-common/polyglot-notebooks/contracts';
 import { DotnetInteractiveChannel } from '../../src/vscode-common/DotnetInteractiveChannel';
 // executes the given callback for the specified commands
 export class CallbackTestTestDotnetInteractiveChannel implements DotnetInteractiveChannel {
@@ -43,8 +43,8 @@ export class CallbackTestTestDotnetInteractiveChannel implements DotnetInteracti
     sender: IKernelCommandAndEventSender;
     receiver: IKernelCommandAndEventReceiver;
 
-    waitForReady(): Promise<void> {
-        return Promise.resolve();
+    waitForReady(): Promise<KernelReady> {
+        return Promise.resolve({ kernelInfos: [] });
     }
 
     dispose() {

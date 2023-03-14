@@ -8,6 +8,7 @@ import * as tmp from 'tmp';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 import { createOutput } from '../../src/vscode-common/utilities';
 import { DotnetInteractiveChannel } from '../../src/vscode-common/DotnetInteractiveChannel';
+import { ClientMapperConfiguration } from '../../src/vscode-common/clientMapper';
 
 export function withFakeGlobalStorageLocation(createLocation: boolean, callback: { (globalStoragePath: string): Promise<void> }) {
     return new Promise<void>((resolve, reject) => {
@@ -30,7 +31,7 @@ export function withFakeGlobalStorageLocation(createLocation: boolean, callback:
     });
 }
 
-export function createChannelConfig(channelCreator: (notebookUri: vscodeLike.Uri) => Promise<DotnetInteractiveChannel>) {
+export function createChannelConfig(channelCreator: (notebookUri: vscodeLike.Uri) => Promise<DotnetInteractiveChannel>): ClientMapperConfiguration {
     function defaultChannelCreator(notebookUri: vscodeLike.Uri): Promise<DotnetInteractiveChannel> {
         throw new Error('Each test needs to override this.');
     }
@@ -60,7 +61,10 @@ export function createChannelConfig(channelCreator: (notebookUri: vscodeLike.Uri
 
     return {
         ...defaultClientMapperConfig,
-        channelCreator: channelCreator,
+        channelCreator: async (uri: vscodeLike.Uri) => {
+            const channel = await channelCreator(uri);
+            return { channel, kernelReady: <contracts.KernelReady>{} }
+        },
     };
 }
 

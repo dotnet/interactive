@@ -71,11 +71,10 @@ public class InterfaceGenerator
         $"{nameof(HoverTextProduced)}.{nameof(HoverTextProduced.LinePositionSpan)}",
         $"{nameof(OpenDocument)}.{nameof(OpenDocument.RegionName)}",
         $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}",
-            
+
         $"{nameof(KernelCommand)}.{nameof(KernelCommand.TargetKernelName)}",
         $"{nameof(KernelCommand)}.{nameof(KernelCommand.DestinationUri)}",
-        $"{nameof(KernelCommand)}.{nameof(KernelCommand.OriginUri)}",
-
+        $"{nameof(KernelCommand)}.{nameof(KernelCommand.OriginUri)}"
     };
 
     private static readonly IEnumerable<Type> CoreAssemblyTypes = GetTypesFromClosure(typeof(KernelCommand).Assembly);

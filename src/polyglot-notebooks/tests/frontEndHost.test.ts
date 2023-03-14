@@ -54,51 +54,38 @@ describe("frontEndHost", () => {
         });
         frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
         expect(seenMessages).to.deep.equal([{
-            event: {},
+            event:
+            {
+                kernelInfos:
+                    [{
+                        aliases: [],
+                        displayName: 'testKernel',
+                        isComposite: true,
+                        isProxy: false,
+                        localName: 'testKernel',
+                        supportedDirectives: [],
+                        supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
+                        uri: 'kernel://testKernel/'
+                    },
+                    {
+                        aliases: ['js'],
+                        displayName: 'javascript - JavaScript',
+                        isComposite: false,
+                        isProxy: false,
+                        languageName: 'JavaScript',
+                        localName: 'javascript',
+                        supportedDirectives: [],
+                        supportedKernelCommands:
+                            [{ name: 'RequestKernelInfo' },
+                            { name: 'SubmitCode' },
+                            { name: 'RequestValueInfos' },
+                            { name: 'RequestValue' },
+                            { name: 'SendValue' }],
+                        uri: 'kernel://testKernel/javascript'
+                    }]
+            },
             eventType: 'KernelReady',
             routingSlip: ['kernel://testKernel/']
-        },
-        {
-            event:
-            {
-                kernelInfo:
-                {
-                    aliases: [],
-                    displayName: 'testKernel',
-                    isComposite: true,
-                    isProxy: false,
-                    localName: 'testKernel',
-                    supportedDirectives: [],
-                    supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
-                    uri: 'kernel://testKernel/'
-                }
-            },
-            eventType: 'KernelInfoProduced',
-            routingSlip: ['kernel://testKernel/']
-        },
-        {
-            event:
-            {
-                kernelInfo:
-                {
-                    aliases: ['js'],
-                    displayName: 'javascript - JavaScript',
-                    isComposite: false,
-                    isProxy: false,
-                    languageName: 'JavaScript',
-                    localName: 'javascript',
-                    supportedDirectives: [],
-                    supportedKernelCommands:
-                        [{ name: 'RequestKernelInfo' },
-                        { name: 'SubmitCode' },
-                        { name: 'RequestValueInfos' },
-                        { name: 'RequestValue' },
-                        { name: 'SendValue' }],
-                    uri: 'kernel://testKernel/javascript'
-                }
-            },
-            eventType: 'KernelInfoProduced',
-            routingSlip: ['kernel://testKernel/javascript']
         }]);
     });
 

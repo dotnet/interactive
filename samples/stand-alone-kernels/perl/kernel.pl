@@ -83,17 +83,8 @@ sub main {
 
     publish({
         "eventType" => "KernelReady",
-        "event" => {},
-        "command" => undef,
-        "routingSlip" => [
-            $kernelUri
-        ]
-    });
-
-    publish({
-        "eventType" => "KernelInfoProduced",
         "event" => {
-            "kernelInfo" => $kernelInfo,
+            "kernelInfos" => $kernelInfo
         },
         "command" => undef,
         "routingSlip" => [

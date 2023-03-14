@@ -71,6 +71,9 @@
       <NamedTestSelector>
         <TestName>StdIoBehaviorTests.Quit_command_causes_stdio_process_to_end</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
