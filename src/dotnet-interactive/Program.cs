@@ -16,8 +16,8 @@ using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
 using Serilog.Sinks.RollingFileAlternate;
-using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Program>;
+using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 
 namespace Microsoft.DotNet.Interactive.App;
 
@@ -67,17 +67,17 @@ public class Program
     }
 
     public static IWebHostBuilder ConstructWebHostBuilder(
-        StartupOptions options, 
+        StartupOptions options,
         IServiceCollection serviceCollection)
     {
-        using var _ = Log.OnEnterAndExit();
-
         // TODO: (ConstructWebHostBuilder) dispose me
         var disposables = new CompositeDisposable
         {
             StartToolLogging(options)
         };
-            
+
+        using var _ = Log.OnEnterAndExit();
+
         HttpProbingSettings probingSettings = null;
 
         if (options.EnableHttpApi)
@@ -138,9 +138,9 @@ public class Program
 
     public static IWebHost ConstructWebHost(StartupOptions options)
     {
-        var webHost = ConstructWebHostBuilder(options,_serviceCollection)
+        var webHost = ConstructWebHostBuilder(options, _serviceCollection)
             .Build();
-           
+
         return webHost;
     }
 }

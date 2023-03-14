@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,13 +19,13 @@ using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
-using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using Pocket;
+
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
-using Microsoft.DotNet.Interactive.Formatting;
-using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -379,41 +380,41 @@ public abstract partial class Kernel :
                         break;
 
                     case RequestDiagnostics _:
-                    {
-                        if (_countOfLanguageServiceCommandsInFlight > 0)
                         {
-                            context.CancelWithSuccess();
-                            return context.Result;
+                            if (_countOfLanguageServiceCommandsInFlight > 0)
+                            {
+                                context.CancelWithSuccess();
+                                return context.Result;
+                            }
+
+                            if (_inFlightContext is { } inflight)
+                            {
+                                inflight.Complete(inflight.Command);
+                            }
+
+                            _inFlightContext = context;
+
+                            await RunOnFastPath(context, c, cancellationToken);
+
+                            _inFlightContext = null;
                         }
-
-                        if (_inFlightContext is { } inflight)
-                        {
-                            inflight.Complete(inflight.Command);
-                        }
-
-                        _inFlightContext = context;
-
-                        await RunOnFastPath(context, c, cancellationToken);
-
-                        _inFlightContext = null;
-                    }
                         break;
 
                     case RequestHoverText _:
                     case RequestCompletions _:
                     case RequestSignatureHelp _:
-                    {
-                        if (_inFlightContext is { } inflight)
                         {
-                            inflight.CancelWithSuccess();
+                            if (_inFlightContext is { } inflight)
+                            {
+                                inflight.CancelWithSuccess();
+                            }
+
+                            Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
+
+                            await RunOnFastPath(context, c, cancellationToken);
+
+                            Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
                         }
-
-                        Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
-
-                        await RunOnFastPath(context, c, cancellationToken);
-
-                        Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
-                    }
                         break;
 
                     case DisplayError _:
@@ -629,7 +630,8 @@ public abstract partial class Kernel :
 
     private protected bool CanHandle(KernelCommand command)
     {
-        if (command.TargetKernelName is not null &&
+        if (!KernelInfo.IsProxy &&
+            command.TargetKernelName is not null &&
             command.TargetKernelName != Name)
         {
             return false;
@@ -637,7 +639,8 @@ public abstract partial class Kernel :
 
         if (command.DestinationUri is not null)
         {
-            if (KernelInfo.RemoteUri != command.DestinationUri)
+            if (KernelInfo.Uri != command.DestinationUri &&
+                KernelInfo.RemoteUri != command.DestinationUri)
             {
                 return false;
             }

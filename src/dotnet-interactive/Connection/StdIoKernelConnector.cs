@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,48 +14,76 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
+
+using Pocket;
+
+using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Connection.StdIoKernelConnector>;
+
 using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive.App.Connection;
 
-public class StdIoKernelConnector : IKernelConnector, IDisposable
+public class StdIoKernelConnector : IKernelConnector
 {
+    private readonly string[] _command;
+    private readonly string _rootProxyKernelLocalName;
+    private readonly Uri _kernelHostUri;
+    private readonly DirectoryInfo _workingDirectory;
+
+    private Dictionary<string, KernelInfo> _remoteKernelInfos;
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
     private RefCountDisposable? _refCountDisposable = null;
 
-    public StdIoKernelConnector(string[] command, Uri kernelHostUri, DirectoryInfo? workingDirectory = null)
+    public int? ProcessId => _process?.Id;
+
+    public StdIoKernelConnector(
+        string[] command,
+        string rootProxyKernelLocalName,
+        Uri kernelHostUri,
+        DirectoryInfo? workingDirectory = null)
     {
-        Command = command;
-        KernelHostUri = kernelHostUri;
-        WorkingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
+        _command = command;
+        _rootProxyKernelLocalName = rootProxyKernelLocalName;
+        _kernelHostUri = kernelHostUri;
+        _workingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
+
+        _remoteKernelInfos = new Dictionary<string, KernelInfo>();
     }
 
-    public string[] Command { get; }
+    /// <remarks>
+    /// TODO: Does it even make sense to implement <see cref="IKernelConnector"/> here considering that we have
+    /// concepts (such as a single root <see cref="ProxyKernel"/>, and zero or more (child) <see cref="ProxyKernel"/>s)
+    /// that the <see cref="IKernelConnector"/> abstraction does not understand / support? Should the '#!connect stdio'
+    /// command be removed?
+    /// 
+    /// The current implementation only supports creating / retrieving the root <see cref="ProxyKernel"/>.
+    /// </remarks>
+    async Task<Kernel> IKernelConnector.CreateKernelAsync(string kernelName)
+        => await CreateRootProxyKernelAsync();
 
-    public DirectoryInfo WorkingDirectory { get; }
-
-    public Uri KernelHostUri { get; }
-
-    public async Task<Kernel> CreateKernelAsync(string kernelName)
+    public async Task<ProxyKernel> CreateRootProxyKernelAsync()
     {
-        ProxyKernel? proxyKernel;
+        ProxyKernel rootProxyKernel;
 
         if (_receiver is null)
         {
-            var command = Command[0];
-            var arguments = Command.Skip(1).ToArray();
-            if (KernelHostUri is { })
+            using var activity = Log.OnEnterAndExit();
+
+            var command = _command[0];
+            var arguments = _command.Skip(1).ToArray();
+            if (_kernelHostUri is { })
             {
                 arguments = arguments.Concat(new[]
                 {
                     "--kernel-host",
-                    KernelHostUri.Authority
+                    _kernelHostUri.Authority
                 }).ToArray();
             }
 
@@ -70,11 +99,12 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                         ["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
                         ["DOTNET_DbgEnableMiniDump"] = "0" // https://docs.microsoft.com/en-us/dotnet/core/diagnostics/dumps
                     },
-                    WorkingDirectory = WorkingDirectory.FullName,
+                    WorkingDirectory = _workingDirectory.FullName,
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 },
@@ -100,6 +130,8 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
 
             _process.Start();
 
+            activity.Info("Process id: {0}", _process.Id);
+
             _receiver = KernelCommandAndEventReceiver.FromObservable(stdOutObservable);
 
             bool kernelReadyReceived = false;
@@ -111,9 +143,22 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                                        kernelReadyReceived = true;
                                    });
 
+            _receiver.Select(coe => coe.Event)
+                                   .OfType<KernelInfoProduced>()
+                                   .Subscribe(e =>
+                                   {
+                                       var info = e.KernelInfo;
+                                       var name = info.LocalName;
+
+                                       lock (_remoteKernelInfos)
+                                       {
+                                           _remoteKernelInfos[name] = info;
+                                       }
+                                   });
+
             _sender = KernelCommandAndEventSender.FromTextWriter(
                _process.StandardInput,
-               KernelHostUri);
+               _kernelHostUri);
 
             _refCountDisposable = new RefCountDisposable(new CompositeDisposable
             {
@@ -122,13 +167,13 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
                 _receiver.Dispose
             });
 
-            proxyKernel = new ProxyKernel(
-                kernelName,
+            rootProxyKernel = new ProxyKernel(
+                _rootProxyKernelLocalName,
                 _sender,
                 _receiver,
-                KernelHostUri);
+                _kernelHostUri);
 
-            proxyKernel.RegisterForDisposal(_refCountDisposable);
+            rootProxyKernel.RegisterForDisposal(_refCountDisposable);
 
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
@@ -154,16 +199,95 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
         }
         else
         {
-            proxyKernel = new ProxyKernel(
-                kernelName,
+            rootProxyKernel = new ProxyKernel(
+                _rootProxyKernelLocalName,
                 _sender,
                 _receiver,
-                KernelHostUri);
+                _kernelHostUri);
 
-            proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
+            rootProxyKernel.RegisterForDisposal(_refCountDisposable);
+        }
+
+        return rootProxyKernel;
+    }
+
+    public async Task<ProxyKernel> CreateProxyKernelAsync(string remoteName, string? localNameOverride = null)
+    {
+        using var rootProxyKernel = await CreateRootProxyKernelAsync();
+
+        ProxyKernel proxyKernel;
+
+        if (_remoteKernelInfos.TryGetValue(remoteName, out var remoteInfo))
+        {
+            proxyKernel = await CreateProxyKernelAsync(remoteInfo, localNameOverride);
+        }
+        else
+        {
+            var result = await rootProxyKernel.SendAsync(new RequestKernelInfo(remoteName));
+
+            var remoteInfos = result.Events
+                .OfType<KernelInfoProduced>()
+                .Select(e => e.KernelInfo)
+                .Where(info => info.LocalName == remoteName)
+                .ToArray();
+
+            if (remoteInfos.Length == 1)
+            {
+                remoteInfo = remoteInfos[0];
+                proxyKernel = await CreateProxyKernelAsync(remoteInfo, localNameOverride);
+            }
+            else
+            {
+                var message = $"Found {remoteInfos.Length} remote {nameof(Kernel)}s matching name '{remoteName}'.";
+                var failureEvents = result.Events.OfType<CommandFailed>().ToArray();
+                var innerException = failureEvents.Length == 1
+                    ? failureEvents[0].Exception
+                    : new AggregateException(failureEvents.Select(f => f.Exception));
+
+                throw new InvalidOperationException(message, innerException);
+            }
         }
 
         return proxyKernel;
+    }
+
+    public async Task<ProxyKernel> CreateProxyKernelAsync(KernelInfo remoteInfo, string? localNameOverride = null)
+    {
+        using var _ = await CreateRootProxyKernelAsync();
+
+        var localName =
+            string.IsNullOrWhiteSpace(localNameOverride) ? remoteInfo.LocalName : localNameOverride;
+
+        var proxyKernel =
+            new ProxyKernel(
+                localName,
+                _sender,
+                _receiver,
+                remoteInfo.Uri);
+
+        UpdateKernelInfo(proxyKernel, remoteInfo);
+
+        proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
+
+        return proxyKernel;
+    }
+
+    private static void UpdateKernelInfo(ProxyKernel proxyKernel, KernelInfo remoteInfo)
+    {
+        proxyKernel.KernelInfo.DisplayName = remoteInfo.DisplayName;
+        proxyKernel.KernelInfo.IsComposite = remoteInfo.IsComposite;
+        proxyKernel.KernelInfo.LanguageName = remoteInfo.LanguageName;
+        proxyKernel.KernelInfo.LanguageVersion = remoteInfo.LanguageVersion;
+
+        foreach (var directive in remoteInfo.SupportedDirectives)
+        {
+            proxyKernel.KernelInfo.SupportedDirectives.Add(directive);
+        }
+
+        foreach (var command in remoteInfo.SupportedKernelCommands)
+        {
+            proxyKernel.KernelInfo.SupportedKernelCommands.Add(command);
+        }
     }
 
     private void SendQuitCommand()
@@ -189,6 +313,4 @@ public class StdIoKernelConnector : IKernelConnector, IDisposable
             _process = null;
         }
     }
-
-    public void Dispose() => _refCountDisposable?.Dispose();
 }

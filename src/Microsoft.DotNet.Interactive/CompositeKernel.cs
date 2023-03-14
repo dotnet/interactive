@@ -36,7 +36,6 @@ public sealed class CompositeKernel :
         _childKernels = new(this);
     }
 
-
     public string DefaultKernelName
     {
         get => _defaultKernelName ??

@@ -15,11 +15,13 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket.For.Xunit;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 {
     private readonly StdioConnectionTestConfiguration _configuration;
@@ -29,7 +31,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
         _configuration = CreateConnectionConfiguration();
     }
 
-    protected override Task<IKernelConnector> CreateConnectorAsync()
+    protected override IKernelConnector CreateConnector()
     {
         var command = new List<string> { _configuration.Command };
 
@@ -38,14 +40,11 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
             command.AddRange(_configuration.Args);
         }
 
-        var connector = new StdIoKernelConnector(
+        return new StdIoKernelConnector(
             command.ToArray(),
+            rootProxyKernelLocalName: "rootProxy",
             kernelHostUri: new Uri("kernel://test-kernel"),
             workingDirectory: _configuration.WorkingDirectory);
-
-        RegisterForDisposal(connector);
-
-        return Task.FromResult<IKernelConnector>(connector);
     }
 
     protected StdioConnectionTestConfiguration CreateConnectionConfiguration()
@@ -98,7 +97,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
         await localCompositeKernel.SendAsync(connectToRemoteKernel);
 
         var result = await localCompositeKernel.SendAsync(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName", "newKernelName"));
-        
+
         var expected = Encoding.UTF8.EncodingName + "/" + Encoding.UTF8.EncodingName;
 
         result.Events
@@ -125,6 +124,6 @@ public class StdioConnectionTestConfiguration
     public string Command { get; set; }
 
     public string[] Args { get; set; }
-    
+
     public DirectoryInfo WorkingDirectory { get; set; }
 }
