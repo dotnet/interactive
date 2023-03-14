@@ -98,7 +98,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             using var csharpProxyKernel = await connector.CreateProxyKernelAsync(remoteInfo: csharpKernelInfo);
             var expectedCSharpKernelInfo = new KernelInfo(csharpKernelInfo.LocalName)
             {
-                DisplayName = csharpKernelInfo.DisplayName,
                 IsProxy = true,
                 IsComposite = false,
                 LanguageName = csharpKernelInfo.LanguageName,
@@ -112,7 +111,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             using var fsharpProxyKernel = await connector.CreateProxyKernelAsync(remoteInfo: fsharpKernelInfo, localNameOverride: "fsharp2");
             var expectedFSharpKernelInfo = new KernelInfo("fsharp2")
             {
-                DisplayName = fsharpKernelInfo.DisplayName,
                 IsProxy = true,
                 IsComposite = false,
                 LanguageName = fsharpKernelInfo.LanguageName,

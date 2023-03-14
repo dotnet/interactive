@@ -35,12 +35,11 @@ public class StdIoKernelConnector : IKernelConnector
     private readonly Uri _kernelHostUri;
     private readonly DirectoryInfo _workingDirectory;
 
-    private readonly Dictionary<string, KernelInfo> _remoteKernelInfos;
+    private readonly Dictionary<string, KernelInfo> _remoteKernelInfoCache;
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
     private RefCountDisposable? _refCountDisposable;
-    private KernelReady? _kernelReady;
 
     public int? ProcessId => _process?.Id;
 
@@ -55,7 +54,7 @@ public class StdIoKernelConnector : IKernelConnector
         _kernelHostUri = kernelHostUri;
         _workingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
 
-        _remoteKernelInfos = new Dictionary<string, KernelInfo>();
+        _remoteKernelInfoCache = new Dictionary<string, KernelInfo>();
     }
 
     /// <remarks>
@@ -130,31 +129,25 @@ public class StdIoKernelConnector : IKernelConnector
             await Task.Yield();
 
             _process.Start();
-
             activity.Info("Process id: {0}", _process.Id);
 
             _receiver = KernelCommandAndEventReceiver.FromObservable(stdOutObservable);
-            _kernelReady = null;
+
+            KernelReady? kernelReady = null;
             _receiver.Select(coe => coe.Event)
                                    .OfType<KernelReady>()
                                    .Take(1)
                                    .Subscribe(e =>
                                    {
-                                       _kernelReady = e;
-
+                                       kernelReady = e;
+                                       UpdateRemoteKernelInfoCache(kernelReady.KernelInfos);
                                    });
 
             _receiver.Select(coe => coe.Event)
                                    .OfType<KernelInfoProduced>()
                                    .Subscribe(e =>
                                    {
-                                       var info = e.KernelInfo;
-                                       var name = info.LocalName;
-
-                                       lock (_remoteKernelInfos)
-                                       {
-                                           _remoteKernelInfos[name] = info;
-                                       }
+                                       UpdateRemoteKernelInfoCache(e.KernelInfo);
                                    });
 
             _sender = KernelCommandAndEventSender.FromTextWriter(
@@ -179,7 +172,7 @@ public class StdIoKernelConnector : IKernelConnector
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
 
-            while (_kernelReady is null)
+            while (kernelReady is null)
             {
                 await Task.Delay(20);
 
@@ -209,13 +202,27 @@ public class StdIoKernelConnector : IKernelConnector
             rootProxyKernel.RegisterForDisposal(_refCountDisposable);
         }
 
-        if (_kernelReady is { })
-        {
-            var kernelInfo = _kernelReady.KernelInfos.Single(k => k.Uri == _kernelHostUri);
-            rootProxyKernel.UpdateKernelInfo(kernelInfo);
-        }
-
+        var remoteRootKernelInfo = _remoteKernelInfoCache.Values.Single(k => k.Uri == _kernelHostUri);
+        rootProxyKernel.UpdateKernelInfo(remoteRootKernelInfo);
         return rootProxyKernel;
+    }
+
+    private void UpdateRemoteKernelInfoCache(IEnumerable<KernelInfo> infos)
+    {
+        foreach (var info in infos)
+        {
+            UpdateRemoteKernelInfoCache(info);
+        }
+    }
+
+    private void UpdateRemoteKernelInfoCache(KernelInfo info)
+    {
+        var name = info.LocalName;
+
+        lock (_remoteKernelInfoCache)
+        {
+            _remoteKernelInfoCache[name] = info;
+        }
     }
 
     public async Task<ProxyKernel> CreateProxyKernelAsync(string remoteName, string? localNameOverride = null)
@@ -224,7 +231,7 @@ public class StdIoKernelConnector : IKernelConnector
 
         ProxyKernel proxyKernel;
 
-        if (_remoteKernelInfos.TryGetValue(remoteName, out var remoteInfo))
+        if (_remoteKernelInfoCache.TryGetValue(remoteName, out var remoteInfo))
         {
             proxyKernel = await CreateProxyKernelAsync(remoteInfo, localNameOverride);
         }
@@ -272,29 +279,11 @@ public class StdIoKernelConnector : IKernelConnector
                 _receiver,
                 remoteInfo.Uri);
 
-        UpdateKernelInfo(proxyKernel, remoteInfo);
+        proxyKernel.UpdateKernelInfo(remoteInfo);
 
         proxyKernel.RegisterForDisposal(_refCountDisposable!.GetDisposable());
 
         return proxyKernel;
-    }
-
-    private static void UpdateKernelInfo(ProxyKernel proxyKernel, KernelInfo remoteInfo)
-    {
-        proxyKernel.KernelInfo.DisplayName = remoteInfo.DisplayName;
-        proxyKernel.KernelInfo.IsComposite = remoteInfo.IsComposite;
-        proxyKernel.KernelInfo.LanguageName = remoteInfo.LanguageName;
-        proxyKernel.KernelInfo.LanguageVersion = remoteInfo.LanguageVersion;
-
-        foreach (var directive in remoteInfo.SupportedDirectives)
-        {
-            proxyKernel.KernelInfo.SupportedDirectives.Add(directive);
-        }
-
-        foreach (var command in remoteInfo.SupportedKernelCommands)
-        {
-            proxyKernel.KernelInfo.SupportedKernelCommands.Add(command);
-        }
     }
 
     private void SendQuitCommand()
