@@ -33,42 +33,43 @@ describe('Notebook tests', () => {
         it(`executes and returns expected value: ${language}`, async () => {
             const token = '123';
             const code = '1+1';
-            const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
-                'SubmitCode': [
-                    {
-                        eventType: CodeSubmissionReceivedType,
-                        event: {
-                            code: code
+            const config = createChannelConfig(async (_notebookPath) =>
+                new TestDotnetInteractiveChannel({
+                    'SubmitCode': [
+                        {
+                            eventType: CodeSubmissionReceivedType,
+                            event: {
+                                code: code
+                            },
+                            token
                         },
-                        token
-                    },
-                    {
-                        eventType: CompleteCodeSubmissionReceivedType,
-                        event: {
-                            code: code
+                        {
+                            eventType: CompleteCodeSubmissionReceivedType,
+                            event: {
+                                code: code
+                            },
+                            token
                         },
-                        token
-                    },
-                    {
-                        eventType: ReturnValueProducedType,
-                        event: {
-                            valueId: null,
-                            formattedValues: [
-                                {
-                                    mimeType: 'text/html',
-                                    value: '2'
-                                }
-                            ]
+                        {
+                            eventType: ReturnValueProducedType,
+                            event: {
+                                valueId: null,
+                                formattedValues: [
+                                    {
+                                        mimeType: 'text/html',
+                                        value: '2'
+                                    }
+                                ]
+                            },
+                            token
                         },
-                        token
-                    },
-                    {
-                        eventType: CommandSucceededType,
-                        event: {},
-                        token
-                    }
-                ]
-            }));
+                        {
+                            eventType: CommandSucceededType,
+                            event: {},
+                            token
+                        }
+                    ]
+                }));
             const clientMapper = new ClientMapper(config);
             const client = await clientMapper.getOrAddClient(createUri('test/path'));
             const outputs: Array<vscodeLike.NotebookCellOutput> = [];

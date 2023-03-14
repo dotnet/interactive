@@ -35,11 +35,12 @@ public class StdIoKernelConnector : IKernelConnector
     private readonly Uri _kernelHostUri;
     private readonly DirectoryInfo _workingDirectory;
 
-    private Dictionary<string, KernelInfo> _remoteKernelInfos;
+    private readonly Dictionary<string, KernelInfo> _remoteKernelInfos;
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
-    private RefCountDisposable? _refCountDisposable = null;
+    private RefCountDisposable? _refCountDisposable;
+    private KernelReady? _kernelReady;
 
     public int? ProcessId => _process?.Id;
 
@@ -133,14 +134,14 @@ public class StdIoKernelConnector : IKernelConnector
             activity.Info("Process id: {0}", _process.Id);
 
             _receiver = KernelCommandAndEventReceiver.FromObservable(stdOutObservable);
-
-            bool kernelReadyReceived = false;
+            _kernelReady = null;
             _receiver.Select(coe => coe.Event)
                                    .OfType<KernelReady>()
                                    .Take(1)
                                    .Subscribe(e =>
                                    {
-                                       kernelReadyReceived = true;
+                                       _kernelReady = e;
+
                                    });
 
             _receiver.Select(coe => coe.Event)
@@ -178,9 +179,9 @@ public class StdIoKernelConnector : IKernelConnector
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
 
-            while (!kernelReadyReceived)
+            while (_kernelReady is null)
             {
-                await Task.Delay(200);
+                await Task.Delay(20);
 
                 if (_process.HasExited)
                 {
@@ -206,6 +207,12 @@ public class StdIoKernelConnector : IKernelConnector
                 _kernelHostUri);
 
             rootProxyKernel.RegisterForDisposal(_refCountDisposable);
+        }
+
+        if (_kernelReady is { })
+        {
+            var kernelInfo = _kernelReady.KernelInfos.Single(k => k.Uri == _kernelHostUri);
+            rootProxyKernel.UpdateKernelInfo(kernelInfo);
         }
 
         return rootProxyKernel;

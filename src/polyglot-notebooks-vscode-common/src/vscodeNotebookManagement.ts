@@ -58,14 +58,14 @@ export async function handleCustomInputRequest(prompt: string, inputTypeHint: st
     return { handled: false, result: undefined };
 }
 
-export function hashBangConnect(clientMapper: ClientMapper, hostUri: string, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+export function hashBangConnect(clientMapper: ClientMapper, hostUri: string, kernelInfos: contracts.KernelInfo[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
     Logger.default.info(`handling #!connect for ${documentUri.toString()}`);
-    hashBangConnectPrivate(clientMapper, hostUri, kernelInfoProduced, messageHandlerMap, controllerPostMessage, documentUri);
+    hashBangConnectPrivate(clientMapper, hostUri, kernelInfos, messageHandlerMap, controllerPostMessage, documentUri);
 }
 
-function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, kernelInfoProduced: contracts.KernelInfoProduced[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, kernelInfos: contracts.KernelInfo[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
 
-    Logger.default.info(`handling #!connect from '${hostUri}' for not ebook: ${documentUri.toString()}`);
+    Logger.default.info(`handling #!connect from '${hostUri}' for notebook: ${documentUri.toString()}`);
 
     const documentUriString = documentUri.toString();
 
@@ -83,6 +83,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
         let WebviewToExtensionHostReceiver = KernelCommandAndEventReceiver.FromObservable(messageHandler);
 
         Logger.default.info(`configuring routing for host '${hostUri}'`);
+
         let sub01 = client.channel.receiver.subscribe({
             next: envelope => {
                 if (isKernelEventEnvelope(envelope)) {
@@ -125,7 +126,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
                     if (envelope.eventType === contracts.KernelInfoProducedType) {
                         const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
                         if (!connection.isKernelInfoForProxy(kernelInfoProduced.kernelInfo)) {
-                            connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced, client.kernel);
+                            connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced.kernelInfo, client.kernel);
                         }
                     }
 
@@ -145,13 +146,13 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
             }
         });
 
-        const knownKernels = client.kernelHost.getKernelInfoProduced();
+        // const knownKernels = client.kernelHost.getKernelInfoProduced();
 
-        for (const knwonKernel of knownKernels) {
-            const kernelInfoProduced = <contracts.KernelInfoProduced>knwonKernel.event;
-            Logger.default.info(`forwarding kernelInfo [${JSON.stringify(kernelInfoProduced.kernelInfo)}] to webview`);
-            extensionHostToWebviewSender.send(knwonKernel);
-        }
+        // for (const knwonKernel of knownKernels) {
+        //     const kernelInfoProduced = <contracts.KernelInfoProduced>knwonKernel.event;
+        //     Logger.default.info(`forwarding kernelInfo [${JSON.stringify(kernelInfoProduced.kernelInfo)}] to webview`);
+        //     extensionHostToWebviewSender.send(knwonKernel);
+        // }
 
         client.kernelHost.tryAddConnector({
             sender: extensionHostToWebviewSender,
@@ -166,7 +167,11 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
             sub02.unsubscribe();
         });
 
-        for (const kernelInfo of kernelInfoProduced) {
+        for (const kernelInfo of kernelInfos) {
+            const remoteUri = kernelInfo.isProxy ? kernelInfo.remoteUri! : kernelInfo.uri;
+            if (!client.kernelHost.tryGetConnector(remoteUri)) {
+                client.kernelHost.defaultConnector.addRemoteHostUri(remoteUri);
+            }
             connection.ensureOrUpdateProxyForKernelInfo(kernelInfo, client.kernel);
         }
     });

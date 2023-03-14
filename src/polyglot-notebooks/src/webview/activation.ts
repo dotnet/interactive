@@ -7,6 +7,7 @@ import * as connection from "../connection";
 import { Logger } from "../logger";
 import { KernelHost } from '../kernelHost';
 import { v4 as uuid } from 'uuid';
+import { KernelInfo } from '../contracts';
 
 type KernelMessagingApi = {
     onDidReceiveKernelMessage: (arg: any) => any;
@@ -41,6 +42,23 @@ function configure(global: any, context: KernelMessagingApi) {
             }
 
             remoteToLocal.next(envelope);
+        } else if (arg.webViewId === webViewId) {
+            const kernelHost = (<KernelHost>(global['webview'].kernelHost));
+            if (kernelHost) {
+                switch (arg.preloadCommand) {
+                    case '#!connect': {
+                        Logger.default.info(`connecting to kernels from extension host`);
+                        const kernelInfos = <KernelInfo[]>(arg.kernelInfos);
+                        for (const kernelInfo of kernelInfos) {
+                            const remoteUri = kernelInfo.isProxy ? kernelInfo.remoteUri! : kernelInfo.uri;
+                            if (!kernelHost.tryGetConnector(remoteUri)) {
+                                kernelHost.defaultConnector.addRemoteHostUri(remoteUri);
+                            }
+                            connection.ensureOrUpdateProxyForKernelInfo(kernelInfo, kernelHost.kernel);
+                        }
+                    }
+                }
+            }
         }
     });
 
@@ -54,9 +72,9 @@ function configure(global: any, context: KernelMessagingApi) {
         localToRemote,
         remoteToLocal,
         () => {
-            const kernelInfoProduced = (<KernelHost>(global['webview'].kernelHost)).getKernelInfoProduced();
+            const kernelInfos = (<KernelHost>(global['webview'].kernelHost)).getKernelInfos();
             const hostUri = (<KernelHost>(global['webview'].kernelHost)).uri;
-            context.postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri, webViewId });
+            context.postKernelMessage({ preloadCommand: '#!connect', kernelInfos, hostUri, webViewId });
         }
     );
 }

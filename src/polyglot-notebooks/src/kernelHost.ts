@@ -43,6 +43,10 @@ export class KernelHost {
         return this._uri;
     }
 
+    public get kernel(): CompositeKernel {
+        return this._kernel;
+    }
+
     public tryGetKernelByRemoteUri(remoteUri: string): Kernel | undefined {
         return this._remoteUriToKernel.get(remoteUri);
     }
@@ -136,7 +140,7 @@ export class KernelHost {
         return this._connectors.find(c => c.canReach(remoteUri));
     }
 
-    public connect() {
+    public async connect(): Promise<contracts.KernelReady> {
         this._kernel.subscribeToKernelEvents(e => {
             Logger.default.info(`KernelHost forwarding event: ${JSON.stringify(e)}`);
             this._defaultConnector.sender.send(e);
@@ -155,27 +159,27 @@ export class KernelHost {
             }
         });
 
-        this._defaultConnector.sender.send({ eventType: contracts.KernelReadyType, event: {}, routingSlip: [this._kernel.kernelInfo.uri!] });
+        const kernelInfos = [this._kernel.kernelInfo, ...Array.from(this._kernel.childKernels.map(k => k.kernelInfo).filter(ki => ki.isProxy === false))];
 
-        this.publishKerneInfo();
+        const kernekReady: contracts.KernelReady = {
+            kernelInfos: kernelInfos
+        };
+
+        await this._defaultConnector.sender.send({ eventType: contracts.KernelReadyType, event: kernekReady, routingSlip: [this._kernel.kernelInfo.uri!] });
+
+        return kernekReady;
     }
 
-    public publishKerneInfo() {
-
-        const events = this.getKernelInfoProduced();
-
-        for (const event of events) {
-            this._defaultConnector.sender.send(event);
+    public getKernelInfos(): contracts.KernelInfo[] {
+        let kernelInfos = [this._kernel.kernelInfo];
+        for (let kernel of this._kernel.childKernels) {
+            kernelInfos.push(kernel.kernelInfo);
         }
+        return kernelInfos;
     }
 
     public getKernelInfoProduced(): contracts.KernelEventEnvelope[] {
-        let events: contracts.KernelEventEnvelope[] = [];
-        events.push({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: this._kernel.kernelInfo }, routingSlip: [this._kernel.kernelInfo.uri!] });
-
-        for (let kernel of this._kernel.childKernels) {
-            events.push({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: kernel.kernelInfo }, routingSlip: [kernel.kernelInfo.uri!] });
-        }
+        let events: contracts.KernelEventEnvelope[] = Array.from(this.getKernelInfos().map(kernelInfo => ({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: kernelInfo }, routingSlip: [kernelInfo.uri!] })));
 
         return events;
     }

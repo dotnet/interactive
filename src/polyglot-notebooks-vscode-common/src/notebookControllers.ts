@@ -138,13 +138,14 @@ export class DotNetNotebookKernel {
             switch (e.message.preloadCommand) {
                 case '#!connect':
                     this.config.clientMapper.getOrAddClient(notebookUri).then(() => {
-                        const kernelInfoProduced = (<contracts.KernelEventEnvelope[]>(e.message.kernelInfoProduced)).map(e => <contracts.KernelInfoProduced>e.event);
                         const hostUri = e.message.hostUri;
-                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, kernelInfoProduced, this.uriMessageHandlerMap, (arg) => controller.postMessage({ ...arg, webViewId: e.message.webViewId }), notebookUri);
+                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, <contracts.KernelInfo[]>(e.message.kernelInfos), this.uriMessageHandlerMap, (arg) => controller.postMessage({ ...arg, webViewId: e.message.webViewId }), notebookUri);
+                        this.config.clientMapper.getOrAddClient(notebookUri).then(client => {
+                            controller.postMessage({ webViewId: e.message.webViewId, preloadCommand: "#!connect", kernelInfos: client.kernelHost.getKernelInfos() });
+                        });
                     });
                     break;
             }
-
 
             if (e.message.logEntry) {
                 Logger.default.write(<LogEntry>e.message.logEntry);
