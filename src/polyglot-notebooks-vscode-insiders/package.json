@@ -9,7 +9,7 @@
   "enabledApiProposals": [
     "notebookMessaging"
   ],
-  "preview": true,
+  "preview": false,
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
