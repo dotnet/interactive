@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -36,7 +37,7 @@ public class StdIoKernelConnector : IKernelConnector
     private readonly Uri _kernelHostUri;
     private readonly DirectoryInfo _workingDirectory;
 
-    private readonly Dictionary<string, KernelInfo> _remoteKernelInfoCache;
+    private readonly ConcurrentDictionary<string, KernelInfo> _remoteKernelInfoCache;
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private Process? _process;
@@ -55,7 +56,7 @@ public class StdIoKernelConnector : IKernelConnector
         _kernelHostUri = kernelHostUri;
         _workingDirectory = workingDirectory ?? new DirectoryInfo(Environment.CurrentDirectory);
 
-        _remoteKernelInfoCache = new Dictionary<string, KernelInfo>();
+        _remoteKernelInfoCache = new ConcurrentDictionary<string, KernelInfo>();
     }
 
     /// <remarks>
@@ -210,40 +211,23 @@ public class StdIoKernelConnector : IKernelConnector
 
     private void UpdateRemoteKernelInfoCache(IEnumerable<KernelInfo> infos)
     {
-        lock (_remoteKernelInfoCache)
+        foreach (var info in infos)
         {
-            foreach (var info in infos)
-            {
-                UpdateRemoteKernelInfoCache(info);
-            }
+            UpdateRemoteKernelInfoCache(info);
         }
     }
 
     private void UpdateRemoteKernelInfoCache(KernelInfo info)
     {
         var name = info.LocalName;
-
-        lock (_remoteKernelInfoCache)
-        {
-            _remoteKernelInfoCache[name] = info;
-        }
+        _remoteKernelInfoCache[name] = info;
     }
 
     private KernelInfo GetCachedKernelInfoForRemoteRoot()
-    {
-        lock (_remoteKernelInfoCache)
-        {
-            return _remoteKernelInfoCache.Values.Single(k => k.Uri == _kernelHostUri);
-        }
-    }
+        => _remoteKernelInfoCache.Values.Single(k => k.Uri == _kernelHostUri);
 
     private bool TryGetCachedKernelInfoByRemoteName(string remoteName, [NotNullWhen(true)] out KernelInfo? remoteInfo)
-    {
-        lock (_remoteKernelInfoCache)
-        {
-            return _remoteKernelInfoCache.TryGetValue(remoteName, out remoteInfo);
-        }
-    }
+        => _remoteKernelInfoCache.TryGetValue(remoteName, out remoteInfo);
 
     public async Task<ProxyKernel> CreateProxyKernelAsync(string remoteName, string? localNameOverride = null)
     {
