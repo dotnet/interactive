@@ -119,7 +119,9 @@ export async function ensureCellLanguage(cell: vscode.NotebookCell): Promise<voi
                 constants.CellLanguageIdentifier
             );
             updatedCellData.metadata = cell.metadata;
+
             await vscodeNotebookManagement.replaceNotebookCells(cell.notebook.uri, new vscode.NotebookRange(cell.index, cell.index + 1), [updatedCellData]);
+
         }
     }
 }
