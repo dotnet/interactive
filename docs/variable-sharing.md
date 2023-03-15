@@ -44,7 +44,7 @@ When you run the `#!set` command, it creates a copy of the source variable in th
 
 <img width="510" alt="image" src="https://user-images.githubusercontent.com/547415/225191987-8be846fe-6c18-44c7-b6b6-62e8b64b9407.png">
 
-By default, this copy is created using the `application/json` MIME type. (If the value can't be serialized, you will see an error. The formatters can be configured to work around this. More information can be found [here](formatting.md).)
+By default, this copy is created using the `application/json` MIME type. This means that the C# `words` variable is serialized to JSON and that JSON is then parsed into an object in JavaScript. (If the value can't be serialized, you will see an error. The formatters can be configured to work around this. More information can be found [here](formatting.md).)
 
 ### Variables View
 
