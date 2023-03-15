@@ -40,7 +40,7 @@ When you have a variable in one kernel that you'd like to use in another, you ca
 
 <img width="509" alt="image" src="https://user-images.githubusercontent.com/547415/225192121-5c9b0461-aef4-4aa8-a027-babd8c564788.png">
 
-When you run the `#!set` command, it creates a copy of the source variable in the kernel where you run it. In the following screen shot, running the command `#!set --value @csharp:words --name fromCsharp` in the JavaScript kernel 
+When you run the `#!set` command, it creates a copy of the source variable in the kernel where you run it. In the following screen shot, running the command `#!set --value @csharp:words --name fromCsharp` in the JavaScript kernel copies the C# variable `words` to a JavaScript variable called `fromCsharp`. 
 
 <img width="510" alt="image" src="https://user-images.githubusercontent.com/547415/225191987-8be846fe-6c18-44c7-b6b6-62e8b64b9407.png">
 
