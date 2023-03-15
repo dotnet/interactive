@@ -383,12 +383,13 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
     const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
     const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, document.metadata, isIpynb);
 
-    if (!rawNotebookDocumentMetadata.custom.metadata.language_info) {
-        rawNotebookDocumentMetadata.custom.metadata.language_info = { name: "polyglot-notebook" };
-    } else {
-        rawNotebookDocumentMetadata.custom.metadata.language_info.name = "polyglot-notebook";
+    if (isIpynb) {
+        if (!rawNotebookDocumentMetadata.custom.metadata.language_info) {
+            rawNotebookDocumentMetadata.custom.metadata.language_info = { name: "polyglot-notebook" };
+        } else {
+            rawNotebookDocumentMetadata.custom.metadata.language_info.name = "polyglot-notebook";
+        }
     }
-
     await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, rawNotebookDocumentMetadata);
 }
 
