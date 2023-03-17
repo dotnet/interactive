@@ -56,7 +56,8 @@
   ],
   "main": "./out/src/vscode-common/extension.js",
   "extensionDependencies": [
-    "ms-toolsai.jupyter"
+    "ms-toolsai.jupyter",
+    "bierner.markdown-mermaid"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
