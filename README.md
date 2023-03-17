@@ -39,7 +39,7 @@ The most popular notebook platform is Jupyter, and .NET Interactive is a fully s
 
 ### Small factor devices
 
-We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](small-factor-devices.md).
+We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](docs/small-factor-devices.md).
 
 ## FAQ
 
