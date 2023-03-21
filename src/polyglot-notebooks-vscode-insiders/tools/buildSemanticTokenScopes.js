@@ -117,7 +117,7 @@ processScopesFromThemePath(themePath);
 
 const projectJsonPaths = [
     path.join(__dirname, '..', 'package.json'), // insiders
-    path.join(__dirname, '..', '..', 'dotnet-interactive-vscode', 'package.json'), // stable
+    path.join(__dirname, '..', '..', 'polyglot-notebooks-vscode', 'package.json'), // stable
 ];
 
 for (const projectJsonPath of projectJsonPaths) {

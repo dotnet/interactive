@@ -175,8 +175,8 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
     const eol = getEol();
 
     const notebookFileFilters = {
-        'Polyglot Notebooks': ['dib'],
-        'Jupyter Notebooks': ['ipynb'],
+        'Polyglot Notebook Script': ['dib'],
+        'Jupyter Notebook': ['ipynb'],
     };
 
     async function newNotebookCommandHandler(preferDefaults: boolean): Promise<void> {
@@ -327,7 +327,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         };
 
         const createForIpynb = viewType === constants.JupyterViewType;
-        const rawNotebookMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, createForIpynb);
+        const rawNotebookMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata, {}, createForIpynb);
         const content = new vscode.NotebookData([cell]);
         content.metadata = rawNotebookMetadata;
         const notebook = await vscode.workspace.openNotebookDocument(viewType, content);

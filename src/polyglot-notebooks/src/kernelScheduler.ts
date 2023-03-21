@@ -9,11 +9,16 @@ interface SchedulerOperation<T> {
     executor: (value: T) => Promise<void>;
     promiseCompletionSource: PromiseCompletionSource<void>;
 }
+
 export class KernelScheduler<T> {
+    setMustTrampoline(predicate: (c: T) => boolean) {
+        this._mustTrampoline = predicate ?? ((_c) => false);
+    }
     private _operationQueue: Array<SchedulerOperation<T>> = [];
     private _inFlightOperation?: SchedulerOperation<T>;
-
+    private _mustTrampoline: (c: T) => boolean;
     constructor() {
+        this._mustTrampoline = (_c) => false;
     }
 
     public cancelCurrentOperation(): void {
@@ -27,7 +32,9 @@ export class KernelScheduler<T> {
             promiseCompletionSource: new PromiseCompletionSource<void>(),
         };
 
-        if (this._inFlightOperation) {
+        const mustTrampoline = this._mustTrampoline(value);
+
+        if (this._inFlightOperation && !mustTrampoline) {
             Logger.default.info(`kernelScheduler: starting immediate execution of ${JSON.stringify(operation.value)}`);
 
             // invoke immediately
@@ -45,7 +52,9 @@ export class KernelScheduler<T> {
         Logger.default.info(`kernelScheduler: scheduling execution of ${JSON.stringify(operation.value)}`);
         this._operationQueue.push(operation);
         if (this._operationQueue.length === 1) {
-            this.executeNextCommand();
+            setTimeout(() => {
+                this.executeNextCommand();
+            }, 0);
         }
 
         return operation.promiseCompletionSource.promise;
@@ -68,8 +77,10 @@ export class KernelScheduler<T> {
                     nextOperation.promiseCompletionSource.reject(e);
                 })
                 .finally(() => {
-                    this._operationQueue.shift();
-                    this.executeNextCommand();
+                    setTimeout(() => {
+                        this._operationQueue.shift();
+                        this.executeNextCommand();
+                    }, 0);
                 });
         }
     }

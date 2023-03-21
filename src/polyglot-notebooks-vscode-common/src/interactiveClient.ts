@@ -52,7 +52,8 @@ import {
     CancelType,
     Cancel,
     ErrorProducedType,
-    ErrorProduced
+    ErrorProduced,
+    KernelInfo
 } from './polyglot-notebooks/contracts';
 import { clearDebounce, createOutput } from './utilities';
 
@@ -71,6 +72,7 @@ export interface ErrorOutputCreator {
 export interface InteractiveClientConfiguration {
     readonly channel: KernelCommandAndEventChannel,
     readonly createErrorOutput: ErrorOutputCreator,
+    readonly kernelInfos: Array<KernelInfo>
 }
 
 export class InteractiveClient {
@@ -93,11 +95,17 @@ export class InteractiveClient {
 
                     if (envelope.eventType === KernelInfoProducedType) {
                         const kernelInfoProduced = <KernelInfoProduced>envelope.event;
-                        connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced, this._kernel);
+                        connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced.kernelInfo, this._kernel);
                     }
                 }
             }
         });
+
+        for (const kernelInfo of config.kernelInfos) {
+            const remoteHostUri = connection.extractHostAndNomalize(kernelInfo.isProxy ? kernelInfo.remoteUri! : kernelInfo.uri);
+            this._kernelHost.defaultConnector.addRemoteHostUri(remoteHostUri);
+            connection.ensureOrUpdateProxyForKernelInfo(kernelInfo, this._kernel);
+        }
 
         this._kernelHost.connect();
     }

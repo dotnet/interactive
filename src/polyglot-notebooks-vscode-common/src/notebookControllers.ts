@@ -71,24 +71,26 @@ export class DotNetNotebookKernel {
             await this.onNotebookOpen(notebook, config.clientMapper, jupyterController);
         }));
 
+        this.disposables.push(vscode.workspace.onDidCloseNotebookDocument(notebook => {
+            stopTrackingNotebook(notebook);
+        }));
+
         // ...but we may have to look at already opened ones if we were activated late
         for (const notebook of vscode.workspace.notebookDocuments) {
             this.onNotebookOpen(notebook, config.clientMapper, jupyterController);
         }
 
         this.disposables.push(vscode.workspace.onDidOpenTextDocument(async textDocument => {
-            if (vscode.window.activeNotebookEditor) {
-                const notebook = vscode.window.activeNotebookEditor.notebook;
-                if (metadataUtilities.isDotNetNotebook(notebook)) {
-                    const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(notebook);
-                    const cells = notebook.getCells();
-                    const foundCell = cells.find(cell => cell.document === textDocument);
-                    if (foundCell) {
-                        // if we found the cell ensure it has kernel metadata
-                        const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(foundCell);
-                        if (!cellMetadata.kernelName) {
-                            // no kernel name; set it from the notebook metadata
-                            await vscodeUtilities.setCellKernelName(foundCell, notebookMetadata.kernelInfo.defaultKernelName);
+            const notebook = vscode.workspace.notebookDocuments.find(n => n.getCells().find(c => c.document === textDocument) !== undefined);
+            if (notebook) {
+                const isDotNetNotebook = metadataUtilities.isDotNetNotebook(notebook);
+                if (isDotNetNotebook) {
+                    // only look at the cell metadata if the notebook is fully open
+                    const isOpenComplete = isNotebookOpenComplete(notebook);
+                    if (isOpenComplete) {
+                        const cell = notebook.getCells().find(c => c.document === textDocument);
+                        if (cell) {
+                            ensureCellKernelMetadata(cell, { preferPreviousCellMetadata: true });
                         }
                     }
                 }
@@ -136,13 +138,14 @@ export class DotNetNotebookKernel {
             switch (e.message.preloadCommand) {
                 case '#!connect':
                     this.config.clientMapper.getOrAddClient(notebookUri).then(() => {
-                        const kernelInfoProduced = (<contracts.KernelEventEnvelope[]>(e.message.kernelInfoProduced)).map(e => <contracts.KernelInfoProduced>e.event);
                         const hostUri = e.message.hostUri;
-                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, kernelInfoProduced, this.uriMessageHandlerMap, (arg) => controller.postMessage(arg), notebookUri);
+                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, <contracts.KernelInfo[]>(e.message.kernelInfos), this.uriMessageHandlerMap, (arg) => controller.postMessage({ ...arg, webViewId: e.message.webViewId }), notebookUri);
+                        this.config.clientMapper.getOrAddClient(notebookUri).then(client => {
+                            controller.postMessage({ webViewId: e.message.webViewId, preloadCommand: "#!connect", kernelInfos: client.kernelHost.getKernelInfos() });
+                        });
                     });
                     break;
             }
-
 
             if (e.message.logEntry) {
                 Logger.default.write(<LogEntry>e.message.logEntry);
@@ -194,6 +197,14 @@ export class DotNetNotebookKernel {
 
                 return client.execute(source, vscodeUtilities.getCellKernelName(cell), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async (success) => {
                     await outputUpdatePromise;
+
+                    const isIpynb = metadataUtilities.isIpynbNotebook(cell.notebook);
+                    const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(cell.notebook);
+                    const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
+                    const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
+                    const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, cell.notebook.metadata, isIpynb);
+
+                    await vscodeNotebookManagement.replaceNotebookMetadata(cell.notebook.uri, rawNotebookDocumentMetadata);
                     endExecution(client, cell, success);
                 }).catch(async () => {
                     await outputUpdatePromise;
@@ -257,6 +268,56 @@ export class DotNetNotebookKernel {
     }
 }
 
+// When a new notebook cell is discovered via `onDidOpenTextDocument` and if the cell metadata doesn't have a kernel name,
+// we need to know what value to use.  If we've never seen the notebook before, then the user opened a new one and the correct
+// kernel is the notebook's default.  If we _have_ seen the notebook before, then the user added a new cell and we need to
+// look at the previous cell's metadata to determine the correct kernel name.
+const openedNotebooks = new Set<string>();
+function markNotebookAsOpened(notebook: vscode.NotebookDocument) {
+    openedNotebooks.add(notebook.uri.fsPath);
+}
+
+function isNotebookOpenComplete(notebook: vscode.NotebookDocument) {
+    return openedNotebooks.has(notebook.uri.fsPath);
+}
+
+function stopTrackingNotebook(notebook: vscode.NotebookDocument) {
+    openedNotebooks.delete(notebook.uri.fsPath);
+}
+
+async function ensureCellKernelMetadata(cell: vscode.NotebookCell, options: { preferPreviousCellMetadata: boolean }): Promise<void> {
+    if (cell.document.languageId === 'markdown') {
+        const existingCellMetadata = cell.metadata?.custom?.metadata;
+        if (existingCellMetadata?.polyglot_notebook || existingCellMetadata?.dotnet_interactive) {
+            const updatedCellMetadata = { ...cell.metadata };
+            delete updatedCellMetadata.custom.metadata.dotnet_interactive;
+            delete updatedCellMetadata.custom.metadata.polyglot_notebook;
+            await vscodeNotebookManagement.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, updatedCellMetadata);
+        }
+        return;
+    }
+
+    // if we found the cell ensure it has kernel metadata
+    const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
+    if (!cellMetadata.kernelName) {
+        // no kernel name found; if asked, set from previous cell, otherwise set it from the notebook metadata
+        let kernelNameToSet: string | undefined = undefined;
+        if (options.preferPreviousCellMetadata && cell.index > 0) {
+            const previousCell = cell.notebook.cellAt(cell.index - 1);
+            const previousCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(previousCell);
+            kernelNameToSet = previousCellMetadata.kernelName;
+        }
+
+        if (!kernelNameToSet) {
+            // couldn't get it from the previous cell, or we weren't supposed to
+            const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(cell.notebook);
+            kernelNameToSet = notebookMetadata.kernelInfo.defaultKernelName;
+        }
+
+        await vscodeUtilities.setCellKernelName(cell, kernelNameToSet);
+    }
+}
+
 function getVsCodeMimeTypeFromStreamType(stream: string | undefined): string | undefined {
     switch (stream) {
         case 'stdout':
@@ -272,7 +333,15 @@ async function updateNotebookMetadata(notebook: vscode.NotebookDocument, clientM
     try {
         // update various metadata
         await updateDocumentKernelspecMetadata(notebook);
-        await updateCellLanguagesAndKernels(notebook);
+        for (let cell of notebook.getCells()) {
+            await vscodeUtilities.ensureCellLanguage(cell);
+
+            // the previous call might have replaced the cell in the notebook, so we need to fetch it again to make sure it's fresh
+            cell = notebook.cellAt(cell.index);
+            await ensureCellKernelMetadata(cell, { preferPreviousCellMetadata: false });
+        }
+
+        markNotebookAsOpened(notebook);
 
         // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
         const client = await clientMapper.getOrAddClient(notebook.uri);
@@ -294,22 +363,29 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
                 for (const item of notebookMetadata.kernelInfo.items) {
                     if (item.name === kernelInfoProduced.kernelInfo.localName) {
                         metadataChanged = true;
-                        item.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        if (kernelInfoProduced.kernelInfo.languageName) {
+                            item.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        }
                         item.aliases = kernelInfoProduced.kernelInfo.aliases;
                     }
                 }
 
                 if (!metadataChanged) {
-                    // nothing changed, must be a new kernel
-                    notebookMetadata.kernelInfo.items.push({
-                        name: kernelInfoProduced.kernelInfo.localName,
-                        languageName: kernelInfoProduced.kernelInfo.languageName,
-                        aliases: kernelInfoProduced.kernelInfo.aliases
-                    });
+                    if (kernelInfoProduced.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.SubmitCodeType)) {
+                        const kernelInfo: contracts.DocumentKernelInfo = {
+                            name: kernelInfoProduced.kernelInfo.localName,
+                            aliases: kernelInfoProduced.kernelInfo.aliases
+                        };
+                        if (kernelInfoProduced.kernelInfo.languageName !== undefined && kernelInfoProduced.kernelInfo.languageName !== null) {
+                            kernelInfo.languageName = kernelInfoProduced.kernelInfo.languageName;
+                        }
+                        // nothing changed, must be a new kernel
+                        notebookMetadata.kernelInfo.items.push(kernelInfo);
+                    }
                 }
 
                 const existingRawNotebookDocumentMetadata = document.metadata;
-                const updatedRawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, isIpynb);
+                const updatedRawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, existingRawNotebookDocumentMetadata, isIpynb);
                 const newRawNotebookDocumentMetadata = metadataUtilities.mergeRawMetadata(existingRawNotebookDocumentMetadata, updatedRawNotebookDocumentMetadata);
                 await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, newRawNotebookDocumentMetadata);
             }
@@ -319,22 +395,16 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
     const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
     const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
     const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
-    const rawNotebookDocumentMetadata = metadataUtilities.getRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, isIpynb);
-    await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, rawNotebookDocumentMetadata);
-}
+    const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, document.metadata, isIpynb);
 
-async function updateCellLanguagesAndKernels(document: vscode.NotebookDocument): Promise<void> {
-    const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
-
-    // update cell language and kernel
-    await Promise.all(document.getCells().map(async (cell) => {
-        const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
-        await vscodeUtilities.ensureCellLanguage(cell);
-        if (!cellMetadata.kernelName) {
-            // no kernel specified; apply global
-            vscodeUtilities.setCellKernelName(cell, notebookMetadata.kernelInfo.defaultKernelName);
+    if (isIpynb) {
+        if (!rawNotebookDocumentMetadata.custom.metadata.language_info) {
+            rawNotebookDocumentMetadata.custom.metadata.language_info = { name: "polyglot-notebook" };
+        } else {
+            rawNotebookDocumentMetadata.custom.metadata.language_info.name = "polyglot-notebook";
         }
-    }));
+    }
+    await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, rawNotebookDocumentMetadata);
 }
 
 export function endExecution(client: InteractiveClient | undefined, cell: vscode.NotebookCell, success: boolean) {

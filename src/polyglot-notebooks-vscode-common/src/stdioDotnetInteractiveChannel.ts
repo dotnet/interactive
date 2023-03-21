@@ -9,7 +9,8 @@ import {
     DiagnosticLogEntryProduced,
     KernelEventEnvelopeObserver,
     KernelReadyType,
-    SubmitCodeType
+    SubmitCodeType,
+    KernelReady
 } from './polyglot-notebooks/contracts';
 import { ProcessStart } from './interfaces';
 import { ReportChannel } from './interfaces/vscode-like';
@@ -33,7 +34,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
     private lineReader: LineReader;
     private notifyOnExit: boolean = true;
-    private readyPromise: Promise<void>;
+    private readyPromise: Promise<KernelReady>;
     private pingTimer: NodeJS.Timer | null = null;
     private _receiverSubject: Subject<KernelCommandOrEventEnvelope>;
     private _sender: IKernelCommandAndEventSender;
@@ -60,7 +61,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         this.childProcess = null;
 
         // prepare one-time ready event
-        this.readyPromise = new Promise<void>(async (resolve, reject) => {
+        this.readyPromise = new Promise<KernelReady>(async (resolve, reject) => {
 
             let args = processStart.args;
             // launch the process
@@ -93,7 +94,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
             const readySubscriber = this.subscribeToKernelEvents(eventEnvelope => {
                 if (eventEnvelope.eventType === KernelReadyType) {
                     readySubscriber.dispose();
-                    resolve();
+                    resolve(<KernelReady>(eventEnvelope.event));
                 }
             });
         });
@@ -198,7 +199,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         }
     }
 
-    waitForReady(): Promise<void> {
+    waitForReady(): Promise<KernelReady> {
         return this.readyPromise;
     }
 

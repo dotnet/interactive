@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine;
 
-internal static class KernelHostLauncher
+internal static class StdIoMode
 {
     public static async Task<int> Do(StartupOptions startupOptions, KernelHost kernelHost, IConsole console)
     {
-        var disposable = Program.StartToolLogging(startupOptions);
         await kernelHost.ConnectAndWaitAsync();
-        disposable.Dispose();
         return 0;
     }
 }

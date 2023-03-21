@@ -63,7 +63,7 @@ public class CSharpKernel :
     {
         KernelInfo.LanguageName = "C#";
         KernelInfo.LanguageVersion = "11.0";
-        KernelInfo.DisplayName = "C# Script";
+        KernelInfo.DisplayName = $"{KernelInfo.LocalName} - C# Script";
         _workspace = new InteractiveWorkspace();
 
         //For the VSCode-Add-In Directory.GetCurrentDirectory() would here return something like: c:\Users\<username>\AppData\Roaming\Code\User\globalStorage\ms-dotnettools.dotnet-interactive-vscode

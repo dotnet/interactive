@@ -5,10 +5,10 @@ import { ErrorOutputCreator, InteractiveClient } from "./interactiveClient";
 import { ReportChannel, Uri } from "./interfaces/vscode-like";
 import { CompositeKernel } from './polyglot-notebooks/compositeKernel';
 import { KernelCommandAndEventChannel } from "./DotnetInteractiveChannel";
-import { Logger } from "./polyglot-notebooks";
+import { KernelReady, Logger } from "./polyglot-notebooks";
 
 export interface ClientMapperConfiguration {
-    channelCreator: (notebookUri: Uri) => Promise<KernelCommandAndEventChannel>,
+    channelCreator: (notebookUri: Uri) => Promise<{ channel: KernelCommandAndEventChannel, kernelReady: KernelReady }>,
     createErrorOutput: ErrorOutputCreator,
     diagnosticChannel?: ReportChannel,
     configureKernel: (compositeKernel: CompositeKernel, notebookUri: Uri) => void,
@@ -55,10 +55,11 @@ export class ClientMapper {
             this.writeDiagnosticMessage(`creating client for '${key}'`);
             clientPromise = new Promise<InteractiveClient>(async (resolve, reject) => {
                 try {
-                    const channel = await this.config.channelCreator(uri);
+                    const { channel, kernelReady } = await this.config.channelCreator(uri);
                     const config = {
                         channel: channel,
                         createErrorOutput: this.config.createErrorOutput,
+                        kernelInfos: kernelReady?.kernelInfos || []
                     };
                     const client = new InteractiveClient(config);
                     this.config.configureKernel(client.kernel, uri);

@@ -65,8 +65,8 @@ export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
     }
 
 
-    waitForReady(): Promise<void> {
-        return Promise.resolve();
+    waitForReady(): Promise<contracts.KernelReady> {
+        return Promise.resolve({ kernelInfos: [] });
     }
 
     dispose() {

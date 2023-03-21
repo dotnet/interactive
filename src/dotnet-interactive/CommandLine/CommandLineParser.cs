@@ -17,7 +17,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.App.Connection;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents.ParserServer;
@@ -99,7 +98,7 @@ public static class CommandLineParser
 
         jupyter ??= JupyterCommand.Do;
 
-        startKernelHost ??= KernelHostLauncher.Do;
+        startKernelHost ??= StdIoMode.Do;
 
         startNotebookParser ??= ParseNotebookCommand.Do;
 
@@ -313,6 +312,15 @@ public static class CommandLineParser
             stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                 async (startupOptions, options, console, context, cancellationToken) =>
                 {
+                    using var c =
+                        console is TestConsole
+                            ? Disposable.Empty
+                            : Program.StartToolLogging(startupOptions);
+
+                    using var operation = Log.OnEnterAndExit();
+                    operation.Trace("Command line: {0}", Environment.CommandLine);
+                    operation.Trace("Process ID: {0}", Environment.ProcessId);
+
                     Console.InputEncoding = Encoding.UTF8;
                     Console.OutputEncoding = Encoding.UTF8;
                     Environment.CurrentDirectory = startupOptions.WorkingDir.FullName;
@@ -383,12 +391,6 @@ public static class CommandLineParser
                     }
                     else
                     {
-                        if (!isVSCode)
-                        {
-                            var proxy = await host.ConnectProxyKernelOnDefaultConnectorAsync("javascript", new Uri("kernel://webview/javascript"));
-
-                            proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
-                        }
                         await startKernelHost(startupOptions, host, console);
                     }
 
@@ -553,7 +555,5 @@ public static class CommandLineParser
             default:
                 throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
         }
-
-
     }
 }

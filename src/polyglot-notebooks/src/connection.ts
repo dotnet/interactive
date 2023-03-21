@@ -124,30 +124,34 @@ function notifyOfKernelInfoUpdates(compositeKernel: CompositeKernel) {
     }
 }
 
-export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.KernelInfoProduced, compositeKernel: CompositeKernel) {
-    if (kernelInfoProduced.kernelInfo.isProxy) {
-        Logger.default.warn(`skippin creation of proxy for a proxy kernel : [${JSON.stringify(kernelInfoProduced.kernelInfo)}]`);
-        return;
+export function ensureOrUpdateProxyForKernelInfo(kernelInfo: contracts.KernelInfo, compositeKernel: CompositeKernel) {
+    if (kernelInfo.isProxy) {
+        const host = extractHostAndNomalize(kernelInfo.remoteUri!);
+        if (host === extractHostAndNomalize(compositeKernel.kernelInfo.uri)) {
+            Logger.default.warn(`skippin creation of proxy for a proxy kernel : [${JSON.stringify(kernelInfo)}]`);
+            return;
+        }
     }
-    const uriToLookup = kernelInfoProduced.kernelInfo.uri ?? kernelInfoProduced.kernelInfo.remoteUri;
+    const uriToLookup = kernelInfo.isProxy ? kernelInfo.remoteUri! : kernelInfo.uri;
     if (uriToLookup) {
         let kernel = compositeKernel.findKernelByUri(uriToLookup);
         if (!kernel) {
             // add
             if (compositeKernel.host) {
-                Logger.default.info(`creating proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfoProduced)}`);
+                Logger.default.info(`creating proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfo)}`);
                 // check for clash with `kernelInfo.localName`
-                kernel = compositeKernel.host.connectProxyKernel(kernelInfoProduced.kernelInfo.localName, uriToLookup, kernelInfoProduced.kernelInfo.aliases);
+                kernel = compositeKernel.host.connectProxyKernel(kernelInfo.localName, uriToLookup, kernelInfo.aliases);
+                updateKernelInfo(kernel.kernelInfo, kernelInfo);
             } else {
                 throw new Error('no kernel host found');
             }
         } else {
-            Logger.default.info(`patching proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfoProduced)} `);
+            Logger.default.info(`patching proxy for uri[${uriToLookup}]with info ${JSON.stringify(kernelInfo)} `);
         }
 
         if (kernel.kernelInfo.isProxy) {
             // patch
-            updateKernelInfo(kernel.kernelInfo, kernelInfoProduced.kernelInfo);
+            updateKernelInfo(kernel.kernelInfo, kernelInfo);
         }
 
         notifyOfKernelInfoUpdates(compositeKernel);
@@ -155,15 +159,18 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfoProduced: contracts.K
 }
 
 export function isKernelInfoForProxy(kernelInfo: contracts.KernelInfo): boolean {
-    const hasUri = !!kernelInfo.uri;
-    const hasRemoteUri = !!kernelInfo.remoteUri;
-    return hasUri && hasRemoteUri;
+    return kernelInfo.isProxy;
 }
 
-export function updateKernelInfo(destination: contracts.KernelInfo, incoming: contracts.KernelInfo) {
-    destination.languageName = incoming.languageName ?? destination.languageName;
-    destination.languageVersion = incoming.languageVersion ?? destination.languageVersion;
-    destination.displayName = incoming.displayName;
+export function updateKernelInfo(destination: contracts.KernelInfo, source: contracts.KernelInfo) {
+    destination.languageName = source.languageName ?? destination.languageName;
+    destination.languageVersion = source.languageVersion ?? destination.languageVersion;
+    destination.displayName = source.displayName;
+    destination.isComposite = source.isComposite;
+
+    if (source.displayName) {
+        destination.displayName = source.displayName;
+    }
 
     const supportedDirectives = new Set<string>();
     const supportedCommands = new Set<string>();
@@ -184,14 +191,14 @@ export function updateKernelInfo(destination: contracts.KernelInfo, incoming: co
         supportedCommands.add(supportedCommand.name);
     }
 
-    for (const supportedDirective of incoming.supportedDirectives) {
+    for (const supportedDirective of source.supportedDirectives) {
         if (!supportedDirectives.has(supportedDirective.name)) {
             supportedDirectives.add(supportedDirective.name);
             destination.supportedDirectives.push(supportedDirective);
         }
     }
 
-    for (const supportedCommand of incoming.supportedKernelCommands) {
+    for (const supportedCommand of source.supportedKernelCommands) {
         if (!supportedCommands.has(supportedCommand.name)) {
             supportedCommands.add(supportedCommand.name);
             destination.supportedKernelCommands.push(supportedCommand);
@@ -253,6 +260,13 @@ export class Connector implements Disposable {
         });
     }
 
+    public addRemoteHostUri(remoteUri: string) {
+        const uri = extractHostAndNomalize(remoteUri);
+        if (uri) {
+            this._remoteUris.add(uri);
+        }
+    }
+
     public canReach(remoteUri: string): boolean {
         const host = extractHostAndNomalize(remoteUri);//?
         if (host) {
@@ -265,7 +279,7 @@ export class Connector implements Disposable {
     }
 }
 
-export function extractHostAndNomalize(kernelUri: string): string | undefined {
+export function extractHostAndNomalize(kernelUri: string): string {
     const filter: RegExp = /(?<host>.+:\/\/[^\/]+)(\/[^\/])*/gi;
     const match = filter.exec(kernelUri); //?
     if (match?.groups?.host) {

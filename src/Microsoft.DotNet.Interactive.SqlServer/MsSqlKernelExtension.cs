@@ -1,8 +1,10 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
@@ -15,8 +17,9 @@ public class MsSqlKernelExtension : IKernelExtension
             var sqlToolName = "MicrosoftSqlToolsServiceLayer";
             await Utils.CheckAndInstallGlobalToolAsync(sqlToolName, "1.2.0", "Microsoft.SqlServer.SqlToolsServiceLayer.Tool");
 
+            var sqlToolPath = Path.Combine(Paths.DotnetToolsPath, sqlToolName);
             compositeKernel
-                .AddKernelConnector(new ConnectMsSqlCommand(sqlToolName));
+                .AddKernelConnector(new ConnectMsSqlCommand(sqlToolPath));
 
             compositeKernel
                 .SubmissionParser

@@ -355,6 +355,7 @@ export interface KernelInfoProduced extends KernelEvent {
 }
 
 export interface KernelReady extends KernelEvent {
+    kernelInfos: Array<KernelInfo>;
 }
 
 export interface PackageAdded extends KernelEvent {

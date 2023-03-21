@@ -9,11 +9,11 @@
   "enabledApiProposals": [
     "notebookMessaging"
   ],
-  "preview": true,
+  "preview": false,
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.76.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -218,7 +218,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.408001",
+          "default": "1.0.416504",
           "description": "The required version of the .NET Interactive tool."
         }
       }
@@ -288,10 +288,6 @@
       {
         "command": "polyglot-notebook.shareValueWith",
         "title": "Share value with..."
-      },
-      {
-        "command": "polyglot-notebook.selectCellKernel",
-        "title": "Polyglot Notebook: Select cell kernel"
       },
       {
         "command": "polyglot-notebook.notebookEditor.restartKernel",

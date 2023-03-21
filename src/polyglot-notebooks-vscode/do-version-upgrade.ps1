@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 
 try {
     $stableDirectory = Resolve-Path $PSScriptROot
-    $insidersDirectory = Resolve-Path "$PSScriptRoot\..\dotnet-interactive-vscode-insiders"
+    $insidersDirectory = Resolve-Path "$PSScriptRoot\..\polyglot-notebooks-vscode-insiders"
 
     # ensure semantic token types are up to date
     Push-Location $insidersDirectory

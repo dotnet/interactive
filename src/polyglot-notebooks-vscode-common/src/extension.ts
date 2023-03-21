@@ -115,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
     await tokensProvider.init(context);
     context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider(semanticTokens.selector, tokensProvider, tokensProvider.semanticTokensLegend));
 
-    async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<KernelCommandAndEventChannel> {
+    async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<{ channel: KernelCommandAndEventChannel, kernelReady: contracts.KernelReady }> {
         const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
         const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
         const launchOptions = await getInteractiveLaunchOptions();
@@ -148,8 +148,11 @@ export async function activate(context: vscode.ExtensionContext) {
             clientMapper.closeClient(notebookUri, false);
         });
 
-        await channel.waitForReady();
-        return channel;
+        const kernelReady = await channel.waitForReady();
+        return {
+            channel,
+            kernelReady
+        };
     }
 
     function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {

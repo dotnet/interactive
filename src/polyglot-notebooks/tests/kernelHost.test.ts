@@ -30,46 +30,33 @@ describe("kernelHost",
             kernelHost.connect();
 
             expect(inMemory.local.messagesSent).to.deep.equal([{
-                event: {},
+                event:
+                {
+                    kernelInfos:
+                        [{
+                            aliases: [],
+                            displayName: 'vscode',
+                            isComposite: true,
+                            isProxy: false,
+                            localName: 'vscode',
+                            supportedDirectives: [],
+                            supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
+                            uri: 'kernel://vscode/'
+                        },
+                        {
+                            aliases: ['test1', 'test2'],
+                            displayName: 'test',
+                            isComposite: false,
+                            isProxy: false,
+                            languageName: 'customLanguage',
+                            localName: 'test',
+                            supportedDirectives: [],
+                            supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'customCommand' }],
+                            uri: 'kernel://vscode/test'
+                        }]
+                },
                 eventType: 'KernelReady',
                 routingSlip: ['kernel://vscode/']
-            },
-            {
-                event:
-                {
-                    kernelInfo:
-                    {
-                        aliases: [],
-                        displayName: 'vscode',
-                        isComposite: true,
-                        isProxy: false,
-                        localName: 'vscode',
-                        supportedDirectives: [],
-                        supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
-                        uri: 'kernel://vscode/'
-                    }
-                },
-                eventType: 'KernelInfoProduced',
-                routingSlip: ['kernel://vscode/']
-            },
-            {
-                event:
-                {
-                    kernelInfo:
-                    {
-                        aliases: ['test1', 'test2'],
-                        displayName: 'test',
-                        isComposite: false,
-                        isProxy: false,
-                        languageName: 'customLanguage',
-                        localName: 'test',
-                        supportedDirectives: [],
-                        supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'customCommand' }],
-                        uri: 'kernel://vscode/test'
-                    }
-                },
-                eventType: 'KernelInfoProduced',
-                routingSlip: ['kernel://vscode/test']
             }]);
         });
 

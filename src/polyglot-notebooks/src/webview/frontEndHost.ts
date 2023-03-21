@@ -29,7 +29,7 @@ export function createHost(
         next: (envelope) => {
             if (connection.isKernelEventEnvelope(envelope) && envelope.eventType === contracts.KernelInfoProducedType) {
                 const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
-                connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced, compositeKernel);
+                connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced.kernelInfo, compositeKernel);
             }
         }
     });

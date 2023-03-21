@@ -6,6 +6,8 @@ import * as rxjs from "rxjs";
 import * as connection from "../connection";
 import { Logger } from "../logger";
 import { KernelHost } from '../kernelHost';
+import { v4 as uuid } from 'uuid';
+import { KernelInfo } from '../contracts';
 
 type KernelMessagingApi = {
     onDidReceiveKernelMessage: (arg: any) => any;
@@ -31,14 +33,32 @@ function configure(global: any, context: KernelMessagingApi) {
         }
     });
 
+    const webViewId = uuid();
     context.onDidReceiveKernelMessage((arg: any) => {
-        if (arg.envelope) {
+        if (arg.envelope && arg.webViewId === webViewId) {
             const envelope = <connection.KernelCommandOrEventEnvelope><any>(arg.envelope);
             if (connection.isKernelEventEnvelope(envelope)) {
                 Logger.default.info(`channel got ${envelope.eventType} with token ${envelope.command?.token} and id ${envelope.command?.id}`);
             }
 
             remoteToLocal.next(envelope);
+        } else if (arg.webViewId === webViewId) {
+            const kernelHost = (<KernelHost>(global['webview'].kernelHost));
+            if (kernelHost) {
+                switch (arg.preloadCommand) {
+                    case '#!connect': {
+                        Logger.default.info(`connecting to kernels from extension host`);
+                        const kernelInfos = <KernelInfo[]>(arg.kernelInfos);
+                        for (const kernelInfo of kernelInfos) {
+                            const remoteUri = kernelInfo.isProxy ? kernelInfo.remoteUri! : kernelInfo.uri;
+                            if (!kernelHost.tryGetConnector(remoteUri)) {
+                                kernelHost.defaultConnector.addRemoteHostUri(remoteUri);
+                            }
+                            connection.ensureOrUpdateProxyForKernelInfo(kernelInfo, kernelHost.kernel);
+                        }
+                    }
+                }
+            }
         }
     });
 
@@ -52,9 +72,9 @@ function configure(global: any, context: KernelMessagingApi) {
         localToRemote,
         remoteToLocal,
         () => {
-            const kernelInfoProduced = (<KernelHost>(global['webview'].kernelHost)).getKernelInfoProduced();
+            const kernelInfos = (<KernelHost>(global['webview'].kernelHost)).getKernelInfos();
             const hostUri = (<KernelHost>(global['webview'].kernelHost)).uri;
-            context.postKernelMessage({ preloadCommand: '#!connect', kernelInfoProduced, hostUri });
+            context.postKernelMessage({ preloadCommand: '#!connect', kernelInfos, hostUri, webViewId });
         }
     );
 }

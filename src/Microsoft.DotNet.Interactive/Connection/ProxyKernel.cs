@@ -16,7 +16,6 @@ public sealed class ProxyKernel : Kernel
     private readonly IKernelCommandAndEventSender _sender;
     private readonly IKernelCommandAndEventReceiver _receiver;
     private ExecutionContext _executionContext;
-    private bool _requiresRequestKernelInfoOnFirstCommand = true;
     private string _suppressCompletionsForCommandId;
 
     private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext
@@ -49,7 +48,7 @@ public sealed class ProxyKernel : Kernel
         {
             if (coe.Event is { } e)
             {
-                if (e is KernelInfoProduced {Command: NoCommand} kip && kip.KernelInfo.Uri == KernelInfo.RemoteUri)
+                if (e is KernelInfoProduced { Command: NoCommand } kip && kip.KernelInfo.Uri == KernelInfo.RemoteUri)
                 {
                     UpdateKernelInfoFromEvent(kip);
                     PublishEvent(new KernelInfoProduced(KernelInfo, e.Command));
@@ -66,14 +65,10 @@ public sealed class ProxyKernel : Kernel
 
     private void UpdateKernelInfoFromEvent(KernelInfoProduced kernelInfoProduced)
     {
-        _requiresRequestKernelInfoOnFirstCommand = false;
-        KernelInfo.LanguageName = kernelInfoProduced.KernelInfo.LanguageName;
-        KernelInfo.LanguageVersion = kernelInfoProduced.KernelInfo.LanguageVersion;
-        KernelInfo.DisplayName = kernelInfoProduced.KernelInfo.DisplayName;
-        ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfoProduced.KernelInfo.SupportedDirectives);
-        ((HashSet<KernelCommandInfo>)KernelInfo.SupportedKernelCommands).UnionWith(kernelInfoProduced.KernelInfo.SupportedKernelCommands);
+        var kernelInfo = kernelInfoProduced.KernelInfo;
+        UpdateKernelInfo(kernelInfo);
     }
-    
+
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
     {
         if (command.OriginUri is null)
@@ -83,13 +78,13 @@ public sealed class ProxyKernel : Kernel
                 command.OriginUri = KernelInfo.Uri;
             }
         }
-       
+
         _executionContext = ExecutionContext.Capture();
         var token = command.GetOrCreateToken();
         command.GetOrCreateId();
 
         command.OriginUri ??= KernelInfo.Uri;
-        
+
         if (command.DestinationUri is null)
         {
             command.DestinationUri = KernelInfo.RemoteUri;
@@ -104,14 +99,16 @@ public sealed class ProxyKernel : Kernel
         }
 
         var targetKernelName = command.TargetKernelName;
-        command.TargetKernelName = null;
-        var completionSource = new TaskCompletionSource<KernelEvent>();
-       
-        _inflight[token] = (command, _executionContext, completionSource, context);
-        
-        ExecutionContext.SuppressFlow();
+        if (command.TargetKernelName == Name)
+        {
+            command.TargetKernelName = null;
+        }
 
-        EnsureKernelInfoIsLoaded(command, context);
+        var completionSource = new TaskCompletionSource<KernelEvent>();
+
+        _inflight[token] = (command, _executionContext, completionSource, context);
+
+        ExecutionContext.SuppressFlow();
 
         var t = _sender.SendAsync(command, context.CancellationToken);
         t.ContinueWith(task =>
@@ -134,25 +131,6 @@ public sealed class ProxyKernel : Kernel
                 context.Fail(command, cf.Exception, cf.Message);
             }
         });
-    }
-
-    private void EnsureKernelInfoIsLoaded(KernelCommand command, KernelInvocationContext context)
-    {
-        if (_requiresRequestKernelInfoOnFirstCommand)
-        {
-            _requiresRequestKernelInfoOnFirstCommand = false;
-            if (command is not RequestKernelInfo)
-            {
-                var r = new RequestKernelInfo(KernelInfo.RemoteUri);
-
-                _suppressCompletionsForCommandId = r.GetOrCreateId();
-                r.Parent = command.Parent ?? command;
-                r.OriginUri = KernelInfo.Uri;
-                r.DestinationUri = KernelInfo.RemoteUri;
-
-                _sender.SendAsync(r, context.CancellationToken).GetAwaiter().GetResult();
-            }
-        }
     }
 
     private bool CanHandleLocally(KernelCommand command)
@@ -229,9 +207,9 @@ public sealed class ProxyKernel : Kernel
                     {
                         UpdateKernelInfoFromEvent(kip);
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
-                        
+
                         newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
-                        
+
                         if (pending.executionContext is { } ec)
                         {
                             ExecutionContext.Run(ec, _ =>
@@ -279,5 +257,14 @@ public sealed class ProxyKernel : Kernel
         }
 
         return commandOriginUri is null;
+    }
+
+    public void UpdateKernelInfo(KernelInfo kernelInfo)
+    {
+        KernelInfo.IsComposite = kernelInfo.IsComposite;
+        KernelInfo.LanguageName = kernelInfo.LanguageName;
+        KernelInfo.LanguageVersion = kernelInfo.LanguageVersion;
+        KernelInfo.UpdateSupportedKernelCommandsFrom(kernelInfo);
+        ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfo.SupportedDirectives);
     }
 }

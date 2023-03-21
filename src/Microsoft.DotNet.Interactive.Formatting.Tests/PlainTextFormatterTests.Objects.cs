@@ -50,67 +50,7 @@ public partial class PlainTextFormatterTests
 
             s.Should().Contain("Name: Bob");
         }
-
-        [Fact]
-        public void It_emits_a_default_maximum_number_of_properties()
-        {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyProperties>();
-
-            var writer = new StringWriter();
-            formatter.Format(new ClassWithManyProperties(), writer);
-
-            var s = writer.ToString();
-            s.Should().Be(
-                @$"{nameof(ClassWithManyProperties)}
-    X1: 1
-    X2: 2
-    X3: 3
-    X4: 4
-    X5: 5
-    X6: 6
-    X7: 7
-    X8: 8
-    X9: 9
-    X10: 10
-    X11: 11
-    X12: 12
-    X13: 13
-    X14: 14
-    X15: 15
-    X16: 16
-    X17: 17
-    X18: 18
-    X19: 19
-    X20: 20
-    ...".ReplaceLineEndings());
-        }
-
-        [Fact]
-        public void It_emits_a_configurable_maximum_number_of_properties()
-        {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyProperties>();
-            PlainTextFormatter.MaxProperties = 1;
-
-            var writer = new StringWriter();
-            formatter.Format(new ClassWithManyProperties(), writer);
-
-            var s = writer.ToString();
-            s.Should().Be($"ClassWithManyProperties{Environment.NewLine}    X1: 1{Environment.NewLine}    ...");
-        }
-
-        [Fact]
-        public void When_Zero_properties_chosen_just_ToString_is_used()
-        {
-            var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithManyPropertiesAndCustomToString>();
-            PlainTextFormatter.MaxProperties = 0;
-
-            var writer = new StringWriter();
-            formatter.Format(new ClassWithManyPropertiesAndCustomToString(), writer);
-
-            var s = writer.ToString();
-            s.Should().Be($"{typeof(ClassWithManyPropertiesAndCustomToString)} custom ToString value");
-        }
-
+        
         [Fact]
         public void When_Zero_properties_available_to_choose_just_ToString_is_used()
         {

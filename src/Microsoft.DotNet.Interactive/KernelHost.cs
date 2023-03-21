@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
@@ -89,12 +90,12 @@ public class KernelHost : IDisposable
                 if (e.Command.DestinationUri is { } destinationUri &&
                     _kernel.ChildKernels.TryGetByUri(destinationUri, out var kernelByUri))
                 {
-                    kernelByUri.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
+                    kernelByUri.KernelInfo.UpdateSupportedKernelCommandsFrom(kernelInfoProduced.KernelInfo);
                 }
                 else if (e.Command.TargetKernelName is { } targetKernelName &&
                          _kernel.ChildKernels.TryGetByAlias(targetKernelName, out var kernelByName))
                 {
-                    kernelByName.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
+                    kernelByName.KernelInfo.UpdateSupportedKernelCommandsFrom(kernelInfoProduced.KernelInfo);
                 }
             }
 
@@ -124,25 +125,19 @@ public class KernelHost : IDisposable
             }
         });
 
-        await _defaultSender.SendAsync(
-            new KernelReady(),
-            _cancellationTokenSource.Token);
+        var kernelInfos = new List<KernelInfo>();
 
-        var infoProduced = new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None);
-        infoProduced.RoutingSlip.Stamp(_kernel.KernelInfo.Uri);
-
-        await _defaultSender.SendAsync(
-            infoProduced,
-            _cancellationTokenSource.Token);
-
-        foreach (var kernel in _kernel.ChildKernels.Where(k => k is not ProxyKernel))
+        _kernel.VisitSubkernelsAndSelf(k =>
         {
-            infoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
-            infoProduced.RoutingSlip.Stamp(kernel.KernelInfo.Uri);
-            await _defaultSender.SendAsync(
-                infoProduced,
-                _cancellationTokenSource.Token);
-        }
+            if (k.KernelInfo.IsProxy == false)
+            {
+                kernelInfos.Add(k.KernelInfo);
+            }
+        }, true);
+
+        await _defaultSender.SendAsync(
+            new KernelReady(kernelInfos.ToArray()),
+            _cancellationTokenSource.Token);
     }
 
     public async Task ConnectAndWaitAsync()

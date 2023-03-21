@@ -224,7 +224,7 @@ public class SerializationTests
                          e.Command.RoutingSlip.StampAsArrived(new Uri("kernel://somelocation/kernelName"));
                          e.Command.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName"));
                      }
-               
+
                      e.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName"));
                      return e;
                  }))
@@ -316,12 +316,7 @@ public class SerializationTests
                 new KernelInfo("javascript", aliases: new[] { "js" })
                 {
                     LanguageName = "JavaScript",
-                    DisplayName = "JavaScript",
                     Uri = new Uri("kernel://vscode/javascript"),
-                    SupportedDirectives = new[]
-                    {
-                        new KernelDirectiveInfo("#r")
-                    },
                     SupportedKernelCommands = new[]
                     {
                         new KernelCommandInfo(nameof(SubmitCode))
@@ -331,8 +326,32 @@ public class SerializationTests
                 {
                     OriginUri = new("kernel://pid-1234/csharp")
                 });
-
-            yield return new KernelReady();
+            
+            yield return new KernelReady(new[]
+            {
+                new KernelInfo("javascript", aliases: new[] { "js" })
+                {
+                    LanguageName = "JavaScript",
+                    Uri = new Uri("kernel://vscode/javascript"),
+                    SupportedKernelCommands = new[]
+                    {
+                        new KernelCommandInfo(nameof(SubmitCode))
+                    }
+                },
+                new KernelInfo("csharp", aliases: new[] { "cs" })
+                {
+                    LanguageName = "CSharp",
+                    Uri = new Uri("kernel://pid/csharp"),
+                    SupportedDirectives = new[]
+                    {
+                        new KernelDirectiveInfo("#r"),
+                    },
+                    SupportedKernelCommands = new[]
+                    {
+                        new KernelCommandInfo(nameof(SubmitCode))
+                    }
+                }
+            });
 
             yield return new PackageAdded(
                 new ResolvedPackageReference(
@@ -342,7 +361,7 @@ public class SerializationTests
                     packageRoot: "/the/package/root",
                     probingPaths: new[] { "/probing/path/1", "/probing/path/2" }),
                 new SubmitCode("#r \"nuget:ThePackage,1.2.3\""));
-                
+
             yield return new ReturnValueProduced(
                 new HtmlString("<b>hi!</b>"),
                 new SubmitCode("b(\"hi!\")", "csharp", SubmissionType.Run),

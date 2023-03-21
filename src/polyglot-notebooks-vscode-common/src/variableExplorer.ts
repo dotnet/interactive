@@ -32,7 +32,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
                     if (targetKernelIndex >= 0) {
                         const targetKernelSelectorOption = kernelSelectorOptions[targetKernelIndex];
                         // ends with newline to make adding code easier
-                        const code = `#!share --from ${variableInfo.sourceKernelName} ${variableInfo.valueName}\n`;
+                        const code = `#!set --value @${variableInfo.sourceKernelName}:${variableInfo.valueName} --name ${variableInfo.valueName}\n`;
                         const command: contracts.SendEditableCode = {
                             kernelName: targetKernelSelectorOption.kernelName,
                             code,

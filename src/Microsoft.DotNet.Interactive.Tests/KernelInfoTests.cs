@@ -145,55 +145,6 @@ public class KernelInfoTests
         }
 
         [Fact]
-        public async Task proxyKernel_kernelInfo_is_updated_to_reflect_remote_kernelInfo_on_first_command_sent_to_remote()
-        {
-            using var localCompositeKernel = new CompositeKernel("LOCAL")
-            {
-                new FakeKernel("fsharp")
-            };
-            var proxiedCsharpKernel = new CSharpKernel();
-            using var remoteCompositeKernel = new CompositeKernel("REMOTE")
-            {
-                proxiedCsharpKernel,
-                new FakeKernel("fsharp", languageName: "fsharp", displayName: "Eff Sharp")
-            };
-
-            ConnectHost.ConnectInProcessHost(
-                localCompositeKernel,
-                remoteCompositeKernel);
-
-            var remoteKernelUri = new Uri("kernel://remote/fsharp");
-
-            await localCompositeKernel
-                .Host
-                .ConnectProxyKernelOnDefaultConnectorAsync(
-                    "proxied-fsharp",
-                    remoteKernelUri);
-
-            var proxyKernel = localCompositeKernel.FindKernelByName("proxied-fsharp");
-
-            proxyKernel.KernelInfo
-                .Should()
-                .BeEquivalentTo(new
-                {
-                    LanguageName = (string)null,
-                    RemoteUri = remoteKernelUri
-                }, c => c.ExcludingMissingMembers());
-
-            await localCompositeKernel.SendAsync(
-                new SubmitCode("let x = 1",targetKernelName: "proxied-fsharp"));
-
-            proxyKernel.KernelInfo
-                .Should()
-                .BeEquivalentTo(new
-                {
-                    LanguageName = "fsharp",
-                    DisplayName = "Eff Sharp",
-                    RemoteUri = remoteKernelUri
-                }, c => c.ExcludingMissingMembers());
-        }
-
-        [Fact]
         public async Task It_returns_info_about_unproxied_subkernels_of_remote_composite()
         {
             using var localCompositeKernel = new CompositeKernel("LOCAL-COMPOSITE")
@@ -225,7 +176,7 @@ public class KernelInfoTests
                 .Should()
                 .Contain(new Uri("kernel://remote/remote-fake"));
         }
-        
+
         [Fact]
         public async Task Unproxied_kernels_have_a_URI()
         {
@@ -307,9 +258,9 @@ public class KernelInfoTests
         public async Task When_kernel_info_is_requested_from_proxy_then_ProxyKernel_kernel_info_is_updated()
         {
             using var localCompositeKernel = new CompositeKernel();
-            
+
             var remoteCsharpKernel = new CSharpKernel();
-            
+
             using var remoteCompositeKernel = new CompositeKernel
             {
                 remoteCsharpKernel
@@ -348,10 +299,10 @@ public class KernelInfoTests
         public void when_kernels_are_added_it_produces_KernelInfoProduced_events()
         {
             using var compositeKernel = new CompositeKernel();
-                
+
             var events = compositeKernel.KernelEvents.ToSubscribedList();
 
-            compositeKernel.Add(new CSharpKernel(), new []{"cs", "cs2"});
+            compositeKernel.Add(new CSharpKernel(), new[] { "cs", "cs2" });
 
             events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "csharp");
         }
@@ -370,7 +321,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 var compositeKernel = Kernel.Root as CompositeKernel;
 compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
 ";
-            var result = await compositeKernel.SendAsync(new SubmitCode(code, targetKernelName:"csharp"));
+            var result = await compositeKernel.SendAsync(new SubmitCode(code, targetKernelName: "csharp"));
 
             result.Events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "csharpTwo");
         }
@@ -498,7 +449,6 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
             {
                 new FakeKernel("fsharp")
             };
-
 
         using var remoteCompositeKernel = new CompositeKernel("REMOTE")
             {

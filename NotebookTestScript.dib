@@ -1,6 +1,6 @@
 #!meta
 
-{"kernelInfo":{"defaultKernelName":"csharp","items":[{"name":"csharp","aliases":[]}]}}
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
 
 #!markdown
 
@@ -380,9 +380,15 @@ using Microsoft.DotNet.Interactive.Commands;
 
 var _ = Kernel.Root.SendAsync(new SendEditableCode("fsharp","#!share --from csharp x\nx"));
 
+#!markdown
+
+The code below will add 2 markdown cells
+
 #!csharp
 
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 
-var _ = Kernel.Root.SendAsync(new SendEditableCode("markdown","# markdown cell"));
+for(var i = 0; i<2;i++){
+    var _ = await Kernel.Root.SendAsync(new SendEditableCode("markdown",$"# markdown cell {i}"));
+}   

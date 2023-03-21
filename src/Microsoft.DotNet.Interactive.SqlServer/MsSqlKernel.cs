@@ -22,7 +22,6 @@ internal class MsSqlKernel : ToolsServiceKernel
         string connectionString,
         ToolsServiceClient client) : base(name, client, "T-SQL")
     {
-        KernelInfo.DisplayName = "T-SQL";
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionString));

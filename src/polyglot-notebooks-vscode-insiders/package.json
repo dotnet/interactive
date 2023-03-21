@@ -9,11 +9,11 @@
   "enabledApiProposals": [
     "notebookMessaging"
   ],
-  "preview": true,
+  "preview": false,
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "1.76.0-insider"
+    "vscode": "1.77.0-insider"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -218,7 +218,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.408001",
+          "default": "1.0.416504",
           "description": "The required version of the .NET Interactive tool."
         }
       }
@@ -288,10 +288,6 @@
       {
         "command": "polyglot-notebook.shareValueWith",
         "title": "Share value with..."
-      },
-      {
-        "command": "polyglot-notebook.selectCellKernel",
-        "title": "Polyglot Notebook: Select cell kernel"
       },
       {
         "command": "polyglot-notebook.notebookEditor.restartKernel",
@@ -791,9 +787,7 @@
     "compile-variable-grid": "cd ../polyglot-notebooks-ui-components && npm run buildDev",
     "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../polyglot-notebooks-ui-components/dist/*.* ./resources",
     "vscode:prepublish": "npm run compile",
-    "compile-and-copy-preloads": "npm run compile-preloads && npm run copy-preloads",
-    "compile-and-copy-variable-grid": "npm run compile-variable-grid && npm run copy-variable-grid",
-    "compile": "npm run lint && tsc -p ./ && npm run compile-and-copy-preloads && npm run compile-and-copy-variable-grid",
+    "compile": "npm run lint && tsc -p ./ && npm run compile-preloads && npm run compile-variable-grid && npm run copy-preloads && npm run copy-variable-grid",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
