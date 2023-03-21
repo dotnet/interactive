@@ -11,7 +11,7 @@ public class SendValue : KernelCommand
     public SendValue(
         string name,
         object value,
-        FormattedValue formattedValue = null,
+        FormattedValue formattedValue = null, // FIX: (SendValue) make this parameter required
         string targetKernelName = null) : base(targetKernelName)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -21,7 +21,7 @@ public class SendValue : KernelCommand
 
         Name = name;
         Value = value;
-        FormattedValue = formattedValue;
+        FormattedValue = formattedValue ?? throw new ArgumentNullException(nameof(formattedValue));
     }
 
     public FormattedValue FormattedValue { get; }

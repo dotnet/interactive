@@ -124,7 +124,7 @@ using {typeof(PocketView).Namespace};
         var kernel = CreateKernel(language, openTestingNamespaces: true);
 
         await kernel.FindKernelByName("csharp").As<CSharpKernel>()
-            .SendAsync(new SendValue(nameof(stringValue), stringValue));
+            .SendAsync(new SendValue(nameof(stringValue), stringValue, FormattedValue.FromObject(stringValue)[0]));
 
         var code = $"stringValue.DisplayAs(\"{mimeType}\");";
 
