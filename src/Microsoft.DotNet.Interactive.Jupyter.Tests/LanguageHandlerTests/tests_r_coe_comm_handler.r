@@ -83,7 +83,7 @@ test_that("test_can_get_kernel_ready_on_comm_open", {
     t <- testComm()
     .dotnet_coe_comm_hander_env$coe_handler_connect_to_comm(t, list())
     
-    msg_sent <- create_msg_sent("KernelReady")
+    msg_sent <- create_msg_sent("KernelReady", list(kernelInfos=list()))
     expect_equal(t$msg_sent, msg_sent, info=sprintf('expected: %s\n  actual: %s', msg_sent, t$msg_sent))
 })
 

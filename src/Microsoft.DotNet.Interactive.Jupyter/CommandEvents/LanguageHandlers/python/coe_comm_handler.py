@@ -184,7 +184,8 @@ def __get_dotnet_coe_comm_handler():
         pass
 
     class KernelReady(KernelEvent):
-        pass
+        def __init__(self, kernelInfos = []):
+            self.kernelInfos = kernelInfos
 
     class CommandSucceeded(KernelEvent):
         pass

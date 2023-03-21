@@ -42,7 +42,7 @@ library(jsonlite);
 .dotnet_coe_comm_hander_env$is_ready <- function() {
     return (
         .dotnet_coe_comm_hander_env$eventEnvelope(
-                .dotnet_coe_comm_hander_env$emptyEvent, 
+                list(kernelInfos=list()), 
                 .dotnet_coe_comm_hander_env$KernelReady)
     );
 }

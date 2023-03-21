@@ -77,7 +77,7 @@ class TestCoeCommHandler(unittest.TestCase):
         self.handler.handle_control_comm_opened(self.comm, 'test_target')
         
     def test_can_get_kernel_ready_on_comm_open(self):
-        self.assertEqual(self.comm.msg_sent, self.create_msg_sent("KernelReady"))
+        self.assertEqual(self.comm.msg_sent, self.create_msg_sent("KernelReady", { "kernelInfos": [] }))
     
     def test_can_handle_invalid_json(self):
         msg_received = {"content": { "data": {'type': 'command', 'commandOrEvent': 'just a string'}}};
