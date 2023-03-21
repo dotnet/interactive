@@ -11,11 +11,14 @@ namespace Microsoft.DotNet.Interactive;
 [TypeFormatterSource(typeof(MessageDiagnosticsFormatterSource))]
 public class KernelCommandResult
 {
-    private readonly List<KernelEvent> _events = new();
+    private readonly List<KernelEvent> _events;
 
-    internal KernelCommandResult(KernelCommand command)
+    public KernelCommandResult(KernelCommand command, IEnumerable<KernelEvent> events = null)
     {
         Command = command;
+
+        _events = new();
+        _events.AddRange(events);
     }
 
     public KernelCommand Command { get; }
