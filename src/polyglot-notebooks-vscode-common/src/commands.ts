@@ -175,8 +175,8 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
     const eol = getEol();
 
     const notebookFileFilters = {
-        'Polyglot Notebooks': ['dib'],
-        'Jupyter Notebooks': ['ipynb'],
+        'Polyglot Notebook Script': ['dib'],
+        'Jupyter Notebook': ['ipynb'],
     };
 
     async function newNotebookCommandHandler(preferDefaults: boolean): Promise<void> {

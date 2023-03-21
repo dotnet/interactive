@@ -276,13 +276,27 @@ const openedNotebooks = new Set<string>();
 function markNotebookAsOpened(notebook: vscode.NotebookDocument) {
     openedNotebooks.add(notebook.uri.fsPath);
 }
+
 function isNotebookOpenComplete(notebook: vscode.NotebookDocument) {
     return openedNotebooks.has(notebook.uri.fsPath);
 }
+
 function stopTrackingNotebook(notebook: vscode.NotebookDocument) {
     openedNotebooks.delete(notebook.uri.fsPath);
 }
+
 async function ensureCellKernelMetadata(cell: vscode.NotebookCell, options: { preferPreviousCellMetadata: boolean }): Promise<void> {
+    if (cell.document.languageId === 'markdown') {
+        const existingCellMetadata = cell.metadata?.custom?.metadata;
+        if (existingCellMetadata?.polyglot_notebook || existingCellMetadata?.dotnet_interactive) {
+            const updatedCellMetadata = { ...cell.metadata };
+            delete updatedCellMetadata.custom.metadata.dotnet_interactive;
+            delete updatedCellMetadata.custom.metadata.polyglot_notebook;
+            await vscodeNotebookManagement.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, updatedCellMetadata);
+        }
+        return;
+    }
+
     // if we found the cell ensure it has kernel metadata
     const cellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
     if (!cellMetadata.kernelName) {
