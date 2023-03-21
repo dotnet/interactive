@@ -18,7 +18,10 @@ public class KernelCommandResult
         Command = command;
 
         _events = new();
-        _events.AddRange(events);
+        if (events is not null)
+        {
+            _events.AddRange(events);
+        }
     }
 
     public KernelCommand Command { get; }
