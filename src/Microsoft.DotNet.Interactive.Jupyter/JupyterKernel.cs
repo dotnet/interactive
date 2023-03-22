@@ -21,6 +21,7 @@ internal partial class JupyterKernel : Kernel
     {
         KernelInfo.LanguageName = languageName;
         KernelInfo.LanguageVersion = languageVersion;
+        KernelInfo.DisplayName = $"{name} - {languageName} {languageVersion} (Preview)";
         _sender = sender ?? throw new ArgumentNullException(nameof(sender));
         _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
 

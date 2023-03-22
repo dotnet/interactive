@@ -114,7 +114,7 @@ internal class JupyterConnection : IJupyterConnection
             throw new KernelStartException(kernelSpecName, $"Process Exited with exit code {kernelProcess.ExitCode}. Ensure you are running in the correct environment.");
         }
 
-        var kernelConnection = new ZMQKernelConnection(connectionInfo, kernelProcess);
+        var kernelConnection = new ZMQKernelConnection(connectionInfo, kernelProcess, kernelSpecName);
         return kernelConnection;
     }
 

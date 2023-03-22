@@ -207,15 +207,15 @@ Some tests require additional setup or will be skipped. `JupyterKernel` tests fo
 ### Run tests with a local Jupyter Server
 
 1. Install [Jupyter server](https://docs.jupyter.org/en/latest/install.html) or [Anaconda](https://www.anaconda.com/products/distribution)
-2. [Install R kernel](https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/) for R tests by calling 
+2. [Install R kernel](https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/) for R tests by calling the following in Anaconda Prompt (Windows) or the terminal (Mac/Linux)
 ```
 conda install -c r r-irkernel
 ```
-3. Start the server locally as mentioned [here](https://docs.jupyter.org/en/latest/running.html)
+3. Start the server locally as mentioned [here](https://docs.jupyter.org/en/latest/running.html). You can use any random string or guid for your_token value.
 ```
 jupyter notebook --no-browser --NotebookApp.token=<your_token> --port=8888
 ```
-4. Set an environment variable `TEST_DOTNET_JUPYTER_HTTP_CONN` pointing to the server and the token generated for the Jupyter server as 
+4. Set an environment variable `TEST_DOTNET_JUPYTER_HTTP_CONN` pointing to the server and the token you are using for the Jupyter server as 
 ```
 --url http://localhost:8888 --token <your_token>
 ```
@@ -224,7 +224,7 @@ jupyter notebook --no-browser --NotebookApp.token=<your_token> --port=8888
 ### Run tests with a Jupyter Kernel over ZMQ
 
 1. Install [Anaconda](https://www.anaconda.com/products/distribution)
-2. [Install R kernel](https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/) for R tests by calling 
+2. [Install R kernel](https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/) for R tests by calling the following in Anaconda Prompt (Windows) or the terminal (Mac/Linux) 
 ```
 conda install -c r r-irkernel
 ```
