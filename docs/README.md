@@ -34,7 +34,7 @@ If you're just starting out here, you might want to start with the [FAQ](./FAQ.m
 
 ## .NET Interactive Developer Documentation
 
-* Using the .NET Interactive [command-line interface](../src/dotnet-interactive/CommandLine/readme.md)
+* Using the .NET Interactive [command-line interface](command-line-interface.md)
 
 ### .NET API Guide ([TODO](https://github.com/dotnet/interactive/issues/815))
 
