@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -169,5 +170,104 @@ namespace Dummy
         {
             throw new Exception("oops!");
         }
+    }
+
+    public class ClassImplementingIDictionary_of_int_string : IDictionary<int, string>
+    {
+        string IDictionary<int, string>.this[int key]
+        {
+            get => "2";
+            set => throw new NotImplementedException();
+        }
+
+        ICollection<int> IDictionary<int, string>.Keys => new[] { 1 };
+
+        ICollection<string> IDictionary<int, string>.Values => new[] { "2" };
+
+        int ICollection<KeyValuePair<int, string>>.Count => 1;
+
+        bool ICollection<KeyValuePair<int, string>>.IsReadOnly => true;
+
+        void IDictionary<int, string>.Add(int key, string value)
+        {
+        }
+
+        void ICollection<KeyValuePair<int, string>>.Add(KeyValuePair<int, string> item)
+        {
+        }
+
+        void ICollection<KeyValuePair<int, string>>.Clear()
+        {
+        }
+
+        bool ICollection<KeyValuePair<int, string>>.Contains(KeyValuePair<int, string> item)
+        {
+            return (item.Key == 1 && item.Value == "2");
+        }
+
+        bool IDictionary<int, string>.ContainsKey(int key)
+        {
+            return (key == 1);
+        }
+
+        void ICollection<KeyValuePair<int, string>>.CopyTo(KeyValuePair<int, string>[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerator<KeyValuePair<int, string>> IEnumerable<KeyValuePair<int, string>>.GetEnumerator()
+        {
+            return ((IEnumerable<KeyValuePair<int, string>>)new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+        }
+
+        bool IDictionary<int, string>.Remove(int key)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool ICollection<KeyValuePair<int, string>>.Remove(KeyValuePair<int, string> item)
+        {
+            return false;
+        }
+
+        bool IDictionary<int, string>.TryGetValue(int key, out string value)
+        {
+            value = "2";
+            return (key == 1);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+        }
+    }
+
+    public class ClassWithPropertiesThatIsAlsoIEnumerable : IEnumerable
+    {
+        private readonly IEnumerable _values;
+
+        public ClassWithPropertiesThatIsAlsoIEnumerable(IEnumerable values)
+        {
+            _values = values;
+        }
+
+        public string Property { get; set; } 
+
+        IEnumerator IEnumerable.GetEnumerator() => _values.GetEnumerator();
+    }
+
+    public class ClassWithPropertiesThatIsAlsoIEnumerable<T> : IEnumerable<T>
+    {
+        private readonly IEnumerable<T> _values;
+
+        public ClassWithPropertiesThatIsAlsoIEnumerable(IEnumerable<T> values)
+        {
+            _values = values;
+        }
+
+        public string Property { get; set; } 
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => _values.GetEnumerator();
+        public IEnumerator GetEnumerator() => _values.GetEnumerator();
     }
 }

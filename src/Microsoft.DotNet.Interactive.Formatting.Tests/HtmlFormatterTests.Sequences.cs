@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Dummy;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
@@ -520,7 +521,7 @@ public partial class HtmlFormatterTests
         [Fact]
         public void Dictionary_with_non_string_keys_are_formatted_correctly()
         {
-            var dict = new SomeDictUsingInterfaceImpls();
+            var dict = new ClassImplementingIDictionary_of_int_string();
 
             var html = dict.ToDisplayString("text/html").RemoveStyleElement();
 
@@ -651,7 +652,7 @@ public partial class HtmlFormatterTests
         }
             
         [Fact]
-        public void All_properties_are_shown_when_sequences_contain_different_types()
+        public void All_element_properties_are_shown_when_sequences_contain_different_types()
         {
             var objects = new object[]
             {
@@ -852,70 +853,35 @@ public partial class HtmlFormatterTests
                         """);
         }
 
-        class SomeDictUsingInterfaceImpls : IDictionary<int, string>
+        [Fact]
+        public void When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements()
         {
-            string IDictionary<int, string>.this[int key] { get => "2"; set => throw new NotImplementedException(); }
-
-            ICollection<int> IDictionary<int, string>.Keys => new[] { 1 };
-
-            ICollection<string> IDictionary<int, string>.Values => new[] { "2" };
-
-            int ICollection<KeyValuePair<int, string>>.Count => 1;
-
-            bool ICollection<KeyValuePair<int, string>>.IsReadOnly => true;
-
-            void IDictionary<int, string>.Add(int key, string value)
+            var instance = new ClassWithPropertiesThatIsAlsoIEnumerable(new[] { "apple", "banana" })
             {
-            }
+                Property = "cherry"
+            };
 
-            void ICollection<KeyValuePair<int, string>>.Add(KeyValuePair<int, string> item)
-            {
-            }
+            var html = instance.ToDisplayString("text/html").RemoveStyleElement();
 
-            void ICollection<KeyValuePair<int, string>>.Clear()
-            {
-            }
 
-            bool ICollection<KeyValuePair<int, string>>.Contains(KeyValuePair<int, string> item)
-            {
-                return (item.Key == 1 && item.Value == "2");
-            }
 
-            bool IDictionary<int, string>.ContainsKey(int key)
-            {
-                return (key == 1);
-            }
 
-            void ICollection<KeyValuePair<int, string>>.CopyTo(KeyValuePair<int, string>[] array, int arrayIndex)
-            {
-                throw new NotImplementedException();
-            }
+            // TODO (When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements) write test
+            throw new NotImplementedException();
+        }
 
-            IEnumerator<KeyValuePair<int, string>> IEnumerable<KeyValuePair<int, string>>.GetEnumerator()
+        [Fact]
+        public void When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements()
+        {
+            var instance = new ClassWithPropertiesThatIsAlsoIEnumerable<string>(new[] { "apple", "banana" })
             {
-                return ((IEnumerable < KeyValuePair<int, string> > ) new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
-            }
+                Property = "cherry"
+            };
 
-            bool IDictionary<int, string>.Remove(int key)
-            {
-                throw new NotImplementedException();
-            }
+            var html = instance.ToDisplayString("text/html").RemoveStyleElement();
 
-            bool ICollection<KeyValuePair<int, string>>.Remove(KeyValuePair<int, string> item)
-            {
-                return false;
-            }
-
-            bool IDictionary<int, string>.TryGetValue(int key, out string value)
-            {
-                value = "2";
-                return (key == 1);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return ((IEnumerable)new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
-            }
+            // TODO (When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements) write test
+            throw new NotImplementedException();
         }
     }
 }
