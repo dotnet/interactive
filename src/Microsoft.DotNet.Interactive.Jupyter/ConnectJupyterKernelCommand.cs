@@ -139,11 +139,23 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
 
 public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnectionOptions
 {
-    private readonly IJupyterConnection _defaultConnection = JupyterConnection.Current;
+    private static JupyterConnection _currentJupyterConnection;
+
+    /// <summary>
+    /// Represents connection to the kernels in the current environment
+    /// </summary>
+    private static JupyterConnection CurrentConnection
+    {
+        get
+        {
+            _currentJupyterConnection ??= new(new JupyterKernelSpecModule());
+            return _currentJupyterConnection;
+        }
+    }
 
     public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
     {
-        return _defaultConnection;
+        return CurrentConnection;
     }
 
     public IReadOnlyCollection<Option> GetOptions()
