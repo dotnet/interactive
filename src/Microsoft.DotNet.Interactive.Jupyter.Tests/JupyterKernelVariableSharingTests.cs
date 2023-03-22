@@ -7,6 +7,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
+using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using System.Linq;
@@ -15,6 +16,34 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
+
+public static class ValueSharingMessageAssertionExtensions
+{
+    public static void ShouldContainCommMsgWithValues(this SubscribedList<Messaging.Message> messages, params string[] values)
+    {
+        messages
+            .Should()
+            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.CommMsg)
+            .Which
+            .Content
+            .Should()
+            .BeOfType<CommMsg>()
+            .Which
+            .ShouldContainValues(values);
+    }
+
+    public static void ShouldContainValues(this CommMsg commMsg, params string[] values)
+    {
+        commMsg
+            .Data
+            .Should()
+            .ContainKey("commandOrEvent")
+            .WhoseValue
+            .ToString()
+            .Should()
+            .ContainAll(values);
+    }
+}
 
 public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 {
@@ -25,10 +54,12 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 
         events.Should().NotContainErrors();
 
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         result = await kernel.SubmitCodeAsync($"#!testKernel\n#!share --from csharp x");
         events = result.Events;
 
         events.Should().NotContainErrors();
+        sentMessages.ShouldContainCommMsgWithValues("SendValue", "x");
 
         result = await kernel.SubmitCodeAsync($"#!share --from testKernel x");
         events = result.Events;
@@ -128,6 +159,8 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
             .Should()
             .NotContainErrors();
 
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+
         result = await kernel.SubmitCodeAsync($"#!testKernel\n#!share --from csharp df --as df_in_kernel");
         events = result.Events;
 
@@ -135,12 +168,17 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
             .Should()
             .NotContainErrors();
 
+        sentMessages.ShouldContainCommMsgWithValues("SendValue", "df_in_kernel");
+
+        sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var dfResult = await kernel.SendAsync(new RequestValue("df_in_kernel", "application/json", "testKernel"));
 
         dfResult
             .Events
             .Should()
             .NotContainErrors();
+
+        sentMessages.ShouldContainCommMsgWithValues("RequestValue", "df_in_kernel");
 
         dfResult
             .Events
@@ -250,6 +288,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 ]").ToTabularDataResource()
         };
 
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var sendCommand = new SendValue("df", dfs, new FormattedValue("application/json", null));
         var result = await kernel.SendAsync(sendCommand);
         var events = result.Events;
@@ -257,6 +296,20 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         events
             .Should()
             .NotContainErrors();
+
+        var commMessages = sentMessages
+            .Where(m => m.Header.MessageType == JupyterMessageContentTypes.CommMsg)
+            .ToList();
+
+        commMessages
+            .Should()
+            .HaveCount(2);
+
+        for (int i = 0; i < commMessages.Count; i++)
+        {
+            var message = commMessages[i].Content.As<CommMsg>();
+            message.ShouldContainValues("SendValue", $"df{i+1}");
+        }
 
         events
             .Should()
@@ -343,6 +396,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 ]").ToTabularDataResource()
         };
 
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var sendCommand = new SendValue("df", dfs, new FormattedValue("application/json", null));
         var result = await kernel.SendAsync(sendCommand);
         var events = result.Events;
@@ -354,6 +408,8 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         events
             .Should()
             .NotContain(e => e is DisplayedValueProduced);
+
+        sentMessages.ShouldContainCommMsgWithValues("SendValue", "df");
 
         var dfResult = await kernel.SendAsync(new RequestValue("df"));
 
@@ -406,6 +462,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
   }
 ]").ToTabularDataResource();
 
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var sendCommand = new SendValue("df", df, new FormattedValue("application/json", null));
         var result = await kernel.SendAsync(sendCommand);
         var events = result.Events;
@@ -417,6 +474,8 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         events
             .Should()
             .NotContain(e => e is DisplayedValueProduced);
+
+        sentMessages.ShouldContainCommMsgWithValues("SendValue", "df");
 
         var dfResult = await kernel.SendAsync(new RequestValue("df"));
 
@@ -534,13 +593,15 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
             new FormattedValue(TabularDataResourceFormatter.MimeType,
                         JsonSerializer.Serialize(df, TabularDataResourceFormatter.JsonSerializerOptions))));
 
-
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var results = await kernel.SendAsync(new RequestValueInfos());
         var events = results.Events;
 
         events
             .Should()
             .NotContainErrors();
+
+        sentMessages.ShouldContainCommMsgWithValues("RequestValueInfos");
 
         var valueInfos = events
             .Should()
