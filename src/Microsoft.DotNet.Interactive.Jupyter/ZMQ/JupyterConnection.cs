@@ -18,24 +18,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 
 internal class JupyterConnection : IJupyterConnection
 {
-    private static JupyterConnection _currentJupyterConnection;
-
-    /// <summary>
-    /// Represents connection to the kernels in the current environment
-    /// </summary>
-    public static JupyterConnection Current
-    {
-        get
-        {
-            if (_currentJupyterConnection == null)
-            {
-                _currentJupyterConnection = new(new JupyterKernelSpecModule());
-            }
-
-            return _currentJupyterConnection;
-        }
-    }
-
     private readonly Task<IReadOnlyDictionary<string, KernelSpec>> _getKernelSpecs;
 
     public JupyterConnection(IJupyterKernelSpecModule kernelSpecModule)
