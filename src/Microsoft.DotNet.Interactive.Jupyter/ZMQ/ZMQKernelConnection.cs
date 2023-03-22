@@ -35,7 +35,7 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
     private readonly CancellationTokenSource _cancellationTokenSource;
     private Process _kernelProcess;
 
-    public ZMQKernelConnection(ConnectionInformation connectionInformation, Process kernelProcess)
+    public ZMQKernelConnection(ConnectionInformation connectionInformation, Process kernelProcess, string kernelSpecName)
     {
         if (connectionInformation is null)
         {
@@ -72,7 +72,7 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
                            _kernelProcess
                        };
 
-        Uri = KernelHost.CreateHostUriForProcessId(_kernelProcess.Id);
+        Uri = new($"jupyter-kernel://{kernelSpecName}-pid-{kernelProcess.Id}");
     }
 
     public Uri Uri { get; }
