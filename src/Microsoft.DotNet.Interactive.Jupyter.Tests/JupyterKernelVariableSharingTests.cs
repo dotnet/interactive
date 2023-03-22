@@ -92,28 +92,13 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     }
 
     [Theory]
-    [JupyterHttpTestData(@"
-data = [{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Black, 58""},{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Red, 58""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Red""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Black""}]
-import pandas as pd
-df = pd.DataFrame(data)", "df.equals(df_shared)", "True", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterHttpTestData(@"
-data <- fromJSON('[{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Black, 58""},{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Red, 58""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Red""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Black""}]')
-df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData(@"
-data = [{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Black, 58""},{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Red, 58""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Red""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Black""}]
-import pandas as pd
-df = pd.DataFrame(data)", "df.equals(df_shared)", "True", KernelSpecName = PythonKernelName)]
-    [JupyterZMQTestData(@"
-data <- fromJSON('[{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Black, 58""},{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Red, 58""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Red""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Black""}]')
-df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName = RKernelName)]
-    [JupyterTestData(@"
-data = [{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Black, 58""},{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Red, 58""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Red""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Black""}]
-import pandas as pd
-df = pd.DataFrame(data)", "df.equals(df_shared)", "True", KernelSpecName = PythonKernelName)]
-    [JupyterTestData(@"
-data <- fromJSON('[{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Black, 58""},{""CategoryName"":""Road Frames"",""ProductName"":""HL Road Frame - Red, 58""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Red""},{""CategoryName"":""Helmets"",""ProductName"":""Sport-100 Helmet, Black""}]')
-df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName = RKernelName)]
-    public async Task can_share_dataframe_to_from_kernel(JupyterConnectionTestData connectionData, string createVarDF, string assertIdentical, string expectedAssertionResult)
+    [JupyterHttpTestData("df_in_kernel.equals(df_roundtrip)", "True", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("df_in_kernel.equals(df_roundtrip)", "True", KernelSpecName = PythonKernelName)]
+    [JupyterTestData("df_in_kernel.equals(df_roundtrip)", "True", KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData("identical(df_in_kernel, df_roundtrip)", "[1] TRUE", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("identical(df_in_kernel, df_roundtrip)", "[1] TRUE", KernelSpecName = RKernelName)]
+    [JupyterTestData("identical(df_in_kernel, df_roundtrip)", "[1] TRUE", KernelSpecName = RKernelName)]
+    public async Task can_share_dataframe_to_from_kernel(JupyterConnectionTestData connectionData, string assertIdentical, string expectedAssertionResult)
     {
         var options = connectionData.GetConnectionOptions();
 
@@ -121,33 +106,86 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
 
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
-        
-        var result = await kernel.SubmitCodeAsync($"#!testKernel\n{createVarDF}");
+
+        var df = JsonDocument.Parse(@"
+[
+  {
+        ""name"": ""Granny Smith apple"",
+        ""deliciousness"": 0,
+        ""color"":""red""
+  },
+  {
+        ""name"": ""Rainier cherry"",
+        ""deliciousness"": 9000,
+        ""color"":""yellow""
+  }
+]").ToTabularDataResource();
+
+        var result = await kernel.SendAsync(new SendValue("df", df, null, "csharp"));
         var events = result.Events;
 
         events
             .Should()
             .NotContainErrors();
 
-        result = await kernel.SubmitCodeAsync($"#!share --from testKernel df --as df_shared");
+        result = await kernel.SubmitCodeAsync($"#!testKernel\n#!share --from csharp df --as df_in_kernel");
         events = result.Events;
 
         events
             .Should()
             .NotContainErrors();
 
-        events
+        var dfResult = await kernel.SendAsync(new RequestValue("df_in_kernel", "application/json", "testKernel"));
+
+        dfResult
+            .Events
+            .Should()
+            .NotContainErrors();
+
+        dfResult
+            .Events
             .Should()
             .ContainSingle<ValueProduced>()
-            .Which.Value.Should().BeAssignableTo<TabularDataResource>();
+            .Which
+            .Value
+            .Should()
+            .BeAssignableTo<TabularDataResource>()
+            .Which
+            .Data
+            .Should()
+            .BeEquivalentTo(df.Data);
 
-        result = await kernel.SubmitCodeAsync($"#!testKernel\n#!share --from csharp df_shared");
+        result = await kernel.SubmitCodeAsync(@"
+#!share --from testKernel df_in_kernel --as df_shared
+#!testKernel
+#!share --from csharp df_shared --as df_roundtrip
+");
         events = result.Events;
 
         events
             .Should()
             .NotContainErrors();
-        
+
+        var csharpDf = await kernel.SendAsync(new RequestValue("df_shared", "application/json", "csharp"));
+
+        csharpDf
+            .Events
+            .Should()
+            .NotContainErrors();
+
+        csharpDf
+            .Events
+            .Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .BeAssignableTo<TabularDataResource>()
+            .Which
+            .Data
+            .Should()
+            .BeEquivalentTo(df.Data);
+
         result = await kernel.SubmitCodeAsync($"#!testKernel\n{assertIdentical}");
         events = result.Events;
 
@@ -171,12 +209,14 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
         options.SaveState();
     }
 
-    // No test data only because this is a full kernel end-to-end test
+    // for validating the kernel side logic, this test is intended to be run against a jupyter connection that and not just a test connection
     [Theory]
-    [JupyterHttpTestData(KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
-    [JupyterHttpTestData(KernelSpecName = RKernelName)]
+    [JupyterTestData(KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = RKernelName)]
+    [JupyterTestData(KernelSpecName = RKernelName)]
     public async Task can_handle_setting_multiple_df_on_kernel(JupyterConnectionTestData connectionData)
     {
         var options = connectionData.GetConnectionOptions();
@@ -231,7 +271,7 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
                 .ContainAll("df1", "df2");
 
         var df1Result = await kernel.SendAsync(new RequestValue("df1"));
-        
+
         df1Result
             .Events
             .Should()
@@ -269,14 +309,18 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
             .Data
             .Should()
             .BeEquivalentTo(dfs[1].Data);
+
+        options.SaveState();
     }
 
-    // No test data only because this is a full kernel end-to-end test
+    // for validating the kernel side logic, this test is intended to be run against a jupyter connection that and not just a test connection
     [Theory]
-    [JupyterHttpTestData(KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
-    [JupyterHttpTestData(KernelSpecName = RKernelName)]
+    [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = RKernelName)]
+    [JupyterTestData(KernelSpecName = PythonKernelName)]
+    [JupyterTestData(KernelSpecName = RKernelName)]
     public async Task can_handle_setting_single_df_in_enumerable_on_kernel(JupyterConnectionTestData connectionData)
     {
         var options = connectionData.GetConnectionOptions();
@@ -330,14 +374,18 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
             .Data
             .Should()
             .BeEquivalentTo(dfs[0].Data);
+
+        options.SaveState();
     }
 
-    // No test data only because this is a full kernel end-to-end test
+    // for validating the kernel side logic, this test is intended to be run against a jupyter connection that and not just a test connection
     [Theory]
-    [JupyterHttpTestData(KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
-    [JupyterHttpTestData(KernelSpecName = RKernelName)]
+    [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = RKernelName)]
+    [JupyterTestData(KernelSpecName = PythonKernelName)]
+    [JupyterTestData(KernelSpecName = RKernelName)]
     public async Task can_handle_setting_single_df_on_kernel(JupyterConnectionTestData connectionData)
     {
         var options = connectionData.GetConnectionOptions();
@@ -389,6 +437,8 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
             .Data
             .Should()
             .BeEquivalentTo(df.Data);
+
+        options.SaveState();
     }
 
     [Theory]
@@ -447,7 +497,7 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
     }
 
     [Theory]
-    [JupyterHttpTestData("a = 12345", new[] {"a", "b", "df"}, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] {"12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>"}, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterHttpTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName)]
     [JupyterTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName)]
     [JupyterHttpTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "[{\"name\":\"Granny Smith apple\",\"deliciousness\":0,\"color\":\"red\"},{\"name\":\"Rainier cherry\",\"deliciousness\":9000,\"color\":\"yellow\"}]" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
@@ -497,7 +547,7 @@ df <- data.frame(data)", "identical(df, df_shared)", "[1] TRUE", KernelSpecName 
             .ContainSingle<ValueInfosProduced>()
             .Which
             .ValueInfos;
-        
+
         valueInfos
             .Select(v => v.Name)
             .Should()

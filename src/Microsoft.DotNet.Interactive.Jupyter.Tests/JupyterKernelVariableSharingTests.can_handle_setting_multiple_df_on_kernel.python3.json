@@ -1,18 +1,18 @@
 [
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_10",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_10",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.197036Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.262248Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "a84c1525-045f-4d4a-8a16-62cf6d79ba6e",
+      "msg_id": "cd53e652-d783-4c12-bb8f-b0a38c94c81f",
       "username": "dotnet_kernel",
-      "session": "6782b114-246f-4ade-86a1-0348fe1431d9",
-      "date": "2023-03-22T06:25:08.1832115Z",
+      "session": "e90337fa-e091-433e-8c17-180622fd2260",
+      "date": "2023-03-22T05:15:26.2469851Z",
       "msg_type": "kernel_info_request",
       "version": "5.3"
     },
@@ -25,42 +25,18 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_12",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_11",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.198035Z",
-      "msg_type": "status",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "a84c1525-045f-4d4a-8a16-62cf6d79ba6e",
-      "username": "dotnet_kernel",
-      "session": "6782b114-246f-4ade-86a1-0348fe1431d9",
-      "date": "2023-03-22T06:25:08.1832115Z",
-      "msg_type": "kernel_info_request",
-      "version": "5.3"
-    },
-    "metadata": {},
-    "content": {
-      "execution_state": "idle"
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_11",
-      "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.198035Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.262248Z",
       "msg_type": "kernel_info_reply",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "a84c1525-045f-4d4a-8a16-62cf6d79ba6e",
+      "msg_id": "cd53e652-d783-4c12-bb8f-b0a38c94c81f",
       "username": "dotnet_kernel",
-      "session": "6782b114-246f-4ade-86a1-0348fe1431d9",
-      "date": "2023-03-22T06:25:08.1832115Z",
+      "session": "e90337fa-e091-433e-8c17-180622fd2260",
+      "date": "2023-03-22T05:15:26.2469851Z",
       "msg_type": "kernel_info_request",
       "version": "5.3"
     },
@@ -119,18 +95,42 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_13",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_12",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.221547Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.263247Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "e4ab9a76-a368-4b7a-8f5f-68797964885c",
+      "msg_id": "cd53e652-d783-4c12-bb8f-b0a38c94c81f",
       "username": "dotnet_kernel",
-      "session": "23818c1e-0a11-4748-abe1-f3c8a8d94e71",
-      "date": "2023-03-22T06:25:08.2145505Z",
+      "session": "e90337fa-e091-433e-8c17-180622fd2260",
+      "date": "2023-03-22T05:15:26.2469851Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_13",
+      "username": "username",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.287254Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "bfaaca88-87c7-43ab-afc8-db54e30dac3c",
+      "username": "dotnet_kernel",
+      "session": "e6ed1657-3899-4266-9615-4848b0898238",
+      "date": "2023-03-22T05:15:26.2803181Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -143,18 +143,18 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_14",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_14",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.222549Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.287254Z",
       "msg_type": "execute_input",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "e4ab9a76-a368-4b7a-8f5f-68797964885c",
+      "msg_id": "bfaaca88-87c7-43ab-afc8-db54e30dac3c",
       "username": "dotnet_kernel",
-      "session": "23818c1e-0a11-4748-abe1-f3c8a8d94e71",
-      "date": "2023-03-22T06:25:08.2145505Z",
+      "session": "e6ed1657-3899-4266-9615-4848b0898238",
+      "date": "2023-03-22T05:15:26.2803181Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -168,25 +168,25 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_15",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_15",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.264410Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.330280Z",
       "msg_type": "execute_reply",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "e4ab9a76-a368-4b7a-8f5f-68797964885c",
+      "msg_id": "bfaaca88-87c7-43ab-afc8-db54e30dac3c",
       "username": "dotnet_kernel",
-      "session": "23818c1e-0a11-4748-abe1-f3c8a8d94e71",
-      "date": "2023-03-22T06:25:08.2145505Z",
+      "session": "e6ed1657-3899-4266-9615-4848b0898238",
+      "date": "2023-03-22T05:15:26.2803181Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
     "metadata": {
-      "started": "2023-03-22T06:25:08.222549Z",
+      "started": "2023-03-22T05:15:26.287254Z",
       "dependencies_met": true,
-      "engine": "3f032ab3-beed-442e-8ef5-5df45cc4be42",
+      "engine": "cbb0aef7-c7f2-434f-bdfe-2bc1019f100a",
       "status": "ok"
     },
     "content": {
@@ -200,18 +200,18 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_16",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_16",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.264410Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.330280Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "e4ab9a76-a368-4b7a-8f5f-68797964885c",
+      "msg_id": "bfaaca88-87c7-43ab-afc8-db54e30dac3c",
       "username": "dotnet_kernel",
-      "session": "23818c1e-0a11-4748-abe1-f3c8a8d94e71",
-      "date": "2023-03-22T06:25:08.2145505Z",
+      "session": "e6ed1657-3899-4266-9615-4848b0898238",
+      "date": "2023-03-22T05:15:26.2803181Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -224,18 +224,18 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_17",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_17",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.274966Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.340293Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "587cbd7f-44c1-4b5c-9835-ea225db923d1",
+      "msg_id": "30786a60-2a61-473a-a9d8-3ee97abdda58",
       "username": "dotnet_kernel",
-      "session": "c448c544-9f46-4c6e-b62f-4bf6d171f28e",
-      "date": "2023-03-22T06:25:08.2731406Z",
+      "session": "7a098d2f-0aa3-410c-a2f1-2530cb754d4b",
+      "date": "2023-03-22T05:15:26.3389726Z",
       "msg_type": "comm_open",
       "version": "5.3"
     },
@@ -248,24 +248,24 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_18",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_18",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.274966Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.341287Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "587cbd7f-44c1-4b5c-9835-ea225db923d1",
+      "msg_id": "30786a60-2a61-473a-a9d8-3ee97abdda58",
       "username": "dotnet_kernel",
-      "session": "c448c544-9f46-4c6e-b62f-4bf6d171f28e",
-      "date": "2023-03-22T06:25:08.2731406Z",
+      "session": "7a098d2f-0aa3-410c-a2f1-2530cb754d4b",
+      "date": "2023-03-22T05:15:26.3389726Z",
       "msg_type": "comm_open",
       "version": "5.3"
     },
     "metadata": {},
     "content": {
-      "comm_id": "6143770f-f353-411e-8703-77970ba7aeda",
+      "comm_id": "b714afc0-7381-4618-a0b3-764b47be4d18",
       "data": {
         "commandOrEvent": "{\"event\": {\"kernelInfos\": []}, \"eventType\": \"KernelReady\", \"command\": null}",
         "type": "event"
@@ -276,18 +276,18 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_19",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_19",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:08.275968Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.341287Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "587cbd7f-44c1-4b5c-9835-ea225db923d1",
+      "msg_id": "30786a60-2a61-473a-a9d8-3ee97abdda58",
       "username": "dotnet_kernel",
-      "session": "c448c544-9f46-4c6e-b62f-4bf6d171f28e",
-      "date": "2023-03-22T06:25:08.2731406Z",
+      "session": "7a098d2f-0aa3-410c-a2f1-2530cb754d4b",
+      "date": "2023-03-22T05:15:26.3389726Z",
       "msg_type": "comm_open",
       "version": "5.3"
     },
@@ -300,18 +300,18 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_20",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_20",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.199491Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.418830Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "13fdfcac-6cdc-45fa-b7ae-05807876af54",
+      "msg_id": "38bf31e8-dc9b-4d10-8512-98b6f90ce8e4",
       "username": "dotnet_kernel",
-      "session": "e043d657-c736-4630-867b-f38a1b1df33f",
-      "date": "2023-03-22T06:25:09.1978164Z",
+      "session": "2adfcf84-b89e-4413-8923-59d696fbb46e",
+      "date": "2023-03-22T05:15:26.4172827Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
@@ -324,24 +324,24 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_21",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_21",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.664659Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.888390Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "13fdfcac-6cdc-45fa-b7ae-05807876af54",
+      "msg_id": "38bf31e8-dc9b-4d10-8512-98b6f90ce8e4",
       "username": "dotnet_kernel",
-      "session": "e043d657-c736-4630-867b-f38a1b1df33f",
-      "date": "2023-03-22T06:25:09.1978164Z",
+      "session": "2adfcf84-b89e-4413-8923-59d696fbb46e",
+      "date": "2023-03-22T05:15:26.4172827Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
     "metadata": {},
     "content": {
-      "comm_id": "6143770f-f353-411e-8703-77970ba7aeda",
+      "comm_id": "b714afc0-7381-4618-a0b3-764b47be4d18",
       "data": {
         "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
         "type": "event"
@@ -352,18 +352,18 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_22",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_22",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.664659Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.889417Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "13fdfcac-6cdc-45fa-b7ae-05807876af54",
+      "msg_id": "38bf31e8-dc9b-4d10-8512-98b6f90ce8e4",
       "username": "dotnet_kernel",
-      "session": "e043d657-c736-4630-867b-f38a1b1df33f",
-      "date": "2023-03-22T06:25:09.1978164Z",
+      "session": "2adfcf84-b89e-4413-8923-59d696fbb46e",
+      "date": "2023-03-22T05:15:26.4172827Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
@@ -376,18 +376,18 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_23",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_23",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.671659Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.892417Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "66c3e67a-1d61-4b15-92d8-5e50b674eddb",
+      "msg_id": "faf92953-c06f-4277-8513-51c88085ae62",
       "username": "dotnet_kernel",
-      "session": "85e0d0f8-5c0a-4101-989d-867da8cfac12",
-      "date": "2023-03-22T06:25:09.6708498Z",
+      "session": "d31fc49d-f7a1-4abd-9a1f-598f96197f23",
+      "date": "2023-03-22T05:15:26.8920208Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
@@ -400,176 +400,24 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_24",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_24",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.673663Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.893417Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "66c3e67a-1d61-4b15-92d8-5e50b674eddb",
+      "msg_id": "faf92953-c06f-4277-8513-51c88085ae62",
       "username": "dotnet_kernel",
-      "session": "85e0d0f8-5c0a-4101-989d-867da8cfac12",
-      "date": "2023-03-22T06:25:09.6708498Z",
+      "session": "d31fc49d-f7a1-4abd-9a1f-598f96197f23",
+      "date": "2023-03-22T05:15:26.8920208Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
     "metadata": {},
     "content": {
-      "comm_id": "6143770f-f353-411e-8703-77970ba7aeda",
-      "data": {
-        "commandOrEvent": "{\"event\": {\"name\": \"df_in_kernel\", \"value\": [{\"name\": \"Granny Smith apple\", \"deliciousness\": 0, \"color\": \"red\"}, {\"name\": \"Rainier cherry\", \"deliciousness\": 9000, \"color\": \"yellow\"}], \"formattedValue\": {\"mimeType\": \"application/table-schema+json\", \"value\": \"              name  deliciousness  color\\nGranny Smith apple              0    red\\n    Rainier cherry           9000 yellow\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"ZO8pl9XXSExYRzPN7K0G8Z5SFrhgsh3VSVaiqnQBScU=\", \"id\": \"8c0f54cdf8e044c7b117238c49167868\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"df_in_kernel\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/.NET?tag=arrived\", \"kernel://local/testKernel?tag=arrived\"]}}",
-        "type": "event"
-      }
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_25",
-      "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.674661Z",
-      "msg_type": "status",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "66c3e67a-1d61-4b15-92d8-5e50b674eddb",
-      "username": "dotnet_kernel",
-      "session": "85e0d0f8-5c0a-4101-989d-867da8cfac12",
-      "date": "2023-03-22T06:25:09.6708498Z",
-      "msg_type": "comm_msg",
-      "version": "5.3"
-    },
-    "metadata": {},
-    "content": {
-      "execution_state": "idle"
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_26",
-      "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.737728Z",
-      "msg_type": "status",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "19fe5ab7-2c56-4213-8a33-a3b1332c04f3",
-      "username": "dotnet_kernel",
-      "session": "bb604efa-e3fa-4ba8-a4f1-50e8d6de33a3",
-      "date": "2023-03-22T06:25:09.7376032Z",
-      "msg_type": "comm_msg",
-      "version": "5.3"
-    },
-    "metadata": {},
-    "content": {
-      "execution_state": "busy"
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_27",
-      "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.740243Z",
-      "msg_type": "comm_msg",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "19fe5ab7-2c56-4213-8a33-a3b1332c04f3",
-      "username": "dotnet_kernel",
-      "session": "bb604efa-e3fa-4ba8-a4f1-50e8d6de33a3",
-      "date": "2023-03-22T06:25:09.7376032Z",
-      "msg_type": "comm_msg",
-      "version": "5.3"
-    },
-    "metadata": {},
-    "content": {
-      "comm_id": "6143770f-f353-411e-8703-77970ba7aeda",
-      "data": {
-        "commandOrEvent": "{\"event\": {\"name\": \"df_in_kernel\", \"value\": [{\"name\": \"Granny Smith apple\", \"deliciousness\": 0, \"color\": \"red\"}, {\"name\": \"Rainier cherry\", \"deliciousness\": 9000, \"color\": \"yellow\"}], \"formattedValue\": {\"mimeType\": \"application/table-schema+json\", \"value\": \"              name  deliciousness  color\\nGranny Smith apple              0    red\\n    Rainier cherry           9000 yellow\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"TYVFH5vnNO+Xyf4rrNf6dOOriYH4uBqdOB/IJUzwE+I=\", \"id\": \"910913cfeb94470e823bc7b1f8c9ff83\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"df_in_kernel\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
-        "type": "event"
-      }
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_28",
-      "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.740243Z",
-      "msg_type": "status",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "19fe5ab7-2c56-4213-8a33-a3b1332c04f3",
-      "username": "dotnet_kernel",
-      "session": "bb604efa-e3fa-4ba8-a4f1-50e8d6de33a3",
-      "date": "2023-03-22T06:25:09.7376032Z",
-      "msg_type": "comm_msg",
-      "version": "5.3"
-    },
-    "metadata": {},
-    "content": {
-      "execution_state": "idle"
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_29",
-      "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.777765Z",
-      "msg_type": "status",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "72e3acd8-ae8f-4728-ba76-345f5f32e095",
-      "username": "dotnet_kernel",
-      "session": "b61268fb-33e3-4818-b3a5-6518d40e2954",
-      "date": "2023-03-22T06:25:09.7764770Z",
-      "msg_type": "comm_msg",
-      "version": "5.3"
-    },
-    "metadata": {},
-    "content": {
-      "execution_state": "busy"
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_30",
-      "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.778763Z",
-      "msg_type": "comm_msg",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "72e3acd8-ae8f-4728-ba76-345f5f32e095",
-      "username": "dotnet_kernel",
-      "session": "b61268fb-33e3-4818-b3a5-6518d40e2954",
-      "date": "2023-03-22T06:25:09.7764770Z",
-      "msg_type": "comm_msg",
-      "version": "5.3"
-    },
-    "metadata": {},
-    "content": {
-      "comm_id": "6143770f-f353-411e-8703-77970ba7aeda",
+      "comm_id": "b714afc0-7381-4618-a0b3-764b47be4d18",
       "data": {
         "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
         "type": "event"
@@ -580,18 +428,18 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_31",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_25",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.779766Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.894416Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "72e3acd8-ae8f-4728-ba76-345f5f32e095",
+      "msg_id": "faf92953-c06f-4277-8513-51c88085ae62",
       "username": "dotnet_kernel",
-      "session": "b61268fb-33e3-4818-b3a5-6518d40e2954",
-      "date": "2023-03-22T06:25:09.7764770Z",
+      "session": "d31fc49d-f7a1-4abd-9a1f-598f96197f23",
+      "date": "2023-03-22T05:15:26.8920208Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
@@ -604,19 +452,19 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_32",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_26",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.785765Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.907422Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "21d60350-270e-4cf9-8f80-4ef5d3e07362",
+      "msg_id": "e6a52095-7a40-4f08-b683-ce7eea6d79ba",
       "username": "dotnet_kernel",
-      "session": "2fedd614-95e7-4a83-88be-fe7b61f7eb2c",
-      "date": "2023-03-22T06:25:09.7840797Z",
-      "msg_type": "execute_request",
+      "session": "a8227c36-304c-4fcb-98b9-7a97ba9214ca",
+      "date": "2023-03-22T05:15:26.9066306Z",
+      "msg_type": "comm_msg",
       "version": "5.3"
     },
     "metadata": {},
@@ -628,105 +476,123 @@
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_33",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_27",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.785765Z",
-      "msg_type": "execute_input",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.924714Z",
+      "msg_type": "comm_msg",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "21d60350-270e-4cf9-8f80-4ef5d3e07362",
+      "msg_id": "e6a52095-7a40-4f08-b683-ce7eea6d79ba",
       "username": "dotnet_kernel",
-      "session": "2fedd614-95e7-4a83-88be-fe7b61f7eb2c",
-      "date": "2023-03-22T06:25:09.7840797Z",
-      "msg_type": "execute_request",
+      "session": "a8227c36-304c-4fcb-98b9-7a97ba9214ca",
+      "date": "2023-03-22T05:15:26.9066306Z",
+      "msg_type": "comm_msg",
       "version": "5.3"
     },
     "metadata": {},
     "content": {
-      "code": "df_in_kernel.equals(df_roundtrip)",
-      "execution_count": 1
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_34",
-      "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.787781Z",
-      "msg_type": "execute_result",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "21d60350-270e-4cf9-8f80-4ef5d3e07362",
-      "username": "dotnet_kernel",
-      "session": "2fedd614-95e7-4a83-88be-fe7b61f7eb2c",
-      "date": "2023-03-22T06:25:09.7840797Z",
-      "msg_type": "execute_request",
-      "version": "5.3"
-    },
-    "metadata": {},
-    "content": {
+      "comm_id": "b714afc0-7381-4618-a0b3-764b47be4d18",
       "data": {
-        "text/plain": "True"
-      },
-      "metadata": {},
-      "transient": {},
-      "execution_count": 1
+        "commandOrEvent": "{\"event\": {\"name\": \"df1\", \"value\": [{\"name\": \"Granny Smith apple\", \"deliciousness\": 0, \"color\": \"red\"}, {\"name\": \"Rainier cherry\", \"deliciousness\": 9000, \"color\": \"yellow\"}], \"formattedValue\": {\"mimeType\": \"application/table-schema+json\", \"value\": \"              name  deliciousness  color\\nGranny Smith apple              0    red\\n    Rainier cherry           9000 yellow\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"8l35wqhXLvYQr1zVPrvVQqKjYWvIqM7NCa1BaSWh8gg=\", \"id\": \"f8d716ad11074fb892de7448e06e2746\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"df1\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
     },
     "buffers": [],
     "channel": "shell"
   },
   {
     "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_35",
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_28",
       "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.797776Z",
-      "msg_type": "execute_reply",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "21d60350-270e-4cf9-8f80-4ef5d3e07362",
-      "username": "dotnet_kernel",
-      "session": "2fedd614-95e7-4a83-88be-fe7b61f7eb2c",
-      "date": "2023-03-22T06:25:09.7840797Z",
-      "msg_type": "execute_request",
-      "version": "5.3"
-    },
-    "metadata": {
-      "started": "2023-03-22T06:25:09.785765Z",
-      "dependencies_met": true,
-      "engine": "3f032ab3-beed-442e-8ef5-5df45cc4be42",
-      "status": "ok"
-    },
-    "content": {
-      "payload": [],
-      "user_expressions": {},
-      "status": "ok",
-      "execution_count": 0
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "acaaac62-d2eb11c1b1405a5b196d4931_21864_36",
-      "username": "username",
-      "session": "acaaac62-d2eb11c1b1405a5b196d4931",
-      "date": "2023-03-22T06:25:09.797776Z",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.925714Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "21d60350-270e-4cf9-8f80-4ef5d3e07362",
+      "msg_id": "e6a52095-7a40-4f08-b683-ce7eea6d79ba",
       "username": "dotnet_kernel",
-      "session": "2fedd614-95e7-4a83-88be-fe7b61f7eb2c",
-      "date": "2023-03-22T06:25:09.7840797Z",
-      "msg_type": "execute_request",
+      "session": "a8227c36-304c-4fcb-98b9-7a97ba9214ca",
+      "date": "2023-03-22T05:15:26.9066306Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_29",
+      "username": "username",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.984262Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "0cb0830f-8f89-426e-b934-094b81a6132a",
+      "username": "dotnet_kernel",
+      "session": "8881f93b-0a05-414b-ae5b-4dfd80b8b1a2",
+      "date": "2023-03-22T05:15:26.9835301Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_30",
+      "username": "username",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.985260Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "0cb0830f-8f89-426e-b934-094b81a6132a",
+      "username": "dotnet_kernel",
+      "session": "8881f93b-0a05-414b-ae5b-4dfd80b8b1a2",
+      "date": "2023-03-22T05:15:26.9835301Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "b714afc0-7381-4618-a0b3-764b47be4d18",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"df2\", \"value\": [{\"a\": \"1\", \"b\": 1}, {\"a\": \"2\", \"b\": 2}], \"formattedValue\": {\"mimeType\": \"application/table-schema+json\", \"value\": \"a  b\\n1  1\\n2  2\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"DGpDjtPQ1zGVG6SeTJjoRqpDX1ytVzH462OEAma8wSU=\", \"id\": \"b78d4735166d4de496308c5836bebf06\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"df2\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "198a5713-129a4e888f9b58bac7a7efb1_21344_31",
+      "username": "username",
+      "session": "198a5713-129a4e888f9b58bac7a7efb1",
+      "date": "2023-03-22T05:15:26.986260Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "0cb0830f-8f89-426e-b934-094b81a6132a",
+      "username": "dotnet_kernel",
+      "session": "8881f93b-0a05-414b-ae5b-4dfd80b8b1a2",
+      "date": "2023-03-22T05:15:26.9835301Z",
+      "msg_type": "comm_msg",
       "version": "5.3"
     },
     "metadata": {},
