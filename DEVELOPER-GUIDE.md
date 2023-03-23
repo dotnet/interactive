@@ -240,6 +240,7 @@ conda activate base
 
 These tests can be run directly against the language handler scripts. This is useful for when making changes on the scripts sent to the jupyter kernel without needing a full integration.
 
-1. Python tests can be run directly in the Anancoda prompt by calling `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\run_tests.bat`
-2. R tests (for now) can be run in a Jupyter R notebook. Copy the code from `src\Microsoft.DotNet.Interactive.Jupyter\CommandEvents\LanguageHandlers\r\coe_comm_handler.r` and `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\tests_r_coe_comm_handler.r` into cells in an R notebook and run the cells.
+1. Python tests can be run directly in the Anaconda Prompt with IPython by calling `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\run_python_tests.bat`
+2. R tests can be run directly in the Anaconda Prompt with RScript by calling `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\run_r_tests.bat`
+3. Both Python and R tests can be run together in the Anaconda Prompt by calling `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\run_tests.bat`
 

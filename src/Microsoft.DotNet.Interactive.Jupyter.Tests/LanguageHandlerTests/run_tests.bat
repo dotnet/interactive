@@ -1,6 +1,8 @@
 @ECHO OFF
-REM this script needs to be run in a conda environment where both ipython and r are installed
+REM this script needs to be run in a conda environment where IPython and RScript are installed
 
-REM run python tests using ipython 
-ipython ./tests_python_coe_comm_handler.py
+ECHO "Running Python tests"
+CALL "run_python_tests.bat"
 
+ECHO "Running R tests"
+CALL "run_r_tests.bat"

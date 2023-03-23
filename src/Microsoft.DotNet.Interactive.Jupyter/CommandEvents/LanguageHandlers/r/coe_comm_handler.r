@@ -1,4 +1,4 @@
-﻿# Copyright (c) .NET Foundation and contributors. All rights reserved.
+# Copyright (c) .NET Foundation and contributors. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 library(IRkernel);
@@ -212,4 +212,6 @@ library(jsonlite);
     
 };
 
-comm_manager()$register_target('dotnet_coe_handler_comm', .dotnet_coe_comm_hander_env$coe_handler_connect_to_comm);
+if(!is.null(comm_manager())) {
+    comm_manager()$register_target('dotnet_coe_handler_comm', .dotnet_coe_comm_hander_env$coe_handler_connect_to_comm);
+}

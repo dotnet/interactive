@@ -1,11 +1,10 @@
-﻿# Copyright (c) .NET Foundation and contributors. All rights reserved.
+# Copyright (c) .NET Foundation and contributors. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 # Run this test using:
-#   copy and run both the coe_comm_handler.r and test script below to an R jupyter notebook 
-#   TODO: Create a command line script to run as R script
+#   RScript tests_r_coe_comm_handler.r 
 
-# source('../../Microsoft.DotNet.Interactive.Jupyter/CommandEvents/LanguageHandlers/r/coe_comm_handler.r')
+source('../../Microsoft.DotNet.Interactive.Jupyter/CommandEvents/LanguageHandlers/r/coe_comm_handler.r')
 
 if (!require(testthat)) install.packages('testthat')
 library(testthat)
