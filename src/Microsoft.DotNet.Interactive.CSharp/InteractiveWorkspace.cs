@@ -125,13 +125,6 @@ internal class InteractiveWorkspace : Workspace
             _previousSubmissionProjectId = AddProjectWithPreviousSubmissionToSolution(_currentCompilation,
                 scriptState.Script.Code, _workingProjectId, _previousSubmissionProjectId);
 
-            //This fixes an issue where the performance of language services is degrading each time a new submission is run.
-            //Forces the creation of the Compilation object in the project of the previous submission
-            //If the compilation were not eagerly created, the entire solution would be compiled each
-            //time it is used to answer a language service question (ForkDocumentForLanguageServices).
-            //Instead, only the working project will be compiled to answer language service questions.
-            await CurrentSolution.GetProject(_previousSubmissionProjectId).GetCompilationAsync();
-
             AddNewWorkingProjectToSolution(_currentCompilation, _previousSubmissionProjectId);
         }
         finally
