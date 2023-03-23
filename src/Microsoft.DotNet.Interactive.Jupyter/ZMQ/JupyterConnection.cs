@@ -76,7 +76,12 @@ internal class JupyterConnection : IJupyterConnection
                 await JsonSerializer.SerializeAsync(writer, connectionInfo, connectionInfo.GetType(), JsonFormatter.SerializerOptions);
             }
 
-            var runtimeConnectionFile = Path.Combine(JupyterCommonDirectories.GetRuntimeDirectory().FullName, fileName);
+            var directory = JupyterCommonDirectories.GetRuntimeDirectory();
+            if (!directory.Exists)
+            {
+                directory.Create();
+            }
+            var runtimeConnectionFile = Path.Combine(directory.FullName, fileName);
             File.Copy(connectionInfoTempFilePath, runtimeConnectionFile);
             File.Delete(connectionInfoTempFilePath);
 
