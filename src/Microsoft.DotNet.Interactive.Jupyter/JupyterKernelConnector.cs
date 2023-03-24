@@ -29,7 +29,7 @@ internal class JupyterKernelConnector : IKernelConnector
         var commsManager = new CommsManager(kernelConnection.Sender, kernelConnection.Receiver);
 
         await kernelConnection.StartAsync();
-        var kernel = await JupyterKernel.CreateAsync(kernelName, kernelConnection.Uri, kernelConnection.Sender, kernelConnection.Receiver);
+        var kernel = await JupyterKernel.CreateAsync(kernelName, kernelConnection.Sender, kernelConnection.Receiver);
 
         if (!string.IsNullOrEmpty(_initScript))
         {

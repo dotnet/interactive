@@ -16,7 +16,7 @@ internal partial class JupyterKernel : Kernel
     private readonly IMessageSender _sender;
     private readonly IMessageReceiver _receiver;
 
-    protected JupyterKernel(string name, Uri uri, IMessageSender sender, IMessageReceiver receiver, string languageName, string languageVersion)
+    protected JupyterKernel(string name, IMessageSender sender, IMessageReceiver receiver, string languageName, string languageVersion)
         : base(name)
     {
         KernelInfo.LanguageName = languageName;
@@ -24,8 +24,6 @@ internal partial class JupyterKernel : Kernel
         KernelInfo.DisplayName = $"{name} - {languageName} {languageVersion} (Preview)";
         _sender = sender ?? throw new ArgumentNullException(nameof(sender));
         _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
-
-        KernelInfo.RemoteUri = uri ?? throw new ArgumentNullException(nameof(uri));
     }
 
     private IMessageReceiver Receiver => _receiver;
@@ -38,7 +36,7 @@ internal partial class JupyterKernel : Kernel
         return RunOnKernelAsync<T>(content, Sender, Receiver, token, channel);
     }
 
-    public static async Task<JupyterKernel> CreateAsync(string name, Uri uri, IMessageSender sender, IMessageReceiver receiver)
+    public static async Task<JupyterKernel> CreateAsync(string name, IMessageSender sender, IMessageReceiver receiver)
     {
         if (sender == null) throw new ArgumentNullException(nameof(sender));
         if (receiver == null) throw new ArgumentNullException(nameof(receiver));
@@ -47,7 +45,6 @@ internal partial class JupyterKernel : Kernel
         var kernelInfo = await RequestKernelInfo(sender, receiver);
 
         return new JupyterKernel(name,
-                                 uri,
                                  sender,
                                  receiver,
                                  kernelInfo?.LanguageInfo?.Name,

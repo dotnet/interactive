@@ -72,7 +72,7 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
                            _kernelProcess
                        };
 
-        Uri = new($"jupyter-kernel://{kernelSpecName}-pid-{kernelProcess.Id}");
+        Uri = new($"kernel://pid-{kernelProcess.Id}/{kernelSpecName}");
     }
 
     public Uri Uri { get; }
