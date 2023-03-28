@@ -324,7 +324,7 @@ public partial class HtmlFormatterTests
 
             html
                   .Should()
-                  .Contain($$"""
+                  .Contain("""
                     <tr>
                         <td>NotOk</td>
                         <td>

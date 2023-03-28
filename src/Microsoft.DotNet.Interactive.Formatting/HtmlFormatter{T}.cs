@@ -210,15 +210,37 @@ public class HtmlFormatter<T> : TypeFormatter<T>
     {
         if (typeof(T).IsScalar())
         {
-            return new HtmlFormatter<T>((value, context) => { HtmlFormatter.FormatAndStyleAsPlainText(value, context); });
+            return new HtmlFormatter<T>((value, context) => HtmlFormatter.FormatAndStyleAsPlainText(value, context));
         }
 
-        var members = typeof(T).GetMembersToFormat()
-                               .GetMemberAccessors<T>();
+        (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag)[] rows =
+            typeof(T).GetMembersToFormat()
+                     .GetMemberAccessors<T>()
+                     .Select(a => (
+                                      new HtmlTag("td", a.MemberName),
+                                      new Func<T, HtmlTag>(obj => new HtmlTag("td", c =>
+                                      {
+                                          var value = a.GetValueOrException(obj);
+                                          value.FormatTo(c, HtmlFormatter.MimeType);
+                                      }))))
+                     .ToArray();
 
-        return new HtmlFormatter<T>((instance, context) => BuildTreeView(instance, context, members));
+        // represent IEnumerable as a separate special property at the end of the list
+        if (typeof(T).IsEnumerable())
+        {
+            var enumerableFormatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(typeof(T));
+            (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag) enumerableAccessor =
+                (new HtmlTag("td", new HtmlTag("i", "(values)")), obj => new HtmlTag("td", c =>
+                    {
+                        enumerableFormatter.Format(obj, c);
+                    }));
+            Array.Resize(ref rows, rows.Length + 1);
+            rows[^1] = enumerableAccessor;
+        }
 
-        static bool BuildTreeView(T source, FormatContext context, MemberAccessor<T>[] memberAccessors)
+        return new HtmlFormatter<T>((instance, context) => BuildTreeView(instance, context, rows));
+
+        static bool BuildTreeView(T source, FormatContext context, (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag)[] rows)
         {
             context.RequireDefaultStyles();
 
@@ -232,7 +254,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             {
                 var formatter = PlainTextSummaryFormatter.GetPreferredFormatterFor(source?.GetType());
 
-                formatter.Format(source, context);
+                formatter.Format(source, c);
             });
 
             var attributes = new HtmlAttributes();
@@ -250,10 +272,12 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                 div(
                     Html.Table(
                         headers: null,
-                        rows: memberAccessors.Select(
+                        rows: rows.Select(
                             a => (IHtmlContent)
                                 tr(
-                                    td(a.Member.Name), td(a.GetValueOrException(source)))).ToArray())));
+                                    a.propertyLabelTdTag, a.getPropertyValueTdTag(source)
+                                )
+                        ).ToArray())));
 
             view.WriteTo(context);
 

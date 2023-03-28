@@ -309,6 +309,7 @@ public static class Formatter
     public static void FormatTo<T>(
         this T obj,
         FormatContext context,
+        // FIX: (FormatTo) make this non-optional
         string mimeType = PlainTextFormatter.MimeType)
     {
         if (obj is not null)

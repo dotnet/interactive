@@ -10,6 +10,7 @@ using Dummy;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
@@ -863,11 +864,34 @@ public partial class HtmlFormatterTests
 
             var html = instance.ToDisplayString("text/html").RemoveStyleElement();
 
-
-
-
-            // TODO (When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements) write test
-            throw new NotImplementedException();
+            html.Should().BeEquivalentHtmlTo($"""
+                    <details open="open" class="dni-treeview">
+                        <summary>
+                            <span class="dni-code-hint">{code(instance.ToDisplayString(PlainTextSummaryFormatter.MimeType))}</span>
+                        </summary>
+                        <div>
+                            <table>
+                                <thead>
+                                    <tr></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Property</td>
+                                        <td>cherry</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i>(values)</i></td>
+                                        <td>
+                                            <div class="dni-plaintext">
+                                                <pre>[ apple, banana ]</pre>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                </details>
+                """);
         }
 
         [Fact]
@@ -880,8 +904,35 @@ public partial class HtmlFormatterTests
 
             var html = instance.ToDisplayString("text/html").RemoveStyleElement();
 
-            // TODO (When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements) write test
-            throw new NotImplementedException();
+            html.Should().BeEquivalentHtmlTo($"""
+                    <details open="open" class="dni-treeview">
+                        <summary>
+                            <span class="dni-code-hint">{code(instance.ToDisplayString(PlainTextSummaryFormatter.MimeType))}</span>
+                        </summary>
+                        <div>
+                            <table>
+                                <thead>
+                                    <tr></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Property</td>
+                                        <td>cherry</td>
+                                    </tr>
+                                    <tr>
+                                        <td><i>(values)</i></td>
+                                        <td>
+                                            <div class="dni-plaintext">
+                                                <pre>[ apple, banana ]</pre>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                </details>
+                """);
+
         }
     }
 }

@@ -13,12 +13,12 @@ internal class FormatterMapByType
 {
     private readonly ConcurrentDictionary<Type, ITypeFormatter> _formatters = new();
     private readonly Type _genericDef;
-    private readonly string _name;
+    private readonly string _createFormatterMethodName;
 
-    internal FormatterMapByType(Type genericDef, string name)
+    internal FormatterMapByType(Type genericDef, string createFormatterMethodName)
     {
         _genericDef = genericDef;
-        _name = name;
+        _createFormatterMethodName = createFormatterMethodName;
     }
 
     internal ITypeFormatter GetOrCreateFormatterForType(Type type) =>
@@ -27,6 +27,6 @@ internal class FormatterMapByType
             t => (ITypeFormatter)
                 _genericDef
                     .MakeGenericType(t)
-                    .GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
+                    .GetMethod(_createFormatterMethodName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
                     .Invoke(null, Array.Empty<object>()));
 }

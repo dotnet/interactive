@@ -78,7 +78,7 @@ public static class PlainTextFormatter
                 object value = accessor.GetValueOrException(target);
 
                 WriteStartProperty(context);
-                context.Writer.Write(accessor.Member.Name);
+                context.Writer.Write(accessor.MemberName);
                 context.Writer.Write(": ");
                 value.FormatTo(context);
 

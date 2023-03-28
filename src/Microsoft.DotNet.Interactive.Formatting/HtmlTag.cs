@@ -37,6 +37,13 @@ public class HtmlTag : IHtmlContent
 
         void Write(FormatContext context) => context.Writer.Write(text);
     }
+    
+    public HtmlTag(string name, IHtmlContent content) : this(name)
+    {
+        Content = Write;
+
+        void Write(FormatContext context) => content.WriteTo(context.Writer, HtmlEncoder.Default);
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HtmlTag"/> class.

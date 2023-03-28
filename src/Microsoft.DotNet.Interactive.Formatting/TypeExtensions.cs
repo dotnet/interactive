@@ -53,7 +53,7 @@ internal static class TypeExtensions
 
     public static MemberAccessor<T>[] GetMemberAccessors<T>(this IEnumerable<MemberInfo> forMembers) =>
         forMembers
-            .Select(MemberAccessor.CreateMemberAccessor<T>)
+            .Select(memberInfo => new MemberAccessor<T>(memberInfo))
             .ToArray();
 
     public static IEnumerable<MemberInfo> GetMembersToFormat(this Type type)
@@ -153,8 +153,7 @@ internal static class TypeExtensions
 
     public static bool ShouldDisplay(MemberInfo m)
     {
-        if (!(m.MemberType == MemberTypes.Property ||
-              m.MemberType == MemberTypes.Field))
+        if (m.MemberType is not (MemberTypes.Property or MemberTypes.Field))
         {
             return false;
         }
@@ -165,7 +164,7 @@ internal static class TypeExtensions
             return false;
         }
 
-        if (m.MemberType != MemberTypes.Property)
+        if (m.MemberType is not MemberTypes.Property)
         {
             return true;
         }
