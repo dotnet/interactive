@@ -1,0 +1,14 @@
+{
+  "Projects": [
+    {
+      "LanguageSet": "Azure_Languages",
+      "LocItems": [
+        {
+          "SourceFile": "src\\polyglot-notebooks-vscode-insiders\\package.nls.json",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\polyglot-notebooks-vscode-insiders"
+        }
+      ]
+    }
+  ]
+}

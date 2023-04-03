@@ -2,12 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import React from "react";
-import { VariableGridRow } from "../contracts/types";
+import { GridLocalization, VariableGridRow } from "../contracts/types";
 
 
 export type VariableGridProps = {
     rows: VariableGridRow[]
 };
+
+
 
 export type VariableGridState = {
     rows: VariableGridRow[]
@@ -25,7 +27,8 @@ export type VariableGridState = {
                 id: string
             }
         }
-    }
+    },
+    gridLocalization?: GridLocalization
 };
 
 function ensureId(rows: VariableGridRow[]) {
@@ -35,6 +38,15 @@ function ensureId(rows: VariableGridRow[]) {
     }
 }
 
+const defaultGridLocalization: GridLocalization = {
+    actionsColumnHeader: 'Actions',
+    nameColumnHeader: 'Name',
+    valueColumnHeader: 'Value',
+    typeColumnHeader: 'Type',
+    kernelNameColumnHeader: 'Kernel',
+    shareTemplate: 'Share value {value-name} from {kernel-name} kernel'
+}
+
 export class VariableGrid extends React.Component<VariableGridProps, VariableGridState> {
 
     state: VariableGridState = {
@@ -42,7 +54,8 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
         filter: "",
         shareValue: (data: VariableGridRow) => {
             console.log(data);
-        }
+        },
+        gridLocalization: { ...defaultGridLocalization }
     };
 
     idToClass: { [key: string]: string } = {
@@ -99,17 +112,31 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
         window.addEventListener('message', event => {
             switch (event.data.command) {
                 case 'set-rows':
-                    const rows = [...event.data.rows];
-                    ensureId(rows);
-                    this.setState({
-                        ...this.state,
-                        rows: rows
-                    });
+                    {
+                        const rows = [...event.data.rows];
+                        ensureId(rows);
+                        const localization = event.data.localizationStrings ?? defaultGridLocalization;
+                        this.setState({
+                            ...this.state,
+                            rows: rows,
+                            gridLocalization: { ...localization }
+                        });
+                    }
+                    break;
 
+                case 'configure-grid':
+                    {
+                        const localisazion = event.data.localizationStrings ?? defaultGridLocalization;
+                        this.setState({
+                            ...this.state,
+                            gridLocalization: { ...localisazion }
+                        });
+                    }
                     break;
             }
         });
     }
+
     setColumnsWidth() {
         const width = this.getTableSize();
         this.setColumnWidth("name-column", width);
@@ -248,8 +275,6 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
         }
     }
 
-
-
     handleInput(e: React.FormEvent<HTMLInputElement>): void {
         const inputField = e.target as HTMLInputElement;
         this.updateFilter(inputField.value);
@@ -344,7 +369,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     id={`0-0`}
                                     className="header name-column"
                                 >
-                                    Name
+                                    {this.state.gridLocalization!.nameColumnHeader}
                                     <div
                                         className='grip'
                                         draggable={true}
@@ -357,7 +382,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     id={`0-1`}
                                     className="header value-column"
                                 >
-                                    Value
+                                    {this.state.gridLocalization!.valueColumnHeader}
                                     <div
                                         className='grip'
                                         draggable={true}
@@ -370,7 +395,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     id={`0-2`}
                                     className="header type-column"
                                 >
-                                    Type
+                                    {this.state.gridLocalization!.typeColumnHeader}
                                     <div
                                         className='grip'
                                         draggable={true}
@@ -383,7 +408,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     id={`0-3`}
                                     className="header kernel-column"
                                 >
-                                    Kernel
+                                    {this.state.gridLocalization!.kernelNameColumnHeader}
                                     <div
                                         className='grip'
                                         draggable={true}
@@ -396,7 +421,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     id={`0-4`}
                                     className="header actions-column"
                                 >
-                                    Actions
+                                    {this.state.gridLocalization!.actionsColumnHeader}
                                 </th>
                             </tr>
                             {rows.map((row: VariableGridRow, i) =>
@@ -456,9 +481,9 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     <td key={4} id={`${row.id}-${4}`} className="actions-column">
                                         <div className="actions">
                                             <button
-                                                title={`Share ${row.name} from ${row.kernelDisplayName}`}
+                                                title={this.state.gridLocalization!.shareTemplate.replace("{value-name}", row.name).replace("{kernel-name}", row.kernelDisplayName)}
                                                 className="share"
-                                                aria-label={`Share ${row.name} from ${row.kernelDisplayName} kernel to`}
+                                                aria-label={this.state.gridLocalization!.shareTemplate.replace("{value-name}", row.name).replace("{kernel-name}", row.kernelDisplayName)}
                                                 style={{ marginRight: 16 }}
                                                 onClick={() => {
                                                     this.state.shareValue(row);
