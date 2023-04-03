@@ -11,7 +11,7 @@ import { Disposable } from './polyglot-notebooks/disposables';
 import { isKernelEventEnvelope } from './polyglot-notebooks';
 import * as kernelSelectorUtilities from './kernelSelectorUtilities';
 import * as vscodeLike from './interfaces/vscode-like';
-import { VariableGridRow, VariableInfo } from '../ui/types';
+import { GridLocalization, VariableGridRow, VariableInfo } from '../ui/types';
 
 function debounce(callback: () => void) {
     utilities.debounce('variable-explorer', 500, callback);
@@ -150,7 +150,21 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
 
     private setRows(rows: VariableGridRow[]) {
         if (this.webview) {
-            this.webview.postMessage({ command: 'set-rows', rows });
+
+            const localizationStrings: GridLocalization = {
+                actionsColumnHeader: 'Actions',
+                nameColumnHeader: 'Name',
+                valueColumnHeader: 'Value',
+                typeColumnHeader: 'Type',
+                kernelNameColumnHeader: 'Kernel',
+                shareTemplate: 'Share value {value-name} from {kernel-name} kernel'
+            };
+
+            this.webview.postMessage({
+                command: 'set-rows',
+                rows,
+                localizationStrings: localizationStrings
+            });
         }
     }
 
