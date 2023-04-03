@@ -130,6 +130,10 @@ public class HttpRequestKernel :
                 switch (kvp.Key.ToLowerInvariant())
                 {
                     case "content-type":
+                        if (message.Content is null)
+                        {
+                            message.Content = new StringContent(httpRequest.Body);
+                        }
                         message.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
                         break;
                     case "accept":
@@ -275,7 +279,7 @@ public class HttpRequestKernel :
                     verb = parts[0].Trim();
                     address = parts[1].Trim();
                 }
-                else if (!string.IsNullOrWhiteSpace(line) && IsHeader.Matches(line) is { } matches)
+                else if (!string.IsNullOrWhiteSpace(line) && IsHeader.Matches(line) is { } matches && matches.Count != 0)
                 {
                     foreach (Match match in matches)
                     {

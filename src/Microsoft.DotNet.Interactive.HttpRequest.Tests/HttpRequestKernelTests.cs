@@ -193,6 +193,29 @@ Content-Type: application/json
     }
 
     [Fact]
+    public async Task can_set_contenttype_without_a_body()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpRequestKernel(client: client);
+
+        var result = await kernel.SendAsync(new SubmitCode(@"
+Get  https://location1.com:1200/endpoint
+Authorization: Basic username password
+Content-Type: application/json
+"));
+
+        result.Events.Should().NotContainErrors();
+        request.Content.Headers.ContentType.ToString().Should().Be("application/json");
+    }
+
+    [Fact]
     public async Task can_use_symbols_in_body()
     {
         HttpRequestMessage request = null;
