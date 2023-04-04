@@ -13,7 +13,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Humanizer.Localisation;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.App.Connection;
@@ -86,10 +86,10 @@ public static class CommandLineParser
 
         startServer ??= (startupOptions, invocationContext) =>
         {
-            operation.Info("constructing webhost");
+            operation.Info(Resources.ConstructingWebhostInfo);
             var webHost = Program.ConstructWebHost(startupOptions);
             disposeOnQuit.Add(webHost);
-            operation.Info("starting  kestrel server");
+            operation.Info(Resources.StartingKestrelServerInfo);
             webHost.Start();
             onServerStarted?.Invoke();
             webHost.WaitForShutdown();
@@ -114,20 +114,20 @@ public static class CommandLineParser
 
         var verboseOption = new Option<bool>(
             "--verbose",
-            "Enable verbose logging to the console");
+            Resources.VerboseOptionDescription);
 
         var logPathOption = new Option<DirectoryInfo>(
             "--log-path",
-            "Enable file logging to the specified directory");
+            Resources.LogPathOptionDescription);
 
         var pathOption = new Option<DirectoryInfo>(
                 "--path",
-                "Installs the kernelspecs to the specified directory")
+                Resources.PathOptionsDescription)
             .ExistingOnly();
 
         var defaultKernelOption = new Option<string>(
             "--default-kernel",
-            description: "The default language for the kernel",
+            description: Resources.DefaultKernelOptionDescription,
             getDefaultValue: () => "csharp").AddCompletions("fsharp", "csharp", "pwsh");
 
         var rootCommand = DotnetInteractive();
@@ -167,7 +167,7 @@ public static class CommandLineParser
             var command = new RootCommand
             {
                 Name = "dotnet-interactive",
-                Description = "Interactive programming for .NET."
+                Description = Resources.DotnetInteractiveCommandDescription
             };
 
             command.AddGlobalOption(logPathOption);
@@ -181,23 +181,23 @@ public static class CommandLineParser
             var httpPortRangeOption = new Option<HttpPortRange>(
                 "--http-port-range",
                 parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                description: "Specifies the range of ports to use to enable HTTP services",
+                description: Resources.JupyterHttpPortRangeOptionDescription,
                 isDefault: true);
 
-            var jupyterCommand = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
+            var jupyterCommand = new Command("jupyter", Resources.JupyterStartsDescription)
             {
                 defaultKernelOption,
                 httpPortRangeOption,
                 new Argument<FileInfo>
                 {
                     Name = "connection-file",
-                    Description = "The path to a connection file provided by Jupyter"
+                    Description = Resources.JupyterConnectionFileOptionDescription
                 }.ExistingOnly()
             };
 
             jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
 
-            var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
+            var installCommand = new Command("install", Resources.JupyterInstallDescription)
             {
                 httpPortRangeOption,
                 pathOption
@@ -249,17 +249,17 @@ public static class CommandLineParser
             var httpPortRangeOption = new Option<HttpPortRange>(
                 "--http-port-range",
                 parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                description: "Specifies the range of ports to use to enable HTTP services");
+                description: Resources.StdIoHttpPortRangeOptionDescription);
 
             var httpPortOption = new Option<HttpPort>(
                 "--http-port",
-                description: "Specifies the port on which to enable HTTP services",
+                description: Resources.StdIoHttpPortOptionDescription,
                 parseArgument: result =>
                 {
                     if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
                     {
                         var parsed = result.Parent as OptionResult;
-                        result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
+                        result.ErrorMessage = string.Format(Resources.StdIoErrorMessageCannotSpecifyBoth, conflictingOption.Token.Value, parsed.Token.Value);
                         return null;
                     }
 
@@ -277,7 +277,7 @@ public static class CommandLineParser
 
                     if (!int.TryParse(source, out var portNumber))
                     {
-                        result.ErrorMessage = "Must specify a port number or *.";
+                        result.ErrorMessage = Resources.StdIoErrorMessageMustSpecifyPortNumber;
                         return null;
                     }
 
@@ -288,18 +288,18 @@ public static class CommandLineParser
                 "--kernel-host",
                 parseArgument: x => x.Tokens.Count == 0 ? KernelHost.CreateHostUriForCurrentProcessId() : KernelHost.CreateHostUri(x.Tokens[0].Value),
                 isDefault: true,
-                description: "Name of the kernel host.");
+                description: Resources.StdIoKernelHostOptionDescription);
 
-            var previewOption = new Option<bool>("--preview", description: "Enable preview kernel features.");
+            var previewOption = new Option<bool>("--preview", description: Resources.StdIoPreviewOptionDescription);
 
             var workingDirOption = new Option<DirectoryInfo>(
                 "--working-dir",
                 () => new DirectoryInfo(Environment.CurrentDirectory),
-                "Working directory to which to change after launching the kernel.");
+                Resources.StdIoWorkingDirectoryOptionDescription);
 
             var stdIOCommand = new Command(
                 "stdio",
-                "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
+                Resources.StdIoCommandDescription)
             {
                 defaultKernelOption,
                 httpPortRangeOption,
@@ -404,7 +404,7 @@ public static class CommandLineParser
         {
             var notebookParserCommand = new Command(
                 "notebook-parser",
-                "Starts a process to parse and serialize notebooks.");
+                Resources.NotebookParserCommandDescription);
             notebookParserCommand.Handler = CommandHandler.Create(async () =>
             {
                 Console.InputEncoding = Encoding.UTF8;
@@ -421,7 +421,7 @@ public static class CommandLineParser
 
             if (string.IsNullOrWhiteSpace(source))
             {
-                result.ErrorMessage = "Must specify a port range";
+                result.ErrorMessage = Resources.NotebookParserErrorMessageMustSpecifyPortRange;
                 return null;
             }
 
@@ -429,19 +429,19 @@ public static class CommandLineParser
 
             if (parts.Length != 2)
             {
-                result.ErrorMessage = "Must specify a port range";
+                result.ErrorMessage = Resources.NotebookParserErrorMessageMustSpecifyPortRange;
                 return null;
             }
 
             if (!int.TryParse(parts[0], out var start) || !int.TryParse(parts[1], out var end))
             {
-                result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
+                result.ErrorMessage = Resources.NotebookParserErrorMessageMustSpecifyPortRangeAsStartPortEndPort;
                 return null;
             }
 
             if (start > end)
             {
-                result.ErrorMessage = "Start port must be lower then end port";
+                result.ErrorMessage = Resources.NotebookParserErrorMessageStartPortMustBelower;
                 return null;
             }
 

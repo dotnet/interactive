@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="cs" original="../Resources.resx">
+    <body>
+      <trans-unit id="ErrorMessageFromOptions">
+        <source>The {0} and {1} options cannot be used together.</source>
+        <target state="new">The {0} and {1} options cannot be used together.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FromFileOptionDescription">
+        <source>Specifies a file whose contents will be stored.</source>
+        <target state="new">Specifies a file whose contents will be stored.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FromUrlOptionDescription">
+        <source>Specifies a URL whose content will be stored.</source>
+        <target state="new">Specifies a URL whose content will be stored.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FromValueOptionDescription">
+        <source>Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.</source>
+        <target state="new">Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MimeTypeOptionDescription">
+        <source>A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.</source>
+        <target state="new">A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NameOptionDescription">
+        <source>The name of the value to create. You can use #!share to retrieve this value from another subkernel.</source>
+        <target state="new">The name of the value to create. You can use #!share to retrieve this value from another subkernel.</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

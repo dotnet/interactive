@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="it" original="../Resources.resx">
+    <body>
+      <trans-unit id="ConstructingWebhostInfo">
+        <source>constructing webhost</source>
+        <target state="new">constructing webhost</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DefaultKernelOptionDescription">
+        <source>The default language for the kernel</source>
+        <target state="new">The default language for the kernel</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DotnetInteractiveCommandDescription">
+        <source>Interactive programming for .NET.</source>
+        <target state="new">Interactive programming for .NET.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JupyterConnectionFileOptionDescription">
+        <source>The path to a connection file provided by Jupyter</source>
+        <target state="new">The path to a connection file provided by Jupyter</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JupyterHttpPortRangeOptionDescription">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="new">Specifies the range of ports to use to enable HTTP services</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JupyterInstallDescription">
+        <source>Install the .NET kernel for Jupyter</source>
+        <target state="new">Install the .NET kernel for Jupyter</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JupyterStartsDescription">
+        <source>Starts dotnet-interactive as a Jupyter kernel</source>
+        <target state="new">Starts dotnet-interactive as a Jupyter kernel</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="LogPathOptionDescription">
+        <source>Enable file logging to the specified directory</source>
+        <target state="new">Enable file logging to the specified directory</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotebookParserCommandDescription">
+        <source>Starts a process to parse and serialize notebooks.</source>
+        <target state="new">Starts a process to parse and serialize notebooks.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotebookParserErrorMessageMustSpecifyPortRange">
+        <source>Must specify a port range</source>
+        <target state="new">Must specify a port range</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotebookParserErrorMessageMustSpecifyPortRangeAsStartPortEndPort">
+        <source>Must specify a port range as StartPort-EndPort</source>
+        <target state="new">Must specify a port range as StartPort-EndPort</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotebookParserErrorMessageStartPortMustBelower">
+        <source>Start port must be lower then end port</source>
+        <target state="new">Start port must be lower then end port</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PathOptionsDescription">
+        <source>Installs the kernel specs to the specified directory</source>
+        <target state="new">Installs the kernel specs to the specified directory</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingKestrelServerInfo">
+        <source>starting  kestrel server</source>
+        <target state="new">starting  kestrel server</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StdIoCommandDescription">
+        <source>Starts dotnet-interactive with kernel functionality exposed over standard I/O</source>
+        <target state="new">Starts dotnet-interactive with kernel functionality exposed over standard I/O</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StdIoErrorMessageCannotSpecifyBoth">
+        <source>Cannot specify both {0} and {1} together</source>
+        <target state="new">Cannot specify both {0} and {1} together</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StdIoErrorMessageMustSpecifyPortNumber">
+        <source>Must specify a port number or *.</source>
+        <target state="new">Must specify a port number or *.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StdIoHttpPortOptionDescription">
+        <source>Specifies the port on which to enable HTTP services</source>
+        <target state="new">Specifies the port on which to enable HTTP services</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StdIoHttpPortRangeOptionDescription">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="new">Specifies the range of ports to use to enable HTTP services</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StdIoKernelHostOptionDescription">
+        <source>Name of the kernel host.</source>
+        <target state="new">Name of the kernel host.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StdIoPreviewOptionDescription">
+        <source>Enable preview kernel features.</source>
+        <target state="new">Enable preview kernel features.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StdIoWorkingDirectoryOptionDescription">
+        <source>Working directory to which to change after launching the kernel.</source>
+        <target state="new">Working directory to which to change after launching the kernel.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="VerboseOptionDescription">
+        <source>Enable verbose logging to the console</source>
+        <target state="new">Enable verbose logging to the console</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
