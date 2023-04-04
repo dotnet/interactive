@@ -17,6 +17,26 @@
           "SourceFile": "src\\Microsoft.DotNet.Interactive\\Resources.resx",
           "CopyOption": "LangIDOnName",
           "OutputPath": "src\\Microsoft.DotNet.Interactive"
+        },
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.AspNetCore\\Resources.resx",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.AspNetCore"
+        },
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.Journey\\Resources.resx",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.Journey"
+        },
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.ExtensionLab\\Resources.resx",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.ExtensionLab"
+        },
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.Jupyter\\Resources.resx",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.Jupyter"
         }
       ]
     }

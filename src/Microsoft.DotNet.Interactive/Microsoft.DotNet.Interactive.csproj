@@ -52,6 +52,21 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\Microsoft.DotNet.Interactive.Documents\Microsoft.DotNet.Interactive.Documents.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
   <Import Project="..\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems" Label="Shared" />
 
 </Project>
