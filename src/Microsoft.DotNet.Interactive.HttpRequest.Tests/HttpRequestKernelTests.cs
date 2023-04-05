@@ -23,7 +23,7 @@ public class HttpRequestKernelTests
     [InlineData("POST")]
     [InlineData("DELETE")]
     [InlineData("HEAD")]
-    public async Task supports_verbs(string verb)
+    public async Task supports_sending_requests_with_common_verbs(string verb)
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -41,12 +41,12 @@ public class HttpRequestKernelTests
         result.Events.Should().NotContainErrors();
 
         request.Method.Method.Should().Be(verb);
-
     }
 
     [Fact]
     public async Task requires_base_address_when_using_relative_uris()
     {
+        // FIX: (requires_base_address_when_using_relative_uris) needed?
         using var kernel = new HttpRequestKernel();
 
         var result = await kernel.SendAsync(new SubmitCode("get  /relativePath"));
@@ -78,7 +78,7 @@ public class HttpRequestKernelTests
     }
 
     [Fact]
-    public async Task can_replace_symbols()
+    public async Task it_can_interpolate_variables_into_URL()
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -102,6 +102,7 @@ public class HttpRequestKernelTests
     [Fact]
     public async Task can_use_base_address_to_resolve_host_symbol()
     {
+        // FIX: (can_use_base_address_to_resolve_host_symbol) do we need a magic "host" symbol?
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
         {
@@ -132,6 +133,8 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
+
+        // FIX: (can_handle_multiple_request_in_a_single_submission) this should require a comment separator
 
         var result = await kernel.SendAsync(new SubmitCode(@"
 get  https://location1.com:1200/endpoint
@@ -166,7 +169,7 @@ Authorization: Basic username password"));
     }
 
     [Fact]
-    public async Task can_set_body()
+    public async Task can_set_body_from_single_line()
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -217,6 +220,26 @@ Content-Type: application/json
 
     [Fact]
     public async Task can_use_symbols_in_body()
+    public void can_set_body_from_multiline_text()
+    {
+
+        
+
+        // TODO (can_set_body_from_multiline_text) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact]
+    public void it_can_set_http_version()
+    {
+        
+
+        // TODO (it_can_set_http_version) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact]
+    public async Task it_can_interpolate_variables_into_request_body()
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -243,6 +266,15 @@ Content-Type: application/json
     }
 
     [Fact]
+    public void it_can_interpolate_variables_into_request_headers()
+    {
+        
+
+        // TODO (it_can_interpolate_variables_into_headers) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact]
     public async Task comments_can_be_placed_before_a_variable_expanded_request()
     {
         HttpRequestMessage request = null;
@@ -255,6 +287,8 @@ Content-Type: application/json
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
         kernel.SetValue("theHost", "example.com");
+
+        // FIX: (comments_can_be_placed_before_a_variable_expanded_request) comment syntax should use ### prefix
 
         var code = @"
 // something to ensure we're not on the first line
@@ -283,7 +317,7 @@ GET https://{{theHost}}";
     }
 
     [Fact]
-    public async Task diagnostic_positions_are_correct_for_unresolved_symbols()
+    public async Task diagnostic_positions_are_correct_for_unresolved_symbols_in_URL()
     {
         using var kernel = new HttpRequestKernel();
         kernel.BaseAddress = new Uri("http://example.com");
@@ -302,8 +336,30 @@ GET https://example.com/{{unresolved_symbol}}";
     }
 
     [Fact]
+    public void diagnostic_positions_are_correct_for_unresolved_symbols_in_request_body()
+    {
+        throw new NotImplementedException();
+    }
+
+    [Fact]
+    public void diagnostic_positions_are_correct_for_unresolved_symbols_in_request_headers()
+    {
+        throw new NotImplementedException();
+    }
+
+    [Fact]
+    public void diagnostics_are_produced_for_headers_without_a_value()
+    {
+        
+
+        // TODO (diagnostics_are_produced_for_headers_without_a_value) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact]
     public async Task Setting_BaseAddress_sets_host_variable()
     {
+        // FIX: (Setting_BaseAddress_sets_host_variable) can we remove this?
         using var kernel = new HttpRequestKernel();
         kernel.BaseAddress = new Uri("http://example.com");
 
@@ -351,5 +407,60 @@ User-Agent: {{missing_value_2}}";
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void diagnostic_positions_are_correct_when_submission_contains_multiple_requests()
+    {
+        
+
+        // TODO (diagnostic_positions_are_correct_when_submission_contains_multiple_requests) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact]
+    public void responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
+    {
+       // Request Variables
+       // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+
+        // TODO (responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests) write test
+        throw new NotImplementedException();
+    }
+
+
+
+
+
+    [Fact]
+    public void prompt_symbol_sends_input_request_to_user()
+    {
+        /*
+###
+# @prompt username
+# @prompt refCode Your reference code display on webpage
+# @prompt otp Your one-time password in your mailbox
+POST https://{{host}}/verify-otp/{{refCode}} HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "username": "{{username}}",
+    "otp": "{{otp}}"
+}
+         */
+
+        // TODO (prompt_symbol_sends_input_request_to_user) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact]
+    public void JSONPath_can_be_used_to_access_response_properties()
+    {
+        // example:
+        // @authToken = {{login.response.headers.X-AuthToken}}
+
+        // TODO (dot_notation_can_be_used_to_access_response_properties) write test
+        throw new NotImplementedException();
     }
 }

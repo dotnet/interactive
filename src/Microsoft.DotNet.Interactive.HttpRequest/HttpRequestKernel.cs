@@ -47,8 +47,6 @@ public class HttpRequestKernel :
         IsHeader = new Regex(@"^\s*(?<key>[\w-]+):\s*(?<value>.*)", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
     }
 
-  
-
     public HttpRequestKernel(string name = null, HttpClient client = null)
         : base(name ?? "http")
     {
@@ -173,7 +171,6 @@ public class HttpRequestKernel :
 
     private IEnumerable<(string Request, List<Diagnostic> Diagnostics)> InterpolateAndGetDiagnostics(string code)
     {
-        var canResolveHost = BaseAddress is { };
         var lines = code.Split('\n');
 
         var result = new List<(string Request, List<Diagnostic>)>();
