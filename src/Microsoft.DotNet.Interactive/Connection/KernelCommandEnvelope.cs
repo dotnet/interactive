@@ -74,7 +74,8 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             [nameof(RequestInput)] = typeof(KernelCommandEnvelope<RequestInput>),
             [nameof(RequestValue)] = typeof(KernelCommandEnvelope<RequestValue>),
             [nameof(RequestValueInfos)] = typeof(KernelCommandEnvelope<RequestValueInfos>),
-            [nameof(RequestKernelInfo)] = typeof(KernelCommandEnvelope<RequestKernelInfo>)
+            [nameof(RequestKernelInfo)] = typeof(KernelCommandEnvelope<RequestKernelInfo>),
+            [nameof(SendValue)] = typeof(KernelCommandEnvelope<SendValue>)
         };
 
         _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName
