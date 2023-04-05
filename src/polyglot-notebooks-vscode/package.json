@@ -13,7 +13,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.76.0"
+    "vscode": "^1.77.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -218,7 +218,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.416502",
+          "default": "1.0.420401",
           "description": "The required version of the .NET Interactive tool."
         }
       }
