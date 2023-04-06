@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Formatting;
+using System;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
@@ -36,18 +37,26 @@ public class JupyterKernelSpecModule : IJupyterKernelSpecModule
 
     public async Task<IReadOnlyDictionary<string, KernelSpec>> ListKernels()
     {
-        var kernelSpecsList = await ExecuteCommand("list", "--json");
-        if (kernelSpecsList.ExitCode == 0)
+        try
         {
-            var results = JsonSerializer.Deserialize<KernelSpecListCommandResults>(string.Join(string.Empty, kernelSpecsList.Output));
-            return results.kernelspecs?.ToDictionary(r => r.Key, r =>
+            var kernelSpecsList = await ExecuteCommand("list", "--json");
+            if (kernelSpecsList.ExitCode == 0)
             {
-                var spec = r.Value?.spec;
-                spec.Name ??= r.Key;
-                return spec;
-            });
+                var results = JsonSerializer.Deserialize<KernelSpecListCommandResults>(string.Join(string.Empty, kernelSpecsList.Output));
+                return results.kernelspecs?.ToDictionary(r => r.Key, r =>
+                {
+                    var spec = r.Value?.spec;
+                    spec.Name ??= r.Key;
+                    return spec;
+                });
+            }
+            else
+            {
+                // fall back to custom lookup logic 
+                return LookupInstalledKernels();
+            }
         }
-        else
+        catch (Exception)
         {
             // fall back to custom lookup logic 
             return LookupInstalledKernels();
