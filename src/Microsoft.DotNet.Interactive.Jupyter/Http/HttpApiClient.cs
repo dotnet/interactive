@@ -34,27 +34,42 @@ internal class HttpApiClient : IDisposable
 
     public virtual async Task<HttpResponseMessage> SendRequestAsync(string relativeApiPath, HttpContent content, HttpMethod method)
     {
-        _httpClient.DefaultRequestHeaders.Clear();
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(".NET interactive");
-
         var token = await _authProvider.GetTokenAsync();
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"{_authProvider.AuthScheme} {token}");
-
-        var request = new HttpRequestMessage()
-        {
-            RequestUri = GetUri(relativeApiPath),
-            Method = method, 
-            Content = content
-        };
-
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        var request = CreateRequest(token, relativeApiPath, content, method);
 
         return await _httpClient.SendAsync(request);
+    }
+
+    public virtual HttpResponseMessage SendRequest(string relativeApiPath, HttpContent content, HttpMethod method)
+    {
+        var token = _authProvider.GetToken();
+        var request = CreateRequest(token, relativeApiPath, content, method);
+
+        return _httpClient.Send(request);
     }
 
     public Uri GetUri(string relativeApiPath)
     {
         // preserve the full base Uri 
         return new Uri($"{_baseUri.AbsoluteUri.TrimEnd('/')}/{relativeApiPath.TrimStart('/')}");
+    }
+
+    protected virtual HttpRequestMessage CreateRequest(string token, string relativeApiPath, HttpContent content, HttpMethod method)
+    {
+        _httpClient.DefaultRequestHeaders.Clear();
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(".NET interactive");
+
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"{_authProvider.AuthScheme} {token}");
+
+        var request = new HttpRequestMessage()
+        {
+            RequestUri = GetUri(relativeApiPath),
+            Method = method,
+            Content = content
+        };
+
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        return request;
     }
 }

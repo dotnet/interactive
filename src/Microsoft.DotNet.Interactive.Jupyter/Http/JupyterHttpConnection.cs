@@ -72,7 +72,7 @@ internal class JupyterHttpConnection : IJupyterConnection
 
     public void Dispose()
     {
-        Task.Run(ShutdownJupyterSessionsAsync).Wait();
+        ShutdownJupyterSessions();
         _disposables.Dispose();
     }
 
@@ -138,12 +138,12 @@ internal class JupyterHttpConnection : IJupyterConnection
         return new JupyterKernelHttpConnection(kernelApiClient, _authProvider);
     }
 
-    private async Task<bool> ShutdownJupyterSessionsAsync()
+    private bool ShutdownJupyterSessions()
     {
         bool success = true;
         foreach (var session in _activeSessions)
         {
-            HttpResponseMessage response = await _apiClient.SendRequestAsync(
+            HttpResponseMessage response = _apiClient.SendRequest(
                     relativeApiPath: $"api/sessions/{session}",
                     content: null,
                     method: HttpMethod.Delete
