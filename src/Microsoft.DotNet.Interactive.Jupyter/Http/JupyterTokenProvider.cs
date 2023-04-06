@@ -6,13 +6,6 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Http;
 
-internal interface IAuthorizationProvider
-{
-    Task<string> GetTokenAsync();
-
-    string AuthScheme { get; }
-}
-
 internal class JupyterTokenProvider : IAuthorizationProvider
 {
     private readonly string _token;
@@ -29,5 +22,10 @@ internal class JupyterTokenProvider : IAuthorizationProvider
     public Task<string> GetTokenAsync()
     {
         return Task.FromResult(_token);
+    }
+
+    public string GetToken()
+    {
+        return _token;
     }
 }
