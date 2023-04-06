@@ -43,7 +43,7 @@ internal class JupyterConnection : IJupyterConnection
 
         if (spec is null)
         {
-            throw new KernelStartException(kernelSpecName, "kernel not found");
+            throw new ArgumentException($"KernelSpec {kernelSpecName} not found");
         }
 
         ConnectionInformation connectionInfo = null;

@@ -93,7 +93,8 @@ internal class JupyterHttpConnection : IJupyterConnection
 
             byte[] bytes = await response.Content.ReadAsByteArrayAsync();
             var list = JsonSerializer.Deserialize<KernelSpecs>(bytes);
-            _availableKernels = list?.kernelspecs?.Select(t => {
+            _availableKernels = list?.kernelspecs?.Select(t =>
+            {
                 var spec = t.Value.spec;
                 spec.Name ??= t.Key;
                 return spec;
@@ -118,30 +119,23 @@ internal class JupyterHttpConnection : IJupyterConnection
             type = "notebook"
         };
 
-        try
+        HttpResponseMessage response = await _apiClient.SendRequestAsync(
+            relativeApiPath: "api/sessions",
+            content: new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json"),
+            method: HttpMethod.Post
+        );
+
+        if (!response.IsSuccessStatusCode)
         {
-            HttpResponseMessage response = await _apiClient.SendRequestAsync(
-                relativeApiPath: "api/sessions",
-                content: new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json"),
-                method: HttpMethod.Post
-            );
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new KernelStartException(kernelSpecName, response.ReasonPhrase);
-            }
-
-            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
-            var session = JsonSerializer.Deserialize<KernelSessionInfo>(bytes);
-            _activeSessions.Add(session.id);
-            var kernelApiClient = _apiClient.CreateClient($"api/kernels/{session.kernel.id}");
-
-            return new JupyterKernelHttpConnection(kernelApiClient, _authProvider);
+            throw new KernelStartException(kernelSpecName, response.ReasonPhrase);
         }
-        catch (Exception e)
-        {
-            throw new KernelStartException(kernelSpecName, e.Message);
-        }
+
+        byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+        var session = JsonSerializer.Deserialize<KernelSessionInfo>(bytes);
+        _activeSessions.Add(session.id);
+        var kernelApiClient = _apiClient.CreateClient($"api/kernels/{session.kernel.id}");
+
+        return new JupyterKernelHttpConnection(kernelApiClient, _authProvider);
     }
 
     private async Task<bool> ShutdownJupyterSessionsAsync()
