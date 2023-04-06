@@ -206,9 +206,9 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     public System.String CommId { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
   public class CommOpen : Message
-    .ctor(System.String commId, System.String targetName, System.Object data)
+    .ctor(System.String commId, System.String targetName, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data)
     public System.String CommId { get;}
-    public System.Object Data { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
     public System.String TargetName { get;}
   public class CommTarget
     .ctor(System.String targetName)
