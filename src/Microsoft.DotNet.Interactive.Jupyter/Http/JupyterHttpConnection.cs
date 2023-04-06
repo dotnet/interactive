@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Http;
 
-internal class JupyterHttpConnection : IJupyterConnection
+internal class JupyterHttpConnection : IJupyterConnection, IDisposable
 {
     #region JsonTypes
     private class KernelSessionInfo

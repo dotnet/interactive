@@ -69,7 +69,10 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
         var kernel = await connector?.CreateKernelAsync(localName);
-        kernel?.RegisterForDisposal(connection);
+        if (connection is IDisposable disposableConnection)
+        {
+            kernel?.RegisterForDisposal(disposableConnection);
+        }
         return kernel;
     }
 
@@ -95,8 +98,8 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         }
 
         IEnumerable<CompletionItem> completions;
-        using (var connection = GetJupyterConnection(ctx.ParseResult))
-        {
+        var connection = GetJupyterConnection(ctx.ParseResult);
+        using (connection as IDisposable) {
             completions = GetKernelSpecsCompletions(connection);
         }
 

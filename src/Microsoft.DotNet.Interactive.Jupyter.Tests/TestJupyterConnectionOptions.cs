@@ -219,7 +219,7 @@ public class TestJupyterKernelConnection : IJupyterKernelConnection
     public bool IsDisposed => _disposed;
 }
 
-public class TestJupyterConnection : IJupyterConnection
+public class TestJupyterConnection : IJupyterConnection, IDisposable
 {
     private IJupyterConnection _testJupyterConnection;
     private TestJupyterKernelConnection _testKernelConnection;
@@ -254,7 +254,7 @@ public class TestJupyterConnection : IJupyterConnection
 
     public void Dispose()
     {
-        _testJupyterConnection?.Dispose();
+        (_testJupyterConnection as IDisposable)?.Dispose();
         _disposed = true;
     }
 
