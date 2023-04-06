@@ -13,7 +13,7 @@ public class CommInfoRequest : RequestMessage
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string TargetName { get; }
 
-    public CommInfoRequest(string targetName)
+    public CommInfoRequest(string targetName = null)
     {
         TargetName = targetName;
     }

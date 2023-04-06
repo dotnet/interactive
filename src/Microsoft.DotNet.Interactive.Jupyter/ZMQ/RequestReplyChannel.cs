@@ -16,7 +16,7 @@ internal class RequestReplyChannel
     private readonly MessageSender _sender;
     private readonly string channel;
 
-    public RequestReplyChannel(MessageSender sender, string channel = MessageChannel.shell)
+    public RequestReplyChannel(MessageSender sender, string channel = MessageChannelValues.shell)
     {
         _sender = sender ?? throw new ArgumentNullException(nameof(sender));
         this.channel = channel;
@@ -24,7 +24,7 @@ internal class RequestReplyChannel
     public void Reply(ReplyMessage message, Message request)
     {
         var reply = Message.CreateReply(message, request, channel);
-        _sender.Send(reply);
+        Send(reply);
     }
 
     public void Send(Message message)

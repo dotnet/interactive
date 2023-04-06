@@ -1,0 +1,342 @@
+[
+  {
+    "header": {
+      "msg_id": "f12c9f60-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
+      "date": "2023-03-21T23:56:05.296088Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "dd40f229-f8f3-4476-aa59-0221e8ea704a",
+      "username": "dotnet_kernel",
+      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
+      "date": "2023-03-21T23:56:05.2228700Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f12cc670-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
+      "date": "2023-03-21T23:56:05.298088Z",
+      "msg_type": "kernel_info_reply",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "dd40f229-f8f3-4476-aa59-0221e8ea704a",
+      "username": "dotnet_kernel",
+      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
+      "date": "2023-03-21T23:56:05.2228700Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "protocol_version": "5.0",
+      "implementation": "IRkernel",
+      "implementation_version": "0.8.15",
+      "language_info": {
+        "name": "R",
+        "version": "3.6.1",
+        "mimetype": "text/x-r-source",
+        "file_extension": ".r",
+        "pygments_lexer": "r",
+        "codemirror_mode": "r"
+      },
+      "banner": "R version 3.6.1 (2019-07-05)",
+      "status": "ok",
+      "help_links": []
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f12d1490-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
+      "date": "2023-03-21T23:56:05.299090Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "dd40f229-f8f3-4476-aa59-0221e8ea704a",
+      "username": "dotnet_kernel",
+      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
+      "date": "2023-03-21T23:56:05.2228700Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f12dd7e0-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
+      "date": "2023-03-21T23:56:05.304088Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "2e9c96cf-8747-49e7-87bb-bcefb693c77b",
+      "username": "dotnet_kernel",
+      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
+      "date": "2023-03-21T23:56:05.2998779Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f12e2646-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
+      "date": "2023-03-21T23:56:05.307102Z",
+      "msg_type": "execute_input",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "2e9c96cf-8747-49e7-87bb-bcefb693c77b",
+      "username": "dotnet_kernel",
+      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
+      "date": "2023-03-21T23:56:05.2998779Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "code": "# Copyright (c) .NET Foundation and contributors. All rights reserved.\n# Licensed under the MIT license. See LICENSE file in the project root for full license information.\n\nlibrary(IRkernel);\nlibrary(jsonlite);\n\n.dotnet_coe_comm_hander_env <- new.env();\n\n.dotnet_coe_comm_hander_env$emptyEvent <- fromJSON(\"{}\")\n\n# events\n.dotnet_coe_comm_hander_env$KernelReady <- 'KernelReady';\n.dotnet_coe_comm_hander_env$CommandSucceeded <- 'CommandSucceeded';\n.dotnet_coe_comm_hander_env$CommandFailed <- 'CommandFailed';\n.dotnet_coe_comm_hander_env$ValueProduced <- 'ValueProduced';\n.dotnet_coe_comm_hander_env$ValueInfosProduced <- 'ValueInfosProduced';\n\n#commands\n.dotnet_coe_comm_hander_env$SendValue <- 'SendValue';\n.dotnet_coe_comm_hander_env$RequestValue <- 'RequestValue';\n.dotnet_coe_comm_hander_env$RequestValueInfos <- 'RequestValueInfos';\n\n.dotnet_coe_comm_hander_env$json <- function(value) {\n    return (toJSON(value, auto_unbox = TRUE, null=\"null\", force = TRUE))\n}\n    \n.dotnet_coe_comm_hander_env$payload <- function(envelope, type) {\n    payload <- list(commandOrEvent = .dotnet_coe_comm_hander_env$json(envelope), type = type);\n    return (payload);\n}\n\n.dotnet_coe_comm_hander_env$eventEnvelope <- function(event, eventType, command = NA) {\n    if (!is.na(command) && !is.null(command)) {\n        # we don't care about routing slip here and there are some json serialization issues with R un-boxing\n        # for now, let's remove it or make it empty\n        command$routingSlip <- list()\n    }\n    envelope <- list(event=event, eventType=eventType, command=command);\n    return (.dotnet_coe_comm_hander_env$payload(envelope, 'event'));\n}\n\n.dotnet_coe_comm_hander_env$is_ready <- function() {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                list(kernelInfos=list()), \n                .dotnet_coe_comm_hander_env$KernelReady)\n    );\n}\n\n.dotnet_coe_comm_hander_env$fail <- function(message = NA, command = NA) {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                list(message=message), \n                .dotnet_coe_comm_hander_env$CommandFailed, \n                command)\n    );\n}\n\n.dotnet_coe_comm_hander_env$pass <- function(command = NA) {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                .dotnet_coe_comm_hander_env$emptyEvent, \n                .dotnet_coe_comm_hander_env$CommandSucceeded, \n                command)\n    );\n}\n\n.dotnet_coe_comm_hander_env$get_formatted_value <- function(value, mimeType = 'application/json') {\n    formattedValue = NULL\n    if (is.data.frame(value)) {\n        mimeType <- 'application/table-schema+json'\n        formattedValue <- .dotnet_coe_comm_hander_env$json(head(value))\n    } else if (mimeType == 'application/json') {\n        formattedValue <- .dotnet_coe_comm_hander_env$json(value)\n    }\n    return (list(\n        mimeType=mimeType,\n        value=formattedValue\n       ))\n}\n\n.dotnet_coe_comm_hander_env$handle_request_value_infos <- function(commandOrEvent) {\n    variables <- ls(all=TRUE, globalenv()) # we only retrieve the global variables \n    results <- list();\n    \n    for (var in variables) {\n        if (!startsWith(var, '.')) {\n            value <- get(var);\n            type <- if (is.data.frame(value)) 'data.frame' else toString(typeof(value));\n            if (type != 'closure') {\n                formattedValue <- .dotnet_coe_comm_hander_env$get_formatted_value(value);\n                results <- append(results, list(list(name=var, formattedValue=formattedValue, typeName=type)));\n            }\n        };\n    };\n                \n    \n    valueInfosProduced = list(valueInfos=results)\n    \n    response <- .dotnet_coe_comm_hander_env$eventEnvelope(\n                valueInfosProduced, \n                .dotnet_coe_comm_hander_env$ValueInfosProduced, \n                commandOrEvent)\n}\n\n.dotnet_coe_comm_hander_env$handle_request_value <- function(commandOrEvent) {\n    requestValue <- commandOrEvent$command\n    mimeType <- requestValue$mimeType\n    name <- requestValue$name\n    \n    if (is.na(name) || name == '' || !exists(name)) {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                    sprintf('Variable \"%s\" not found.', name))\n        )\n    }\n    \n    rawValue <- get(name);\n    mimeType <- if (is.data.frame(rawValue)) 'application/table-schema+json' else mimeType;\n    formattedValue <- .dotnet_coe_comm_hander_env$get_formatted_value(rawValue, mimeType);\n\n    valueProduced = list(\n                        name=name, \n                        value=rawValue, \n                        formattedValue=formattedValue\n                    )\n    response <- .dotnet_coe_comm_hander_env$eventEnvelope(\n                valueProduced, \n                .dotnet_coe_comm_hander_env$ValueProduced, \n                commandOrEvent)\n    \n    return (response)\n}\n\n.dotnet_coe_comm_hander_env$handle_send_value <- function(commandOrEvent) {\n    sendValue <- commandOrEvent$command\n    mimeType <- sendValue$formattedValue$mimeType\n    name <- sendValue$name\n    rawValue <- sendValue$formattedValue$value\n    resultValue = NA\n    \n    if (make.names(name) != name) {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                    sprintf('Invalid Identifier: \"%s\"', name))\n        )\n    }\n    \n    if (mimeType == 'application/table-schema+json') {\n        resultValue <- fromJSON(rawValue)\n        resultValue <- data.frame(resultValue$data)\n    } else if (mimeType == 'application/json') {\n        resultValue <- fromJSON(rawValue)\n    } else {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                        sprintf('Failed to set value for \"%s\". \"%s\" mimetype not supported.', name, mimeType))\n        )\n    }\n    \n    \n    assign(name, resultValue, globalenv());\n    return (.dotnet_coe_comm_hander_env$pass())\n}\n\n.dotnet_coe_comm_hander_env$handle_command <- function(commandOrEvent) {\n    commandType <- commandOrEvent$commandType\n\n    result <- .dotnet_coe_comm_hander_env$fail(\n                sprintf('command \"%s\" not supported', commandType)\n            )\n\n    if (commandType == .dotnet_coe_comm_hander_env$SendValue) {\n        result <- .dotnet_coe_comm_hander_env$handle_send_value(commandOrEvent)\n    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValue) {\n        result <- .dotnet_coe_comm_hander_env$handle_request_value(commandOrEvent)\n    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValueInfos) {\n        result <- .dotnet_coe_comm_hander_env$handle_request_value_infos(commandOrEvent)\n    }\n\n    return (result)\n}\n\n.dotnet_coe_comm_hander_env$handle_command_or_event <- function(msg) {\n    response <- tryCatch({\n            msg_type <- msg$type\n            commandOrEvent <- fromJSON(msg$commandOrEvent)\n        \n            if (msg_type == 'command') {\n                return (.dotnet_coe_comm_hander_env$handle_command(commandOrEvent))\n            } \n        },\n        error=function(cond) {\n            return (\n                .dotnet_coe_comm_hander_env$fail(\n                    sprintf('failed to process comm data. %s', cond$message))\n                )\n        })    \n    \n    return(response)\n}\n\n.dotnet_coe_comm_hander_env$coe_handler_connect_to_comm <- function(comm, data) {\n    comm$on_msg(function(msg) {\n        # assign('.debug.onmsg', msg, globalenv());\n        response <- .dotnet_coe_comm_hander_env$handle_command_or_event(msg);\n        comm$send(response);  \n    })\n\n    ready <- .dotnet_coe_comm_hander_env$is_ready()\n    comm$send(ready);  \n    \n};\n\ncomm_manager()$register_target('dotnet_coe_handler_comm', .dotnet_coe_comm_hander_env$coe_handler_connect_to_comm);\n",
+      "execution_count": 1
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f13e0890-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
+      "date": "2023-03-21T23:56:05.410191Z",
+      "msg_type": "execute_reply",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "2e9c96cf-8747-49e7-87bb-bcefb693c77b",
+      "username": "dotnet_kernel",
+      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
+      "date": "2023-03-21T23:56:05.2998779Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "payload": [],
+      "user_expressions": {},
+      "status": "ok",
+      "execution_count": 1
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f13e2f96-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
+      "date": "2023-03-21T23:56:05.412191Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "2e9c96cf-8747-49e7-87bb-bcefb693c77b",
+      "username": "dotnet_kernel",
+      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
+      "date": "2023-03-21T23:56:05.2998779Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f13edfe0-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
+      "date": "2023-03-21T23:56:05.415703Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "893821b9-d8d3-4565-a39f-268abc299f7b",
+      "username": "dotnet_kernel",
+      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
+      "date": "2023-03-21T23:56:05.4126453Z",
+      "msg_type": "comm_open",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f13f7c20-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
+      "date": "2023-03-21T23:56:05.420704Z",
+      "msg_type": "comm_msg",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "893821b9-d8d3-4565-a39f-268abc299f7b",
+      "username": "dotnet_kernel",
+      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
+      "date": "2023-03-21T23:56:05.4126453Z",
+      "msg_type": "comm_open",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "0be2a9a7-b8fc-460d-8667-4e8ff204cc27",
+      "data": {
+        "commandOrEvent": "{\"event\":{\"kernelInfos\":[]},\"eventType\":\"KernelReady\",\"command\":null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f13fa330-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
+      "date": "2023-03-21T23:56:05.421706Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "893821b9-d8d3-4565-a39f-268abc299f7b",
+      "username": "dotnet_kernel",
+      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
+      "date": "2023-03-21T23:56:05.4126453Z",
+      "msg_type": "comm_open",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f14066a8-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
+      "date": "2023-03-21T23:56:05.426704Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "ba875301-16ad-4d8b-ace2-ab2c513912bd",
+      "username": "dotnet_kernel",
+      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
+      "date": "2023-03-21T23:56:05.4239063Z",
+      "msg_type": "inspect_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f15df39e-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
+      "date": "2023-03-21T23:56:05.620371Z",
+      "msg_type": "inspect_reply",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "ba875301-16ad-4d8b-ace2-ab2c513912bd",
+      "username": "dotnet_kernel",
+      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
+      "date": "2023-03-21T23:56:05.4239063Z",
+      "msg_type": "inspect_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "status": "ok",
+      "found": true,
+      "data": {
+        "text/plain": "print                   package:base                   R Documentation\n\n_\bP_\br_\bi_\bn_\bt _\bV_\ba_\bl_\bu_\be_\bs\n\n_\bD_\be_\bs_\bc_\br_\bi_\bp_\bt_\bi_\bo_\bn:\n\n     'print' prints its argument and returns it _invisibly_ (via\n     'invisible(x)').  It is a generic function which means that new\n     printing methods can be easily added for new 'class'es.\n\n_\bU_\bs_\ba_\bg_\be:\n\n     print(x, ...)\n     \n     ## S3 method for class 'factor'\n     print(x, quote = FALSE, max.levels = NULL,\n           width = getOption(\"width\"), ...)\n     \n     ## S3 method for class 'table'\n     print(x, digits = getOption(\"digits\"), quote = FALSE,\n           na.print = \"\", zero.print = \"0\",\n           right = is.numeric(x) || is.complex(x),\n           justify = \"none\", ...)\n     \n     ## S3 method for class 'function'\n     print(x, useSource = TRUE, ...)\n     \n_\bA_\br_\bg_\bu_\bm_\be_\bn_\bt_\bs:\n\n       x: an object used to select a method.\n\n     ...: further arguments passed to or from other methods.\n\n   quote: logical, indicating whether or not strings should be printed\n          with surrounding quotes.\n\nmax.levels: integer, indicating how many levels should be printed for a\n          factor; if '0', no extra \"Levels\" line will be printed.  The\n          default, 'NULL', entails choosing 'max.levels' such that the\n          levels print on one line of width 'width'.\n\n   width: only used when 'max.levels' is NULL, see above.\n\n  digits: minimal number of _significant_ digits, see 'print.default'.\n\nna.print: character string (or 'NULL') indicating 'NA' values in\n          printed output, see 'print.default'.\n\nzero.print: character specifying how zeros ('0') should be printed; for\n          sparse tables, using '\".\"' can produce more readable results,\n          similar to printing sparse matrices in 'Matrix'.\n\n   right: logical, indicating whether or not strings should be right\n          aligned.\n\n justify: character indicating if strings should left- or\n          right-justified or left alone, passed to 'format'.\n\nuseSource: logical indicating if internally stored source should be\n          used for printing when present, e.g., if 'options(keep.source\n          = TRUE)' has been in use.\n\n_\bD_\be_\bt_\ba_\bi_\bl_\bs:\n\n     The default method, 'print.default' has its own help page.  Use\n     'methods(\"print\")' to get all the methods for the 'print' generic.\n\n     'print.factor' allows some customization and is used for printing\n     'ordered' factors as well.\n\n     'print.table' for printing 'table's allows other customization. As\n     of R 3.0.0, it only prints a description in case of a table with\n     0-extents (this can happen if a classifier has no valid data).\n\n     See 'noquote' as an example of a class whose main purpose is a\n     specific 'print' method.\n\n_\bR_\be_\bf_\be_\br_\be_\bn_\bc_\be_\bs:\n\n     Chambers, J. M. and Hastie, T. J. (1992) _Statistical Models in\n     S._ Wadsworth & Brooks/Cole.\n\n_\bS_\be_\be _\bA_\bl_\bs_\bo:\n\n     The default method 'print.default', and help for the methods\n     above; further 'options', 'noquote'.\n\n     For more customizable (but cumbersome) printing, see 'cat',\n     'format' or also 'write'.  For a simple prototypical print method,\n     see '.print.via.format' in package 'tools'.\n\n_\bE_\bx_\ba_\bm_\bp_\bl_\be_\bs:\n\n     require(stats)\n     \n     ts(1:20)  #-- print is the \"Default function\" --> print.ts(.) is called\n     for(i in 1:3) print(1:i)\n     \n     ## Printing of factors\n     attenu$station ## 117 levels -> 'max.levels' depending on width\n     \n     ## ordered factors: levels  \"l1 < l2 < ..\"\n     esoph$agegp[1:12]\n     esoph$alcgp[1:12]\n     \n     ## Printing of sparse (contingency) tables\n     set.seed(521)\n     t1 <- round(abs(rt(200, df = 1.8)))\n     t2 <- round(abs(rt(200, df = 1.4)))\n     table(t1, t2) # simple\n     print(table(t1, t2), zero.print = \".\") # nicer to read\n     \n     ## same for non-integer \"table\":\n     T <- table(t2,t1)\n     T <- T * (1+round(rlnorm(length(T)))/4)\n     print(T, zero.print = \".\") # quite nicer,\n     print.table(T[,2:8] * 1e9, digits=3, zero.print = \".\")\n     ## still slightly inferior to  Matrix::Matrix(T)  for larger T\n     \n     ## Corner cases with empty extents:\n     table(1, NA) # < table of extent 1 x 0 >\n     ",
+        "text/html": "\n<table width=\"100%\" summary=\"page for print {base}\"><tr><td>print {base}</td><td style=\"text-align: right;\">R Documentation</td></tr></table>\n\n<h2>Print Values</h2>\n\n<h3>Description</h3>\n\n<p><code>print</code> prints its argument and returns it <em>invisibly</em> (via\n<code>invisible(x)</code>).  It is a generic function which means that\nnew printing methods can be easily added for new <code>class</code>es.\n</p>\n\n\n<h3>Usage</h3>\n\n<pre>\nprint(x, ...)\n\n## S3 method for class 'factor'\nprint(x, quote = FALSE, max.levels = NULL,\n      width = getOption(\"width\"), ...)\n\n## S3 method for class 'table'\nprint(x, digits = getOption(\"digits\"), quote = FALSE,\n      na.print = \"\", zero.print = \"0\",\n      right = is.numeric(x) || is.complex(x),\n      justify = \"none\", ...)\n\n## S3 method for class 'function'\nprint(x, useSource = TRUE, ...)\n</pre>\n\n\n<h3>Arguments</h3>\n\n<table summary=\"R argblock\">\n<tr valign=\"top\"><td><code>x</code></td>\n<td>\n<p>an object used to select a method.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>...</code></td>\n<td>\n<p>further arguments passed to or from other methods.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>quote</code></td>\n<td>\n<p>logical, indicating whether or not strings should be\nprinted with surrounding quotes.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>max.levels</code></td>\n<td>\n<p>integer, indicating how many levels should be\nprinted for a factor; if <code>0</code>, no extra &quot;Levels&quot; line will be\nprinted.  The default, <code>NULL</code>, entails choosing <code>max.levels</code>\nsuch that the levels print on one line of width <code>width</code>.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>width</code></td>\n<td>\n<p>only used when <code>max.levels</code> is NULL, see above.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>digits</code></td>\n<td>\n<p>minimal number of <em>significant</em> digits, see\n<code>print.default</code>.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>na.print</code></td>\n<td>\n<p>character string (or <code>NULL</code>) indicating\n<code>NA</code> values in printed output, see\n<code>print.default</code>.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>zero.print</code></td>\n<td>\n<p>character specifying how zeros (<code>0</code>) should be\nprinted; for sparse tables, using <code>\".\"</code> can produce more\nreadable results, similar to printing sparse matrices in <a href=\"https://CRAN.R-project.org/package=Matrix\"><span class=\"pkg\">Matrix</span></a>.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>right</code></td>\n<td>\n<p>logical, indicating whether or not strings should be\nright aligned.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>justify</code></td>\n<td>\n<p>character indicating if strings should left- or\nright-justified or left alone, passed to <code>format</code>.</p>\n</td></tr>\n<tr valign=\"top\"><td><code>useSource</code></td>\n<td>\n<p>logical indicating if internally stored source\nshould be used for printing when present, e.g., if\n<code>options(keep.source = TRUE)</code> has been in use.</p>\n</td></tr>\n</table>\n\n\n<h3>Details</h3>\n\n<p>The default method, <code>print.default</code> has its own help page.\nUse <code>methods(\"print\")</code> to get all the methods for the\n<code>print</code> generic.\n</p>\n<p><code>print.factor</code> allows some customization and is used for printing\n<code>ordered</code> factors as well.\n</p>\n<p><code>print.table</code> for printing <code>table</code>s allows other\ncustomization. As of R 3.0.0, it only prints a description in case of a table\nwith 0-extents (this can happen if a classifier has no valid data).\n</p>\n<p>See <code>noquote</code> as an example of a class whose main\npurpose is a specific <code>print</code> method.\n</p>\n\n\n<h3>References</h3>\n\n<p>Chambers, J. M. and Hastie, T. J. (1992)\n<em>Statistical Models in S.</em>\nWadsworth &amp; Brooks/Cole.\n</p>\n\n\n<h3>See Also</h3>\n\n<p>The default method <code>print.default</code>, and help for the\nmethods above; further <code>options</code>, <code>noquote</code>.\n</p>\n<p>For more customizable (but cumbersome) printing, see\n<code>cat</code>, <code>format</code> or also <code>write</code>.\nFor a simple prototypical print method, see\n<code>.print.via.format</code> in package <span class=\"pkg\">tools</span>.\n</p>\n\n\n<h3>Examples</h3>\n\n<pre>\nrequire(stats)\n\nts(1:20)  #-- print is the \"Default function\" --&gt; print.ts(.) is called\nfor(i in 1:3) print(1:i)\n\n## Printing of factors\nattenu$station ## 117 levels -&gt; 'max.levels' depending on width\n\n## ordered factors: levels  \"l1 &lt; l2 &lt; ..\"\nesoph$agegp[1:12]\nesoph$alcgp[1:12]\n\n## Printing of sparse (contingency) tables\nset.seed(521)\nt1 &lt;- round(abs(rt(200, df = 1.8)))\nt2 &lt;- round(abs(rt(200, df = 1.4)))\ntable(t1, t2) # simple\nprint(table(t1, t2), zero.print = \".\") # nicer to read\n\n## same for non-integer \"table\":\nT &lt;- table(t2,t1)\nT &lt;- T * (1+round(rlnorm(length(T)))/4)\nprint(T, zero.print = \".\") # quite nicer,\nprint.table(T[,2:8] * 1e9, digits=3, zero.print = \".\")\n## still slightly inferior to  Matrix::Matrix(T)  for larger T\n\n## Corner cases with empty extents:\ntable(1, NA) # &lt; table of extent 1 x 0 &gt;\n</pre>\n\n<hr /><div style=\"text-align: center;\">[Package <em>base</em> version 3.6.1 ]</div>",
+        "text/latex": "\\inputencoding{utf8}\n\\HeaderA{print}{Print Values}{print}\n\\methaliasA{print.Dlist}{print}{print.Dlist}\n\\methaliasA{print.factor}{print}{print.factor}\n\\methaliasA{print.function}{print}{print.function}\n\\methaliasA{print.listof}{print}{print.listof}\n\\methaliasA{print.simple.list}{print}{print.simple.list}\n\\methaliasA{print.table}{print}{print.table}\n\\keyword{print}{print}\n%\n\\begin{Description}\\relax\n\\code{print} prints its argument and returns it \\emph{invisibly} (via\n\\code{\\LinkA{invisible}{invisible}(x)}).  It is a generic function which means that\nnew printing methods can be easily added for new \\code{\\LinkA{class}{class}}es.\n\\end{Description}\n%\n\\begin{Usage}\n\\begin{verbatim}\n\nprint(x, ...)\n\n## S3 method for class 'factor'\nprint(x, quote = FALSE, max.levels = NULL,\n      width = getOption(\"width\"), ...)\n\n## S3 method for class 'table'\nprint(x, digits = getOption(\"digits\"), quote = FALSE,\n      na.print = \"\", zero.print = \"0\",\n      right = is.numeric(x) || is.complex(x),\n      justify = \"none\", ...)\n\n## S3 method for class 'function'\nprint(x, useSource = TRUE, ...)\n\\end{verbatim}\n\\end{Usage}\n%\n\\begin{Arguments}\n\\begin{ldescription}\n\\item[\\code{x}] an object used to select a method.\n\\item[\\code{...}] further arguments passed to or from other methods.\n\\item[\\code{quote}] logical, indicating whether or not strings should be\nprinted with surrounding quotes.\n\\item[\\code{max.levels}] integer, indicating how many levels should be\nprinted for a factor; if \\code{0}, no extra \"Levels\" line will be\nprinted.  The default, \\code{NULL}, entails choosing \\code{max.levels}\nsuch that the levels print on one line of width \\code{width}.\n\\item[\\code{width}] only used when \\code{max.levels} is NULL, see above.\n\\item[\\code{digits}] minimal number of \\emph{significant} digits, see\n\\code{\\LinkA{print.default}{print.default}}.\n\\item[\\code{na.print}] character string (or \\code{NULL}) indicating\n\\code{\\LinkA{NA}{NA}} values in printed output, see\n\\code{\\LinkA{print.default}{print.default}}.\n\\item[\\code{zero.print}] character specifying how zeros (\\code{0}) should be\nprinted; for sparse tables, using \\code{\".\"} can produce more\nreadable results, similar to printing sparse matrices in \\Rhref{https://CRAN.R-project.org/package=Matrix}{\\pkg{Matrix}}.\n\\item[\\code{right}] logical, indicating whether or not strings should be\nright aligned.\n\\item[\\code{justify}] character indicating if strings should left- or\nright-justified or left alone, passed to \\code{\\LinkA{format}{format}}.\n\\item[\\code{useSource}] logical indicating if internally stored source\nshould be used for printing when present, e.g., if\n\\code{\\LinkA{options}{options}(keep.source = TRUE)} has been in use.\n\\end{ldescription}\n\\end{Arguments}\n%\n\\begin{Details}\\relax\nThe default method, \\code{\\LinkA{print.default}{print.default}} has its own help page.\nUse \\code{\\LinkA{methods}{methods}(\"print\")} to get all the methods for the\n\\code{print} generic.\n\n\\code{print.factor} allows some customization and is used for printing\n\\code{\\LinkA{ordered}{ordered}} factors as well.\n\n\\code{print.table} for printing \\code{\\LinkA{table}{table}}s allows other\ncustomization. As of R 3.0.0, it only prints a description in case of a table\nwith 0-extents (this can happen if a classifier has no valid data).\n\nSee \\code{\\LinkA{noquote}{noquote}} as an example of a class whose main\npurpose is a specific \\code{print} method.\n\\end{Details}\n%\n\\begin{References}\\relax\nChambers, J. M. and Hastie, T. J. (1992)\n\\emph{Statistical Models in S.}\nWadsworth \\& Brooks/Cole.\n\\end{References}\n%\n\\begin{SeeAlso}\\relax\nThe default method \\code{\\LinkA{print.default}{print.default}}, and help for the\nmethods above; further \\code{\\LinkA{options}{options}}, \\code{\\LinkA{noquote}{noquote}}.\n\nFor more customizable (but cumbersome) printing, see\n\\code{\\LinkA{cat}{cat}}, \\code{\\LinkA{format}{format}} or also \\code{\\LinkA{write}{write}}.\nFor a simple prototypical print method, see\n\\code{\\LinkA{.print.via.format}{.print.via.format}} in package \\pkg{tools}.\n\\end{SeeAlso}\n%\n\\begin{Examples}\n\\begin{ExampleCode}\nrequire(stats)\n\nts(1:20)  #-- print is the \"Default function\" --> print.ts(.) is called\nfor(i in 1:3) print(1:i)\n\n## Printing of factors\nattenu$station ## 117 levels -> 'max.levels' depending on width\n\n## ordered factors: levels  \"l1 < l2 < ..\"\nesoph$agegp[1:12]\nesoph$alcgp[1:12]\n\n## Printing of sparse (contingency) tables\nset.seed(521)\nt1 <- round(abs(rt(200, df = 1.8)))\nt2 <- round(abs(rt(200, df = 1.4)))\ntable(t1, t2) # simple\nprint(table(t1, t2), zero.print = \".\") # nicer to read\n\n## same for non-integer \"table\":\nT <- table(t2,t1)\nT <- T * (1+round(rlnorm(length(T)))/4)\nprint(T, zero.print = \".\") # quite nicer,\nprint.table(T[,2:8] * 1e9, digits=3, zero.print = \".\")\n## still slightly inferior to  Matrix::Matrix(T)  for larger T\n\n## Corner cases with empty extents:\ntable(1, NA) # < table of extent 1 x 0 >\n\\end{ExampleCode}\n\\end{Examples}"
+      },
+      "metadata": {}
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "f15e41be-c843-11ed-93eb-eb53504a5a3c",
+      "username": "dotnet_kernel",
+      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
+      "date": "2023-03-21T23:56:05.621372Z",
+      "msg_type": "status",
+      "version": "5.0"
+    },
+    "parent_header": {
+      "msg_id": "ba875301-16ad-4d8b-ace2-ab2c513912bd",
+      "username": "dotnet_kernel",
+      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
+      "date": "2023-03-21T23:56:05.4239063Z",
+      "msg_type": "inspect_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  }
+]

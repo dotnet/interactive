@@ -6,7 +6,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="CommandEvents\LanguageHandlers\coe_comm_adapter.py" />
+    <None Remove="CommandEvents\LanguageHandlers\r\coe_comm_handler.r" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="CommandEvents\LanguageHandlers\python\coe_comm_handler.py" />
+    <EmbeddedResource Include="CommandEvents\LanguageHandlers\r\coe_comm_handler.r" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Markdig.Signed" Version="0.30.4" />

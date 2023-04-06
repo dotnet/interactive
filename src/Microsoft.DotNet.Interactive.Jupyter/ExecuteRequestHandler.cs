@@ -44,7 +44,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
     }
 
     protected override void OnKernelEventReceived(
-        KernelEvent @event, 
+        KernelEvent @event,
         JupyterRequestContext context)
     {
         switch (@event)
@@ -73,7 +73,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
         return transient;
     }
 
-    private void OnDiagnosticsProduced(JupyterRequestContext context, 
+    private void OnDiagnosticsProduced(JupyterRequestContext context,
         ZeroMQMessage request,
         DiagnosticsProduced diagnosticsProduced)
     {
@@ -98,7 +98,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
 
     private void OnCommandFailed(
         CommandFailed commandFailed,
-        IJupyterMessageSender jupyterMessageSender)
+        IJupyterMessageResponseSender jupyterMessageSender)
     {
         var traceBack = new List<string>();
         var emsg = commandFailed.Message;
@@ -140,7 +140,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
 
     private void OnDisplayEvent(DisplayEvent displayEvent,
         ZeroMQMessage request,
-        IJupyterMessageSender jupyterMessageSender)
+        IJupyterMessageResponseSender jupyterMessageSender)
     {
         if (displayEvent is ReturnValueProduced && displayEvent.Value is DisplayedValue)
         {
@@ -155,9 +155,9 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
         // 
         // In the case of DiagnosticsProduced however there are multiple entries, one
         // for each diagnsotic, all with the same type
-        Dictionary<string,object> GetFormattedValuesByMimeType()
+        Dictionary<string, object> GetFormattedValuesByMimeType()
         {
-            return 
+            return
                 displayEvent
                     .FormattedValues
                     .ToDictionary(k => k.MimeType, v => PreserveJson(v.MimeType, v.Value));
@@ -212,7 +212,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
     private void OnLogEvent(
         DiagnosticLogEntryProduced logEvent,
         ZeroMQMessage request,
-        IJupyterMessageSender jupyterMessageSender)
+        IJupyterMessageResponseSender jupyterMessageSender)
     {
         var transient = CreateTransient();
 
@@ -220,7 +220,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
             transient: transient,
             data: new Dictionary<string, object> { [PlainTextFormatter.MimeType] = logEvent.Message });
 
-        var isSilent = ((ExecuteRequest) request.Content).Silent;
+        var isSilent = ((ExecuteRequest)request.Content).Silent;
 
         if (!isSilent)
         {
@@ -249,7 +249,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
         return defaultText;
     }
 
-    private void OnCommandHandled(IJupyterMessageSender jupyterMessageSender)
+    private void OnCommandHandled(IJupyterMessageResponseSender jupyterMessageSender)
     {
         // reply ok
         var executeReplyPayload = new ExecuteReplyOk(executionCount: _executionCount);

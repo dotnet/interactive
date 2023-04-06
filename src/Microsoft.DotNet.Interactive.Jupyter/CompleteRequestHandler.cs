@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public class CompleteRequestHandler : RequestHandlerBase<CompleteRequest>
 {
-    public CompleteRequestHandler(Kernel kernel,  IScheduler scheduler = null)
+    public CompleteRequestHandler(Kernel kernel, IScheduler scheduler = null)
         : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
     {
     }
@@ -30,22 +30,22 @@ public class CompleteRequestHandler : RequestHandlerBase<CompleteRequest>
     }
 
     protected override void OnKernelEventReceived(
-        KernelEvent @event, 
+        KernelEvent @event,
         JupyterRequestContext context)
     {
         switch (@event)
         {
             case CompletionsProduced completionRequestCompleted:
                 OnCompletionRequestCompleted(
-                    completionRequestCompleted, 
+                    completionRequestCompleted,
                     context.JupyterMessageSender);
                 break;
         }
     }
 
-    private static void OnCompletionRequestCompleted(CompletionsProduced completionsProduced, IJupyterMessageSender jupyterMessageSender)
+    private static void OnCompletionRequestCompleted(CompletionsProduced completionsProduced, IJupyterMessageResponseSender jupyterMessageSender)
     {
-        var startPosition = 0; 
+        var startPosition = 0;
         var endPosition = 0;
 
         if (completionsProduced.Command is RequestCompletions command)

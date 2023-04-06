@@ -33,15 +33,15 @@ public class IsCompleteRequestHandler : RequestHandlerBase<IsCompleteRequest>
         switch (@event)
         {
             case CompleteCodeSubmissionReceived _:
-                Reply( true, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
+                Reply(true, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                 break;
             case IncompleteCodeSubmissionReceived _:
-                Reply( false, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
+                Reply(false, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                 break;
         }
     }
 
-    private void Reply(bool isComplete, ZeroMQMessage request, IJupyterMessageSender jupyterMessageSender)
+    private void Reply(bool isComplete, ZeroMQMessage request, IJupyterMessageResponseSender jupyterMessageSender)
     {
         var status = isComplete ? "complete" : "incomplete";
         var indent = isComplete ? string.Empty : "*";

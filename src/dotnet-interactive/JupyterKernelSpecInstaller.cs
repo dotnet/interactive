@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DotNet.Interactive.Jupyter;
 using System;
 using System.CommandLine;
 using System.CommandLine.IO;
@@ -72,9 +73,9 @@ public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
 
             return false;
         }
-            
+
         _console.Out.WriteLine($"Installing using path {destination.FullName}.");
-            
+
         var succeeded = CopyKernelSpecFiles(sourceDirectory, destination);
         if (succeeded)
         {
