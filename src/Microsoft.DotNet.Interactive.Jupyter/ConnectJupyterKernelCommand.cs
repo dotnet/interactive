@@ -68,10 +68,10 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
 
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-        var kernel = await connector?.CreateKernelAsync(localName);
+        var kernel = await connector.CreateKernelAsync(localName);
         if (connection is IDisposable disposableConnection)
         {
-            kernel?.RegisterForDisposal(disposableConnection);
+            kernel.RegisterForDisposal(disposableConnection);
         }
         return kernel;
     }
