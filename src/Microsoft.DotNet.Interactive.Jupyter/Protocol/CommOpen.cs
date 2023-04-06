@@ -17,9 +17,9 @@ public class CommOpen : Message
     public string TargetName { get; }
 
     [JsonPropertyName("data")]
-    public object Data { get; }
+    public IReadOnlyDictionary<string, object> Data { get; }
 
-    public CommOpen(string commId, string targetName, object data)
+    public CommOpen(string commId, string targetName, IReadOnlyDictionary<string, object> data)
     {
         if (string.IsNullOrWhiteSpace(commId))
         {
