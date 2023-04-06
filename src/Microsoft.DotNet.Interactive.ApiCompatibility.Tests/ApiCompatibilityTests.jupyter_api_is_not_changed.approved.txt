@@ -118,7 +118,7 @@ Microsoft.DotNet.Interactive.Jupyter
     public static System.String input(System.String prompt = )
     public static Microsoft.DotNet.Interactive.PasswordString password(System.String prompt = )
 Microsoft.DotNet.Interactive.Jupyter.Connection
-  public abstract class IJupyterConnection, System.IDisposable
+  public abstract class IJupyterConnection
     public System.Threading.Tasks.Task<IJupyterKernelConnection> CreateKernelConnectionAsync(System.String kernelSpecName)
     public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Jupyter.KernelSpec>> GetKernelSpecsAsync()
   public abstract class IJupyterKernelConnection, System.IDisposable
