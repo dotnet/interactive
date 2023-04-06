@@ -132,10 +132,6 @@ internal class JupyterConnection : IJupyterConnection
         return kernelProcess;
     }
 
-    public void Dispose()
-    {
-    }
-
     private async Task<KernelSpec> GetKernelSpecAsync(string kernelSpecName)
     {
         var installedSpecs = await _getKernelSpecs;

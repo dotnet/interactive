@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Connection;
 
-public interface IJupyterConnection : IDisposable
+public interface IJupyterConnection
 {
     Task<IEnumerable<KernelSpec>> GetKernelSpecsAsync();
 
