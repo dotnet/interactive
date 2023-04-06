@@ -160,7 +160,6 @@ public sealed class ProxyKernel : Kernel
         switch (command)
         {
             case AnonymousKernelCommand:
-                return base.HandleAsync(command, context);
             case DirectiveCommand:
                 return base.HandleAsync(command, context);
         }

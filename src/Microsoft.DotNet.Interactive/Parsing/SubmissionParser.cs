@@ -66,8 +66,8 @@ public class SubmissionParser
             requestDiagnostics,
             requestDiagnostics.Code,
             (languageNode, parent, _) => new RequestDiagnostics(languageNode, parent));
-            
-        return commands.Where(c => c is RequestDiagnostics ).ToList();
+
+        return commands.Where(c => c is RequestDiagnostics).ToList();
     }
 
     private delegate KernelCommand CreateChildCommand(
@@ -88,7 +88,7 @@ public class SubmissionParser
         var nodes = tree.GetRoot().ChildNodes.ToArray();
 
         var targetKernelName = originalCommand.TargetKernelName ?? DefaultKernelName();
-            
+
         var lastCommandScope = originalCommand.SchedulingScope;
         KernelNameDirectiveNode lastKernelNameNode = null;
 
@@ -97,11 +97,11 @@ public class SubmissionParser
             switch (node)
             {
                 case DirectiveNode directiveNode:
-                    if (KernelInvocationContext.Current is {} context)
+                    if (KernelInvocationContext.Current is { } context)
                     {
                         context.CurrentlyParsingDirectiveNode = directiveNode;
                     }
-                       
+
                     var parseResult = directiveNode.GetDirectiveParseResult();
 
                     if (parseResult.Errors.Any())
@@ -124,7 +124,7 @@ public class SubmissionParser
                                         CodeAnalysis.DiagnosticSeverity.Error,
                                         "NI0001", // QUESTION: (SplitSubmission) what code should this be?
                                         "Unrecognized magic command");
-                                    var diagnosticsProduced = new DiagnosticsProduced(new[] { diagnostic }, c);
+                                    var diagnosticsProduced = new DiagnosticsProduced(new[] { diagnostic }, originalCommand);
                                     context.Publish(diagnosticsProduced);
                                     return Task.CompletedTask;
                                 });
@@ -141,7 +141,7 @@ public class SubmissionParser
                         {
                             commands.Clear();
 
-                            if (sendExtraDiagnostics is {})
+                            if (sendExtraDiagnostics is { })
                             {
                                 commands.Add(sendExtraDiagnostics);
                             }
@@ -214,7 +214,6 @@ public class SubmissionParser
                     break;
 
                 case LanguageNode languageNode:
-                {
                     if (commands.Count > 0 &&
                         commands[^1] is SubmitCode previous)
                     {
@@ -230,7 +229,6 @@ public class SubmissionParser
                             commands.Add(command);
                         }
                     }
-                }
                     break;
 
                 default:
@@ -258,7 +256,7 @@ public class SubmissionParser
         if (NoSplitWasNeeded())
         {
             originalCommand.TargetKernelName ??= targetKernelName;
-            return new []{originalCommand};
+            return new[] { originalCommand };
         }
 
         foreach (var command in commands)
@@ -291,8 +289,8 @@ public class SubmissionParser
                 }
             }
 
-            if (commands.All(c => c.GetType() == originalCommand.GetType() && 
-                                  (c.TargetKernelName == originalCommand.TargetKernelName 
+            if (commands.All(c => c.GetType() == originalCommand.GetType() &&
+                                  (c.TargetKernelName == originalCommand.TargetKernelName
                                    || c.TargetKernelName == commands[0].TargetKernelName)))
             {
                 return true;
@@ -324,7 +322,7 @@ public class SubmissionParser
             CompositeKernel c => c.DefaultKernelName,
             _ => _kernel.Name
         };
-            
+
         return kernelName;
     }
 
@@ -335,7 +333,7 @@ public class SubmissionParser
             return null;
         }
 
-        var dict = new Dictionary<string, (SchedulingScope , Func<Parser>)>();
+        var dict = new Dictionary<string, (SchedulingScope, Func<Parser>)>();
 
         foreach (var childKernel in compositeKernel.ChildKernels)
         {
@@ -347,7 +345,7 @@ public class SubmissionParser
                 }
             }
 
-            (SchedulingScope, Func<Parser>) GetParser() => (childKernel.SchedulingScope,() => childKernel.SubmissionParser.GetDirectiveParser());
+            (SchedulingScope, Func<Parser>) GetParser() => (childKernel.SchedulingScope, () => childKernel.SubmissionParser.GetDirectiveParser());
         }
 
         return dict;
@@ -374,7 +372,7 @@ public class SubmissionParser
                                     typeof(KernelInvocationContext),
                                     _ => KernelInvocationContext.Current);
                         });
-                
+
             _directiveParser = commandLineBuilder.Build();
         }
 
