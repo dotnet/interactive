@@ -11,17 +11,7 @@ public abstract class KernelEvent
 {
     protected KernelEvent(KernelCommand command)
     {
-        if (command is null)
-        {
-            throw new ArgumentNullException(nameof(command));
-        }
-
-        if (command is AnonymousKernelCommand)
-        {
-            throw new ArgumentException($"{nameof(command)} should not be an {nameof(AnonymousKernelCommand)}");
-        }
-
-        Command = command;
+        Command = command ?? throw new ArgumentNullException(nameof(command));
         RoutingSlip = new EventRoutingSlip();
     }
 
