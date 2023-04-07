@@ -8,6 +8,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Parsing;
@@ -337,7 +338,7 @@ let x = 123
             .Should()
             .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
     }
-       
+
     private static SubmissionParser CreateSubmissionParser(string defaultLanguage = "csharp")
     {
         using var compositeKernel = new CompositeKernel
@@ -363,6 +364,15 @@ let x = 123
         compositeKernel.UseDefaultMagicCommands();
 
         return compositeKernel.SubmissionParser;
+    }
+
+    [Fact]
+    public async Task DiagnosticsProduced_events_always_point_back_to_the_original_command()
+    {
+        using var kernel = new CSharpKernel();
+        var command = new SubmitCode("#!unrecognized");
+        var result = await kernel.SendAsync(command);
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Command.Should().BeSameAs(command);
     }
 
     [Fact]
@@ -447,7 +457,7 @@ let x = 123 // with some intervening code
 // language-specific code";
 
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var _, out var _);
-            
+
         var command = new RequestDiagnostics(code);
         var commands = new CSharpKernel().UseDefaultMagicCommands().SubmissionParser.SplitSubmission(command);
 
