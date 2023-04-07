@@ -15,17 +15,17 @@ public sealed class JupyterHttpKernelConnectionOptions : IJupyterKernelConnectio
     private readonly IReadOnlyCollection<Option> _options;
 
     public Option<string> TargetUrl { get; } =
-    new("--url", "URl to connect to the jupyter server")
+    new("--url", "URL to connect to a remote jupyter server")
     {
     };
 
     public Option<string> Token { get; } =
-    new("--token", "token to connect to the jupyter server")
+    new("--token", "token to connect to a remote jupyter server")
     {
     };
 
     private Option<bool> UseBearerAuth { get; } =
-    new("--bearer", "auth type is bearer token")
+    new("--bearer", "auth type is bearer token for remote jupyter server")
     {
     };
 

@@ -19,10 +19,10 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
     private KeyValuePair<int, IEnumerable<CompletionItem>> _mruKernelSpecSuggestions;
 
     public ConnectJupyterKernelCommand() : base("jupyter",
-                                        "Connects to a jupyter kernel")
+                                        "Connects to a jupyter kernel. This feature is in preview.")
     {
-        AddOption(InitScript);
         AddOption(KernelSpecName.AddCompletions(ctx => GetKernelSpecsCompletions(ctx)));
+        AddOption(InitScript);
     }
 
     public Option<string> KernelSpecName { get; } =
@@ -52,6 +52,10 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
+        context.DisplayAs(
+            "The `#!connect jupyter` feature is in preview. Please report any feedback or issues at https://github.com/dotnet/interactive/issues/new/choose.", 
+            "text/markdown");
+
         var kernelSpecName = commandLineContext.ParseResult.GetValueForOption(KernelSpecName);
         var initScript = commandLineContext.ParseResult.GetValueForOption(InitScript);
 
@@ -60,7 +64,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         {
             throw new InvalidOperationException("No supported connection options were specified");
         }
-        
+
         JupyterKernelConnector connector = new JupyterKernelConnector(connection, kernelSpecName, initScript);
 
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
