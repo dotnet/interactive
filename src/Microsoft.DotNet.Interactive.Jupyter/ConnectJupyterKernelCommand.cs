@@ -3,15 +3,12 @@
 
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
-using Microsoft.DotNet.Interactive.Jupyter.Http;
-using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Completions;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
-using System.Reactive.Disposables;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
@@ -137,83 +134,5 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         }
 
         return (values).GetHashCode();
-    }
-}
-
-public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnectionOptions
-{
-    private static JupyterConnection _currentJupyterConnection;
-
-    /// <summary>
-    /// Represents connection to the kernels in the current environment
-    /// </summary>
-    private static JupyterConnection CurrentConnection
-    {
-        get
-        {
-            _currentJupyterConnection ??= new(new JupyterKernelSpecModule());
-            return _currentJupyterConnection;
-        }
-    }
-
-    public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
-    {
-        return CurrentConnection;
-    }
-
-    public IReadOnlyCollection<Option> GetOptions()
-    {
-        return Array.Empty<Option>();
-    }
-}
-
-public sealed class JupyterHttpKernelConnectionOptions : IJupyterKernelConnectionOptions
-{
-    private readonly IReadOnlyCollection<Option> _options;
-
-    public Option<string> TargetUrl { get; } =
-    new("--url", "URl to connect to the jupyter server")
-    {
-    };
-
-    public Option<string> Token { get; } =
-    new("--token", "token to connect to the jupyter server")
-    {
-    };
-
-    private Option<bool> UseBearerAuth { get; } =
-    new("--bearer", "auth type is bearer token")
-    {
-    };
-
-    public JupyterHttpKernelConnectionOptions()
-    {
-        _options = new List<Option>
-        {
-            TargetUrl,
-            Token,
-            UseBearerAuth
-        };
-    }
-
-    public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
-    {
-        var targetUrl = connectionOptionsParseResult.GetValueForOption(TargetUrl);
-
-        if (targetUrl is null)
-        {
-            return null;
-        }
-
-        var token = connectionOptionsParseResult.GetValueForOption(Token);
-        var useBearerAuth = connectionOptionsParseResult.GetValueForOption(UseBearerAuth);
-
-        var connection = new JupyterHttpConnection(new Uri(targetUrl), new JupyterTokenProvider(token, useBearerAuth ? AuthorizationScheme.Bearer : null));
-        return connection;
-    }
-
-    public IReadOnlyCollection<Option> GetOptions()
-    {
-        return _options;
     }
 }
