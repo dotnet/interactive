@@ -60,7 +60,7 @@ public class JupyterKernelSpecModule : IJupyterKernelSpecModule
         }
         catch (Exception exception)
         {
-            Log.Error("Failed to retrieve kernel specs", exception);
+            Log.Warning("Failed to retrieve kernel specs", exception);
             // fall back to custom lookup logic 
             return LookupInstalledKernels();
         }
