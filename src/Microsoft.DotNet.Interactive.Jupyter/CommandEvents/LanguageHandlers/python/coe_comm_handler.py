@@ -201,7 +201,7 @@ def __get_dotnet_coe_comm_handler():
             self.formattedValue = formattedValue
     
     class ValueInfosProduced(KernelEvent):
-        def __init__(self, valueInfos: list[KernelValueInfo]):
+        def __init__(self, valueInfos):
             self.valueInfos = valueInfos
             
     class Envelope:

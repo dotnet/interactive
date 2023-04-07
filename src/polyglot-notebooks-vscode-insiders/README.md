@@ -36,7 +36,7 @@ The following languages are supported by Polyglot Notebooks:
 - Notebook-friendly diffing tool that makes it easy to visually compare inputs, outputs, and metadata
 - Navigate via Outline View
 - Customizable notebook layout
-- Connect to Python and R Jupyter kernels installed locally or remotely and share variables between them.
+- Connect to Python (3.7+) and R Jupyter kernels installed locally or remotely and share variables between them.
 
 ## Getting Started
 
