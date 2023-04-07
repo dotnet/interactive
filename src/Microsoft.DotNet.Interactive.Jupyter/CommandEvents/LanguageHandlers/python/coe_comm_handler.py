@@ -66,7 +66,7 @@ def __get_dotnet_coe_comm_handler():
             return envelop.payload()
 
         def __handle_request_value_infos(self, command):
-            results_who_ls = get_ipython().magic('who_ls')
+            results_who_ls = get_ipython().run_line_magic('who_ls', '')
             variables = globals()
             results = [KernelValueInfo(x, FormattedValue.fromValue(variables[x]), str(type(variables[x]))) 
                                     for x in results_who_ls 
