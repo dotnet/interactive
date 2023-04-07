@@ -24,14 +24,8 @@ public class JupyterKernelTests : JupyterKernelTestBase
     [Fact]
     public async Task can_get_help_for_connect_jupyter()
     {
-        var kernel = CreateCompositeKernelAsync();
-        var jupyterKernelCommand = new ConnectJupyterKernelCommand();
-        jupyterKernelCommand
-            .AddConnectionOptions(new JupyterHttpKernelConnectionOptions())
-            .AddConnectionOptions(new JupyterLocalKernelConnectionOptions());
+        var kernel = CreateCompositeKernelAsync(new JupyterHttpKernelConnectionOptions(), new JupyterLocalKernelConnectionOptions());
         
-        kernel.AddKernelConnector(jupyterKernelCommand);
-
         var command = new SubmitCode("#!connect jupyter --help");
 
         var result = await kernel.SendAsync(command);

@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Formatting;
 using System;
+using Pocket;
+using static Pocket.Logger;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
@@ -56,8 +58,9 @@ public class JupyterKernelSpecModule : IJupyterKernelSpecModule
                 return LookupInstalledKernels();
             }
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Log.Error("Failed to retrieve kernel specs", exception);
             // fall back to custom lookup logic 
             return LookupInstalledKernels();
         }

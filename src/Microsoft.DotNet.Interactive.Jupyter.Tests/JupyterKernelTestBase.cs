@@ -32,7 +32,7 @@ public abstract class JupyterKernelTestBase : IDisposable
         _disposables.Dispose();
     }
 
-    protected CompositeKernel CreateCompositeKernelAsync(IJupyterKernelConnectionOptions options = null)
+    protected CompositeKernel CreateCompositeKernelAsync(params IJupyterKernelConnectionOptions[] optionsList)
     {
         Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
 
@@ -43,11 +43,14 @@ public abstract class JupyterKernelTestBase : IDisposable
         var kernel = new CompositeKernel { csharpKernel };
         kernel.DefaultKernelName = csharpKernel.Name;
 
-        if (options != null)
+        var jupyterKernelCommand = new ConnectJupyterKernelCommand();
+
+        foreach (var options in optionsList) 
         {
-            var jupyterKernelCommand = new ConnectJupyterKernelCommand();
-            kernel.AddKernelConnector(jupyterKernelCommand.AddConnectionOptions(options));
+            jupyterKernelCommand.AddConnectionOptions(options);
         }
+
+        kernel.AddKernelConnector(jupyterKernelCommand);
         _disposables.Add(kernel);
         return kernel;
     }
