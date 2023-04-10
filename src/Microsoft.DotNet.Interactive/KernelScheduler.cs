@@ -148,6 +148,10 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
                         {
                             operation.TaskCompletionSource.TrySetResult(t.Result);
                         }
+                        else if (t.Exception is { })
+                        {
+                            operation.TaskCompletionSource.SetException(t.Exception);
+                        }
                     }
                 });
 

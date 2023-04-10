@@ -27,7 +27,7 @@ public class HoverTextTests : LanguageKernelTestBase
     }
 
     [Fact]
-    public async Task hover_on_unsupported_language_service_fails_with_informative_error()
+    public async Task hover_in_unsupported_language_fails_with_informative_error()
     {
         using var kernel = new FakeKernel();
 

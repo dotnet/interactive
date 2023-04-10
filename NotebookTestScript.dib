@@ -52,7 +52,7 @@ var x = 123;
 
 #!markdown
 
-# Execute the next cell.  After execution, the output immediately above this should read:
+# Execute the next two cells.  After execution, the output immediately above each should read:
 
 ```
 The value is 123.
@@ -65,6 +65,12 @@ And the output below the next cell should display the same value.
 #!share --from csharp x
 document.getElementById("output").innerText = `The value is ${x}.`;
 console.log(`The value is ${x}.`);
+
+#!javascript
+
+#!set --value @csharp:x --name y
+document.getElementById("output").innerText = `The value is ${y}.`;
+console.log(`The value is ${y}.`);
 
 #!markdown
 
@@ -104,7 +110,7 @@ And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with nam
 
 #!javascript
 
-await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf = 1234; Console.WriteLine(asdf);', targetKernelName: 'csharp' } });
+await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var csharpVarFromJs = 1234; Console.WriteLine(csharpVarFromJs);', targetKernelName: 'csharp' } });
 
 #!markdown
 
