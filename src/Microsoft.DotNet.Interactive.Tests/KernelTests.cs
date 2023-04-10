@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
@@ -10,6 +11,9 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -159,5 +163,65 @@ public partial class KernelTests
 
         var lastEvent = await events;
         lastEvent.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Awaiting_a_disposed_task_does_not_deadlock()
+    {
+        using var kernel = new CompositeKernel
+        {
+            new CSharpKernel()
+        };
+
+        await kernel.SendAsync(new SubmitCode("""
+            using Microsoft.DotNet.Interactive;
+            using Microsoft.DotNet.Interactive.Commands;
+            using Microsoft.DotNet.Interactive.Events;
+            using Microsoft.DotNet.Interactive.CSharp;
+
+            var csharp2 = new CSharpKernel();
+            """));
+
+        await kernel.SendAsync(new SubmitCode("""
+            var result = csharp2.SendAsync(new SubmitCode("123"));
+            """));
+
+        var result = await kernel.SendAsync(new SubmitCode("""
+            (await result).Events
+            """));
+
+        result.Events.Should().ContainSingle<CommandFailed>()
+              .Which.Exception.Should().BeOfType<ObjectDisposedException>();
+    }
+
+    [Fact]
+    public async Task WAT()
+    {
+        using var kernel = new CompositeKernel
+        {
+            new CSharpKernel()
+        };
+
+        await kernel.SendAsync(new SubmitCode("""
+            using Microsoft.DotNet.Interactive;
+            using Microsoft.DotNet.Interactive.Commands;
+            using Microsoft.DotNet.Interactive.Events;
+            using Microsoft.DotNet.Interactive.CSharp;
+
+            var csharp2 = new CSharpKernel();
+            var csharp2Events = new List<KernelEvent>();
+            csharp2.KernelEvents.Subscribe(e => csharp2Events.Add(e));
+            """));
+
+        await kernel.SendAsync(new SubmitCode("""
+            var result = csharp2.SendAsync(new SubmitCode("123"));
+            """));
+
+        var result = await kernel.SendAsync(new SubmitCode("""
+            csharp2Events.Count
+        """));
+
+        result.Events.Should().ContainSingle<ReturnValueProduced>()
+              .Which.Value.As<int>().Should().BeGreaterThan(0);
     }
 }

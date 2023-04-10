@@ -81,9 +81,14 @@ public class PowerShellKernel :
         _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
     }
 
-    public PowerShellKernel() : base(DefaultKernelName)
+    public PowerShellKernel() : this(DefaultKernelName)
+    {
+    }
+
+    public PowerShellKernel(string name) : base(name)
     {
         KernelInfo.LanguageName = LanguageName;
+        KernelInfo.LanguageVersion = "7";
 
         _psHost = new PSKernelHost(this);
         _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);

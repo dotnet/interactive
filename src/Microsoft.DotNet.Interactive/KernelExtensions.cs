@@ -560,10 +560,6 @@ public static class KernelExtensions
                     value,
                     formattedValue));
         }
-        else
-        {
-            throw new CommandNotSupportedException(typeof(SendValue), kernel);
-        }
     }
 
     private static async Task<ValueProduced> GetValue(Kernel kernel, string name, string requestedMimeType)
@@ -698,49 +694,7 @@ public static class KernelExtensions
             onVisit(k);
         }
     }
-
-    public static async Task VisitSubkernelsAsync(
-        this Kernel kernel,
-        Func<Kernel, Task> onVisit,
-        bool recursive = false)
-    {
-        if (kernel is null)
-        {
-            throw new ArgumentNullException(nameof(kernel));
-        }
-
-        if (onVisit is null)
-        {
-            throw new ArgumentNullException(nameof(onVisit));
-        }
-
-        foreach (var subKernel in kernel.Subkernels(recursive))
-        {
-            await onVisit(subKernel);
-        }
-    }
-
-    public static async Task VisitSubkernelsAndSelfAsync(
-        this Kernel kernel,
-        Func<Kernel, Task> onVisit,
-        bool recursive = false)
-    {
-        if (kernel is null)
-        {
-            throw new ArgumentNullException(nameof(kernel));
-        }
-
-        if (onVisit is null)
-        {
-            throw new ArgumentNullException(nameof(onVisit));
-        }
-
-        foreach (var k in kernel.SubkernelsAndSelf(recursive))
-        {
-            await onVisit(k);
-        }
-    }
-
+    
     public static IEnumerable<Kernel> SubkernelsAndSelf(
         this Kernel kernel,
         bool recursive = false)

@@ -449,7 +449,11 @@ public static class CommandLineParser
         }
     }
 
-    private static CompositeKernel CreateKernel(string defaultKernelName, FrontendEnvironment frontendEnvironment, StartupOptions startupOptions, TelemetrySender telemetrySender)
+    private static CompositeKernel CreateKernel(
+        string defaultKernelName, 
+        FrontendEnvironment frontendEnvironment, 
+        StartupOptions startupOptions, 
+        TelemetrySender telemetrySender)
     {
         using var _ = Log.OnEnterAndExit("Creating Kernels");
 

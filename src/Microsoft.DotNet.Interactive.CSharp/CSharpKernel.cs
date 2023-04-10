@@ -57,8 +57,8 @@ public class CSharpKernel :
 
     public CSharpKernel() : this(DefaultKernelName)
     {
-
     }
+
     public CSharpKernel(string name) : base(name)
     {
         KernelInfo.LanguageName = "C#";

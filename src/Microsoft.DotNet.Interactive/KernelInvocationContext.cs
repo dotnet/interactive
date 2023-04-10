@@ -77,6 +77,7 @@ public class KernelInvocationContext : IDisposable
 
         _disposables.Add(operation);
     }
+
     internal bool IsFailed { get; private set; }
 
     public KernelCommand Command { get; }
@@ -159,7 +160,7 @@ public class KernelInvocationContext : IDisposable
                 }
                 else
                 {
-                    if (command.Parent is null)
+                    if (command.Parent is null && message is not null)
                     {
                         Publish(new ErrorProduced(message, command), publishOnAmbientContextOnly: true);
                     }

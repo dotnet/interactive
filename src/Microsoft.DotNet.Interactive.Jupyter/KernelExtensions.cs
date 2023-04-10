@@ -209,22 +209,22 @@ using static {typeof(TopLevelMethods).FullName};
             {
                 var context = cmdLineContext.GetService<KernelInvocationContext>();
 
-                var commands =  kernel.Directives
-                                      .Where(d => !d.IsHidden)
-                                      .OrderBy(d => d.Name)
-                                      .ToArray();
+                var commands = kernel.Directives
+                                     .Where(d => !d.IsHidden)
+                                     .OrderBy(d => d.Name)
+                                     .ToArray();
 
                 var supportedDirectives = new SupportedDirectives(kernel.Name, commands);
 
                 context.Display(supportedDirectives);
 
-                await kernel.VisitSubkernelsAsync(async k =>
+                var subkernels = kernel.Subkernels()
+                                       .Where(k => k.Directives.Any(d => d.Name == "#!lsmagic"));
+
+                foreach (var subkernel in subkernels)
                 {
-                    if (k.Directives.Any(d => d.Name == "#!lsmagic"))
-                    {
-                        await k.SendAsync(new SubmitCode(((SubmitCode)context.Command).Code));
-                    }
-                });
+                    await subkernel.SendAsync(new SubmitCode(((SubmitCode)context.Command).Code));
+                }
             })
         };
     }
