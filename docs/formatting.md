@@ -29,7 +29,7 @@ Another MIME type that's generally available is `application/json`. When using t
 
 <img width="511" alt="image" src="https://user-images.githubusercontent.com/547415/223600837-e50a3597-7589-4ed2-add7-254139e8aaec.png">
 
-In the above screen shot, the code coloring in the JSON output is provided by the VS Code notebook renderer for `application/json`.  
+In the above screen shot, the code coloring in the JSON output is provided by the [VS Code notebook renderer](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer) for `application/json`.  
 
 ## Configuring formatting
 
