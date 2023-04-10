@@ -27,7 +27,6 @@ public class HttpRequestKernel :
        IKernelCommandHandler<RequestDiagnostics>
 {
     private readonly HttpClient _client;
-    private readonly Argument<Uri> _hostArgument = new();
 
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
     private Uri _baseAddress;
@@ -54,28 +53,10 @@ public class HttpRequestKernel :
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - HTTP Request";
 
         _client = client ?? new HttpClient();
-        var setHost = new Command("#!set-host", "Sets the host name to be used when sending requests using relative URLs");
-        setHost.AddArgument(_hostArgument);
-        setHost.SetHandler(context =>
-        {
-            var host = context.ParseResult.GetValueForArgument(_hostArgument);
-            BaseAddress = host;
-        });
-        AddDirective(setHost);
 
         RegisterForDisposal(_client);
     }
-
-    public Uri BaseAddress
-    {
-        get => _baseAddress;
-        set
-        {
-            _baseAddress = value;
-            SetValue("host", value?.Host);
-        }
-    }
-
+    
     public Task HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (_variables.TryGetValue(command.Name, out var value))
@@ -249,12 +230,6 @@ public class HttpRequestKernel :
     {
         var parsedRequests = new List<HttpRequest>();
 
-        /*
-         * A request as first verb and endpoint (optional version), this command could be multiline
-         * optional headers
-         * optional body
-         */
-
         foreach (var (request, diagnostics) in InterpolateAndGetDiagnostics(requests))
         {
             var body = new StringBuilder();
@@ -296,18 +271,17 @@ public class HttpRequestKernel :
 
             var bodyText = body.ToString().Trim();
 
-            if (string.IsNullOrWhiteSpace(address) && BaseAddress is null)
+            if (string.IsNullOrWhiteSpace(address))
             {
                 throw new InvalidOperationException("Cannot perform HttpRequest without a valid uri.");
             }
 
             var uri = new Uri(address, UriKind.RelativeOrAbsolute);
-            if (!uri.IsAbsoluteUri && BaseAddress is null)
+            if (!uri.IsAbsoluteUri)
             {
                 throw new InvalidOperationException($"Cannot use relative path {uri} without a base address.");
             }
 
-            uri = uri.IsAbsoluteUri ? uri : new Uri(BaseAddress, uri);
             parsedRequests.Add(new HttpRequest(verb, uri.AbsoluteUri, bodyText, headerValues, diagnostics));
         }
 
