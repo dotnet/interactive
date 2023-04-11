@@ -13,7 +13,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "1.78.0-insider"
+    "vscode": "^1.77.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -794,7 +794,7 @@
     "test": "mocha out/tests/**/*.test.js",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "tdd": "npm test -- --watch",
-    "package": "npx @vscode/vsce package",
+    "package": "npx @vscode/vsce package --pre-release",
     "clearUserData": "del-cli \"./userData/**/*\" \"!.gitignore\""
   },
   "mocha": {},
