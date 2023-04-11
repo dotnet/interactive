@@ -50,11 +50,11 @@ try {
         # publish vs code marketplace
         Write-Host "Publishing $extension"
         if (-Not $simulate) {
-            if ($vscodeTarget -eq "stable") {
-                vsce publish --packagePath $extension --pat $vscodeToken --noVerify
+            if ($vscodeTarget -eq "insiders") {
+                vsce publish --pre-release --packagePath $extension --pat $vscodeToken --noVerify
             }
             else{
-                vsce publish --pre-release --packagePath $extension --pat $vscodeToken --noVerify
+                vsce publish --packagePath $extension --pat $vscodeToken --noVerify
             }
            
         }
