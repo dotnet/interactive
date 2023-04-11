@@ -46,7 +46,7 @@ public class MermaidKernelTests
         scriptNode.InnerText.Should()
             .Contain(markdown);
         scriptNode.InnerText.Should()
-            .Contain("(['mermaidUri'], (mermaid) => {");
+            .Contain("import mermaid from ");
 
         renderTarget.Should().NotBeNull();
     }
