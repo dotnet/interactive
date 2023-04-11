@@ -234,6 +234,33 @@ csharpVarFromInput
 
 #!markdown
 
+# Run mermaid markdown:
+Execute the markadown in the cell, this should produce a graphic visualization.
+
+#!mermaid
+
+mindmap
+  root((.NET Interactive))
+    Commands
+        SubmitCode
+        Cancel
+        SendValue
+    Events
+        CommandSucceeded
+        CommandFailed
+        ValueProduced
+    Kernels
+        Kernel
+        CompositeKernel
+        ProxyKernel
+    Directives
+        Connect
+            SQL
+            KQL
+            Jupyter
+
+#!markdown
+
 # Check this manual scenario:
 
 1. `Ctrl+Shift+P` => "Polyglot Notebook: Create new blank notebook"
