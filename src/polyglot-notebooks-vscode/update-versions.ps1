@@ -44,14 +44,10 @@ try {
         # ...and save changes
         $packageJsonContents | ConvertTo-Json -depth 100 | Out-File $packageJsonPath
         Write-Host
-    }
+    }    
 
-    $vsCodeStableVersion = $version
-    $vsCodeVersionParts = $vsCodeStableVersion -split "\."
-    $vsCodeInsidersVersion = $vsCodeVersionParts[0] + "." + ([int]$vsCodeVersionParts[1] + 1)
-
-    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\package.json" -vscodeEngine "^$vsCodeStableVersion.0" -updateToolVersion $updateAll
-    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\..\polyglot-notebooks-vscode-insiders\package.json" -vscodeEngine "$vsCodeInsidersVersion.0-insider" -updateToolVersion $true
+    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\package.json" -vscodeEngine "^$version.0" -updateToolVersion $updateAll
+    Update-VersionNumbers -packageJsonPath "$PSScriptRoot\..\polyglot-notebooks-vscode-insiders\package.json" -vscodeEngine "^$version.0" -updateToolVersion $true
 }
 catch {
     Write-Host $_
