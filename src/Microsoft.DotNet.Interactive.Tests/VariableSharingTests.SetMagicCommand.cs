@@ -430,7 +430,6 @@ public partial class VariableSharingTests
             result.Events.Should().NotContainErrors();
             var valueProduced = await csharpKernel.RequestValueAsync("x");
 
-
             var expected = JsonDocument.Parse(jsonFragment);
             valueProduced.Value.Should()
                          .BeOfType<JsonDocument>()

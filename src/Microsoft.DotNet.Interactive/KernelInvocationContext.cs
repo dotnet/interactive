@@ -272,37 +272,49 @@ public class KernelInvocationContext : IDisposable
     {
         if (_current.Value is null || _current.Value.IsComplete)
         {
-            var context = new KernelInvocationContext(command);
-
-            _current.Value = context;
+            _current.Value = new KernelInvocationContext(command);
         }
         else
         {
             if (!CommandEqualityComparer.Instance.Equals(_current.Value.Command, command))
             {
-                var capturedEventStream = _current.Value._events;
-                _current.Value._childCommands.GetOrAdd(command, innerCommand =>
+                var currentContext = _current.Value;
+
+                currentContext._childCommands.GetOrAdd(command, innerCommand =>
                 {
+                    if (innerCommand.Parent is  null)
+                    {
+                       // innerCommand.Parent = currentContext.Command;
+                    }
+                    else
+                    {
+                        // FIX: (Establish) when does this happen?
+                    }
+
                     var replaySubject = new ReplaySubject<KernelEvent>();
 
                     var subscription = replaySubject
-                        .Where(e =>
-                        {
-                            if (innerCommand.OriginUri is { })
-                            {
-                                // if executing on behalf of a proxy, don't swallow anything
-                                return true;
-                            }
+                                       .Where(e =>
+                                       {
+                                           if (innerCommand.OriginUri is { })
+                                           {
+                                               // if executing on behalf of a proxy, don't swallow anything
+                                               return true;
+                                           }
 
-                            return e is not CommandSucceeded and not CommandFailed;
-                        })
-                        .Subscribe(e => capturedEventStream.OnNext(e));
+                                           return e is not CommandSucceeded and not CommandFailed;
+                                       })
+                                       .Subscribe(e => currentContext._events.OnNext(e));
 
-                    _current.Value._disposables.Add(subscription);
-                    _current.Value._disposables.Add(replaySubject);
+                    currentContext._disposables.Add(subscription);
+                    currentContext._disposables.Add(replaySubject);
 
                     return replaySubject;
                 });
+            }
+            else
+            {
+                // FIX: (Establish) when does this happen?
             }
         }
 
@@ -348,6 +360,7 @@ public class KernelInvocationContext : IDisposable
     internal DirectiveNode CurrentlyParsingDirectiveNode { get; set; }
 
     public Task ScheduleAsync(Func<KernelInvocationContext, Task> func) =>
+        // FIX: (ScheduleAsync) inline this
         HandlingKernel.SendAsync(new AnonymousKernelCommand((_, invocationContext) =>
             func(invocationContext)));
 }
