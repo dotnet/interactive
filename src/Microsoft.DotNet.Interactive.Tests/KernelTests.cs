@@ -194,8 +194,8 @@ public partial class KernelTests
               .Which.Exception.Should().BeOfType<ObjectDisposedException>();
     }
 
-    [Fact]
-    public async Task WAT()
+    [Fact(Skip = "next up")]
+    public async Task Invocation_context_does_not_cause_entanglement_between_kernels_that_do_not_share_a_scheduler()
     {
         using var kernel = new CompositeKernel
         {

@@ -359,7 +359,7 @@ public static class KernelExtensions
         object ParseValueOption(ArgumentResult argResult)
         {
             var valueOptionValue = argResult.Tokens.Single().Value;
-
+            
             if (!valueOptionValue.StartsWith("@"))
             {
                 return valueOptionValue;
@@ -405,6 +405,7 @@ public static class KernelExtensions
 
             if (result.Events.LastOrDefault() is CommandFailed failed)
             {
+                // FIX: (ConfigureAndAddSetMagicCommand) this doesn't get hit because the final events are getting eaten in the nested context
                 argResult.ErrorMessage = failed.Message;
                 return null;
             }
@@ -559,6 +560,10 @@ public static class KernelExtensions
                     declarationName,
                     value,
                     formattedValue));
+        }
+        else
+        {
+            throw new CommandNotSupportedException(typeof(SendValue), kernel);
         }
     }
 
