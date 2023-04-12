@@ -182,12 +182,13 @@ public sealed class ProxyKernel : Kernel
 
         var hasPending = _inflight.TryGetValue(token, out var pending);
 
-        if (hasPending && HasSameOrigin(kernelEvent, KernelInfo))
+        if (hasPending && HasSameOrigin(kernelEvent))
         {
             if (kernelEvent.Command.IsEquivalentTo(pending.command))
             {
                 pending.command.RoutingSlip.ContinueWith(kernelEvent.Command.RoutingSlip);
             }
+
             switch (kernelEvent)
             {
                 case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
@@ -240,7 +241,7 @@ public sealed class ProxyKernel : Kernel
         }
     }
 
-    private bool HasSameOrigin(KernelEvent kernelEvent, KernelInfo kernelInfo)
+    private bool HasSameOrigin(KernelEvent kernelEvent)
     {
         var commandOriginUri = kernelEvent.Command.OriginUri;
 
@@ -249,13 +250,7 @@ public sealed class ProxyKernel : Kernel
             commandOriginUri = KernelInfo.Uri;
         }
 
-        if (kernelInfo is not null &&
-            commandOriginUri is not null)
-        {
-            return commandOriginUri.Equals(kernelInfo.Uri);
-        }
-
-        return commandOriginUri is null;
+        return commandOriginUri.Equals(KernelInfo.Uri);
     }
 
     public void UpdateKernelInfo(KernelInfo kernelInfo)
