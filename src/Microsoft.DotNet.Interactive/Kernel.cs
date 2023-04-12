@@ -178,14 +178,7 @@ public abstract partial class Kernel :
 
             if (handlingKernel is null)
             {
-                // if (command.TargetKernelName is null)
-                {
-                    context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
-                }
-                // else
-                // {
-                //     // FIX: (TrySplitCommand) 
-                // }
+                context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
                 return false;
             }
 

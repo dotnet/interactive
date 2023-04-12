@@ -435,32 +435,35 @@ public class SubmissionParser
                 {
                     interpolatedValue = value.ToString();
                 }
-                else if (valueProduced.FormattedValue.MimeType == "application/json")
+                else switch (valueProduced.FormattedValue.MimeType)
                 {
-                    var stringValue = valueProduced.FormattedValue.Value;
-
-                    var jsonDoc = JsonDocument.Parse(stringValue);
-
-                    object jsonValue = jsonDoc.RootElement.ValueKind switch
+                    case "application/json":
                     {
-                        JsonValueKind.True => true,
-                        JsonValueKind.False => false,
-                        JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                        JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-                        JsonValueKind.Object => stringValue,
-                        _ => null
-                    };
+                        var stringValue = valueProduced.FormattedValue.Value;
 
-                    interpolatedValue = jsonValue?.ToString();
-                }
-                else if (valueProduced.FormattedValue.MimeType == "text/plain")
-                {
-                    interpolatedValue = valueProduced.FormattedValue.Value;
-                }
-                else
-                {
-                    errorMessage = result.Events.OfType<CommandFailed>().Last().Message;
-                    return false;
+                        var jsonDoc = JsonDocument.Parse(stringValue);
+
+                        object jsonValue = jsonDoc.RootElement.ValueKind switch
+                        {
+                            JsonValueKind.True => true,
+                            JsonValueKind.False => false,
+                            JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                            JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+                            JsonValueKind.Object => stringValue,
+                            _ => null
+                        };
+
+                        interpolatedValue = jsonValue?.ToString();
+                        break;
+                    }
+
+                    case "text/plain":
+                        interpolatedValue = valueProduced.FormattedValue.Value;
+                        break;
+
+                    default:
+                        errorMessage = result.Events.OfType<CommandFailed>().LastOrDefault()?.Message ?? $"Unsupported MIME type: {valueProduced.FormattedValue.MimeType}";
+                        return false;
                 }
 
                 replacementTokens = new[] { $"{interpolatedValue}" };
