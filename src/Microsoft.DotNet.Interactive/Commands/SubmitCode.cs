@@ -24,6 +24,18 @@ public class SubmitCode : KernelCommand
         KernelNameDirectiveNode kernelNameDirectiveNode = null)
         : base(languageNode.Name, parent)
     {
+        // FIX: (SubmitCode) clean up
+        if (Code is null)
+        {
+            
+
+        }
+
+        if (parent is null)
+        {
+            
+        }
+
         Code = languageNode.Text;
         LanguageNode = languageNode;
         SubmissionType = submissionType;
@@ -40,7 +52,7 @@ public class SubmitCode : KernelCommand
 
     public SubmissionType SubmissionType { get; }
 
-    public override string ToString() => $"{nameof(SubmitCode)}: {Code.TruncateForDisplay()}";
+    public override string ToString() => $"{nameof(SubmitCode)}: {Code?.TruncateForDisplay()}";
 
     internal LanguageNode LanguageNode { get; }
 

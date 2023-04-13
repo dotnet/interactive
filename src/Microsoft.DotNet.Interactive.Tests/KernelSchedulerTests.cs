@@ -14,6 +14,8 @@ using Pocket;
 using Xunit;
 using Xunit.Abstractions;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests>;
+#pragma warning disable CS1998
+#pragma warning disable CS0162
 
 namespace Microsoft.DotNet.Interactive.Tests;
 

@@ -392,7 +392,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.Int32 GetHashCode()
     public System.String GetOrCreateToken()
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Void PublishInternalEvents()
+    public System.Void SetId(System.String id)
     public System.Void SetToken(System.String token)
   public abstract class LanguageServiceCommand : KernelCommand, System.IEquatable<KernelCommand>
     public System.String Code { get;}
