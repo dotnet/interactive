@@ -175,7 +175,7 @@ public sealed class ProxyKernel : Kernel
     private protected override Task HandleRequestKernelInfoAsync(RequestKernelInfo command, KernelInvocationContext context) =>
         // override the default handler on Kernel and forward the command instead
         HandleByForwardingToRemoteAsync(command, context);
-
+    
     private void DelegatePublication(KernelEvent kernelEvent)
     {
         var token = kernelEvent.Command.GetOrCreateToken();
@@ -184,18 +184,20 @@ public sealed class ProxyKernel : Kernel
 
         if (hasPending && HasSameOrigin(kernelEvent))
         {
-            if (kernelEvent.Command.IsEquivalentTo(pending.command))
+            var areSameCommand = pending.command.Equals(kernelEvent.Command);
+
+            if (areSameCommand)
             {
                 pending.command.RoutingSlip.ContinueWith(kernelEvent.Command.RoutingSlip);
             }
 
             switch (kernelEvent)
             {
-                case CommandFailed cf when pending.command.IsEquivalentTo(kernelEvent.Command):
+                case CommandFailed cf when areSameCommand:
                     _inflight.Remove(token);
                     pending.completionSource.TrySetResult(cf);
                     break;
-                case CommandSucceeded cs when pending.command.IsEquivalentTo(kernelEvent.Command):
+                case CommandSucceeded cs when areSameCommand:
                     _inflight.Remove(token);
                     pending.completionSource.TrySetResult(cs);
                     break;
@@ -204,13 +206,13 @@ public sealed class ProxyKernel : Kernel
                     _suppressCompletionsForCommandId = null;
                     break;
                 case KernelInfoProduced kip when kip.KernelInfo.Uri == KernelInfo.RemoteUri:
-                    {
-                        UpdateKernelInfoFromEvent(kip);
-                        var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
+                {
+                    UpdateKernelInfoFromEvent(kip);
+                    var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
 
-                        newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
+                    newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
 
-                        if (pending.executionContext is { } ec)
+                    if (pending.executionContext is { } ec)
                         {
                             ExecutionContext.Run(ec, _ =>
                             {

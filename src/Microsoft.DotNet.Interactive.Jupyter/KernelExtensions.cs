@@ -223,7 +223,11 @@ using static {typeof(TopLevelMethods).FullName};
 
                 foreach (var subkernel in subkernels)
                 {
-                    await subkernel.SendAsync(new SubmitCode(((SubmitCode)context.Command).Code));
+                    var command = new SubmitCode(((SubmitCode)context.Command).Code);
+
+                    command.GetOrCreateToken();
+
+                    await subkernel.SendAsync(command);
                 }
             })
         };
