@@ -26,7 +26,6 @@ using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
-
 namespace Microsoft.DotNet.Interactive;
 
 public abstract partial class Kernel :

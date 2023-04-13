@@ -9,14 +9,15 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
-[DebuggerStepThrough]
 public abstract class KernelCommand : IEquatable<KernelCommand>
 {
     private KernelCommand _parent;
     private string _token;
+    private string _id;
 
     protected KernelCommand(
         string targetKernelName = null,
@@ -74,6 +75,13 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         }
     }
 
+    private int _childTokenCounter;
+
+    private int GetNextChildToken()
+    {
+        return Interlocked.Increment(ref _childTokenCounter);
+    }
+
     public string GetOrCreateToken()
     {
         if (_token is not null)
@@ -83,7 +91,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         if (Parent is { } parent)
         {
-            _token = parent._token;
+            _token = parent._token; // + "." + parent.GetNextChildToken();
             return _token;
         }
 
@@ -134,24 +142,21 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         return Handler(this, context);
     }
 
-    internal const string IdKey = "id";
-
-    internal void SetId(string id)
+    public void SetId(string id)
     {
-        // FIX: (SetId) don't use Properties for these
-        Properties[IdKey] = id;
+        _id = id;
     }
 
     internal string GetOrCreateId()
     {
-        if (Properties.TryGetValue(IdKey, out var value))
+        if (_id is not null)
         {
-            return (string)value;
+            return _id;
         }
 
-        var id = Guid.NewGuid().ToString("N");
-        SetId(id);
-        return id;
+        SetId(Guid.NewGuid().ToString("N"));
+
+        return _id;
     }
 
     public bool Equals(KernelCommand other)

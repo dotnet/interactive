@@ -175,7 +175,7 @@ public sealed class ProxyKernel : Kernel
     private protected override Task HandleRequestKernelInfoAsync(RequestKernelInfo command, KernelInvocationContext context) =>
         // override the default handler on Kernel and forward the command instead
         HandleByForwardingToRemoteAsync(command, context);
-    
+
     private void DelegatePublication(KernelEvent kernelEvent)
     {
         var token = kernelEvent.Command.GetOrCreateToken();
@@ -213,31 +213,31 @@ public sealed class ProxyKernel : Kernel
                     newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
 
                     if (pending.executionContext is { } ec)
-                        {
-                            ExecutionContext.Run(ec, _ =>
-                            {
-                                pending.invocationContext.Publish(newEvent);
-                                pending.invocationContext.Publish(kip);
-                            }, null);
-                        }
-                        else
+                    {
+                        ExecutionContext.Run(ec, _ =>
                         {
                             pending.invocationContext.Publish(newEvent);
                             pending.invocationContext.Publish(kip);
-                        }
+                        }, null);
                     }
+                    else
+                    {
+                        pending.invocationContext.Publish(newEvent);
+                        pending.invocationContext.Publish(kip);
+                    }
+                }
                     break;
                 default:
+                {
+                    if (pending.executionContext is { } ec)
                     {
-                        if (pending.executionContext is { } ec)
-                        {
-                            ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
-                        }
-                        else
-                        {
-                            pending.invocationContext.Publish(kernelEvent);
-                        }
+                        ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
                     }
+                    else
+                    {
+                        pending.invocationContext.Publish(kernelEvent);
+                    }
+                }
                     break;
             }
         }

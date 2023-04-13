@@ -12,6 +12,9 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelVariableSharingTests</FixtureName>
       </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelTests.can_cancel_submit_code_and_interrupt_kernel</TestName>
+      </NamedTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelCommandTests</FixtureName>
       </FixtureTestSelector>

@@ -10,8 +10,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
 public class TokenTests
 {
-    // FIX: (TokenTests) revisit these tests
-
     [Fact]
     public void A_token_is_generated_on_demand()
     {
@@ -23,7 +21,7 @@ public class TokenTests
     }
 
     [Fact]
-    public void Repeated_calls_to_GetToken_for_the_same_command_return_the_same_value()
+    public void Repeated_calls_to_GetOrCreateToken_for_the_same_command_return_the_same_value()
     {
         var command = new SubmitCode("123");
 
@@ -36,6 +34,7 @@ public class TokenTests
     [Fact]
     public void When_created_in_the_same_context_then_child_commands_having_the_same_parent_also_have_the_same_token()
     {
+        // FIX: (When_created_in_the_same_context_then_child_commands_having_the_same_parent_also_have_the_same_token) this looks wrong
         var parentCommand = new SubmitCode("123");
         
         string token1 = null;
