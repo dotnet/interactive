@@ -25,7 +25,7 @@ public class KernelInvocationContext : IDisposable
 
     private readonly ReplaySubject<KernelEvent> _events = new();
 
-    private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new(new CommandEqualityComparer());
+    private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new();
 
     private readonly CompositeDisposable _disposables = new();
 
@@ -127,7 +127,7 @@ public class KernelInvocationContext : IDisposable
                 return;
             }
 
-            var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
+            var completingMainCommand = command.Equals(Command);
                 
             if (succeed && !IsFailed)
             {
@@ -238,7 +238,7 @@ public class KernelInvocationContext : IDisposable
         {
             events.OnNext(@event);
         }
-        else if (CommandEqualityComparer.Instance.Equals(Command, command))
+        else if (Command.Equals(command))
         {
             _events.OnNext(@event);
         }
@@ -255,7 +255,7 @@ public class KernelInvocationContext : IDisposable
 
     internal KernelCommandResult ResultFor(KernelCommand command)
     {
-        if (CommandEqualityComparer.Instance.Equals(command, Command))
+        if (command.Equals( Command))
         {
             return Result;
         }
@@ -276,7 +276,7 @@ public class KernelInvocationContext : IDisposable
         }
         else
         {
-            if (!CommandEqualityComparer.Instance.Equals(_current.Value.Command, command))
+            if (!_current.Value.Command.Equals(command))
             {
                 var currentContext = _current.Value;
 

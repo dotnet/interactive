@@ -68,6 +68,7 @@ public static class AspNetExtensions
 
         return services;
     }
+
     public static IApplicationBuilder UseDotNetInteractiveHttpApi<T>(this IApplicationBuilder app, T kernel, Assembly staticResourceRoot, HttpProbingSettings httpProbingSettings, HttpPort httpPort) where T : Kernel
     {
         app.UseStaticFiles(new StaticFileOptions
@@ -95,7 +96,6 @@ public static class AspNetExtensions
             if (htmlNotebookFrontendEnvironment is null || htmlNotebookFrontendEnvironment.RequiresAutomaticBootstrapping)
             {
                 var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
-                enableHttp.PublishInternalEvents();
                 kernel.DeferCommand(enableHttp);
             }
 

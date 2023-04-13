@@ -10,6 +10,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
 public class TokenTests
 {
+    // FIX: (TokenTests) revisit these tests
+
     [Fact]
     public void A_token_is_generated_on_demand()
     {
@@ -35,7 +37,7 @@ public class TokenTests
     public void When_created_in_the_same_context_then_child_commands_having_the_same_parent_also_have_the_same_token()
     {
         var parentCommand = new SubmitCode("123");
-
+        
         string token1 = null;
         string token2 = null;
 

@@ -13,9 +13,10 @@ using System.Text.Json.Serialization;
 namespace Microsoft.DotNet.Interactive.Commands;
 
 [DebuggerStepThrough]
-public abstract class KernelCommand
+public abstract class KernelCommand : IEquatable<KernelCommand>
 {
     private KernelCommand _parent;
+    private string _token;
 
     protected KernelCommand(
         string targetKernelName = null,
@@ -39,19 +40,14 @@ public abstract class KernelCommand
         get => _parent;
         internal set
         {
-            _parent = value;
-            //
-            // if (value is { } )
-            // {
-            //     if (Token is null)
-            //     {
-            //         this.SetToken(value.GetOrCreateToken());
-            //     }
-            // }
-            // else
-            // {
-            //     // FIX: (Parent) should this be allowed?
-            // }
+            if (_parent is null)
+            {
+                _parent = value;
+            }
+            else if (_parent != value)
+            {
+                throw new InvalidOperationException("Parent cannot be changed.");
+            }
         }
     }
 
@@ -68,94 +64,45 @@ public abstract class KernelCommand
 
     public void SetToken(string token)
     {
-        if (!Properties.TryGetValue(TokenKey, out var existing))
+        if (_token is null)
         {
-            Properties.Add(TokenKey, new TokenSequence(token));
+            _token = token;
         }
-        else if (existing is not TokenSequence sequence || sequence.Current != token)
+        else if (token != _token)
         {
             throw new InvalidOperationException("Command token cannot be changed.");
         }
     }
 
-    internal const string TokenKey = "token";
-
     public string GetOrCreateToken()
     {
-        // FIX: (GetOrCreateToken) make this a property
-        if (Properties.TryGetValue(TokenKey, out var value) &&
-            value is TokenSequence tokenSequence)
+        if (_token is not null)
         {
-            return tokenSequence.Current;
+            return _token;
         }
 
         if (Parent is { } parent)
         {
-            var token = parent.GetOrCreateToken();
-            SetToken(token);
-            return token;
+            _token = parent._token;
+            return _token;
         }
 
         // FIX: (GetOrCreateToken) don't depend on KernelInvocationContext.Current
         if (KernelInvocationContext.Current?.Command is { } contextCommand &&
-            !CommandEqualityComparer.Instance.Equals(contextCommand, this))
+            !Equals(contextCommand))
         {
             var token = contextCommand.GetOrCreateToken();
             SetToken(token);
             return token;
         }
 
-        return GenerateToken();
-    }
+        _token = CreateToken();
 
-    private string GetNextToken()
-    {
-        if (Properties.TryGetValue(TokenKey, out var value) &&
-            value is TokenSequence tokenSequence)
+        return _token;
+
+        static string CreateToken()
         {
-            return tokenSequence.GetNext();
-        }
-
-        return GenerateToken();
-    }
-
-    private string GenerateToken()
-    {
-        var seed = Parent?.GetNextToken();
-
-        var sequence = new TokenSequence(seed);
-
-        Properties.Add(TokenKey, sequence);
-
-        return sequence.Current;
-    }
-
-    private class TokenSequence
-    {
-        private readonly object _lock = new();
-
-        public TokenSequence(string? current = null)
-        {
-            Current = current ?? Hash(Guid.NewGuid().ToString());
-        }
-
-        internal string Current { get; private set; }
-
-        public string GetNext()
-        {
-            string next;
-
-            lock (_lock)
-            {
-                next = Current = Hash(Current);
-            }
-
-            return next;
-        }
-
-        private static string Hash(string seed)
-        {
-            var inputBytes = Encoding.ASCII.GetBytes(seed);
+            var inputBytes = Encoding.ASCII.GetBytes(Guid.NewGuid().ToString());
 
             byte[] hash;
             using (var sha = SHA256.Create())
@@ -167,11 +114,9 @@ public abstract class KernelCommand
         }
     }
 
-    [JsonIgnore]
-    internal SchedulingScope SchedulingScope { get; set; }
+    [JsonIgnore] internal SchedulingScope SchedulingScope { get; set; }
 
-    [JsonIgnore]
-    internal bool? ShouldPublishCompletionEvent { get; set; }
+    [JsonIgnore] internal bool? ShouldPublishCompletionEvent { get; set; }
 
     [JsonIgnore]
     public ParseResult KernelChooserParseResult { get; internal set; }
@@ -187,5 +132,45 @@ public abstract class KernelCommand
         }
 
         return Handler(this, context);
+    }
+
+    internal const string IdKey = "id";
+
+    internal void SetId(string id)
+    {
+        // FIX: (SetId) don't use Properties for these
+        Properties[IdKey] = id;
+    }
+
+    internal string GetOrCreateId()
+    {
+        if (Properties.TryGetValue(IdKey, out var value))
+        {
+            return (string)value;
+        }
+
+        var id = Guid.NewGuid().ToString("N");
+        SetId(id);
+        return id;
+    }
+
+    public bool Equals(KernelCommand other)
+    {
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        if (other is null)
+        {
+            return false;
+        }
+
+        return GetOrCreateId() == other.GetOrCreateId();
+    }
+
+    public override int GetHashCode()
+    {
+        return GetOrCreateId().GetHashCode();
     }
 }

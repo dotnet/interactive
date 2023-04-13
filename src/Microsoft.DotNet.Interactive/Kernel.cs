@@ -194,7 +194,7 @@ public abstract partial class Kernel :
             command.TargetKernelName ??= handlingKernel.Name;
 
             if (command.Parent is null &&
-                !CommandEqualityComparer.Instance.Equals(command, originalCommand))
+                !command.Equals(originalCommand))
             {
                 command.Parent = originalCommand;
             }
@@ -342,7 +342,7 @@ public abstract partial class Kernel :
         context = KernelInvocationContext.Establish(command);
 
         // only subscribe for the root command 
-        var currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
+        var currentCommandOwnsContext = context.Command.Equals(command);
 
         if (currentCommandOwnsContext)
         {
@@ -530,7 +530,7 @@ public abstract partial class Kernel :
 
             await Pipeline.SendAsync(command, context);
 
-            if (!CommandEqualityComparer.Instance.Equals(command, context.Command))
+            if (!command.Equals(context.Command))
             {
                 context.Complete(command);
             }
