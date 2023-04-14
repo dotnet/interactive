@@ -33,7 +33,9 @@ public class ConnectOpenAICommand : ConnectKernelCommand
 
         var kernelName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption)!;
 
-        if (!TryLoadFromFile(GetSettingsFilePathForKernelName(kernelName), out var settings))
+        var settingsFile = GetSettingsFilePathForKernelName(kernelName);
+
+        if (!TryLoadFromFile(settingsFile, out var settings))
         {
             var useAzureOpenAI = commandLineContext.ParseResult.GetValueForOption(UseAzureOpenAIOption);
 
@@ -74,7 +76,13 @@ public class ConnectOpenAICommand : ConnectKernelCommand
                 }
             };
 
-            WriteSettingsFile(settings, GetSettingsFilePathForKernelName(kernelName));
+            WriteSettingsFile(settings, settingsFile);
+
+            context.Display($"""
+        A settings file was created: {settingsFile}
+
+        You can edit this file to add additional OpenAI services.
+        """);
         }
 
         var config = settings.CreateKernelConfig();

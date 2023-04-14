@@ -5,6 +5,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.AI.ChatCompletion;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
@@ -13,10 +14,14 @@ public class OpenAIKernel :
     IKernelCommandHandler<SubmitCode>
 {
     private readonly IKernel _semanticKernel;
+    private readonly SubmissionHandlingType _submissionHandlingType;
+    private ChatHistory _chatHistory;
+    private IChatCompletion _chatCompletionService;
 
     public OpenAIKernel(IKernel semanticKernel, string name, SubmissionHandlingType submissionHandlingType) : this($"{name}:{LabelFor(submissionHandlingType)}")
     {
         _semanticKernel = semanticKernel;
+        _submissionHandlingType = submissionHandlingType;
     }
 
     private static string LabelFor(SubmissionHandlingType submissionHandlingType) =>
@@ -35,33 +40,55 @@ public class OpenAIKernel :
         KernelInfo.LanguageName = "text";
     }
 
-    public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+    public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
     {
-        var semanticFunction = _semanticKernel.CreateSemanticFunction("{{$INPUT}}");
-
-        var semanticKernelResponse = await _semanticKernel.RunAsync(
-                         command.Code,
-                         context.CancellationToken,
-                         semanticFunction);
-
-        var plainTextValue = new FormattedValue("text/plain", semanticKernelResponse.Result.ToDisplayString("text/plain"));
-        var htmlValue = new FormattedValue("text/html", semanticKernelResponse.ToDisplayString("text/html"));
-
-        var formattedValues = new[]
+        switch (_submissionHandlingType)
         {
-            plainTextValue,
-            htmlValue
-        };
+            case SubmissionHandlingType.TextCompletion:
+                var semanticFunction = _semanticKernel.CreateSemanticFunction("{{$INPUT}}");
 
-        context.Publish(new ReturnValueProduced(semanticKernelResponse, command, formattedValues));
+                var semanticKernelResponse = await _semanticKernel.RunAsync(
+                                                 submitCode.Code,
+                                                 context.CancellationToken,
+                                                 semanticFunction);
+
+                var plainTextValue = new FormattedValue(PlainTextSummaryFormatter.MimeType, semanticKernelResponse.Result.ToDisplayString(PlainTextSummaryFormatter.MimeType));
+
+                var htmlValue = new FormattedValue(HtmlFormatter.MimeType, semanticKernelResponse.ToDisplayString(HtmlFormatter.MimeType));
+
+                var formattedValues = new[]
+                {
+                    plainTextValue,
+                    htmlValue
+                };
+
+                context.Publish(new ReturnValueProduced(semanticKernelResponse, submitCode, formattedValues));
+                break;
+
+            case SubmissionHandlingType.ChatCompletion:
+
+                _chatCompletionService ??= _semanticKernel.GetService<IChatCompletion>();
+                _chatHistory ??= _chatCompletionService.CreateNewChat();
+
+                _chatHistory.AddMessage("user", submitCode.Code);
+
+                var reply = await _chatCompletionService.GenerateMessageAsync(_chatHistory, new(), context.CancellationToken);
+
+                context.Publish(new ReturnValueProduced(reply, submitCode, FormattedValue.FromObject(reply, PlainTextFormatter.MimeType)));
+
+                break;
+
+            case SubmissionHandlingType.TextEmbeddingGeneration:
+                break;
+
+            case SubmissionHandlingType.ImageGeneration:
+                break;
+
+            case SubmissionHandlingType.Skill:
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
-}
-
-public enum SubmissionHandlingType
-{
-    TextEmbeddingGeneration,
-    ChatCompletion,
-    TextCompletion,
-    ImageGeneration,
-    Skill
 }
