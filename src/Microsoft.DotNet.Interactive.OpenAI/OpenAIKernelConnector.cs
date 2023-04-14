@@ -36,12 +36,18 @@ public class ConnectOpenAICommand : ConnectKernelCommand
         InvocationContext commandLineContext)
     {
         var name = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+        
+        // here we should do lookup for settings if we have them already?
+
         var useAzureOpenAI = commandLineContext.ParseResult.GetValueForOption(UseAzureOpenAIOption);
 
-        await Settings.AskAzureEndpoint(useAzureOpenAI);
-        await Settings.AskModel(useAzureOpenAI);
-        await Settings.AskApiKey(useAzureOpenAI);
+        var endpoint = await Settings.AskAzureEndpoint(useAzureOpenAI);
+        var model= await Settings.AskModel(useAzureOpenAI);
+        var apiKey = await Settings.AskApiKey(useAzureOpenAI);
 
-        return new OpenAIKernel(name);
+        var openAiKernel = new OpenAIKernel(name);
+
+        openAiKernel.Configure(new OpenAIKernelSettings(model,endpoint,apiKey,useAzureOpenAI));
+        return openAiKernel;
     }
 }
