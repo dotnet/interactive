@@ -7,14 +7,14 @@ namespace Microsoft.DotNet.Interactive.OpenAI;
 
 public class OpenAIKernelConnector
 {
-    public static async Task AddKernelConnector()
+    public static Task AddKernelConnector()
     {
         if (KernelInvocationContext.Current is { } context &&
             context.HandlingKernel.RootKernel is CompositeKernel root)
         {
-            var config = new KernelConfig();
-
-            root.AddKernelConnector(new ConnectOpenAICommand());
+           root.AddKernelConnector(new ConnectOpenAICommand());
         }
+
+        return Task.CompletedTask;
     }
 }

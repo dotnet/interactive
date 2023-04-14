@@ -40,7 +40,7 @@ public class ConnectOpenAICommand : ConnectKernelCommand
             (useAzureOpenAI, model, endpoint, apiKey,_) = Settings.LoadFromFile();
         }
 
-        var openAiKernel = new OpenAIKernel(name);
+        var openAiKernel = new OpenAIKernel(name!);
 
         openAiKernel.Configure(new OpenAIKernelSettings(model,endpoint,apiKey,useAzureOpenAI));
 
