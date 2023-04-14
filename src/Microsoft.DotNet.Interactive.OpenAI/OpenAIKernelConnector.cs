@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.CommandLine.Invocation;
+
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.SemanticKernel;
 
@@ -28,17 +29,19 @@ public class ConnectOpenAICommand : ConnectKernelCommand
     {
     }
 
-    public Option<>
+    public Option<bool> useAzureOpenAIOption { get; } = new Option<bool>("--use-azure-openai", "Use Azure OpenAI");
 
     public override async Task<Kernel> ConnectKernelAsync(
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
         var name = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+        var useAzureOpenAI = commandLineContext.ParseResult.GetValueForOption(useAzureOpenAIOption);
 
+        await Settings.AskAzureEndpoint(useAzureOpenAI);
+        await Settings.AskModel(useAzureOpenAI);
+        await Settings.AskApiKey(useAzureOpenAI);
 
-
-
-        return new OpenAIKernel();
+        return new OpenAIKernel(name);
     }
 }
