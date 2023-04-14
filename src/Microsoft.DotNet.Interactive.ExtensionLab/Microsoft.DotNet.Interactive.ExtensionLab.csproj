@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Analysis" Version="0.20.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.0" />
     <PackageReference Include="Iced" Version="1.17.0" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />

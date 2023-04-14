@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -251,7 +250,7 @@ public abstract class ToolsServiceKernel :
         var dataRows = new List<List<KeyValuePair<string, object>>>();
         var columnNames = columnInfos.Select(c => c.ColumnName).ToArray();
 
-        SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
+        ResolveColumnNameClashes(columnNames);
 
         for (var i = 0; i <  columnInfos.Length; i++)
         {
@@ -314,6 +313,24 @@ public abstract class ToolsServiceKernel :
         }
 
         yield return new TabularDataResource(schema, dataRows);
+
+        void ResolveColumnNameClashes(string[] names)
+        {
+            var nameCounts = new Dictionary<string, int>(capacity: names.Length);
+            for (var i1 = 0; i1 < names.Length; i1++)
+            {
+                var columnName = names[i1];
+                if (nameCounts.TryGetValue(columnName, out var count))
+                {
+                    nameCounts[columnName] = ++count;
+                    names[i1] = columnName + $" ({count})";
+                }
+                else
+                {
+                    nameCounts[columnName] = 1;
+                }
+            }
+        }
     }
 
     public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)

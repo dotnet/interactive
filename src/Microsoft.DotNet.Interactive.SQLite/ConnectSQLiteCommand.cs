@@ -6,7 +6,7 @@ using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab;
+namespace Microsoft.DotNet.Interactive.SQLite;
 
 public class ConnectSQLiteCommand : ConnectKernelCommand
 {

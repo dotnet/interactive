@@ -5,15 +5,13 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Assent;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
+namespace Microsoft.DotNet.Interactive.SQLite.Tests;
 
 public class SQLiteKernelExtensionTests : IDisposable
 {
@@ -35,9 +33,7 @@ public class SQLiteKernelExtensionTests : IDisposable
             new KeyValueStoreKernel()
         };
 
-        var extension = new SQLiteKernelExtension();
-
-        await extension.OnLoadAsync(kernel);
+        SQLiteKernelConnector.AddSQLiteKernelConnectorToCompositeKernel(kernel);
 
         using var _ = SQLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
 
@@ -66,9 +62,7 @@ SELECT * FROM fruit
             new KeyValueStoreKernel()
         };
 
-        var extension = new SQLiteKernelExtension();
-
-        await extension.OnLoadAsync(kernel);
+        SQLiteKernelConnector.AddSQLiteKernelConnectorToCompositeKernel(kernel);
 
         using var _ = SQLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
 
