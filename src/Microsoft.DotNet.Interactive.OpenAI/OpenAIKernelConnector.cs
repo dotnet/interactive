@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Security.Cryptography;
 
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.SemanticKernel;
@@ -36,18 +37,31 @@ public class ConnectOpenAICommand : ConnectKernelCommand
         InvocationContext commandLineContext)
     {
         var name = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
-        
+
         // here we should do lookup for settings if we have them already?
 
         var useAzureOpenAI = commandLineContext.ParseResult.GetValueForOption(UseAzureOpenAIOption);
 
-        var endpoint = await Settings.AskAzureEndpoint(useAzureOpenAI);
-        var model= await Settings.AskModel(useAzureOpenAI);
-        var apiKey = await Settings.AskApiKey(useAzureOpenAI);
+        var configFileName = new FileInfo($"semantic_kernel_config_{name}_{useAzureOpenAI}.config");
+        string endpoint;
+        string model;
+        string? apiKey;
+        if (!configFileName.Exists)
+        {
+
+            endpoint = await Settings.AskAzureEndpoint(useAzureOpenAI, configFileName.FullName);
+            model = await Settings.AskModel(useAzureOpenAI, configFileName.FullName);
+            apiKey = await Settings.AskApiKey(useAzureOpenAI, configFileName.FullName);
+        }
+        else
+        {
+            (useAzureOpenAI, model, endpoint, apiKey,_) = Settings.LoadFromFile();
+        }
 
         var openAiKernel = new OpenAIKernel(name);
 
         openAiKernel.Configure(new OpenAIKernelSettings(model,endpoint,apiKey,useAzureOpenAI));
+
         return openAiKernel;
     }
 }
