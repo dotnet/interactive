@@ -1,20 +1,25 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.SemanticKernel;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
 public class OpenAIKernelConnector
 {
-    public static Task AddKernelConnector()
+    public static void AddKernelConnectorToCurrentRootKernel()
     {
         if (KernelInvocationContext.Current is { } context &&
             context.HandlingKernel.RootKernel is CompositeKernel root)
         {
-           root.AddKernelConnector(new ConnectOpenAICommand());
+            AddKernelConnectorTo(root);
         }
 
-        return Task.CompletedTask;
     }
+
+    public static void AddKernelConnectorTo(CompositeKernel kernel)
+    {
+        kernel.AddKernelConnector(new ConnectOpenAICommand());
+    }
+
+    public static readonly string SettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".net-interactive", "OpenAI");
 }

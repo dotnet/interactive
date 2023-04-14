@@ -7,7 +7,7 @@ using InteractiveKernel = Microsoft.DotNet.Interactive.Kernel;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
-public static class Settings
+internal static class Settings
 {
     private const string DefaultConfigFile = "config/settings.json";
     private const string TypeKey = "type";

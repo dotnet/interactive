@@ -307,7 +307,7 @@ public class SubmissionParser
             var kernel = _kernel switch
             {
                 // The parent kernel is the one where a directive would be defined, and therefore the one that should decide whether to accept this submission. 
-                CompositeKernel composite => composite.FindKernelByName(node.ParentKernelName),
+                CompositeKernel composite => composite.FindKernelByName(node.ParentKernelName) ?? _kernel,
                 _ => _kernel
             };
 

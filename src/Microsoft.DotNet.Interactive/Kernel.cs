@@ -733,6 +733,8 @@ public abstract partial class Kernel :
         DirectiveNode directiveNode,
         int requestPosition)
     {
+        var topDirectiveParser = SubmissionParser.GetDirectiveParser();
+
         var directiveParsers = new List<Parser>();
 
         directiveParsers.AddRange(
@@ -746,7 +748,6 @@ public abstract partial class Kernel :
         }
 
         var allCompletions = new List<CompletionItem>();
-        var topDirectiveParser = SubmissionParser.GetDirectiveParser();
         var prefix = topDirectiveParser.Configuration.RootCommand.Name + " ";
         requestPosition += prefix.Length;
 

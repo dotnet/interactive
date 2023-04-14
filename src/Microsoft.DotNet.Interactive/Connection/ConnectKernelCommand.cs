@@ -26,7 +26,7 @@ public abstract class ConnectKernelCommand : Command
         "--kernel-name",
         "The name of the subkernel to be added")
     {
-        IsRequired = true
+        IsRequired = true,
     };
 
     /// <summary>

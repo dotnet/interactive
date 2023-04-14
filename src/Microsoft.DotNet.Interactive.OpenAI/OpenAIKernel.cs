@@ -2,35 +2,66 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.SemanticKernel;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
-public class OpenAIKernel : 
+public class OpenAIKernel :
     Kernel,
     IKernelCommandHandler<SubmitCode>
 {
     private readonly IKernel _semanticKernel;
 
-    public OpenAIKernel(string name = "openai") : base(name)
+    public OpenAIKernel(IKernel semanticKernel, string name, SubmissionHandlingType submissionHandlingType) : this($"{name}:{LabelFor(submissionHandlingType)}")
+    {
+        _semanticKernel = semanticKernel;
+    }
+
+    private static string LabelFor(SubmissionHandlingType submissionHandlingType) =>
+        submissionHandlingType switch
+        {
+            SubmissionHandlingType.TextCompletion => "text",
+            SubmissionHandlingType.ChatCompletion => "chat",
+            SubmissionHandlingType.TextEmbeddingGeneration => "embedding",
+            SubmissionHandlingType.ImageGeneration => "image",
+            SubmissionHandlingType.Skill => "skill",
+            _ => throw new ArgumentOutOfRangeException(nameof(submissionHandlingType), submissionHandlingType, null)
+        };
+
+    private OpenAIKernel(string name) : base(name)
     {
         KernelInfo.LanguageName = "text";
-        _semanticKernel = SemanticKernel.Kernel.Builder.Build();
     }
-
-    public void Configure(OpenAIKernelSettings settings)
-    {
-        throw new NotImplementedException();
-    }
-
-
 
     public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
-        var result = await _semanticKernel.RunAsync(command.Code, context.CancellationToken);
-        // we need probably more info at this point, if dall-e is used we need to display image
-        throw new NotImplementedException();
+        var semanticFunction = _semanticKernel.CreateSemanticFunction("{{$INPUT}}");
+
+        var semanticKernelResponse = await _semanticKernel.RunAsync(
+                         command.Code,
+                         context.CancellationToken,
+                         semanticFunction);
+
+        var plainTextValue = new FormattedValue("text/plain", semanticKernelResponse.Result.ToDisplayString("text/plain"));
+        var htmlValue = new FormattedValue("text/html", semanticKernelResponse.ToDisplayString("text/html"));
+
+        var formattedValues = new[]
+        {
+            plainTextValue,
+            htmlValue
+        };
+
+        context.Publish(new ReturnValueProduced(semanticKernelResponse, command, formattedValues));
     }
 }
 
-public record OpenAIKernelSettings(string Model, string Endpoint, string ApiKey, bool UseAzureOpenAI = false, string? OrgId = null);
+public enum SubmissionHandlingType
+{
+    TextEmbeddingGeneration,
+    ChatCompletion,
+    TextCompletion,
+    ImageGeneration,
+    Skill
+}
