@@ -138,11 +138,11 @@ public static class Settings
         try
         {
             var config = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(DefaultConfigFile));
-            bool useAzureOpenAI = config[TypeKey] == "azure";
-            string model = config[ModelKey];
-            string azureEndpoint = config[EndpointKey];
-            string apiKey = config[SecretKey];
-            string orgId = config[OrgKey];
+            var useAzureOpenAI = config![TypeKey] == "azure";
+            var model = config[ModelKey];
+            var azureEndpoint = config[EndpointKey];
+            var apiKey = config[SecretKey];
+            var orgId = config[OrgKey];
             if (orgId == "none")
             {
                 orgId = "";

@@ -33,4 +33,4 @@ public class OpenAIKernel :
     }
 }
 
-public record OpenAIKernelSettings(string model, string endpoint, string apiKey, bool useAzureOpenAI = false, string? orgId = null);
+public record OpenAIKernelSettings(string Model, string Endpoint, string ApiKey, bool UseAzureOpenAI = false, string? OrgId = null);
