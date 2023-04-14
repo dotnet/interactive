@@ -23,7 +23,6 @@ public sealed class CompositeKernel :
     Kernel,
     IEnumerable<Kernel>
 {
-    private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new();
     private readonly KernelCollection _childKernels;
     private string _defaultKernelName;
     private Command _connectDirective;
@@ -139,13 +138,9 @@ public sealed class CompositeKernel :
             {
                 return this;
             }
-            else if (_defaultKernelNamesByCommandType.TryGetValue(command.GetType(), out targetKernelName))
-            {
 
-            }
-            else
+            if (!_defaultKernelNamesByCommandType.TryGetValue(command.GetType(), out targetKernelName))
             {
-
                 targetKernelName = DefaultKernelName;
             }
         }
@@ -225,12 +220,7 @@ public sealed class CompositeKernel :
 
             var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
 
-            var kernel = this.FindKernelByName(actionDirectiveNode.ParentKernelName);
-
-            if (kernel is null)
-            {
-                yield break;
-            }
+            var kernel = this.FindKernelByName(actionDirectiveNode.ParentKernelName) ?? this;
 
             var languageKernelDirectiveParser = kernel.SubmissionParser.GetDirectiveParser();
 
