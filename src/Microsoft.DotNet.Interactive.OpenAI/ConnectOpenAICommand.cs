@@ -31,7 +31,6 @@ public class ConnectOpenAICommand : ConnectKernelCommand
         string? apiKey;
         if (!configFileName.Exists)
         {
-
             endpoint = await Settings.AskAzureEndpoint(useAzureOpenAI, configFileName.FullName);
             model = await Settings.AskModel(useAzureOpenAI, configFileName.FullName);
             apiKey = await Settings.AskApiKey(useAzureOpenAI, configFileName.FullName);
