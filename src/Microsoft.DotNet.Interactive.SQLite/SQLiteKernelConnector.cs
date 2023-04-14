@@ -31,11 +31,11 @@ public class SQLiteKernelConnector : IKernelConnector
         if (KernelInvocationContext.Current is { } context &&
             context.HandlingKernel.RootKernel is CompositeKernel root)
         {
-            AddSQLiteKernelConnectorToCompositeKernel(root);
+            AddSQLiteKernelConnectorTo(root);
         }
     }
 
-    public static void AddSQLiteKernelConnectorToCompositeKernel(CompositeKernel kernel)
+    public static void AddSQLiteKernelConnectorTo(CompositeKernel kernel)
     {
 
 

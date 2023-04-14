@@ -24,7 +24,7 @@ public class SQLiteKernelExtensionTests : IDisposable
             .UsingExtension("json");
     }
 
-    [Fact(Skip = "Fix formatter setup")]
+    [Fact]
     public async Task can_generate_tabular_json_from_database_table_result()
     {
         using var kernel = new CompositeKernel
@@ -33,7 +33,7 @@ public class SQLiteKernelExtensionTests : IDisposable
             new KeyValueStoreKernel()
         };
 
-        SQLiteKernelConnector.AddSQLiteKernelConnectorToCompositeKernel(kernel);
+        SQLiteKernelConnector.AddSQLiteKernelConnectorTo(kernel);
 
         using var _ = SQLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
 
@@ -53,7 +53,7 @@ SELECT * FROM fruit
         this.Assent(formattedData, _configuration);
     }
 
-    [Fact(Skip = "Fix formatter setup")]
+    [Fact]
     public async Task can_handle_duplicate_columns_in_query_results()
     {
         using var kernel = new CompositeKernel
@@ -62,7 +62,7 @@ SELECT * FROM fruit
             new KeyValueStoreKernel()
         };
 
-        SQLiteKernelConnector.AddSQLiteKernelConnectorToCompositeKernel(kernel);
+        SQLiteKernelConnector.AddSQLiteKernelConnectorTo(kernel);
 
         using var _ = SQLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
 

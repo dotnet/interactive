@@ -1,1 +1,32 @@
-<table><thead><tr><td><span>id</span></td><td><span>name</span></td><td><span>color</span></td><td><span>deliciousness</span></td></tr></thead><tbody><tr><td><div class="dni-plaintext">1</div></td><td>apple</td><td>green</td><td><div class="dni-plaintext">10</div></td></tr><tr><td><div class="dni-plaintext">2</div></td><td>banana</td><td>red</td><td><div class="dni-plaintext">11</div></td></tr><tr><td><div class="dni-plaintext">3</div></td><td>cherry</td><td>red</td><td><div class="dni-plaintext">9000</div></td></tr></tbody></table>
+<table><thead><tr><td><span>id</span></td><td><span>name</span></td><td><span>color</span></td><td><span>deliciousness</span></td></tr></thead><tbody><tr><td><div class="dni-plaintext"><pre>1</pre></div></td><td>apple</td><td>green</td><td><div class="dni-plaintext"><pre>10</pre></div></td></tr><tr><td><div class="dni-plaintext"><pre>2</pre></div></td><td>banana</td><td>red</td><td><div class="dni-plaintext"><pre>11</pre></div></td></tr><tr><td><div class="dni-plaintext"><pre>3</pre></div></td><td>cherry</td><td>red</td><td><div class="dni-plaintext"><pre>9000</pre></div></td></tr></tbody></table><style>
+.dni-code-hint {
+    font-style: italic;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.dni-treeview {
+    white-space: nowrap;
+}
+.dni-treeview td {
+    vertical-align: top;
+    text-align: start;
+}
+details.dni-treeview {
+    padding-left: 1em;
+}
+table td {
+    text-align: start;
+}
+table tr { 
+    vertical-align: top; 
+    margin: 0em 0px;
+}
+table tr td pre 
+{ 
+    vertical-align: top !important; 
+    margin: 0em 0px !important;
+} 
+table th {
+    text-align: start;
+}
+</style>
