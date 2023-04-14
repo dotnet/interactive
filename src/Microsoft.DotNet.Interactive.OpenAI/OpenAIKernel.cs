@@ -20,13 +20,15 @@ public class OpenAIKernel :
 
     public void Configure(OpenAIKernelSettings settings)
     {
-
+        throw new NotImplementedException();
     }
 
 
 
-    public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+    public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
+        var result = await _semanticKernel.RunAsync(command.Code, context.CancellationToken);
+        // we need probably more info at this point, if dall-e is used we need to display image
         throw new NotImplementedException();
     }
 }
