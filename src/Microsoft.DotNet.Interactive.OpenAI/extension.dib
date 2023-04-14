@@ -1,0 +1,7 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+await Microsoft.DotNet.Interactive.OpenAI.PromptKernelConnector.AddKernelConnector();
