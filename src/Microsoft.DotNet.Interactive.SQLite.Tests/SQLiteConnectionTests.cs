@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
+namespace Microsoft.DotNet.Interactive.SQLite.Tests;
 
 public class SQLiteConnectionTests
 {

@@ -1,17 +1,17 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Enumerable = System.Linq.Enumerable;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab;
+namespace Microsoft.DotNet.Interactive.SQLite;
 
 public class SQLiteKernel :
     Kernel,
@@ -67,7 +67,7 @@ public class SQLiteKernel :
             var values = new object[reader.FieldCount];
             var names = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToArray();
 
-            SqlKernelUtils.AliasDuplicateColumnNames(names);
+            ResolveColumnNameClashes(names);
 
             // holds the result of a single statement within the query
             var table = new List<(string, object)[]>();
@@ -86,6 +86,24 @@ public class SQLiteKernel :
 
             yield return table;
         } while (reader.NextResult());
+
+        void ResolveColumnNameClashes(string[] names)
+        {
+            var nameCounts = new Dictionary<string, int>(capacity: names.Length);
+            for (var i1 = 0; i1 < names.Length; i1++)
+            {
+                var columnName = names[i1];
+                if (nameCounts.TryGetValue(columnName, out var count))
+                {
+                    nameCounts[columnName] = ++count;
+                    names[i1] = columnName + $" ({count})";
+                }
+                else
+                {
+                    nameCounts[columnName] = 1;
+                }
+            }
+        }
     }
 }
 
