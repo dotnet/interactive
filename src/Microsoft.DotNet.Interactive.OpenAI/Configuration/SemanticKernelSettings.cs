@@ -39,16 +39,16 @@ public class SemanticKernelSettings
             {
                 config.AddAzureOpenAITextCompletionService(
                     settings.Key,
-                    settings.Value.ModelOrDeploymentName,
-                    settings.Value.Endpoint,
-                    settings.Value.ApiKey);
+                    settings.Value.ModelOrDeploymentName!,
+                    settings.Value.Endpoint!,
+                    settings.Value.ApiKey!);
             }
             else
             {
                 config.AddOpenAITextCompletionService(
                     settings.Key,
-                    settings.Value.ModelOrDeploymentName,
-                    settings.Value.ApiKey,
+                    settings.Value.ModelOrDeploymentName!,
+                    settings.Value.ApiKey!,
                     settings.Value.OrgId);
             }
         }
@@ -59,17 +59,17 @@ public class SemanticKernelSettings
             {
                 config.AddAzureOpenAIEmbeddingGenerationService(
                     settings.Key,
-                    settings.Value.ModelOrDeploymentName,
-                    settings.Value.Endpoint,
-                    settings.Value.ApiKey);
+                    settings.Value.ModelOrDeploymentName!,
+                    settings.Value.Endpoint!,
+                    settings.Value.ApiKey!);
             }
             else
             {
                 config.AddOpenAIEmbeddingGenerationService(
                     settings.Key,
-                    settings.Value.ModelOrDeploymentName,
-                    settings.Value.ApiKey,
-                    settings.Value.OrgId);
+                    settings.Value.ModelOrDeploymentName!,
+                    settings.Value.ApiKey!,
+                    settings.Value.OrgId!);
             }
         }
 
@@ -77,8 +77,8 @@ public class SemanticKernelSettings
         {
             config.AddOpenAIChatCompletionService(
                 settings.Key,
-                settings.Value.ModelOrDeploymentName,
-                settings.Value.ApiKey,
+                settings.Value.ModelOrDeploymentName!,
+                settings.Value.ApiKey!,
                 settings.Value.OrgId);
         }
 
@@ -86,7 +86,7 @@ public class SemanticKernelSettings
         {
             config.AddOpenAIImageGenerationService(
                 settings.Key,
-                settings.Value.ApiKey,
+                settings.Value.ApiKey!,
                 settings.Value.OrgId);
         }
 

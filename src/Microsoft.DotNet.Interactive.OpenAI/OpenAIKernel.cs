@@ -16,14 +16,18 @@ public class OpenAIKernel :
 {
     private readonly IKernel _semanticKernel;
     private readonly SubmissionHandlingType _submissionHandlingType;
-    private ChatHistory _chatHistory;
-    private IChatCompletion _chatCompletionService;
-    private IImageGeneration _imageGenerationService;
+    private ChatHistory? _chatHistory;
+    private IChatCompletion? _chatCompletionService;
+    private IImageGeneration? _imageGenerationService;
 
-    public OpenAIKernel(IKernel semanticKernel, string name, SubmissionHandlingType submissionHandlingType) : this($"{name}:{LabelFor(submissionHandlingType)}")
+    public OpenAIKernel(
+        IKernel semanticKernel, 
+        string name, 
+        SubmissionHandlingType submissionHandlingType) : base($"{name}:{LabelFor(submissionHandlingType)}")
     {
         _semanticKernel = semanticKernel;
         _submissionHandlingType = submissionHandlingType;
+        KernelInfo.LanguageName = "text";
     }
 
     private static string LabelFor(SubmissionHandlingType submissionHandlingType) =>
@@ -36,11 +40,6 @@ public class OpenAIKernel :
             SubmissionHandlingType.Skill => "skill",
             _ => throw new ArgumentOutOfRangeException(nameof(submissionHandlingType), submissionHandlingType, null)
         };
-
-    private OpenAIKernel(string name) : base(name)
-    {
-        KernelInfo.LanguageName = "text";
-    }
 
     public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
     {
