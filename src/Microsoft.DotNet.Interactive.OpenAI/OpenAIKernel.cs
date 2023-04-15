@@ -6,6 +6,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
+using Microsoft.SemanticKernel.AI.ImageGeneration;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
@@ -17,6 +18,7 @@ public class OpenAIKernel :
     private readonly SubmissionHandlingType _submissionHandlingType;
     private ChatHistory _chatHistory;
     private IChatCompletion _chatCompletionService;
+    private IImageGeneration _imageGenerationService;
 
     public OpenAIKernel(IKernel semanticKernel, string name, SubmissionHandlingType submissionHandlingType) : this($"{name}:{LabelFor(submissionHandlingType)}")
     {
@@ -82,6 +84,17 @@ public class OpenAIKernel :
                 break;
 
             case SubmissionHandlingType.ImageGeneration:
+
+                _imageGenerationService ??= _semanticKernel.GetService<IImageGeneration>();
+
+                var height = 256;
+                var width = 256;
+                var imageUrl = await _imageGenerationService.GenerateImageAsync(
+                                   submitCode.Code,
+                                   width, height);
+
+                await SkiaUtils.ShowImage(imageUrl, width, height);
+
                 break;
 
             case SubmissionHandlingType.Skill:
