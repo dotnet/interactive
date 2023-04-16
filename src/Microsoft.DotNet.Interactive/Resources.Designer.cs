@@ -207,45 +207,45 @@ namespace Microsoft.DotNet.Interactive {
         /// <summary>
         ///   Looks up a localized string similar to Specifies a file whose contents will be stored..
         /// </summary>
-        internal static string Magics_store_from_file_Description {
+        internal static string Magics_value_from_file_Description {
             get {
-                return ResourceManager.GetString("Magics_store_from_file_Description", resourceCulture);
+                return ResourceManager.GetString("Magics_value_from_file_Description", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Specifies a URL whose content will be stored..
         /// </summary>
-        internal static string Magics_store_from_url_Description {
+        internal static string Magics_value_from_url_Description {
             get {
-                return ResourceManager.GetString("Magics_store_from_url_Description", resourceCulture);
+                return ResourceManager.GetString("Magics_value_from_url_Description", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value..
         /// </summary>
-        internal static string Magics_store_from_value_Description {
+        internal static string Magics_value_from_value_Description {
             get {
-                return ResourceManager.GetString("Magics_store_from_value_Description", resourceCulture);
+                return ResourceManager.GetString("Magics_value_from_value_Description", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to A mime type for the value. If specified, displays the value immediately as an output using the specified mime type..
         /// </summary>
-        internal static string Magics_store_mime_type_Description {
+        internal static string Magics_value_mime_type_Description {
             get {
-                return ResourceManager.GetString("Magics_store_mime_type_Description", resourceCulture);
+                return ResourceManager.GetString("Magics_value_mime_type_Description", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The name of the value to create. You can use #!share to retrieve this value from another subkernel..
         /// </summary>
-        internal static string Magics_store_name_Description {
+        internal static string Magics_value_name_Description {
             get {
-                return ResourceManager.GetString("Magics_store_name_Description", resourceCulture);
+                return ResourceManager.GetString("Magics_value_name_Description", resourceCulture);
             }
         }
         

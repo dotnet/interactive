@@ -18,18 +18,18 @@ public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
     {
         NameOption = new Option<string>(
             "--name",
-            LocalizationResources.Magics_store_name_Description())
+            LocalizationResources.Magics_value_name_Description())
         {
             IsRequired = true
         };
 
         FromUrlOption = new Option<Uri>(
             "--from-url",
-            description: LocalizationResources.Magics_store_from_url_Description());
+            description: LocalizationResources.Magics_value_from_url_Description());
 
         FromFileOption = new Option<FileInfo>(
             "--from-file",
-            description: LocalizationResources.Magics_store_from_file_Description(),
+            description: LocalizationResources.Magics_value_from_file_Description(),
             parseArgument: result =>
             {
                 var filePath = result.Tokens.Single().Value;
@@ -57,7 +57,7 @@ public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
 
         FromValueOption = new Option<string>(
             "--from-value",
-            description: LocalizationResources.Magics_store_from_value_Description(),
+            description: LocalizationResources.Magics_value_from_value_Description(),
             parseArgument: result =>
             {
                 if (SetErrorIfAlsoUsed(FromUrlOption, result))
@@ -70,7 +70,7 @@ public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
 
         MimeTypeOption = new Option<string>(
                 "--mime-type",
-                LocalizationResources.Magics_store_mime_type_Description())
+                LocalizationResources.Magics_value_mime_type_Description())
             .AddCompletions(new[]
             {
                 "application/json",

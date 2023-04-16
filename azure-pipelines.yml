@@ -47,13 +47,19 @@ pr:
     - '*.txt'
     - '*.github-issues'
 
-# Scheduled trigger that will run at 8:00 AM every Monday
+# Scheduled trigger that will run at 8:00 AM every Monday and Wednesday
 schedules:
 - cron: "0 8 * * Mon"
-  displayName: Weekly build for Localization Updates
+  displayName: Weekly build for Localization Updates (Monday)
   branches:
     include:
     - main
+- cron: "0 8 * * Wed"
+  displayName: Weekly build for Localization Updates (Wednesday)
+  branches:
+    include:
+    - main
+
 
 # Variables
 variables:
