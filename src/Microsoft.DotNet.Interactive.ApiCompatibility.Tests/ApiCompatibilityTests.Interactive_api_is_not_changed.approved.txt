@@ -111,8 +111,8 @@ Microsoft.DotNet.Interactive
     public static Kernel Root { get;}
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
-    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text)
-    public static System.Threading.Tasks.Task<System.String> GetPasswordAsync(System.String prompt = )
+    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text, System.String valueName = null)
+    public static System.Threading.Tasks.Task<System.String> GetPasswordAsync(System.String prompt = , System.String valueName = null)
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
     public ChooseKernelDirective ChooseKernelDirective { get;}
