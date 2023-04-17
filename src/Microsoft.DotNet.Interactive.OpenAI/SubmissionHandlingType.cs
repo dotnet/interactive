@@ -9,5 +9,5 @@ public enum SubmissionHandlingType
     ChatCompletion,
     TextCompletion,
     ImageGeneration,
-    Skill
+    Prompt
 }

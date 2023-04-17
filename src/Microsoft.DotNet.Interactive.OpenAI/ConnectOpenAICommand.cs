@@ -95,24 +95,24 @@ public class ConnectOpenAICommand : ConnectKernelCommand
 
         if (config.AllChatCompletionServiceIds.Any())
         {
-            rootKernel.Add(new OpenAIKernel(semanticKernel, kernelName, SubmissionHandlingType.ChatCompletion));
+            rootKernel.Add(new ChatCompletionKernel(semanticKernel, kernelName));
         }
 
         if (config.AllTextCompletionServiceIds.Any())
         {
-            rootKernel.Add(new OpenAIKernel(semanticKernel, kernelName, SubmissionHandlingType.TextCompletion));
+            rootKernel.Add(new TextCompletionKernel(semanticKernel, kernelName));
         }
 
         if (config.AllTextEmbeddingGenerationServiceIds.Any())
         {
-            rootKernel.Add(new OpenAIKernel(semanticKernel, kernelName, SubmissionHandlingType.TextEmbeddingGeneration));
+            rootKernel.Add(new TextEmbeddingGenerationKernel(semanticKernel, kernelName));
         }
 
         if (config.ImageGenerationServices.Any())
         {
-            rootKernel.Add(new OpenAIKernel(semanticKernel, kernelName, SubmissionHandlingType.ImageGeneration));
+            rootKernel.Add(new ImageGenerationKernel(semanticKernel, kernelName));
         }
 
-        return new OpenAIKernel(semanticKernel, kernelName, SubmissionHandlingType.Skill);
+        return new PromptKernel(semanticKernel, kernelName);
     }
 }
