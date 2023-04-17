@@ -103,6 +103,9 @@
     <!-- ThreadJob -->
     <FileSignInfo Include="Microsoft.PowerShell.ThreadJob.dll" CertificateName="None" />
     <FileSignInfo Include="ThreadJob.psd1" CertificateName="None" />
+
+    <!-- SemantiKernel -->
+    <FileSignInfo Include="Microsoft.SemanticKernel.dll" CertificateName="None" />
   </ItemGroup>
 
 </Project>
