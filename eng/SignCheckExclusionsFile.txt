@@ -4,4 +4,5 @@ Microsoft.PowerShell.Management.psd1;Microsoft.dotnet-interactive.*.nupkg;
 Microsoft.PowerShell.Security.psd1;Microsoft.dotnet-interactive.*.nupkg;
 Security.types.ps1xml;Microsoft.dotnet-interactive.*.nupkg;
 Microsoft.PowerShell.Utility.psd1;Microsoft.dotnet-interactive.*.nupkg;
+Microsoft.SemanticKernel.*.nupkg;
 dotnet-interactive.js
