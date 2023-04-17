@@ -9,6 +9,7 @@ using Assent;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SQLite.Tests;
@@ -24,7 +25,7 @@ public class SQLiteKernelExtensionTests : IDisposable
             .UsingExtension("json");
     }
 
-    [Fact(Skip = "Formatter is not stable")]
+    [Fact]
     public async Task can_generate_tabular_json_from_database_table_result()
     {
         using var kernel = new CompositeKernel
@@ -45,15 +46,14 @@ public class SQLiteKernelExtensionTests : IDisposable
 SELECT * FROM fruit
 ");
 
-        var formattedData = result.Events.OfType<DisplayedValueProduced>().Single()
-                                  .FormattedValues.Single(fm => fm.MimeType == HtmlFormatter.MimeType)
-                                  .Value;
+        var tabularData =  result.Events.OfType<DisplayedValueProduced>().Single()
+            .Value;
 
            
-        this.Assent(formattedData, _configuration);
+        this.Assent(tabularData.ToDisplayString(TabularDataResourceFormatter .MimeType), _configuration);
     }
 
-    [Fact(Skip = "Formatter is not stable")]
+    [Fact]
     public async Task can_handle_duplicate_columns_in_query_results()
     {
         using var kernel = new CompositeKernel
@@ -74,14 +74,11 @@ SELECT * FROM fruit
 SELECT 1 AS Apples, 2 AS Bananas, 3 AS Apples, 4 AS BANANAS, 5 AS Apples, 6 AS BaNaNaS
 ");
 
-        var formattedData = result.Events
-                                  .OfType<DisplayedValueProduced>()
-                                  .Single()
-                                  .FormattedValues
-                                  .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
-                                  .Value;
+        var tabularData = result.Events.OfType<DisplayedValueProduced>().Single()
+            .Value;
 
-        this.Assent(formattedData, _configuration);
+
+        this.Assent(tabularData.ToDisplayString(TabularDataResourceFormatter.MimeType), _configuration);
     }
 
     public void Dispose()

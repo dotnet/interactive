@@ -1,32 +1,42 @@
-<table><thead><tr><td><span>Apples</span></td><td><span>Bananas</span></td><td><span>Apples (2)</span></td><td><span>BANANAS</span></td><td><span>Apples (3)</span></td><td><span>BaNaNaS</span></td></tr></thead><tbody><tr><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td><td><div class="dni-plaintext"><pre>3</pre></div></td><td><div class="dni-plaintext"><pre>4</pre></div></td><td><div class="dni-plaintext"><pre>5</pre></div></td><td><div class="dni-plaintext"><pre>6</pre></div></td></tr></tbody></table><style>
-.dni-code-hint {
-    font-style: italic;
-    overflow: hidden;
-    white-space: nowrap;
+{
+  "profile": "tabular-data-resource",
+  "schema": {
+    "primaryKey": [],
+    "fields": [
+      {
+        "type": "integer",
+        "name": "Apples"
+      },
+      {
+        "type": "integer",
+        "name": "Bananas"
+      },
+      {
+        "type": "integer",
+        "name": "Apples (2)"
+      },
+      {
+        "type": "integer",
+        "name": "BANANAS"
+      },
+      {
+        "type": "integer",
+        "name": "Apples (3)"
+      },
+      {
+        "type": "integer",
+        "name": "BaNaNaS"
+      }
+    ]
+  },
+  "data": [
+    {
+      "Apples": 1,
+      "Bananas": 2,
+      "Apples (2)": 3,
+      "BANANAS": 4,
+      "Apples (3)": 5,
+      "BaNaNaS": 6
+    }
+  ]
 }
-.dni-treeview {
-    white-space: nowrap;
-}
-.dni-treeview td {
-    vertical-align: top;
-    text-align: start;
-}
-details.dni-treeview {
-    padding-left: 1em;
-}
-table td {
-    text-align: start;
-}
-table tr { 
-    vertical-align: top; 
-    margin: 0em 0px;
-}
-table tr td pre 
-{ 
-    vertical-align: top !important; 
-    margin: 0em 0px !important;
-} 
-table th {
-    text-align: start;
-}
-</style>
