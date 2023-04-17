@@ -18,18 +18,18 @@ public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
     {
         NameOption = new Option<string>(
             "--name",
-            "The name of the value to create. You can use #!share to retrieve this value from another subkernel.")
+            LocalizationResources.Magics_value_name_Description())
         {
             IsRequired = true
         };
 
         FromUrlOption = new Option<Uri>(
             "--from-url",
-            description: "Specifies a URL whose content will be stored.");
+            description: LocalizationResources.Magics_value_from_url_Description());
 
         FromFileOption = new Option<FileInfo>(
             "--from-file",
-            description: "Specifies a file whose contents will be stored.",
+            description: LocalizationResources.Magics_value_from_file_Description(),
             parseArgument: result =>
             {
                 var filePath = result.Tokens.Single().Value;
@@ -46,7 +46,7 @@ public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
 
                 if (!File.Exists(filePath))
                 {
-                    result.ErrorMessage = LocalizationResources.Instance.FileDoesNotExist(filePath);
+                    result.ErrorMessage = LocalizationResources.FileDoesNotExist(filePath);
                     return null;
                 }
                 else
@@ -57,7 +57,7 @@ public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
 
         FromValueOption = new Option<string>(
             "--from-value",
-            description: "Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.",
+            description: LocalizationResources.Magics_value_from_value_Description(),
             parseArgument: result =>
             {
                 if (SetErrorIfAlsoUsed(FromUrlOption, result))
@@ -70,7 +70,7 @@ public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
 
         MimeTypeOption = new Option<string>(
                 "--mime-type",
-                "A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.")
+                LocalizationResources.Magics_value_mime_type_Description())
             .AddCompletions(new[]
             {
                 "application/json",
@@ -91,8 +91,7 @@ public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
 
             if (otherOptionResult is { })
             {
-                result.ErrorMessage =
-                    $"The {otherOptionResult.Token.Value} and {((OptionResult)result.Parent).Token.Value} options cannot be used together.";
+                result.ErrorMessage = LocalizationResources.Magics_ErrorMessageCannotBeUsedTogether(otherOptionResult.Token.Value, ((OptionResult)result.Parent).Token.Value);
 
                 return true;
             }

@@ -23,7 +23,8 @@ public static class KernelExtensions
     public static T UseAboutMagicCommand<T>(this T kernel)
         where T : Kernel
     {
-        var about = new Command("#!about", "Show version and build information")
+
+        var about = new Command("#!about", LocalizationResources.Magics_about_Description())
         {
             Handler = CommandHandler.Create((InvocationContext ctx) =>
             {

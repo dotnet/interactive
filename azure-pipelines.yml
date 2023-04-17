@@ -47,6 +47,20 @@ pr:
     - '*.txt'
     - '*.github-issues'
 
+# Scheduled trigger that will run at 8:00 AM every Monday and Wednesday
+schedules:
+- cron: "0 8 * * Mon"
+  displayName: Weekly build for Localization Updates (Monday)
+  branches:
+    include:
+    - main
+- cron: "0 8 * * Wed"
+  displayName: Weekly build for Localization Updates (Wednesday)
+  branches:
+    include:
+    - main
+
+
 # Variables
 variables:
   - name: _TeamName
@@ -65,6 +79,8 @@ variables:
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
     value: '16.13.0'
+  - name: LocPRCreationEnabled
+    value: ${{ eq(variables['Build.Reason'], 'Schedule') }}
   - name: Codeql.Enabled
     value: true
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -77,6 +93,16 @@ stages:
 - stage: build
   displayName: Build and Test
   jobs:
+  - ${{ if ne(variables['System.TeamProject'], 'public') }}:
+    - template: /eng/common/templates/job/onelocbuild.yml
+      parameters:
+        MirrorRepo: interactive
+        MirrorBranch: main
+        SkipLocProjectJsonGeneration: true
+        LclSource: lclFilesfromPackage
+        LclPackageId: 'LCL-JUNO-PROD-ROSLYN'
+        CreatePr: $(LocPRCreationEnabled)
+
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true

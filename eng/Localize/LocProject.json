@@ -1,0 +1,34 @@
+{
+  "Projects": [
+    {
+      "LanguageSet": "Azure_Languages",
+      "LocItems": [
+        {
+          "SourceFile": "src\\polyglot-notebooks-vscode-insiders\\package.nls.json",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\polyglot-notebooks-vscode-insiders"
+        },
+        {
+          "SourceFile": "src\\dotnet-interactive\\Resources.resx",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\dotnet-interactive"
+        },
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive\\Resources.resx",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive"
+        },
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.Journey\\Resources.resx",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.Journey"
+        },
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.Jupyter\\Resources.resx",
+          "CopyOption": "LangIDOnName",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.Jupyter"
+        }
+      ]
+    }
+  ]
+}

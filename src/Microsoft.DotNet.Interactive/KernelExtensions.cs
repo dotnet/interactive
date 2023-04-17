@@ -91,7 +91,7 @@ public static class KernelExtensions
         where TKernel : Kernel
     {
         var fileArg = new Argument<FileInfo>("file").ExistingOnly();
-        var command = new Command("#!import", "Runs another notebook or source code file inline.")
+        var command = new Command("#!import", LocalizationResources.Magics_import_Description())
         {
             fileArg
         };
@@ -153,7 +153,7 @@ public static class KernelExtensions
     public static T UseLogMagicCommand<T>(this T kernel)
         where T : Kernel
     {
-        var command = new Command("#!log", "Enables session logging.");
+        var command = new Command("#!log", LocalizationResources.Magics_log_Description());
 
         var logStarted = false;
 
@@ -265,23 +265,23 @@ public static class KernelExtensions
     {
         var nameOption = new Option<string>(
             "--name",
-            description: "The name of the value to be created in the current kernel.")
+            description: LocalizationResources.Magics_set_name_Description())
         {
             IsRequired = true
         };
 
         var byrefOption = new Option<bool>(
             "--byref",
-            "Shares the specified value by reference if kernels are in the same process.");
+            LocalizationResources.Magics_set_byref_Description());
 
         var mimeTypeOption = new Option<string>(
                 "--mime-type", 
-                description: "The MIME type by which the value should be represented. This will often determine how an object will be formatted into a string.",
+                description: LocalizationResources.Magics_set_mime_type_Description(),
                 parseArgument: result =>
                 {
                     if (result.GetValueForOption(byrefOption))
                     {
-                        result.ErrorMessage = "The --mime-type and --byref options cannot be used together.";
+                        result.ErrorMessage = LocalizationResources.Magics_set_mime_type_ErrorMessageCannotBeUsed();
                     }
 
                     return result.Tokens.FirstOrDefault()?.Value;
@@ -297,7 +297,7 @@ public static class KernelExtensions
         var valueOption = new Option<object>(
             "--value",
             description:
-            "The value to be set. @input:user_prompt allows you to prompt the user for this value. Values can be requested from other kernels by name, for example @csharp:variableName.",
+            LocalizationResources.Magics_set_value_Description(),
             parseArgument: ParseValueOption)
         {
             IsRequired = true,
@@ -343,7 +343,7 @@ public static class KernelExtensions
             return Array.Empty<CompletionItem>();
         });
 
-        var set = new Command("#!set", "Sets a value in the current kernel")
+        var set = new Command("#!set", LocalizationResources.Magics_set_Description())
         {
             nameOption,
             valueOption,
@@ -375,14 +375,14 @@ public static class KernelExtensions
             {
                 if (destinationKernel.KernelInfo.IsProxy)
                 {
-                    argResult.ErrorMessage = "Sharing by reference is not allowed when kernels are remote.";
+                    argResult.ErrorMessage = LocalizationResources.Magics_set_ErrorMessageSharingByReference();
                     return null;
                 }
 
                 if (destinationKernel.RootKernel.FindKernelByName(sourceKernelName) is { } sourceKernel &&
                     sourceKernel.KernelInfo.IsProxy)
                 {
-                    argResult.ErrorMessage = "Sharing by reference is not allowed when kernels are remote.";
+                    argResult.ErrorMessage = LocalizationResources.Magics_set_ErrorMessageSharingByReference();
                     return null;
                 }
 
@@ -426,7 +426,7 @@ public static class KernelExtensions
     {
         var sourceValueNameArg = new Argument<string>(
             "name",
-            "The name of the value to share. (This is also the default name of the value created in the destination kernel, unless --as is used to specify a different one.)");
+            LocalizationResources.Magics_share_name_Description());
 
         sourceValueNameArg.AddCompletions(_ =>
         {
@@ -454,7 +454,7 @@ public static class KernelExtensions
 
         var fromKernelOption = new Option<string>(
             "--from",
-            "The name of the kernel to get the value from.");
+            LocalizationResources.Magics_share_from_Description());
 
         fromKernelOption.AddCompletions(_ =>
         {
@@ -472,16 +472,16 @@ public static class KernelExtensions
         });
 
         var mimeTypeOption =
-            new Option<string>("--mime-type", "Share the value as a string formatted to the specified MIME type.")
+            new Option<string>("--mime-type", LocalizationResources.Magics_share_mime_type_Description())
                 .AddCompletions(
                     JsonFormatter.MimeType,
                     HtmlFormatter.MimeType,
                     PlainTextFormatter.MimeType);
 
-        var asOption = new Option<string>("--as", "The name to give the the value in the importing kernel.");
+        var asOption = new Option<string>("--as", LocalizationResources.Magics_share_as_Description());
 
         var share = new Command("#!share",
-            "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")
+            LocalizationResources.Magics_share_Description())
         {
             fromKernelOption,
             sourceValueNameArg,
@@ -594,7 +594,7 @@ public static class KernelExtensions
 
     private static Command who()
     {
-        var command = new Command("#!who", "Display the names of the current top-level variables.")
+        var command = new Command(name: "#!who", LocalizationResources.Magics_who_Description())
         {
             Handler = CommandHandler.Create(async (InvocationContext ctx) =>
             {
@@ -607,7 +607,7 @@ public static class KernelExtensions
 
     private static Command whos()
     {
-        var command = new Command("#!whos", "Display the names of the current top-level variables and their values.")
+        var command = new Command("#!whos", LocalizationResources.Magics_whos_Description())
         {
             Handler = CommandHandler.Create(async (InvocationContext ctx) =>
             {

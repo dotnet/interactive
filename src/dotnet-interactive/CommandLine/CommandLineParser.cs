@@ -13,7 +13,6 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.App.Connection;
@@ -114,20 +113,20 @@ public static class CommandLineParser
 
         var verboseOption = new Option<bool>(
             "--verbose",
-            "Enable verbose logging to the console");
+            LocalizationResources.Cli_dotnet_interactive_verbose_Description());
 
         var logPathOption = new Option<DirectoryInfo>(
             "--log-path",
-            "Enable file logging to the specified directory");
+            LocalizationResources.Cli_dotnet_interactive_log_path_Description());
 
         var pathOption = new Option<DirectoryInfo>(
                 "--path",
-                "Installs the kernelspecs to the specified directory")
+                LocalizationResources.Cli_dotnet_interactive_jupyter_install_path_Description())
             .ExistingOnly();
 
         var defaultKernelOption = new Option<string>(
             "--default-kernel",
-            description: "The default language for the kernel",
+            description: LocalizationResources.Cli_dotnet_interactive_jupyter_default_kernel_Description(),
             getDefaultValue: () => "csharp").AddCompletions("fsharp", "csharp", "pwsh");
 
         var rootCommand = DotnetInteractive();
@@ -167,7 +166,7 @@ public static class CommandLineParser
             var command = new RootCommand
             {
                 Name = "dotnet-interactive",
-                Description = "Interactive programming for .NET."
+                Description = LocalizationResources.Cli_dotnet_interactive_Description()
             };
 
             command.AddGlobalOption(logPathOption);
@@ -181,23 +180,23 @@ public static class CommandLineParser
             var httpPortRangeOption = new Option<HttpPortRange>(
                 "--http-port-range",
                 parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                description: "Specifies the range of ports to use to enable HTTP services",
+                description: LocalizationResources.Cli_dotnet_interactive_jupyter_install_http_port_range_Description(),
                 isDefault: true);
 
-            var jupyterCommand = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
+            var jupyterCommand = new Command("jupyter", LocalizationResources.Cli_dotnet_interactive_jupyter_Description())
             {
                 defaultKernelOption,
                 httpPortRangeOption,
                 new Argument<FileInfo>
                 {
                     Name = "connection-file",
-                    Description = "The path to a connection file provided by Jupyter"
+                    Description = LocalizationResources.Cli_dotnet_interactive_jupyter_connection_file_Description()
                 }.ExistingOnly()
             };
 
             jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
 
-            var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
+            var installCommand = new Command("install", LocalizationResources.Cli_dotnet_interactive_jupyter_install_Description())
             {
                 httpPortRangeOption,
                 pathOption
@@ -249,17 +248,17 @@ public static class CommandLineParser
             var httpPortRangeOption = new Option<HttpPortRange>(
                 "--http-port-range",
                 parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                description: "Specifies the range of ports to use to enable HTTP services");
+                description: LocalizationResources.Cli_dotnet_interactive_stdio_http_port_range_Description());
 
             var httpPortOption = new Option<HttpPort>(
                 "--http-port",
-                description: "Specifies the port on which to enable HTTP services",
+                description: LocalizationResources.Cli_dotnet_interactive_stdio_http_port_Description(),
                 parseArgument: result =>
                 {
                     if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
                     {
                         var parsed = result.Parent as OptionResult;
-                        result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
+                        result.ErrorMessage = LocalizationResources.Cli_dotnet_interactive_stdio_http_port_ErrorMessageCannotSpecifyBoth(conflictingOption.Token.Value, parsed.Token.Value);
                         return null;
                     }
 
@@ -277,7 +276,7 @@ public static class CommandLineParser
 
                     if (!int.TryParse(source, out var portNumber))
                     {
-                        result.ErrorMessage = "Must specify a port number or *.";
+                        result.ErrorMessage = LocalizationResources.Cli_dotnet_interactive_stdio_http_port_ErrorMessageMustSpecifyPortNumber();
                         return null;
                     }
 
@@ -288,18 +287,18 @@ public static class CommandLineParser
                 "--kernel-host",
                 parseArgument: x => x.Tokens.Count == 0 ? KernelHost.CreateHostUriForCurrentProcessId() : KernelHost.CreateHostUri(x.Tokens[0].Value),
                 isDefault: true,
-                description: "Name of the kernel host.");
+                description: LocalizationResources.Cli_dotnet_interactive_stdio_kernel_host_Description());
 
-            var previewOption = new Option<bool>("--preview", description: "Enable preview kernel features.");
+            var previewOption = new Option<bool>("--preview", description: LocalizationResources.Cli_dotnet_interactive_stdio_preview_Description());
 
             var workingDirOption = new Option<DirectoryInfo>(
                 "--working-dir",
                 () => new DirectoryInfo(Environment.CurrentDirectory),
-                "Working directory to which to change after launching the kernel.");
+                LocalizationResources.Cli_dotnet_interactive_stdio_working_directory_Description());
 
             var stdIOCommand = new Command(
                 "stdio",
-                "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
+                LocalizationResources.Cli_dotnet_interactive_stdio_Description())
             {
                 defaultKernelOption,
                 httpPortRangeOption,
@@ -404,7 +403,7 @@ public static class CommandLineParser
         {
             var notebookParserCommand = new Command(
                 "notebook-parser",
-                "Starts a process to parse and serialize notebooks.");
+                LocalizationResources.Cli_dotnet_interactive_notebook_parserDescription());
             notebookParserCommand.Handler = CommandHandler.Create(async () =>
             {
                 Console.InputEncoding = Encoding.UTF8;
@@ -421,7 +420,7 @@ public static class CommandLineParser
 
             if (string.IsNullOrWhiteSpace(source))
             {
-                result.ErrorMessage = "Must specify a port range";
+                result.ErrorMessage = LocalizationResources.Cli_ErrorMessageMustSpecifyPortRange();
                 return null;
             }
 
@@ -429,19 +428,19 @@ public static class CommandLineParser
 
             if (parts.Length != 2)
             {
-                result.ErrorMessage = "Must specify a port range";
+                result.ErrorMessage = LocalizationResources.Cli_ErrorMessageMustSpecifyPortRange();
                 return null;
             }
 
             if (!int.TryParse(parts[0], out var start) || !int.TryParse(parts[1], out var end))
             {
-                result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
+                result.ErrorMessage = LocalizationResources.CliErrorMessageMustSpecifyPortRangeAsStartPortEndPort();
                 return null;
             }
 
             if (start > end)
             {
-                result.ErrorMessage = "Start port must be lower then end port";
+                result.ErrorMessage = LocalizationResources.CliErrorMessageStartPortMustBeLower();
                 return null;
             }
 
