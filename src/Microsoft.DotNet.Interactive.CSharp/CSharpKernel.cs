@@ -121,13 +121,13 @@ public class CSharpKernel :
                        .GroupBy(v => v.Name)
                        .Select(g =>
                        {
-                           var formattedValues = FormattedValue.FromObject(
+                           var formattedValues = FormattedValue.CreateSingleFromObject(
                                g.LastOrDefault()?.Value,
                                command.MimeType);
                            
                            return new KernelValueInfo(
                                g.Key,
-                               formattedValues[0],
+                               formattedValues,
                                g.Last().Type);
                        })
                        .ToArray() ??
@@ -348,7 +348,7 @@ public class CSharpKernel :
             {
                 if (ScriptState is not null && HasReturnValue)
                 {
-                    var formattedValues = FormattedValue.FromObject(ScriptState.ReturnValue);
+                    var formattedValues = FormattedValue.CreateManyFromObject(ScriptState.ReturnValue);
                     context.Publish(
                         new ReturnValueProduced(
                             ScriptState.ReturnValue,

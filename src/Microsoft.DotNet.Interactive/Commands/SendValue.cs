@@ -3,6 +3,7 @@
 
 using System;
 using System.Text.Json.Serialization;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
@@ -14,6 +15,11 @@ public class SendValue : KernelCommand
         FormattedValue formattedValue = null,
         string targetKernelName = null) : base(targetKernelName)
     {
+        if (formattedValue is null)
+        {
+            formattedValue = FormattedValue.CreateSingleFromObject(value, JsonFormatter.MimeType);
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));

@@ -72,7 +72,8 @@ Microsoft.DotNet.Interactive
     .ctor()
     public System.Void Stamp(System.Uri uri)
   public class FormattedValue
-    public static System.Collections.Generic.IReadOnlyList<FormattedValue> FromObject(System.Object value, System.String[] mimeTypes)
+    public static System.Collections.Generic.IReadOnlyList<FormattedValue> CreateManyFromObject(System.Object value, System.String[] mimeTypes)
+    public static FormattedValue CreateSingleFromObject(System.Object value, System.String mimeType = null)
     .ctor(System.String mimeType, System.String value)
     public System.String MimeType { get;}
     public System.String Value { get;}

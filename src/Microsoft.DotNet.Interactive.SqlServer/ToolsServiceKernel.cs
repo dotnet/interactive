@@ -24,7 +24,6 @@ public abstract class ToolsServiceKernel :
     IKernelCommandHandler<RequestValue>,
     IKernelCommandHandler<SendValue>
 {
-
     protected readonly Uri TempFileUri;
     protected readonly TaskCompletionSource<ConnectionCompleteParams> ConnectionCompleted = new();
     private Func<QueryCompleteParams, Task> _queryCompletionHandler;
@@ -374,12 +373,13 @@ public abstract class ToolsServiceKernel :
     {
         var valueInfos = QueryResults.Keys.Select(key =>
         {
-            var formattedValues = FormattedValue.FromObject(
+            var formattedValues = FormattedValue.CreateSingleFromObject(
                 _variables[key],
                 command.MimeType);
 
             return new KernelValueInfo(
-                key, formattedValues[0],
+                key, 
+                formattedValues,
                 type: typeof(IEnumerable<TabularDataResource>));
         }).ToArray();
 

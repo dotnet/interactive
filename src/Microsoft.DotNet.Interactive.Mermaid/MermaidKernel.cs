@@ -35,7 +35,7 @@ public class MermaidKernel : Kernel,
             Background = string.IsNullOrWhiteSpace(background) ? "white" : background
         };
 
-        var formattedValues = FormattedValue.FromObject(markdown);
+        var formattedValues = FormattedValue.CreateManyFromObject(markdown);
         
         context.Publish(
             new DisplayedValueProduced(

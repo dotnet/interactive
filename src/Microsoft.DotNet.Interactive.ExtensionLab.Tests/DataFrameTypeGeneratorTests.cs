@@ -89,7 +89,9 @@ public class DataFrameTypeGeneratorTests
 #r ""{typeof(DataFrame).Assembly.Location}""
 using Microsoft.Data.Analysis;
 ");
-        await kernel.SendAsync(new SendValue("frame", CreateDataFrame()));
+        var dataFrame = CreateDataFrame();
+
+        await kernel.SendAsync(new SendValue("frame", dataFrame, FormattedValue.CreateSingleFromObject(dataFrame)));
 
         var result = await kernel.SubmitCodeAsync("#!linqify frame --show-code");
 
@@ -125,7 +127,9 @@ using Microsoft.Data.Analysis;
 using Microsoft.Data.Analysis;
 ");
         var dataFrameVariableName = "myDataFrame";
-        await kernel.SendAsync(new SendValue(dataFrameVariableName, CreateDataFrame()));
+        var dataFrame = CreateDataFrame();
+
+        await kernel.SendAsync(new SendValue(dataFrameVariableName, dataFrame, FormattedValue.CreateSingleFromObject(dataFrame)));
 
         var code = "#!linqify ";
         var result = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(0, code.Length)));
@@ -150,7 +154,9 @@ using Microsoft.Data.Analysis;
 #r ""{typeof(DataFrame).Assembly.Location}""
 using Microsoft.Data.Analysis;
 ");
-        await kernel.SendAsync(new SendValue("frame", CreateDataFrame()));
+        var dataFrame = CreateDataFrame();
+
+        await kernel.SendAsync(new SendValue("frame", dataFrame, FormattedValue.CreateSingleFromObject(dataFrame)));
 
         await kernel.SubmitCodeAsync(magicCommand);
 

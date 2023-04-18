@@ -9,6 +9,12 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Jupyter.Tests.ExecuteRequestHandlerTests.sends_InputRequest_message_when_submission_requests_user_input_in_powershell("Read-Host", "", "input-value")</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelVariableSharingTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelCommandTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

@@ -653,7 +653,7 @@ public static class KernelExtensions
                 new DisplayedValueProduced(
                     currentVariables,
                     context.Command,
-                    FormattedValue.FromObject(currentVariables)));
+                    FormattedValue.CreateManyFromObject(currentVariables)));
         }
     }
 
