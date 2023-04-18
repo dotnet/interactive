@@ -220,7 +220,7 @@ type FSharpKernel () as this =
                 match result with
                 | Some(value) when value.ReflectionType <> typeof<unit> ->
                     let value = value.ReflectionValue
-                    let formattedValues = FormattedValue.FromObject(value)
+                    let formattedValues = FormattedValue.CreateManyFromObject(value)
                     context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
                 | Some _
                 | None -> ()
@@ -377,7 +377,7 @@ type FSharpKernel () as this =
             let valueInfos =
                 script.Value.Fsi.GetBoundValues()
                 |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
-                |> List.map (fun x -> new KernelValueInfo(x.Name, FormattedValue.FromObject(x.Value.ReflectionValue, requestValueInfos.MimeType)[0], this.getValueType(x.Name)))
+                |> List.map (fun x -> new KernelValueInfo(x.Name, FormattedValue.CreateManyFromObject(x.Value.ReflectionValue, requestValueInfos.MimeType)[0], this.getValueType(x.Name)))
                 :> IReadOnlyCollection<KernelValueInfo>
             context.Publish(new ValueInfosProduced(valueInfos, requestValueInfos))
         }

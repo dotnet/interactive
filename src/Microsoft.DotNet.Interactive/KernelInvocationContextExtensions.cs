@@ -21,7 +21,7 @@ public static class KernelInvocationContextExtensions
     {
         var displayId = Guid.NewGuid().ToString();
 
-        var formattedValues = FormattedValue.FromObject(value, mimeTypes);
+        var formattedValues = FormattedValue.CreateManyFromObject(value, mimeTypes);
 
         context.Publish(
             new DisplayedValueProduced(

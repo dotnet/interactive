@@ -177,9 +177,9 @@ public class PowerShellKernel :
                          .Where(v => !_suppressedValueInfoNames.Contains(v.Name))
                          .Select(v =>
                          {
-                             var formattedValue = FormattedValue.FromObject(
+                             var formattedValue = FormattedValue.CreateSingleFromObject(
                                  v.Value,
-                                 command.MimeType)[0];
+                                 command.MimeType);
 
                              return new KernelValueInfo(
                                  v.Name,

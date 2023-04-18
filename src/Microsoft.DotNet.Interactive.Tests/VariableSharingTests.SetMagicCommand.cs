@@ -44,7 +44,6 @@ public partial class VariableSharingTests
 
             composite.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), composite.Name);
 
-
             await composite.SendAsync(new SubmitCode("#!set --name x --value @input:input-please"));
             var valueProduced = await kernel.RequestValueAsync("x");
             

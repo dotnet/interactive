@@ -91,7 +91,7 @@ using Microsoft.Data.Analysis;
 ");
         var dataFrame = CreateDataFrame();
 
-        await kernel.SendAsync(new SendValue("frame", dataFrame, FormattedValue.FromObject(dataFrame)[0]));
+        await kernel.SendAsync(new SendValue("frame", dataFrame, FormattedValue.CreateSingleFromObject(dataFrame)));
 
         var result = await kernel.SubmitCodeAsync("#!linqify frame --show-code");
 
@@ -129,7 +129,7 @@ using Microsoft.Data.Analysis;
         var dataFrameVariableName = "myDataFrame";
         var dataFrame = CreateDataFrame();
 
-        await kernel.SendAsync(new SendValue(dataFrameVariableName, dataFrame, FormattedValue.FromObject(dataFrame)[0]));
+        await kernel.SendAsync(new SendValue(dataFrameVariableName, dataFrame, FormattedValue.CreateSingleFromObject(dataFrame)));
 
         var code = "#!linqify ";
         var result = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(0, code.Length)));
@@ -156,7 +156,7 @@ using Microsoft.Data.Analysis;
 ");
         var dataFrame = CreateDataFrame();
 
-        await kernel.SendAsync(new SendValue("frame", dataFrame, FormattedValue.FromObject(dataFrame)[0]));
+        await kernel.SendAsync(new SendValue("frame", dataFrame, FormattedValue.CreateSingleFromObject(dataFrame)));
 
         await kernel.SubmitCodeAsync(magicCommand);
 

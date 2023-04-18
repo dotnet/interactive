@@ -25,7 +25,17 @@ public class FormattedValue
 
     public string Value { get; }
 
-    public static IReadOnlyList<FormattedValue> FromObject(object value, params string[] mimeTypes)
+    public static FormattedValue CreateSingleFromObject(object value, string mimeType = null)
+    {
+        if (mimeType is null)
+        {
+            mimeType = Formatter.GetPreferredMimeTypesFor(value?.GetType()).First();
+        }
+
+        return new FormattedValue(mimeType, value.ToDisplayString(mimeType));
+    }
+
+    public static IReadOnlyList<FormattedValue> CreateManyFromObject(object value, params string[] mimeTypes)
     {
         if (mimeTypes is null ||
             mimeTypes.Length == 0)

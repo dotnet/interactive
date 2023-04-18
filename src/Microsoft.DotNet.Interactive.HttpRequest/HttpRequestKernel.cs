@@ -85,7 +85,7 @@ public class HttpRequestKernel :
             var valueProduced = new ValueProduced(
                 value,
                 command.Name,
-                FormattedValue.FromObject(value).FirstOrDefault(),
+                FormattedValue.CreateSingleFromObject(value),
                 command);
             context.Publish(valueProduced);
         }
