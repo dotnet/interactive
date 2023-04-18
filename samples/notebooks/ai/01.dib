@@ -1,0 +1,54 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"},{"aliases":[],"languageName":"text","name":"diegoAi(embedding)"},{"aliases":[],"languageName":"text","name":"diegoAi(image)"},{"aliases":[],"languageName":"text","name":"diegoAi(prompt)"}]}}
+
+#!csharp
+
+#r "nuget: Microsoft.SemanticKernel, 0.11.146.1-preview"
+#r "nuget: SkiaSharp, 2.88.3"
+
+#!csharp
+
+#r "D:\Repos\public\interactive\src\Microsoft.DotNet.Interactive.OpenAI\bin\Debug\net7.0\Microsoft.DotNet.Interactive.OpenAI.dll"
+Microsoft.DotNet.Interactive.OpenAI.OpenAIKernelConnector.AddKernelConnectorToCurrentRootKernel();
+
+#!csharp
+
+System.Diagnostics.Debugger.Launch();
+
+#!csharp
+
+#!connect openai --kernel-name diegoAi
+
+#!diegoAi(prompt)
+
+#!function summarize --skill writer
+{{$input}}
+Summarize the text above.
+
+#!diegoAi(prompt)
+
+#!function anchorman --skill writer
+{{$input}} 
+Rewrite the text above in the style of Ron Burgundy
+
+#!diegoAi(prompt)
+
+#!function boygeorge --skill writer
+{{$input}} 
+Rewrite the text above as a boygeorge song three times
+
+#!diegoAi(prompt)
+
+#!function explainer --skill writer
+{{$input}} 
+
+Summaraize the text above in the style of Randall Munroe's Thing Explainer, using only words that are amongst the most common 100 english words
+
+#!diegoAi(text)
+
+#!prompt function.writer.explainer
+
+Since .NET Interactive is capable of running as a kernel for notebooks, it enables a polyglot (multi-language) notebook experience. When using the .NET Interactive kernel, you can use different languages from one cell to the next, share variables between languages, and dynamically connect new languages and remote kernels within a notebook. There's no need to install different Jupyter kernels, use wrapper libraries, or install different tools to get the best experience for the language of your choice. You can always use the best language for the job and seamlessly transition between different stages of your workflow, all within one notebook.
+
+For the best experience when working with multi-language notebooks, we recommend installing the Polyglot Notebooks extension for Visual Studio Code. While the full .NET Interactive feature set is available in Jupyter, many features are only usable via code, whereas the Polyglot Notebooks extension provides additional features including a language/kernel picker for each cell, enhanced language services, a multi-kernel variable viewer, and more.

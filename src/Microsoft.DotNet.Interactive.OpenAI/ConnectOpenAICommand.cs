@@ -113,6 +113,7 @@ public class ConnectOpenAICommand : ConnectKernelCommand
             rootKernel.Add(new ImageGenerationKernel(semanticKernel, kernelName));
         }
 
+        await Task.Delay(1000);
         return new PromptKernel(semanticKernel, kernelName);
     }
 }

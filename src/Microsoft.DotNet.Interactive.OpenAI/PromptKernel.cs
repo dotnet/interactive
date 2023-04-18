@@ -68,7 +68,7 @@ public class PromptKernel :
             {
                 valueInfos.Add(new KernelValueInfo(
                                    $"function.{key}.{functionView.Name}",
-                                   FormattedValue.FromObject(value, PlainTextSummaryFormatter.MimeType)
+                                   FormattedValue.FromObject(functionView, PlainTextSummaryFormatter.MimeType)
                                                  .FirstOrDefault()));
             }
         }

@@ -16,19 +16,11 @@ public abstract class OpenAIKernel :
     {
         Formatter.Register<FunctionView>((value, context) =>
         {
-            value.Parameters.FormatTo(context, PlainTextSummaryFormatter.MimeType);
-
-            if (value.IsSemantic)
-            {
-                context.Writer.Write(" (semantic)");
-            }
-            else
-            {
-                context.Writer.Write(" (native)");
-            }
+            context.Writer.Write($"params: {string.Join(", ", value.Parameters.Select(p => p.Name))}");
 
             return true;
         }, PlainTextSummaryFormatter.MimeType);
+        
     }
 
     public IKernel SemanticKernel { get; }
@@ -36,7 +28,7 @@ public abstract class OpenAIKernel :
     protected OpenAIKernel(
         IKernel semanticKernel,
         string name,
-        SubmissionHandlingType submissionHandlingType) : base($"{name}:{LabelFor(submissionHandlingType)}")
+        SubmissionHandlingType submissionHandlingType) : base($"{name}({LabelFor(submissionHandlingType)})")
     {
         SemanticKernel = semanticKernel;
         KernelInfo.LanguageName = "text";

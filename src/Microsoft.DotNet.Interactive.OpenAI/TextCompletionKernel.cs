@@ -2,10 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
+using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.CoreSkills;
 using Microsoft.SemanticKernel.Orchestration;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
@@ -17,7 +20,9 @@ public class TextCompletionKernel :
     private readonly Command _promptCommand = new("#!prompt");
     private readonly Dictionary<string, string> _values = new();
     private readonly Argument<string[]> _functionPipelineArgument = new("pipeline");
+    private readonly Option<bool> _usePlannerOption = new("--use-planner");
     private string[] _functionNamesForPipeline;
+    private bool _usePlanner;
 
     public TextCompletionKernel(
         IKernel semanticKernel,
@@ -26,14 +31,20 @@ public class TextCompletionKernel :
         _functionPipelineArgument.AddCompletions(context => SemanticKernel.GetFunctionNames());
 
         _promptCommand.Add(_functionPipelineArgument);
+        _promptCommand.Add(_usePlannerOption);
 
-        _promptCommand.SetHandler(context => { _functionNamesForPipeline = context.ParseResult.GetValueForArgument(_functionPipelineArgument); });
+        _promptCommand.SetHandler(context =>
+        {
+            _functionNamesForPipeline = context.ParseResult.GetValueForArgument(_functionPipelineArgument);
+            _usePlanner = context.ParseResult.GetValueForOption(_usePlannerOption);
+        });
 
         AddDirective(_promptCommand);
     }
 
     protected override async Task HandleSubmitCode(SubmitCode submitCode, KernelInvocationContext context)
     {
+       
         try
         {
             var pipeline = new List<ISKFunction>();
@@ -63,26 +74,83 @@ public class TextCompletionKernel :
                 }
             }
 
-            var semanticKernelResponse = await SemanticKernel.RunAsync(
-                                             contextVariables,
-                                             context.CancellationToken,
-                                             pipeline.ToArray());
-
-            var plainTextValue = new FormattedValue(PlainTextFormatter.MimeType, semanticKernelResponse.Result.ToDisplayString(PlainTextFormatter.MimeType));
-
-            var htmlValue = new FormattedValue(HtmlFormatter.MimeType, semanticKernelResponse.ToDisplayString(HtmlFormatter.MimeType));
-
-            var formattedValues = new[]
+            if (_usePlanner)
             {
-                plainTextValue,
-                htmlValue
-            };
-
-            context.Publish(new ReturnValueProduced(semanticKernelResponse, submitCode, formattedValues));
+                await ExecutePlan(submitCode, context);
+            }
+            else
+            {
+                await ExecutePrompt(submitCode, context, contextVariables, pipeline);
+            }
         }
         finally
         {
             _functionNamesForPipeline = null;
+        }
+    }
+
+    private async Task ExecutePrompt(SubmitCode submitCode, KernelInvocationContext context,
+        ContextVariables contextVariables, List<ISKFunction> pipeline)
+    {
+        var semanticKernelResponse = await SemanticKernel.RunAsync(
+            contextVariables,
+            context.CancellationToken,
+            pipeline.ToArray());
+
+        var plainTextValue = new FormattedValue(PlainTextFormatter.MimeType,
+            semanticKernelResponse.Result.ToDisplayString(PlainTextFormatter.MimeType));
+
+        var htmlValue = new FormattedValue(HtmlFormatter.MimeType,
+            semanticKernelResponse.ToDisplayString(HtmlFormatter.MimeType));
+
+        var formattedValues = new[]
+        {
+            plainTextValue,
+            htmlValue
+        };
+
+        context.Publish(new ReturnValueProduced(semanticKernelResponse, submitCode, formattedValues));
+    }
+
+    private async Task ExecutePlan(SubmitCode submitCode, KernelInvocationContext context)
+    {
+        var planner = SemanticKernel.ImportSkill(new PlannerSkill(SemanticKernel));
+        var plan = await SemanticKernel.RunAsync(submitCode.Code, planner["CreatePlan"]);
+        var currentPlanStepContext = plan;
+        var step = 1;
+        var maxSteps = 10;
+        while (!currentPlanStepContext.Variables.ToPlan().IsComplete && step < maxSteps)
+        {
+            var results = await SemanticKernel.RunAsync(currentPlanStepContext.Variables, planner["ExecutePlan"]);
+            var currentStepPlan = results.Variables.ToPlan();
+            if (currentStepPlan.IsSuccessful)
+            {
+                if (currentStepPlan.IsComplete)
+                {
+                    var plainTextValue = new FormattedValue(PlainTextFormatter.MimeType,
+                        currentStepPlan.Result.ToDisplayString(PlainTextFormatter.MimeType));
+
+                    var htmlValue = new FormattedValue(HtmlFormatter.MimeType,
+                        currentStepPlan.ToDisplayString(HtmlFormatter.MimeType));
+
+                    var formattedValues = new[]
+                    {
+                        plainTextValue,
+                        htmlValue
+                    };
+
+                    context.Publish(new ReturnValueProduced(currentStepPlan, submitCode, formattedValues));
+                    break;
+                }
+            }
+            else
+            {
+                context.Fail(submitCode, message: $"Step {step} - Execution failed: {currentStepPlan.Result}");
+                break;
+            }
+
+            currentPlanStepContext = results;
+            step++;
         }
     }
 

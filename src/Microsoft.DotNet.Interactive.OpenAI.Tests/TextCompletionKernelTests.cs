@@ -47,6 +47,48 @@ public class TextCompletionKernelTests
                     """);
     }
 
+    [Fact(Skip = "requires mocking for the planner")]
+    public async Task Can_use_planner()
+    {
+        var semanticKernel = KernelBuilder.BuildSemanticKernel();
+
+        var promptKernel = new PromptKernel(semanticKernel, "prompt");
+        var textKernel = new TextCompletionKernel(semanticKernel, "text");
+
+        await promptKernel.SendAsync(new SubmitCode("""
+         #!function summarize --skill writer
+         {{$input}}
+         Summarize the text above.
+         """));
+
+        await promptKernel.SendAsync(new SubmitCode("""
+         #!function make_poem --skill writer
+         {{$input}}
+         make a poem from text above.
+         """));
+
+        var result = await textKernel.SendAsync(new SubmitCode("""
+            #!prompt function.writer.summarize function.writer.make_poem --use-planner 
+            Tomorrow is Valentine's day. I need to come up with a few date ideas.
+            She likes Shakespeare so write using his style.Summarize the ideas.
+            """));
+
+        result.Events.Should().NotContainErrors();
+
+        result.Events.Should().ContainSingle<ReturnValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(f => f.MimeType == "text/plain")
+            .Which
+            .Value
+            .Should()
+            .Be("""
+                    [text] Can you make this text any shorter?
+                    Summarize the text above.
+                    """);
+    }
+
     [Fact]
     public async Task Can_use_prompts_with_context_values()
     {
