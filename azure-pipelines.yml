@@ -100,7 +100,7 @@ stages:
         MirrorBranch: main
         SkipLocProjectJsonGeneration: true
         LclSource: lclFilesfromPackage
-        LclPackageId: 'LCL-JUNO-PROD-ROSLYN'
+        LclPackageId: 'LCL-JUNO-PROD-INTERACTIVE'
         CreatePr: $(LocPRCreationEnabled)
 
   - template: /eng/common/templates/jobs/jobs.yml
