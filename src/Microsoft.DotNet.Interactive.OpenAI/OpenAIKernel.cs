@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.SkillDefinition;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
@@ -10,11 +12,30 @@ public abstract class OpenAIKernel :
     Kernel,
     IKernelCommandHandler<SubmitCode>
 {
+    static OpenAIKernel()
+    {
+        Formatter.Register<FunctionView>((value, context) =>
+        {
+            value.Parameters.FormatTo(context, PlainTextSummaryFormatter.MimeType);
+
+            if (value.IsSemantic)
+            {
+                context.Writer.Write(" (semantic)");
+            }
+            else
+            {
+                context.Writer.Write(" (native)");
+            }
+
+            return true;
+        }, PlainTextSummaryFormatter.MimeType);
+    }
+
     public IKernel SemanticKernel { get; }
 
     protected OpenAIKernel(
-        IKernel semanticKernel, 
-        string name, 
+        IKernel semanticKernel,
+        string name,
         SubmissionHandlingType submissionHandlingType) : base($"{name}:{LabelFor(submissionHandlingType)}")
     {
         SemanticKernel = semanticKernel;
@@ -28,7 +49,7 @@ public abstract class OpenAIKernel :
             SubmissionHandlingType.ChatCompletion => "chat",
             SubmissionHandlingType.TextEmbeddingGeneration => "embedding",
             SubmissionHandlingType.ImageGeneration => "image",
-            SubmissionHandlingType.Prompt => "Prompt",
+            SubmissionHandlingType.Prompt => "prompt",
             _ => throw new ArgumentOutOfRangeException(nameof(submissionHandlingType), submissionHandlingType, null)
         };
 
