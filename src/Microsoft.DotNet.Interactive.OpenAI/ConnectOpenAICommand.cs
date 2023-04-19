@@ -24,7 +24,7 @@ public class ConnectOpenAICommand : ConnectKernelCommand
 
     public Option<bool> UseAzureOpenAIOption { get; } = new("--use-azure-openai", "Use Azure OpenAI");
 
-    public override async Task<Kernel> ConnectKernelAsync(
+    public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
@@ -32,6 +32,8 @@ public class ConnectOpenAICommand : ConnectKernelCommand
         {
             throw new InvalidOperationException("The root kernel must be a CompositeKernel");
         }
+
+        var kernels = new List<Kernel>();
 
         var kernelGroupName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption)!;
 
@@ -103,36 +105,37 @@ public class ConnectOpenAICommand : ConnectKernelCommand
 
         if (config.AllChatCompletionServiceIds.Any())
         {
-            rootKernel.Add(new ChatCompletionKernel(
-                               semanticKernel,
-                               kernelGroupName,
-                               settings.ChatCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName));
+            kernels.Add(new ChatCompletionKernel(
+                            semanticKernel,
+                            kernelGroupName,
+                            settings.ChatCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName));
         }
 
         if (config.AllTextCompletionServiceIds.Any())
         {
-            rootKernel.Add(new TextCompletionKernel(
-                               semanticKernel,
-                               kernelGroupName,
-                              settings.TextCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName  ));
+            kernels.Add(new TextCompletionKernel(
+                            semanticKernel,
+                            kernelGroupName,
+                            settings.TextCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName));
         }
 
         if (config.AllTextEmbeddingGenerationServiceIds.Any())
         {
             semanticKernel.ImportSkill(new TextMemorySkill());
 
-            rootKernel.Add(new TextEmbeddingGenerationKernel(
-                               semanticKernel,
-                               kernelGroupName,
-                               settings.TextEmbeddingGenerationServiceSettings[kernelGroupName].ModelOrDeploymentName));
+            kernels.Add(new TextEmbeddingGenerationKernel(
+                            semanticKernel,
+                            kernelGroupName,
+                            settings.TextEmbeddingGenerationServiceSettings[kernelGroupName].ModelOrDeploymentName));
         }
 
         if (config.ImageGenerationServices.Any())
         {
-            rootKernel.Add(new ImageGenerationKernel(semanticKernel, kernelGroupName));
+            kernels.Add(new ImageGenerationKernel(semanticKernel, kernelGroupName));
         }
 
-        await Task.Delay(1000);
-        return new SkillKernel(semanticKernel, kernelGroupName);
+        kernels.Add(new SkillKernel(semanticKernel, kernelGroupName));
+
+        return kernels;
     }
 }

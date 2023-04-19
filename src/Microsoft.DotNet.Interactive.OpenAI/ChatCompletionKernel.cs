@@ -37,6 +37,6 @@ public class ChatCompletionKernel :
 
         var reply = await _chatCompletionService.GenerateMessageAsync(_chatHistory, new(), context.CancellationToken);
 
-        context.Publish(new ReturnValueProduced(reply, submitCode, FormattedValue.FromObject(reply, PlainTextFormatter.MimeType)));
+        context.Publish(new ReturnValueProduced(reply, submitCode, FormattedValue.CreateManyFromObject(reply, PlainTextFormatter.MimeType)));
     }
 }

@@ -83,8 +83,7 @@ public class SkillKernel :
             {
                 valueInfos.Add(new KernelValueInfo(
                                    $"function.{key}.{functionView.Name}",
-                                   FormattedValue.FromObject(functionView, PlainTextSummaryFormatter.MimeType)
-                                                 .FirstOrDefault()));
+                                   FormattedValue.CreateSingleFromObject(functionView, PlainTextSummaryFormatter.MimeType)));
             }
         }
 
