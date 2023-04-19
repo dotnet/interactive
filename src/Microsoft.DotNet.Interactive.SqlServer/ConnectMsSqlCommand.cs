@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
@@ -32,7 +33,7 @@ public class ConnectMsSqlCommand : ConnectKernelCommand
             description: "The connection string used to connect to the database",
             parse: s => new(s.Tokens.Single().Value));
 
-    public override async Task<Kernel> ConnectKernelAsync(
+    public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
@@ -58,7 +59,7 @@ public class ConnectMsSqlCommand : ConnectKernelCommand
             await InitializeDbContextAsync(localName, connector, context);
         }
 
-        return kernel;
+        return new []{kernel};
     }
 
     private async Task InitializeDbContextAsync(string kernelName, MsSqlKernelConnector options, KernelInvocationContext context)

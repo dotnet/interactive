@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Threading.Tasks;
@@ -190,13 +191,14 @@ hello!
         public Option<int> FakenessLevelOption { get; } =
             new("--fakeness-level");
 
-        public override Task<Kernel> ConnectKernelAsync(
+        public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
             KernelInvocationContext context,
             InvocationContext commandLineContext)
         {
             var connector = new FakeKernelConnector();
             connector.CreateKernel = _createKernel;
-            return connector.CreateKernelAsync(commandLineContext.ParseResult.GetValueForOption(KernelNameOption));
+            var kernel = await connector.CreateKernelAsync(commandLineContext.ParseResult.GetValueForOption(KernelNameOption));
+            return new[] { kernel };
         }
     }
 }
