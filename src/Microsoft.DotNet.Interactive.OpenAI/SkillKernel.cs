@@ -10,22 +10,26 @@ using Microsoft.SemanticKernel;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
-public class PromptKernel :
-    OpenAIKernel,
-    IKernelCommandHandler<RequestValueInfos>
+public class SkillKernel :
+    Kernel,
+    IKernelCommandHandler<RequestValueInfos>,
+    IKernelCommandHandler<SubmitCode>
 {
     private readonly Command _functionCommand = new("#!function", "Indicates that the cell contents should be used to define a semantic function.");
-
     private readonly Option<string> _skillNameOption = new("--skill", "The name of the skill to which the function should be added.");
-
     private readonly Argument<string> _functionNameArgument = new("functionName", "The name of the function to be defined.");
+
     private string? _currentSkillName;
     private string _currentFunctionName;
 
-    public PromptKernel(
+    public SkillKernel(
         IKernel semanticKernel,
-        string name) : base(semanticKernel, name, SubmissionHandlingType.Prompt)
+        string name) : base($"{name}(skill)")
     {
+        SemanticKernel = semanticKernel;
+        KernelInfo.LanguageName = "text";
+        KernelInfo.DisplayName = $"{Name} - Define skills";
+
         _functionCommand.Add(_skillNameOption);
         _functionCommand.Add(_functionNameArgument);
 
@@ -38,8 +42,19 @@ public class PromptKernel :
         AddDirective(_functionCommand);
     }
 
-    protected override Task HandleSubmitCode(SubmitCode submitCode, KernelInvocationContext context)
+    public IKernel SemanticKernel { get; }
+
+    Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
     {
+        if (_currentFunctionName is null)
+        {
+            context.DisplayAs(
+                $"Use the `{Name}` kernel to define a semantic function. You must give the function a name by calling the `{_functionCommand.Name}` magic command at the top of the cell.",
+                "text/markdown");
+            context.Fail(context.Command);
+            return Task.CompletedTask;
+        }
+
         try
         {
             SemanticKernel.CreateSemanticFunction(
@@ -76,20 +91,5 @@ public class PromptKernel :
         context.Publish(new ValueInfosProduced(valueInfos, command));
 
         return Task.CompletedTask;
-    }
-}
-
-internal static class SemanticKernelExtensions
-{
-    public static IEnumerable<string> GetFunctionNames(this IKernel kernel)
-    {
-        var functionsView = kernel.Skills.GetFunctionsView();
-
-        foreach (var functionView in functionsView
-                                     .SemanticFunctions.Concat(functionsView.NativeFunctions)
-                                     .SelectMany(p => p.Value))
-        {
-            yield return $"function.{functionView.SkillName}.{functionView.Name}";
-        }
     }
 }

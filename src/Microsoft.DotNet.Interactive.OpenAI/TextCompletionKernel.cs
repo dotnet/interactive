@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
-using System.Threading.Tasks;
-
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -14,7 +12,8 @@ using Microsoft.SemanticKernel.Orchestration;
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
 public class TextCompletionKernel :
-    OpenAIKernel,
+    Kernel,
+    IKernelCommandHandler<SubmitCode>,
     IKernelCommandHandler<SendValue>
 {
     private readonly Command _promptCommand = new("#!prompt");
@@ -26,8 +25,13 @@ public class TextCompletionKernel :
 
     public TextCompletionKernel(
         IKernel semanticKernel,
-        string name) : base(semanticKernel, name, SubmissionHandlingType.TextCompletion)
+        string name,
+        string modelName) : base($"{name}(text)")
     {
+        SemanticKernel = semanticKernel;
+        KernelInfo.LanguageName = "text";
+        KernelInfo.DisplayName = $"{Name} - {modelName}";
+
         _functionPipelineArgument.AddCompletions(context => SemanticKernel.GetFunctionNames());
 
         _promptCommand.Add(_functionPipelineArgument);
@@ -40,16 +44,21 @@ public class TextCompletionKernel :
         });
 
         AddDirective(_promptCommand);
+
+        this.UseValueSharing();
     }
 
-    protected override async Task HandleSubmitCode(SubmitCode submitCode, KernelInvocationContext context)
+    public IKernel SemanticKernel { get; }
+
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
     {
-       
         try
         {
             var pipeline = new List<ISKFunction>();
-            var contextVariables = new ContextVariables();
-            contextVariables.Set("INPUT", submitCode.Code);
+            var skContext = SemanticKernel.CreateNewContext();
+            // var contextVariables = new ContextVariables();
+            skContext.Variables.Set("INPUT", submitCode.Code);
+            skContext.Variables.Set(TextMemorySkill.CollectionParam, TextEmbeddingGenerationKernel.DefaultMemoryCollectionName);
 
             if (_functionNamesForPipeline is null || _functionNamesForPipeline.Length == 0)
             {
@@ -60,7 +69,7 @@ public class TextCompletionKernel :
             {
                 foreach (var (key, value) in _values)
                 {
-                    contextVariables.Set(key, value);
+                    skContext.Variables.Set(key, value);
                 }
 
                 foreach (var functionName in _functionNamesForPipeline)
@@ -80,7 +89,7 @@ public class TextCompletionKernel :
             }
             else
             {
-                await ExecutePrompt(submitCode, context, contextVariables, pipeline);
+                await ExecutePrompt(submitCode, context, skContext.Variables, pipeline);
             }
         }
         finally
@@ -89,19 +98,22 @@ public class TextCompletionKernel :
         }
     }
 
-    private async Task ExecutePrompt(SubmitCode submitCode, KernelInvocationContext context,
-        ContextVariables contextVariables, List<ISKFunction> pipeline)
+    private async Task ExecutePrompt(
+        SubmitCode submitCode,
+        KernelInvocationContext context,
+        ContextVariables contextVariables,
+        List<ISKFunction> pipeline)
     {
         var semanticKernelResponse = await SemanticKernel.RunAsync(
-            contextVariables,
-            context.CancellationToken,
-            pipeline.ToArray());
+                                         contextVariables,
+                                         context.CancellationToken,
+                                         pipeline.ToArray());
 
         var plainTextValue = new FormattedValue(PlainTextFormatter.MimeType,
-            semanticKernelResponse.Result.ToDisplayString(PlainTextFormatter.MimeType));
+                                                semanticKernelResponse.Result.ToDisplayString(PlainTextFormatter.MimeType));
 
         var htmlValue = new FormattedValue(HtmlFormatter.MimeType,
-            semanticKernelResponse.ToDisplayString(HtmlFormatter.MimeType));
+                                           semanticKernelResponse.ToDisplayString(HtmlFormatter.MimeType));
 
         var formattedValues = new[]
         {
@@ -128,10 +140,10 @@ public class TextCompletionKernel :
                 if (currentStepPlan.IsComplete)
                 {
                     var plainTextValue = new FormattedValue(PlainTextFormatter.MimeType,
-                        currentStepPlan.Result.ToDisplayString(PlainTextFormatter.MimeType));
+                                                            currentStepPlan.Result.ToDisplayString(PlainTextFormatter.MimeType));
 
                     var htmlValue = new FormattedValue(HtmlFormatter.MimeType,
-                        currentStepPlan.ToDisplayString(HtmlFormatter.MimeType));
+                                                       currentStepPlan.ToDisplayString(HtmlFormatter.MimeType));
 
                     var formattedValues = new[]
                     {

@@ -9,18 +9,26 @@ using Microsoft.SemanticKernel.AI.ChatCompletion;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
-public class ChatCompletionKernel : OpenAIKernel
+public class ChatCompletionKernel :
+    Kernel,
+    IKernelCommandHandler<SubmitCode>
 {
     private ChatHistory? _chatHistory;
     private IChatCompletion? _chatCompletionService;
 
-    public ChatCompletionKernel(IKernel semanticKernel,
-        string name) : base(semanticKernel, name, SubmissionHandlingType.ChatCompletion)
+    public ChatCompletionKernel(
+        IKernel semanticKernel,
+        string name,
+        string modelName) : base($"{name}(chat)")
     {
-
+        SemanticKernel = semanticKernel;
+        KernelInfo.LanguageName = "text";
+        KernelInfo.DisplayName = $"{Name} - {modelName}";
     }
 
-    protected override async Task HandleSubmitCode(SubmitCode submitCode, KernelInvocationContext context)
+    public IKernel SemanticKernel { get; }
+
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
     {
         _chatCompletionService ??= SemanticKernel.GetService<IChatCompletion>();
         _chatHistory ??= _chatCompletionService.CreateNewChat();
@@ -30,6 +38,5 @@ public class ChatCompletionKernel : OpenAIKernel
         var reply = await _chatCompletionService.GenerateMessageAsync(_chatHistory, new(), context.CancellationToken);
 
         context.Publish(new ReturnValueProduced(reply, submitCode, FormattedValue.FromObject(reply, PlainTextFormatter.MimeType)));
-
     }
 }

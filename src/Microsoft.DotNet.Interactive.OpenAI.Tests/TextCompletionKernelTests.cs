@@ -17,8 +17,8 @@ public class TextCompletionKernelTests
     {
         var semanticKernel = KernelBuilder.BuildSemanticKernel();
 
-        var promptKernel = new PromptKernel(semanticKernel, "prompt");
-        var textKernel = new TextCompletionKernel(semanticKernel, "text");
+        var promptKernel = new SkillKernel(semanticKernel, "prompt");
+        var textKernel = new TextCompletionKernel(semanticKernel, "text", "text-davinci-003");
 
         await promptKernel.SendAsync(new SubmitCode("""
          #!function summarize --skill writer
@@ -52,8 +52,8 @@ public class TextCompletionKernelTests
     {
         var semanticKernel = KernelBuilder.BuildSemanticKernel();
 
-        var promptKernel = new PromptKernel(semanticKernel, "prompt");
-        var textKernel = new TextCompletionKernel(semanticKernel, "text");
+        var promptKernel = new SkillKernel(semanticKernel, "prompt");
+        var textKernel = new TextCompletionKernel(semanticKernel, "text", "text-davinci-003");
 
         await promptKernel.SendAsync(new SubmitCode("""
          #!function summarize --skill writer
@@ -94,8 +94,8 @@ public class TextCompletionKernelTests
     {
         var semanticKernel = KernelBuilder.BuildSemanticKernel();
 
-        var promptKernel = new PromptKernel(semanticKernel, "prompt");
-        var textKernel = new TextCompletionKernel(semanticKernel, "text").UseValueSharing();
+        var promptKernel = new SkillKernel(semanticKernel, "prompt");
+        var textKernel = new TextCompletionKernel(semanticKernel, "text", "text-davinci-003");
 
         await promptKernel.SendAsync(new SubmitCode("""
          #!function summarize --skill writer

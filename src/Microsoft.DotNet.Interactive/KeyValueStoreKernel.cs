@@ -70,7 +70,7 @@ public class KeyValueStoreKernel :
 
     public IReadOnlyDictionary<string, FormattedValue> Values => _values;
 
-    Task IKernelCommandHandler<SubmitCode>.HandleAsync(
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(
         SubmitCode command,
         KernelInvocationContext context)
     {
@@ -80,9 +80,7 @@ public class KeyValueStoreKernel :
 
         var options = ValueDirectiveOptions.Create(parseResult, _chooseKernelDirective);
 
-        StoreValue(command, context, options, value);
-
-        return Task.CompletedTask;
+        await StoreValueAsync(command, context, options, value);
     }
 
     internal override bool AcceptsUnknownDirectives => true;
@@ -120,7 +118,7 @@ public class KeyValueStoreKernel :
 
             _lastOperation = (hadValue, previousValue, newValue);
 
-            StoreValue(newValue, options, context, mimeType: mimeType);
+            await StoreValueAsync(newValue, options, context, mimeType: mimeType);
         }
         else
         {
@@ -128,7 +126,7 @@ public class KeyValueStoreKernel :
         }
     }
 
-    private void StoreValue(
+    private async Task StoreValueAsync(
         KernelCommand command, 
         KernelInvocationContext context, 
         ValueDirectiveOptions options,
@@ -156,7 +154,7 @@ public class KeyValueStoreKernel :
         }
         else
         {
-            StoreValue(value, options, context, mimeType: mimeType);
+            await StoreValueAsync(value, options, context, mimeType: mimeType);
         }
 
         _lastOperation = default;
@@ -181,19 +179,33 @@ public class KeyValueStoreKernel :
         }
     }
 
-    private void StoreValue(
+    private async Task StoreValueAsync(
         string value,
         ValueDirectiveOptions options,
         KernelInvocationContext context,
         string mimeType = null)
-
     {
-        mimeType ??= ( options.MimeType ?? PlainTextFormatter.MimeType);
-        _values[options.Name] = new FormattedValue(mimeType, value);
+        mimeType ??= (options.MimeType ?? PlainTextFormatter.MimeType);
 
-        if (options.MimeType is {} displayMimeType)
+        var shouldDisplayValue = options.MimeType is { } displayMimeType;
+
+        await StoreValueAsync(options.Name, value, mimeType, shouldDisplayValue, context);
+    }
+
+    protected virtual Task StoreValueAsync(
+        string key,
+        string value,
+        string mimeType,
+        bool shouldDisplayValue,
+        KernelInvocationContext context)
+    {
+        _values[key] = new FormattedValue(mimeType, value);
+
+        if (shouldDisplayValue)
         {
-            context.DisplayAs(value, displayMimeType);
+            context.DisplayAs(value, mimeType);
         }
+
+        return Task.CompletedTask;
     }
 }

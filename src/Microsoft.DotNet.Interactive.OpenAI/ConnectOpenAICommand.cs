@@ -6,6 +6,8 @@ using System.CommandLine.Invocation;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.OpenAI.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel.CoreSkills;
+using Microsoft.SemanticKernel.Memory;
 using Pocket.For.MicrosoftExtensionsLogging;
 using static Microsoft.DotNet.Interactive.OpenAI.Configuration.SemanticKernelSettings;
 
@@ -31,9 +33,9 @@ public class ConnectOpenAICommand : ConnectKernelCommand
             throw new InvalidOperationException("The root kernel must be a CompositeKernel");
         }
 
-        var kernelName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption)!;
+        var kernelGroupName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption)!;
 
-        var settingsFile = GetSettingsFilePathForKernelName(kernelName);
+        var settingsFile = GetSettingsFilePathForKernelName(kernelGroupName);
 
         if (!TryLoadFromFile(settingsFile, out var settings))
         {
@@ -43,7 +45,7 @@ public class ConnectOpenAICommand : ConnectKernelCommand
 
             settings.TextCompletionServiceSettings = new()
             {
-                [kernelName] = new TextCompletionServiceSettings
+                [kernelGroupName] = new TextCompletionServiceSettings
                 {
                     Endpoint = useAzureOpenAI
                                    ? await Kernel.GetInputAsync(
@@ -87,33 +89,50 @@ public class ConnectOpenAICommand : ConnectKernelCommand
 
         var config = settings.CreateKernelConfig();
 
-        var semanticKernel = SemanticKernel.Kernel
-                                           .Builder
-                                           .WithConfiguration(config)
-                                           .WithLogger(new LoggerFactory().AddPocketLogger().CreateLogger<OpenAIKernel>())
-                                           .Build();
+        var kernelBuilder = SemanticKernel.Kernel
+                                          .Builder
+                                          .WithConfiguration(config)
+                                          .WithLogger(new LoggerFactory().AddPocketLogger().CreateLogger<ConnectOpenAICommand>());
+
+        if (config.AllTextEmbeddingGenerationServiceIds.Any())
+        {
+            kernelBuilder.WithMemoryStorage(new VolatileMemoryStore());
+        }
+
+        var semanticKernel = kernelBuilder.Build();
 
         if (config.AllChatCompletionServiceIds.Any())
         {
-            rootKernel.Add(new ChatCompletionKernel(semanticKernel, kernelName));
+            rootKernel.Add(new ChatCompletionKernel(
+                               semanticKernel,
+                               kernelGroupName,
+                               settings.ChatCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName));
         }
 
         if (config.AllTextCompletionServiceIds.Any())
         {
-            rootKernel.Add(new TextCompletionKernel(semanticKernel, kernelName));
+            rootKernel.Add(new TextCompletionKernel(
+                               semanticKernel,
+                               kernelGroupName,
+                              settings.TextCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName  ));
         }
 
         if (config.AllTextEmbeddingGenerationServiceIds.Any())
         {
-            rootKernel.Add(new TextEmbeddingGenerationKernel(semanticKernel, kernelName));
+            semanticKernel.ImportSkill(new TextMemorySkill());
+
+            rootKernel.Add(new TextEmbeddingGenerationKernel(
+                               semanticKernel,
+                               kernelGroupName,
+                               settings.TextEmbeddingGenerationServiceSettings[kernelGroupName].ModelOrDeploymentName));
         }
 
         if (config.ImageGenerationServices.Any())
         {
-            rootKernel.Add(new ImageGenerationKernel(semanticKernel, kernelName));
+            rootKernel.Add(new ImageGenerationKernel(semanticKernel, kernelGroupName));
         }
 
         await Task.Delay(1000);
-        return new PromptKernel(semanticKernel, kernelName);
+        return new SkillKernel(semanticKernel, kernelGroupName);
     }
 }

@@ -38,7 +38,7 @@ public static class KernelInvocationContextExtensions
     public static DisplayedValue DisplayAs(
         this KernelInvocationContext context,
         string value,
-        string mimeType, params string[]additionalMimeTypes)
+        string mimeType)
     {
         if (string.IsNullOrWhiteSpace(mimeType))
         {
@@ -47,7 +47,7 @@ public static class KernelInvocationContextExtensions
 
         var displayId = Guid.NewGuid().ToString();
 
-        var mimeTypes = new HashSet<string>(additionalMimeTypes ?? Array.Empty<string>())
+        var mimeTypes = new HashSet<string>
         {
             mimeType
         };

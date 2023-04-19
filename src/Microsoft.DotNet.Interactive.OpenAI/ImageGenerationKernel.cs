@@ -7,27 +7,34 @@ using Microsoft.SemanticKernel.AI.ImageGeneration;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
-public class ImageGenerationKernel : OpenAIKernel
+public class ImageGenerationKernel :
+    Kernel,
+    IKernelCommandHandler<SubmitCode>
 {
     private IImageGeneration? _imageGenerationService;
 
-    public ImageGenerationKernel(IKernel semanticKernel,
-        string name) : base(semanticKernel, name, SubmissionHandlingType.ImageGeneration)
+    public ImageGenerationKernel(
+        IKernel semanticKernel,
+        string name) : base($"{name}(image)")
     {
-
+        SemanticKernel = semanticKernel;
+        KernelInfo.LanguageName = "text";
+        KernelInfo.DisplayName = Name;
+        KernelInfo.DisplayName = $"{Name} - DALL-E";
     }
 
-    protected override async Task HandleSubmitCode(SubmitCode submitCode, KernelInvocationContext context)
+    public IKernel SemanticKernel { get; }
+
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
     {
         _imageGenerationService ??= SemanticKernel.GetService<IImageGeneration>();
 
         var height = 256;
         var width = 256;
         var imageUrl = await _imageGenerationService.GenerateImageAsync(
-            submitCode.Code,
-            width, height);
+                           submitCode.Code,
+                           width, height);
 
         await SkiaUtils.ShowImage(imageUrl, width, height);
-
     }
 }

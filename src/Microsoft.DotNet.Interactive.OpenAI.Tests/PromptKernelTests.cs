@@ -19,7 +19,7 @@ public class PromptKernelTests
     {
         var semanticKernel = KernelBuilder.BuildSemanticKernel();
 
-        using var promptKernel = new PromptKernel(semanticKernel, "prompt");
+        using var promptKernel = new SkillKernel(semanticKernel, "prompt");
 
         var result = await promptKernel.SendAsync(new SubmitCode("""
          #!function summarize
@@ -43,7 +43,7 @@ public class PromptKernelTests
     {
         var semanticKernel = KernelBuilder.BuildSemanticKernel();
 
-        using var promptKernel = new PromptKernel(semanticKernel, "prompt");
+        using var promptKernel = new SkillKernel(semanticKernel, "prompt");
 
         await promptKernel.SendAsync(new SubmitCode("""
          #!function summarize
@@ -75,7 +75,7 @@ public class PromptKernelTests
     {
         var semanticKernel = KernelBuilder.BuildSemanticKernel();
 
-        using var promptKernel = new PromptKernel(semanticKernel, "prompt");
+        using var promptKernel = new SkillKernel(semanticKernel, "prompt");
 
         var result = await promptKernel.SendAsync(new SubmitCode("""
          #!function summarize --skill writer
@@ -99,7 +99,7 @@ public class PromptKernelTests
     {
         var semanticKernel = KernelBuilder.BuildSemanticKernel();
 
-        using var promptKernel = new PromptKernel(semanticKernel, "prompt");
+        using var promptKernel = new SkillKernel(semanticKernel, "prompt");
 
         await promptKernel.SendAsync(new SubmitCode("""
          #!function summarize --skill writer
@@ -128,7 +128,7 @@ public class PromptKernelTests
     {
         var semanticKernel = KernelBuilder.BuildSemanticKernel();
 
-        using var promptKernel = new PromptKernel(semanticKernel, "prompt");
+        using var promptKernel = new SkillKernel(semanticKernel, "prompt");
 
         await promptKernel.SendAsync(new SubmitCode("""
          #!function summarize --skill writer
