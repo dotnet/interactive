@@ -48,7 +48,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         return this;
     }
 
-    public override async Task<Kernel> ConnectKernelAsync(
+    public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
@@ -74,7 +74,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         {
             kernel.RegisterForDisposal(disposableConnection);
         }
-        return kernel;
+        return new[]{kernel};
     }
 
     private IJupyterConnection GetJupyterConnection(ParseResult parseResult)

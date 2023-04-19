@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Threading.Tasks;
@@ -38,7 +39,7 @@ public abstract class ConnectKernelCommand : Command
     /// </summary>
     /// <param name="context">The <see cref="KernelInvocationContext"/> for the current command.</param>
     /// <returns>A new <see cref="Kernel"/> instance to be added to the <see cref="CompositeKernel"/>.</returns>
-    public abstract Task<Kernel> ConnectKernelAsync(
+    public abstract Task<IEnumerable<Kernel>> ConnectKernelsAsync(
         KernelInvocationContext context,
         InvocationContext commandLineContext);
 }

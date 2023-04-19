@@ -6,7 +6,7 @@ Microsoft.DotNet.Interactive.Kql
     .ctor(System.String resolvedToolsServicePath)
     public System.CommandLine.Option<System.String> ClusterOption { get;}
     public System.CommandLine.Option<System.String> DatabaseOption { get;}
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
   public class KqlConnectionDetails
     .ctor()
     public System.String AuthenticationType { get; set;}

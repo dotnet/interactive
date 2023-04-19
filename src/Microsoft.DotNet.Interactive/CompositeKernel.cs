@@ -277,24 +277,27 @@ public sealed class CompositeKernel :
         connectionCommand.Handler = CommandHandler.Create<KernelInvocationContext, InvocationContext>(
             async (context, commandLineContext) =>
             {
-                var connectedKernel = await connectionCommand.ConnectKernelAsync(context, commandLineContext);
-
-                Add(connectedKernel);
-
-                // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
-
-                var chooseKernelDirective =
-                    Directives.OfType<ChooseKernelDirective>()
-                        .Single(d => d.Kernel == connectedKernel);
-
-                if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
+                var connectedKernels = await connectionCommand.ConnectKernelsAsync(context, commandLineContext);
+                foreach (var connectedKernel in connectedKernels)
                 {
-                    chooseKernelDirective.Description = connectionCommand.ConnectedKernelDescription;
+
+                    Add(connectedKernel);
+
+                    // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
+
+                    var chooseKernelDirective =
+                        Directives.OfType<ChooseKernelDirective>()
+                            .Single(d => d.Kernel == connectedKernel);
+
+                    if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
+                    {
+                        chooseKernelDirective.Description = connectionCommand.ConnectedKernelDescription;
+                    }
+
+                    chooseKernelDirective.Description += " (Connected kernel)";
+
+                    context.Display($"Kernel added: #!{connectedKernel.Name}");
                 }
-
-                chooseKernelDirective.Description += " (Connected kernel)";
-
-                context.Display($"Kernel added: #!{connectedKernel.Name}");
             });
 
         _connectDirective.Add(connectionCommand);
