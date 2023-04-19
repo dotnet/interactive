@@ -16,7 +16,7 @@ public class TextCompletionKernel :
     IKernelCommandHandler<SubmitCode>,
     IKernelCommandHandler<SendValue>
 {
-    private readonly Command _promptCommand = new("#!prompt");
+    private readonly Command _promptCommand = new("#!use-skills");
     private readonly Dictionary<string, string> _values = new();
     private readonly Argument<string[]> _functionPipelineArgument = new("pipeline");
     private readonly Option<bool> _usePlannerOption = new("--use-planner");

@@ -505,7 +505,7 @@ public class SubmissionParser
 
             var inputRequest = new RequestInput(
                 valueName: valueName,
-                prompt: $"Please enter a value for field \"{valueName}\".",
+                prompt: !valueName.Contains(" ") ? $"Please enter a value for field \"{valueName}\"." : valueName,
                 inputTypeHint: typeHint);
 
             var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.ImageGeneration;
 
@@ -35,6 +36,11 @@ public class ImageGenerationKernel :
                            submitCode.Code,
                            width, height);
 
-        await SkiaUtils.ShowImage(imageUrl, width, height);
+        var surface = await SkiaUtils.ShowImage(imageUrl, width, height);
+
+        context.Publish(new ReturnValueProduced(
+                            surface,
+                            submitCode,
+                            FormattedValue.CreateManyFromObject(surface)));
     }
 }

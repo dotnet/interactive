@@ -27,7 +27,7 @@ public class TextCompletionKernelTests
          """));
 
         var result = await textKernel.SendAsync(new SubmitCode("""
-            #!prompt function.writer.summarize
+            #!use-skills function.writer.summarize
             Can you make this text any shorter?
             """));
 
@@ -68,7 +68,7 @@ public class TextCompletionKernelTests
          """));
 
         var result = await textKernel.SendAsync(new SubmitCode("""
-            #!prompt function.writer.summarize function.writer.make_poem --use-planner 
+            #!use-skills function.writer.summarize function.writer.make_poem --use-planner 
             Tomorrow is Valentine's day. I need to come up with a few date ideas.
             She likes Shakespeare so write using his style.Summarize the ideas.
             """));
@@ -104,7 +104,7 @@ public class TextCompletionKernelTests
          """));
 
         var result = await textKernel.SendAsync(new SubmitCode("""
-            #!prompt function.writer.summarize
+            #!use-skills function.writer.summarize
             #!set --name style --value "Boy George"
             Can you make this text any shorter?
             """));

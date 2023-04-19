@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.OpenAI;
 
 internal static class SkiaUtils
 {
-    public static async Task ShowImage(string url, int width, int height)
+    public static async Task<SKSurface> ShowImage(string url, int width, int height)
     {
         SKImageInfo info = new SKImageInfo(width, height);
         SKSurface surface = SKSurface.Create(info);
@@ -23,6 +23,6 @@ internal static class SkiaUtils
             canvas.DrawBitmap(webBitmap, 0, 0, null);
             surface.Draw(canvas, 0, 0, null);
         };
-        surface.Snapshot().Display();
+        return surface;
     }
 }
