@@ -88,7 +88,7 @@ public class TextCompletionKernel :
 
             var pipeline = new List<ISKFunction>();
             var hasFacts = false;
-            if (_embeddingsKernel is not null && _contextForMemory?.Length > 1)
+            if (_embeddingsKernel is not null && _contextForMemory?.Length > 0)
             {
                 var sb = new StringBuilder();
                 var uniqueFacts = new HashSet<string>();
