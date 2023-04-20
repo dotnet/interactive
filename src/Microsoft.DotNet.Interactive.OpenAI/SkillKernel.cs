@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -20,7 +21,7 @@ public class SkillKernel :
     private readonly Argument<string> _functionNameArgument = new("functionName", "The name of the function to be defined.");
 
     private string? _currentSkillName;
-    private string _currentFunctionName;
+    private string? _currentFunctionName;
 
     public SkillKernel(
         IKernel semanticKernel,
@@ -57,10 +58,20 @@ public class SkillKernel :
 
         try
         {
-            SemanticKernel.CreateSemanticFunction(
-                submitCode.Code,
-                _currentFunctionName,
-                _currentSkillName);
+            if (_currentSkillName != null)
+            {
+                SemanticKernel.CreateSemanticFunction(
+                    submitCode.Code,
+                    _currentFunctionName,
+                     _currentSkillName);
+            }
+            else
+            {
+                SemanticKernel.CreateSemanticFunction(
+                    submitCode.Code,
+                    _currentFunctionName);
+            }
+
         }
         finally
         {

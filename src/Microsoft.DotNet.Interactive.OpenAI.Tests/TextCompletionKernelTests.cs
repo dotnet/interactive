@@ -121,7 +121,7 @@ public class TextCompletionKernelTests
               .Should()
               .Be("""
                     [text] Can you make this text any shorter?
-                    Summarize the text above in the style of Boy George.
+                    Summarize the text above in the style of "Boy George".
                     """);
     }
 }

@@ -37,7 +37,7 @@ public class SemanticKernelSettings
         {
             if (settings.Value.UseAzureOpenAI)
             {
-                config.AddAzureOpenAITextCompletionService(
+                config.AddAzureTextCompletionService(
                     settings.Key,
                     settings.Value.ModelOrDeploymentName!,
                     settings.Value.Endpoint!,
@@ -57,7 +57,7 @@ public class SemanticKernelSettings
         {
             if (settings.Value.UseAzureOpenAI)
             {
-                config.AddAzureOpenAIEmbeddingGenerationService(
+                config.AddAzureTextEmbeddingGenerationService(
                     settings.Key,
                     settings.Value.ModelOrDeploymentName!,
                     settings.Value.Endpoint!,
@@ -65,7 +65,7 @@ public class SemanticKernelSettings
             }
             else
             {
-                config.AddOpenAIEmbeddingGenerationService(
+                config.AddOpenAITextEmbeddingGenerationService(
                     settings.Key,
                     settings.Value.ModelOrDeploymentName!,
                     settings.Value.ApiKey!,
@@ -75,11 +75,23 @@ public class SemanticKernelSettings
 
         foreach (var settings in ChatCompletionServiceSettings)
         {
-            config.AddOpenAIChatCompletionService(
-                settings.Key,
-                settings.Value.ModelOrDeploymentName!,
-                settings.Value.ApiKey!,
-                settings.Value.OrgId);
+            if (settings.Value.UseAzureOpenAI)
+            {
+                config.AddAzureChatCompletionService(
+                    settings.Key,
+                    settings.Value.ModelOrDeploymentName!,
+                    settings.Value.Endpoint!,
+                    settings.Value.ApiKey!);
+            }
+            else
+            {
+                config.AddOpenAIChatCompletionService(
+                    settings.Key,
+                    settings.Value.ModelOrDeploymentName!,
+                    settings.Value.ApiKey!,
+                    settings.Value.OrgId);
+            }
+           
         }
 
         foreach (var settings in ImageGenerationServiceSettings)
