@@ -28,7 +28,7 @@ public class SkillKernel :
         string name) : base($"{name}(skill)")
     {
         SemanticKernel = semanticKernel;
-        KernelInfo.LanguageName = "text";
+        KernelInfo.LanguageName = "semantic-kernel.skprompt";
         KernelInfo.DisplayName = $"{Name} - Define skills";
 
         _functionCommand.Add(_skillNameOption);
