@@ -142,7 +142,7 @@ public class TextCompletionKernel :
                 }
             }
 
-            else if (_functionNamesForPipeline is null || _functionNamesForPipeline.Length == 0)
+            if (_functionNamesForPipeline is null || _functionNamesForPipeline.Length == 0 || pipeline.Count == 0)
             {
                 var semanticFunction = SemanticKernel.CreateSemanticFunction("""
                     {{$INPUT}}

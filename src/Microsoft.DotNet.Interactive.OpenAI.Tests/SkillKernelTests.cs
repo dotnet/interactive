@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.OpenAI.Tests;
 
-public class PromptKernelTests
+public class SkillKernelTests
 {
     [Fact]
     public async Task Can_create_a_global_function()
