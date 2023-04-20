@@ -42,8 +42,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\Microsoft.DotNet.Interactive\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <GenerateSource>"true"</GenerateSource>
+      <LogicalName>Microsoft.DotNet.Interactive.Resources.resources</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 </Project>
