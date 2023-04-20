@@ -204,7 +204,6 @@ Microsoft.DotNet.Interactive
   public class KernelExtensionLoadException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(System.Exception innerException)
   public static class KernelExtensions
-    public static Kernel FindKernel(System.Func<Kernel,System.Boolean> predicate)
     public static Kernel FindKernelByName(System.String name)
     public static System.Collections.Generic.IEnumerable<Kernel> FindKernels(System.Func<Kernel,System.Boolean> predicate)
     public static System.Threading.Tasks.Task LoadAndRunInteractiveDocument(System.IO.FileInfo file)
