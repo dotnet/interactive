@@ -16,6 +16,7 @@ public class OpenAIKernelConnector
 
             return true;
         }, PlainTextSummaryFormatter.MimeType);
+
     }
 
     public static void AddKernelConnectorToCurrentRootKernel()

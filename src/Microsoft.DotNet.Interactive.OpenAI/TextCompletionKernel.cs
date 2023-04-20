@@ -20,7 +20,7 @@ public class TextCompletionKernel :
     private readonly Dictionary<string, string> _values = new();
     private readonly Argument<string[]> _functionPipelineArgument = new("pipeline");
     private readonly Option<bool> _usePlannerOption = new("--use-planner");
-    private string[] _functionNamesForPipeline;
+    private string[]? _functionNamesForPipeline;
     private bool _usePlanner;
 
     public TextCompletionKernel(
@@ -54,12 +54,17 @@ public class TextCompletionKernel :
     {
         try
         {
-            var pipeline = new List<ISKFunction>();
             var skContext = SemanticKernel.CreateNewContext();
-            // var contextVariables = new ContextVariables();
-            skContext.Variables.Set("INPUT", submitCode.Code);
             skContext.Variables.Set(TextMemorySkill.CollectionParam, TextEmbeddingGenerationKernel.DefaultMemoryCollectionName);
+            foreach (var (key, value) in _values)
+            {
+                skContext.Variables.Set(key, value);
+            }
 
+            skContext.Variables.Set("INPUT", submitCode.Code);
+
+            var pipeline = new List<ISKFunction>();
+            
             if (_functionNamesForPipeline is null || _functionNamesForPipeline.Length == 0)
             {
                 var semanticFunction = SemanticKernel.CreateSemanticFunction("{{$INPUT}}");
@@ -67,11 +72,6 @@ public class TextCompletionKernel :
             }
             else
             {
-                foreach (var (key, value) in _values)
-                {
-                    skContext.Variables.Set(key, value);
-                }
-
                 foreach (var functionName in _functionNamesForPipeline)
                 {
                     var parts = functionName.Split(".");
@@ -130,7 +130,7 @@ public class TextCompletionKernel :
         var plan = await SemanticKernel.RunAsync(submitCode.Code, planner["CreatePlan"]);
         var currentPlanStepContext = plan;
         var step = 1;
-        var maxSteps = 10;
+        var maxSteps = 100;
         while (!currentPlanStepContext.Variables.ToPlan().IsComplete && step < maxSteps)
         {
             var results = await SemanticKernel.RunAsync(currentPlanStepContext.Variables, planner["ExecutePlan"]);
@@ -168,7 +168,11 @@ public class TextCompletionKernel :
 
     public Task HandleAsync(SendValue command, KernelInvocationContext context)
     {
-        _values[command.Name] = command.FormattedValue?.Value ?? command.Value?.ToString();
+        var value = command.FormattedValue?.Value ?? command.Value?.ToString();
+        if (value is { })
+        {
+            _values[command.Name] = value;
+        }
 
         return Task.CompletedTask;
     }

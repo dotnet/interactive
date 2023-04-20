@@ -262,7 +262,7 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task ScheduleAsync(System.Func<KernelInvocationContext,System.Threading.Tasks.Task> func)
   public static class KernelInvocationContextExtensions
     public static DisplayedValue Display(System.Object value, System.String[] mimeTypes)
-    public static DisplayedValue DisplayAs(System.String value, System.String mimeType, System.String[] additionalMimeTypes)
+    public static DisplayedValue DisplayAs(System.String value, System.String mimeType)
     public static System.Void DisplayStandardError(System.String error, Microsoft.DotNet.Interactive.Commands.KernelCommand command = null)
     public static System.Void DisplayStandardOut(System.String output, Microsoft.DotNet.Interactive.Commands.KernelCommand command = null)
     public static System.Void PublishValueProduced(Microsoft.DotNet.Interactive.Commands.RequestValue requestValue, System.Object value)
@@ -291,6 +291,7 @@ Microsoft.DotNet.Interactive
     .ctor(System.String name = value)
     public ChooseKernelDirective ChooseKernelDirective { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,FormattedValue> Values { get;}
+    protected System.Threading.Tasks.Task StoreValueAsync(System.String key, System.String value, System.String mimeType, System.Boolean shouldDisplayValue, KernelInvocationContext context)
   public class KqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
   public class LinePosition, System.IEquatable<LinePosition>
@@ -948,4 +949,4 @@ Microsoft.DotNet.Interactive.ValueSharing
 System
   public static class DisplayExtensions
     public static Microsoft.DotNet.Interactive.DisplayedValue Display(String[] mimeTypes)
-    public static Microsoft.DotNet.Interactive.DisplayedValue DisplayAs(String mimeType, String[] additionalMimeTypes)
+    public static Microsoft.DotNet.Interactive.DisplayedValue DisplayAs(String mimeType)

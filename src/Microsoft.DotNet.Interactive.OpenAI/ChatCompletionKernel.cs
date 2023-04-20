@@ -6,15 +6,18 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
+using Microsoft.SemanticKernel.CoreSkills;
 
 namespace Microsoft.DotNet.Interactive.OpenAI;
 
 public class ChatCompletionKernel :
     Kernel,
-    IKernelCommandHandler<SubmitCode>
+    IKernelCommandHandler<SubmitCode>,
+    IKernelCommandHandler<SendValue>
 {
     private ChatHistory? _chatHistory;
     private IChatCompletion? _chatCompletionService;
+    private readonly Dictionary<string, string> _values = new();
 
     public ChatCompletionKernel(
         IKernel semanticKernel,
@@ -32,11 +35,29 @@ public class ChatCompletionKernel :
     {
         _chatCompletionService ??= SemanticKernel.GetService<IChatCompletion>();
         _chatHistory ??= _chatCompletionService.CreateNewChat();
+        
+        var skContext = SemanticKernel.CreateNewContext();
+        skContext.Variables.Set(TextMemorySkill.CollectionParam, TextEmbeddingGenerationKernel.DefaultMemoryCollectionName);
+        foreach (var (key, value) in _values)
+        {
+            skContext.Variables.Set(key, value);
+        }
 
-        _chatHistory.AddMessage("user", submitCode.Code);
+        _chatHistory.AddMessage(ChatHistory.AuthorRoles.User, submitCode.Code);
 
         var reply = await _chatCompletionService.GenerateMessageAsync(_chatHistory, new(), context.CancellationToken);
 
         context.Publish(new ReturnValueProduced(reply, submitCode, FormattedValue.CreateManyFromObject(reply, PlainTextFormatter.MimeType)));
+    }
+
+    public Task HandleAsync(SendValue command, KernelInvocationContext context)
+    {
+        var value = command.FormattedValue?.Value ?? command.Value?.ToString();
+        if (value is { })
+        {
+            _values[command.Name] = value;
+        }
+
+        return Task.CompletedTask;
     }
 }

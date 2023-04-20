@@ -23,9 +23,11 @@ public class TextEmbeddingGenerationServiceSettings
 
 public class ChatCompletionServiceSettings
 {
+    public string? Endpoint { get; set; }
     public string? ModelOrDeploymentName { get; set; }
     public string? ApiKey { get; set; }
     public string? OrgId { get; set; }
+    public bool UseAzureOpenAI { get; set; }
 }
 
 public class ImageGenerationServiceSettings

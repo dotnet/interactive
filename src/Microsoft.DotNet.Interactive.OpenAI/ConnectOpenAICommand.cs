@@ -108,7 +108,7 @@ public class ConnectOpenAICommand : ConnectKernelCommand
             kernels.Add(new ChatCompletionKernel(
                             semanticKernel,
                             kernelGroupName,
-                            settings.ChatCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName));
+                            settings.ChatCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName!));
         }
 
         if (config.AllTextCompletionServiceIds.Any())
@@ -116,7 +116,7 @@ public class ConnectOpenAICommand : ConnectKernelCommand
             kernels.Add(new TextCompletionKernel(
                             semanticKernel,
                             kernelGroupName,
-                            settings.TextCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName));
+                            settings.TextCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName!));
         }
 
         if (config.AllTextEmbeddingGenerationServiceIds.Any())
@@ -126,7 +126,7 @@ public class ConnectOpenAICommand : ConnectKernelCommand
             kernels.Add(new TextEmbeddingGenerationKernel(
                             semanticKernel,
                             kernelGroupName,
-                            settings.TextEmbeddingGenerationServiceSettings[kernelGroupName].ModelOrDeploymentName));
+                            settings.TextEmbeddingGenerationServiceSettings[kernelGroupName].ModelOrDeploymentName!));
         }
 
         if (config.ImageGenerationServices.Any())
