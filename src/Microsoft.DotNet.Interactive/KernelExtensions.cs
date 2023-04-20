@@ -52,9 +52,8 @@ public static class KernelExtensions
         }
     }
 
-    public static Kernel FindKernelByName(this Kernel kernel, string name) => FindKernel(kernel, kernel => kernel.KernelInfo.NameAndAliases.Contains(name));
-
-    public static Kernel FindKernel(this Kernel kernel, Func<Kernel, bool> predicate) => FindKernels(kernel, predicate).FirstOrDefault();
+    public static Kernel FindKernelByName(this Kernel kernel, string name) =>
+        FindKernels(kernel, kernel1 => kernel1.KernelInfo.NameAndAliases.Contains(name)).FirstOrDefault();
 
     public static IEnumerable<Kernel> FindKernels(this Kernel kernel, Func<Kernel, bool> predicate)
     {

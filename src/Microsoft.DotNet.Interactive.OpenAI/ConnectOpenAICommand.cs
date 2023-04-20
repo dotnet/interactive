@@ -6,6 +6,7 @@ using System.CommandLine.Invocation;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.OpenAI.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.CoreSkills;
 using Microsoft.SemanticKernel.Memory;
 using Pocket.For.MicrosoftExtensionsLogging;
@@ -28,12 +29,10 @@ public class ConnectOpenAICommand : ConnectKernelCommand
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
-        if (context.HandlingKernel.RootKernel is not CompositeKernel rootKernel)
+        if (context.HandlingKernel.RootKernel is not CompositeKernel)
         {
             throw new InvalidOperationException("The root kernel must be a CompositeKernel");
         }
-
-        var kernels = new List<Kernel>();
 
         var kernelGroupName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption)!;
 
@@ -41,101 +40,68 @@ public class ConnectOpenAICommand : ConnectKernelCommand
 
         if (!TryLoadFromFile(settingsFile, out var settings))
         {
-            var useAzureOpenAI = commandLineContext.ParseResult.GetValueForOption(UseAzureOpenAIOption);
+            settings = await PromptUserForSettingsAsync(
+                           context, 
+                           commandLineContext, 
+                           kernelGroupName, 
+                           settingsFile);
+        }
 
-            settings = new SemanticKernelSettings();
+        return OpenAIKernelConnector.CreateKernels(settings, kernelGroupName);
+    }
 
-            settings.TextCompletionServiceSettings = new()
+    private async Task<SemanticKernelSettings> PromptUserForSettingsAsync(
+        KernelInvocationContext context, 
+        InvocationContext commandLineContext, 
+        string kernelGroupName, 
+        string settingsFile)
+    {
+        var useAzureOpenAI = commandLineContext.ParseResult.GetValueForOption(UseAzureOpenAIOption);
+
+        var settings = new SemanticKernelSettings();
+
+        settings.TextCompletionServiceSettings = new()
+        {
+            [kernelGroupName] = new TextCompletionServiceSettings
             {
-                [kernelGroupName] = new TextCompletionServiceSettings
-                {
-                    Endpoint = useAzureOpenAI
-                                   ? await Kernel.GetInputAsync(
-                                         "Please enter your Azure OpenAI endpoint",
-                                         valueName: "endpoint")
-                                   : null,
-                    UseAzureOpenAI = useAzureOpenAI,
-                    ModelOrDeploymentName =
-                        useAzureOpenAI
-                            ? await Kernel.GetInputAsync(
-                                  "Please enter your Azure OpenAI deployment name",
-                                  valueName: "deploymentName")
+                Endpoint = useAzureOpenAI
+                               ? await Kernel.GetInputAsync(
+                                     "Please enter your Azure OpenAI endpoint",
+                                     valueName: "endpoint")
+                               : null,
+                UseAzureOpenAI = useAzureOpenAI,
+                ModelOrDeploymentName =
+                    useAzureOpenAI
+                        ? await Kernel.GetInputAsync(
+                              "Please enter your Azure OpenAI deployment name",
+                              valueName: "deploymentName")
+                        : await Kernel.GetInputAsync(
+                              "Please enter the OpenAI model name",
+                              valueName: "modelName"),
+
+                ApiKey =
+                    useAzureOpenAI
+                        ? await Kernel.GetPasswordAsync(
+                              "Please enter your Azure OpenAI API key",
+                              valueName: "apiKey")
+                        : await Kernel.GetPasswordAsync(
+                              "Please enter your OpenAI API key",
+                              valueName: "apiKey"),
+                OrgId = useAzureOpenAI
+                            ? null
                             : await Kernel.GetInputAsync(
-                                  "Please enter the OpenAI model name",
-                                  valueName: "modelName"),
+                                  "Please enter your OpenAI organization ID",
+                                  valueName: "orgId"),
+            }
+        };
 
-                    ApiKey =
-                        useAzureOpenAI
-                            ? await Kernel.GetPasswordAsync(
-                                  "Please enter your Azure OpenAI API key",
-                                  valueName: "apiKey")
-                            : await Kernel.GetPasswordAsync(
-                                  "Please enter your OpenAI API key",
-                                  valueName: "apiKey"),
-                    OrgId = useAzureOpenAI
-                                ? null
-                                : await Kernel.GetInputAsync(
-                                      "Please enter your OpenAI organization ID",
-                                      valueName: "orgId"),
-                }
-            };
+        WriteSettingsFile(settings, settingsFile);
 
-            WriteSettingsFile(settings, settingsFile);
-
-            context.Display($"""
+        context.Display($"""
         A settings file was created: {settingsFile}
 
         You can edit this file to add additional OpenAI services.
         """);
-        }
-
-        var config = settings.CreateKernelConfig();
-
-        var kernelBuilder = SemanticKernel.Kernel
-                                          .Builder
-                                          .WithConfiguration(config)
-                                          .WithLogger(new LoggerFactory().AddPocketLogger().CreateLogger<ConnectOpenAICommand>());
-
-        if (config.AllTextEmbeddingGenerationServiceIds.Any())
-        {
-            kernelBuilder.WithMemoryStorage(new VolatileMemoryStore());
-        }
-
-        var semanticKernel = kernelBuilder.Build();
-
-        if (config.AllChatCompletionServiceIds.Any())
-        {
-            kernels.Add(new ChatCompletionKernel(
-                            semanticKernel,
-                            kernelGroupName,
-                            settings.ChatCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName!));
-        }
-
-        if (config.AllTextCompletionServiceIds.Any())
-        {
-            kernels.Add(new TextCompletionKernel(
-                            semanticKernel,
-                            kernelGroupName,
-                            settings.TextCompletionServiceSettings[kernelGroupName].ModelOrDeploymentName!));
-        }
-
-        if (config.AllTextEmbeddingGenerationServiceIds.Any())
-        {
-            semanticKernel.ImportSkill(new TextMemorySkill());
-
-            kernels.Add(new TextEmbeddingGenerationKernel(
-                            semanticKernel,
-                            kernelGroupName,
-                            settings.TextEmbeddingGenerationServiceSettings[kernelGroupName].ModelOrDeploymentName!));
-        }
-
-        if (config.ImageGenerationServices.Any())
-        {
-            kernels.Add(new ImageGenerationKernel(semanticKernel, kernelGroupName));
-        }
-
-        kernels.Add(new SkillKernel(semanticKernel, kernelGroupName));
-
-        return kernels;
+        return settings;
     }
 }

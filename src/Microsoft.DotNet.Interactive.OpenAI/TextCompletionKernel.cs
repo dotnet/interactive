@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
+using System.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -16,6 +17,7 @@ public class TextCompletionKernel :
     IKernelCommandHandler<SubmitCode>,
     IKernelCommandHandler<SendValue>
 {
+    private readonly TextEmbeddingGenerationKernel? _embeddingsKernel;
     private readonly Command _promptCommand = new("#!use-skills");
     private readonly Dictionary<string, string> _values = new();
     private readonly Argument<string[]> _functionPipelineArgument = new("pipeline");
@@ -26,8 +28,10 @@ public class TextCompletionKernel :
     public TextCompletionKernel(
         IKernel semanticKernel,
         string name,
-        string modelName) : base($"{name}(text)")
+        string modelName,
+        TextEmbeddingGenerationKernel? embeddingsKernel = null) : base($"{name}(text)")
     {
+        _embeddingsKernel = embeddingsKernel;
         SemanticKernel = semanticKernel;
         KernelInfo.LanguageName = "text";
         KernelInfo.DisplayName = $"{Name} - {modelName}";
@@ -50,12 +54,16 @@ public class TextCompletionKernel :
 
     public IKernel SemanticKernel { get; }
 
-    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(
+        SubmitCode submitCode,
+        KernelInvocationContext context)
     {
         try
         {
             var skContext = SemanticKernel.CreateNewContext();
+
             skContext.Variables.Set(TextMemorySkill.CollectionParam, TextEmbeddingGenerationKernel.DefaultMemoryCollectionName);
+
             foreach (var (key, value) in _values)
             {
                 skContext.Variables.Set(key, value);
@@ -64,10 +72,40 @@ public class TextCompletionKernel :
             skContext.Variables.Set("INPUT", submitCode.Code);
 
             var pipeline = new List<ISKFunction>();
-            
+
+            if (_embeddingsKernel is not null)
+            {
+                var sb = new StringBuilder();
+
+                foreach (var id in _embeddingsKernel.EmbeddingIds)
+                {
+                    skContext.Variables.Set(id, id);
+                    sb.AppendLine($$$"""
+                    {{retrieve ${{{id}}}}} 
+
+                    """);
+                }
+
+                sb.AppendLine("{{$INPUT}}");
+
+                var semanticFunction = SemanticKernel.CreateSemanticFunction(
+                    sb.ToString(),
+                    skillName: FixUpCharacters(Name),
+                    functionName: "loadmemory");
+
+                pipeline.Add(semanticFunction);
+
+                string FixUpCharacters(string name)
+                {
+                    return name.Replace("(", "_").Replace(")", "_");
+                }
+            }
+
             if (_functionNamesForPipeline is null || _functionNamesForPipeline.Length == 0)
             {
-                var semanticFunction = SemanticKernel.CreateSemanticFunction("{{$INPUT}}");
+                var semanticFunction = SemanticKernel.CreateSemanticFunction("""
+                    {{$INPUT}}
+                    """);
                 pipeline.Add(semanticFunction);
             }
             else

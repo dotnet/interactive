@@ -38,6 +38,7 @@ public class ChatCompletionKernel :
         
         var skContext = SemanticKernel.CreateNewContext();
         skContext.Variables.Set(TextMemorySkill.CollectionParam, TextEmbeddingGenerationKernel.DefaultMemoryCollectionName);
+
         foreach (var (key, value) in _values)
         {
             skContext.Variables.Set(key, value);
