@@ -174,6 +174,7 @@ public class TextCompletionKernel :
         finally
         {
             _functionNamesForPipeline = null;
+            _contextForMemory = null;
         }
     }
 
