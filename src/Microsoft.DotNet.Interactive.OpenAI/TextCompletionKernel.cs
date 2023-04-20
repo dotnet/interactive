@@ -142,14 +142,14 @@ public class TextCompletionKernel :
                 }
             }
 
-            if (_functionNamesForPipeline is null || _functionNamesForPipeline.Length == 0 || pipeline.Count == 0)
+            if (_functionNamesForPipeline?.Length == 0 && pipeline.Count == 0)
             {
                 var semanticFunction = SemanticKernel.CreateSemanticFunction("""
                     {{$INPUT}}
                     """);
                 pipeline.Add(semanticFunction);
             }
-            else
+            else if (_functionNamesForPipeline?.Length > 0)
             {
                 foreach (var functionName in _functionNamesForPipeline)
                 {
