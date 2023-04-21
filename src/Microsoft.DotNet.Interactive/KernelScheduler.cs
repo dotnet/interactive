@@ -38,8 +38,9 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
         _disposables = new CompositeDisposable
         {
+            _schedulerDisposalSource.Cancel,
+            _schedulerDisposalSource,
             _topLevelScheduledOperations,
-            () => _schedulerDisposalSource.Cancel()
         };
 
         static bool DoNotPreempt(T one, T two)
