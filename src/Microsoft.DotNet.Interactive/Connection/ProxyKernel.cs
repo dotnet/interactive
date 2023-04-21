@@ -211,7 +211,7 @@ public sealed class ProxyKernel : Kernel
 
                         if (pending.executionContext is { } ec)
                         {
-                            ExecutionContext.Run(ec, _ =>
+                            ExecutionContext.Run(ec.CreateCopy(), _ =>
                             {
                                 pending.invocationContext.Publish(newEvent);
                                 pending.invocationContext.Publish(kip);
@@ -228,7 +228,7 @@ public sealed class ProxyKernel : Kernel
                     {
                         if (pending.executionContext is { } ec)
                         {
-                            ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
+                            ExecutionContext.Run(ec.CreateCopy(), _ => pending.invocationContext.Publish(kernelEvent), null);
                         }
                         else
                         {
