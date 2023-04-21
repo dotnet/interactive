@@ -38,7 +38,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         _disposables = new CompositeDisposable
         {
             _topLevelScheduledOperations,
-            () => _schedulerDisposalSource.Cancel()
+            _schedulerDisposalSource
         };
     }
 
