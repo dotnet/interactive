@@ -89,7 +89,7 @@ internal class InteractiveLoggerProvider : ILoggerProvider
 
             if (_loggerProvider._pocketLoggerEC is {} currentEc)
             {
-                ExecutionContext.Run(currentEc, PocketLogCallback, logMessage);
+                ExecutionContext.Run(currentEc.CreateCopy(), PocketLogCallback, logMessage);
             }
             else
             {

@@ -112,7 +112,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             try
             {
                 ExecutionContext.Run(
-                    executionContext!,
+                    executionContext!.CreateCopy(),
                     _ => RunPreemptively(operation),
                     operation);
 

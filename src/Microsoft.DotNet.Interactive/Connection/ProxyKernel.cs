@@ -206,38 +206,38 @@ public sealed class ProxyKernel : Kernel
                     _suppressCompletionsForCommandId = null;
                     break;
                 case KernelInfoProduced kip when kip.KernelInfo.Uri == KernelInfo.RemoteUri:
-                {
-                    UpdateKernelInfoFromEvent(kip);
-                    var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
-
-                    newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
-
-                    if (pending.executionContext is { } ec)
                     {
-                        ExecutionContext.Run(ec, _ =>
+                        UpdateKernelInfoFromEvent(kip);
+                        var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
+
+                        newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
+
+                        if (pending.executionContext is { } ec)
+                        {
+                            ExecutionContext.Run(ec.CreateCopy(), _ =>
+                            {
+                                pending.invocationContext.Publish(newEvent);
+                                pending.invocationContext.Publish(kip);
+                            }, null);
+                        }
+                        else
                         {
                             pending.invocationContext.Publish(newEvent);
                             pending.invocationContext.Publish(kip);
-                        }, null);
+                        }
                     }
-                    else
-                    {
-                        pending.invocationContext.Publish(newEvent);
-                        pending.invocationContext.Publish(kip);
-                    }
-                }
                     break;
                 default:
-                {
-                    if (pending.executionContext is { } ec)
                     {
-                        ExecutionContext.Run(ec, _ => pending.invocationContext.Publish(kernelEvent), null);
+                        if (pending.executionContext is { } ec)
+                        {
+                            ExecutionContext.Run(ec.CreateCopy(), _ => pending.invocationContext.Publish(kernelEvent), null);
+                        }
+                        else
+                        {
+                            pending.invocationContext.Publish(kernelEvent);
+                        }
                     }
-                    else
-                    {
-                        pending.invocationContext.Publish(kernelEvent);
-                    }
-                }
                     break;
             }
         }
