@@ -24,18 +24,6 @@ public class SubmitCode : KernelCommand
         KernelNameDirectiveNode kernelNameDirectiveNode = null)
         : base(languageNode.Name, parent)
     {
-        // FIX: (SubmitCode) clean up
-        if (Code is null)
-        {
-            
-
-        }
-
-        if (parent is null)
-        {
-            
-        }
-
         Code = languageNode.Text;
         LanguageNode = languageNode;
         SubmissionType = submissionType;

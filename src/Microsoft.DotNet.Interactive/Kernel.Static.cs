@@ -38,21 +38,31 @@ public partial class Kernel
     /// <param name="prompt">The prompt to show.</param>
     /// <param name="typeHint">The type hint for the input, for example text or password.</param>
     /// <returns>The user input value.</returns>
-    public static async Task<string> GetInputAsync(string prompt = "", string typeHint = "text")
+    public static async Task<string> GetInputAsync(
+        string prompt = "",
+        string typeHint = "text", 
+        string valueName = null)
     {
-        return await GetInputAsync(prompt, false, typeHint);
+        return await GetInputAsync(prompt, false, typeHint, valueName);
     }
         
-    public static async Task<string> GetPasswordAsync(string prompt = "")
+    public static async Task<string> GetPasswordAsync(
+        string prompt = "",
+        string valueName = null)
     {
-        return await GetInputAsync(prompt, true);
+        return await GetInputAsync(prompt, true, valueName: valueName);
     }
 
-    private static async Task<string> GetInputAsync(string prompt, bool isPassword, string typeHint = "text")
+    private static async Task<string> GetInputAsync(
+        string prompt, 
+        bool isPassword, 
+        string typeHint = "text",
+        string valueName = null)
     {
         var command = new RequestInput(
             prompt,
-            inputTypeHint: isPassword ? "password" : typeHint);
+            inputTypeHint: isPassword ? "password" : typeHint,
+            valueName: valueName);
 
         var result = await Root.SendAsync(command, CancellationToken.None);
 

@@ -268,7 +268,7 @@ public class KernelInvocationContext : IDisposable
         }
     }
 
-    public static KernelInvocationContext Establish(KernelCommand command)
+    public static KernelInvocationContext GetOrCreateAmbientContext(KernelCommand command)
     {
         if (_current.Value is null || _current.Value.IsComplete)
         {
@@ -282,15 +282,6 @@ public class KernelInvocationContext : IDisposable
 
                 currentContext._childCommands.GetOrAdd(command, innerCommand =>
                 {
-                    if (innerCommand.Parent is  null)
-                    {
-                       // innerCommand.Parent = currentContext.Command;
-                    }
-                    else
-                    {
-                        // FIX: (Establish) when does this happen?
-                    }
-
                     var replaySubject = new ReplaySubject<KernelEvent>();
 
                     var subscription = replaySubject
@@ -343,6 +334,7 @@ public class KernelInvocationContext : IDisposable
         }
 
         Complete(Command);
+
         if (_ownsCancellationTokenSource)
         {
             _cancellationTokenSources.TryRemove(Command.GetOrCreateToken(), out _);

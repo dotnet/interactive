@@ -40,7 +40,7 @@ public class TokenTests
         string token1 = null;
         string token2 = null;
 
-        using (KernelInvocationContext.Establish(parentCommand))
+        using (KernelInvocationContext.GetOrCreateAmbientContext(parentCommand))
         {
             token1 = new SubmitCode("456").GetOrCreateToken();
             token2 = new SubmitCode("456").GetOrCreateToken();
@@ -58,12 +58,12 @@ public class TokenTests
         string token1 = null;
         string token2 = null;
 
-        using (KernelInvocationContext.Establish(parentCommand))
+        using (KernelInvocationContext.GetOrCreateAmbientContext(parentCommand))
         {
             token1 = new SubmitCode("456").GetOrCreateToken();
         }
 
-        using (KernelInvocationContext.Establish(parentCommand))
+        using (KernelInvocationContext.GetOrCreateAmbientContext(parentCommand))
         {
             token2 = new SubmitCode("456").GetOrCreateToken();
         }

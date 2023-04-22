@@ -338,7 +338,7 @@ public abstract partial class Kernel :
         KernelInvocationContext context = null;
         command.ShouldPublishCompletionEvent ??= true;
 
-        context = KernelInvocationContext.Establish(command);
+        context = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
         // only subscribe for the root command 
         var currentCommandOwnsContext = context.Command.Equals(command);
@@ -521,7 +521,7 @@ public abstract partial class Kernel :
 
     internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
     {
-        var context = KernelInvocationContext.Establish(command);
+        var context = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
         try
         {
