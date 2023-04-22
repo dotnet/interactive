@@ -188,7 +188,7 @@ public class KeyValueStoreKernel :
         string mimeType = null)
 
     {
-        mimeType ??= ( options.MimeType ?? PlainTextFormatter.MimeType);
+        mimeType ??= options.MimeType ?? PlainTextFormatter.MimeType;
         _values[options.Name] = new FormattedValue(mimeType, value);
 
         if (options.MimeType is {} displayMimeType)

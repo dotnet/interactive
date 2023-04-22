@@ -23,9 +23,8 @@ public static class DisplayExtensions
 
     public static DisplayedValue DisplayAs(
         this string value, 
-        string mimeType, 
-        params string[] additionalMimeTypes)
+        string mimeType)
     {
-        return KernelInvocationContext.Current.DisplayAs(value, mimeType, additionalMimeTypes);
+        return KernelInvocationContext.Current.DisplayAs(value, mimeType);
     }
 }

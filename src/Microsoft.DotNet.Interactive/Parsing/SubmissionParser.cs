@@ -307,7 +307,7 @@ public class SubmissionParser
             var kernel = _kernel switch
             {
                 // The parent kernel is the one where a directive would be defined, and therefore the one that should decide whether to accept this submission. 
-                CompositeKernel composite => composite.FindKernelByName(node.ParentKernelName),
+                CompositeKernel composite => composite.FindKernelByName(node.ParentKernelName) ?? _kernel,
                 _ => _kernel
             };
 
@@ -508,7 +508,7 @@ public class SubmissionParser
 
             var inputRequest = new RequestInput(
                 valueName: valueName,
-                prompt: $"Please enter a value for field \"{valueName}\".",
+                prompt: !valueName.Contains(" ") ? $"Please enter a value for field \"{valueName}\"." : valueName,
                 inputTypeHint: typeHint);
 
             var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();

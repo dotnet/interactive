@@ -38,8 +38,13 @@ public static class KernelInvocationContextExtensions
     public static DisplayedValue DisplayAs(
         this KernelInvocationContext context,
         string value,
-        string mimeType, params string[]additionalMimeTypes)
+        string mimeType)
     {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
         if (string.IsNullOrWhiteSpace(mimeType))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
@@ -47,20 +52,15 @@ public static class KernelInvocationContextExtensions
 
         var displayId = Guid.NewGuid().ToString();
 
-        var mimeTypes = new HashSet<string>(additionalMimeTypes ?? Array.Empty<string>())
-        {
-            mimeType
-        };
-
-        var formattedValues = mimeTypes.Select(mime =>  new FormattedValue(
-            mime,
-            value));
+        var formattedValue = new FormattedValue(
+            mimeType,
+            value);
 
         context.Publish(
             new DisplayedValueProduced(
                 value,
-                context?.Command,
-                formattedValues.ToArray(),
+                context.Command,
+                new [] { formattedValue },
                 displayId));
 
         var displayedValue = new DisplayedValue(displayId, mimeType, context);

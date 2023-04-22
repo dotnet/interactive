@@ -158,7 +158,6 @@ public class SerializationTests
     {
         foreach (var command in commands().Select(c =>
                  {
-                     c.Properties["id"] = "command-id";
                      c.RoutingSlip.StampAsArrived(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
                      c.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
                      return c;
@@ -220,7 +219,6 @@ public class SerializationTests
     {
         foreach (var @event in events().Select(e =>
                  {
-                     e.Command.Properties["id"] = "command-id";
                      if (e is not KernelReady)
                      {
                          e.Command.RoutingSlip.StampAsArrived(new Uri("kernel://somelocation/kernelName"));

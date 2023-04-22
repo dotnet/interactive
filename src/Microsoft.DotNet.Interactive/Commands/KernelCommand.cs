@@ -1,10 +1,9 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -89,9 +88,9 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
             return _token;
         }
 
-        if (Parent is { } parent)
+        if (_parent is { })
         {
-            _token = parent._token; // + "." + parent.GetNextChildToken();
+            SetTokenFromParent();
             return _token;
         }
 
@@ -120,6 +119,11 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
             return Convert.ToBase64String(hash);
         }
+    }
+
+    private void SetTokenFromParent()
+    {
+        _token = _parent._token; // + "." + parent.GetNextChildToken();
     }
 
     [JsonIgnore] internal SchedulingScope SchedulingScope { get; set; }

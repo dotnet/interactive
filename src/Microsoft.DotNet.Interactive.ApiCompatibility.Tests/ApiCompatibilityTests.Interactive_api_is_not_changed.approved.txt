@@ -111,8 +111,8 @@ Microsoft.DotNet.Interactive
     public static Kernel Root { get;}
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
-    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text)
-    public static System.Threading.Tasks.Task<System.String> GetPasswordAsync(System.String prompt = )
+    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text, System.String valueName = null)
+    public static System.Threading.Tasks.Task<System.String> GetPasswordAsync(System.String prompt = , System.String valueName = null)
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
     public ChooseKernelDirective ChooseKernelDirective { get;}
@@ -199,7 +199,6 @@ Microsoft.DotNet.Interactive
   public class KernelExtensionLoadException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(System.Exception innerException)
   public static class KernelExtensions
-    public static Kernel FindKernel(System.Func<Kernel,System.Boolean> predicate)
     public static Kernel FindKernelByName(System.String name)
     public static System.Collections.Generic.IEnumerable<Kernel> FindKernels(System.Func<Kernel,System.Boolean> predicate)
     public static System.Threading.Tasks.Task LoadAndRunInteractiveDocument(System.IO.FileInfo file)
@@ -239,7 +238,7 @@ Microsoft.DotNet.Interactive
     public System.String ToString()
   public class KernelInvocationContext, System.IDisposable
     public static KernelInvocationContext Current { get;}
-    public static KernelInvocationContext Establish(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    public static KernelInvocationContext GetOrCreateAmbientContext(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public System.Threading.CancellationToken CancellationToken { get;}
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public Kernel HandlingKernel { get;}
@@ -255,7 +254,7 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task ScheduleAsync(System.Func<KernelInvocationContext,System.Threading.Tasks.Task> func)
   public static class KernelInvocationContextExtensions
     public static DisplayedValue Display(System.Object value, System.String[] mimeTypes)
-    public static DisplayedValue DisplayAs(System.String value, System.String mimeType, System.String[] additionalMimeTypes)
+    public static DisplayedValue DisplayAs(System.String value, System.String mimeType)
     public static System.Void DisplayStandardError(System.String error, Microsoft.DotNet.Interactive.Commands.KernelCommand command = null)
     public static System.Void DisplayStandardOut(System.String output, Microsoft.DotNet.Interactive.Commands.KernelCommand command = null)
     public static System.Void PublishValueProduced(Microsoft.DotNet.Interactive.Commands.RequestValue requestValue, System.Object value)
@@ -946,4 +945,4 @@ Microsoft.DotNet.Interactive.ValueSharing
 System
   public static class DisplayExtensions
     public static Microsoft.DotNet.Interactive.DisplayedValue Display(String[] mimeTypes)
-    public static Microsoft.DotNet.Interactive.DisplayedValue DisplayAs(String mimeType, String[] additionalMimeTypes)
+    public static Microsoft.DotNet.Interactive.DisplayedValue DisplayAs(String mimeType)

@@ -210,10 +210,7 @@ f();"));
         SetKernelLanguage(language);
         var command = new SubmitCode(@"#!html
 <p>hello!</p>", Kernel.Name);
-
-        // FIX: (deferred_command_can_produce_events) is this needed?
-        command.Properties["publish-internal-events"] = true;
-
+        
         DeferCommand(command);
         var request = ZeroMQMessage.Create(new ExecuteRequest("display(2+2)"));
         var context = new JupyterRequestContext(JupyterMessageSender, request);

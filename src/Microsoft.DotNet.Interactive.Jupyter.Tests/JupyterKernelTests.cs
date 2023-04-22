@@ -256,12 +256,12 @@ public class JupyterKernelTests : JupyterKernelTestBase
     public async Task can_cancel_hover_text_without_kernel_interrupt()
     {
         var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
-                Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest())),
+            Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest()))
         }));
 
         var kernel = await CreateJupyterKernelAsync(options);
 
-        var waitForCommandReceieved = options.MessageTracker.SentMessages
+        var waitForCommandReceived = options.MessageTracker.SentMessages
                     .TakeUntil(m => m.Header.MessageType == JupyterMessageContentTypes.InspectRequest)
                     .ToTask();
 
@@ -270,7 +270,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
         var requestHoverTextTask = kernel.SendAsync(request, cts.Token);
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        await waitForCommandReceieved;
+        await waitForCommandReceived;
         cts.Cancel();
 
         // wait until task is done

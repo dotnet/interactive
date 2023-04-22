@@ -54,7 +54,7 @@ public abstract class RequestHandlerBase<T> : IDisposable
 
         bool ShouldForward(KernelEvent e)
         {
-            return e.Command?.GetOrCreateToken() == context.Token || e.Command.ShouldPublishInternalEvents();
+            return e.Command?.GetOrCreateToken() == context.Token;
         }
     }
 
