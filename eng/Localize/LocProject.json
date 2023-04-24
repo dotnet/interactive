@@ -1,34 +1,62 @@
 {
   "Projects": [
     {
-      "LanguageSet": "Azure_Languages",
+      "LocItems": [
+        {
+          "SourceFile": "src\\dotnet-interactive\\xlf\\Resources.xlf",
+          "OutputPath": "src\\dotnet-interactive\\xlf",
+          "LclFile": "src\\dotnet-interactive\\xlf\\{Lang}\\Resources.xlf.lcl",
+          "Languages": "",
+          "CopyOption": "LangIDOnName"
+        }
+      ],
+      "LanguageSet": "VS_Main_Languages"
+    },
+    {
+      "LocItems": [
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive\\xlf\\Resources.xlf",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive\\xlf",
+          "LclFile": "src\\Microsoft.DotNet.Interactive\\xlf\\{Lang}\\Resources.xlf.lcl",
+          "Languages": "",
+          "CopyOption": "LangIDOnName"
+        }
+      ],
+      "LanguageSet": "VS_Main_Languages"
+    },
+    {
+      "LocItems": [
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.Journey\\xlf\\Resources.xlf",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.Journey\\xlf",
+          "LclFile": "src\\Microsoft.DotNet.Interactive.Journey\\xlf\\{Lang}\\Resources.xlf.lcl",
+          "Languages": "",
+          "CopyOption": "LangIDOnName"
+        }
+      ],
+      "LanguageSet": "VS_Main_Languages"
+    },
+    {
+      "LocItems": [
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.Jupyter\\xlf\\Resources.xlf",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.Jupyter\\xlf",
+          "LclFile": "src\\Microsoft.DotNet.Interactive.Jupyter\\xlf\\{Lang}\\Resources.xlf.lcl",
+          "Languages": "",
+          "CopyOption": "LangIDOnName"
+        }
+      ],
+      "LanguageSet": "VS_Main_Languages"
+    },
+    {
       "LocItems": [
         {
           "SourceFile": "src\\polyglot-notebooks-vscode-insiders\\package.nls.json",
-          "CopyOption": "LangIDOnName",
-          "OutputPath": "src\\polyglot-notebooks-vscode-insiders"
-        },
-        {
-          "SourceFile": "src\\dotnet-interactive\\Resources.resx",
-          "CopyOption": "LangIDOnName",
-          "OutputPath": "src\\dotnet-interactive"
-        },
-        {
-          "SourceFile": "src\\Microsoft.DotNet.Interactive\\Resources.resx",
-          "CopyOption": "LangIDOnName",
-          "OutputPath": "src\\Microsoft.DotNet.Interactive"
-        },
-        {
-          "SourceFile": "src\\Microsoft.DotNet.Interactive.Journey\\Resources.resx",
-          "CopyOption": "LangIDOnName",
-          "OutputPath": "src\\Microsoft.DotNet.Interactive.Journey"
-        },
-        {
-          "SourceFile": "src\\Microsoft.DotNet.Interactive.Jupyter\\Resources.resx",
-          "CopyOption": "LangIDOnName",
-          "OutputPath": "src\\Microsoft.DotNet.Interactive.Jupyter"
+          "OutputPath": "src\\polyglot-notebooks-vscode-insiders",
+          "CopyOption": "LangIDOnName"
         }
-      ]
+      ],
+      "LanguageSet": "VS_Main_Languages"
     }
   ]
 }
