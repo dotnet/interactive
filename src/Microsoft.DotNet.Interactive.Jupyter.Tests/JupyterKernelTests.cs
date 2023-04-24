@@ -176,7 +176,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         await waitForCommandReceieved;
 
-        await Task.Delay(10);
+        await Task.Delay(100);
 
         cts.Cancel();
         // wait until task is done
