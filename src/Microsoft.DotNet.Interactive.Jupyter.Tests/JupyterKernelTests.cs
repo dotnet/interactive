@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -155,7 +156,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
         options.Connection.KernelConnection.IsDisposed.Should().BeTrue();
     }
 
-    [Fact(Skip = "fix test")]
+    [Fact]
     public async Task can_cancel_submit_code_and_interrupt_kernel()
     {
         var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
@@ -174,8 +175,10 @@ public class JupyterKernelTests : JupyterKernelTestBase
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         await waitForCommandReceieved;
-        cts.Cancel();
 
+        await Task.Delay(10);
+
+        cts.Cancel();
         // wait until task is done
         await codeSubmissionTask.ContinueWith(t => { },
             new CancellationToken(),
