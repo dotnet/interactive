@@ -7,9 +7,18 @@ param (
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
-$projectsToSkip = @(
-    "Microsoft.DotNet.Interactive.CSharpProject.Tests"
-    )
+if ($IsWindows) {
+    $projectsToSkip = @(
+        "Microsoft.DotNet.Interactive.CSharpProject.Tests"
+        )
+}
+else
+{
+    $projectsToSkip = @(
+        "Microsoft.DotNet.Interactive.VisualStudio.Tests",
+        "Microsoft.DotNet.Interactive.CSharpProject.Tests"
+        )
+}
 
 function ExecuteTestDirectory([string]$testDirectory, [string]$extraArgs = "") {
     $testCommand = "dotnet test $testDirectory/ $extraArgs -l trx --no-restore --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $buildConfig --results-directory $repoRoot/artifacts/TestResults/$buildConfig"

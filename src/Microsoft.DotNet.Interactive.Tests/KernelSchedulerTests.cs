@@ -149,7 +149,7 @@ public class KernelSchedulerTests : IDisposable
         var deferredOperations = new[] { 1, 2, 3 };
         var completedDeferredOperations = new List<int>();
 
-        var deferredOperationsTaskCompletionSource = new TaskCompletionSource();
+        var deferredOperationsTaskCompletionSource = new TaskCompletionSource<bool>();
         scheduler.RegisterDeferredOperationSource(
             (_, _) => deferredOperations,
             async i =>
@@ -164,7 +164,7 @@ public class KernelSchedulerTests : IDisposable
                 completedDeferredOperations.Add(i);
                 if (completedDeferredOperations.Count == deferredOperations.Length)
                 {
-                    deferredOperationsTaskCompletionSource.SetResult();
+                    deferredOperationsTaskCompletionSource.SetResult(true);
                 }
 
                 return i;
@@ -211,7 +211,11 @@ public class KernelSchedulerTests : IDisposable
         laterWorkWasExecuted.Should().BeFalse();
     }
 
+#if NETFRAMEWORK
+    [FactSkipNetFramework]
+#else
     [FactSkipLinux]
+#endif
     public void cancelling_work_in_progress_prevents_subsequent_work_scheduled_before_cancellation_from_executing()
     {
         using var scheduler = new KernelScheduler<int, int>();
