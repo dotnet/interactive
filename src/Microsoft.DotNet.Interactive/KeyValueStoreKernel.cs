@@ -6,11 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
+
 using static Microsoft.DotNet.Interactive.ChooseKeyValueStoreKernelDirective;
 
 namespace Microsoft.DotNet.Interactive;
@@ -70,7 +72,7 @@ public class KeyValueStoreKernel :
 
     public IReadOnlyDictionary<string, FormattedValue> Values => _values;
 
-    Task IKernelCommandHandler<SubmitCode>.HandleAsync(
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(
         SubmitCode command,
         KernelInvocationContext context)
     {
@@ -80,9 +82,7 @@ public class KeyValueStoreKernel :
 
         var options = ValueDirectiveOptions.Create(parseResult, _chooseKernelDirective);
 
-        StoreValue(command, context, options, value);
-
-        return Task.CompletedTask;
+        await StoreValueAsync(command, context, options, value);
     }
 
     internal override bool AcceptsUnknownDirectives => true;
@@ -120,7 +120,7 @@ public class KeyValueStoreKernel :
 
             _lastOperation = (hadValue, previousValue, newValue);
 
-            StoreValue(newValue, options, context, mimeType: mimeType);
+            await StoreValueAsync(newValue, options, context, mimeType: mimeType);
         }
         else
         {
@@ -128,9 +128,9 @@ public class KeyValueStoreKernel :
         }
     }
 
-    private void StoreValue(
-        KernelCommand command, 
-        KernelInvocationContext context, 
+    private async Task StoreValueAsync(
+        KernelCommand command,
+        KernelInvocationContext context,
         ValueDirectiveOptions options,
         string value = null,
         string mimeType = null)
@@ -143,7 +143,7 @@ public class KeyValueStoreKernel :
                 context.Fail(command,
                     message: "The --from-file option cannot be used in combination with a content submission.");
             }
-                
+
         }
         else if (options.FromUrl is { })
         {
@@ -156,14 +156,14 @@ public class KeyValueStoreKernel :
         }
         else
         {
-            StoreValue(value, options, context, mimeType: mimeType);
+            await StoreValueAsync(value, options, context, mimeType: mimeType);
         }
 
         _lastOperation = default;
 
         void UndoSetValue()
         {
-            if (_lastOperation is {})
+            if (_lastOperation is { })
             {
                 if (_lastOperation?.hadValue == true)
                 {
@@ -181,19 +181,34 @@ public class KeyValueStoreKernel :
         }
     }
 
-    private void StoreValue(
+    private async Task StoreValueAsync(
         string value,
         ValueDirectiveOptions options,
         KernelInvocationContext context,
         string mimeType = null)
+    {
+        mimeType ??= (options.MimeType ?? PlainTextFormatter.MimeType);
+
+        var shouldDisplayValue = options.MimeType is { } displayMimeType;
+
+        await StoreValueAsync(options.Name, value, mimeType, shouldDisplayValue, context);
+    }
+
+    protected virtual Task StoreValueAsync(
+        string key,
+        string value,
+        string mimeType,
+        bool shouldDisplayValue,
+        KernelInvocationContext context)
 
     {
-        mimeType ??= options.MimeType ?? PlainTextFormatter.MimeType;
-        _values[options.Name] = new FormattedValue(mimeType, value);
+        _values[key] = new FormattedValue(mimeType, value);
 
-        if (options.MimeType is {} displayMimeType)
+        if (shouldDisplayValue)
         {
-            context.DisplayAs(value, displayMimeType);
+            context.DisplayAs(value, mimeType);
         }
+
+        return Task.CompletedTask;
     }
 }
