@@ -188,7 +188,7 @@ public class KeyValueStoreKernel :
         string mimeType = null)
     {
         mimeType ??= (options.MimeType ?? PlainTextFormatter.MimeType);
-        var shouldDisplayValue = !string.IsNullOrEmpty( options.MimeType );
+        var shouldDisplayValue = !string.IsNullOrWhiteSpace(options.MimeType);
         await StoreValueAsync(options.Name, value, mimeType, shouldDisplayValue, context);
     }
 
