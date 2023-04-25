@@ -283,6 +283,7 @@ Microsoft.DotNet.Interactive
     .ctor(System.String name = value)
     public ChooseKernelDirective ChooseKernelDirective { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,FormattedValue> Values { get;}
+    protected System.Threading.Tasks.Task StoreValueAsync(System.String key, System.String value, System.String mimeType, System.Boolean shouldDisplayValue, KernelInvocationContext context)
   public class KqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
   public class LinePosition, System.IEquatable<LinePosition>
