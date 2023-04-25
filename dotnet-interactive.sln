@@ -116,6 +116,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.SQLite.Tests", "src\Microsoft.DotNet.Interactive.SQLite.Tests\Microsoft.DotNet.Interactive.SQLite.Tests.csproj", "{83B62E34-7AE3-4A7A-A105-1707FF389D39}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.VisualStudio.Tests", "src\Microsoft.DotNet.Interactive.VisualStudio.Tests\Microsoft.DotNet.Interactive.VisualStudio.Tests.csproj", "{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -666,6 +668,18 @@ Global
 		{83B62E34-7AE3-4A7A-A105-1707FF389D39}.Release|x64.Build.0 = Release|Any CPU
 		{83B62E34-7AE3-4A7A-A105-1707FF389D39}.Release|x86.ActiveCfg = Release|Any CPU
 		{83B62E34-7AE3-4A7A-A105-1707FF389D39}.Release|x86.Build.0 = Release|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Debug|x64.Build.0 = Debug|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Debug|x86.Build.0 = Debug|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Release|x64.ActiveCfg = Release|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Release|x64.Build.0 = Release|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Release|x86.ActiveCfg = Release|Any CPU
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -717,6 +731,7 @@ Global
 		{6273EEFB-E920-48F4-B0AF-8620B6D9FB28} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
 		{CAB71ACA-9CDA-492D-A3DD-E5BA2C84FD64} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
 		{83B62E34-7AE3-4A7A-A105-1707FF389D39} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}
+		{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D05A9AF-CFFB-4187-8599-574387B76727}
