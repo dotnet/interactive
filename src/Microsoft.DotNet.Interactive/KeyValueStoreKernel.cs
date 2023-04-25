@@ -163,7 +163,7 @@ public class KeyValueStoreKernel :
 
         void UndoSetValue()
         {
-            if (_lastOperation is { })
+            if (_lastOperation is not null)
             {
                 if (_lastOperation?.hadValue == true)
                 {
@@ -188,9 +188,7 @@ public class KeyValueStoreKernel :
         string mimeType = null)
     {
         mimeType ??= (options.MimeType ?? PlainTextFormatter.MimeType);
-
-        var shouldDisplayValue = options.MimeType is { } displayMimeType;
-
+        var shouldDisplayValue = !string.IsNullOrEmpty( options.MimeType );
         await StoreValueAsync(options.Name, value, mimeType, shouldDisplayValue, context);
     }
 
