@@ -109,7 +109,7 @@ public abstract class ToolsServiceKernel :
 
     public abstract Task ConnectAsync();
 
-    public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         if (!Connected)
         {
@@ -332,7 +332,7 @@ public abstract class ToolsServiceKernel :
         }
     }
 
-    public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<RequestCompletions>.HandleAsync(RequestCompletions command, KernelInvocationContext context)
     {
         if (!_intellisenseReady)
         {
@@ -355,7 +355,7 @@ public abstract class ToolsServiceKernel :
         return false;
     }
 
-    public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (TryGetValue<object>(command.Name, out var value))
         {
@@ -369,7 +369,7 @@ public abstract class ToolsServiceKernel :
         return Task.CompletedTask;
     }
 
-    public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
         var valueInfos = QueryResults.Keys.Select(key =>
         {
@@ -418,7 +418,7 @@ public abstract class ToolsServiceKernel :
     /// <returns></returns>
     protected abstract bool CanDeclareVariable(string name, object value, out string msg);
 
-    public async Task HandleAsync(
+    async Task IKernelCommandHandler<SendValue>.HandleAsync(
         SendValue command,
         KernelInvocationContext context)
     {

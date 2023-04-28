@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Kql;
 using Microsoft.DotNet.Interactive.Mermaid;
 using Microsoft.DotNet.Interactive.PowerShell;
+using Microsoft.DotNet.Interactive.SQLite;
 using Microsoft.DotNet.Interactive.SqlServer;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -91,6 +92,13 @@ public class ApiCompatibilityTests
     public void powershell_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<PowerShellKernel>();
+        this.Assent(contract, _configuration);
+    }
+
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
+    public void sqLite_api_is_not_changed()
+    {
+        var contract = ApiContract.GenerateContract<SQLiteKernelConnector>();
         this.Assent(contract, _configuration);
     }
 
