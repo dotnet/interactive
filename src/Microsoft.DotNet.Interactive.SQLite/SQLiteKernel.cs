@@ -31,7 +31,7 @@ public class SQLiteKernel :
         return new SqliteConnection(_connectionString);
     }
 
-    public virtual async Task HandleAsync(
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(
         SubmitCode submitCode,
         KernelInvocationContext context)
     {
@@ -56,8 +56,6 @@ public class SQLiteKernel :
         }
     }
 
-      
-        
     private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(IDbCommand command)
     {
         using var reader = command.ExecuteReader();

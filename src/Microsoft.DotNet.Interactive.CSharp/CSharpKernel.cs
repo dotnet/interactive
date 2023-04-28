@@ -108,7 +108,7 @@ public class CSharpKernel :
 
     public ScriptState ScriptState { get; private set; }
 
-    public Task<bool> IsCompleteSubmissionAsync(string code)
+    private Task<bool> IsCompleteSubmissionAsync(string code)
     {
         var syntaxTree = SyntaxFactory.ParseSyntaxTree(code, _csharpParseOptions);
         return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
@@ -210,25 +210,28 @@ public class CSharpKernel :
         var text = await document.GetTextAsync(context.CancellationToken);
         var cursorPosition = text.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
         var service = QuickInfoService.GetService(document);
-        var info = await service.GetQuickInfoAsync(document, cursorPosition, context.CancellationToken);
-            
-        if (info is null)
+        if (service != null)
         {
-            return;
+            var info = await service.GetQuickInfoAsync(document, cursorPosition, context.CancellationToken);
+            
+            if (info is null)
+            {
+                return;
+            }
+
+            var scriptSpanStart = LinePosition.FromCodeAnalysisLinePosition(text.Lines.GetLinePosition(0));
+            var linePosSpan = LinePositionSpan.FromCodeAnalysisLinePositionSpan(text.Lines.GetLinePositionSpan(info.Span));
+            var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
+
+            context.Publish(
+                new HoverTextProduced(
+                    command,
+                    new[]
+                    {
+                        new FormattedValue("text/markdown", info.ToMarkdownString())
+                    },
+                    correctedLinePosSpan));
         }
-
-        var scriptSpanStart = LinePosition.FromCodeAnalysisLinePosition(text.Lines.GetLinePosition(0));
-        var linePosSpan = LinePositionSpan.FromCodeAnalysisLinePositionSpan(text.Lines.GetLinePositionSpan(info.Span));
-        var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
-
-        context.Publish(
-            new HoverTextProduced(
-                command,
-                new[]
-                {
-                    new FormattedValue("text/markdown", info.ToMarkdownString())
-                },
-                correctedLinePosSpan));
     }
 
     async Task IKernelCommandHandler<RequestSignatureHelp>.HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
