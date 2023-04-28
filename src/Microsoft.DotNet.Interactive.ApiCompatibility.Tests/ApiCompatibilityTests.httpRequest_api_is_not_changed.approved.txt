@@ -17,7 +17,7 @@ Microsoft.DotNet.Interactive.HttpRequest
     public System.Uri BaseAddress { get; set;}
     public System.Void SetValue(System.String valueName, System.String value)
   public class HttpRequestKernelExtension
-    public static System.Void Load(Microsoft.DotNet.Interactive.Kernel kernel)
+    public static System.Void Load(Microsoft.DotNet.Interactive.Kernel kernel, System.Net.Http.HttpClient httpClient = null)
     .ctor()
   public class HttpResponse
     .ctor(System.Int32 statusCode, System.String reasonPhrase, System.String version, System.Collections.Generic.Dictionary<System.String,System.String[]> headers, HttpRequest request = null, HttpContent content = null, System.Nullable<System.Double> elapsedMilliseconds = null)
