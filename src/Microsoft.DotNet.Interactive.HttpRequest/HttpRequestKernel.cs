@@ -81,7 +81,7 @@ public class HttpRequestKernel :
         }
     }
 
-    public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (_variables.TryGetValue(command.Name, out var value))
         {
@@ -96,7 +96,7 @@ public class HttpRequestKernel :
         return Task.CompletedTask;
     }
 
-    public Task HandleAsync(SendValue command, KernelInvocationContext context)
+    Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
     {
         SetValue(command.Name, command.FormattedValue.Value);
         return Task.CompletedTask;
@@ -107,7 +107,7 @@ public class HttpRequestKernel :
         _variables[valueName] = value;
     }
 
-    public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         var parsedRequests = ParseRequests(command.Code).ToArray();
         var diagnostics = parsedRequests.SelectMany(r => r.Diagnostics).ToArray();
@@ -189,7 +189,7 @@ public class HttpRequestKernel :
         context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
     }
 
-    public Task HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
     {
         var requestsAndDiagnostics = InterpolateAndGetDiagnostics(command.Code);
         var diagnostics = requestsAndDiagnostics.SelectMany(r => r.Diagnostics);
