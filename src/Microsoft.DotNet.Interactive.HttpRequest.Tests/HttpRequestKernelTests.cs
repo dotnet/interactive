@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -17,6 +18,11 @@ namespace Microsoft.DotNet.Interactive.HttpRequest.Tests;
 
 public class HttpRequestKernelTests
 {
+    public HttpRequestKernelTests()
+    {
+        Formatter.ResetToDefault();
+    }
+
     [Theory]
     [InlineData("GET")]
     [InlineData("PUT")]
@@ -41,7 +47,6 @@ public class HttpRequestKernelTests
         result.Events.Should().NotContainErrors();
 
         request.Method.Method.Should().Be(verb);
-
     }
 
     [Fact]
@@ -51,7 +56,7 @@ public class HttpRequestKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode("get  /relativePath"));
 
-        var error =  result.Events.Should().ContainSingle<CommandFailed>().Which;
+        var error = result.Events.Should().ContainSingle<CommandFailed>().Which;
 
         error.Message.Should().Contain("Cannot use relative path /relativePath without a base address.");
     }
@@ -69,7 +74,7 @@ public class HttpRequestKernelTests
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
         kernel.BaseAddress = new Uri("http://example.com");
-        
+
         var result = await kernel.SendAsync(new SubmitCode("get  https://anotherlocation.com/endpoint"));
 
         result.Events.Should().NotContainErrors();
@@ -89,7 +94,7 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
-     
+
         kernel.SetValue("my_host", "my.host.com");
 
         var result = await kernel.SendAsync(new SubmitCode("get  https://{{my_host}}:1200/endpoint"));
@@ -123,7 +128,7 @@ public class HttpRequestKernelTests
     [Fact]
     public async Task can_handle_multiple_request_in_a_single_submission()
     {
-        List<HttpRequestMessage> requests = new ();
+        List<HttpRequestMessage> requests = new();
         var handler = new InterceptingHttpMessageHandler((message, _) =>
         {
             requests.Add(message);
@@ -140,7 +145,7 @@ put  https://location2.com:1200/endpoint"));
 
         result.Events.Should().NotContainErrors();
 
-        requests.Select(r => r.RequestUri.AbsoluteUri).ToArray().Should().BeEquivalentTo(new []{ "https://location1.com:1200/endpoint", "https://location2.com:1200/endpoint" });
+        requests.Select(r => r.RequestUri.AbsoluteUri).ToArray().Should().BeEquivalentTo(new[] { "https://location1.com:1200/endpoint", "https://location2.com:1200/endpoint" });
     }
 
     [Fact]
@@ -227,7 +232,7 @@ Content-Type: application/json
         });
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
-        kernel.SetValue("one","1");
+        kernel.SetValue("one", "1");
         var result = await kernel.SendAsync(new SubmitCode(@"
 post  https://location1.com:1200/endpoint
 Authorization: Basic username password
@@ -351,5 +356,33 @@ User-Agent: {{missing_value_2}}";
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task produces_json_html_and_plain_text_formatted_values()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+
+        using var root = new CompositeKernel();
+        HttpRequestKernelExtension.Load(root, client);
+        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().NotContainErrors();
+
+        var displayEvent =
+            result.Events.Should().ContainSingle<DisplayEvent>().Which.FormattedValues.Should()
+                .Contain(f => f.MimeType == HtmlFormatter.MimeType).And
+                .Contain(f => f.MimeType == PlainTextFormatter.MimeType).And
+                .Contain(f => f.MimeType == JsonFormatter.MimeType);
     }
 }
