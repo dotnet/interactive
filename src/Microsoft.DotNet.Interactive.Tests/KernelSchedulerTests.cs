@@ -284,7 +284,7 @@ public class KernelSchedulerTests : IDisposable
             .ThrowAsync<OperationCanceledException>();
     }
 
-    [Fact]
+    [Fact(Skip = "requires System.Runtime.ControlledExecution")]
     public void Infinite_loops_can_be_cancelled()
     {
         using var scheduler = new KernelScheduler<int, int>();
