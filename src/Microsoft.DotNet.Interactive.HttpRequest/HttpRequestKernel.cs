@@ -5,12 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.CommandLine;
+using System.Diagnostics;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
@@ -30,7 +32,7 @@ public class HttpRequestKernel :
     private readonly Argument<Uri> _hostArgument = new();
 
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
-    private Uri _baseAddress;
+    private Uri? _baseAddress;
     private static readonly Regex IsRequest;
     private static readonly Regex IsHeader;
 
@@ -40,16 +42,14 @@ public class HttpRequestKernel :
     static HttpRequestKernel()
     {
         var verbs = string.Join("|",
-            typeof(HttpMethod).GetProperties(BindingFlags.Static | BindingFlags.Public).Select(p => p.GetValue(null).ToString()));
+            typeof(HttpMethod).GetProperties(BindingFlags.Static | BindingFlags.Public).Select(p => p.GetValue(null)!.ToString()));
 
         IsRequest = new Regex(@"^\s*(" + verbs + ")", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         IsHeader = new Regex(@"^\s*(?<key>[\w-]+):\s*(?<value>.*)", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
     }
 
-  
-
-    public HttpRequestKernel(string name = null, HttpClient client = null)
+    public HttpRequestKernel(string? name = null, HttpClient? client = null)
         : base(name ?? "http")
     {
         KernelInfo.LanguageName = "HTTP";
@@ -68,13 +68,16 @@ public class HttpRequestKernel :
         RegisterForDisposal(_client);
     }
 
-    public Uri BaseAddress
+    public Uri? BaseAddress
     {
         get => _baseAddress;
         set
         {
             _baseAddress = value;
-            SetValue("host", value?.Host);
+            if (value is not null)
+            {
+                SetValue("host", value.Host);
+            }
         }
     }
 
@@ -106,8 +109,8 @@ public class HttpRequestKernel :
 
     public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
-        var requests = ParseRequests(command.Code).ToArray();
-        var diagnostics = requests.SelectMany(r => r.Diagnostics).ToArray();
+        var parsedRequests = ParseRequests(command.Code).ToArray();
+        var diagnostics = parsedRequests.SelectMany(r => r.Diagnostics).ToArray();
 
         PublishDiagnostics(context, command, diagnostics);
 
@@ -117,40 +120,63 @@ public class HttpRequestKernel :
             return;
         }
 
-        foreach (var httpRequest in requests)
+        foreach (var parsedRequest in parsedRequests)
         {
-            var message = new HttpRequestMessage(new HttpMethod(httpRequest.Verb), httpRequest.Address);
-            if (!string.IsNullOrWhiteSpace(httpRequest.Body))
+            var requestMessage = new HttpRequestMessage(new HttpMethod(parsedRequest.Verb), parsedRequest.Address);
+            if (!string.IsNullOrWhiteSpace(parsedRequest.Body))
             {
-                message.Content = new StringContent(httpRequest.Body);
+                requestMessage.Content = new StringContent(parsedRequest.Body);
             }
 
-            foreach (var kvp in httpRequest.Headers)
+            foreach (var kvp in parsedRequest.Headers)
             {
                 switch (kvp.Key.ToLowerInvariant())
                 {
                     case "content-type":
-                        if (message.Content is null)
+                        if (requestMessage.Content is null)
                         {
-                            message.Content = new StringContent(httpRequest.Body);
+                            requestMessage.Content = new StringContent(parsedRequest.Body);
                         }
-                        message.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
+                        requestMessage.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
                         break;
                     case "accept":
-                        message.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(kvp.Value));
+                        requestMessage.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(kvp.Value));
                         break;
                     case "user-agent":
-                        message.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(kvp.Value));
+                        requestMessage.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(kvp.Value));
                         break;
                     default:
-                        message.Headers.Add(kvp.Key, kvp.Value);
+                        requestMessage.Headers.Add(kvp.Key, kvp.Value);
                         break;
                 }
             }
 
-            var response = await _client.SendAsync(message);
-            context.Display(response, HtmlFormatter.MimeType, PlainTextFormatter.MimeType);
+            var response = await GetResponseWithTimingAsync(requestMessage, context.CancellationToken);
+            // TODO: Store response in a dictionary if it happens to be a named request.
+
+            context.Display(response);
         }
+    }
+
+    private async Task<HttpResponse> GetResponseWithTimingAsync(
+        HttpRequestMessage requestMessage,
+        CancellationToken cancellationToken)
+    {
+        HttpResponse response;
+        var stopWatch = Stopwatch.StartNew();
+
+        try
+        {
+            var responseMessage = await _client.SendAsync(requestMessage, cancellationToken);
+            response = await responseMessage.ToHttpResponseAsync(cancellationToken);
+        }
+        finally
+        {
+            stopWatch.Stop();
+        }
+
+        response.ElapsedMilliseconds = stopWatch.Elapsed.TotalMilliseconds;
+        return response;
     }
 
     private void PublishDiagnostics(KernelInvocationContext context, KernelCommand command, IEnumerable<Diagnostic> diagnostics)
@@ -247,10 +273,10 @@ public class HttpRequestKernel :
         return lines.Any(line => IsRequest.IsMatch(line));
         //return lines.Any() && lines.Any(line => !string.IsNullOrWhiteSpace(line));
     }
-    
-    private IEnumerable<HttpRequest> ParseRequests(string requests)
+
+    private IEnumerable<ParsedHttpRequest> ParseRequests(string requests)
     {
-        var parsedRequests = new List<HttpRequest>();
+        var parsedRequests = new List<ParsedHttpRequest>();
 
         /*
          * A request as first verb and endpoint (optional version), this command could be multiline
@@ -261,10 +287,10 @@ public class HttpRequestKernel :
         foreach (var (request, diagnostics) in InterpolateAndGetDiagnostics(requests))
         {
             var body = new StringBuilder();
-            string verb = null;
-            string address = null;
+            string? verb = null;
+            string? address = null;
             var headerValues = new Dictionary<string, string>();
-            var lines = request.Split(new[] {'\n'});
+            var lines = request.Split(new[] { '\n' });
             for (var index = 0; index < lines.Length; index++)
             {
                 var line = lines[index];
@@ -275,7 +301,7 @@ public class HttpRequestKernel :
                         continue;
                     }
 
-                    var parts = line.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+                    var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     verb = parts[0].Trim();
                     address = parts[1].Trim();
                 }
@@ -297,29 +323,47 @@ public class HttpRequestKernel :
                 }
             }
 
+            if (string.IsNullOrWhiteSpace(verb))
+            {
+                throw new InvalidOperationException("Cannot perform HttpRequest without a valid verb.");
+            }
+
+            var uri = GetAbsoluteUriString(address);
             var bodyText = body.ToString().Trim();
-
-            if (string.IsNullOrWhiteSpace(address) && BaseAddress is null)
-            {
-                throw new InvalidOperationException("Cannot perform HttpRequest without a valid uri.");
-            }
-
-            var uri = new Uri(address, UriKind.RelativeOrAbsolute);
-            if (!uri.IsAbsoluteUri && BaseAddress is null)
-            {
-                throw new InvalidOperationException($"Cannot use relative path {uri} without a base address.");
-            }
-
-            uri = uri.IsAbsoluteUri ? uri : new Uri(BaseAddress, uri);
-            parsedRequests.Add(new HttpRequest(verb, uri.AbsoluteUri, bodyText, headerValues, diagnostics));
+            parsedRequests.Add(new ParsedHttpRequest(verb, uri, bodyText, headerValues, diagnostics));
         }
 
         return parsedRequests;
     }
 
-    private class HttpRequest
+    private string GetAbsoluteUriString(string? address)
     {
-        public HttpRequest(string verb, string address, string body, IEnumerable<KeyValuePair<string, string>> headers, IEnumerable<Diagnostic> diagnostics)
+        Uri uri;
+
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            uri = BaseAddress is null
+                ? throw new InvalidOperationException("Cannot perform HttpRequest without a valid uri.")
+                : BaseAddress;
+        }
+        else
+        {
+            uri = new Uri(address, UriKind.RelativeOrAbsolute);
+
+            if (!uri.IsAbsoluteUri)
+            {
+                uri = BaseAddress is null
+                    ? throw new InvalidOperationException($"Cannot use relative path {uri} without a base address.")
+                    : new Uri(BaseAddress, uri);
+            }
+        }
+
+        return uri.AbsoluteUri;
+    }
+
+    private class ParsedHttpRequest
+    {
+        public ParsedHttpRequest(string verb, string address, string body, IEnumerable<KeyValuePair<string, string>> headers, IEnumerable<Diagnostic> diagnostics)
         {
             Verb = verb;
             Address = address;
