@@ -248,7 +248,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     private class ScheduledOperation
     {
-        private static readonly Action<Action, CancellationToken> _runWithControlledExecution;
+        private static readonly Action<Action, CancellationToken> _runWithControlledExecution = default;
 
         static ScheduledOperation()
         {
