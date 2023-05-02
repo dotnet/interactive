@@ -7,6 +7,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -215,7 +216,7 @@ public static class KernelExtensions
         T kernel,
         InvocationContext cmdLineContext,
         Option<string> nameOption,
-        Option<object> valueOption,
+        Option<ValueOptionResult> valueOption,
         Option<string> mimeTypeOption,
         Option<bool> byrefOption)
         where T : Kernel
@@ -230,8 +231,14 @@ public static class KernelExtensions
             var events = new List<ValueProduced>();
 
             using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(events.Add);
+            
+            var valueSource = cmdLineContext.ParseResult.GetValueForOption(valueOption);
+          
 
-            var valueProduced = events.SingleOrDefault();
+            var valueProduced = valueSource switch
+            { { Name: var sourceValueName, Kernel: var sourceKernelName } when !string.IsNullOrWhiteSpace(sourceKernelName) && !string.IsNullOrEmpty(sourceKernelName) && sourceKernelName != "input" => events.SingleOrDefault(e => e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName),
+                _ => null
+            };
 
             if (valueProduced is { })
             {
@@ -242,15 +249,16 @@ public static class KernelExtensions
             }
             else
             {
-                var interpolatedValue = cmdLineContext.ParseResult.GetValueForOption(valueOption);
 
-                await SendValue(kernel, interpolatedValue, null, valueName);
+                await SendValue(kernel,valueSource?.Value, null, valueName);
             }
         }
         else
         {
             context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
         }
+
+       
     }
 
     public static T UseValueSharing<T>(this T kernel) where T : Kernel
@@ -293,7 +301,7 @@ public static class KernelExtensions
                 HtmlFormatter.MimeType,
                 PlainTextFormatter.MimeType);
 
-        var valueOption = new Option<object>(
+        var valueOption = new Option<ValueOptionResult>(
             "--value",
             description:
             LocalizationResources.Magics_set_value_Description(),
@@ -355,13 +363,13 @@ public static class KernelExtensions
 
         destinationKernel.AddDirective(set);
 
-        object ParseValueOption(ArgumentResult argResult)
+        ValueOptionResult ParseValueOption(ArgumentResult argResult)
         {
             var valueOptionValue = argResult.Tokens.Single().Value;
             
             if (!valueOptionValue.StartsWith("@"))
             {
-                return valueOptionValue;
+                return new ValueOptionResult( valueOptionValue, null,null);
             }
 
             bool isByref;
@@ -412,14 +420,16 @@ public static class KernelExtensions
 
             if (isByref)
             {
-                return valueProduced.Value;
+                return new ValueOptionResult(valueProduced.Value, sourceKernelName, sourceValueName);
             }
             else
             {
-                return valueProduced.FormattedValue;
+                return new ValueOptionResult(valueProduced.FormattedValue, sourceKernelName, sourceValueName);
             }
         }
     }
+
+    private record ValueOptionResult(object Value, string Kernel, string Name);
 
     private static void ConfigureAndAddShareMagicCommand<T>(T kernel) where T : Kernel
     {

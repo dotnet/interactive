@@ -32,9 +32,10 @@ public partial class VariableSharingTests
         {
             var kernel = CreateKernel(Language.CSharp);
 
-            using var composite = new CompositeKernel();
-
-            composite.Add(kernel);
+            using var composite = new CompositeKernel
+            {
+                kernel
+            };
 
             composite.RegisterCommandHandler<RequestInput>((requestInput, context) =>
             {
@@ -50,10 +51,43 @@ public partial class VariableSharingTests
             valueProduced.Value.Should().BeEquivalentTo("hello!");
         }
 
+        [Fact]
+        public async Task can_handle_multiple_set_commands_in_single_submission()
+        {
+            using var kernel = CreateCompositeKernel();
+
+            kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+            {
+                context.Publish(new InputProduced("hello!", requestInput));
+                return Task.CompletedTask;
+            });
+
+            await kernel.SendAsync( new SubmitCode("""
+                let var1 = "a"
+                let var2 = "b"
+                """, targetKernelName:"fsharp"));
+
+            var result = await kernel.SendAsync(new SubmitCode("""
+                #!set --name newVar1 --value @fsharp:var1 --mime-type text/plain
+                #!set --name newVar2 --value @fsharp:var2 --mime-type text/plain
+                #!set --name newVar3 --value @input:input-please
+                """, targetKernelName: "csharp"));
+
+            result.Events.Should().NotContainErrors();
+
+            result = await kernel.SendAsync(new RequestValueInfos("csharp"));
+
+            var valueInfosProduced = result.Events.Should()
+                .ContainSingle<ValueInfosProduced>()
+                .Which;
+
+            valueInfosProduced.ValueInfos.Select(v => v.Name).Should().BeEquivalentTo("newVar1", "newVar2", "newVar3");
+        }
+
         [Theory]
         [InlineData(
             """
-                #!fsharp
+                #!fsharp 
                 let x = 123
                 """,
             """
