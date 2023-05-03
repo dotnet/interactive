@@ -37,8 +37,8 @@ try {
     Copy-Item -Path "$insidersDirectory\src\*" -Destination "$stableDirectory\src\" -Filter "*.ts"
 
     # copy localization files
-    Remove-Item -Path "$stableDirectory\" -Filter "package.nls.*.json"
-    Copy-Item -Path "$insidersDirectory\" -Destination "$stableDirectory\src\" -Filter "package.nls.*.json"
+    Remove-Item -Path "$stableDirectory\*" -Filter "package.nls.*"
+    Copy-Item -Path "$insidersDirectory\*" -Destination "$stableDirectory\" -Filter "package.nls.*"
 
     # update apis
     . "$PSScriptRoot\update-api.ps1" -version $version
