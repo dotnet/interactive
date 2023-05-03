@@ -20,7 +20,7 @@ try {
 
     $insidersPackageJsonContents = (Get-Content "$insidersDirectory\package.json" | Out-String | ConvertFrom-Json)
 
-    $insidersPackageJsonContents.scripts.package += " --pre-release" 
+    $insidersPackageJsonContents.scripts.package += " --pre-release"
 
     $insidersPackageJsonContents | ConvertTo-Json -depth 100 | Out-File "$insidersDirectory\package.json"
 
@@ -35,6 +35,10 @@ try {
     # copy source files
     Remove-Item -Path "$stableDirectory\src\*" -Filter "*.ts"
     Copy-Item -Path "$insidersDirectory\src\*" -Destination "$stableDirectory\src\" -Filter "*.ts"
+
+    # copy localization files
+    Remove-Item -Path "$stableDirectory\" -Filter "package.nls.*.json"
+    Copy-Item -Path "$insidersDirectory\" -Destination "$stableDirectory\src\" -Filter "package.nls.*.json"
 
     # update apis
     . "$PSScriptRoot\update-api.ps1" -version $version
