@@ -39,6 +39,8 @@ try {
     # copy localization files
     Remove-Item -Path "$stableDirectory\*" -Filter "package.nls.*"
     Copy-Item -Path "$insidersDirectory\*" -Destination "$stableDirectory\" -Filter "package.nls.*"
+    Remove-Item -Path "$stableDirectory\l10n\*" -Filter "bundle.l10n.*"
+    Copy-Item -Path "$insidersDirectory\l10n\*" -Destination "$stableDirectory\l10n\" -Filter "bundle.l10n.*"
 
     # update apis
     . "$PSScriptRoot\update-api.ps1" -version $version

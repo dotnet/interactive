@@ -65,6 +65,7 @@
     },
     "virtualWorkspaces": true
   },
+  "l10n": "./l10n",
   "contributes": {
     "notebooks": [
       {
