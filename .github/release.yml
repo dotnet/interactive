@@ -93,6 +93,9 @@ changelog:
     - title: Area-Jupyter sub-kernels
       labels:
         - Area-Jupyter sub-kernels
+    - title: Area-Localization and Globalization
+      labels:
+        - Area-Localization and Globalization
     - title: Other Changes
       labels:
         - "*"

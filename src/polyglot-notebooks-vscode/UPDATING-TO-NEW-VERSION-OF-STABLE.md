@@ -23,9 +23,9 @@
 
 # Locking stable to .NET Interactive version
 
-After a `stable` release it is importnat to lock the vscode extension to the version of `.NET Interactive` so that later fixes can be release as vscode extension only without the need to publish a new set of nuget packages.
+After a `stable` release it is important to lock the vscode extension to the version of `.NET Interactive` so that later fixes can be release as vscode extension only without the need to publish a new set of nuget packages.
 
-1. Run the following command to update `the package.json` for both `stable` and `insiders` and locks the vscode engine using hte parameter `-version 1.76`
+1. Run the following command to update `the package.json` for both `stable` and `insiders` and locks the vscode engine using the parameter `-version 1.76`
 
 ```console
 \.update-versions.ps1 -updateAll -version 1.76
