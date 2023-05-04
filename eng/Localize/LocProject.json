@@ -54,6 +54,11 @@
           "SourceFile": "src\\polyglot-notebooks-vscode-insiders\\package.nls.json",
           "OutputPath": "src\\polyglot-notebooks-vscode-insiders",
           "CopyOption": "LangIDOnName"
+        },
+        {
+          "SourceFile": "src\\polyglot-notebooks-vscode-insiders\\l10n\\bundle.l10n.json",
+          "OutputPath": "src\\polyglot-notebooks-vscode-insiders\\l10n",
+          "CopyOption": "LangIDOnName"
         }
       ],
       "LanguageSet": "VS_Main_Languages"

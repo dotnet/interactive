@@ -152,12 +152,12 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         if (this.webview) {
 
             const localizationStrings: GridLocalization = {
-                actionsColumnHeader: 'Actions',
-                nameColumnHeader: 'Name',
-                valueColumnHeader: 'Value',
-                typeColumnHeader: 'Type',
-                kernelNameColumnHeader: 'Kernel',
-                shareTemplate: 'Share value {value-name} from {kernel-name} kernel'
+                actionsColumnHeader: this.translate('VariableGridColumnActions', 'Actions'),
+                nameColumnHeader: this.translate('VariableGridColumnName', 'Name'),
+                valueColumnHeader: this.translate('VariableGridColumnValue', 'Value'),
+                typeColumnHeader: this.translate('VariableGridColumnType', 'Type'),
+                kernelNameColumnHeader: this.translate('VariableGridColumnKernel', 'Kernel'),
+                shareTemplate: this.translate('VariableGridshareTemplate', 'Share value {value-name} from {kernel-name} kernel')
             };
 
             this.webview.postMessage({
@@ -166,6 +166,11 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                 localizationStrings: localizationStrings
             });
         }
+    }
+
+    private translate(key: string, fallback: string): string {
+        const translation = vscode.l10n.t(key);
+        return translation === key ? fallback : translation;
     }
 
     showNotebookVariables(notebookUri: vscodeLike.Uri | undefined) {
