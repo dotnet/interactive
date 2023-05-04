@@ -13,7 +13,7 @@
   "//version": "%description.version%",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.77.0"
+    "vscode": "^1.78.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
