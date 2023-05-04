@@ -6,6 +6,7 @@ import * as vscodeLike from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
 import { InteractiveClient } from './interactiveClient';
 import { ServiceCollection } from './serviceCollection';
+import * as diagnostics from './diagnostics';
 
 export class ActiveNotebookTracker {
     private activeClients: Map<vscodeLike.Uri, InteractiveClient> = new Map();
@@ -22,6 +23,9 @@ export class ActiveNotebookTracker {
     private notebookDocumentClosed(notebook: vscode.NotebookDocument, client: InteractiveClient) {
         this.activeClients.delete(notebook.uri);
         this.clientMapper.closeClient(notebook.uri, true);
+        for (const cell of notebook.getCells()) {
+            diagnostics.getDiagnosticCollection(cell.document.uri).set(cell.document.uri, undefined);
+        }
     }
 
     dispose() {
