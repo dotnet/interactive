@@ -1,4 +1,4 @@
-{
+﻿{
   "description.package": "VS Code の Polyglot Notebooks。1 つのノートブックで複数の言語を使用できます。どの言語にも完全な言語サーバー サポートが提供され、言語間で変数を共有できます。",
   "description.version": "CI パッケージの作成時にはバージョン '42.42.42' が自動設定されます。",
   "description.untrustedWorkspaces": "インタラクティブ ウィンドウとノートブックでのセルの実行は、信頼されていないワークスペースではサポートされていません。",
