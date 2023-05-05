@@ -1,4 +1,4 @@
-{
+﻿{
   "description.package": "Polyglot Notebooks für VS Code. Verwenden Sie mehrere Sprachen in einem Notebook mit vollständiger Sprachserverunterstützung für jede Sprache, und geben Sie Variablen zwischen ihnen frei.",
   "description.version": "Die Version \"42.42.42\" wird während der Erstellung des CI-Pakets automatisch festgelegt.",
   "description.untrustedWorkspaces": "Die Ausführung von Zellen in Interactive-Fenstern und Notebooks wird in nicht vertrauenswürdigen Arbeitsbereichen nicht unterstützt.",

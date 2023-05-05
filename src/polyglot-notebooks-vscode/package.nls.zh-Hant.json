@@ -1,4 +1,4 @@
-{
+﻿{
   "description.package": "VS Code 的 Polyglot Notebooks。在一個筆記本中使用多種語言，且每個語言都支援完整語言伺服器，並在其中共用變數。",
   "description.version": "建立 CI 封裝期間已自動設定版本 '42.42.42'。",
   "description.untrustedWorkspaces": "未受信任的工作區不支援在互動視窗和筆記本中執行儲存格。",
