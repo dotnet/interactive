@@ -1,4 +1,4 @@
-{
+﻿{
   "description.package": "Polyglot Notebooks pro VS Code. Používejte více jazyků v jednom poznámkovém bloku s plnou podporou jazykového serveru pro každý jazyk a sdílejte mezi nimi proměnné.",
   "description.version": "Verze 42.42.42 je při vytváření balíčku CI nastavena automaticky.",
   "description.untrustedWorkspaces": "Spouštění buněk v interaktivním okně a poznámkových blocích se v nedůvěryhodných pracovních prostorech nepodporuje.",
