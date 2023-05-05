@@ -15,14 +15,14 @@ try {
     & node .\tools\buildSemanticTokenScopes.js
     Pop-Location
 
-    # copy package.json
-    Copy-Item -Path "$stableDirectory\package.json" -Destination "$insidersDirectory\package.json"
+    # copy package.json from insider
+    Copy-Item -Path "$insidersDirectory\package.json" -Destination  "$stableDirectory\package.json"
 
-    $insidersPackageJsonContents = (Get-Content "$insidersDirectory\package.json" | Out-String | ConvertFrom-Json)
+    $stablePackageJsonContents = (Get-Content "$stableDirectory\package.json" | Out-String | ConvertFrom-Json)
 
-    $insidersPackageJsonContents.scripts.package += " --pre-release" 
+    $stablePackageJsonContents.scripts.package = $stablePackageJsonContents.scripts.package.Replace("--pre-release","").Trim()
 
-    $insidersPackageJsonContents | ConvertTo-Json -depth 100 | Out-File "$insidersDirectory\package.json"
+    $stablePackageJsonContents | ConvertTo-Json -depth 100 | Out-File "$stableDirectory\package.json"
 
     # copy grammar files
     Remove-Item -Path "$stableDirectory\grammars\*"
@@ -35,6 +35,12 @@ try {
     # copy source files
     Remove-Item -Path "$stableDirectory\src\*" -Filter "*.ts"
     Copy-Item -Path "$insidersDirectory\src\*" -Destination "$stableDirectory\src\" -Filter "*.ts"
+
+    # copy localization files
+    Remove-Item -Path "$stableDirectory\*" -Filter "package.nls.*"
+    Copy-Item -Path "$insidersDirectory\*" -Destination "$stableDirectory\" -Filter "package.nls.*"
+    Remove-Item -Path "$stableDirectory\l10n\*" -Filter "bundle.l10n.*"
+    Copy-Item -Path "$insidersDirectory\l10n\*" -Destination "$stableDirectory\l10n\" -Filter "bundle.l10n.*"
 
     # update apis
     . "$PSScriptRoot\update-api.ps1" -version $version

@@ -1,7 +1,7 @@
 {
   "name": "dotnet-interactive-vscode",
   "displayName": "Polyglot Notebooks",
-  "description": "Polyglot Notebooks for VS Code. Use multiple languages in one notebook with full language server support for each language and share variables between them.",
+  "description": "%description.package%",
   "icon": "images/icon.png",
   "publisher": "ms-dotnettools",
   "author": "Microsoft Corporation",
@@ -10,7 +10,7 @@
     "notebookMessaging"
   ],
   "preview": false,
-  "//version": "The version '42.42.42' is auto-set during CI package creation.",
+  "//version": "%description.version%",
   "version": "42.42.42",
   "engines": {
     "vscode": "^1.77.0"
@@ -61,10 +61,11 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Execution of cells in Interactive Window and Notebooks is not supported in untrusted workspaces."
+      "description": "%description.untrustedWorkspaces%"
     },
     "virtualWorkspaces": true
   },
+  "l10n": "./l10n",
   "contributes": {
     "notebooks": [
       {
@@ -102,7 +103,7 @@
         "polyglot-notebook.suppressPromptToSaveDefaults": {
           "type": "boolean",
           "default": false,
-          "description": "Suppresses the prompt to save the default notebook extension and language."
+          "description": "%description.suppressPromptToSaveDefaults%"
         },
         "polyglot-notebook.defaultNotebookExtension": {
           "type": [
@@ -115,8 +116,8 @@
             ".ipynb"
           ],
           "enumDescriptions": [
-            "Use .dib files for notebooks.",
-            "Use .ipynb files for notebooks."
+            "%description.configuration.useDib%",
+            "%description.configuration.useIpynb%"
           ]
         },
         "polyglot-notebook.defaultNotebookLanguage": {
@@ -125,7 +126,7 @@
             "null"
           ],
           "default": null,
-          "description": "The default starting language for new notebooks.",
+          "description": "%description.defaultNotebookLanguage%",
           "enum": [
             "csharp",
             "fsharp",
@@ -152,12 +153,12 @@
         "polyglot-notebook.kernelEnvironmentVariables": {
           "type": "object",
           "default": {},
-          "description": "Environment variables to set when starting a notebook session."
+          "description": "%description.kernelEnvironmentVariables%"
         },
         "polyglot-notebook.languageServiceDelay": {
           "type": "number",
           "default": 500,
-          "description": "The delay in ms before language services are invoked."
+          "description": "%description.languageServiceDelay%"
         },
         "polyglot-notebook.logLevel": {
           "type": "string",
@@ -169,10 +170,10 @@
             "None"
           ],
           "enumDescriptions": [
-            "Logs informational messages",
-            "Logs warning messages",
-            "Logs error messages",
-            "Disables logging"
+            "%description.logLevel.info%",
+            "%description.logLevel.warning%",
+            "%description.logLevel.error%",
+            "%description.logLevel.disabled%"
           ]
         },
         "dotnet-interactive.kernelTransportArgs": {
@@ -188,7 +189,7 @@
             "--working-dir",
             "{working_dir}"
           ],
-          "description": "Command and arguments used to start a notebook session."
+          "description": "%description.kernelTransportArgs%"
         },
         "dotnet-interactive.notebookParserArgs": {
           "type": "array",
@@ -204,22 +205,22 @@
         "dotnet-interactive.kernelTransportWorkingDirectory": {
           "type": "string",
           "default": "{global_storage_path}",
-          "description": "The working directory in which the kernel transport process is started."
+          "description": "%description.kernelTransportWorkingDirectory%"
         },
         "dotnet-interactive.interactiveToolSource": {
           "type": "string",
           "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",
-          "description": "The NuGet source to use when acquiring the .NET Interactive tool."
+          "description": "%description.interactiveToolSource%"
         },
         "dotnet-interactive.minimumDotNetSdkVersion": {
           "type": "string",
           "default": "7.0",
-          "description": "The minimum required version of the .NET SDK."
+          "description": "%description.minimumDotNetSdkVersion%"
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
           "default": "1.0.420401",
-          "description": "The required version of the .NET Interactive tool."
+          "description": "%description.requiredInteractiveToolVersion%"
         }
       }
     },
@@ -245,53 +246,53 @@
     "commands": [
       {
         "command": "dotnet-interactive.acquire",
-        "title": "Install .NET Interactive"
+        "title": "%command.acquire%"
       },
       {
         "command": "polyglot-notebook.openNotebook",
-        "title": "Polyglot Notebook: Open notebook"
+        "title": "%command.openNotebook%"
       },
       {
         "command": "polyglot-notebook.saveAsNotebook",
-        "title": "Polyglot Notebook: Save notebook as..."
+        "title": "%command.saveAsNotebook%"
       },
       {
         "command": "polyglot-notebook.fileNew",
         "enablement": "false",
-        "title": "New Polyglot Notebook",
+        "title": "%command.fileNew%",
         "shortTitle": "Polyglot Notebook"
       },
       {
         "command": "polyglot-notebook.newNotebook",
-        "title": "Polyglot Notebook: Create default notebook"
+        "title": "%command.newNotebook%"
       },
       {
         "command": "polyglot-notebook.newNotebookNoDefaults",
-        "title": "Polyglot Notebook: Create new blank notebook"
+        "title": "%command.newNotebookNoDefaults%"
       },
       {
         "command": "polyglot-notebook.setNewNotebookDefaults",
-        "title": "Polyglot Notebook: Set new notebook default values"
+        "title": "%command.setNewNotebookDefaults%"
       },
       {
         "command": "polyglot-notebook.restartCurrentNotebookKernel",
-        "title": "Polyglot Notebook: Restart the current notebook's kernel"
+        "title": "%command.restartCurrentNotebookKernel%"
       },
       {
         "command": "polyglot-notebook.stopCurrentNotebookKernel",
-        "title": "Polyglot Notebook: Stop the current notebook's kernel"
+        "title": "%command.stopCurrentNotebookKernel%"
       },
       {
         "command": "polyglot-notebook.stopAllNotebookKernels",
-        "title": "Polyglot Notebook: Stop all notebook kernels"
+        "title": "%command.stopAllNotebookKernels%"
       },
       {
         "command": "polyglot-notebook.shareValueWith",
-        "title": "Share value with..."
+        "title": "%command.shareValueWith%"
       },
       {
         "command": "polyglot-notebook.notebookEditor.restartKernel",
-        "title": "Restart",
+        "title": "%command.restartKernel%",
         "icon": {
           "light": "resources/light/restart-kernel.svg",
           "dark": "resources/dark/restart-kernel.svg"
@@ -299,7 +300,7 @@
       },
       {
         "command": "polyglot-notebook.notebookEditor.openValueViewer",
-        "title": "Variables",
+        "title": "%command.openValueViewer%",
         "icon": "$(variable-group)"
       }
     ],
@@ -813,6 +814,7 @@
     "@typescript-eslint/eslint-plugin": "5.3.0",
     "@typescript-eslint/parser": "5.3.0",
     "@vscode/vsce": "2.16.0",
+    "@vscode/l10n-dev": "0.0.18",
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
     "chai-fs": "2.0.0",
@@ -838,6 +840,7 @@
     "uuid": "8.3.2",
     "vscode-oniguruma": "1.6.1",
     "vscode-textmate": "6.0.0",
-    "vscode-uri": "3.0.6"
+    "vscode-uri": "3.0.6",
+    "@vscode/l10n": "0.0.10"
   }
 }
