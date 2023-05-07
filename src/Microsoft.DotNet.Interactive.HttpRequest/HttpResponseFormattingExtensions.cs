@@ -12,9 +12,8 @@ namespace Microsoft.DotNet.Interactive.HttpRequest;
 internal static class HttpResponseFormattingExtensions
 {
     private const string ContainerClass = "http-response-message-container";
-    private const string LogContainerClass = "aspnet-logs-container";
 
-    private static readonly HtmlString _flexCss = new($@"
+    private static readonly HtmlString CSS = new($@"
             .{ContainerClass} {{
                 display: flex;
                 flex-wrap: wrap;
@@ -34,11 +33,7 @@ internal static class HttpResponseFormattingExtensions
                 margin-bottom: 0;
             }}
 
-            .{LogContainerClass} {{
-                margin: 0 .5em;
-            }}
-
-            .{ContainerClass} summary, .{LogContainerClass} summary {{
+            .{ContainerClass} summary {{
                 margin: 1em 0;
                 font-size: 1.17em;
                 font-weight: 700;
@@ -128,7 +123,7 @@ internal static class HttpResponseFormattingExtensions
 
         PocketView output =
             PocketViewTags.div[@class: ContainerClass](
-                PocketViewTags.style[type: "text/css"](_flexCss),
+                PocketViewTags.style[type: "text/css"](CSS),
                 requestDiv,
                 responseDiv);
 
