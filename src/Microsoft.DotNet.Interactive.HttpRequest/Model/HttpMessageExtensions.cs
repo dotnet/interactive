@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
-internal static class HttpObjectModelFactories
+internal static class HttpMessageExtensions
 {
     internal static async Task<HttpRequest> ToHttpRequestAsync(
         this HttpRequestMessage requestMessage,
