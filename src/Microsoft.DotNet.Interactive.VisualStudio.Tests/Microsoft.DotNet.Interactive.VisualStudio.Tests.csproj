@@ -12,9 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\ConnectHost.cs" Link="Utility\ConnectHost.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FactSkipLinux.cs" Link="Utility\FactSkipLinux.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FactSkipNetFramework.cs" Link="Utility\FactSkipNetFramework.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FakeKernel.cs" Link="Utility\FakeKernel.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\TestUtility.cs" Link="Utility\TestUtility.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\KernelRoutingTests.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\KernelSchedulerTests.cs" />
   </ItemGroup>
 
