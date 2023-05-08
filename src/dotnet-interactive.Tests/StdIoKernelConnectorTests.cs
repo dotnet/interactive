@@ -25,10 +25,30 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 loggingArgs = $"--verbose --log-path {logDir}";
             }
 
-            var dotnetInteractive = typeof(Program).Assembly.Location;
+            var binPath =
+                Path.GetDirectoryName(
+                    Path.GetDirectoryName(
+                        Path.GetDirectoryName(
+                            Path.GetDirectoryName(
+                                typeof(StdIoKernelConnector).Assembly.Location))));
+
+            Func<string, bool> predicate =
+                filePath =>
+                    !string.Equals(
+                        Path.GetFileName(Path.GetDirectoryName(filePath)),
+                        "publish",
+                        StringComparison.OrdinalIgnoreCase);
+
+            var toolAppDllPath =
+                Directory.GetFiles(
+                    Path.Combine(binPath, "dotnet-interactive"),
+                    "Microsoft.DotNet.Interactive.App.dll",
+                    SearchOption.AllDirectories)
+                        .Single(predicate);
+
             var hostUri = KernelHost.CreateHostUri("host");
             var connector = new StdIoKernelConnector(
-                new[] { "dotnet", $""" "{dotnetInteractive}" stdio {loggingArgs}""" },
+                new[] { "dotnet", $""" "{toolAppDllPath}" stdio {loggingArgs}""" },
                 rootProxyKernelLocalName: "rootProxy",
                 hostUri);
 
