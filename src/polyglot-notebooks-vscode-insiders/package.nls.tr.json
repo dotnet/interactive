@@ -1,4 +1,4 @@
-﻿{
+{
   "description.package": "VS Code için Polyglot Notebooks. Her dil için tam dil sunucusu desteğine sahip tek bir not defterinde birden çok dil kullanın ve değişkenleri aralarında paylaşın.",
   "description.version": "CI paketi oluşturulurken '42.42.42' sürümü otomatik olarak ayarlanır.",
   "description.untrustedWorkspaces": "Etkileşimli Penceresi ve Notebooks’ta hücrelerin yürütülmesi, güvenilmeyen çalışma alanlarında desteklenmez.",

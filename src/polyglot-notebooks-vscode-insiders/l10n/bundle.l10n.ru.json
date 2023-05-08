@@ -1,8 +1,8 @@
-﻿{
-  "VariableGridColumnActions": "Actions",
-  "VariableGridColumnName": "Name",
-  "VariableGridColumnValue": "Value",
-  "VariableGridColumnType": "Type",
-  "VariableGridColumnKernel": "Kernel",
-  "VariableGridshareTemplate": "Share value {value-name} from {kernel-name} kernel"
+{
+  "VariableGridColumnActions": "Действия",
+  "VariableGridColumnName": "Имя",
+  "VariableGridColumnValue": "Значение",
+  "VariableGridColumnType": "Тип",
+  "VariableGridColumnKernel": "Ядро",
+  "VariableGridshareTemplate": "Отправить значение {value-name} из ядра {kernel-name}"
 }

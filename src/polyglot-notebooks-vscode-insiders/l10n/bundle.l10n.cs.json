@@ -1,8 +1,8 @@
-﻿{
-  "VariableGridColumnActions": "Actions",
-  "VariableGridColumnName": "Name",
-  "VariableGridColumnValue": "Value",
-  "VariableGridColumnType": "Type",
-  "VariableGridColumnKernel": "Kernel",
-  "VariableGridshareTemplate": "Share value {value-name} from {kernel-name} kernel"
+{
+  "VariableGridColumnActions": "Akce",
+  "VariableGridColumnName": "Název",
+  "VariableGridColumnValue": "Hodnota",
+  "VariableGridColumnType": "Typ",
+  "VariableGridColumnKernel": "Jádro",
+  "VariableGridshareTemplate": "Hodnota sdílené složky {value-name} z jádra {kernel-name}"
 }
