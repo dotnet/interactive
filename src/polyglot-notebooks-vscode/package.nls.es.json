@@ -1,4 +1,4 @@
-﻿{
+{
   "description.package": "Polyglot Notebooks para VS Code. Usa varios idiomas en un bloc de notas con compatibilidad completa con el servidor de idiomas para cada idioma y comparte variables entre ellos.",
   "description.version": "La versión \"42.42.42\" se establece automáticamente durante la creación del paquete CI.",
   "description.untrustedWorkspaces": "La ejecución de celdas en la Ventana Interactiva y en los blocs de notas no es compatible con las áreas de trabajo no confiables.",

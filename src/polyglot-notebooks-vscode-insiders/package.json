@@ -219,7 +219,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.425403",
+          "default": "1.0.425801",
           "description": "%description.requiredInteractiveToolVersion%"
         }
       }

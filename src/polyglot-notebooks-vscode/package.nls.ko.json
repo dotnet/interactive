@@ -1,4 +1,4 @@
-﻿{
+{
   "description.package": "VS Code에 대한 Polyglot Notebooks입니다. 각 언어에 대한 전체 언어 서버 지원을 통해 한 Notebook에서 여러 언어를 사용하고 언어 간에 변수를 공유하세요.",
   "description.version": "CI 패키지를 만드는 동안 '42.42.42' 버전이 자동 설정됩니다.",
   "description.untrustedWorkspaces": "신뢰할 수 없는 작업 영역에서는 대화형 창 및 전자 필기장의 셀 실행이 지원되지 않습니다.",
