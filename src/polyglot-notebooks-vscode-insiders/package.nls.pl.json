@@ -1,4 +1,4 @@
-﻿{
+{
   "description.package": "Polyglot Notebooks dla programu VS Code. Używaj wielu języków w jednym notesie z obsługą serwera w pełnym języku dla każdego języka i udostępniaj zmienne między nimi.",
   "description.version": "Wersja „42.42.42” jest ustawiana automatycznie podczas tworzenia pakietu ciągłej integracji.",
   "description.untrustedWorkspaces": "Wykonywanie komórek w oknie Interactive i usłudze Notebooks nie jest obsługiwane w niezaufanych obszarach roboczych.",

@@ -1,8 +1,8 @@
-﻿{
-  "VariableGridColumnActions": "Actions",
-  "VariableGridColumnName": "Name",
-  "VariableGridColumnValue": "Value",
-  "VariableGridColumnType": "Type",
-  "VariableGridColumnKernel": "Kernel",
-  "VariableGridshareTemplate": "Share value {value-name} from {kernel-name} kernel"
+{
+  "VariableGridColumnActions": "操作",
+  "VariableGridColumnName": "名称",
+  "VariableGridColumnValue": "值",
+  "VariableGridColumnType": "类型",
+  "VariableGridColumnKernel": "内核",
+  "VariableGridshareTemplate": "从 {kernel-name} 内核共享值 {value-name}"
 }
