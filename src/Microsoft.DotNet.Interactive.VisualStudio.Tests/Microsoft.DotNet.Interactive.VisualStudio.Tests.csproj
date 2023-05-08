@@ -20,6 +20,7 @@
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\KernelTests.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\KernelRoutingTests.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\KernelSchedulerTests.cs" />
+    <Compile Include="..\dotnet-interactive.Tests\StdIoKernelConnectorTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -117,6 +117,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.SQLite.Tests", "src\Microsoft.DotNet.Interactive.SQLite.Tests\Microsoft.DotNet.Interactive.SQLite.Tests.csproj", "{83B62E34-7AE3-4A7A-A105-1707FF389D39}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.VisualStudio.Tests", "src\Microsoft.DotNet.Interactive.VisualStudio.Tests\Microsoft.DotNet.Interactive.VisualStudio.Tests.csproj", "{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1A4A744F-FEF3-4361-A2E5-C5D496F7BFDC} = {1A4A744F-FEF3-4361-A2E5-C5D496F7BFDC}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
