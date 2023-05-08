@@ -1,8 +1,8 @@
-﻿{
+{
   "VariableGridColumnActions": "Actions",
-  "VariableGridColumnName": "Name",
-  "VariableGridColumnValue": "Value",
+  "VariableGridColumnName": "Nom",
+  "VariableGridColumnValue": "Valeur",
   "VariableGridColumnType": "Type",
-  "VariableGridColumnKernel": "Kernel",
-  "VariableGridshareTemplate": "Share value {value-name} from {kernel-name} kernel"
+  "VariableGridColumnKernel": "Noyau",
+  "VariableGridshareTemplate": "Partager la valeur {value-name} du noyau {kernel-name}"
 }

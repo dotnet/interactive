@@ -1,8 +1,8 @@
-﻿{
-  "VariableGridColumnActions": "Actions",
-  "VariableGridColumnName": "Name",
-  "VariableGridColumnValue": "Value",
-  "VariableGridColumnType": "Type",
-  "VariableGridColumnKernel": "Kernel",
-  "VariableGridshareTemplate": "Share value {value-name} from {kernel-name} kernel"
+{
+  "VariableGridColumnActions": "アクション",
+  "VariableGridColumnName": "名前",
+  "VariableGridColumnValue": "値",
+  "VariableGridColumnType": "種類",
+  "VariableGridColumnKernel": "カーネル",
+  "VariableGridshareTemplate": "{kernel-name} カーネルから値 {value-name} を共有します"
 }
