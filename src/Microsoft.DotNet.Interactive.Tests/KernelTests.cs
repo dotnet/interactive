@@ -5,17 +5,19 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
-using FluentAssertions;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+
+#if !NETFRAMEWORK
+using Microsoft.DotNet.Interactive.CSharp;
+#endif
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -165,6 +167,7 @@ public partial class KernelTests
         lastEvent.Should().BeNull();
     }
 
+#if !NETFRAMEWORK
     [Fact]
     public async Task Awaiting_a_disposed_task_does_not_deadlock()
     {
@@ -224,4 +227,5 @@ public partial class KernelTests
         result.Events.Should().ContainSingle<ReturnValueProduced>()
               .Which.Value.As<int>().Should().BeGreaterThan(0);
     }
+#endif
 }
