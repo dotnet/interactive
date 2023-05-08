@@ -6,9 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
@@ -170,8 +168,14 @@ Console.WriteLine(1);";
     {
         using var compositeKernel = new CompositeKernel
         {
-            new CSharpKernel(),
-            new FSharpKernel()
+            new FakeKernel("csharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            },
+            new FakeKernel("fsharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            }
         };
 
         compositeKernel.DefaultKernelName = "fsharp";
@@ -183,9 +187,9 @@ Console.WriteLine(1);";
         command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                "kernel://local/.NET?tag=arrived", 
-                "kernel://local/csharp?tag=arrived", 
-                "kernel://local/csharp", 
+                "kernel://local/.NET?tag=arrived",
+                "kernel://local/csharp?tag=arrived",
+                "kernel://local/csharp",
                 "kernel://local/.NET"
             });
     }
@@ -196,14 +200,20 @@ Console.WriteLine(1);";
         using var localCompositeKernel = new CompositeKernel("vscode");
         using var remoteCompositeKernel = new CompositeKernel(".NET")
         {
-            new CSharpKernel(),
-            new FSharpKernel()
+            new FakeKernel("csharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            },
+            new FakeKernel("fsharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            }
         };
         RemoteCommand remoteCommandHandled = null;
         remoteCompositeKernel.FindKernelByName("csharp").RegisterCommandHandler<RemoteCommand>((command, context) =>
         {
             remoteCommandHandled = command;
-            
+
             return Task.CompletedTask;
         });
 
@@ -218,7 +228,7 @@ Console.WriteLine(1);";
             .ConnectProxyKernelOnDefaultConnectorAsync(
                 "csharp-proxy",
                 new(remoteCompositeKernel.Host.Uri, "csharp"));
-        
+
         localCompositeKernel.FindKernelByName("csharp-proxy").RegisterCommandType<RemoteCommand>();
 
         var command = new RemoteCommand("csharp-proxy");
@@ -241,12 +251,18 @@ Console.WriteLine(1);";
         using var localCompositeKernel = new CompositeKernel("vscode");
         using var remoteCompositeKernel = new CompositeKernel(".NET")
         {
-            new CSharpKernel(),
-            new FSharpKernel()
+            new FakeKernel("csharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            },
+            new FakeKernel("fsharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            }
         };
-        
+
         remoteCompositeKernel.DefaultKernelName = "fsharp";
-        
+
         ConnectHost.ConnectInProcessHost(
             localCompositeKernel,
             remoteCompositeKernel);
@@ -256,7 +272,7 @@ Console.WriteLine(1);";
             .ConnectProxyKernelOnDefaultConnectorAsync(
                 "csharp-proxy",
                 new(remoteCompositeKernel.Host.Uri, "csharp"));
-        
+
         var command = new SubmitCode(@"Console.WriteLine(1);", targetKernelName: "csharp-proxy");
 
         await localCompositeKernel.SendAsync(command);
@@ -264,13 +280,13 @@ Console.WriteLine(1);";
         command.RoutingSlip.ToUriArray().Should().BeEquivalentTo(
             new[]
             {
-                "kernel://local/?tag=arrived", 
-                "kernel://local/csharp-proxy?tag=arrived", 
-                "kernel://remote/?tag=arrived", 
-                "kernel://remote/csharp?tag=arrived", 
-                "kernel://remote/csharp", 
-                "kernel://remote/", 
-                "kernel://local/csharp-proxy", 
+                "kernel://local/?tag=arrived",
+                "kernel://local/csharp-proxy?tag=arrived",
+                "kernel://remote/?tag=arrived",
+                "kernel://remote/csharp?tag=arrived",
+                "kernel://remote/csharp",
+                "kernel://remote/",
+                "kernel://local/csharp-proxy",
                 "kernel://local/"
             });
     }
@@ -280,8 +296,22 @@ Console.WriteLine(1);";
     {
         using var compositeKernel = new CompositeKernel
         {
-            new CSharpKernel(),
-            new FSharpKernel()
+            new FakeKernel("csharp")
+            {
+                Handle = (command, context) =>
+                {
+                    if (command is SubmitCode submitCode)
+                    {
+                        context.Publish(new ReturnValueProduced(submitCode.Code, command));
+                    }
+
+                    return Task.CompletedTask;
+                }
+            },
+            new FakeKernel("fsharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            }
         };
 
         compositeKernel.DefaultKernelName = "fsharp";
@@ -297,7 +327,6 @@ Console.WriteLine(1);";
                   {
                       "kernel://local/csharp",
                       "kernel://local/.NET"
-               
                   });
     }
 
@@ -307,8 +336,22 @@ Console.WriteLine(1);";
         using var localCompositeKernel = new CompositeKernel("vscode");
         using var remoteCompositeKernel = new CompositeKernel(".NET")
         {
-            new CSharpKernel(),
-            new FSharpKernel()
+            new FakeKernel("csharp")
+            {
+                Handle = (command, context) =>
+                {
+                    if (command is SubmitCode submitCode)
+                    {
+                        context.Publish(new ReturnValueProduced(submitCode.Code, command));
+                    }
+
+                    return Task.CompletedTask;
+                }
+            },
+            new FakeKernel("fsharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            }
         };
 
         remoteCompositeKernel.DefaultKernelName = "fsharp";
