@@ -5,7 +5,6 @@
         {
           "SourceFile": "src\\dotnet-interactive\\xlf\\Resources.xlf",
           "OutputPath": "src\\dotnet-interactive\\xlf",
-          "LclFile": "src\\dotnet-interactive\\xlf\\{Lang}\\Resources.xlf.lcl",
           "Languages": "",
           "CopyOption": "LangIDOnName"
         }
@@ -17,7 +16,6 @@
         {
           "SourceFile": "src\\Microsoft.DotNet.Interactive\\xlf\\Resources.xlf",
           "OutputPath": "src\\Microsoft.DotNet.Interactive\\xlf",
-          "LclFile": "src\\Microsoft.DotNet.Interactive\\xlf\\{Lang}\\Resources.xlf.lcl",
           "Languages": "",
           "CopyOption": "LangIDOnName"
         }
@@ -29,7 +27,6 @@
         {
           "SourceFile": "src\\Microsoft.DotNet.Interactive.Journey\\xlf\\Resources.xlf",
           "OutputPath": "src\\Microsoft.DotNet.Interactive.Journey\\xlf",
-          "LclFile": "src\\Microsoft.DotNet.Interactive.Journey\\xlf\\{Lang}\\Resources.xlf.lcl",
           "Languages": "",
           "CopyOption": "LangIDOnName"
         }
@@ -41,7 +38,6 @@
         {
           "SourceFile": "src\\Microsoft.DotNet.Interactive.Jupyter\\xlf\\Resources.xlf",
           "OutputPath": "src\\Microsoft.DotNet.Interactive.Jupyter\\xlf",
-          "LclFile": "src\\Microsoft.DotNet.Interactive.Jupyter\\xlf\\{Lang}\\Resources.xlf.lcl",
           "Languages": "",
           "CopyOption": "LangIDOnName"
         }
