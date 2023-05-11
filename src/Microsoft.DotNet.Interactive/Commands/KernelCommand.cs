@@ -19,16 +19,11 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     private string _id;
 
     protected KernelCommand(
-        string targetKernelName = null,
-        KernelCommand parent = null)
+        string targetKernelName = null)
     {
         Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
         TargetKernelName = targetKernelName;
         RoutingSlip = new CommandRoutingSlip();
-        if (parent is { })
-        {
-            Parent = parent;
-        }
     }
 
     [JsonIgnore]

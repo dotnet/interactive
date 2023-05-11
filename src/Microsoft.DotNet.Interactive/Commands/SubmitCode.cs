@@ -20,9 +20,8 @@ public class SubmitCode : KernelCommand
     internal SubmitCode(
         LanguageNode languageNode,
         SubmissionType submissionType = SubmissionType.Run,
-        KernelCommand parent = null,
         KernelNameDirectiveNode kernelNameDirectiveNode = null)
-        : base(languageNode.Name, parent)
+        : base(languageNode.Name)
     {
         Code = languageNode.Text;
         LanguageNode = languageNode;

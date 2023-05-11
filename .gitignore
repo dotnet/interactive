@@ -11,6 +11,7 @@
 *.sln.docstates
 .trydotnet-*
 .dotnet/
+.NCrunch_dotnet-interactive
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

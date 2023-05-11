@@ -17,9 +17,8 @@ public class RequestSignatureHelp : LanguageServiceCommand
 
     internal RequestSignatureHelp(
         LanguageNode languageNode,
-        LinePosition linePosition,
-        KernelCommand parent = null)
-        : base(languageNode, linePosition, parent)
+        LinePosition linePosition)
+        : base(languageNode, linePosition)
     {
     }
 
@@ -27,6 +26,6 @@ public class RequestSignatureHelp : LanguageServiceCommand
         LanguageNode languageNode,
         LinePosition position)
     {
-        return new RequestSignatureHelp(languageNode, position, Parent);
+        return new RequestSignatureHelp(languageNode, position);
     }
 }

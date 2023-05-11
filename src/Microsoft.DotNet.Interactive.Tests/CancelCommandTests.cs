@@ -240,9 +240,7 @@ while(!cancellationToken.IsCancellationRequested){
         private readonly TaskCompletionSource _invoked = new();
         private readonly TaskCompletionSource _cancelled = new();
 
-        public CancellableCommand(
-            string targetKernelName = null,
-            KernelCommand parent = null) : base(targetKernelName, parent)
+        public CancellableCommand(string targetKernelName = null) : base(targetKernelName)
         {
             // prevent NoSuitableKernelException by setting the handler
             Handler = (command, context) => Task.CompletedTask;

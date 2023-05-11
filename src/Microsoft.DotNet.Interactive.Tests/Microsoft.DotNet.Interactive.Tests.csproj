@@ -12,6 +12,7 @@
     <NoWarn>$(NoWarn);VSTHRD105</NoWarn><!-- Ignore: Avoid method overloads that assume TaskScheduler.Current -->
     <NoWarn>$(NoWarn);VSTHRD110</NoWarn><!-- Ignore: Observe result of async calls -->
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
+    <NoWarn>$(NoWarn);CS0219</NoWarn><!-- Ignore: The variable is assigned but its value is never used -->
   </PropertyGroup>
 
   <ItemGroup>
