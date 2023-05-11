@@ -52,7 +52,7 @@ public class SubmissionParser
             {
                 if (!string.IsNullOrWhiteSpace(languageNode.Text))
                 {
-                    return new SubmitCode(languageNode, submitCode.SubmissionType, parent, kernelNameNode);
+                    return new SubmitCode(languageNode, submitCode.SubmissionType, kernelNameNode);
                 }
                 else
                 {
@@ -65,7 +65,7 @@ public class SubmissionParser
         var commands = SplitSubmission(
             requestDiagnostics,
             requestDiagnostics.Code,
-            (languageNode, parent, _) => new RequestDiagnostics(languageNode, parent));
+            (languageNode, parent, _) => new RequestDiagnostics(languageNode));
 
         return commands.Where(c => c is RequestDiagnostics).ToList();
     }
@@ -156,7 +156,7 @@ public class SubmissionParser
 
                                     context.Fail(originalCommand, message: message);
                                     return Task.CompletedTask;
-                                }, parent: originalCommand));
+                                }));
                         }
 
                         break;
@@ -170,7 +170,6 @@ public class SubmissionParser
 
                     var directiveCommand = new DirectiveCommand(
                         parseResult,
-                        originalCommand,
                         directiveNode)
                     {
                         TargetKernelName = targetKernelName,
@@ -243,8 +242,7 @@ public class SubmissionParser
             if (kernel?.SubmissionParser.GetDirectiveParser() is { } parser)
             {
                 var restore = new DirectiveCommand(
-                    parser.Parse("#!nuget-restore"),
-                    originalCommand)
+                    parser.Parse("#!nuget-restore"))
                 {
                     SchedulingScope = kernel.SchedulingScope,
                     TargetKernelName = kernelName

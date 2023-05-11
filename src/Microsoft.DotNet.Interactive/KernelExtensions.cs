@@ -166,10 +166,50 @@ public static class KernelExtensions
 
             using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(events.Add);
 
-            var valueSource = cmdLineContext.ParseResult.GetValueForOption(valueOption);
+            var valueOptionResult = cmdLineContext.ParseResult.GetValueForOption(valueOption);
 
-            var valueProduced = valueSource switch
-            { { Name: var sourceValueName, Kernel: var sourceKernelName } when !string.IsNullOrWhiteSpace(sourceKernelName) && !string.IsNullOrEmpty(sourceKernelName) && sourceKernelName != "input" => events.SingleOrDefault(e => e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName),
+            // FIX: (HandleSetMagicCommand) 
+
+            switch (events.Count)
+            {
+                case 0: break;
+                case 1: break;
+                case 2: break;
+                default: break;
+            }
+
+            if (valueOptionResult is { })
+            {
+                if (valueOptionResult.Kernel is { } sourceKernelName)
+                {
+                    switch (sourceKernelName)
+                    {
+                        case "input": break;
+                        case "password": break;
+                        default: break;
+                    }
+                }
+                else
+                {
+                }
+
+                if (valueOptionResult.Kernel is { } sourceValueName)
+                {
+                }
+                else
+                {
+                }
+            }
+            else
+            {
+            }
+
+            var valueProduced = valueOptionResult switch
+            {
+                { Name: var sourceValueName, Kernel: var sourceKernelName } when
+                    // !string.IsNullOrWhiteSpace(sourceKernelName) &&
+                    sourceKernelName != "input" => events.SingleOrDefault(
+                        e => e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName),
                 _ => null
             };
 
@@ -182,8 +222,7 @@ public static class KernelExtensions
             }
             else
             {
-
-                await SendValue(kernel, valueSource?.Value, null, valueName);
+                await SendValue(kernel, valueOptionResult?.Value, null, valueName);
             }
         }
         else

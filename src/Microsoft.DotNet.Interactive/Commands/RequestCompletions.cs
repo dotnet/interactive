@@ -17,9 +17,8 @@ public class RequestCompletions : LanguageServiceCommand
 
     internal RequestCompletions(
         LanguageNode languageNode,
-        LinePosition linePosition, 
-        KernelCommand parent = null) 
-        : base(languageNode, linePosition, parent)
+        LinePosition linePosition) 
+        : base(languageNode, linePosition)
     {
     }
 
@@ -27,6 +26,6 @@ public class RequestCompletions : LanguageServiceCommand
         LanguageNode languageNode,
         LinePosition position)
     {
-        return new RequestCompletions(languageNode, position, Parent);
+        return new RequestCompletions(languageNode, position);
     }
 }

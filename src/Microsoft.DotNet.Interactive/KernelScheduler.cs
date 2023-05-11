@@ -26,6 +26,8 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     public KernelScheduler(Func<T, T, bool> isPreemptive = null)
     {
+        // FIX: (KernelScheduler) remove delegate
+
         _isPreemptive = isPreemptive ?? DoNotPreempt;
 
         _runLoopTask = Task.Factory.StartNew(

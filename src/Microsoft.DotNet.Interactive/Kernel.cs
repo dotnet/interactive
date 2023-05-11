@@ -512,7 +512,7 @@ public abstract partial class Kernel :
         {
             Log.Info("Undeferring commands ahead of '{command}'", parent);
             return Task.CompletedTask;
-        }, targetKernelName: targetKernelName, parent: parent)
+        }, targetKernelName: targetKernelName)
         {
         }
 
