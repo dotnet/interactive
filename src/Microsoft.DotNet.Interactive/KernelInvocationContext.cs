@@ -234,10 +234,21 @@ public class KernelInvocationContext : IDisposable
         {
             _events.OnNext(@event);
         }
-        else if (string.Equals(Command.GetOrCreateToken(), command.GetOrCreateToken(), StringComparison.Ordinal))
+        else
         {
-            // event from a sub-command that was remotely split
-            _events.OnNext(@event);
+            var currentCommandToken = command.GetOrCreateToken();
+            var contextCommandToken = Command.GetOrCreateToken();
+
+            if (string.Equals(contextCommandToken, currentCommandToken, StringComparison.Ordinal))
+            {
+                // event from a sub-command that was remotely split
+                _events.OnNext(@event);
+            }
+            else if (currentCommandToken.StartsWith(contextCommandToken))
+            {
+                // event from a sub-command that was remotely split
+                _events.OnNext(@event);
+            }
         }
     }
 
@@ -329,6 +340,11 @@ public class KernelInvocationContext : IDisposable
 
         if (_ownsCancellationTokenSource)
         {
+            if (_cancellationTokenSources.Count > 1)
+            {
+                // FIX: (Dispose) 
+            }
+
             _cancellationTokenSources.TryRemove(Command.GetOrCreateToken(), out _);
             _cancellationTokenSource.Dispose();
         }

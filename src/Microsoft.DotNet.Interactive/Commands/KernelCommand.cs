@@ -85,17 +85,8 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         if (_parent is { })
         {
-            SetTokenFromParent();
+            _token = _parent.GetOrCreateToken() + "." + _parent.GetNextChildToken();
             return _token;
-        }
-
-        // FIX: (GetOrCreateToken) don't depend on KernelInvocationContext.Current
-        if (KernelInvocationContext.Current?.Command is { } contextCommand &&
-            !Equals(contextCommand))
-        {
-            // var token = contextCommand.GetOrCreateToken();
-            // SetToken(token);
-            // return token;
         }
 
         _token = CreateToken();
@@ -104,21 +95,10 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         static string CreateToken()
         {
-            var inputBytes = Encoding.ASCII.GetBytes(Guid.NewGuid().ToString());
+            var inputBytes = Guid.NewGuid().ToByteArray();
 
-            byte[] hash;
-            using (var sha = SHA256.Create())
-            {
-                hash = sha.ComputeHash(inputBytes);
-            }
-
-            return Convert.ToBase64String(hash);
+            return Convert.ToBase64String(inputBytes);
         }
-    }
-
-    private void SetTokenFromParent()
-    {
-        _token = _parent._token; // + "." + parent.GetNextChildToken();
     }
 
     [JsonIgnore] internal SchedulingScope SchedulingScope { get; set; }

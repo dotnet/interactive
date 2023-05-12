@@ -94,7 +94,7 @@ public class KernelSchedulerTests : IDisposable
     [Fact]
     public async Task preemptively_scheduled_work_does_not_execute_in_parallel()
     {
-        using var scheduler = new KernelScheduler<int, int>((i, i1) => true);
+        using var scheduler = new TestKernelScheduler<int>((_, _) => true);
         var concurrencyCounter = 0;
         var maxObservedParallelism = 0;
 
@@ -115,6 +115,18 @@ public class KernelSchedulerTests : IDisposable
         await Task.WhenAll(tasks);
 
         maxObservedParallelism.Should().Be(1);
+    }
+
+    public class TestKernelScheduler<T> : KernelScheduler<T, T>
+    {
+        private readonly Func<T, T, bool> _isPreemptive;
+
+        public TestKernelScheduler(Func<T, T, bool> isPreemptive)
+        {
+            _isPreemptive = isPreemptive;
+        }
+
+        protected override bool IsPreemptive(T current, T incoming) => _isPreemptive(current, incoming);
     }
 
     [Fact]
@@ -483,7 +495,7 @@ public class KernelSchedulerTests : IDisposable
     {
         var executionList = new List<string>();
 
-        using var scheduler = new KernelScheduler<string, string>( (o,i) => o == "outer" && i == "inner");
+        using var scheduler = new TestKernelScheduler<string>((o, i) => o == "outer" && i == "inner");
 
         await scheduler.RunAsync("outer", async _ =>
         {
@@ -503,11 +515,11 @@ public class KernelSchedulerTests : IDisposable
         });
 
         executionList.Should()
-            .BeEquivalentSequenceTo(
-                "outer 1",
-                "inner 1",
-                "inner 2",
-                "outer 2");
+                     .BeEquivalentSequenceTo(
+                         "outer 1",
+                         "inner 1",
+                         "inner 2",
+                         "outer 2");
     }
 
     [Fact]

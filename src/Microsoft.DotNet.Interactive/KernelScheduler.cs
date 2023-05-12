@@ -12,7 +12,6 @@ namespace Microsoft.DotNet.Interactive;
 
 public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TResult>
 {
-    private readonly Func<T, T, bool> _isPreemptive;
     private static readonly Logger Log = new("KernelScheduler");
 
     private readonly CompositeDisposable _disposables;
@@ -24,12 +23,8 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
     private ScheduledOperation _currentlyRunningOperation;
 
-    public KernelScheduler(Func<T, T, bool> isPreemptive = null)
+    public KernelScheduler()
     {
-        // FIX: (KernelScheduler) remove delegate
-
-        _isPreemptive = isPreemptive ?? DoNotPreempt;
-
         _runLoopTask = Task.Factory.StartNew(
             ScheduledOperationRunLoop,
             TaskCreationOptions.LongRunning,
@@ -41,11 +36,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             _schedulerDisposalSource,
             _topLevelScheduledOperations,
         };
-
-        static bool DoNotPreempt(T one, T two)
-        {
-            return false;
-        }
+        
     }
 
     public void CancelCurrentOperation(Action<T> onCancellation = null)
@@ -67,7 +58,8 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         ThrowIfDisposed();
 
         ScheduledOperation operation;
-        if (_isPreemptive(_currentTopLevelOperation, value))
+
+        if (IsPreemptive(_currentTopLevelOperation, value))
         {
             operation = new ScheduledOperation(
                 value,
@@ -363,6 +355,8 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
         public KernelSchedulerDelegate<T, TResult> OnExecuteAsync { get; }
     }
+
+    protected virtual bool IsPreemptive(T current, T incoming) => false;
 }
 
 static class DotNetStandardHelpers
