@@ -16,6 +16,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 #if !NETFRAMEWORK
+using System;
 using Microsoft.DotNet.Interactive.CSharp;
 #endif
 
@@ -197,7 +198,7 @@ public partial class KernelTests
               .Which.Exception.Should().BeOfType<ObjectDisposedException>();
     }
 
-    [Fact(Skip = "next up")]
+    [Fact(Skip = "later")]
     public async Task Invocation_context_does_not_cause_entanglement_between_kernels_that_do_not_share_a_scheduler()
     {
         using var kernel = new CompositeKernel
@@ -228,4 +229,53 @@ public partial class KernelTests
               .Which.Value.As<int>().Should().BeGreaterThan(0);
     }
 #endif
+
+    [Fact]
+    public async Task it_can_handle_commands_that_submits_commands_that_are_split()
+    {
+        var subkernel = new FakeKernel();
+        var magicCommand = new Command("#!magic");
+        bool magicWasCalled = false;
+        magicCommand.SetHandler(_ =>
+        {
+            magicWasCalled = true;
+        });
+        subkernel.AddDirective(magicCommand);
+
+        subkernel.Handle = async (command, context) =>
+        {
+            if (command is SubmitCode submitCode)
+            {
+                switch (submitCode.Code)
+                {
+                    case "outer submission":
+                        await context.HandlingKernel.RootKernel.SendAsync(new SubmitCode("""
+                                #!magic
+                                1+1
+                                """));
+
+                        break;
+
+                    default:
+                        context.Display("inner submission", mimeTypes: "text/plain");
+                        break;
+                }
+            }
+        };
+
+        using var kernel = new CompositeKernel
+        {
+            subkernel
+        };
+
+        using var events = kernel.KernelEvents.ToSubscribedList();
+
+        await kernel.SubmitCodeAsync("outer submission");
+
+        magicWasCalled.Should().BeTrue();
+
+        events.Should().ContainSingle<DisplayedValueProduced>(v => v.Value.Equals("inner submission"));
+
+        throw new Exception();
+    }
 }

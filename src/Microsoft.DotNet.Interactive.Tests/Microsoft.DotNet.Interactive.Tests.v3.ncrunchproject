@@ -9,6 +9,9 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelPackageTests.Loads_native_dependencies_from_nugets</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelPackageTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

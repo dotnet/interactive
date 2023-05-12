@@ -93,9 +93,9 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         if (KernelInvocationContext.Current?.Command is { } contextCommand &&
             !Equals(contextCommand))
         {
-            var token = contextCommand.GetOrCreateToken();
-            SetToken(token);
-            return token;
+            // var token = contextCommand.GetOrCreateToken();
+            // SetToken(token);
+            // return token;
         }
 
         _token = CreateToken();
