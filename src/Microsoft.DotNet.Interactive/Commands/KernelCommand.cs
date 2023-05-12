@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
+using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -156,5 +157,22 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     public override int GetHashCode()
     {
         return GetOrCreateId().GetHashCode();
+    }
+
+    public bool IsSelfOrDescendantOf(KernelCommand other)
+    {
+        return GetOrCreateToken().StartsWith(other.GetOrCreateToken());
+    }
+
+    public bool IsSiblingOf(KernelCommand other)
+    {
+        return GetParentTokenOf(GetOrCreateToken()) == GetParentTokenOf(other.GetOrCreateToken());
+
+        static string GetParentTokenOf(string token)
+        {
+            var parts = token.Split(new[] { '.' });
+
+            return string.Join(".", parts[..^1]);
+        }
     }
 }
