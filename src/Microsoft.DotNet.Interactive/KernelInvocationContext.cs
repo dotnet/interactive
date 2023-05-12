@@ -236,17 +236,12 @@ public class KernelInvocationContext : IDisposable
         }
         else
         {
-            var currentCommandToken = command.GetOrCreateToken();
-            var contextCommandToken = Command.GetOrCreateToken();
-
-            if (string.Equals(contextCommandToken, currentCommandToken, StringComparison.Ordinal))
+            if (command.IsSelfOrDescendantOf(Command))
             {
-                // event from a sub-command that was remotely split
                 _events.OnNext(@event);
             }
-            else if (currentCommandToken.StartsWith(contextCommandToken))
+            else if (command.IsSiblingOf(Command))
             {
-                // event from a sub-command that was remotely split
                 _events.OnNext(@event);
             }
         }

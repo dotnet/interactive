@@ -2,9 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Commands;
+using System.Diagnostics;
 
 namespace Microsoft.DotNet.Interactive.Events;
 
+[DebuggerStepThrough]
 public class KernelInfoProduced : KernelEvent
 {
     public KernelInfoProduced(

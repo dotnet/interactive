@@ -21,36 +21,16 @@ public class KernelCommandScheduler : KernelScheduler<KernelCommand, KernelComma
             return true;
         }
 
-        var currentToken = current.GetOrCreateToken();
-        var incomingToken = incoming.GetOrCreateToken();
-
-        if (incomingToken == currentToken)
+        if (incoming.IsSelfOrDescendantOf(current))
         {
             return true;
         }
 
-        if (incomingToken.StartsWith(currentToken))
-        {
-            return true;
-        }
-
-        if (AreSiblings(currentToken, incomingToken))
+        if (incoming.IsSiblingOf(current))
         {
             return true;
         }
 
         return incoming.RoutingSlip.StartsWith(current.RoutingSlip);
-    }
-
-    private bool AreSiblings(string currentToken, string incomingToken)
-    {
-        return GetParentTokenOf(currentToken) == GetParentTokenOf(incomingToken);
-    }
-
-    private string GetParentTokenOf(string token)
-    {
-        var parts = token.Split(new []{'.'});
-
-        return string.Join(".", parts[..^1]);
     }
 }
