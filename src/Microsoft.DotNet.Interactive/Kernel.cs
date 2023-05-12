@@ -340,6 +340,14 @@ public abstract partial class Kernel :
 
         context = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
+        if (command.Parent is null)
+        {
+            if (!ReferenceEquals(command, context.Command))
+            {
+                command.Parent = context.Command;
+            }
+        }
+
         // only subscribe for the root command 
         var currentCommandOwnsContext = context.Command.Equals(command);
 
@@ -494,10 +502,13 @@ public abstract partial class Kernel :
     {
         try
         {
+            var undeferScheduledCommands = new UndeferScheduledCommands(
+                context.HandlingKernel.Name,
+                context.Command);
+            
             await SendAsync(
-                new UndeferScheduledCommands(
-                    context.HandlingKernel.Name,
-                    context.Command), context.CancellationToken);
+                undeferScheduledCommands, 
+                context.CancellationToken);
         }
         catch (TaskCanceledException)
         {
@@ -514,6 +525,7 @@ public abstract partial class Kernel :
             return Task.CompletedTask;
         }, targetKernelName: targetKernelName)
         {
+            Parent = parent;
         }
 
         public override string ToString() => $"Undefer commands ahead of {Parent}";

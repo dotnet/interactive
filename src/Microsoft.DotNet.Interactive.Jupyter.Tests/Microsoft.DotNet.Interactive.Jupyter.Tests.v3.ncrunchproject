@@ -15,6 +15,7 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelCommandTests</FixtureName>
       </FixtureTestSelector>
+      <AllTestsSelector />
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

@@ -1,5 +1,13 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <DefaultTestTimeout>20000</DefaultTestTimeout>
+    <IgnoredTests>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Browser.Tests.HtmlKernelTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Browser.Tests.JavaScriptKernelTests</FixtureName>
+      </FixtureTestSelector>
+    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

@@ -84,6 +84,42 @@ public partial class VariableSharingTests
             valueInfosProduced.ValueInfos.Select(v => v.Name).Should().BeEquivalentTo("newVar1", "newVar2", "newVar3");
         }
 
+        [Fact]
+        public async Task set_commands_do_not_shared_events_OR_SOMETHING_LIKE_THAT()
+        {
+            // FIX: (set_commands_do_not_shared_events_OR_SOMETHING_LIKE_THAT) 
+
+            using var kernel = CreateCompositeKernel();
+
+            kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+            {
+                context.Publish(new InputProduced("hello!", requestInput));
+                return Task.CompletedTask;
+            });
+
+            await kernel.SendAsync(new SubmitCode("""
+                let var1 = "a"
+                let var2 = "b"
+                """, targetKernelName: "fsharp"));
+
+            var result = await kernel.SendAsync(new SubmitCode("""
+                #!set --name newVar1 --value @fsharp:var1 --mime-type text/plain
+                #!set --name newVar2 --value @fsharp:var2 --mime-type text/plain
+                #!set --name newVar3 --value @input:input-please
+                """, targetKernelName: "csharp"));
+
+            result.Events.Should().NotContainErrors();
+
+            result = await kernel.SendAsync(new RequestValueInfos("csharp"));
+
+            var valueInfosProduced = result.Events.Should()
+                                           .ContainSingle<ValueInfosProduced>()
+                                           .Which;
+
+            // TODO (set_commands_do_not_shared_events_OR_SOMETHING_LIKE_THAT) write test
+            throw new NotImplementedException();
+        }
+
         [Theory]
         [InlineData(
             """
