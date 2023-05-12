@@ -565,26 +565,7 @@ public abstract partial class Kernel :
         {
             if (_commandScheduler is null)
             {
-                var scheduler = new KernelScheduler<KernelCommand, KernelCommandResult>(
-                    (outer, inner) =>
-                    {
-                        if (outer is null)
-                        {
-                            return false;
-                        }
-
-                        if (inner.Parent == outer)
-                        {
-                            return true;
-                        }
-
-                        if (inner.GetOrCreateToken() == outer.GetOrCreateToken())
-                        {
-                            return true;
-                        }
-
-                        return inner.RoutingSlip.StartsWith(outer.RoutingSlip);
-                    });
+                var scheduler = new KernelCommandScheduler();
                 RegisterForDisposal(scheduler);
                 SetScheduler(scheduler);
             }
