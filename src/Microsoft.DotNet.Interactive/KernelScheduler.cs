@@ -18,10 +18,9 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     private readonly List<DeferredOperationSource> _deferredOperationSources = new();
     private readonly CancellationTokenSource _schedulerDisposalSource = new();
     private readonly Task _runLoopTask;
-    private T _currentTopLevelOperation = default;
 
     private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
-    private ScheduledOperation _currentlyRunningOperation;
+    private ScheduledOperation _currentlyRunningTopLevelOperation;
 
     public KernelScheduler()
     {
@@ -40,11 +39,11 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     public void CancelCurrentOperation(Action<T> onCancellation = null)
     {
-        if (_currentlyRunningOperation is { } operation)
+        if (_currentlyRunningTopLevelOperation is { } operation)
         {
             onCancellation?.Invoke(operation.Value);
             operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
-            _currentlyRunningOperation = null;
+            _currentlyRunningTopLevelOperation = null;
         }
     }
 
@@ -58,16 +57,18 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
         ScheduledOperation operation;
 
-        if (ShouldRunPreemptively(_currentTopLevelOperation, value))
+        if (_currentlyRunningTopLevelOperation is { } topLevelOperation &&
+            IsChildOperation(topLevelOperation.Value, value))
         {
             operation = new ScheduledOperation(
                 value,
                 onExecuteAsync,
                 isDeferred: false,
+                isChildOperation: true,
                 executionContext: null,
                 scope,
                 cancellationToken);
-            RunPreemptively(operation);
+            RunBeforeCurrentOperationIsCompleted(operation);
         }
         else
         {
@@ -75,10 +76,11 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
                 value,
                 onExecuteAsync,
                 isDeferred: false,
+                isChildOperation: false,
                 ExecutionContext.Capture(),
                 scope: scope,
                 cancellationToken: cancellationToken);
-            RunAfterOtherWork(cancellationToken, operation);
+            RunAfterCurrentOperations(cancellationToken, operation);
         }
 
         return operation.TaskCompletionSource.Task;
@@ -88,7 +90,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     {
         foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
         {
-            _currentTopLevelOperation = operation.Value;
+            _currentlyRunningTopLevelOperation = operation;
 
             var executionContext = operation.ExecutionContext;
 
@@ -98,19 +100,14 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
                 executionContext = ExecutionContext.Capture();
             }
 
-            _currentlyRunningOperation = operation;
+            _currentlyRunningTopLevelOperation = operation;
 
             try
             {
                 ExecutionContext.Run(
                     executionContext!.CreateCopy(),
-                    _ => RunPreemptively(operation),
+                    _ => RunBeforeCurrentOperationIsCompleted(operation),
                     operation);
-
-                if (expr)
-                {
-                    
-                }
 
                 operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
             }
@@ -120,15 +117,14 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             }
             finally
             {
-                _currentTopLevelOperation = default;
-                _currentlyRunningOperation = null;
+                _currentlyRunningTopLevelOperation = default;
             }
         }
     }
 
     private void Run(ScheduledOperation operation)
     {
-        _currentTopLevelOperation ??= operation.Value;
+        _currentlyRunningTopLevelOperation ??= operation;
 
         using var logOp = Log.OnEnterAndConfirmOnExit();
         logOp.Info("{value}", operation.Value);
@@ -169,16 +165,16 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         }
     }
 
-    private void RunAfterOtherWork(CancellationToken cancellationToken, ScheduledOperation operation)
+    private void RunAfterCurrentOperations(CancellationToken cancellationToken, ScheduledOperation operation)
     {
         _topLevelScheduledOperations.Add(operation, cancellationToken);
     }
 
-    private void RunPreemptively(ScheduledOperation operation)
+    private void RunBeforeCurrentOperationIsCompleted(ScheduledOperation operation)
     {
         try
         {
-            foreach (var deferredOperation in OperationsToRunBefore(operation))
+            foreach (ScheduledOperation deferredOperation in OperationsToRunBefore(operation))
             {
                 Run(deferredOperation);
             }
@@ -212,6 +208,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
                     deferred,
                     source.OnExecuteAsync,
                     true,
+                    false,
                     scope: operation.Scope);
 
                 yield return deferredOperation;
@@ -281,12 +278,14 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             T value,
             KernelSchedulerDelegate<T, TResult> onExecuteAsync,
             bool isDeferred,
+            bool isChildOperation,
             ExecutionContext executionContext = default,
             string scope = "default",
             CancellationToken cancellationToken = default)
         {
             Value = value;
             IsDeferred = isDeferred;
+            IsChildOperation = isChildOperation;
             ExecutionContext = executionContext;
             _onExecuteAsync = onExecuteAsync;
             _cancellationToken = cancellationToken;
@@ -308,6 +307,8 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         public T Value { get; }
 
         public bool IsDeferred { get; }
+
+        public bool IsChildOperation { get; }
 
         public ExecutionContext ExecutionContext { get; }
 
@@ -360,7 +361,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         public KernelSchedulerDelegate<T, TResult> OnExecuteAsync { get; }
     }
 
-    protected virtual bool ShouldRunPreemptively(T current, T incoming) => false;
+    protected virtual bool IsChildOperation(T current, T incoming) => false;
 }
 
 static class DotNetStandardHelpers
