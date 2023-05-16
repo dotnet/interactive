@@ -231,7 +231,7 @@ public partial class KernelTests
 #endif
 
     [Fact]
-    public async Task it_can_handle_commands_that_submits_commands_that_are_split()
+    public async Task it_can_handle_commands_that_submit_commands_that_are_split()
     {
         var subkernel = new FakeKernel();
         var magicCommand = new Command("#!magic");
@@ -251,13 +251,13 @@ public partial class KernelTests
                     case "outer submission":
                         await context.HandlingKernel.RootKernel.SendAsync(new SubmitCode("""
                                 #!magic
-                                1+1
+                                inner submission
                                 """));
 
                         break;
 
-                    default:
-                        context.Display("inner submission", mimeTypes: "text/plain");
+                    case "inner submission":
+                        context.Display("inner submission event", mimeTypes: "text/plain");
                         break;
                 }
             }
@@ -274,7 +274,7 @@ public partial class KernelTests
 
         magicWasCalled.Should().BeTrue();
 
-        events.Should().ContainSingle<DisplayedValueProduced>(v => v.Value.Equals("inner submission"));
+        events.Should().ContainSingle<DisplayedValueProduced>(v => v.Value.Equals("inner submission event"));
 
         throw new Exception();
     }

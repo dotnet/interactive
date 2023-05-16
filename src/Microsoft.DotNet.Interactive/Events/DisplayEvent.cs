@@ -3,11 +3,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events;
 
+[DebuggerStepThrough]
 public abstract class DisplayEvent : KernelEvent
 {
     protected DisplayEvent(

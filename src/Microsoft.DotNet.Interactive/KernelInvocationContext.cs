@@ -152,9 +152,16 @@ public class KernelInvocationContext : IDisposable
                 }
                 else
                 {
-                    if (command.Parent is null && message is not null)
+                    if (message is not null)
                     {
-                        Publish(new ErrorProduced(message, command), publishOnAmbientContextOnly: true);
+                        if (command.Parent is null)
+                        {
+                            Publish(new ErrorProduced(message, command), publishOnAmbientContextOnly: true);
+                        }
+                        else if (command.IsSelfOrDescendantOf(Command))
+                        {
+                            Publish(new ErrorProduced(message, command), publishOnAmbientContextOnly: true);
+                        }
                     }
 
                     Publish(new CommandFailed(exception, command, message));

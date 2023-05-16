@@ -73,7 +73,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
     }
 
     [Fact]
-    public async Task Commands_sent_within_the_code_of_another_command_publish_error_events_for_failures()
+    public async Task Commands_sent_within_the_code_of_another_command_publish_error_events_on_CompositeKernel_for_failures()
     {
         using var kernel = new CompositeKernel
         {
