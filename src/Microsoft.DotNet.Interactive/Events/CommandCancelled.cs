@@ -8,6 +8,8 @@ namespace Microsoft.DotNet.Interactive.Events;
 
 public class CommandCancelled : KernelEvent
 {
+    // FIX: (CommandCancelled) consider deprecating this event
+
     [JsonIgnore]
     public KernelCommand CancelledCommand { get; }
 

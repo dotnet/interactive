@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive;
 
 public class KernelCommandScheduler : KernelScheduler<KernelCommand, KernelCommandResult>
 {
-    protected override bool IsPreemptive(
+    protected override bool ShouldRunPreemptively(
         KernelCommand current,
         KernelCommand incoming)
     {

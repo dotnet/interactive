@@ -36,7 +36,6 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             _schedulerDisposalSource,
             _topLevelScheduledOperations,
         };
-        
     }
 
     public void CancelCurrentOperation(Action<T> onCancellation = null)
@@ -59,7 +58,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
         ScheduledOperation operation;
 
-        if (IsPreemptive(_currentTopLevelOperation, value))
+        if (ShouldRunPreemptively(_currentTopLevelOperation, value))
         {
             operation = new ScheduledOperation(
                 value,
@@ -107,6 +106,11 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
                     executionContext!.CreateCopy(),
                     _ => RunPreemptively(operation),
                     operation);
+
+                if (expr)
+                {
+                    
+                }
 
                 operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
             }
@@ -356,7 +360,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         public KernelSchedulerDelegate<T, TResult> OnExecuteAsync { get; }
     }
 
-    protected virtual bool IsPreemptive(T current, T incoming) => false;
+    protected virtual bool ShouldRunPreemptively(T current, T incoming) => false;
 }
 
 static class DotNetStandardHelpers
