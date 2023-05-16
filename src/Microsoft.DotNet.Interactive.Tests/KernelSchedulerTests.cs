@@ -116,21 +116,7 @@ public class KernelSchedulerTests : IDisposable
 
         maxObservedParallelism.Should().Be(1);
     }
-
-    [Fact]
-    public void Recursive_preemption()
-    {
-        
-
-
-
-
-
-
-        // TODO (Recursive_preemption) write test
-        throw new NotImplementedException();
-    }
-
+    
     public class TestKernelScheduler<T> : KernelScheduler<T, T>
     {
         private readonly Func<T, T, bool> _isPreemptive;
@@ -140,7 +126,7 @@ public class KernelSchedulerTests : IDisposable
             _isPreemptive = isPreemptive;
         }
 
-        protected override bool ShouldRunPreemptively(T current, T incoming) => _isPreemptive(current, incoming);
+        protected override bool IsChildOperation(T current, T incoming) => _isPreemptive(current, incoming);
     }
 
     [Fact]
