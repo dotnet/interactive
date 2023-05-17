@@ -1,7 +1,7 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <AdditionalFilesToIncludeForProject>
-      <Value>..\microsoft-dotnet-interactive\src\contracts.ts</Value>
+      <Value>..\polyglot-notebooks\src\contracts.ts</Value>
     </AdditionalFilesToIncludeForProject>
     <DefaultTestTimeout>10000</DefaultTestTimeout>
     <HiddenComponentWarnings>
