@@ -181,6 +181,9 @@ Microsoft.DotNet.Interactive
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.KernelEvent> events = null)
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Events.KernelEvent> Events { get;}
+  public class KernelCommandScheduler : KernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult>, IKernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult>, System.IDisposable
+    .ctor()
+    protected System.Boolean IsChildOperation(Microsoft.DotNet.Interactive.Commands.KernelCommand current, Microsoft.DotNet.Interactive.Commands.KernelCommand incoming)
   public class KernelDirectiveInfo, System.IEquatable<KernelDirectiveInfo>
     public static System.Boolean op_Equality(KernelDirectiveInfo left, KernelDirectiveInfo right)
     public static System.Boolean op_Inequality(KernelDirectiveInfo left, KernelDirectiveInfo right)
@@ -263,9 +266,10 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task EndInvoke(System.IAsyncResult result)
     public System.Threading.Tasks.Task Invoke(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
   public class KernelScheduler<T,TResult>, IKernelScheduler<T,TResult>, System.IDisposable
-    .ctor(Func<T,T,System.Boolean> isPreemptive = null)
+    .ctor()
     public System.Void CancelCurrentOperation(Action<T> onCancellation = null)
     public System.Void Dispose()
+    protected System.Boolean IsChildOperation(T current, T incoming)
     public System.Void RegisterDeferredOperationSource(GetDeferredOperationsDelegate getDeferredOperations, KernelSchedulerDelegate<T,TResult> kernelSchedulerOnExecuteAsync)
     public Task<TResult> RunAsync(T value, KernelSchedulerDelegate<T,TResult> onExecuteAsync, System.String scope = default, System.Threading.CancellationToken cancellationToken = null)
    delegate GetDeferredOperationsDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
@@ -392,6 +396,8 @@ Microsoft.DotNet.Interactive.Commands
     public System.Int32 GetHashCode()
     public System.String GetOrCreateToken()
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
+    public System.Boolean IsSelfOrDescendantOf(KernelCommand other)
+    public System.Boolean IsSiblingOf(KernelCommand other)
     public System.Void SetId(System.String id)
     public System.Void SetToken(System.String token)
   public abstract class LanguageServiceCommand : KernelCommand, System.IEquatable<KernelCommand>

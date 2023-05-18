@@ -144,7 +144,7 @@ x.Display(""text/plain"");");
 
         result.Events
               .Should()
-              .EventuallyContainSingle<HoverTextProduced>();
+              .ContainSingle<HoverTextProduced>();
     }
 
     protected abstract IKernelConnector CreateConnector();
