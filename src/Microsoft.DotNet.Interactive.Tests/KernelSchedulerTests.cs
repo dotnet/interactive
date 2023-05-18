@@ -8,6 +8,7 @@ using FluentAssertions;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
@@ -46,7 +47,7 @@ public class KernelSchedulerTests : IDisposable
     }
 
     [Fact]
-    public async Task scheduled_work_is_completed_in_order()
+    public async Task top_level_scheduled_work_is_completed_in_order()
     {
         using var scheduler = new KernelScheduler<int, int>();
 
@@ -66,35 +67,9 @@ public class KernelSchedulerTests : IDisposable
     }
 
     [Fact]
-    public async Task scheduled_work_does_not_execute_in_parallel()
+    public async Task top_level_scheduled_work_does_not_execute_in_parallel()
     {
         using var scheduler = new KernelScheduler<int, int>();
-        var concurrencyCounter = 0;
-        var maxObservedParallelism = 0;
-
-        var tasks = Enumerable.Range(1, 3).Select(i =>
-        {
-            return scheduler.RunAsync(i, async v =>
-            {
-                Interlocked.Increment(ref concurrencyCounter);
-
-                await Task.Delay(100);
-                maxObservedParallelism = Math.Max(concurrencyCounter, maxObservedParallelism);
-
-                Interlocked.Decrement(ref concurrencyCounter);
-                return v;
-            });
-        });
-
-        await Task.WhenAll(tasks);
-
-        maxObservedParallelism.Should().Be(1);
-    }
-
-    [Fact]
-    public async Task preemptively_scheduled_work_does_not_execute_in_parallel()
-    {
-        using var scheduler = new TestKernelScheduler<int>((_, _) => true);
         var concurrencyCounter = 0;
         var maxObservedParallelism = 0;
 
@@ -119,14 +94,14 @@ public class KernelSchedulerTests : IDisposable
     
     public class TestKernelScheduler<T> : KernelScheduler<T, T>
     {
-        private readonly Func<T, T, bool> _isPreemptive;
+        private readonly Func<T, T, bool> _isChildOperation;
 
-        public TestKernelScheduler(Func<T, T, bool> isPreemptive)
+        public TestKernelScheduler(Func<T, T, bool> isChildOperation)
         {
-            _isPreemptive = isPreemptive;
+            _isChildOperation = isChildOperation;
         }
 
-        protected override bool IsChildOperation(T current, T incoming) => _isPreemptive(current, incoming);
+        protected override bool IsChildOperation(T current, T incoming) => _isChildOperation(current, incoming);
     }
 
     [Fact]
@@ -651,5 +626,4 @@ public class KernelSchedulerTests : IDisposable
             .And
             .AllBeEquivalentTo(asyncIdForScheduledWork);
     }
-
 }

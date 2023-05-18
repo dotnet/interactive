@@ -456,6 +456,7 @@ public abstract partial class Kernel :
 
         if (currentCommandOwnsContext)
         {
+            await Scheduler.IdleAsync();
             context.Dispose();
         }
 
@@ -585,7 +586,8 @@ public abstract partial class Kernel :
 
     private IReadOnlyList<KernelCommand> GetDeferredCommands(KernelCommand command, string scope)
     {
-        if (!command.SchedulingScope.Contains(SchedulingScope))
+        if (command.SchedulingScope is null || 
+            !command.SchedulingScope.Contains(SchedulingScope))
         {
             return Array.Empty<KernelCommand>();
         }

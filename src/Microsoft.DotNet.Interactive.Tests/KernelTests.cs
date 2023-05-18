@@ -275,7 +275,5 @@ public partial class KernelTests
         magicWasCalled.Should().BeTrue();
 
         events.Should().ContainSingle<DisplayedValueProduced>(v => v.Value.Equals("inner submission event"));
-
-        throw new Exception();
     }
 }

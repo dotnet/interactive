@@ -250,35 +250,6 @@ public static class AssertionExtensions
             .NotContain(e => e is ErrorProduced)
             .And
             .NotContain(e => e is CommandFailed);
-
-    public static AndWhichConstraint<ObjectAssertions, T> EventuallyContainSingle<T>(
-        this GenericCollectionAssertions<KernelEvent> should,
-        Func<T, bool> where = null,
-        int timeout = 3000)
-        where T : KernelEvent
-    {
-        return Task.Run(async () =>
-        {
-            if (where is null)
-            {
-                where = _ => true;
-            }
-
-            var startTime = DateTime.UtcNow;
-            var endTime = startTime + TimeSpan.FromMilliseconds(timeout);
-            while (DateTime.UtcNow < endTime)
-            {
-                if (should.Subject.OfType<T>().Any(where))
-                {
-                    break;
-                }
-
-                await Task.Delay(200);
-            }
-
-            return should.ContainSingle(where);
-        }).Result;
-    }
 }
 
 public static class ObservableExtensions
