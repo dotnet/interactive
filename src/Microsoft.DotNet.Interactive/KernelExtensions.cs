@@ -7,7 +7,6 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -53,7 +52,7 @@ public static class KernelExtensions
         }
     }
 
-    public static Kernel FindKernelByName(this Kernel kernel, string name) => 
+    public static Kernel FindKernelByName(this Kernel kernel, string name) =>
         FindKernels(kernel, k => k.KernelInfo.NameAndAliases.Contains(name)).FirstOrDefault();
 
     public static IEnumerable<Kernel> FindKernels(this Kernel kernel, Func<Kernel, bool> predicate)
@@ -170,7 +169,7 @@ public static class KernelExtensions
 
             kernel.AddMiddleware(async (kernelCommand, c, next) =>
             {
-                PublishLogEvent(c, kernelCommand.ToLogString());
+                PublishLogEvent(c, kernelCommand.ToDisplayString(MimeTypes.Logging));
 
                 await next(kernelCommand, c);
             });
@@ -186,14 +185,14 @@ public static class KernelExtensions
                             return;
                         }
 
-                        PublishLogEvent(currentContext, e.ToLogString());
+                        PublishLogEvent(currentContext, e.ToDisplayString(MimeTypes.Logging));
                     }
                 }),
                 LogEvents.Subscribe(e =>
                 {
                     if (KernelInvocationContext.Current is {} currentContext)
                     {
-                        PublishLogEvent(currentContext, e.ToLogString());
+                        PublishLogEvent(currentContext, e.ToDisplayString(MimeTypes.Logging));
                     }
                 })
             };
@@ -231,9 +230,8 @@ public static class KernelExtensions
             var events = new List<ValueProduced>();
 
             using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(events.Add);
-            
+
             var valueSource = cmdLineContext.ParseResult.GetValueForOption(valueOption);
-          
 
             var valueProduced = valueSource switch
             { { Name: var sourceValueName, Kernel: var sourceKernelName } when !string.IsNullOrWhiteSpace(sourceKernelName) && !string.IsNullOrEmpty(sourceKernelName) && sourceKernelName != "input" => events.SingleOrDefault(e => e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName),
@@ -250,15 +248,13 @@ public static class KernelExtensions
             else
             {
 
-                await SendValue(kernel,valueSource?.Value, null, valueName);
+                await SendValue(kernel, valueSource?.Value, null, valueName);
             }
         }
         else
         {
             context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
         }
-
-       
     }
 
     public static T UseValueSharing<T>(this T kernel) where T : Kernel
@@ -282,17 +278,17 @@ public static class KernelExtensions
             LocalizationResources.Magics_set_byref_Description());
 
         var mimeTypeOption = new Option<string>(
-                "--mime-type", 
-                description: LocalizationResources.Magics_set_mime_type_Description(),
-                parseArgument: result =>
+            "--mime-type",
+            description: LocalizationResources.Magics_set_mime_type_Description(),
+            parseArgument: result =>
+            {
+                if (result.GetValueForOption(byrefOption))
                 {
-                    if (result.GetValueForOption(byrefOption))
-                    {
-                        result.ErrorMessage = LocalizationResources.Magics_set_mime_type_ErrorMessageCannotBeUsed();
-                    }
+                    result.ErrorMessage = LocalizationResources.Magics_set_mime_type_ErrorMessageCannotBeUsed();
+                }
 
-                    return result.Tokens.FirstOrDefault()?.Value;
-                })
+                return result.Tokens.FirstOrDefault()?.Value;
+            })
             {
                 ArgumentHelpName = "MIME-TYPE"
             }
@@ -358,7 +354,7 @@ public static class KernelExtensions
             byrefOption
         };
 
-        set.SetHandler(async cmdLineContext => 
+        set.SetHandler(async cmdLineContext =>
                            await HandleSetMagicCommand(destinationKernel, cmdLineContext, nameOption, valueOption, mimeTypeOption, byrefOption));
 
         destinationKernel.AddDirective(set);
@@ -366,10 +362,10 @@ public static class KernelExtensions
         ValueOptionResult ParseValueOption(ArgumentResult argResult)
         {
             var valueOptionValue = argResult.Tokens.Single().Value;
-            
+
             if (!valueOptionValue.StartsWith("@"))
             {
-                return new ValueOptionResult( valueOptionValue, null,null);
+                return new ValueOptionResult(valueOptionValue, null, null);
             }
 
             bool isByref;
@@ -707,7 +703,7 @@ public static class KernelExtensions
             onVisit(k);
         }
     }
-    
+
     public static IEnumerable<Kernel> SubkernelsAndSelf(
         this Kernel kernel,
         bool recursive = false)

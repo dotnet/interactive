@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.Interactive;
 public class KernelInvocationContext : IDisposable
 {
     private static readonly AsyncLocal<KernelInvocationContext> _current = new();
-    private static readonly ConcurrentDictionary<string, CancellationTokenSource>  _cancellationTokenSources = new ();
+    private static readonly ConcurrentDictionary<string, CancellationTokenSource> _cancellationTokenSources = new();
 
     private readonly ReplaySubject<KernelEvent> _events = new();
 
@@ -38,7 +39,7 @@ public class KernelInvocationContext : IDisposable
     private KernelInvocationContext(KernelCommand command)
     {
         var operation = new OperationLogger(
-            operationName: command.ToString(),
+            operationName: command.ToDisplayString(MimeTypes.Logging),
             args: new object[]
             {
                 ("KernelCommand", command)
@@ -57,7 +58,7 @@ public class KernelInvocationContext : IDisposable
                 {
                     _ownsCancellationTokenSource = true;
                     return new CancellationTokenSource();
-                } 
+                }
         );
 
         Command = command;
@@ -83,9 +84,9 @@ public class KernelInvocationContext : IDisposable
     public KernelCommand Command { get; }
 
     public bool IsComplete { get; private set; }
-        
+
     public CancellationToken CancellationToken => _cancellationTokenSource.IsCancellationRequested
-        ? new CancellationToken(true) 
+        ? new CancellationToken(true)
         : _cancellationTokenSource.Token;
 
     public void Complete(KernelCommand command)
@@ -108,7 +109,7 @@ public class KernelInvocationContext : IDisposable
             TryCancel();
             Fail(
                 Command,
-                message:"Command cancelled.");
+                message: "Command cancelled.");
         }
     }
 
@@ -128,7 +129,7 @@ public class KernelInvocationContext : IDisposable
             }
 
             var completingMainCommand = command.Equals(Command);
-                
+
             if (succeed && !IsFailed)
             {
                 if (completingMainCommand)
@@ -231,7 +232,7 @@ public class KernelInvocationContext : IDisposable
 
         if (HandlingKernel is { })
         {
-            @event.RoutingSlip.Stamp(HandlingKernel.KernelInfo.Uri);
+            @event.StampRoutingSlip(HandlingKernel.KernelInfo.Uri);
         }
 
         if (!publishOnAmbientContextOnly && _childCommands.TryGetValue(command, out var events))
@@ -255,7 +256,7 @@ public class KernelInvocationContext : IDisposable
 
     internal KernelCommandResult ResultFor(KernelCommand command)
     {
-        if (command.Equals( Command))
+        if (command.Equals(Command))
         {
             return Result;
         }

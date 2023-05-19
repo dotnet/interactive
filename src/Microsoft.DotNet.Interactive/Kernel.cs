@@ -673,7 +673,7 @@ public abstract partial class Kernel :
 
         if (!kernelEvent.RoutingSlip.Contains(KernelInfo.Uri))
         {
-            kernelEvent.RoutingSlip.Stamp(KernelInfo.Uri);
+            kernelEvent.StampRoutingSlip(KernelInfo.Uri);
         }
 
         _kernelEvents.OnNext(kernelEvent);

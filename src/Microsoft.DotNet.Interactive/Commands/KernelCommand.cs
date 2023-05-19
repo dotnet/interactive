@@ -6,12 +6,14 @@ using System.Collections.Generic;
 using System.CommandLine.Parsing;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
+[TypeFormatterSource(typeof(KernelCommandLoggingFormatterSource))]
 public abstract class KernelCommand : IEquatable<KernelCommand>
 {
     private KernelCommand _parent;

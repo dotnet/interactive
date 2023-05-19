@@ -3,20 +3,20 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.DotNet.Interactive.Formatting;
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive;
 
 internal static class KernelDiagnostics
 {
-
     [DebuggerStepThrough]
     public static T LogCommandsToPocketLogger<T>(this T kernel)
         where T : Kernel
     {
         kernel.AddMiddleware(async (command, context, next) =>
         {
-            using var _ = Logger.Log.OnEnterAndExit($"Command: {command.ToString().Replace(Environment.NewLine, " ")}");
+            using var _ = Logger.Log.OnEnterAndExit(command.ToDisplayString(MimeTypes.Logging));
 
             await next(command, context);
         });
@@ -30,25 +30,22 @@ internal static class KernelDiagnostics
         var disposables = new CompositeDisposable();
 
         disposables.Add(
-            kernel.KernelEvents
-                  .Subscribe(
-                      e =>
-                      {
-                          Logger.Log.Info("{kernel}: {event}",
-                                          kernel.Name,
-                                          e);
-                      }));
+            kernel.KernelEvents.Subscribe(e =>
+            {
+                Logger.Log.Info("{kernel}: {event}",
+                                kernel.Name,
+                                e.ToDisplayString(MimeTypes.Logging));
+            }));
 
         kernel.VisitSubkernels(k =>
         {
             disposables.Add(
-                k.KernelEvents.Subscribe(
-                    e =>
-                    {
-                        Logger.Log.Info("{kernel}: {event}",
-                                        k.Name,
-                                        e);
-                    }));
+                k.KernelEvents.Subscribe(e =>
+                {
+                    Logger.Log.Info("{kernel}: {event}",
+                                    k.Name,
+                                    e.ToDisplayString(MimeTypes.Logging));
+                }));
         });
 
         kernel.RegisterForDisposal(disposables);

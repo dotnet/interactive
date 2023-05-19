@@ -72,11 +72,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ContentFiles\" />
-    <Folder Include="Utility\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Http\Microsoft.DotNet.Interactive.Http.csproj" />
@@ -192,5 +187,6 @@
     <Message Text="##vso[task.setvariable variable=StableToolVersionNumber]$(Version)" Importance="high" />
   </Target>
 
+  <Import Project="..\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems" Label="Shared" />
 </Project>
 

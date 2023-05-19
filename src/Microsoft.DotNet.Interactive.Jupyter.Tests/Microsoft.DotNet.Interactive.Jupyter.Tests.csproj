@@ -52,4 +52,5 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+  <Import Project="..\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems" Label="Shared" />
 </Project>

@@ -28,5 +28,14 @@ internal class MessageDiagnosticsFormatterSource : ITypeFormatterSource
 
             return true;
         });
+
+        yield return new LoggingFormatter<RoutingSlip>((slip, context) =>
+        {
+            var list = slip.Entries.Select(e => e.ToString());
+
+            list.FormatTo(context, PlainTextFormatter.MimeType);
+
+            return true;
+        });
     }
 }

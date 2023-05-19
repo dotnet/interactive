@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -66,7 +64,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-            
+
         ScheduledOperation operation;
         if (_isPreemptive(_currentTopLevelOperation, value))
         {
@@ -135,7 +133,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     {
         _currentTopLevelOperation ??= operation.Value;
 
-        using var logOp = Log.OnEnterAndConfirmOnExit($"Run: {operation.Value}");
+        using var logOp = Log.OnEnterAndConfirmOnExit(operation.Value);
 
         try
         {
@@ -196,7 +194,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             Log.Error(exception);
         }
     }
-        
+
     private IEnumerable<ScheduledOperation> OperationsToRunBefore(
         ScheduledOperation operation)
     {
@@ -258,7 +256,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
                 // todo: this is still a problem with fsi
 
                 // ControlledExecution.Run isn't available in .NET Standard but since we're most likely actually running in .NET 7+, we can try to bind a delegate to it.
-                
+
                 //if (Type.GetType("System.Runtime.ControlledExecution, System.Private.CoreLib", false) is { } controlledExecutionType &&
                 //    controlledExecutionType.GetMethod("Run", BindingFlags.Static | BindingFlags.Public) is { } runMethod)
                 //{
@@ -319,7 +317,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
         public Task<TResult> ExecuteAsync()
         {
-            if (_runWithControlledExecution is not null && 
+            if (_runWithControlledExecution is not null &&
                 _cancellationToken.CanBeCanceled)
             {
                 try
@@ -341,7 +339,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             }
             else
             {
-               return _onExecuteAsync(Value);
+                return _onExecuteAsync(Value);
             }
         }
 

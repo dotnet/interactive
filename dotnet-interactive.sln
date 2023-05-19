@@ -740,8 +740,11 @@ Global
 		SolutionGuid = {6D05A9AF-CFFB-4187-8599-574387B76727}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems*{1a4a744f-fef3-4361-a2e5-c5d496f7bfdc}*SharedItemsImports = 5
 		src\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems*{42cc26ba-8057-4654-b23c-e6a48475b381}*SharedItemsImports = 5
 		src\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems*{6273eefb-e920-48f4-b0af-8620b6d9fb28}*SharedItemsImports = 13
+		src\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems*{73136cc6-d968-4d2c-ad93-b23a78b2c7df}*SharedItemsImports = 5
+		src\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems*{a8028abf-7d78-4aba-b4f2-0657a1e5cf71}*SharedItemsImports = 5
 		src\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems*{e06f109d-e9b5-4c68-9904-6955ca30252d}*SharedItemsImports = 5
 		src\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems*{e3297a6a-95aa-4dad-8dd1-971a45856bc2}*SharedItemsImports = 5
 	EndGlobalSection

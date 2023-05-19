@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)DictionaryExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IOExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MimeTypes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NullableAttributes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Range.cs" />
   </ItemGroup>
