@@ -181,6 +181,9 @@ public abstract class RoutingSlip
 
         public string AbsoluteUriWithQuery { get; }
 
-        public override string ToString() => $"{AbsoluteUriWithoutQuery} ({Tag})";
+        public override string ToString() =>
+            Tag is not null
+                ? $"{AbsoluteUriWithoutQuery} ({Tag})"
+                : $"{AbsoluteUriWithoutQuery}";
     }
 }

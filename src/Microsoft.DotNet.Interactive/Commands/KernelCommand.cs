@@ -86,7 +86,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         if (_parent is { })
         {
-            _token = _parent.GetOrCreateToken() + "." + _parent.GetNextChildToken();
+            _token = $"{_parent.GetOrCreateToken()}.{_parent.GetNextChildToken()}";
             return _token;
         }
 
@@ -96,11 +96,19 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         static string CreateToken()
         {
+#if DEBUG
+            var token = Interlocked.Increment(ref _nextRootToken);
+            return token.ToString();
+#else
             var inputBytes = Guid.NewGuid().ToByteArray();
-
             return Convert.ToBase64String(inputBytes);
+#endif
         }
     }
+
+#if DEBUG
+    private static int _nextRootToken = 0;
+#endif
 
     [JsonIgnore] internal SchedulingScope SchedulingScope { get; set; }
 
