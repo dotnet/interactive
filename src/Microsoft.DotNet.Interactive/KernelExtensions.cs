@@ -41,6 +41,11 @@ public static class KernelExtensions
             }
         });
 
+        if (kernel is CompositeKernel composite)
+        {
+            composite.SetDefaultTargetKernelNameForCommand(typeof(Quit), composite.Name);
+        }
+
         return kernel;
 
         void ShutDown()

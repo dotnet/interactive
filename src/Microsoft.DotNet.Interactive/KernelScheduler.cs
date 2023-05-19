@@ -44,11 +44,6 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     {
         if (_currentlyRunningOperation is { } operation)
         {
-            foreach (var childOperation in operation.GetChildOperations())
-            {
-                
-            }
-
             onCancellation?.Invoke(operation.Value);
             operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
             _currentlyRunningOperation = null;
@@ -310,13 +305,26 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         {
             Value = value;
             IsDeferred = isDeferred;
-            IsChildOperation = parentOperation is not null;
+
             ExecutionContext = executionContext;
             _onExecuteAsync = onExecuteAsync;
             CancellationToken = cancellationToken;
             Scope = scope;
 
             TaskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            if (parentOperation is not null)
+            {
+                IsChildOperation = true;
+                var parentOperationCancellationToken = parentOperation.CancellationToken;
+                if (parentOperationCancellationToken.CanBeCanceled)
+                {
+                    parentOperationCancellationToken.Register(() =>
+                    {
+                        TaskCompletionSource.TrySetCanceled();
+                    });
+                }
+            }
 
             if (cancellationToken.CanBeCanceled)
             {

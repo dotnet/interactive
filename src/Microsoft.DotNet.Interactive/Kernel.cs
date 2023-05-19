@@ -12,6 +12,7 @@ using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis.Text;
@@ -313,7 +314,9 @@ public abstract partial class Kernel :
 
     protected virtual Func<TCommand, KernelInvocationContext, Task> CreateDefaultHandlerForCommandType<TCommand>() where TCommand : KernelCommand
     {
-        return (_, _) => Task.CompletedTask;
+        return EmptyHandler;
+
+        Task EmptyHandler(TCommand _, KernelInvocationContext __) => Task.CompletedTask;
     }
 
     internal virtual async Task HandleAsync(
@@ -372,16 +375,14 @@ public abstract partial class Kernel :
                     case Quit quit:
                         quit.SchedulingScope = SchedulingScope;
                         quit.TargetKernelName = Name;
+                        Scheduler.CancelCurrentOperation();
                         await InvokePipelineAndCommandHandler(quit);
                         break;
 
                     case Cancel cancel:
                         cancel.SchedulingScope = SchedulingScope;
                         cancel.TargetKernelName = Name;
-                        Scheduler.CancelCurrentOperation(inflight =>
-                        {
-                            context.Publish(new CommandCancelled(cancel, inflight));
-                        });
+                        Scheduler.CancelCurrentOperation(inflight => { context.Publish(new CommandCancelled(cancel, inflight)); });
                         await InvokePipelineAndCommandHandler(cancel);
                         break;
 
