@@ -247,7 +247,7 @@ public class KernelInvocationContext : IDisposable
             {
                 _events.OnNext(@event);
             }
-            else if (command.IsSiblingOf(Command))
+            else if (command.HasSameRootCommandAs(Command))
             {
                 _events.OnNext(@event);
             }

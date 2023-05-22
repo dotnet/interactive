@@ -120,9 +120,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.App.Tests.LanguageKernelExtensionLoadingTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.MagicCommandTests+About</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.App.Tests.RuntimeTelemetryTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>

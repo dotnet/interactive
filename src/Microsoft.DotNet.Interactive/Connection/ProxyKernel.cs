@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -182,6 +183,23 @@ public sealed class ProxyKernel : Kernel
 
         var hasPending = _inflight.TryGetValue(token, out var pending);
 
+        var inflightParents = _inflight.Values.Where(v => kernelEvent.Command.IsSelfOrDescendantOf(v.command)).ToArray();
+
+        // FIX: (DelegatePublication) 
+        switch (inflightParents.Length)
+        {
+            case 0: break;
+            case 1:
+                pending = inflightParents.Single();
+                hasPending = true;
+                break;
+            case 2: break;
+            case 3: break;
+            case 4: break;
+            case 5: break;
+            default: break;
+        }
+
         if (hasPending && HasSameOrigin(kernelEvent))
         {
             var areSameCommand = pending.command.Equals(kernelEvent.Command);
@@ -209,7 +227,7 @@ public sealed class ProxyKernel : Kernel
                     {
                         UpdateKernelInfoFromEvent(kip);
                         var newEvent = new KernelInfoProduced(KernelInfo, kernelEvent.Command);
-
+                        
                         newEvent.RoutingSlip.ContinueWith(kip.RoutingSlip);
 
                         if (pending.executionContext is { } ec)
