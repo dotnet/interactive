@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="Magics_lsmagic_Description">
         <source>List the available magic commands / directives</source>
-        <target state="new">List the available magic commands / directives</target>
+        <target state="translated">Elencare i comandi magic/direttive disponibili</target>
         <note />
       </trans-unit>
       <trans-unit id="Magics_markdown_Description">
         <source>Convert the code that follows from Markdown into HTML</source>
-        <target state="new">Convert the code that follows from Markdown into HTML</target>
+        <target state="translated">Convertire il codice che segue da Markdown in HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="Magics_time_Description">
         <source>Time the execution of the following code in the submission.</source>
-        <target state="new">Time the execution of the following code in the submission.</target>
+        <target state="translated">Tempo di esecuzione del codice seguente nell'invio.</target>
         <note />
       </trans-unit>
     </body>

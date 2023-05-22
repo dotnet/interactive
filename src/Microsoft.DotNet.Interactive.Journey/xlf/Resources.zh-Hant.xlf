@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="FileDoesNotExist">
         <source>File does not exist: '{0}'.</source>
-        <target state="new">File does not exist: '{0}'.</target>
+        <target state="translated">檔案不存在: '{0}'。</target>
         <note />
       </trans-unit>
       <trans-unit id="Magics_model_answer_from_file_Description">
         <source>Specify lesson source file</source>
-        <target state="new">Specify lesson source file</target>
+        <target state="translated">指定課程來源檔案</target>
         <note />
       </trans-unit>
       <trans-unit id="Magics_model_answer_from_file_ErrorMessage">
         <source>The {0} and {1} options cannot be used together</source>
-        <target state="new">The {0} and {1} options cannot be used together</target>
+        <target state="translated">無法同時使用 {0} 與 {1} 選項</target>
         <note />
       </trans-unit>
       <trans-unit id="Magics_model_answer_from_url_Description">
         <source>Specify lesson source URL</source>
-        <target state="new">Specify lesson source URL</target>
+        <target state="translated">指定課程來源 URL</target>
         <note />
       </trans-unit>
     </body>
