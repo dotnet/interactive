@@ -167,23 +167,23 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         return GetOrCreateId().GetHashCode();
     }
 
-    public bool IsSelfOrDescendantOf(KernelCommand other)
+    internal bool IsSelfOrDescendantOf(KernelCommand other)
     {
         return GetOrCreateToken().StartsWith(other.GetOrCreateToken());
     }
 
-    public bool HasSameRootCommandAs(KernelCommand other)
+    internal bool HasSameRootCommandAs(KernelCommand other)
     {
-        var thisParentToken = GetParentTokenOf(GetOrCreateToken());
-        var otherParentToken = GetParentTokenOf(other.GetOrCreateToken());
+        var thisParentToken = GetRootToken(GetOrCreateToken());
+        var otherParentToken = GetRootToken(other.GetOrCreateToken());
 
         return thisParentToken == otherParentToken;
+    }
 
-        static string GetParentTokenOf(string token)
-        {
-            var parts = token.Split(new[] { '.' });
+    internal static string GetRootToken(string token)
+    {
+        var parts = token.Split(new[] { '.' });
 
-            return parts[0];
-        }
+        return parts[0];
     }
 }

@@ -112,7 +112,6 @@ export class ProxyKernel extends Kernel {
                                     }
                                 }
                                 break;
-                            case contracts.CommandCancelledType:
                             case contracts.CommandFailedType:
                             case contracts.CommandSucceededType:
                                 Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] finished, envelopeid=${envelope.command!.id}, commandid=${commandId}`);

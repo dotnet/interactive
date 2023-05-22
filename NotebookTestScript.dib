@@ -69,8 +69,13 @@ console.log(`The value is ${x}.`);
 #!javascript
 
 #!set --value @csharp:x --name y
+y++;
 document.getElementById("output").innerText = `The value is ${y}.`;
 console.log(`The value is ${y}.`);
+
+#!csharp
+
+System.Diagnostics.Debugger.Launch();
 
 #!markdown
 

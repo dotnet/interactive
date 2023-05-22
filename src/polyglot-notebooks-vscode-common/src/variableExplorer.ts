@@ -73,7 +73,6 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                         switch (envelope.eventType) {
                             case contracts.CommandSucceededType:
                             case contracts.CommandFailedType:
-                            case contracts.CommandCancelledType:
                                 if (envelope.command?.commandType === contracts.SubmitCodeType
                                     || envelope.command?.commandType === contracts.SendValueType) {
 
