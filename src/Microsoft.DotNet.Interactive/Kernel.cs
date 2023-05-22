@@ -382,7 +382,7 @@ public abstract partial class Kernel :
                     case Cancel cancel:
                         cancel.SchedulingScope = SchedulingScope;
                         cancel.TargetKernelName = Name;
-                        Scheduler.CancelCurrentOperation(inflight => { context.Publish(new CommandCancelled(cancel, inflight)); });
+                        Scheduler.CancelCurrentOperation();
                         await InvokePipelineAndCommandHandler(cancel);
                         break;
 

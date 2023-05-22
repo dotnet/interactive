@@ -78,7 +78,6 @@ public class SerializationTests
             $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
             $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}",
             $"{nameof(KernelValueInfo)}.{nameof(KernelValueInfo.Type)}",
-            $"{nameof(CommandCancelled)}.{nameof(CommandCancelled.CancelledCommand)}"
         };
 
         deserializedEnvelope

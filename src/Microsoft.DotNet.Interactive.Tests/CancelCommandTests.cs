@@ -96,45 +96,7 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
             .Should()
             .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
     }
-
-    [FactSkipWindows]
-    public async Task when_cancelling_command_it_reports_what_command_was_cancelled()
-    {
-        // todo: this test is flaky and timeouts in CI
-        while (true)
-        {
-            using var kernel = CreateKernel();
-
-            var cancelCommand = new Cancel();
-
-            var commandToCancel = new SubmitCode(@"
-using Microsoft.DotNet.Interactive;
-var cancellationToken = KernelInvocationContext.Current.CancellationToken;
-while(!cancellationToken.IsCancellationRequested){ 
-    await Task.Delay(10); 
-}", targetKernelName: "csharp");
-
-            var resultForCommandToCancel = kernel.SendAsync(commandToCancel);
-
-            var result = await kernel.SendAsync(cancelCommand);
-
-            try
-            {
-                await resultForCommandToCancel.Timeout(10.Seconds());
-                result.Events.Should()
-                      .ContainSingle<CommandCancelled>()
-                      .Which
-                      .CancelledCommand
-                      .Should()
-                      .Be(commandToCancel);
-                break;
-            }
-            catch (TimeoutException)
-            {
-            }
-        }
-    }
-
+    
     [Fact]
     public async Task can_cancel_user_loop_using_CancellationToken()
     {

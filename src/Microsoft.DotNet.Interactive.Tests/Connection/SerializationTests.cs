@@ -79,7 +79,6 @@ public class SerializationTests
             $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
             $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}",
             $"{nameof(KernelValueInfo)}.{nameof(KernelValueInfo.Type)}",
-            $"{nameof(CommandCancelled)}.{nameof(CommandCancelled.CancelledCommand)}"
         };
 
         deserializedEnvelope
@@ -419,8 +418,6 @@ public class SerializationTests
                     HtmlFormatter.MimeType,
                     "<span>raw value</span>"),
                 new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp"));
-
-            yield return new CommandCancelled(new Cancel(), new SubmitCode("var value = 1;", "csharp"));
 
             yield return new InputProduced("user input", new RequestInput(valueName: "logfile", prompt: "What is the path to the log file?", inputTypeHint: "file", targetKernelName: "vscode"));
         }
