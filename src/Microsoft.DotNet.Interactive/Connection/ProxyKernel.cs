@@ -107,7 +107,8 @@ public sealed class ProxyKernel : Kernel
 
         var completionSource = new TaskCompletionSource<KernelEvent>();
 
-        _inflight[token] = (command, _executionContext, completionSource, context);
+        var rootToken = KernelCommand.GetRootToken(token);
+        _inflight[rootToken] = (command, _executionContext, completionSource, context);
 
         ExecutionContext.SuppressFlow();
 
@@ -179,25 +180,17 @@ public sealed class ProxyKernel : Kernel
 
     private void DelegatePublication(KernelEvent kernelEvent)
     {
-        var token = kernelEvent.Command.GetOrCreateToken();
+        var rootToken = KernelCommand.GetRootToken(kernelEvent.Command.GetOrCreateToken());
 
-        var hasPending = _inflight.TryGetValue(token, out var pending);
+        var hasPending = _inflight.TryGetValue(rootToken, out var pending);
 
         var inflightParents = _inflight.Values.Where(v => kernelEvent.Command.IsSelfOrDescendantOf(v.command)).ToArray();
 
         // FIX: (DelegatePublication) 
-        switch (inflightParents.Length)
+        if (inflightParents.Length == 1)
         {
-            case 0: break;
-            case 1:
-                pending = inflightParents.Single();
-                hasPending = true;
-                break;
-            case 2: break;
-            case 3: break;
-            case 4: break;
-            case 5: break;
-            default: break;
+            pending = inflightParents.Single();
+            hasPending = pending.command.HasSameRootCommandAs(kernelEvent.Command);
         }
 
         if (hasPending && HasSameOrigin(kernelEvent))
@@ -212,11 +205,11 @@ public sealed class ProxyKernel : Kernel
             switch (kernelEvent)
             {
                 case CommandFailed cf when areSameCommand:
-                    _inflight.Remove(token);
+                    _inflight.Remove(rootToken);
                     pending.completionSource.TrySetResult(cf);
                     break;
                 case CommandSucceeded cs when areSameCommand:
-                    _inflight.Remove(token);
+                    _inflight.Remove(rootToken);
                     pending.completionSource.TrySetResult(cs);
                     break;
                 case CommandFailed _ when kernelEvent.Command.GetOrCreateId() == _suppressCompletionsForCommandId:
