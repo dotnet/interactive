@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="Magics_lsmagic_Description">
         <source>List the available magic commands / directives</source>
-        <target state="new">List the available magic commands / directives</target>
+        <target state="translated">사용 가능한 매직 명령/지시문을 나열합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="Magics_markdown_Description">
         <source>Convert the code that follows from Markdown into HTML</source>
-        <target state="new">Convert the code that follows from Markdown into HTML</target>
+        <target state="translated">다음 코드를 Markdown에서 HTML로 변환</target>
         <note />
       </trans-unit>
       <trans-unit id="Magics_time_Description">
         <source>Time the execution of the following code in the submission.</source>
-        <target state="new">Time the execution of the following code in the submission.</target>
+        <target state="translated">제출에서 다음 코드의 실행 시간입니다.</target>
         <note />
       </trans-unit>
     </body>
