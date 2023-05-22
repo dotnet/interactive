@@ -52,7 +52,7 @@ public sealed class MsSqlFactAttribute : FactAttribute
     public static string GetConnectionStringForTests()
     {
         // example:
-        // "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks; Server=localhost"
+        // "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks; Server=localhost; Encrypt=false"
         return Environment.GetEnvironmentVariable(TEST_MSSQL_CONNECTION_STRING); 
     }  
 }
