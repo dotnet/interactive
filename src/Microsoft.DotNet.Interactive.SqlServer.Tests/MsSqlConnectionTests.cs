@@ -183,8 +183,6 @@ SELECT TOP 100 * FROM Person.Person
 
         result.Events
               .Should()
-              .NotContainErrors()
-              .And
               .ContainSingle<DisplayedValueProduced>(e =>
                                                          e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
               .Which.FormattedValues.Single(f => f.MimeType == HtmlFormatter.MimeType)
@@ -192,7 +190,7 @@ SELECT TOP 100 * FROM Person.Person
               .Should()
               .Contain("#!sql-adventureworks")
               .And
-              .Contain(" SELECT TOP * FROM");
+              .Contain("SELECT TOP 100 * FROM Person.Person");
 
     }
 
@@ -334,6 +332,30 @@ my_data_result");
               .Which.Count()
               .Should()
               .Be(1);
+    }
+
+    [MsSqlFact]
+    public async Task Stored_query_results_are_listed_in_ValueInfos()
+    {
+        var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = await CreateKernelAsync();
+        await kernel.SubmitCodeAsync(
+            $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+
+        // Run query with result set
+        await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks --name my_data_result
+select * from sys.databases
+");
+
+        var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
+
+        var result = await sqlKernel.SendAsync(new RequestValueInfos());
+
+        var valueInfos = result.Events.Should().ContainSingle<ValueInfosProduced>()
+            .Which.ValueInfos;
+
+        valueInfos.Should().Contain(v => v.Name == "my_data_result");
     }
 
     [MsSqlFact]

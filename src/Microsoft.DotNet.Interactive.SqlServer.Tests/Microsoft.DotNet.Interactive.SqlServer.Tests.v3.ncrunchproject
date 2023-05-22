@@ -1,37 +1,5 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <DefaultTestTimeout>15000</DefaultTestTimeout>
-    <IgnoredTests>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlServiceClientTests</FixtureName>
-      </FixtureTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests.An_input_type_hint_is_set_for_connection_strings</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests.Empty_results_are_displayed_correctly</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests.Field_types_are_deserialized_correctly</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests.It_can_connect_and_query_data</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests.It_can_scaffold_a_DbContext_in_a_CSharpKernel</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests.It_can_store_multiple_result_set_with_a_name</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests.It_can_store_result_set_with_a_name</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests.query_produces_expected_formatted_values</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests.sending_query_to_sql_will_generate_suggestions</TestName>
-      </NamedTestSelector>
-    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

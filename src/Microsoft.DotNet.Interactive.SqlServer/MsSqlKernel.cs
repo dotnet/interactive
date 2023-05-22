@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Data.SqlClient.Server;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
@@ -103,7 +104,7 @@ internal class MsSqlKernel : ToolsServiceKernel
         var name = commandKernelChooserParseResult?.GetValueForOption(chooser.NameOption);
         if (!string.IsNullOrWhiteSpace(name))
         {
-            QueryResults[name] = results;
+            StoreQueryResultSet(name, results);
         }
     }
 }

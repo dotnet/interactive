@@ -153,6 +153,33 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    public async Task Stored_query_results_are_listed_in_ValueInfos()
+    {
+        var cluster = KqlFactAttribute.GetClusterForTests();
+        using var kernel = await CreateKernelAsync();
+        var result = await kernel.SubmitCodeAsync(
+            $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
+
+        result.Events
+            .Should()
+            .NotContainErrors();
+
+        result = await kernel.SubmitCodeAsync(@"
+#!kql-KustoHelp --name my_data_result
+StormEvents | take 10
+            ");
+
+        var kqlKernel = kernel.FindKernelByName("kql-KustoHelp");
+
+        result = await kqlKernel.SendAsync(new RequestValueInfos());
+
+        var valueInfos = result.Events.Should().ContainSingle<ValueInfosProduced>()
+            .Which.ValueInfos;
+
+        valueInfos.Should().Contain(v => v.Name == "my_data_result");
+    }
+
+    [KqlFact]
     public async Task When_variable_does_not_exist_then_an_error_is_returned()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();

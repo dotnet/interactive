@@ -31,17 +31,7 @@ public abstract class ToolsServiceKernel :
     private bool _intellisenseReady;
     protected bool Connected;
     protected readonly ToolsServiceClient ServiceClient;
-
-    /// <summary>
-    /// The set of query result lists to save for sharing later.
-    /// The key will be the name of the value.
-    /// The value is a list of result sets (multiple if multiple queries are ran as a batch)
-    /// </summary>
-    protected Dictionary<string, IReadOnlyCollection<TabularDataResource>> QueryResults { get; } = new();
-    /// <summary>
-    /// Used to store incoming variables passed in via #!share
-    /// </summary>
-    private readonly Dictionary<string, object> _variables = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, object> _variables  = new(StringComparer.Ordinal);
 
 
     protected ToolsServiceKernel(string name, ToolsServiceClient client, string languageName) : base(name)
@@ -345,7 +335,7 @@ public abstract class ToolsServiceKernel :
 
     public bool TryGetValue<T>(string name, out T value)
     {
-        if (QueryResults.TryGetValue(name, out var resultSet) &&
+        if (_variables.TryGetValue(name, out var resultSet) &&
             resultSet is T resultSetT)
         {
             value = resultSetT;
@@ -371,7 +361,7 @@ public abstract class ToolsServiceKernel :
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var valueInfos = QueryResults.Keys.Select(key =>
+        var valueInfos = _variables.Keys.Select(key =>
         {
             var formattedValues = FormattedValue.CreateSingleFromObject(
                 _variables[key],
@@ -437,5 +427,10 @@ public abstract class ToolsServiceKernel :
             _variables[name] = value;
             return Task.CompletedTask;
         });
+    }
+
+    protected void StoreQueryResultSet(string name, IReadOnlyCollection<TabularDataResource> queryResultSet)
+    {
+        _variables[name] = queryResultSet;
     }
 }
