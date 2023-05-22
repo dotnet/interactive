@@ -101,7 +101,7 @@ Microsoft.DotNet.Interactive.Jupyter
     protected Microsoft.DotNet.Interactive.Kernel get_Kernel()
     protected System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> get_KernelEvents()
     protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
-    protected System.Threading.Tasks.Task SendAsync(JupyterRequestContext context, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    protected System.Threading.Tasks.Task SendAsync(JupyterRequestContext jupyterContext, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
   public class Shell, Microsoft.Extensions.Hosting.IHostedService
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel, JupyterRequestContextScheduler scheduler, ConnectionInformation connectionInformation, Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime)
     public System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellationToken)

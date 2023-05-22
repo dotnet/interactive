@@ -13,9 +13,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelCommandTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.CompleteRequestHandlerTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.CustomMetadataParsingTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>

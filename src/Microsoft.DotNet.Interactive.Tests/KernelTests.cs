@@ -16,7 +16,6 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 #if !NETFRAMEWORK
-using System;
 using Microsoft.DotNet.Interactive.CSharp;
 #endif
 

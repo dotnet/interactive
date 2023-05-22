@@ -40,11 +40,10 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         };
     }
 
-    public void CancelCurrentOperation(Action<T> onCancellation = null)
+    public void CancelCurrentOperation()
     {
         if (_currentlyRunningOperation is { } operation)
         {
-            onCancellation?.Invoke(operation.Value);
             operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
             _currentlyRunningOperation = null;
         }

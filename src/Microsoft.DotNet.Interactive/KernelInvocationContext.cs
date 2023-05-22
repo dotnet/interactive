@@ -342,11 +342,6 @@ public class KernelInvocationContext : IDisposable
 
         if (_ownsCancellationTokenSource)
         {
-            if (_cancellationTokenSources.Count > 1)
-            {
-                // FIX: (Dispose) 
-            }
-
             _cancellationTokenSources.TryRemove(Command.GetOrCreateToken(), out _);
             _cancellationTokenSource.Dispose();
         }
