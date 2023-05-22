@@ -77,7 +77,7 @@ internal class MsKqlKernel : ToolsServiceKernel
         var name = commandKernelChooserParseResult?.GetValueForOption(chooser.NameOption);
         if (!string.IsNullOrWhiteSpace(name))
         {
-            QueryResults[name] = results;
+            StoreQueryResultSet(name, results);
         }
     }
 }

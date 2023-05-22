@@ -260,8 +260,8 @@ Microsoft.DotNet.Interactive.SqlServer
     protected System.Boolean CanDeclareVariable(System.String name, System.Object value, ref System.String& msg)
     public System.Threading.Tasks.Task ConnectAsync()
     protected System.String CreateVariableDeclaration(System.String name, System.Object value)
-    protected System.Collections.Generic.Dictionary<System.String,System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource>> get_QueryResults()
     protected System.Void StoreQueryResults(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> results, System.CommandLine.Parsing.ParseResult commandKernelChooserParseResult)
+    protected System.Void StoreQueryResultSet(System.String name, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> queryResultSet)
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
   public class VersionedTextDocumentIdentifier : TextDocumentIdentifier
     .ctor()
