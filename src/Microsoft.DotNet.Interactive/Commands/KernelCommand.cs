@@ -172,15 +172,18 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         return GetOrCreateToken().StartsWith(other.GetOrCreateToken());
     }
 
-    public bool IsSiblingOf(KernelCommand other)
+    public bool HasSameRootCommandAs(KernelCommand other)
     {
-        return GetParentTokenOf(GetOrCreateToken()) == GetParentTokenOf(other.GetOrCreateToken());
+        var thisParentToken = GetParentTokenOf(GetOrCreateToken());
+        var otherParentToken = GetParentTokenOf(other.GetOrCreateToken());
+
+        return thisParentToken == otherParentToken;
 
         static string GetParentTokenOf(string token)
         {
             var parts = token.Split(new[] { '.' });
 
-            return string.Join(".", parts[..^1]);
+            return parts[0];
         }
     }
 }

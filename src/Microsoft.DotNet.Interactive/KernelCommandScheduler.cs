@@ -26,7 +26,7 @@ public class KernelCommandScheduler : KernelScheduler<KernelCommand, KernelComma
             return true;
         }
 
-        if (incoming.IsSiblingOf(current))
+        if (incoming.HasSameRootCommandAs(current))
         {
             return true;
         }

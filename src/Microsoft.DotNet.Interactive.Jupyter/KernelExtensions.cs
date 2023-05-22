@@ -225,8 +225,6 @@ using static {typeof(TopLevelMethods).FullName};
                 {
                     var command = new SubmitCode(((SubmitCode)context.Command).Code);
 
-                    command.GetOrCreateToken();
-
                     await subkernel.SendAsync(command);
                 }
             })
