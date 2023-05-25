@@ -65,13 +65,25 @@ internal static class KernelEventExtensions
 
     internal static void StampRoutingSlipAndLog(this KernelEvent @event, Uri uri)
     {
+        if (@event.RoutingSlip.Count == 0)
+        {
+            // Log detailed event info if this is the first time the routing slip is being updated.
+            Logger.Log.Info("{event}", @event);
+        }
+
         @event.RoutingSlip.Stamp(uri);
-        Logger.Log.RoutingSlipInfo(@event);
+        Logger.Log.RoutingSlipInfo(@event, uri);
     }
 
-    private static void RoutingSlipInfo(this Logger logger, KernelEvent @event) =>
-        logger.Info(
-            "⬅️ {0} {1}",
-            @event.GetType().Name,
-            @event.RoutingSlip);
+    private static void RoutingSlipInfo(this Logger logger, KernelEvent @event, Uri uri, string tag = null)
+    {
+        if (string.IsNullOrEmpty(tag))
+        {
+            logger.Info("⬅️ {0} {1}", @event.GetType().Name, uri.ToString());
+        }
+        else
+        {
+            logger.Info("⬅️ {0} {1} ({2})", @event.GetType().Name, uri.ToString(), tag);
+        }
+    }
 }
