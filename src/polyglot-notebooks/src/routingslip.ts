@@ -3,8 +3,8 @@
 
 import * as contracts from './contracts';
 import { URI } from 'vscode-uri';
-import { KernelCommandOrEventEnvelope } from './connection';
-import { throwError } from 'rxjs';
+import { KernelCommandOrEventEnvelope, isKernelCommandEnvelope } from './connection';
+
 
 
 export function createKernelUri(kernelUri: string): string {
@@ -27,6 +27,16 @@ export function createKernelUriWithQuery(kernelUri: string): string {
     }
     return absoluteUri;//?
 }
+export function getTag(kernelUri: string): string | undefined {
+    const uri = URI.parse(kernelUri);
+    if (uri.query) {//?
+        const parts = uri.query.split("tag=");
+        if (parts.length > 1) {
+            return parts[1];
+        }
+    }
+    return undefined;
+}
 
 export function stampCommandRoutingSlipAsArrived(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
     stampCommandRoutingSlipAs(kernelCommandEnvelope, kernelUri, "arrived");
@@ -38,14 +48,22 @@ export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelC
     }
     kernelCommandEnvelope.routingSlip;//?
     kernelUri;//?
-    let absoluteUri = createKernelUri(kernelUri); //?
-    if (kernelCommandEnvelope.routingSlip.find(e => e === absoluteUri)) {
-        throw Error(`The uri ${absoluteUri} is already in the routing slip [${kernelCommandEnvelope.routingSlip}]`);
-    } else if (kernelCommandEnvelope.routingSlip.find(e => e.startsWith(absoluteUri))) {
-        kernelCommandEnvelope.routingSlip.push(absoluteUri);
+    let absoluteUriWithQuery = createKernelUriWithQuery(kernelUri); //?
+    let absoluteUriWithoutQuery = createKernelUri(kernelUri); //?
+    let tag = getTag(kernelUri);
+    if (kernelCommandEnvelope.routingSlip.find(e => e === absoluteUriWithQuery)) {
+        // the uri is already in the routing slip
+        throw Error(`The uri ${absoluteUriWithQuery} is already in the routing slip [${kernelCommandEnvelope.routingSlip}]`);
+    } else if (!tag && kernelCommandEnvelope.routingSlip.find(e => e.startsWith(absoluteUriWithoutQuery))) {
+        // there is no tag, this is to complete
+        kernelCommandEnvelope.routingSlip.push(absoluteUriWithQuery);
+    }
+    else if (tag) {
+        // there is atag and this uri is not found
+        kernelCommandEnvelope.routingSlip.push(absoluteUriWithQuery);
     }
     else {
-        throw new Error(`The uri ${absoluteUri} is not in the routing slip [${kernelCommandEnvelope.routingSlip}]`);
+        throw new Error(`The uri ${absoluteUriWithQuery} is not in the routing slip [${kernelCommandEnvelope.routingSlip}]`);
     }
 }
 
@@ -87,9 +105,13 @@ function continueRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventE
     const original = [...kernelCommandOrEventEnvelope.routingSlip];
     for (let i = 0; i < toContinue.length; i++) {
         const normalizedUri = toContinue[i];//?
-        const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => createKernelUri(e) === normalizedUri);
+        const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => createKernelUriWithQuery(e) === normalizedUri);
         if (canAdd) {
-            kernelCommandOrEventEnvelope.routingSlip.push(normalizedUri);
+            if (isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
+                stampCommandRoutingSlip(kernelCommandOrEventEnvelope, normalizedUri);
+            } else {
+                stampEventRoutingSlip(kernelCommandOrEventEnvelope, normalizedUri);
+            }
         } else {
             throw new Error(`The uri ${normalizedUri} is already in the routing slip [${original}], cannot continue with routing slip [${kernelUris.map(e => createKernelUri(e))}]`);
         }
@@ -105,7 +127,7 @@ export function continueEventRoutingSlip(kernelEventEnvelope: contracts.KernelEv
 }
 
 export function createRoutingSlip(kernelUris: string[]): string[] {
-    return Array.from(new Set(kernelUris.map(e => createKernelUri(e))));
+    return Array.from(new Set(kernelUris.map(e => createKernelUriWithQuery(e))));
 }
 
 export function eventRoutingSlipStartsWith(thisEvent: contracts.KernelEventEnvelope, other: string[] | contracts.KernelEventEnvelope): boolean {

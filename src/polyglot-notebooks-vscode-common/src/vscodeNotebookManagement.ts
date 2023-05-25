@@ -136,7 +136,7 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
                         const connector = client.kernelHost.tryGetConnector(host!);
                         if (connector) {
                             // route to interactive
-                            Logger.default.info(`routing command from webview ${JSON.stringify(envelope)} to host ${host}`);
+                            Logger.default.info(`routing event from webview ${JSON.stringify(envelope)} to host ${host}`);
                             connector.sender.send(envelope);
                         } else {
                             Logger.default.error(`cannot find connector to reach ${envelope.command?.command.originUri}`);
