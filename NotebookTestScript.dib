@@ -117,6 +117,10 @@ And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with nam
 
 await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var csharpVarFromJs = 1234; Console.WriteLine(csharpVarFromJs);', targetKernelName: 'csharp' } });
 
+#!csharp
+
+System.Diagnostics.Debugger.Launch();
+
 #!markdown
 
 # Execute the next cell, the output should be displayed as HTML like so:
