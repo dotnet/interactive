@@ -1,6 +1,6 @@
 # Using Python and R in Polyglot Notebooks 
 
-Polyglot notebooks is now offering Jupyter support, meaning you can use Python and R in your polyglot notebook along with previously supported languages like C#, javascript, or SQL. 
+Polyglot notebooks is now offering Jupyter support, meaning you can use Python and R in your polyglot notebook along with previously supported languages like C#, JavaScript, and SQL. 
 
 This feature is currently in preview.
 
@@ -9,11 +9,11 @@ Before you begin, make sure you have the following installed:
 1. ![The Anaconda distribution](https://docs.anaconda.com/free/anaconda/install/index.html)
 2. ![Python](https://www.python.org/downloads/) and/or ![R](https://cran.r-project.org/)
 
-## Connecting to a python kernel
+## Connecting to a Python kernel
 Run the following command in a notebook cell:
 `#!connect jupyter --kernel-name pythonkernel --kernel-spec python3`
 
-Once connected, create a new cell and select your python kernel from the language dropdown in the bottom right hand corner.
+Once connected, create a new cell and select your Python kernel from the cell kernel dropdown in the bottom right hand corner of the cell.
 
 ## Connecting to an R kernel
 First, ensure that R is added to Jupyter. If not, switch to the Anaconda Prompt, and run this command:
