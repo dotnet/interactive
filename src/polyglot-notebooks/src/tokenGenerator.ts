@@ -5,7 +5,7 @@ import { KernelCommandEnvelope } from "./contracts";
 import * as uuid from "uuid";
 
 export class TokenGenerator {
-    private _counter: number = 0;
+    private _counter: number = 1;
     public createToken(parentCommand?: KernelCommandEnvelope): string {
         if (parentCommand) {
             if (!parentCommand.token) {

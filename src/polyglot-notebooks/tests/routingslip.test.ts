@@ -115,14 +115,22 @@ describe("kernel command routingSlip", () => {
         let envelope: contracts.KernelCommandEnvelope = {
             commandType: contracts.SubmitCodeType,
             command: {},
-            routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
+            routingSlip: []
         };
 
-        let other = ["kernel://c", "kernel://d"];
+        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
+        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://b");
+
+        let other = ["kernel://c/?tag=arrived", "kernel://d/?tag=arrived"];
 
         routingSlip.continueCommandRoutingSlip(envelope, other);
 
-        expect(envelope.routingSlip).to.deep.equal(['kernel://a/', 'kernel://b/', 'kernel://c/', 'kernel://d/']);
+        expect(envelope.routingSlip).to.deep.equal([
+            'kernel://a/?tag=arrived',
+            'kernel://b/?tag=arrived',
+            'kernel://c/?tag=arrived',
+            'kernel://d/?tag=arrived'
+        ]);
     });
 
     it("can append a routing slip to another if the other starts with the same list of uris", () => {
@@ -130,14 +138,20 @@ describe("kernel command routingSlip", () => {
         let envelope: contracts.KernelCommandEnvelope = {
             commandType: contracts.SubmitCodeType,
             command: {},
-            routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
+            routingSlip: []
         };
+        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
+        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://b");
 
-        let other = ["kernel://a", "kernel://b", "kernel://c", "kernel://d"];
+        let other = ["kernel://a/?tag=arrived", "kernel://b/?tag=arrived", "kernel://c/?tag=arrived", "kernel://d/?tag=arrived", "kernel://d"];
 
         routingSlip.continueCommandRoutingSlip(envelope, other);
 
-        expect(envelope.routingSlip).to.deep.equal(['kernel://a/', 'kernel://b/', 'kernel://c/', 'kernel://d/']);
+        expect(envelope.routingSlip).to.deep.equal(['kernel://a/?tag=arrived',
+            'kernel://b/?tag=arrived',
+            'kernel://c/?tag=arrived',
+            'kernel://d/?tag=arrived',
+            'kernel://d/']);
     });
 
     it("cannot append a routing slip to another if the other adds in the same kernel", () => {
