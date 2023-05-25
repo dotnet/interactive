@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -20,7 +21,7 @@ public abstract class RoutingSlip
     {
         var entries = _entries.Select(e => e.AbsoluteUriWithQuery).ToArray();
         return entries;
-    }   
+    }
 
     public int Count => _entries.Count;
 
@@ -107,6 +108,33 @@ public abstract class RoutingSlip
         }
     }
 
+    public override string ToString()
+    {
+        using var writer = new StringWriter();
+        writer.Write("[");
+
+        var i = 0;
+        foreach (var entry in Entries)
+        {
+            writer.Write(entry.AbsoluteUriWithoutQuery);
+
+            if (!string.IsNullOrEmpty(entry.Tag))
+            {
+                writer.Write(" (");
+                writer.Write(entry.Tag);
+                writer.Write(")");
+            }
+
+            if (++i != Entries.Count)
+            {
+                writer.Write(", ");
+            }
+        }
+
+        writer.Write("]");
+        return writer.ToString();
+    }
+
     private bool Contains(Entry entry)
     {
         return _entries.Any(e => e.AbsoluteUriWithQuery == entry.AbsoluteUriWithQuery);
@@ -151,6 +179,6 @@ public abstract class RoutingSlip
 
         public string AbsoluteUriWithQuery { get; }
 
-        public override string ToString() => $"{AbsoluteUriWithoutQuery} ({Tag})" ;
+        public override string ToString() => $"{AbsoluteUriWithoutQuery} ({Tag})";
     }
 }

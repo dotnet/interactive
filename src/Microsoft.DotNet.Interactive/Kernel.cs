@@ -510,7 +510,7 @@ public abstract partial class Kernel :
             string targetKernelName,
             KernelCommand parent) : base((_, _) =>
         {
-            Log.Info("Undeferring commands ahead of {command}", parent);
+            Log.Info("Undeferring commands ahead of '{command}'", parent);
             return Task.CompletedTask;
         }, targetKernelName: targetKernelName, parent: parent)
         {
@@ -673,7 +673,7 @@ public abstract partial class Kernel :
 
         if (!kernelEvent.RoutingSlip.Contains(KernelInfo.Uri))
         {
-            kernelEvent.RoutingSlip.Stamp(KernelInfo.Uri);
+            kernelEvent.StampRoutingSlipAndLog(KernelInfo.Uri);
         }
 
         _kernelEvents.OnNext(kernelEvent);
