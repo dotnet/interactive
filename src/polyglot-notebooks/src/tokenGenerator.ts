@@ -2,95 +2,53 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { KernelCommandEnvelope } from "./contracts";
-
-export class Guid {
-
-    public static validator = new RegExp("^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$", "i");
-
-    public static EMPTY = "00000000-0000-0000-0000-000000000000";
-
-    public static isGuid(guid: any) {
-        const value: string = guid.toString();
-        return guid && (guid instanceof Guid || Guid.validator.test(value));
-    }
-
-    public static create(): Guid {
-        return new Guid([Guid.gen(2), Guid.gen(1), Guid.gen(1), Guid.gen(1), Guid.gen(3)].join("-"));
-    }
-
-    public static createEmpty(): Guid {
-        return new Guid("emptyguid");
-    }
-
-    public static parse(guid: string): Guid {
-        return new Guid(guid);
-    }
-
-    public static raw(): string {
-        return [Guid.gen(2), Guid.gen(1), Guid.gen(1), Guid.gen(1), Guid.gen(3)].join("-");
-    }
-
-    private static gen(count: number) {
-        let out: string = "";
-        for (let i: number = 0; i < count; i++) {
-            // tslint:disable-next-line:no-bitwise
-            out += (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-        }
-        return out;
-    }
-
-    private value: string;
-
-    private constructor(guid: string) {
-        if (!guid) { throw new TypeError("Invalid argument; `value` has no value."); }
-
-        this.value = Guid.EMPTY;
-
-        if (guid && Guid.isGuid(guid)) {
-            this.value = guid;
-        }
-    }
-
-    public equals(other: Guid): boolean {
-        // Comparing string `value` against provided `guid` will auto-call
-        // toString on `guid` for comparison
-        return Guid.isGuid(other) && this.value === other.toString();
-    }
-
-    public isEmpty(): boolean {
-        return this.value === Guid.EMPTY;
-    }
-
-    public toString(): string {
-        return this.value;
-    }
-
-    public toJSON(): any {
-        return {
-            value: this.value,
-        };
-    }
-}
-
-function setToken(commandEnvelope: KernelCommandEnvelope) {
-    if (!commandEnvelope.token) {
-        commandEnvelope.token = Guid.create().toString();
-    }
-
-    //
-}
+import * as uuid from "uuid";
 
 export class TokenGenerator {
-    private _seed: string;
-    private _counter: number;
+    private _counter: number = 0;
+    public createToken(parentCommand?: KernelCommandEnvelope): string {
+        if (parentCommand) {
+            if (!parentCommand.token) {
+                parentCommand.token = this.createToken();
+            }
 
-    constructor() {
-        this._seed = Guid.create().toString();
-        this._counter = 0;
+            return `${parentCommand.token}.${this._counter++}`;
+        }
+        else {
+            const guidBytes = uuid.parse(uuid.v4());
+            const data = new Uint8Array(guidBytes);
+            const buffer = Buffer.from(data.buffer);
+            return buffer.toString('base64');
+        }
     }
 
-    public GetNewToken(): string {
-        this._counter++;
-        return `${this._seed}::${this._counter}`;
+    public createId(): string {
+        return uuid.v4();
     }
+}
+
+export function isSelforDescendantOf(thicCommand: KernelCommandEnvelope, otherCommand: KernelCommandEnvelope) {
+    const otherToken = otherCommand.token;
+    const thisToken = thicCommand.token;
+    if (thisToken && otherToken) {
+        return thisToken.startsWith(otherToken!);
+    }
+
+    throw new Error('both commands must have tokens');
+}
+
+export function hasSameRootCommandAs(thicCommand: KernelCommandEnvelope, otherCommand: KernelCommandEnvelope) {
+    const otherToken = otherCommand.token;
+    const thisToken = thicCommand.token;
+    if (thisToken && otherToken) {
+        const otherRootToken = getRootToken(otherToken);
+        const thisRootToken = getRootToken(thisToken);
+        return thisRootToken === otherRootToken;
+    }
+    throw new Error('both commands must have tokens');
+}
+
+export function getRootToken(token: string): string {
+    const parts = token.split('.');
+    return parts[0];
 }

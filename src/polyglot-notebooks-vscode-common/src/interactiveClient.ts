@@ -59,11 +59,11 @@ import { clearDebounce, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';
 import { CompositeKernel } from './polyglot-notebooks/compositeKernel';
-import { Guid } from './polyglot-notebooks/tokenGenerator';
 import { KernelHost } from './polyglot-notebooks/kernelHost';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 import * as connection from './polyglot-notebooks/connection';
 import { DisposableSubscription } from './polyglot-notebooks/disposables';
+import { TokenGenerator } from './polyglot-notebooks/tokenGenerator';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -76,6 +76,7 @@ export interface InteractiveClientConfiguration {
 }
 
 export class InteractiveClient {
+    private _tokenGenerator = new TokenGenerator();
     private disposables: (() => void)[] = [];
     private nextExecutionCount = 1;
     private nextOutputId: number = 1;
@@ -151,8 +152,8 @@ export class InteractiveClient {
             };
 
             let failureReported = false;
-            const commandToken = configuration?.token ? configuration.token : this.getNextToken();
-            const commandId = Guid.create().toString();
+            const commandToken = configuration?.token ? configuration.token : this._tokenGenerator.createToken();
+            const commandId = this._tokenGenerator.createId();
             try {
                 return this.submitCode(source, language, eventEnvelope => {
                     if (this.deferredOutput.length > 0) {
@@ -282,8 +283,8 @@ export class InteractiveClient {
             submissionType: SubmissionType.Run,
             targetKernelName: language
         };
-        token = token || this.getNextToken();
-        id = id || Guid.create().toString();
+        token = token || this._tokenGenerator.createToken();
+        id = id || this._tokenGenerator.createId();
 
         let disposable = this.subscribeToKernelTokenEvents(token, observer);
         try {
@@ -315,7 +316,7 @@ export class InteractiveClient {
 
     cancel(token?: string | undefined): Promise<void> {
         let command: Cancel = {};
-        token = token || this.getNextToken();
+        token = token || this._tokenGenerator.createToken();
         return this.submitCommand(command, CancelType, token, undefined);
     }
 
@@ -338,8 +339,8 @@ export class InteractiveClient {
     private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommand, commandType: KernelCommandType, expectedEventType: KernelEventType, token: string | undefined): Promise<TEvent> {
         return new Promise<TEvent>(async (resolve, reject) => {
             let handled = false;
-            token = token || this.getNextToken();
-            const id = Guid.create().toString();
+            token = token || this._tokenGenerator.createToken();
+            const id = this._tokenGenerator.createId();
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 if (eventEnvelope.command?.token === token && eventEnvelope.eventType === expectedEventType) {
                     switch (eventEnvelope.eventType) {
@@ -376,8 +377,8 @@ export class InteractiveClient {
     private submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string | undefined, id: string | undefined): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             let failureReported = false;
-            token = token || this.getNextToken();
-            id = id || Guid.create().toString();
+            token = token || this._tokenGenerator.createToken();
+            id = id || this._tokenGenerator.createId();
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case CommandFailedType:
@@ -508,7 +509,5 @@ export class InteractiveClient {
         return (this.nextOutputId++).toString();
     }
 
-    private getNextToken(): string {
-        return (this.nextToken++).toString();
-    }
+
 }

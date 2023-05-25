@@ -55,7 +55,6 @@ export class ProxyKernel extends Kernel {
     }
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
-        this.ensureCommandTokenAndId(commandInvocation.commandEnvelope);
         const commandToken = commandInvocation.commandEnvelope.token;
         const commandId = commandInvocation.commandEnvelope.id;
         const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();

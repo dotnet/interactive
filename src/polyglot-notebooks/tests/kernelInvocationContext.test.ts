@@ -6,8 +6,8 @@ import { describe } from "mocha";
 import { IKernelEventObserver } from "../src/kernel";
 import { KernelInvocationContext } from "../src/kernelInvocationContext";
 import * as contracts from "../src/contracts";
-import { Guid } from "../src/tokenGenerator";
 import * as disposables from "../src/disposables";
+import * as uuid from "uuid";
 
 describe("dotnet-interactive", () => {
 
@@ -35,7 +35,7 @@ describe("dotnet-interactive", () => {
             return {
                 commandType: contracts.SubmitCodeType,
                 command: command,
-                token: Guid.create().toString()
+                token: uuid.v4()
             };
         }
         let commadnEnvelope = makeSubmitCode("123");

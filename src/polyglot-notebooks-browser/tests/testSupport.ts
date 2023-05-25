@@ -53,7 +53,7 @@ export class MockKernelCommandAndEventChannel {
     }
 
     public subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver) {
-        let key = this.tokenGenerator.GetNewToken();
+        let key = this.tokenGenerator.createToken();
         this.eventObservers[key] = observer;
 
         return {
@@ -64,7 +64,7 @@ export class MockKernelCommandAndEventChannel {
     }
 
     public setCommandHandler(handler: contracts.KernelCommandEnvelopeHandler) {
-        let key = this.tokenGenerator.GetNewToken();
+        let key = this.tokenGenerator.createToken();
         this.commandHandlers[key] = handler;
     }
 
