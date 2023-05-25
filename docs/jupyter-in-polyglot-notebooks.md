@@ -1,6 +1,6 @@
 # Using Jupyter in Polyglot Notebooks 
 
-Polyglot notebooks is now offering Jupyter support, meaning you can use Python and R in your polyglot notebook along with previously supported languages like C#, javascript, or SQL. 
+Polyglot notebooks is now offering Jupyter support, meaning you can use Python and R in your polyglot notebook along with previously supported languages like C#, JavaScript, and SQL. 
 
 This feature is currently in preview.
 
