@@ -19,11 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\dotnet-interactive\Pocket\Format.CustomizeLogString.cs" Link="Pocket\Format.CustomizeLogString.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\StringExtensions.cs" Link="Utility\StringExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\%28Recipes%29\AsyncLazy{T}.cs" Link="Utility\AsyncLazy{T}.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\(Recipes)\JsonSerializationExtensions.cs" />
   </ItemGroup>
 
-   <ItemGroup>
+  <ItemGroup>
     <None Include="TestProjects\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -44,13 +46,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger" Version="0.4.1">
+    <PackageReference Include="PocketLogger" Version="0.8.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PocketLogger.For.Xunit" Version="0.6.1">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.Subscribe" Version="0.7.0">
+    <PackageReference Include="PocketLogger.Subscribe" Version="0.8.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -82,7 +84,11 @@
     </None>
   </ItemGroup>
 
-  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties />
+    </VisualStudio>
+  </ProjectExtensions>
 
   <ItemGroup>
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.0.0" />
@@ -95,5 +101,9 @@
     </PackageReference>
   </ItemGroup>
 
-
+  <ItemGroup>
+    <Folder Include="Pocket\" />
+  </ItemGroup>
+  
 </Project>
+
