@@ -9,7 +9,7 @@ Before you begin, make sure you have the following installed:
 1. ![The Anaconda distribution](https://docs.anaconda.com/free/anaconda/install/index.html)
 2. ![Python](https://www.python.org/downloads/) and/or ![R](https://cran.r-project.org/)
 
-## Connecting to a python kernel
+## Connecting to a Python kernel
 Run the following command in a notebook cell:
 `#!connect jupyter --kernel-name pythonkernel --kernel-spec python3`
 
