@@ -451,9 +451,9 @@ export class InteractiveClient {
                         break;
                 }
             } else {
-                const tokenParts = token.split('/');
+                const tokenParts = token.split('.');
                 for (let i = tokenParts.length; i >= 1; i--) {
-                    const candidateToken = tokenParts.slice(0, i).join('/');
+                    const candidateToken = tokenParts.slice(0, i).join('.');
                     let listeners = this.tokenEventObservers.get(candidateToken);
                     if (listeners) {
                         for (let listener of listeners) {
