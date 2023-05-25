@@ -7,6 +7,7 @@ import * as contracts from "./contracts";
 import { Disposable } from "./disposables";
 import { getKernelUri, Kernel } from "./kernel";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
+import { hasSameRootCommandAs, isSelforDescendantOf } from "./tokenGenerator";
 
 
 export class KernelInvocationContext implements Disposable {
@@ -127,6 +128,10 @@ export class KernelInvocationContext implements Disposable {
             command === undefined ||
             areCommandsTheSame(command!, this._commandEnvelope) ||
             this._childCommands.includes(command!)) {
+            this._eventSubject.next(kernelEvent);
+        } else if (isSelforDescendantOf(command, this._commandEnvelope)) {
+            this._eventSubject.next(kernelEvent);
+        } else if (hasSameRootCommandAs(command, this._commandEnvelope)) {
             this._eventSubject.next(kernelEvent);
         }
     }
