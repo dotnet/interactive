@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { KernelInvocationContext, areCommandsTheSame } from "./kernelInvocationContext";
-import { TokenGenerator, Guid } from "./tokenGenerator";
+import { TokenGenerator } from "./tokenGenerator";
 import * as contracts from "./contracts";
 import { Logger } from "./logger";
 import { CompositeKernel } from "./compositeKernel";
@@ -85,18 +85,18 @@ export class Kernel {
         return this._scheduler;
     }
 
-    protected ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope) {
+    private ensureCommandTokenAndId(commandEnvelope: contracts.KernelCommandEnvelope, context: KernelInvocationContext) {
         if (!commandEnvelope.token) {
-            let nextToken = this._tokenGenerator.GetNewToken();
-            if (KernelInvocationContext.current?.commandEnvelope) {
-                // a parent command exists, create a token hierarchy
-                nextToken = KernelInvocationContext.current.commandEnvelope.token!;
+            if (context.commandEnvelope !== commandEnvelope) {
+                let nextToken = this._tokenGenerator.createToken(KernelInvocationContext.current?.commandEnvelope);
+                commandEnvelope.token = nextToken;
+            } else {
+                commandEnvelope.token = this._tokenGenerator.createToken();
             }
-            commandEnvelope.token = nextToken;
         }
 
         if (!commandEnvelope.id) {
-            commandEnvelope.id = Guid.create().toString();
+            commandEnvelope.id = this._tokenGenerator.createId();
         }
     }
 
@@ -119,7 +119,8 @@ export class Kernel {
     // the callback set up by attachKernelToChannel, and the callback is expected to return void, so
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
-        this.ensureCommandTokenAndId(commandEnvelope);
+        const context = KernelInvocationContext.establish(commandEnvelope);
+        this.ensureCommandTokenAndId(commandEnvelope, context);
         const kernelUri = getKernelUri(this);
         if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
             routingslip.stampCommandRoutingSlipAsArrived(commandEnvelope, kernelUri);
@@ -127,7 +128,7 @@ export class Kernel {
             Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`);
         }
         commandEnvelope.routingSlip;//?
-        KernelInvocationContext.establish(commandEnvelope);
+
         return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value).finally(() => {
             if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
                 routingslip.stampCommandRoutingSlip(commandEnvelope, kernelUri);

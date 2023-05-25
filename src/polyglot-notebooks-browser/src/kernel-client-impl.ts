@@ -222,7 +222,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
     }
 
     public async submitCode(code: string, targetKernelName?: string): Promise<string> {
-        let token: string = this._tokenGenerator.GetNewToken();
+        let token: string = this._tokenGenerator.createToken();
         let command: contracts.SubmitCode = {
             code: code,
             targetKernelName: targetKernelName
@@ -233,7 +233,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
     }
 
     public async submitCommand(commandType: string, command?: any, targetKernelName?: string): Promise<string> {
-        let token: string = this._tokenGenerator.GetNewToken();
+        let token: string = this._tokenGenerator.createToken();
 
         if (!command) {
             command = {};

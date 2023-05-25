@@ -6,7 +6,7 @@ import { describe } from "mocha";
 import * as contracts from "../src/contracts";
 import { JavascriptKernel } from "../src/javascriptKernel";
 import { Logger } from "../src/logger";
-import { Guid } from "../src/tokenGenerator";
+import * as uuid from "uuid";
 
 describe("javascriptKernel", () => {
 
@@ -62,7 +62,7 @@ describe("javascriptKernel", () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
-        const valueName = `value_${Guid.create().toString().replace(/-/g, "_")}`; //?
+        const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: `${valueName} = 42;` } });
         await kernel.send({ commandType: contracts.RequestValueInfosType, command: <contracts.RequestValueInfos>{} });
         expect((<contracts.ValueInfosProduced>events.find(e => e.eventType === contracts.ValueInfosProducedType)!.event).valueInfos)
@@ -79,7 +79,7 @@ describe("javascriptKernel", () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
-        const valueName = `value_${Guid.create().toString().replace(/-/g, "_")}`; //?
+        const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: `${valueName} = [42,43];` } });
         await kernel.send({ commandType: contracts.RequestValueInfosType, command: <contracts.RequestValueInfos>{} });
         expect((<contracts.ValueInfosProduced>events.find(e => e.eventType === contracts.ValueInfosProducedType)!.event).valueInfos)
@@ -96,7 +96,7 @@ describe("javascriptKernel", () => {
         const events: contracts.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
-        const valueName = `value_${Guid.create().toString().replace(/-/g, "_")}`; //?
+        const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
         await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: `${valueName} = 42;` } });
         await kernel.send({ commandType: contracts.RequestValueType, command: <contracts.RequestValue>{ name: `${valueName}` } });
         expect((<contracts.ValueProduced>events.find(e => e.eventType === contracts.ValueProducedType)!.event).formattedValue)
