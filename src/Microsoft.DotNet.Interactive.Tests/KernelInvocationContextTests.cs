@@ -49,6 +49,44 @@ public class KernelInvocationContextTests
     }
 
     [Fact]
+    public async Task Parented_commands_reuse_same_context()
+    {
+        var barrier = new Barrier(2);
+
+        KernelCommand commandInTask1 = null;
+        KernelCommand commandInTask2 = null;
+
+        var kernelCommand1 = new SubmitCode("");
+        var kernelCommand2 = new SubmitCode("");
+
+        KernelInvocationContext context1 = null;
+        KernelInvocationContext context2 = null;
+
+        kernelCommand2.SetToken($"{kernelCommand1.GetOrCreateToken()}.1");
+
+        await Task.Run(() =>
+        {
+            context1 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1);
+
+                barrier.SignalAndWait(1000);
+                commandInTask1 = KernelInvocationContext.Current.Command;
+            
+        });
+
+        await Task.Run(() =>
+        {
+            context2 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2);
+            
+                barrier.SignalAndWait(1000);
+                commandInTask2 = KernelInvocationContext.Current.Command;
+            
+        });
+
+        context1.Should().BeSameAs(context2);
+
+    }
+
+    [Fact]
     public async Task Middleware_can_be_used_to_emit_events_after_the_command_has_been_handled()
     {
         using var kernel = new CompositeKernel
