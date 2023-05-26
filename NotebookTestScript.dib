@@ -115,7 +115,7 @@ And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with nam
 
 #!javascript
 
-await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'System.Diagnostics.Debugger.Launch(); var csharpVarFromJs = 1234; Console.WriteLine(csharpVarFromJs);', targetKernelName: 'csharp' } });
+await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var csharpVarFromJs = 1234; Console.WriteLine(csharpVarFromJs); csharpVarFromJs.Display();', targetKernelName: 'csharp' } });
 
 #!csharp
 
