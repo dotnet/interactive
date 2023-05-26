@@ -20,8 +20,8 @@ The following languages are supported by Polyglot Notebooks:
 | KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))    |        ✅       |       
 | HTML                                        |        ⛔                 |     
 | [Mermaid](https://mermaid.js.org/intro/)    |        ⛔                 |        
-| [Python](docs/jupyter-in-polyglot-notebooks.md)   |        ✅           |
-| [R](docs/jupyter-in-polyglot-notebooks.md)  |        ✅                 |          
+| Python                                    |        ✅                 |
+| R                                      |        ✅                 |          
   
 ## Features
 
