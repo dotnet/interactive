@@ -11,13 +11,13 @@ Before you begin, make sure you have the following installed:
 
 Please note that if you want to use Python and R in polyglot notebooks, you must open VS Code from the Anaconda prompt. Open the Anaconda prompt and activate the environment you want to work in. Then navigate to the desired folder and open VS code from the Anaconda prompt using the `code .` command. 
 
-## Connecting to a python kernel
+## Connecting to a Python kernel
 Run the following command in a notebook cell:
 ```
 #!connect jupyter --kernel-name pythonkernel --kernel-spec python3
 ```
 
-Once connected, create a new cell and select your python kernel from the kernel picker in the bottom right hand corner of the cell.
+Once connected, create a new cell and select your Python kernel from the kernel picker in the bottom right hand corner of the cell.
 
 ## Connecting to an R kernel
 First, ensure that R is added to Jupyter. If not, switch to the Anaconda Prompt, and run this command:
