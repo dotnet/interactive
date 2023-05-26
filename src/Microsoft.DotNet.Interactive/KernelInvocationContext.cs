@@ -39,10 +39,6 @@ public class KernelInvocationContext : IDisposable
     {
         var operation = new OperationLogger(
             args: new object[] { command },
-            exitArgs: () => new[]
-            {
-                (nameof(KernelCommand), (object)command)
-            },
             category: nameof(KernelInvocationContext),
             logOnStart: true);
 

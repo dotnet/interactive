@@ -514,11 +514,6 @@ public static class CommandLineParser
             .AddConnectionOptions(new JupyterHttpKernelConnectionOptions())
             .AddConnectionOptions(new JupyterLocalKernelConnectionOptions()));
 
-        if (startupOptions.Verbose)
-        {
-            kernel.LogEventsToPocketLogger();
-        }
-
         SetUpFormatters(frontendEnvironment);
 
         kernel.DefaultKernelName = defaultKernelName;

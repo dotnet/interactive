@@ -153,10 +153,6 @@ internal static partial class Format
                 writer.Write(completionsProduced.LinePositionSpan?.ToString());
                 break;
 
-            case DiagnosticLogEntryProduced diagnosticLogEntryProduced:
-                writer.Write(diagnosticLogEntryProduced.Message.TruncateForDisplay());
-                break;
-
             case DiagnosticsProduced diagnosticsProduced:
                 var diagnostics = diagnosticsProduced.Diagnostics;
                 if (diagnostics.Any()) // TODO: How come we produce empty DiagnosticsProduced events?
@@ -199,8 +195,51 @@ internal static partial class Format
                 writer.Write(inputProduced.Value.TruncateForDisplay());
                 break;
 
+            case KernelInfoProduced kernelInfoProduced:
+                writer.AppendProperties(
+                    (nameof(kernelInfoProduced.KernelInfo.LocalName), kernelInfoProduced.KernelInfo.LocalName),
+                    (nameof(kernelInfoProduced.KernelInfo.Uri), kernelInfoProduced.KernelInfo.Uri.ToString()),
+                    (nameof(kernelInfoProduced.KernelInfo.IsComposite), kernelInfoProduced.KernelInfo.IsComposite.ToString()),
+                    (nameof(kernelInfoProduced.KernelInfo.IsProxy), kernelInfoProduced.KernelInfo.IsProxy.ToString()),
+                    (nameof(kernelInfoProduced.KernelInfo.RemoteUri), kernelInfoProduced.KernelInfo.RemoteUri?.ToString()));
+                break;
+
+            case KernelReady kernelReady:
+                writer.Write('(');
+                writer.Write(kernelReady.KernelInfos.Length);
+                writer.Write(" Kernels)");
+                break;
+
             case PackageAdded packageAdded:
-                writer.Write(packageAdded.PackageReference);
+                writer.Write(packageAdded.PackageReference.ToString());
+                break;
+
+            case SignatureHelpProduced signatureHelpProduced:
+                writer.Write('(');
+                writer.Write(signatureHelpProduced.Signatures?.Count ?? 0);
+                writer.Write(" Signatures)");
+                writer.AppendProperties(
+                    (nameof(signatureHelpProduced.ActiveSignatureIndex), signatureHelpProduced.ActiveSignatureIndex.ToString()),
+                    (nameof(signatureHelpProduced.ActiveParameterIndex), signatureHelpProduced.ActiveParameterIndex.ToString()));
+                break;
+
+            case ValueInfosProduced valueInfosProduced:
+                writer.Write('(');
+                writer.Write(valueInfosProduced.ValueInfos.Count);
+                writer.Write(" Values)");
+                break;
+
+            case ValueProduced valueProduced:
+                writer.Write(valueProduced.Name);
+                writer.Write(" '");
+                writer.Write(valueProduced.FormattedValue.Value.TruncateForDisplay());
+                writer.Write("' (");
+                writer.Write(valueProduced.FormattedValue.MimeType);
+                writer.Write(')');
+                break;
+
+            case WorkingDirectoryChanged workingDirectoryChanged:
+                writer.Write(workingDirectoryChanged.WorkingDirectory.TruncateForDisplay());
                 break;
 
             // Base event types.
