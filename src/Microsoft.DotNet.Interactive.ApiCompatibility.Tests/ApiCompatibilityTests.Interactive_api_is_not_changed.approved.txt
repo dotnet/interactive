@@ -240,7 +240,7 @@ Microsoft.DotNet.Interactive
     public System.String ToString()
   public class KernelInvocationContext, System.IDisposable
     public static KernelInvocationContext Current { get;}
-    public static KernelInvocationContext GetOrCreateAmbientContext(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    public static KernelInvocationContext GetOrCreateAmbientContext(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Concurrent.ConcurrentDictionary<System.String,KernelInvocationContext> contextsByRootToken = null)
     public System.Threading.CancellationToken CancellationToken { get;}
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public Kernel HandlingKernel { get;}
@@ -395,9 +395,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.Boolean Equals(KernelCommand other)
     public System.Int32 GetHashCode()
     public System.String GetOrCreateToken()
-    public System.Boolean HasSameRootCommandAs(KernelCommand other)
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Boolean IsSelfOrDescendantOf(KernelCommand other)
     public System.Void SetId(System.String id)
     public System.Void SetToken(System.String token)
   public abstract class LanguageServiceCommand : KernelCommand, System.IEquatable<KernelCommand>
@@ -773,6 +771,7 @@ Microsoft.DotNet.Interactive.Utility
     public System.Collections.Generic.IReadOnlyCollection<System.String> Output { get;}
     public System.Void ThrowOnFailure(System.String message = null)
   public static class ConsoleOutput
+    public static System.IDisposable InitializeFromAsyncContext(System.Int32 asyncContextId)
     public static System.IDisposable Subscribe(System.Func<ObservableConsole,System.IDisposable> subscribe)
    class ObservableConsole, System.IEquatable<ObservableConsole>
     public static System.Boolean op_Equality(ObservableConsole left, ObservableConsole right)
