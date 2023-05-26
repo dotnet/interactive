@@ -4,14 +4,13 @@
 #nullable enable
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Pocket;
@@ -28,6 +27,9 @@ public class KernelHost : IDisposable
     private IDisposable? _kernelEventSubscription;
     private readonly IKernelConnector _defaultConnector;
     private EventLoopScheduler? _eventLoop;
+
+    internal ConcurrentDictionary<string, KernelInvocationContext> ContextsByRootToken { get; } =
+        new(StringComparer.OrdinalIgnoreCase);
 
     internal KernelHost(
         CompositeKernel kernel,

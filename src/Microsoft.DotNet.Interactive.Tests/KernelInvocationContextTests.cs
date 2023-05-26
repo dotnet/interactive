@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using FluentAssertions;
 using System.Linq;
 using System.Threading;
@@ -10,6 +11,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using System;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -52,7 +54,7 @@ public class KernelInvocationContextTests
     public async Task Parented_commands_reuse_same_context()
     {
         var barrier = new Barrier(2);
-
+        var contextsByRootToken = new ConcurrentDictionary<string, KernelInvocationContext>(StringComparer.OrdinalIgnoreCase);
         KernelCommand commandInTask1 = null;
         KernelCommand commandInTask2 = null;
 
@@ -66,20 +68,22 @@ public class KernelInvocationContextTests
 
         await Task.Run(() =>
         {
-            context1 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1);
+            context1 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1, contextsByRootToken);
 
-                barrier.SignalAndWait(1000);
+                
                 commandInTask1 = KernelInvocationContext.Current.Command;
-            
+                barrier.SignalAndWait(1000);
+
         });
 
         await Task.Run(() =>
         {
-            context2 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2);
+            context2 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2, contextsByRootToken);
             
-                barrier.SignalAndWait(1000);
+               
                 commandInTask2 = KernelInvocationContext.Current.Command;
-            
+                barrier.SignalAndWait(1000);
+
         });
 
         context1.Should().BeSameAs(context2);
