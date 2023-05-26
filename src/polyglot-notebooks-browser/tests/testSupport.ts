@@ -113,3 +113,7 @@ export function findEventEnvelope(kernelEventEnvelopes: contracts.KernelEventEnv
 export function findEventEnvelopeFromKernel(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType, kernelName: string): contracts.KernelEventEnvelope | undefined {
     return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command!.command.targetKernelName === kernelName);
 }
+
+export function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
