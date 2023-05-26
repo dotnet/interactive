@@ -73,10 +73,6 @@ y++;
 document.getElementById("output").innerText = `The value is ${y}.`;
 console.log(`The value is ${y}.`);
 
-#!csharp
-
-System.Diagnostics.Debugger.Launch();
-
 #!markdown
 
 # Execute the next cell. After execution, the output immediately below should be:
@@ -115,11 +111,7 @@ And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with nam
 
 #!javascript
 
-await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var csharpVarFromJs = 1234; Console.WriteLine(csharpVarFromJs); csharpVarFromJs.Display();', targetKernelName: 'csharp' } });
-
-#!csharp
-
-System.Diagnostics.Debugger.Launch();
+await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var csharpVarFromJs = 1234; Console.WriteLine(csharpVarFromJs);', targetKernelName: 'csharp' } });
 
 #!markdown
 
