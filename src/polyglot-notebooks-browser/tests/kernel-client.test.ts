@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
-import { configureFetchForKernelDiscovery, createMockChannel, MockKernelCommandAndEventChannel, asKernelClientContainer } from "./testSupport";
+import { configureFetchForKernelDiscovery, createMockChannel, MockKernelCommandAndEventChannel, asKernelClientContainer, delay } from "./testSupport";
 import * as contracts from "../src/polyglot-notebooks/contracts";
 import { IKernelCommandInvocation, Kernel } from "../src/polyglot-notebooks/kernel";
 import { attachKernelToChannel } from "../src/kernel-factory";
@@ -127,9 +127,9 @@ describe("polyglot-notebooks", () => {
         const rootUrl = "https://dotnet.interactive.com:999";
         let transport: MockKernelCommandAndEventChannel | undefined;
         let kernel: Kernel | undefined;
-        let commandsSentToKernel: contracts.KernelCommandEnvelope[] | undefined;
-        let kernelEventHandlers: contracts.KernelEventEnvelopeObserver[] | undefined;
-        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: contracts.KernelCommand, context: KernelInvocationContext }) => Promise<void>) } | undefined;
+        let commandsSentToKernel: contracts.KernelCommandEnvelope[] = [];
+        let kernelEventHandlers: contracts.KernelEventEnvelopeObserver[] = [];
+        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: contracts.KernelCommand, context: KernelInvocationContext }) => Promise<void>) } = {};
 
         let makeClient = () => {
             configureFetchForKernelDiscovery(rootUrl);
@@ -141,14 +141,13 @@ describe("polyglot-notebooks", () => {
                     return mock;
                 },
                 clientSideKernelFactory: async (kernelTransport) => {
-                    commandsSentToKernel = [];
-                    kernelEventHandlers = [];
-                    registeredCommandHandlers = {};
+
                     kernel = new Kernel("client-side-kernel");
                     kernel.registerCommandHandler({
                         commandType: "CustomCommand",
                         handle: (commandInvocation: IKernelCommandInvocation) => {
                             commandsSentToKernel!.push(commandInvocation.commandEnvelope);
+                            commandsSentToKernel;//?
                             return Promise.resolve();
                         }
                     });
@@ -186,7 +185,11 @@ describe("polyglot-notebooks", () => {
                 commandType,
                 command: commandIn
             };
+
             transport!.fakeIncomingSubmitCommand(commandEnvelopeIn);
+            await delay(500);
+            commandsSentToKernel;//?
+
 
             expect(commandsSentToKernel!.length).to.equal(1);
             expect(commandsSentToKernel![0].commandType).to.equal("CustomCommand");
@@ -233,6 +236,7 @@ describe("polyglot-notebooks", () => {
                 event: eventIn
             };
 
+            await delay(500);
             const publishedEvents = transport!.eventsPublished.filter(e => e.eventType === eventEnvelopeIn.eventType);
             expect(publishedEvents.length).to.equal(1);
             expect(publishedEvents[0].eventType).to.be.equal(eventEnvelopeIn.eventType);

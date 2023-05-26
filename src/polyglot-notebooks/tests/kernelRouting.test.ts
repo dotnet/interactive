@@ -114,8 +114,8 @@ describe("kernelRouting", () => {
             [
                 'kernel://local/?tag=arrived',
                 'kernel://local/javascript?tag=arrived',
-                'kernel://remote/',
-                'kernel://remote/javascript',
+                'kernel://remote/?tag=arrived',
+                'kernel://remote/javascript?tag=arrived',
                 'kernel://local/javascript',
                 'kernel://local/'
             ]);
