@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.CommandLine.Parsing;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 

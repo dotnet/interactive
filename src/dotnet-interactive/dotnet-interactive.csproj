@@ -55,25 +55,20 @@
     <PackageReference Include="Pocket.TypeDiscovery" Version="0.5.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger" Version="0.4.1">
+    <PackageReference Include="PocketLogger" Version="0.8.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.For.ApplicationInsights" Version="0.4.1">
+    <PackageReference Include="PocketLogger.For.ApplicationInsights" Version="0.8.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.Subscribe" Version="0.7.0">
+    <PackageReference Include="PocketLogger.Subscribe" Version="0.8.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
     <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ContentFiles\" />
-    <Folder Include="Utility\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -124,6 +119,7 @@
     <None Remove="resources\logo-456x456.png" />
     <None Remove="resources\logo-64x64.png" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\StringExtensions.cs" Link="Utility\StringExtensions.cs" />
 
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive.js" />
 
@@ -193,4 +189,3 @@
   </Target>
 
 </Project>
-

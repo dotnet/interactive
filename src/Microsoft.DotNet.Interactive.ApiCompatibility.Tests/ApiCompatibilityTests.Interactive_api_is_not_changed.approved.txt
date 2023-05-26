@@ -206,7 +206,6 @@ Microsoft.DotNet.Interactive
     public static System.Collections.Generic.IEnumerable<Kernel> SubkernelsAndSelf(System.Boolean recursive = False)
     public static System.Threading.Tasks.Task<KernelCommandResult> SubmitCodeAsync(System.String code)
     public static TKernel UseImportMagicCommand<TKernel>()
-    public static T UseLogMagicCommand<T>()
     public static T UseQuitCommand<T>(System.Func<System.Threading.Tasks.Task> onQuitAsync = null)
     public static T UseValueSharing<T>()
     public static TKernel UseWho<TKernel>()
@@ -348,6 +347,7 @@ Microsoft.DotNet.Interactive
     public System.Void ContinueWith(RoutingSlip other)
     public System.Void Stamp(System.Uri uri)
     public System.Boolean StartsWith(RoutingSlip other)
+    public System.String ToString()
     public System.String[] ToUriArray()
   public class ScriptContent, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String scriptValue)

@@ -42,5 +42,4 @@ To connect to a remote Jupyter server, run this command in a notebook cell:
 ```
 #!connect jupyter --url <url_for_jupyter> --token <token_you_used_for_jupyter> --kernel-name pythonkernel --kernel-spec python3
 ```
-
 For R, run the same command but replace `python3` with `ir` under `--kernel-spec` and give a new name for `kernel-name`.
