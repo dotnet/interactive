@@ -132,8 +132,9 @@ public class KernelInvocationContextTests
 
         });
 
-        events.OfType<StandardOutputValueProduced>().Select(e => e.FormattedValues.First().Value)
-            .Should().BeEquivalentTo("context1", "context2");
+        var lines = events.OfType<StandardOutputValueProduced>().Select(e => e.FormattedValues.First().Value);
+
+        lines.Should().BeEquivalentTo("context1", "context2");
 
     }
 
