@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharpProject.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject.Events;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;
 
@@ -67,12 +67,12 @@ public class CSharpProjectKernel :
 
         var extractor = new BufferFromRegionExtractor();
         _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());
-            
+
         context.Publish(new ProjectOpened(command, _workspace.Buffers.GroupBy(b => b.Id.FileName)
             .OrderBy(g => g.Key).Select(g => new ProjectItem(
                 g.Key,
                 g.Select(r => r.Id.RegionName).Where(r => r != null).OrderBy(r => r).ToList(),
-                g.Where(r => r is not null && !string.IsNullOrWhiteSpace( r.Id.RegionName)).ToDictionary(r => r.Id.RegionName, b => b.Content)))
+                g.Where(r => r is not null && !string.IsNullOrWhiteSpace(r.Id.RegionName)).ToDictionary(r => r.Id.RegionName, b => b.Content)))
             .ToList()));
     }
 
@@ -136,11 +136,15 @@ public class CSharpProjectKernel :
         var result = await _workspaceServer.CompileAsync(request);
 
         var diagnostics = GetDiagnostics(_buffer.Content, result);
-        context.Publish(new DiagnosticsProduced(diagnostics, command));
-        if (diagnostics.Any(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error))
+        if (diagnostics.Any())
         {
-            context.Fail(command);
-            return;
+            context.Publish(new DiagnosticsProduced(diagnostics, command));
+
+            if (diagnostics.Any(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error))
+            {
+                context.Fail(command);
+                return;
+            }
         }
 
         context.Publish(new AssemblyProduced(command, new Base64EncodedAssembly(result.Base64Assembly)));
@@ -176,7 +180,10 @@ public class CSharpProjectKernel :
         var result = await _workspaceServer.CompileAsync(request);
 
         var diagnostics = GetDiagnostics(command.Code, result);
-        context.Publish(new DiagnosticsProduced(diagnostics, command));
+        if (diagnostics.Any())
+        {
+            context.Publish(new DiagnosticsProduced(diagnostics, command));
+        }
     }
 
     async Task IKernelCommandHandler<RequestSignatureHelp>.HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
@@ -278,7 +285,7 @@ public class CSharpProjectKernel :
 
         return finalDiagnostics;
     }
-        
+
     private void ThrowIfProjectIsNotOpened()
     {
         if (_workspaceServer is null || _workspace is null)

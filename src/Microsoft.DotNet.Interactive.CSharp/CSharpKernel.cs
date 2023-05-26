@@ -52,7 +52,7 @@ public class CSharpKernel :
     private Lazy<PackageRestoreContext> _lazyPackageRestoreContext;
 
     private ScriptOptions _scriptOptions;
-        
+
     private string _workingDirectory;
 
     public CSharpKernel() : this(DefaultKernelName)
@@ -124,7 +124,7 @@ public class CSharpKernel :
                            var formattedValues = FormattedValue.CreateSingleFromObject(
                                g.LastOrDefault()?.Value,
                                command.MimeType);
-                           
+
                            return new KernelValueInfo(
                                g.Key,
                                formattedValues,
@@ -213,7 +213,7 @@ public class CSharpKernel :
         if (service != null)
         {
             var info = await service.GetQuickInfoAsync(document, cursorPosition, context.CancellationToken);
-            
+
             if (info is null)
             {
                 return;
@@ -413,7 +413,7 @@ public class CSharpKernel :
             if (!currentDir.Equals(_workingDirectory, StringComparison.Ordinal))
             {
                 _workingDirectory = currentDir;
-                    
+
                 _scriptOptions = _scriptOptions
                     .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
                     .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
@@ -455,7 +455,7 @@ public class CSharpKernel :
         foreach (CodeAnalysis.Completion.CompletionItem item in completionList.ItemsList)
         {
             // TODO: Getting a description for each item significantly slows this overall operation. We should look into caching approaches but shouldn't block completions here.
-           // var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
+            // var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
             var completionItem = item.ToModel(CompletionDescription.Empty);
             items.Add(completionItem);
         }
@@ -485,8 +485,11 @@ public class CSharpKernel :
 
         var document = _workspace.ForkDocumentForLanguageServices(command.Code);
         var semanticModel = await document.GetSemanticModelAsync(context.CancellationToken);
-        var diagnostics = semanticModel.GetDiagnostics(cancellationToken:context.CancellationToken);
-        context.Publish(GetDiagnosticsProduced(command, diagnostics));
+        var diagnostics = semanticModel.GetDiagnostics(cancellationToken: context.CancellationToken);
+        if (diagnostics.Length > 0)
+        {
+            context.Publish(GetDiagnosticsProduced(command, diagnostics));
+        }
     }
 
     public PackageRestoreContext PackageRestoreContext => _lazyPackageRestoreContext.Value;
