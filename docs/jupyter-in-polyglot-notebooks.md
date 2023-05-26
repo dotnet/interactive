@@ -17,7 +17,7 @@ Run the following command in a notebook cell:
 #!connect jupyter --kernel-name pythonkernel --kernel-spec python3
 ```
 
-Once connected, create a new cell and select your python kernel from the language dropdown in the bottom right hand corner.
+Once connected, create a new cell and select your python kernel from the kernel picker in the bottom right hand corner of the cell.
 
 ## Connecting to an R kernel
 First, ensure that R is added to Jupyter. If not, switch to the Anaconda Prompt, and run this command:
@@ -35,7 +35,7 @@ Then restart VS Code from the Anaconda prompt, and run the following command in 
 #!connect jupyter --kernel-name Rkernel --kernel-spec ir
 ```
 
-Once connected, create a new cell and select your R kernel from the language dropdown.
+Once connected, create a new cell and select your R kernel from the kernel picker.
 
 ## Connecting to a remote Jupyter server. 
 To connect to a remote Jupyter server, run this command in a notebook cell:
