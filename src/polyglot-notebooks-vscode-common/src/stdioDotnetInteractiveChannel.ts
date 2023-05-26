@@ -5,8 +5,6 @@ import * as cp from 'child_process';
 import {
     CommandFailedType,
     CommandSucceededType,
-    DiagnosticLogEntryProducedType,
-    DiagnosticLogEntryProduced,
     KernelEventEnvelopeObserver,
     KernelReadyType,
     SubmitCodeType,
@@ -119,11 +117,6 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         Logger.default.info(`envelope received from stdio: ${JSON.stringify(envelope)}`);
         if (isKernelEventEnvelope(envelope)) {
             switch (envelope.eventType) {
-                case DiagnosticLogEntryProducedType:
-                    const diagnosticMessage = (<DiagnosticLogEntryProduced>envelope.event).message;
-                    this.diagnosticChannel.appendLine(diagnosticMessage);
-                    Logger.default.warn(diagnosticMessage);
-                    break;
                 case CommandFailedType:
                 case CommandSucceededType:
                     if (this.pingTimer) {
