@@ -9,7 +9,7 @@ Before you begin, make sure you have the following installed:
 1. [The Anaconda distribution](https://docs.anaconda.com/free/anaconda/install/index.html)
 2. [Python](https://www.python.org/downloads/) and/or [R](https://cran.r-project.org/)
 
-Please note that if you are want to use Python and R in polyglot notebooks, you must open VS Code from the Anaconda prompt. Open the Anaconda prompt and activate the environment you want to work in. Then navigate to the desired folder and open VS code from the Anaconda prompt using the `code .` command. 
+Please note that if you want to use Python and R in polyglot notebooks, you must open VS Code from the Anaconda prompt. Open the Anaconda prompt and activate the environment you want to work in. Then navigate to the desired folder and open VS code from the Anaconda prompt using the `code .` command. 
 
 ## Connecting to a python kernel
 Run the following command in a notebook cell:
