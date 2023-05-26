@@ -7,7 +7,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive;
@@ -130,8 +129,6 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     private void Run(ScheduledOperation operation)
     {
-        _currentlyRunningTopLevelOperation ??= operation;
-
         using var logOp = Log.OnEnterAndConfirmOnExit();
         logOp.Info("{value}", operation.Value);
 
