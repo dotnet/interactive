@@ -149,6 +149,7 @@ public class KernelInvocationContext : IDisposable
                     TryCancel();
 
                     IsFailed = true;
+                   
                 }
                 else
                 {
@@ -273,9 +274,50 @@ public class KernelInvocationContext : IDisposable
         }
     }
 
-    public static KernelInvocationContext GetOrCreateAmbientContext(KernelCommand command)
+    public static KernelInvocationContext GetOrCreateAmbientContext(KernelCommand command, ConcurrentDictionary<string, KernelInvocationContext> contextsByRootToken = null)
     {
-        if (_current.Value is null || _current.Value.IsComplete)
+
+        if (_current.Value is null)
+        {
+            if (contextsByRootToken is null)
+            {
+                _current.Value = new KernelInvocationContext(command);
+            }
+            else
+            {
+                var rootToken = KernelCommand.GetRootToken(command.GetOrCreateToken());
+
+                switch (contextsByRootToken.Count)
+                {
+                    case 0:
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    default:
+                        break;
+                }
+
+                if (contextsByRootToken.TryGetValue(rootToken, out var rootContext))
+                {
+                    _current.Value = rootContext;
+                    AddChildCommandToContext(command, rootContext);
+                }
+                else
+                {
+                    _current.Value = new KernelInvocationContext(command);
+                    contextsByRootToken.TryAdd(rootToken, _current.Value);
+                    _current.Value.OnComplete(c =>
+                    {
+                        contextsByRootToken.TryRemove(rootToken, out _);
+                    });
+                }
+            }
+        }
+        else if (_current.Value.IsComplete)
         {
             _current.Value = new KernelInvocationContext(command);
         }
@@ -285,28 +327,7 @@ public class KernelInvocationContext : IDisposable
             {
                 var currentContext = _current.Value;
 
-                currentContext._childCommands.GetOrAdd(command, innerCommand =>
-                {
-                    var replaySubject = new ReplaySubject<KernelEvent>();
-
-                    var subscription = replaySubject
-                                       .Where(e =>
-                                       {
-                                           if (innerCommand.OriginUri is { })
-                                           {
-                                               // if executing on behalf of a proxy, don't swallow anything
-                                               return true;
-                                           }
-
-                                           return e is not CommandSucceeded and not CommandFailed;
-                                       })
-                                       .Subscribe(e => currentContext._events.OnNext(e));
-
-                    currentContext._disposables.Add(subscription);
-                    currentContext._disposables.Add(replaySubject);
-
-                    return replaySubject;
-                });
+                AddChildCommandToContext(command, currentContext);
             }
             else
             {
@@ -315,6 +336,32 @@ public class KernelInvocationContext : IDisposable
         }
 
         return _current.Value;
+
+        static void AddChildCommandToContext(KernelCommand kernelCommand, KernelInvocationContext currentContext)
+        {
+            currentContext._childCommands.GetOrAdd(kernelCommand, innerCommand =>
+            {
+                var replaySubject = new ReplaySubject<KernelEvent>();
+
+                var subscription = replaySubject
+                    .Where(e =>
+                    {
+                        if (innerCommand.OriginUri is { })
+                        {
+                            // if executing on behalf of a proxy, don't swallow anything
+                            return true;
+                        }
+
+                        return e is not CommandSucceeded and not CommandFailed;
+                    })
+                    .Subscribe(e => currentContext._events.OnNext(e));
+
+                currentContext._disposables.Add(subscription);
+                currentContext._disposables.Add(replaySubject);
+
+                return replaySubject;
+            });
+        }
     }
 
     public static KernelInvocationContext Current => _current.Value;

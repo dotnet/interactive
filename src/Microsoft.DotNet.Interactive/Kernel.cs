@@ -341,7 +341,7 @@ public abstract partial class Kernel :
         KernelInvocationContext context = null;
         command.ShouldPublishCompletionEvent ??= true;
 
-        context = KernelInvocationContext.GetOrCreateAmbientContext(command);
+        context = KernelInvocationContext.GetOrCreateAmbientContext(command, GetKernelHost()?.ContextsByRootToken);
 
         if (command.Parent is null)
         {
@@ -532,10 +532,14 @@ public abstract partial class Kernel :
 
         public override string ToString() => $"Undefer commands ahead of {Parent}";
     }
+    private KernelHost GetKernelHost()
+    {
+        return RootKernel is CompositeKernel { Host: { } kernelHost } ? kernelHost : null;
+    }
 
     internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
     {
-        var context = KernelInvocationContext.GetOrCreateAmbientContext(command);
+        var context = KernelInvocationContext.GetOrCreateAmbientContext(command, GetKernelHost()?.ContextsByRootToken);
 
         try
         {
