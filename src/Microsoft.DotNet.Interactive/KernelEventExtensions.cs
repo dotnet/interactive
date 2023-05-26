@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -8,6 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -60,4 +62,16 @@ internal static class KernelEventExtensions
             )
         ).ToImmutableList();
     }
+
+    internal static void StampRoutingSlipAndLog(this KernelEvent @event, Uri uri)
+    {
+        @event.RoutingSlip.Stamp(uri);
+        Logger.Log.RoutingSlipInfo(@event);
+    }
+
+    private static void RoutingSlipInfo(this Logger logger, KernelEvent @event) =>
+        logger.Info(
+            "⬅️ {0} {1}",
+            @event.GetType().Name,
+            @event.RoutingSlip);
 }

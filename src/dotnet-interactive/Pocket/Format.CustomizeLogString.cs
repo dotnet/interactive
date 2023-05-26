@@ -1,0 +1,279 @@
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.IO;
+using System.Linq;
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+
+namespace Pocket;
+
+internal static partial class Format
+{
+    static partial void CustomizeLogString(object value, ref string output)
+    {
+        switch (value)
+        {
+            case KernelCommand command:
+                {
+                    using var writer = new StringWriter();
+                    writer.AppendLogString(command);
+                    output = writer.ToString();
+                    break;
+                }
+            case KernelEvent @event:
+                {
+                    using var writer = new StringWriter();
+                    writer.AppendLogString(@event);
+                    output = writer.ToString();
+                    break;
+                }
+            default:
+                break;
+        }
+    }
+
+    private static void AppendLogString(this TextWriter writer, KernelCommand command)
+    {
+        writer.Write("⁞Ϲ⁞ ");
+        writer.Write(command.GetType().Name);
+        writer.Write(' ');
+
+        switch (command)
+        {
+            case ChangeWorkingDirectory changeWorkingDirectory:
+                writer.Write(changeWorkingDirectory.WorkingDirectory.TruncateForDisplay());
+                break;
+
+            case DisplayError displayError:
+                writer.Write(displayError.Message.TruncateForDisplay());
+                break;
+
+            case DisplayValue displayValue:
+                writer.Write('\'');
+                writer.Write(displayValue.FormattedValue.Value.TruncateForDisplay());
+                writer.Write("' (");
+                writer.Write(displayValue.FormattedValue.MimeType);
+                writer.Write(')');
+                writer.AppendProperties(
+                    (nameof(displayValue.ValueId), displayValue.ValueId));
+                break;
+
+            case RequestDiagnostics requestDiagnostics:
+                writer.Write(requestDiagnostics.Code.TruncateForDisplay());
+                break;
+
+            case RequestInput requestInput:
+                writer.Write(requestInput.Prompt);
+                writer.AppendProperties(
+                    (nameof(requestInput.ValueName), requestInput.ValueName),
+                    (nameof(requestInput.IsPassword), requestInput.IsPassword.ToString()),
+                    (nameof(requestInput.InputTypeHint), requestInput.InputTypeHint));
+                break;
+
+            case RequestValue requestValue:
+                writer.Write(requestValue.Name);
+                writer.Write(" (");
+                writer.Write(requestValue.MimeType);
+                writer.Write(')');
+                break;
+
+            case RequestValueInfos requestValueInfos:
+                writer.Write(requestValueInfos.MimeType);
+                break;
+
+            case SendEditableCode sendEditableCode:
+                writer.Write(sendEditableCode.Code.TruncateForDisplay());
+                writer.AppendProperties(
+                    (nameof(sendEditableCode.KernelName), sendEditableCode.KernelName));
+                break;
+
+            case SendValue sendValue:
+                writer.Write(sendValue.Name);
+                writer.Write(" '");
+                writer.Write(sendValue.FormattedValue.Value.TruncateForDisplay());
+                writer.Write("' (");
+                writer.Write(sendValue.FormattedValue.MimeType);
+                writer.Write(')');
+                break;
+
+            case SubmitCode submitCode:
+                writer.Write(submitCode.Code.TruncateForDisplay());
+                break;
+
+            case UpdateDisplayedValue updateDisplayedValue:
+                writer.Write('\'');
+                writer.Write(updateDisplayedValue.FormattedValue.Value.TruncateForDisplay());
+                writer.Write("' (");
+                writer.Write(updateDisplayedValue.FormattedValue.MimeType);
+                writer.Write(')');
+                writer.AppendProperties(
+                    (nameof(updateDisplayedValue.ValueId), updateDisplayedValue.ValueId));
+                break;
+
+            // Base command types.
+            case LanguageServiceCommand languageServiceCommand:
+                writer.Write(languageServiceCommand.Code.TruncateForDisplay());
+                writer.Write(' ');
+                writer.Write(languageServiceCommand.LinePosition.ToString());
+                break;
+
+            default:
+                break;
+        }
+
+        writer.AppendProperties(
+            ("Token", command.GetOrCreateToken()),
+            (nameof(command.TargetKernelName), command.TargetKernelName),
+            (nameof(command.DestinationUri), command.DestinationUri?.ToString()));
+    }
+
+    private static void AppendLogString(this TextWriter writer, KernelEvent @event)
+    {
+        writer.Write("⁞Ε⁞ ");
+        writer.Write(@event.GetType().Name);
+        writer.Write(' ');
+
+        switch (@event)
+        {
+            case CodeSubmissionReceived codeSubmissionReceived:
+                writer.Write(codeSubmissionReceived.Code.TruncateForDisplay());
+                break;
+
+            case CommandFailed commandFailed:
+                writer.Write(commandFailed.Message.TruncateForDisplay());
+                break;
+
+            case CompleteCodeSubmissionReceived completeCodeSubmissionReceived:
+                writer.Write(completeCodeSubmissionReceived.Code.TruncateForDisplay());
+                break;
+
+            case CompletionsProduced completionsProduced:
+                writer.Write(completionsProduced.LinePositionSpan?.ToString());
+                break;
+
+            case DiagnosticLogEntryProduced diagnosticLogEntryProduced:
+                writer.Write(diagnosticLogEntryProduced.Message.TruncateForDisplay());
+                break;
+
+            case DiagnosticsProduced diagnosticsProduced:
+                var diagnostics = diagnosticsProduced.Diagnostics;
+                if (diagnostics.Any()) // TODO: How come we produce empty DiagnosticsProduced events?
+                {
+                    var firstMessage = diagnostics.First().Message.TruncateForDisplay();
+                    writer.Write(firstMessage);
+
+                    var diagnosticsCount = diagnostics.Count;
+                    if (diagnosticsCount > 1)
+                    {
+                        writer.Write(" (and ");
+                        writer.Write(diagnosticsCount - 1);
+                        writer.Write(" more)");
+                    }
+                }
+                break;
+
+            case ErrorProduced errorProduced:
+                writer.Write(errorProduced.Message.TruncateForDisplay());
+                break;
+
+            case HoverTextProduced hoverTextProduced:
+                var content = hoverTextProduced.Content;
+                var firstContent = content.First();
+                writer.Write('\'');
+                writer.Write(firstContent.Value.TruncateForDisplay());
+                writer.Write("' (");
+                writer.Write(firstContent.MimeType);
+                writer.Write(')');
+                var contentCount = content.Count;
+                if (contentCount > 1)
+                {
+                    writer.Write(" (and ");
+                    writer.Write(contentCount - 1);
+                    writer.Write(" more)");
+                }
+                break;
+
+            case InputProduced inputProduced:
+                writer.Write(inputProduced.Value.TruncateForDisplay());
+                break;
+
+            case PackageAdded packageAdded:
+                writer.Write(packageAdded.PackageReference);
+                break;
+
+            // Base event types.
+            case DisplayEvent displayEvent:
+                writer.Write('\'');
+                writer.Write(displayEvent.Value?.ToString().TruncateForDisplay());
+                writer.Write('\'');
+
+                var formattedValues = displayEvent.FormattedValues;
+                if (formattedValues.Any())
+                {
+                    writer.Write(" (");
+                    writer.Write(nameof(displayEvent.FormattedValues));
+                    writer.Write(": ");
+                    var firstFormattedValue = formattedValues.First();
+                    writer.Write('\'');
+                    writer.Write(firstFormattedValue.Value.TruncateForDisplay());
+                    writer.Write("' (");
+                    writer.Write(firstFormattedValue.MimeType);
+                    writer.Write(')');
+
+                    var formattedValuesCount = formattedValues.Count;
+                    if (formattedValuesCount > 1)
+                    {
+                        writer.Write(" (and ");
+                        writer.Write(formattedValuesCount - 1);
+                        writer.Write(" more)");
+                    }
+
+                    writer.Write(')');
+                }
+
+                writer.AppendProperties(
+                    (nameof(displayEvent.ValueId), displayEvent.ValueId));
+                break;
+
+            default:
+                break;
+        }
+
+        writer.AppendProperties(
+            (nameof(@event.Command), @event.Command.GetType().Name),
+            ("CommandToken", @event.Command.GetOrCreateToken()));
+    }
+
+    private static void AppendProperties(this TextWriter writer, params (string Name, string Value)[] properties)
+    {
+        if (properties.Length > 0)
+        {
+            writer.Write(" (");
+
+            var i = 0;
+            foreach (var property in properties)
+            {
+                writer.AppendProperty(property.Name, property.Value);
+
+                if (++i != properties.Length)
+                {
+                    writer.Write(", ");
+                }
+            }
+
+            writer.Write(')');
+        }
+    }
+
+    private static void AppendProperty(this TextWriter writer, (string Name, string Value) property)
+        => writer.AppendProperty(property.Name, property.Value);
+
+    private static void AppendProperty(this TextWriter writer, string name, string value)
+    {
+        writer.Write(name);
+        writer.Write(": ");
+        writer.Write(value);
+    }
+}

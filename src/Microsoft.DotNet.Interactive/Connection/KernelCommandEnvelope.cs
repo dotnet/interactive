@@ -38,7 +38,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
     public string Token => _command.GetOrCreateToken();
 
     public string CommandId => _command.GetOrCreateId();
-        
+
     KernelCommand IKernelCommandEnvelope.Command => _command;
 
     public static void RegisterCommand<T>() where T : KernelCommand
@@ -177,7 +177,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         {
             commandToken = tokenProperty.GetString();
         }
-            
+
         if (commandToken is not null)
         {
             command.SetToken(commandToken);
@@ -192,10 +192,11 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
                 if (string.IsNullOrWhiteSpace(uri.Query))
                 {
                     command.RoutingSlip.Stamp(uri);
-                }else
+                }
+                else
                 {
                     var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                    command.RoutingSlip.StampAs(uri, query["tag"] );
+                    command.RoutingSlip.StampAs(uri, query["tag"]);
                 }
             }
         }
@@ -213,7 +214,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             serializationModel,
             Serializer.JsonSerializerOptions);
     }
-    
+
     private static SerializationModel CreateSerializationModel(IKernelCommandEnvelope envelope)
     {
         var serializationModel = new SerializationModel
