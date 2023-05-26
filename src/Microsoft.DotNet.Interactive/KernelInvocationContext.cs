@@ -35,6 +35,8 @@ public class KernelInvocationContext : IDisposable
 
     private bool _ownsCancellationTokenSource;
 
+    private readonly int _consoleAsyncContextId;
+
     private KernelInvocationContext(KernelCommand command)
     {
         var operation = new OperationLogger(
@@ -66,6 +68,12 @@ public class KernelInvocationContext : IDisposable
                 c.Error.Subscribe(s => this.DisplayStandardError(s, command))
             };
         }));
+
+        // FIX: (KernelInvocationContext) can we get this as a return value when Console.Subscribe is called?
+        if (AsyncContext.Id is not null)
+        {
+            _consoleAsyncContextId = AsyncContext.Id.Value;
+        }
 
         _disposables.Add(operation);
     }
@@ -276,7 +284,6 @@ public class KernelInvocationContext : IDisposable
 
     public static KernelInvocationContext GetOrCreateAmbientContext(KernelCommand command, ConcurrentDictionary<string, KernelInvocationContext> contextsByRootToken = null)
     {
-
         if (_current.Value is null)
         {
             if (contextsByRootToken is null)
@@ -287,24 +294,12 @@ public class KernelInvocationContext : IDisposable
             {
                 var rootToken = KernelCommand.GetRootToken(command.GetOrCreateToken());
 
-                switch (contextsByRootToken.Count)
-                {
-                    case 0:
-                        break;
-                    case 1:
-                        break;
-                    case 2:
-                        break;
-                    case 3:
-                        break;
-                    default:
-                        break;
-                }
-
                 if (contextsByRootToken.TryGetValue(rootToken, out var rootContext))
                 {
                     _current.Value = rootContext;
                     AddChildCommandToContext(command, rootContext);
+                    var consoleSubscription = ConsoleOutput.InitializeFromAsyncContext(rootContext._consoleAsyncContextId);
+                    rootContext._disposables.Add(consoleSubscription);
                 }
                 else
                 {

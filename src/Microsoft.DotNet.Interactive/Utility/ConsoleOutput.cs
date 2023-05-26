@@ -64,4 +64,17 @@ public static class ConsoleOutput
     public record ObservableConsole(
         IObservable<string> Out,
         IObservable<string> Error);
+
+    public static IDisposable InitializeFromAsyncContext(int asyncContextId)
+    {
+        if (_multiplexingOutputWriter is not { } outputWriter ||
+            _multiplexingErrorWriter is not { } errorWriter)
+        {
+            throw new InvalidOperationException($"Console multiplexing is not initialized. You must first call {nameof(ConsoleOutput)}.{nameof(Subscribe)}.");
+        }
+
+        return new CompositeDisposable(
+            outputWriter.InitializeCurrentAsyncContextUsingWriterFrom(asyncContextId),
+            errorWriter.InitializeCurrentAsyncContextUsingWriterFrom(asyncContextId));
+    }
 }
