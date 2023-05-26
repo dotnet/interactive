@@ -12,6 +12,8 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using System;
+using System.Collections.Generic;
+using System.Reactive.Linq;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -87,6 +89,51 @@ public class KernelInvocationContextTests
         });
 
         context1.Should().BeSameAs(context2);
+
+    }
+
+    [Fact]
+    public async Task Console_capture_works_when_context_is_shared_by_parented_commands()
+    {
+        var barrier = new Barrier(2);
+        var contextsByRootToken = new ConcurrentDictionary<string, KernelInvocationContext>(StringComparer.OrdinalIgnoreCase);
+        KernelCommand commandInTask1 = null;
+        KernelCommand commandInTask2 = null;
+
+        var kernelCommand1 = new SubmitCode("");
+        var kernelCommand2 = new SubmitCode("");
+
+        KernelInvocationContext context1 = null;
+        KernelInvocationContext context2 = null;
+
+        var events = new List<KernelEvent>();
+
+        kernelCommand2.SetToken($"{kernelCommand1.GetOrCreateToken()}.1");
+
+        await Task.Run(() =>
+        {
+            context1 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1, contextsByRootToken);
+            context1.KernelEvents.Subscribe(events.Add);
+
+            Console.WriteLine("context1");
+            commandInTask1 = KernelInvocationContext.Current.Command;
+            barrier.SignalAndWait(1000);
+
+        });
+
+        await Task.Run(() =>
+        {
+            ExecutionContext.SuppressFlow();
+            context2 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2, contextsByRootToken);
+            context2.KernelEvents.Subscribe(events.Add);
+            Console.WriteLine("context2");
+            commandInTask2 = KernelInvocationContext.Current.Command;
+            barrier.SignalAndWait(1000);
+
+        });
+
+        events.OfType<StandardOutputValueProduced>().Select(e => e.FormattedValues.First().Value)
+            .Should().BeEquivalentTo("context1", "context2");
 
     }
 
