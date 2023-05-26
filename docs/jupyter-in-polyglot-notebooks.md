@@ -20,8 +20,13 @@ First, ensure that R is added to Jupyter. If not, switch to the Anaconda Prompt,
 ```console
 conda install -c r r-irkernel
 ```
+Check to see if your R kernel appears in the Jupyter kernel spec list. If not, add your R kernel to Jupyter by running these commands in the R console:
+```
+install.packages('IRkernel')
+IRkernel::installspec() 
+```
 
-Then switch back to VS Code, and run the following command in a nPotebook cell:
+Then restart VS Code from the Anaconda prompt, and run the following command in a notebook cell:
 `#!connect jupyter --kernel-name Rkernel --kernel-spec ir`
 
 Once connected, create a new cell and select your R kernel from the language dropdown.
