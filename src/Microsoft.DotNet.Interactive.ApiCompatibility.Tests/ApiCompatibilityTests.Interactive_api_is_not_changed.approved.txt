@@ -593,11 +593,6 @@ Microsoft.DotNet.Interactive.Events
     .ctor(System.Collections.Generic.IEnumerable<CompletionItem> completions, Microsoft.DotNet.Interactive.Commands.RequestCompletions command, Microsoft.DotNet.Interactive.LinePositionSpan linePositionSpan = null)
     public System.Collections.Generic.IEnumerable<CompletionItem> Completions { get;}
     public Microsoft.DotNet.Interactive.LinePositionSpan LinePositionSpan { get;}
-  public abstract class DiagnosticEvent : KernelEvent
-  public class DiagnosticLogEntryProduced : DiagnosticEvent
-    .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    public System.String Message { get;}
-    public System.String ToString()
   public class DiagnosticsProduced : KernelEvent
     .ctor(System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Diagnostic> diagnostics, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedDiagnostics = null)
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Diagnostic> Diagnostics { get;}

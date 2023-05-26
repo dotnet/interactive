@@ -1,11 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Microsoft.DotNet.Interactive.Formatting;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,9 +8,13 @@ using System.Reactive.Concurrency;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
-using Recipes;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Recipes;
+using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
@@ -51,9 +50,6 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
         {
             case DisplayEvent displayEvent:
                 OnDisplayEvent(displayEvent, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
-                break;
-            case DiagnosticLogEntryProduced logEvent:
-                OnLogEvent(logEvent, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                 break;
             case CommandSucceeded _:
                 OnCommandHandled(context.JupyterMessageSender);
@@ -199,26 +195,6 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
             default:
                 throw new ArgumentException("Unsupported event type", nameof(displayEvent));
         }
-
-        var isSilent = ((ExecuteRequest)request.Content).Silent;
-
-        if (!isSilent)
-        {
-            // send on io
-            jupyterMessageSender.Send(dataMessage);
-        }
-    }
-
-    private void OnLogEvent(
-        DiagnosticLogEntryProduced logEvent,
-        ZeroMQMessage request,
-        IJupyterMessageResponseSender jupyterMessageSender)
-    {
-        var transient = CreateTransient();
-
-        var dataMessage = new DisplayData(
-            transient: transient,
-            data: new Dictionary<string, object> { [PlainTextFormatter.MimeType] = logEvent.Message });
 
         var isSilent = ((ExecuteRequest)request.Content).Silent;
 

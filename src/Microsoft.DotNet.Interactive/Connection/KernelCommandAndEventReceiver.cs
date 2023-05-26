@@ -69,7 +69,7 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
                 {
                     Log.Error(exception);
 
-                    return new CommandOrEvent(new DiagnosticLogEntryProduced(exception.Message, KernelCommand.None), true);
+                    return new CommandOrEvent(new ErrorProduced(exception.Message, KernelCommand.None), isParseError: true);
                 }
             });
 

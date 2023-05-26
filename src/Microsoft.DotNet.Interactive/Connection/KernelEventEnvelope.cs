@@ -65,7 +65,6 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
             [nameof(CommandSucceeded)] = typeof(KernelEventEnvelope<CommandSucceeded>),
             [nameof(CompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<CompleteCodeSubmissionReceived>),
             [nameof(CompletionsProduced)] = typeof(KernelEventEnvelope<CompletionsProduced>),
-            [nameof(DiagnosticLogEntryProduced)] = typeof(KernelEventEnvelope<DiagnosticLogEntryProduced>),
             [nameof(DiagnosticsProduced)] = typeof(KernelEventEnvelope<DiagnosticsProduced>),
             [nameof(DisplayedValueProduced)] = typeof(KernelEventEnvelope<DisplayedValueProduced>),
             [nameof(DisplayedValueUpdated)] = typeof(KernelEventEnvelope<DisplayedValueUpdated>),

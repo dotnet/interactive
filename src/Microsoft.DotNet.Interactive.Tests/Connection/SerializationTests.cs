@@ -13,9 +13,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
@@ -268,8 +268,6 @@ public class SerializationTests
                 },
                 requestCompletion);
 
-            yield return new DiagnosticLogEntryProduced("oops!", new SubmitCode("123"));
-
             yield return new DiagnosticsProduced(
                 new[]
                 {
@@ -325,7 +323,7 @@ public class SerializationTests
                 {
                     OriginUri = new("kernel://pid-1234/csharp")
                 });
-            
+
             yield return new KernelReady(new[]
             {
                 new KernelInfo("javascript", aliases: new[] { "js" })
