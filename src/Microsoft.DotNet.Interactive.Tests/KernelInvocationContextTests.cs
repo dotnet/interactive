@@ -13,7 +13,6 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using System;
 using System.Collections.Generic;
-using System.Reactive.Linq;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -30,7 +29,7 @@ public class KernelInvocationContextTests
 
         await Task.Run(() =>
         {
-            using (var x = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("")))
+            using (KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("")))
             {
                 barrier.SignalAndWait(1000);
                 commandInTask1 = KernelInvocationContext.Current.Command;
@@ -57,8 +56,6 @@ public class KernelInvocationContextTests
     {
         var barrier = new Barrier(2);
         var contextsByRootToken = new ConcurrentDictionary<string, KernelInvocationContext>(StringComparer.OrdinalIgnoreCase);
-        KernelCommand commandInTask1 = null;
-        KernelCommand commandInTask2 = null;
 
         var kernelCommand1 = new SubmitCode("");
         var kernelCommand2 = new SubmitCode("");
@@ -71,16 +68,14 @@ public class KernelInvocationContextTests
         await Task.Run(() =>
         {
             context1 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1, contextsByRootToken);
-
-            commandInTask1 = KernelInvocationContext.Current.Command;
+            
             barrier.SignalAndWait(1000);
         });
 
         await Task.Run(() =>
         {
             context2 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2, contextsByRootToken);
-
-            commandInTask2 = KernelInvocationContext.Current.Command;
+            
             barrier.SignalAndWait(1000);
         });
 
