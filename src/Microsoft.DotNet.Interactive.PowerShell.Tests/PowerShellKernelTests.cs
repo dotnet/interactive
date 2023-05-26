@@ -3,10 +3,10 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Threading.Tasks;
 using FluentAssertions;
-using System.Linq;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
@@ -54,8 +54,6 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         Assert.Collection(result.Events,
                           e => e.Should().BeOfType<CodeSubmissionReceived>(),
                           e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                          e => e.Should().BeOfType<DiagnosticsProduced>()
-                                .Which.Diagnostics.Count.Should().Be(0),
                           e => e.Should().BeOfType<DisplayedValueProduced>().Which
                                 .Value.Should().BeOfType<string>().Which
                                 .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
@@ -67,7 +65,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                                 .Should().Be(string.Empty),
                           e => e.Should().BeOfType<CommandSucceeded>());
     }
-        
+
     [Fact]
     public async Task PowerShell_token_variables_work()
     {
@@ -85,8 +83,6 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 .BeOfType<CompleteCodeSubmissionReceived>()
                 .Which.Code
                 .Should().Be("echo /this/is/a/path"),
-            e => e.Should().BeOfType<DiagnosticsProduced>()
-                .Which.Diagnostics.Count.Should().Be(0),
             e => e.Should()
                 .BeOfType<StandardOutputValueProduced>()
                 .Which
@@ -102,8 +98,6 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 .BeOfType<CompleteCodeSubmissionReceived>()
                 .Which.Code
                 .Should().Be("$$; $^"),
-            e => e.Should().BeOfType<DiagnosticsProduced>()
-                .Which.Diagnostics.Count.Should().Be(0),
             e => e.Should()
                 .BeOfType<StandardOutputValueProduced>()
                 .Which
@@ -152,8 +146,8 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
 
         outputs.Should().HaveCountGreaterThan(1);
-            
-        string.Join("", 
+
+        string.Join("",
                 outputs
                     .SelectMany(e => e.FormattedValues.Select(v => v.Value))
             ).ToLowerInvariant()
@@ -263,7 +257,6 @@ table th {
         result.Events.Should().SatisfyRespectively(
             e => e.Should().BeOfType<CodeSubmissionReceived>(),
             e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-            e => e.Should().BeOfType<DiagnosticsProduced>().Which.Diagnostics.Count.Should().Be(0),
             e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.ElementAt(0).Should().BeEquivalentToRespectingRuntimeTypes(fv),
             e => e.Should().BeOfType<CommandSucceeded>()
         );

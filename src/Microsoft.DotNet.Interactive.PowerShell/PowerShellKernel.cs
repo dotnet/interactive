@@ -49,7 +49,7 @@ public class PowerShellKernel :
 
     private readonly PSKernelHost _psHost;
     private readonly Lazy<PowerShell> _lazyPwsh;
-        
+
     private PowerShell pwsh => _lazyPwsh.Value;
 
     public Func<string, string> ReadInput { get; set; }
@@ -248,19 +248,18 @@ public class PowerShellKernel :
             context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
         }
 
-        var formattedDiagnostics =
-            parseErrors
-                .Select(d => d.ToString())
-                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                .ToImmutableArray();
-
-        var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
-
-        context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
-
         // If there were parse errors, display them and return early.
         if (parseErrors.Length > 0)
         {
+            var formattedDiagnostics =
+                parseErrors
+                    .Select(d => d.ToString())
+                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                    .ToImmutableArray();
+
+            var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
+            context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
+
             var parseException = new ParseException(parseErrors);
             ReportError(parseException.ErrorRecord);
             return;
@@ -333,8 +332,11 @@ public class PowerShellKernel :
 
         IsCompleteSubmission(code, out var parseErrors);
 
-        var diagnostics = parseErrors.Select(ToDiagnostic);
-        context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
+        if (parseErrors.Length > 0)
+        {
+            var diagnostics = parseErrors.Select(ToDiagnostic);
+            context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
+        }
 
         return Task.CompletedTask;
     }

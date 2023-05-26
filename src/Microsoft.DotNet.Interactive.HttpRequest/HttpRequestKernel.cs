@@ -181,12 +181,16 @@ public class HttpRequestKernel :
 
     private void PublishDiagnostics(KernelInvocationContext context, KernelCommand command, IEnumerable<Diagnostic> diagnostics)
     {
-        var formattedDiagnostics =
-            diagnostics
-                .Select(d => d.ToString())
-                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                .ToImmutableArray();
-        context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
+        if (diagnostics.Any())
+        {
+            var formattedDiagnostics =
+                diagnostics
+                    .Select(d => d.ToString())
+                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                    .ToImmutableArray();
+
+            context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
+        }
     }
 
     Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
