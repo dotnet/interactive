@@ -57,9 +57,22 @@ public class MultiplexingTextWriter : TextWriter
         });
     }
 
+    internal IDisposable InitializeCurrentAsyncContextUsingWriterFrom(int sourceAsyncContextId)
+    {
+        if (_writers.TryGetValue(sourceAsyncContextId, out var writer))
+        {
+            AsyncContext.TryEstablish(out var currentAsyncContextId);
+            _writers[currentAsyncContextId] = writer;
+            return Disposable.Create(() => _writers.TryRemove(currentAsyncContextId, out _));
+        }
+        else
+        {
+            return Disposable.Empty;
+        }
+    }
+
     private TextWriter GetCurrentWriter()
     {
-
         if (AsyncContext.Id is { } asyncContextId)
         {
             var writer = _writers.GetOrAdd(

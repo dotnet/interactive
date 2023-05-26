@@ -72,24 +72,19 @@ public class KernelInvocationContextTests
         {
             context1 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1, contextsByRootToken);
 
-                
-                commandInTask1 = KernelInvocationContext.Current.Command;
-                barrier.SignalAndWait(1000);
-
+            commandInTask1 = KernelInvocationContext.Current.Command;
+            barrier.SignalAndWait(1000);
         });
 
         await Task.Run(() =>
         {
             context2 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2, contextsByRootToken);
-            
-               
-                commandInTask2 = KernelInvocationContext.Current.Command;
-                barrier.SignalAndWait(1000);
 
+            commandInTask2 = KernelInvocationContext.Current.Command;
+            barrier.SignalAndWait(1000);
         });
 
         context1.Should().BeSameAs(context2);
-
     }
 
     [Fact]
@@ -97,14 +92,9 @@ public class KernelInvocationContextTests
     {
         var barrier = new Barrier(2);
         var contextsByRootToken = new ConcurrentDictionary<string, KernelInvocationContext>(StringComparer.OrdinalIgnoreCase);
-        KernelCommand commandInTask1 = null;
-        KernelCommand commandInTask2 = null;
 
         var kernelCommand1 = new SubmitCode("");
         var kernelCommand2 = new SubmitCode("");
-
-        KernelInvocationContext context1 = null;
-        KernelInvocationContext context2 = null;
 
         var events = new List<KernelEvent>();
 
@@ -112,30 +102,26 @@ public class KernelInvocationContextTests
 
         await Task.Run(() =>
         {
-            context1 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1, contextsByRootToken);
-            context1.KernelEvents.Subscribe(events.Add);
+            var context = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1, contextsByRootToken);
+            context.KernelEvents.Subscribe(events.Add);
 
             Console.WriteLine("context1");
-            commandInTask1 = KernelInvocationContext.Current.Command;
-            barrier.SignalAndWait(1000);
 
+            barrier.SignalAndWait(1000);
         });
 
         await Task.Run(() =>
         {
             ExecutionContext.SuppressFlow();
-            context2 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2, contextsByRootToken);
-            context2.KernelEvents.Subscribe(events.Add);
+            KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2, contextsByRootToken);
             Console.WriteLine("context2");
-            commandInTask2 = KernelInvocationContext.Current.Command;
             barrier.SignalAndWait(1000);
-
         });
 
-        var lines = events.OfType<StandardOutputValueProduced>().Select(e => e.FormattedValues.First().Value);
+        var lines = events.OfType<StandardOutputValueProduced>()
+                          .Select(e => e.FormattedValues.First().Value.Trim());
 
-        lines.Should().BeEquivalentTo("context1", "context2");
-
+        lines.Should().BeEquivalentSequenceTo("context1", "context2");
     }
 
     [Fact]
