@@ -13,6 +13,9 @@
 
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive.CSharp\CSharpCodeGeneration.cs" Link="CSharpCodeGeneration.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\DictionaryExtensions.cs" Link="Utility\DictionaryExtensions.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="Utility\NullableAttributes.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\Range.cs" Link="Utility\Range.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +34,8 @@
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 
-  <Import Project="..\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Folder Include="Utility\" />
+  </ItemGroup>
 
 </Project>
