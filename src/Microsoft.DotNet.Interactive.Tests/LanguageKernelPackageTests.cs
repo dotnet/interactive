@@ -819,23 +819,24 @@ using NodaTime.Extensions;");
 
         var source = language switch
         {
-            Language.FSharp => @"
-#r ""nuget:Microsoft.ML.OnnxTransformer,1.4.0""
+            Language.FSharp => """
+#r "nuget:Microsoft.ML.OnnxTransformer,1.4.0"
 
 open System
 open System.Numerics.Tensors
 let inputValues = [| 12.0; 10.0; 17.0; 5.0 |]
 let tInput = new DenseTensor<float>(inputValues.AsMemory(), new ReadOnlySpan<int>([|4|]))
 tInput.Length
-",
-            Language.CSharp => @"
-#r ""nuget:Microsoft.ML.OnnxTransformer,1.4.0""
+""",
+            Language.CSharp => """
+#r "nuget:Microsoft.ML.OnnxTransformer,1.4.0"
 
 using System;
 using System.Numerics.Tensors;
 var inputValues = new[] { 12f, 10f, 17f, 5f };
 var tInput = new DenseTensor<float>(inputValues.AsMemory(), new ReadOnlySpan<int>(new[] { 4 }));
-tInput.Length"
+tInput.Length
+"""
         };
 
         await SubmitCode(kernel, source);
@@ -858,14 +859,14 @@ tInput.Length"
 
         var source = language switch
         {
-            Language.FSharp => @"
-#r ""nuget:System.Device.Gpio,1.0.0""
+            Language.FSharp => """
+#r "nuget:System.Device.Gpio,1.0.0"
 typeof<System.Device.Gpio.GpioController>.Assembly.Location
-",
-            Language.CSharp => @"
-#r ""nuget:System.Device.Gpio,1.0.0""
+""",
+            Language.CSharp => """
+#r "nuget:System.Device.Gpio,1.0.0"
 typeof(System.Device.Gpio.GpioController).Assembly.Location
-"
+"""
         };
 
         await SubmitCode(kernel, source);
