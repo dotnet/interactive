@@ -852,7 +852,7 @@ tInput.Length"
     [Theory]
     [InlineData(Language.CSharp)]
     [InlineData(Language.FSharp)]
-    public async Task it_can_load_platform_specific_assembly_in_nugetpackage(Language language)
+    public async Task it_can_load_platform_specific_assembly_in_nuget_package(Language language)
     {
         var kernel = CreateKernel(language);
 
