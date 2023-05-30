@@ -179,7 +179,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         {
             _childOperationsBarrier.AddParticipant();
 
-            Run(operation);
+            RunDeferredOperationsAndThen(operation);
         }
         finally
         {
