@@ -22,6 +22,6 @@ public interface ISupportNuget
 
     void TryAddRestoreSource(string source);
 
-    // Notifies Kernel that packagereferencing is complete, and provides a list of PackageReferences
+    // Notifies Kernel that package referencing is complete, and provides a list of PackageReferences
     void RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
 }
