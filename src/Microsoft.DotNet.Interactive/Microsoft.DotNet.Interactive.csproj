@@ -69,6 +69,4 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <Import Project="..\Microsoft.Dotnet.Interactive.Shared\Microsoft.Dotnet.Interactive.Shared.projitems" Label="Shared" />
-
 </Project>
