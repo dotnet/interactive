@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import { ClientMapper } from './clientMapper';
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import * as vscodeLike from './interfaces/vscode-like';
 import * as diagnostics from './diagnostics';
 import * as vscodeUtilities from './vscodeUtilities';
@@ -139,7 +139,7 @@ export class DotNetNotebookKernel {
                 case '#!connect':
                     this.config.clientMapper.getOrAddClient(notebookUri).then(() => {
                         const hostUri = e.message.hostUri;
-                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, <contracts.KernelInfo[]>(e.message.kernelInfos), this.uriMessageHandlerMap, (arg) => controller.postMessage({ ...arg, webViewId: e.message.webViewId }), notebookUri);
+                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, <commandsAndEvents.KernelInfo[]>(e.message.kernelInfos), this.uriMessageHandlerMap, (arg) => controller.postMessage({ ...arg, webViewId: e.message.webViewId }), notebookUri);
                         this.config.clientMapper.getOrAddClient(notebookUri).then(client => {
                             controller.postMessage({ webViewId: e.message.webViewId, preloadCommand: "#!connect", kernelInfos: client.kernelHost.getKernelInfos() });
                         });
@@ -191,8 +191,8 @@ export class DotNetNotebookKernel {
                 const source = cell.document.getText();
                 const diagnosticCollection = diagnostics.getDiagnosticCollection(cell.document.uri);
 
-                function diagnosticObserver(diags: Array<contracts.Diagnostic>) {
-                    diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== contracts.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
+                function diagnosticObserver(diags: Array<commandsAndEvents.Diagnostic>) {
+                    diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== commandsAndEvents.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
                 }
 
                 return client.execute(source, vscodeUtilities.getCellKernelName(cell), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async (success) => {
@@ -355,10 +355,10 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
     const isIpynb = metadataUtilities.isIpynbNotebook(document);
     client.channel.receiver.subscribe({
         next: async (commandOrEventEnvelope) => {
-            if (isKernelEventEnvelope(commandOrEventEnvelope) && commandOrEventEnvelope.eventType === contracts.KernelInfoProducedType) {
+            if (isKernelEventEnvelope(commandOrEventEnvelope) && commandOrEventEnvelope.eventType === commandsAndEvents.KernelInfoProducedType) {
                 // got info about a kernel; either update an existing entry, or add a new one
                 let metadataChanged = false;
-                const kernelInfoProduced = <contracts.KernelInfoProduced>commandOrEventEnvelope.event;
+                const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>commandOrEventEnvelope.event;
                 const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
                 for (const item of notebookMetadata.kernelInfo.items) {
                     if (item.name === kernelInfoProduced.kernelInfo.localName) {
@@ -371,8 +371,8 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
                 }
 
                 if (!metadataChanged) {
-                    if (kernelInfoProduced.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.SubmitCodeType)) {
-                        const kernelInfo: contracts.DocumentKernelInfo = {
+                    if (kernelInfoProduced.kernelInfo.supportedKernelCommands.find(ci => ci.name === commandsAndEvents.SubmitCodeType)) {
+                        const kernelInfo: commandsAndEvents.DocumentKernelInfo = {
                             name: kernelInfoProduced.kernelInfo.localName,
                             aliases: kernelInfoProduced.kernelInfo.aliases
                         };

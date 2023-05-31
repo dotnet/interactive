@@ -3,18 +3,18 @@
 
 import * as rxjs from 'rxjs';
 import { CompositeKernel } from './compositeKernel';
-import * as contracts from './contracts';
+import * as commandsAndEvents from './commandsAndEvents';
 import * as disposables from './disposables';
 import { Disposable } from './disposables';
 import { Logger } from './logger';
 
-export type KernelCommandOrEventEnvelope = contracts.KernelCommandEnvelope | contracts.KernelEventEnvelope;
+export type KernelCommandOrEventEnvelope = commandsAndEvents.KernelCommandEnvelope | commandsAndEvents.KernelEventEnvelope;
 
-export function isKernelCommandEnvelope(commandOrEvent: KernelCommandOrEventEnvelope): commandOrEvent is contracts.KernelCommandEnvelope {
+export function isKernelCommandEnvelope(commandOrEvent: KernelCommandOrEventEnvelope): commandOrEvent is commandsAndEvents.KernelCommandEnvelope {
     return (<any>commandOrEvent).commandType !== undefined;
 }
 
-export function isKernelEventEnvelope(commandOrEvent: KernelCommandOrEventEnvelope): commandOrEvent is contracts.KernelEventEnvelope {
+export function isKernelEventEnvelope(commandOrEvent: KernelCommandOrEventEnvelope): commandOrEvent is commandsAndEvents.KernelEventEnvelope {
     return (<any>commandOrEvent).eventType !== undefined;
 }
 
@@ -124,7 +124,7 @@ function notifyOfKernelInfoUpdates(compositeKernel: CompositeKernel) {
     }
 }
 
-export function ensureOrUpdateProxyForKernelInfo(kernelInfo: contracts.KernelInfo, compositeKernel: CompositeKernel) {
+export function ensureOrUpdateProxyForKernelInfo(kernelInfo: commandsAndEvents.KernelInfo, compositeKernel: CompositeKernel) {
     if (kernelInfo.isProxy) {
         const host = extractHostAndNomalize(kernelInfo.remoteUri!);
         if (host === extractHostAndNomalize(compositeKernel.kernelInfo.uri)) {
@@ -158,11 +158,11 @@ export function ensureOrUpdateProxyForKernelInfo(kernelInfo: contracts.KernelInf
     }
 }
 
-export function isKernelInfoForProxy(kernelInfo: contracts.KernelInfo): boolean {
+export function isKernelInfoForProxy(kernelInfo: commandsAndEvents.KernelInfo): boolean {
     return kernelInfo.isProxy;
 }
 
-export function updateKernelInfo(destination: contracts.KernelInfo, source: contracts.KernelInfo) {
+export function updateKernelInfo(destination: commandsAndEvents.KernelInfo, source: commandsAndEvents.KernelInfo) {
     destination.languageName = source.languageName ?? destination.languageName;
     destination.languageVersion = source.languageVersion ?? destination.languageVersion;
     destination.displayName = source.displayName;
@@ -239,8 +239,8 @@ export class Connector implements Disposable {
         this._listener = this._receiver.subscribe({
             next: (kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope) => {
                 if (isKernelEventEnvelope(kernelCommandOrEventEnvelope)) {
-                    if (kernelCommandOrEventEnvelope.eventType === contracts.KernelInfoProducedType) {
-                        const event = <contracts.KernelInfoProduced>kernelCommandOrEventEnvelope.event;
+                    if (kernelCommandOrEventEnvelope.eventType === commandsAndEvents.KernelInfoProducedType) {
+                        const event = <commandsAndEvents.KernelInfoProduced>kernelCommandOrEventEnvelope.event;
                         if (!event.kernelInfo.remoteUri) {
                             const uri = extractHostAndNomalize(event.kernelInfo.uri!);
                             if (uri) {

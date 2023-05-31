@@ -4,7 +4,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from './clientMapper';
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import * as utilities from './utilities';
 import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { Disposable } from './polyglot-notebooks/disposables';
@@ -24,7 +24,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
             const notebookDocument = vscodeNotebookManagement.getNotebookDocumentFromEditor(activeNotebookEditor);
             const client = await clientMapper.tryGetClient(notebookDocument.uri);
             if (client) {
-                const kernelSelectorOptions = kernelSelectorUtilities.getKernelSelectorOptions(client.kernel, notebookDocument, contracts.SendValueType);
+                const kernelSelectorOptions = kernelSelectorUtilities.getKernelSelectorOptions(client.kernel, notebookDocument, commandsAndEvents.SendValueType);
                 const kernelDisplayValues = kernelSelectorOptions.map(k => k.displayValue);
                 const selectedKernelDisplayName = await vscode.window.showQuickPick(kernelDisplayValues, { title: `Share value [${variableInfo.valueName}] from [${variableInfo.sourceKernelName}] to ...` });
                 if (selectedKernelDisplayName) {
@@ -33,12 +33,12 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
                         const targetKernelSelectorOption = kernelSelectorOptions[targetKernelIndex];
                         // ends with newline to make adding code easier
                         const code = `#!set --value @${variableInfo.sourceKernelName}:${variableInfo.valueName} --name ${variableInfo.valueName}\n`;
-                        const command: contracts.SendEditableCode = {
+                        const command: commandsAndEvents.SendEditableCode = {
                             kernelName: targetKernelSelectorOption.kernelName,
                             code,
                         };
-                        const commandEnvelope: contracts.KernelCommandEnvelope = {
-                            commandType: contracts.SendEditableCodeType,
+                        const commandEnvelope: commandsAndEvents.KernelCommandEnvelope = {
+                            commandType: commandsAndEvents.SendEditableCodeType,
                             command,
                         };
 
@@ -71,10 +71,10 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                 next: (envelope) => {
                     if (isKernelEventEnvelope(envelope)) {
                         switch (envelope.eventType) {
-                            case contracts.CommandSucceededType:
-                            case contracts.CommandFailedType:
-                                if (envelope.command?.commandType === contracts.SubmitCodeType
-                                    || envelope.command?.commandType === contracts.SendValueType) {
+                            case commandsAndEvents.CommandSucceededType:
+                            case commandsAndEvents.CommandFailedType:
+                                if (envelope.command?.commandType === commandsAndEvents.SubmitCodeType
+                                    || envelope.command?.commandType === commandsAndEvents.SendValueType) {
 
                                     const completedKernels = this.completedNotebookKernels.get(uri) ?? new Set<string>();
                                     const kernelName = envelope.command?.command?.targetKernelName;
@@ -186,7 +186,7 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
         const rows: VariableGridRow[] = [];
         const client = await this.clientMapper.tryGetClient(uri);
         if (client) {
-            const allKernels = Array.from(client.kernel.childKernels.filter(k => k.kernelInfo.supportedKernelCommands.find(ci => ci.name === contracts.RequestValueInfosType)));
+            const allKernels = Array.from(client.kernel.childKernels.filter(k => k.kernelInfo.supportedKernelCommands.find(ci => ci.name === commandsAndEvents.RequestValueInfosType)));
             const kernels = allKernels.filter(kernel => {
                 return this.completedNotebookKernels.get(uri)?.has(kernel.name) ?? false;
             });

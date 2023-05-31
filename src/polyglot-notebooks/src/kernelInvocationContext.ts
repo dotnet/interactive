@@ -3,7 +3,7 @@
 
 import * as rxjs from "rxjs";
 import * as routingslip from "./routingslip";
-import * as contracts from "./contracts";
+import * as contracts from "./commandsAndEvents";
 import { Disposable } from "./disposables";
 import { getKernelUri, Kernel } from "./kernel";
 import { PromiseCompletionSource } from "./promiseCompletionSource";

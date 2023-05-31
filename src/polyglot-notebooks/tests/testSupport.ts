@@ -1,23 +1,23 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from "../src/contracts";
+import * as commandsAndEvents from "../src/commandsAndEvents";
 import * as connection from "../src/connection";
 import * as rxjs from "rxjs";
 
-export function findEvent<T>(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType): T | undefined {
+export function findEvent<T>(kernelEventEnvelopes: commandsAndEvents.KernelEventEnvelope[], eventType: commandsAndEvents.KernelEventType): T | undefined {
     return findEventEnvelope(kernelEventEnvelopes, eventType)?.event as T;
 }
 
-export function findEventFromKernel<T>(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType, kernelName: string): T | undefined {
+export function findEventFromKernel<T>(kernelEventEnvelopes: commandsAndEvents.KernelEventEnvelope[], eventType: commandsAndEvents.KernelEventType, kernelName: string): T | undefined {
     return findEventEnvelopeFromKernel(kernelEventEnvelopes, eventType, kernelName)?.event as T;
 }
 
-export function findEventEnvelope(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType): contracts.KernelEventEnvelope | undefined {
+export function findEventEnvelope(kernelEventEnvelopes: commandsAndEvents.KernelEventEnvelope[], eventType: commandsAndEvents.KernelEventType): commandsAndEvents.KernelEventEnvelope | undefined {
     return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType);
 }
 
-export function findEventEnvelopeFromKernel(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType, kernelName: string): contracts.KernelEventEnvelope | undefined {
+export function findEventEnvelopeFromKernel(kernelEventEnvelopes: commandsAndEvents.KernelEventEnvelope[], eventType: commandsAndEvents.KernelEventType, kernelName: string): commandsAndEvents.KernelEventEnvelope | undefined {
     return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command!.command.targetKernelName === kernelName);
 }
 
@@ -73,9 +73,9 @@ export function createInMemoryChannels(): {
 
 export function clearTokenAndId(envelope: connection.KernelCommandOrEventEnvelope): connection.KernelCommandOrEventEnvelope {
     if (connection.isKernelEventEnvelope(envelope)) {
-        let clone: contracts.KernelEventEnvelope = { ...envelope };
+        let clone: commandsAndEvents.KernelEventEnvelope = { ...envelope };
         if (clone.command) {
-            clone.command = <contracts.KernelCommandEnvelope>clearTokenAndId(clone.command);
+            clone.command = <commandsAndEvents.KernelCommandEnvelope>clearTokenAndId(clone.command);
         }
         return clone;
     } else if (connection.isKernelCommandEnvelope(envelope)) {

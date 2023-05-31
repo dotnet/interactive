@@ -5,7 +5,7 @@ import * as fetchMock from "fetch-mock";
 import * as rxjs from "rxjs";
 import { DotnetInteractiveClient, KernelClientContainer } from "../src/polyglot-notebooks-interfaces";
 import * as connection from "../src/polyglot-notebooks/connection";
-import * as contracts from "../src/polyglot-notebooks/contracts";
+import * as commandsAndEvents from "../src/polyglot-notebooks/commandsAndEvents";
 import { TokenGenerator } from "../src/polyglot-notebooks/tokenGenerator";
 
 
@@ -19,11 +19,11 @@ export function configureFetchForKernelDiscovery(rootUrl: string) {
 
 export class MockKernelCommandAndEventChannel {
 
-    public commandsSent: Array<contracts.KernelCommandEnvelope>;
-    public eventsPublished: Array<contracts.KernelEventEnvelope>;
+    public commandsSent: Array<commandsAndEvents.KernelCommandEnvelope>;
+    public eventsPublished: Array<commandsAndEvents.KernelEventEnvelope>;
     private tokenGenerator = new TokenGenerator();
-    private eventObservers: { [key: string]: contracts.KernelEventEnvelopeObserver } = {};
-    private commandHandlers: { [key: string]: contracts.KernelCommandEnvelopeHandler } = {};
+    private eventObservers: { [key: string]: commandsAndEvents.KernelEventEnvelopeObserver } = {};
+    private commandHandlers: { [key: string]: commandsAndEvents.KernelCommandEnvelopeHandler } = {};
 
     public sender: connection.IKernelCommandAndEventSender;
     public receiver: connection.IKernelCommandAndEventReceiver;
@@ -32,8 +32,8 @@ export class MockKernelCommandAndEventChannel {
 
     constructor() {
 
-        this.commandsSent = new Array<contracts.KernelCommandEnvelope>();
-        this.eventsPublished = new Array<contracts.KernelEventEnvelope>();
+        this.commandsSent = new Array<commandsAndEvents.KernelCommandEnvelope>();
+        this.eventsPublished = new Array<commandsAndEvents.KernelEventEnvelope>();
 
         this._senderSubject = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
         this._receiverSubject = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
@@ -52,7 +52,7 @@ export class MockKernelCommandAndEventChannel {
         this.receiver = connection.KernelCommandAndEventReceiver.FromObservable(this._receiverSubject);
     }
 
-    public subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver) {
+    public subscribeToKernelEvents(observer: commandsAndEvents.KernelEventEnvelopeObserver) {
         let key = this.tokenGenerator.createToken();
         this.eventObservers[key] = observer;
 
@@ -63,21 +63,21 @@ export class MockKernelCommandAndEventChannel {
         };
     }
 
-    public setCommandHandler(handler: contracts.KernelCommandEnvelopeHandler) {
+    public setCommandHandler(handler: commandsAndEvents.KernelCommandEnvelopeHandler) {
         let key = this.tokenGenerator.createToken();
         this.commandHandlers[key] = handler;
     }
 
-    public fakeIncomingSubmitCommand(envelope: contracts.KernelCommandEnvelope) {
+    public fakeIncomingSubmitCommand(envelope: commandsAndEvents.KernelCommandEnvelope) {
         this._receiverSubject.next(envelope);
     }
 
-    publishKernelEvent(eventEnvelope: contracts.KernelEventEnvelope): Promise<void> {
+    publishKernelEvent(eventEnvelope: commandsAndEvents.KernelEventEnvelope): Promise<void> {
         this.eventsPublished.push(eventEnvelope);
         return Promise.resolve();
     }
 
-    public submitCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
+    public submitCommand(commandEnvelope: commandsAndEvents.KernelCommandEnvelope): Promise<void> {
 
         this.commandsSent.push(commandEnvelope);
         return Promise.resolve();
@@ -98,19 +98,19 @@ export function createMockChannel(rootUrl: string): Promise<{
     return Promise.resolve(new MockKernelCommandAndEventChannel());
 }
 
-export function findEvent<T>(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType): T | undefined {
+export function findEvent<T>(kernelEventEnvelopes: commandsAndEvents.KernelEventEnvelope[], eventType: commandsAndEvents.KernelEventType): T | undefined {
     return findEventEnvelope(kernelEventEnvelopes, eventType)?.event as T;
 }
 
-export function findEventFromKernel<T>(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType, kernelName: string): T | undefined {
+export function findEventFromKernel<T>(kernelEventEnvelopes: commandsAndEvents.KernelEventEnvelope[], eventType: commandsAndEvents.KernelEventType, kernelName: string): T | undefined {
     return findEventEnvelopeFromKernel(kernelEventEnvelopes, eventType, kernelName)?.event as T;
 }
 
-export function findEventEnvelope(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType): contracts.KernelEventEnvelope | undefined {
+export function findEventEnvelope(kernelEventEnvelopes: commandsAndEvents.KernelEventEnvelope[], eventType: commandsAndEvents.KernelEventType): commandsAndEvents.KernelEventEnvelope | undefined {
     return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType);
 }
 
-export function findEventEnvelopeFromKernel(kernelEventEnvelopes: contracts.KernelEventEnvelope[], eventType: contracts.KernelEventType, kernelName: string): contracts.KernelEventEnvelope | undefined {
+export function findEventEnvelopeFromKernel(kernelEventEnvelopes: commandsAndEvents.KernelEventEnvelope[], eventType: commandsAndEvents.KernelEventType, kernelName: string): commandsAndEvents.KernelEventEnvelope | undefined {
     return kernelEventEnvelopes.find(eventEnvelope => eventEnvelope.eventType === eventType && eventEnvelope.command!.command.targetKernelName === kernelName);
 }
 

@@ -9,7 +9,7 @@ import {
     KernelReadyType,
     SubmitCodeType,
     KernelReady
-} from './polyglot-notebooks/contracts';
+} from './polyglot-notebooks/commandsAndEvents';
 import { ProcessStart } from './interfaces';
 import { ReportChannel } from './interfaces/vscode-like';
 import { LineReader } from './lineReader';

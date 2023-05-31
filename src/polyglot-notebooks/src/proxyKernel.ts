@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from "./contracts";
+import * as contracts from "./commandsAndEvents";
 import { Logger } from "./logger";
 import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri } from "./kernel";
 import * as connection from "./connection";

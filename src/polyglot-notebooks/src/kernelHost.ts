@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CompositeKernel } from './compositeKernel';
-import * as contracts from './contracts';
+import * as commandsAndEvents from './commandsAndEvents';
 import * as connection from './connection';
 import * as routingSlip from './routingslip';
 import { Kernel } from './kernel';
@@ -13,9 +13,9 @@ import { KernelScheduler } from './kernelScheduler';
 export class KernelHost {
     private readonly _remoteUriToKernel = new Map<string, Kernel>();
     private readonly _uriToKernel = new Map<string, Kernel>();
-    private readonly _kernelToKernelInfo = new Map<Kernel, contracts.KernelInfo>();
+    private readonly _kernelToKernelInfo = new Map<Kernel, commandsAndEvents.KernelInfo>();
     private readonly _uri: string;
-    private readonly _scheduler: KernelScheduler<contracts.KernelCommandEnvelope>;
+    private readonly _scheduler: KernelScheduler<commandsAndEvents.KernelCommandEnvelope>;
     private _kernel: CompositeKernel;
     private _defaultConnector: connection.Connector;
     private readonly _connectors: connection.Connector[] = [];
@@ -25,10 +25,10 @@ export class KernelHost {
         this._uri = routingSlip.createKernelUri(hostUri || "kernel://vscode");
 
         this._kernel.host = this;
-        this._scheduler = new KernelScheduler<contracts.KernelCommandEnvelope>();
+        this._scheduler = new KernelScheduler<commandsAndEvents.KernelCommandEnvelope>();
 
         this._scheduler.setMustTrampoline((c => {
-            return (c.commandType === contracts.RequestInputType) || (c.commandType === contracts.SendEditableCodeType);
+            return (c.commandType === commandsAndEvents.RequestInputType) || (c.commandType === commandsAndEvents.SendEditableCodeType);
         }));
 
         this._defaultConnector = new connection.Connector({ sender, receiver });
@@ -55,17 +55,17 @@ export class KernelHost {
         return this._uriToKernel.get(originUri);
     }
 
-    public tryGetKernelInfo(kernel: Kernel): contracts.KernelInfo | undefined {
+    public tryGetKernelInfo(kernel: Kernel): commandsAndEvents.KernelInfo | undefined {
         return this._kernelToKernelInfo.get(kernel);
     }
 
-    public addKernelInfo(kernel: Kernel, kernelInfo: contracts.KernelInfo) {
+    public addKernelInfo(kernel: Kernel, kernelInfo: commandsAndEvents.KernelInfo) {
         kernelInfo.uri = routingSlip.createKernelUri(`${this._uri}${kernel.name}`);
         this._kernelToKernelInfo.set(kernel, kernelInfo);
         this._uriToKernel.set(kernelInfo.uri, kernel);
     }
 
-    public getKernel(kernelCommandEnvelope: contracts.KernelCommandEnvelope): Kernel {
+    public getKernel(kernelCommandEnvelope: commandsAndEvents.KernelCommandEnvelope): Kernel {
 
         const uriToLookup = kernelCommandEnvelope.command.destinationUri ?? kernelCommandEnvelope.command.originUri;
         let kernel: Kernel | undefined = undefined;
@@ -140,7 +140,7 @@ export class KernelHost {
         return this._connectors.find(c => c.canReach(remoteUri));
     }
 
-    public async connect(): Promise<contracts.KernelReady> {
+    public async connect(): Promise<commandsAndEvents.KernelReady> {
         this._kernel.subscribeToKernelEvents(e => {
             Logger.default.info(`KernelHost forwarding event: ${JSON.stringify(e)}`);
             this._defaultConnector.sender.send(e);
@@ -161,16 +161,16 @@ export class KernelHost {
 
         const kernelInfos = [this._kernel.kernelInfo, ...Array.from(this._kernel.childKernels.map(k => k.kernelInfo).filter(ki => ki.isProxy === false))];
 
-        const kernekReady: contracts.KernelReady = {
+        const kernekReady: commandsAndEvents.KernelReady = {
             kernelInfos: kernelInfos
         };
 
-        await this._defaultConnector.sender.send({ eventType: contracts.KernelReadyType, event: kernekReady, routingSlip: [this._kernel.kernelInfo.uri!] });
+        await this._defaultConnector.sender.send({ eventType: commandsAndEvents.KernelReadyType, event: kernekReady, routingSlip: [this._kernel.kernelInfo.uri!] });
 
         return kernekReady;
     }
 
-    public getKernelInfos(): contracts.KernelInfo[] {
+    public getKernelInfos(): commandsAndEvents.KernelInfo[] {
         let kernelInfos = [this._kernel.kernelInfo];
         for (let kernel of this._kernel.childKernels) {
             kernelInfos.push(kernel.kernelInfo);
@@ -178,8 +178,8 @@ export class KernelHost {
         return kernelInfos;
     }
 
-    public getKernelInfoProduced(): contracts.KernelEventEnvelope[] {
-        let events: contracts.KernelEventEnvelope[] = Array.from(this.getKernelInfos().map(kernelInfo => ({ eventType: contracts.KernelInfoProducedType, event: <contracts.KernelInfoProduced>{ kernelInfo: kernelInfo }, routingSlip: [kernelInfo.uri!] })));
+    public getKernelInfoProduced(): commandsAndEvents.KernelEventEnvelope[] {
+        let events: commandsAndEvents.KernelEventEnvelope[] = Array.from(this.getKernelInfos().map(kernelInfo => ({ eventType: commandsAndEvents.KernelInfoProducedType, event: <commandsAndEvents.KernelInfoProduced>{ kernelInfo: kernelInfo }, routingSlip: [kernelInfo.uri!] })));
 
         return events;
     }

@@ -54,7 +54,7 @@ import {
     ErrorProducedType,
     ErrorProduced,
     KernelInfo
-} from './polyglot-notebooks/contracts';
+} from './polyglot-notebooks/commandsAndEvents';
 import { clearDebounce, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';

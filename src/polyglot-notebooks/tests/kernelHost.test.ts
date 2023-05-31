@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from "chai";
-import * as contracts from "../src/contracts";
+import * as commandsAndEvents from "../src/commandsAndEvents";
 import { CompositeKernel } from "../src/compositeKernel";
 import { Kernel } from "../src/kernel";
 import { createInMemoryChannels } from "./testSupport";
@@ -110,7 +110,7 @@ describe("kernelHost",
         });
 
         it("routes commands to the appropriate kernels", async () => {
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             const vscodeKernel = new CompositeKernel("composite-kernel");
 
             const inMemory = createInMemoryChannels();
@@ -131,9 +131,9 @@ describe("kernelHost",
             remote.add(go);
 
             python.registerCommandHandler({
-                commandType: contracts.SubmitCodeType, handle: (invocation) => {
+                commandType: commandsAndEvents.SubmitCodeType, handle: (invocation) => {
                     invocation.context.publish({
-                        eventType: contracts.ReturnValueProducedType,
+                        eventType: commandsAndEvents.ReturnValueProducedType,
                         event: {
                             formattedValues: [
                                 {
@@ -149,9 +149,9 @@ describe("kernelHost",
             });
 
             go.registerCommandHandler({
-                commandType: contracts.SubmitCodeType, handle: (invocation) => {
+                commandType: commandsAndEvents.SubmitCodeType, handle: (invocation) => {
                     invocation.context.publish({
-                        eventType: contracts.ReturnValueProducedType,
+                        eventType: commandsAndEvents.ReturnValueProducedType,
                         event: {
                             formattedValues: [
                                 {
@@ -171,8 +171,8 @@ describe("kernelHost",
             vscodeHost.connect();
             remoteHost.connect();
 
-            await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "pytonCode", targetKernelName: "python" } });
-            await vscodeKernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
+            await vscodeKernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "pytonCode", targetKernelName: "python" } });
+            await vscodeKernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
 
 
             expect(events.find(e => e.command!.command.targetKernelName === "python")).not.to.be.undefined;

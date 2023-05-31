@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { describe } from "mocha";
 import { JavascriptKernel } from "../src/javascriptKernel";
-import * as contracts from "../src/contracts";
+import * as commandsAndEvents from "../src/commandsAndEvents";
 import { CompositeKernel } from "../src/compositeKernel";
 import { KernelHost } from "../src/kernelHost";
 import { clearTokenAndId, createInMemoryChannels } from "./testSupport";
@@ -16,13 +16,13 @@ describe("kernelInfo", () => {
             const compositeKernel = new CompositeKernel("root");
             compositeKernel.add(new JavascriptKernel("child1"), ["child1Js"]);
             compositeKernel.add(new JavascriptKernel("child2"), ["child2Js"]);
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             const sub = compositeKernel.subscribeToKernelEvents((event) => events.push(event));
 
-            await compositeKernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
+            await compositeKernel.send({ commandType: commandsAndEvents.RequestKernelInfoType, command: {} });
 
             sub.dispose();
-            const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo);
+            const kernelInfos = events.filter(e => e.eventType === commandsAndEvents.KernelInfoProducedType).map(e => (<commandsAndEvents.KernelInfoProduced>(e.event)).kernelInfo);
 
             expect(kernelInfos.length).to.equal(3);
             expect(kernelInfos).to.deep.equal([{
@@ -79,13 +79,13 @@ describe("kernelInfo", () => {
             const host = new KernelHost(kernel, inMemory.local.sender, inMemory.local.receiver, "kernel://local");
             kernel.add(new JavascriptKernel("child1"), ["child1Js"]);
             kernel.add(new JavascriptKernel("child2"), ["child2Js"]);
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             const sub = kernel.subscribeToKernelEvents((event) => events.push(event));
 
-            await kernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
+            await kernel.send({ commandType: commandsAndEvents.RequestKernelInfoType, command: {} });
 
             sub.dispose();
-            const kernelInfos = events.filter(e => e.eventType === contracts.KernelInfoProducedType).map(e => (<contracts.KernelInfoProduced>(e.event)).kernelInfo.uri);
+            const kernelInfos = events.filter(e => e.eventType === commandsAndEvents.KernelInfoProducedType).map(e => (<commandsAndEvents.KernelInfoProduced>(e.event)).kernelInfo.uri);
 
             expect(kernelInfos.length).to.equal(3);
             expect(kernelInfos).to.deep.equal([
@@ -95,7 +95,7 @@ describe("kernelInfo", () => {
         });
 
         it("when kernels are added it produces KernelInfoProduced events", () => {
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             const kernel = new CompositeKernel("root");
             kernel.kernelEvents.subscribe({
                 next: (event) => {
@@ -132,11 +132,11 @@ describe("kernelInfo", () => {
         });
 
         it("when a custom command is added during command execution it produces and updatedKernelInfoProduced event", async () => {
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             const kernel = new CompositeKernel("root");
             const childKernel = new Kernel("child1", "customLanguage");
             childKernel.registerCommandHandler({
-                commandType: contracts.SubmitCodeType,
+                commandType: commandsAndEvents.SubmitCodeType,
                 handle: (commandInvocation) => {
                     childKernel.registerCommandHandler({
                         commandType: "customCommand",
@@ -152,12 +152,12 @@ describe("kernelInfo", () => {
 
             kernel.kernelEvents.subscribe({
                 next: (event) => {
-                    events.push(<contracts.KernelEventEnvelope>clearTokenAndId(event));
+                    events.push(<commandsAndEvents.KernelEventEnvelope>clearTokenAndId(event));
                 }
             });
 
-            await kernel.send({ commandType: contracts.SubmitCodeType, command: { targetKernelName: "child1" }, });
-            expect(events.filter(e => e.eventType === contracts.KernelInfoProducedType))
+            await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: { targetKernelName: "child1" }, });
+            expect(events.filter(e => e.eventType === commandsAndEvents.KernelInfoProducedType))
                 .to
                 .deep
                 .equal([{
@@ -199,7 +199,7 @@ describe("kernelInfo", () => {
         });
 
         it("when a custom command is added it produces and updatedKernelInfoProduced event", async () => {
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             const kernel = new CompositeKernel("root");
             const childKernel = new Kernel("child1", "customLanguage");
 
@@ -207,18 +207,18 @@ describe("kernelInfo", () => {
 
             kernel.kernelEvents.subscribe({
                 next: (event) => {
-                    events.push(<contracts.KernelEventEnvelope>clearTokenAndId(event));
+                    events.push(<commandsAndEvents.KernelEventEnvelope>clearTokenAndId(event));
                 }
             });
 
             childKernel.registerCommandHandler({
-                commandType: contracts.SubmitCodeType,
+                commandType: commandsAndEvents.SubmitCodeType,
                 handle: (commandInvocation) => {
                     return Promise.resolve();
                 }
             });
 
-            expect(events.filter(e => e.eventType === contracts.KernelInfoProducedType))
+            expect(events.filter(e => e.eventType === commandsAndEvents.KernelInfoProducedType))
                 .to
                 .deep
                 .equal([{
@@ -244,12 +244,12 @@ describe("kernelInfo", () => {
         });
 
         it("when commands adde a kernel it produces KernelInfoProduced events", async () => {
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             const kernel = new CompositeKernel("root");
             const childKernel = new Kernel("child1", "customLanguage");
 
             childKernel.registerCommandHandler({
-                commandType: contracts.SubmitCodeType,
+                commandType: commandsAndEvents.SubmitCodeType,
                 handle: (commandInvocation) => {
                     commandInvocation.commandEnvelope;//?
                     commandInvocation.context.commandEnvelope;//?
@@ -272,14 +272,14 @@ describe("kernelInfo", () => {
 
             kernel.kernelEvents.subscribe({
                 next: (event) => {
-                    events.push(<contracts.KernelEventEnvelope>clearTokenAndId(event));
+                    events.push(<commandsAndEvents.KernelEventEnvelope>clearTokenAndId(event));
                 }
             });
 
             const code = `kernel.root.add(new Kernel("child2", "customLanguage"), ["child2Js"]);`;
-            await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: code, targetKernelName: "child1" } });
+            await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: code, targetKernelName: "child1" } });
 
-            expect(events.filter(e => e.eventType === contracts.KernelInfoProducedType))
+            expect(events.filter(e => e.eventType === commandsAndEvents.KernelInfoProducedType))
                 .to
                 .deep
                 .equal([{
@@ -325,13 +325,13 @@ describe("kernelInfo", () => {
     describe("for unparented kernel", () => {
         it("returns the list of instrinsict kernel commands", async () => {
             const kernel = new JavascriptKernel();
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             const sub = kernel.subscribeToKernelEvents((event) => events.push(event));
 
-            await kernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
+            await kernel.send({ commandType: commandsAndEvents.RequestKernelInfoType, command: {} });
 
             sub.dispose();
-            const kernelInfoProduced = <contracts.KernelInfoProduced>events.find(e => e.eventType === contracts.KernelInfoProducedType)?.event;
+            const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>events.find(e => e.eventType === commandsAndEvents.KernelInfoProducedType)?.event;
             expect(kernelInfoProduced?.kernelInfo.supportedKernelCommands).to.deep.equal(
                 [
                     { name: 'RequestKernelInfo' },
@@ -344,19 +344,19 @@ describe("kernelInfo", () => {
 
         it("returns the language info for javascript", async () => {
             const kernel = new JavascriptKernel();
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             const sub = kernel.subscribeToKernelEvents((event) => events.push(event));
 
-            await kernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
+            await kernel.send({ commandType: commandsAndEvents.RequestKernelInfoType, command: {} });
             sub.dispose();
-            const kernelInfoProduced = <contracts.KernelInfoProduced>events.find(e => e.eventType === contracts.KernelInfoProducedType)?.event;
+            const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>events.find(e => e.eventType === commandsAndEvents.KernelInfoProducedType)?.event;
             expect(kernelInfoProduced?.kernelInfo.languageName).to.equal("JavaScript");
 
         });
 
         it("returns the list of dynamic kernel commands", async () => {
             const kernel = new JavascriptKernel();
-            const events: contracts.KernelEventEnvelope[] = [];
+            const events: commandsAndEvents.KernelEventEnvelope[] = [];
             kernel.registerCommandHandler({
                 commandType: "TestCommand1",
                 handle: (_invocation) => Promise.resolve()
@@ -373,9 +373,9 @@ describe("kernelInfo", () => {
             });
             const sub = kernel.subscribeToKernelEvents((event) => events.push(event));
 
-            await kernel.send({ commandType: contracts.RequestKernelInfoType, command: {} });
+            await kernel.send({ commandType: commandsAndEvents.RequestKernelInfoType, command: {} });
             sub.dispose();
-            const kernelInfoProduced = <contracts.KernelInfoProduced>events.find(e => e.eventType === contracts.KernelInfoProducedType)?.event;
+            const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>events.find(e => e.eventType === commandsAndEvents.KernelInfoProducedType)?.event;
             expect(kernelInfoProduced?.kernelInfo.supportedKernelCommands).to.deep.equal(
                 [{ name: 'RequestKernelInfo' },
                 { name: 'SubmitCode' },

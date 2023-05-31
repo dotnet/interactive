@@ -5,7 +5,7 @@ import * as dotnetInteractiveInterfaces from "./polyglot-notebooks-interfaces";
 import { Kernel, IKernelCommandHandler } from "./polyglot-notebooks/kernel";
 import { TokenGenerator } from "./polyglot-notebooks/tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
-import * as contracts from "./polyglot-notebooks/contracts";
+import * as commandsAndEvents from "./polyglot-notebooks/commandsAndEvents";
 import { createDefaultClientFetch } from "./clientFetch";
 import { clientSideKernelFactory } from "./kernel-factory";
 import { DisposableSubscription, IKernelCommandAndEventReceiver, IKernelCommandAndEventSender, isKernelEventEnvelope } from "./polyglot-notebooks";
@@ -24,7 +24,7 @@ export interface KernelClientImplParameteres {
 class ClientEventQueueManager {
     private static eventPromiseQueues: Map<string, Array<Promise<void>>> = new Map();
 
-    static addEventToClientQueue(clientFetch: dotnetInteractiveInterfaces.ClientFetch, commandToken: string, eventEnvelope: contracts.KernelEventEnvelope) {
+    static addEventToClientQueue(clientFetch: dotnetInteractiveInterfaces.ClientFetch, commandToken: string, eventEnvelope: commandsAndEvents.KernelEventEnvelope) {
         let promiseQueue = this.eventPromiseQueues.get(commandToken);
         if (!promiseQueue) {
             promiseQueue = [];
@@ -89,7 +89,7 @@ class InteractiveConsoleWrapper {
                 value = JSON.stringify(arg);
             }
 
-            const displayedValue: contracts.DisplayedValueProduced = {
+            const displayedValue: commandsAndEvents.DisplayedValueProduced = {
                 formattedValues: [
                     {
                         mimeType,
@@ -97,8 +97,8 @@ class InteractiveConsoleWrapper {
                     }
                 ]
             };
-            const eventEnvelope: contracts.KernelEventEnvelope = {
-                eventType: contracts.DisplayedValueProducedType,
+            const eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
+                eventType: commandsAndEvents.DisplayedValueProducedType,
                 event: displayedValue,
             };
 
@@ -132,7 +132,7 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
         return this._configureRequire(config);
     }
 
-    public subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): DisposableSubscription {
+    public subscribeToKernelEvents(observer: commandsAndEvents.KernelEventEnvelopeObserver): DisposableSubscription {
         let subscription = this._kernelChannel.receiver.subscribe({
             next: (envelope) => {
                 if (isKernelEventEnvelope(envelope)) {
@@ -223,12 +223,12 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
 
     public async submitCode(code: string, targetKernelName?: string): Promise<string> {
         let token: string = this._tokenGenerator.createToken();
-        let command: contracts.SubmitCode = {
+        let command: commandsAndEvents.SubmitCode = {
             code: code,
             targetKernelName: targetKernelName
         }
 
-        await this._kernelChannel.sender.send({ command, commandType: contracts.SubmitCodeType, token });
+        await this._kernelChannel.sender.send({ command, commandType: commandsAndEvents.SubmitCodeType, token });
         return token;
     }
 
@@ -265,11 +265,11 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
     }
 
     public failCommand(err: any, commandToken: string) {
-        const failedEvent: contracts.CommandFailed = {
+        const failedEvent: commandsAndEvents.CommandFailed = {
             message: `${err}`
         };
-        const eventEnvelope: contracts.KernelEventEnvelope = {
-            eventType: contracts.CommandFailedType,
+        const eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
+            eventType: commandsAndEvents.CommandFailedType,
             event: failedEvent,
         };
         ClientEventQueueManager.addEventToClientQueue(this._clientFetch, commandToken, eventEnvelope);

@@ -4,7 +4,7 @@
 import * as signalR from "@microsoft/signalr";
 import { Subject } from "rxjs";
 import { IKernelCommandAndEventReceiver, IKernelCommandAndEventSender, isKernelCommandEnvelope, isKernelEventEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope } from "./polyglot-notebooks";
-import { KernelEventEnvelope, KernelCommandEnvelope } from "./polyglot-notebooks/contracts";
+import { KernelEventEnvelope, KernelCommandEnvelope } from "./polyglot-notebooks/commandsAndEvents";
 
 
 

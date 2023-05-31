@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from './contracts';
+import * as commandsAndEvents from './commandsAndEvents';
 import { URI } from 'vscode-uri';
 import { KernelCommandOrEventEnvelope, isKernelCommandEnvelope } from './connection';
 
@@ -38,11 +38,11 @@ export function getTag(kernelUri: string): string | undefined {
     return undefined;
 }
 
-export function stampCommandRoutingSlipAsArrived(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
+export function stampCommandRoutingSlipAsArrived(kernelCommandEnvelope: commandsAndEvents.KernelCommandEnvelope, kernelUri: string) {
     stampCommandRoutingSlipAs(kernelCommandEnvelope, kernelUri, "arrived");
 }
 
-export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUri: string) {
+export function stampCommandRoutingSlip(kernelCommandEnvelope: commandsAndEvents.KernelCommandEnvelope, kernelUri: string) {
     if (kernelCommandEnvelope.routingSlip === undefined || kernelCommandEnvelope.routingSlip === null) {
         throw new Error("The command does not have a routing slip");
     }
@@ -67,7 +67,7 @@ export function stampCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelC
     }
 }
 
-export function stampEventRoutingSlip(kernelEventEnvelope: contracts.KernelEventEnvelope, kernelUri: string) {
+export function stampEventRoutingSlip(kernelEventEnvelope: commandsAndEvents.KernelEventEnvelope, kernelUri: string) {
     stampRoutingSlip(kernelEventEnvelope, kernelUri);
 }
 
@@ -118,11 +118,11 @@ function continueRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventE
     }
 }
 
-export function continueCommandRoutingSlip(kernelCommandEnvelope: contracts.KernelCommandEnvelope, kernelUris: string[]): void {
+export function continueCommandRoutingSlip(kernelCommandEnvelope: commandsAndEvents.KernelCommandEnvelope, kernelUris: string[]): void {
     continueRoutingSlip(kernelCommandEnvelope, kernelUris);
 }
 
-export function continueEventRoutingSlip(kernelEventEnvelope: contracts.KernelEventEnvelope, kernelUris: string[]): void {
+export function continueEventRoutingSlip(kernelEventEnvelope: commandsAndEvents.KernelEventEnvelope, kernelUris: string[]): void {
     continueRoutingSlip(kernelEventEnvelope, kernelUris);
 }
 
@@ -130,14 +130,14 @@ export function createRoutingSlip(kernelUris: string[]): string[] {
     return Array.from(new Set(kernelUris.map(e => createKernelUriWithQuery(e))));
 }
 
-export function eventRoutingSlipStartsWith(thisEvent: contracts.KernelEventEnvelope, other: string[] | contracts.KernelEventEnvelope): boolean {
+export function eventRoutingSlipStartsWith(thisEvent: commandsAndEvents.KernelEventEnvelope, other: string[] | commandsAndEvents.KernelEventEnvelope): boolean {
     const thisKernelUris = thisEvent.routingSlip ?? [];
     const otherKernelUris = (other instanceof Array ? other : other?.routingSlip) ?? [];
 
     return routingSlipStartsWith(thisKernelUris, otherKernelUris);
 }
 
-export function commandRoutingSlipStartsWith(thisCommand: contracts.KernelCommandEnvelope, other: string[] | contracts.KernelCommandEnvelope): boolean {
+export function commandRoutingSlipStartsWith(thisCommand: commandsAndEvents.KernelCommandEnvelope, other: string[] | commandsAndEvents.KernelCommandEnvelope): boolean {
     const thisKernelUris = thisCommand.routingSlip ?? [];
     const otherKernelUris = (other instanceof Array ? other : other?.routingSlip) ?? [];
 
@@ -162,11 +162,11 @@ function routingSlipStartsWith(thisKernelUris: string[], otherKernelUris: string
     return startsWith;
 }
 
-export function eventRoutingSlipContains(kernlEvent: contracts.KernelEventEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
+export function eventRoutingSlipContains(kernlEvent: commandsAndEvents.KernelEventEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
     return routingSlipContains(kernlEvent, kernelUri, ignoreQuery);
 }
 
-export function commandRoutingSlipContains(kernlEvent: contracts.KernelCommandEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
+export function commandRoutingSlipContains(kernlEvent: commandsAndEvents.KernelCommandEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
     return routingSlipContains(kernlEvent, kernelUri, ignoreQuery);
 }
 
