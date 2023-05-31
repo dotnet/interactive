@@ -1,17 +1,17 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from "./contracts";
+import * as commandsAndEvents from "./commandsAndEvents";
 export * from "./contracts";
 
 export interface DocumentKernelInfoCollection {
     defaultKernelName: string;
-    items: contracts.DocumentKernelInfo[];
+    items: commandsAndEvents.DocumentKernelInfo[];
 }
 
 export interface KernelEventEnvelope {
-    eventType: contracts.KernelEventType;
-    event: contracts.KernelEvent;
+    eventType: commandsAndEvents.KernelEventType;
+    event: commandsAndEvents.KernelEvent;
     command?: KernelCommandEnvelope;
     routingSlip?: string[];
 }
@@ -19,8 +19,8 @@ export interface KernelEventEnvelope {
 export interface KernelCommandEnvelope {
     token?: string;
     id?: string;
-    commandType: contracts.KernelCommandType;
-    command: contracts.KernelCommand;
+    commandType: commandsAndEvents.KernelCommandType;
+    command: commandsAndEvents.KernelCommand;
     routingSlip?: string[];
 }
 

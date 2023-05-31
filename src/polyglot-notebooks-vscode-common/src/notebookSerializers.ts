@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import * as utilities from './interfaces/utilities';
 import * as vscodeLike from './interfaces/vscode-like';
 import { languageToCellKind } from './interactiveNotebook';
@@ -12,7 +12,7 @@ import { Eol } from './interfaces';
 import * as metadataUtilities from './metadataUtilities';
 import * as constants from './constants';
 
-function toInteractiveDocumentElement(cell: vscode.NotebookCellData): contracts.InteractiveDocumentElement {
+function toInteractiveDocumentElement(cell: vscode.NotebookCellData): commandsAndEvents.InteractiveDocumentElement {
     // just need to match the shape
     const fakeCell: vscodeLike.NotebookCell = {
         kind: vscodeLike.NotebookCellKind.Code,
@@ -28,10 +28,10 @@ function toInteractiveDocumentElement(cell: vscode.NotebookCellData): contracts.
     };
 }
 
-async function deserializeNotebookByType(parserServer: NotebookParserServer, serializationType: contracts.DocumentSerializationType, rawData: Uint8Array): Promise<vscode.NotebookData> {
+async function deserializeNotebookByType(parserServer: NotebookParserServer, serializationType: commandsAndEvents.DocumentSerializationType, rawData: Uint8Array): Promise<vscode.NotebookData> {
     const interactiveDocument = await parserServer.parseInteractiveDocument(serializationType, rawData);
     const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromInteractiveDocument(interactiveDocument);
-    const createForIpynb = serializationType === contracts.DocumentSerializationType.Ipynb;
+    const createForIpynb = serializationType === commandsAndEvents.DocumentSerializationType.Ipynb;
     const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, {}, createForIpynb);
     const notebookData: vscode.NotebookData = {
         cells: interactiveDocument.elements.map(element => toVsCodeNotebookCellData(element)),
@@ -40,7 +40,7 @@ async function deserializeNotebookByType(parserServer: NotebookParserServer, ser
     return notebookData;
 }
 
-async function serializeNotebookByType(parserServer: NotebookParserServer, serializationType: contracts.DocumentSerializationType, eol: Eol, data: vscode.NotebookData): Promise<Uint8Array> {
+async function serializeNotebookByType(parserServer: NotebookParserServer, serializationType: commandsAndEvents.DocumentSerializationType, eol: Eol, data: vscode.NotebookData): Promise<Uint8Array> {
     // just need to match the shape
     const fakeNotebookDocument: vscodeLike.NotebookDocument = {
         uri: {
@@ -51,7 +51,7 @@ async function serializeNotebookByType(parserServer: NotebookParserServer, seria
     };
     const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(fakeNotebookDocument);
     const rawInteractiveDocumentNotebookMetadata = metadataUtilities.getRawInteractiveDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata);
-    const interactiveDocument: contracts.InteractiveDocument = {
+    const interactiveDocument: commandsAndEvents.InteractiveDocument = {
         elements: data.cells.map(toInteractiveDocumentElement),
         metadata: rawInteractiveDocumentNotebookMetadata
     };
@@ -61,7 +61,7 @@ async function serializeNotebookByType(parserServer: NotebookParserServer, seria
 
 export function createAndRegisterNotebookSerializers(context: vscode.ExtensionContext, parserServer: NotebookParserServer): Map<string, vscode.NotebookSerializer> {
     const eol = vscodeUtilities.getEol();
-    const createAndRegisterSerializer = (serializationType: contracts.DocumentSerializationType, notebookType: string): vscode.NotebookSerializer => {
+    const createAndRegisterSerializer = (serializationType: commandsAndEvents.DocumentSerializationType, notebookType: string): vscode.NotebookSerializer => {
         const serializer: vscode.NotebookSerializer = {
             deserializeNotebook(content: Uint8Array, _token: vscode.CancellationToken): Promise<vscode.NotebookData> {
                 return deserializeNotebookByType(parserServer, serializationType, content);
@@ -71,7 +71,7 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
             },
         };
 
-        const notebookoptions: vscode.NotebookDocumentContentOptions = notebookType === contracts.DocumentSerializationType.Dib
+        const notebookoptions: vscode.NotebookDocumentContentOptions = notebookType === commandsAndEvents.DocumentSerializationType.Dib
             ? { transientOutputs: true, transientDocumentMetadata: { custom: true }, transientCellMetadata: { custom: true } }
             : {};
 
@@ -81,12 +81,12 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
     };
 
     const serializers = new Map<string, vscode.NotebookSerializer>();
-    serializers.set(constants.NotebookViewType, createAndRegisterSerializer(contracts.DocumentSerializationType.Dib, constants.NotebookViewType));
-    serializers.set(constants.JupyterViewType, createAndRegisterSerializer(contracts.DocumentSerializationType.Ipynb, constants.JupyterNotebookViewType));
+    serializers.set(constants.NotebookViewType, createAndRegisterSerializer(commandsAndEvents.DocumentSerializationType.Dib, constants.NotebookViewType));
+    serializers.set(constants.JupyterViewType, createAndRegisterSerializer(commandsAndEvents.DocumentSerializationType.Ipynb, constants.JupyterNotebookViewType));
     return serializers;
 }
 
-function toVsCodeNotebookCellData(cell: contracts.InteractiveDocumentElement): vscode.NotebookCellData {
+function toVsCodeNotebookCellData(cell: commandsAndEvents.InteractiveDocumentElement): vscode.NotebookCellData {
     const cellData = new vscode.NotebookCellData(
         <number>languageToCellKind(cell.kernelName),
         cell.contents,
@@ -100,7 +100,7 @@ function toVsCodeNotebookCellData(cell: contracts.InteractiveDocumentElement): v
     return cellData;
 }
 
-function outputElementToVsCodeCellOutput(output: contracts.InteractiveDocumentOutputElement): vscode.NotebookCellOutput {
+function outputElementToVsCodeCellOutput(output: commandsAndEvents.InteractiveDocumentOutputElement): vscode.NotebookCellOutput {
     const outputItems: Array<vscode.NotebookCellOutputItem> = [];
     if (utilities.isDisplayOutput(output)) {
         for (const mimeKey in output.data) {

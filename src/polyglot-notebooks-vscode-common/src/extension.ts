@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import * as helpService from './helpService';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -115,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
     await tokensProvider.init(context);
     context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider(semanticTokens.selector, tokensProvider, tokensProvider.semanticTokensLegend));
 
-    async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<{ channel: KernelCommandAndEventChannel, kernelReady: contracts.KernelReady }> {
+    async function kernelChannelCreator(notebookUri: vscodeLike.Uri): Promise<{ channel: KernelCommandAndEventChannel, kernelReady: commandsAndEvents.KernelReady }> {
         const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
         const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
         const launchOptions = await getInteractiveLaunchOptions();
@@ -156,12 +156,12 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {
-        compositeKernel.setDefaultTargetKernelNameForCommand(contracts.RequestInputType, compositeKernel.name);
-        compositeKernel.setDefaultTargetKernelNameForCommand(contracts.SendEditableCodeType, compositeKernel.name);
+        compositeKernel.setDefaultTargetKernelNameForCommand(commandsAndEvents.RequestInputType, compositeKernel.name);
+        compositeKernel.setDefaultTargetKernelNameForCommand(commandsAndEvents.SendEditableCodeType, compositeKernel.name);
 
         compositeKernel.registerCommandHandler({
-            commandType: contracts.RequestInputType, handle: async (commandInvocation) => {
-                const requestInput = <contracts.RequestInput>commandInvocation.commandEnvelope.command;
+            commandType: commandsAndEvents.RequestInputType, handle: async (commandInvocation) => {
+                const requestInput = <commandsAndEvents.RequestInput>commandInvocation.commandEnvelope.command;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
 
@@ -180,7 +180,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     commandInvocation.context.fail('Input request cancelled');
                 } else {
                     commandInvocation.context.publish({
-                        eventType: contracts.InputProducedType,
+                        eventType: commandsAndEvents.InputProducedType,
                         event: {
                             value
                         },
@@ -191,8 +191,8 @@ export async function activate(context: vscode.ExtensionContext) {
         });
 
         compositeKernel.registerCommandHandler({
-            commandType: contracts.SendEditableCodeType, handle: async commandInvocation => {
-                const addCell = <contracts.SendEditableCode>commandInvocation.commandEnvelope.command;
+            commandType: commandsAndEvents.SendEditableCodeType, handle: async commandInvocation => {
+                const addCell = <commandsAndEvents.SendEditableCode>commandInvocation.commandEnvelope.command;
                 const kernelName = addCell.kernelName;
                 const contents = addCell.code;
                 const notebookDocument = vscode.workspace.notebookDocuments.find(notebook => notebook.uri.toString() === notebookUri.toString());

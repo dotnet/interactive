@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from '../../src/vscode-common/polyglot-notebooks/contracts';
+import * as commandsAndEvents from '../../src/vscode-common/polyglot-notebooks/commandsAndEvents';
 import * as metadataUtilities from '../../src/vscode-common/metadataUtilities';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 import { expect } from 'chai';
@@ -74,7 +74,7 @@ describe('metadata utility tests', async () => {
     });
 
     it('cell metadata can be extracted from an interactive document element with old metadata', () => {
-        const interactiveDocumentElement: contracts.InteractiveDocumentElement = {
+        const interactiveDocumentElement: commandsAndEvents.InteractiveDocumentElement = {
             contents: '',
             outputs: [],
             executionOrder: 0,
@@ -91,7 +91,7 @@ describe('metadata utility tests', async () => {
     });
 
     it('cell metadata can be extracted from an interactive document element', () => {
-        const interactiveDocumentElement: contracts.InteractiveDocumentElement = {
+        const interactiveDocumentElement: commandsAndEvents.InteractiveDocumentElement = {
             contents: '',
             outputs: [],
             executionOrder: 0,
@@ -150,7 +150,7 @@ describe('metadata utility tests', async () => {
     });
 
     it('notebook metadata can be extracted from an interactive document', () => {
-        const interactiveDocument: contracts.InteractiveDocument = {
+        const interactiveDocument: commandsAndEvents.InteractiveDocument = {
             elements: [],
             metadata: {
                 custom: {
@@ -456,11 +456,11 @@ describe('metadata utility tests', async () => {
     it('notebook metadata can be extracted from a composite kernel', () => {
         const kernel = new CompositeKernel('composite');
         const cs = new Kernel('csharp', 'csharp');
-        cs.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: (_invocation) => Promise.resolve() });
+        cs.registerCommandHandler({ commandType: commandsAndEvents.SubmitCodeType, handle: (_invocation) => Promise.resolve() });
         cs.kernelInfo.aliases.push('cs');
         kernel.add(cs);
         const fs = new Kernel('fsharp', 'fsharp');
-        fs.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: (_invocation) => Promise.resolve() });
+        fs.registerCommandHandler({ commandType: commandsAndEvents.SubmitCodeType, handle: (_invocation) => Promise.resolve() });
         fs.kernelInfo.aliases.push('fs');
         kernel.add(fs);
         const value = new Kernel('value', 'value');

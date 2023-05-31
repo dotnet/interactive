@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from "./commandsAndEvents";
+import * as commandsAndEvents from "./commandsAndEvents";
 import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
@@ -13,14 +13,14 @@ export class HtmlKernel extends Kernel {
         if (!this.htmlFragmentInserter) {
             this.htmlFragmentInserter = htmlDomFragmentInserter;
         }
-        this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
+        this.registerCommandHandler({ commandType: commandsAndEvents.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
     }
 
     private async handleSubmitCode(invocation: IKernelCommandInvocation): Promise<void> {
-        const submitCode = <contracts.SubmitCode>invocation.commandEnvelope.command;
+        const submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
         const code = submitCode.code;
 
-        invocation.context.publish({ eventType: contracts.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
+        invocation.context.publish({ eventType: commandsAndEvents.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
 
         if (!this.htmlFragmentInserter) {
             throw new Error("No HTML fragment processor registered");
@@ -28,14 +28,14 @@ export class HtmlKernel extends Kernel {
 
         try {
             const formattedValue = await this.htmlFragmentInserter(code);
-            const displayedValueProduced: contracts.DisplayedValueProduced = {
+            const displayedValueProduced: commandsAndEvents.DisplayedValueProduced = {
                 formattedValues: [{
                     mimeType: "text/html",
                     value: formattedValue
                 }]
             };
 
-            invocation.context.publish({ eventType: contracts.DisplayedValueProducedType, event: { displayedValueProduced }, command: invocation.commandEnvelope });
+            invocation.context.publish({ eventType: commandsAndEvents.DisplayedValueProducedType, event: { displayedValueProduced }, command: invocation.commandEnvelope });
 
         } catch (e) {
             throw e;//?

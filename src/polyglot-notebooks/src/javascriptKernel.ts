@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from "./commandsAndEvents";
+import * as commandsAndEvents from "./commandsAndEvents";
 import { ConsoleCapture } from "./consoleCapture";
 import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
@@ -14,16 +14,16 @@ export class JavascriptKernel extends Kernel {
         super(name ?? "javascript", "JavaScript");
         this.kernelInfo.displayName = `${this.kernelInfo.localName} - ${this.kernelInfo.languageName}`;
         this.suppressedLocals = new Set<string>(this.allLocalVariableNames());
-        this.registerCommandHandler({ commandType: contracts.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
-        this.registerCommandHandler({ commandType: contracts.RequestValueInfosType, handle: invocation => this.handleRequestValueInfos(invocation) });
-        this.registerCommandHandler({ commandType: contracts.RequestValueType, handle: invocation => this.handleRequestValue(invocation) });
-        this.registerCommandHandler({ commandType: contracts.SendValueType, handle: invocation => this.handleSendValue(invocation) });
+        this.registerCommandHandler({ commandType: commandsAndEvents.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
+        this.registerCommandHandler({ commandType: commandsAndEvents.RequestValueInfosType, handle: invocation => this.handleRequestValueInfos(invocation) });
+        this.registerCommandHandler({ commandType: commandsAndEvents.RequestValueType, handle: invocation => this.handleRequestValue(invocation) });
+        this.registerCommandHandler({ commandType: commandsAndEvents.SendValueType, handle: invocation => this.handleSendValue(invocation) });
 
         this.capture = new ConsoleCapture();
     }
 
     private handleSendValue(invocation: IKernelCommandInvocation): Promise<void> {
-        const sendValue = <contracts.SendValue>invocation.commandEnvelope.command;
+        const sendValue = <commandsAndEvents.SendValue>invocation.commandEnvelope.command;
         if (sendValue.formattedValue) {
             switch (sendValue.formattedValue.mimeType) {
                 case 'application/json':
@@ -39,13 +39,13 @@ export class JavascriptKernel extends Kernel {
     }
 
     private async handleSubmitCode(invocation: IKernelCommandInvocation): Promise<void> {
-        const submitCode = <contracts.SubmitCode>invocation.commandEnvelope.command;
+        const submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
         const code = submitCode.code;
 
         super.kernelInfo.localName;//?
         super.kernelInfo.uri;//?
         super.kernelInfo.remoteUri;//?
-        invocation.context.publish({ eventType: contracts.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
+        invocation.context.publish({ eventType: commandsAndEvents.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
         invocation.context.commandEnvelope.routingSlip;//?
         this.capture.kernelInvocationContext = invocation.context;
         let result: any = undefined;
@@ -56,10 +56,10 @@ export class JavascriptKernel extends Kernel {
             result = await evaluator(this.capture);
             if (result !== undefined) {
                 const formattedValue = formatValue(result, 'application/json');
-                const event: contracts.ReturnValueProduced = {
+                const event: commandsAndEvents.ReturnValueProduced = {
                     formattedValues: [formattedValue]
                 };
-                invocation.context.publish({ eventType: contracts.ReturnValueProducedType, event, command: invocation.commandEnvelope });
+                invocation.context.publish({ eventType: commandsAndEvents.ReturnValueProducedType, event, command: invocation.commandEnvelope });
             }
         } catch (e) {
             throw e;//?
@@ -70,7 +70,7 @@ export class JavascriptKernel extends Kernel {
     }
 
     private handleRequestValueInfos(invocation: IKernelCommandInvocation): Promise<void> {
-        const valueInfos: contracts.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => (
+        const valueInfos: commandsAndEvents.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => (
             {
                 name: v,
                 typeName: getType(this.getLocalVariable(v)),
@@ -78,23 +78,23 @@ export class JavascriptKernel extends Kernel {
                 preferredMimeTypes: []
             }));
 
-        const event: contracts.ValueInfosProduced = {
+        const event: commandsAndEvents.ValueInfosProduced = {
             valueInfos
         };
-        invocation.context.publish({ eventType: contracts.ValueInfosProducedType, event, command: invocation.commandEnvelope });
+        invocation.context.publish({ eventType: commandsAndEvents.ValueInfosProducedType, event, command: invocation.commandEnvelope });
         return Promise.resolve();
     }
 
     private handleRequestValue(invocation: IKernelCommandInvocation): Promise<void> {
-        const requestValue = <contracts.RequestValue>invocation.commandEnvelope.command;
+        const requestValue = <commandsAndEvents.RequestValue>invocation.commandEnvelope.command;
         const rawValue = this.getLocalVariable(requestValue.name);
         const formattedValue = formatValue(rawValue, requestValue.mimeType || 'application/json');
         Logger.default.info(`returning ${JSON.stringify(formattedValue)} for ${requestValue.name}`);
-        const event: contracts.ValueProduced = {
+        const event: commandsAndEvents.ValueProduced = {
             name: requestValue.name,
             formattedValue
         };
-        invocation.context.publish({ eventType: contracts.ValueProducedType, event, command: invocation.commandEnvelope });
+        invocation.context.publish({ eventType: commandsAndEvents.ValueProducedType, event, command: invocation.commandEnvelope });
         return Promise.resolve();
     }
 
@@ -122,7 +122,7 @@ export class JavascriptKernel extends Kernel {
     }
 }
 
-export function formatValue(arg: any, mimeType: string): contracts.FormattedValue {
+export function formatValue(arg: any, mimeType: string): commandsAndEvents.FormattedValue {
     let value: string;
 
     switch (mimeType) {

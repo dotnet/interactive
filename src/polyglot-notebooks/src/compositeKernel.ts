@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as routingslip from "./routingslip";
-import * as contracts from "./commandsAndEvents";
+import * as commandsAndEvents from "./commandsAndEvents";
 import { getKernelUri, IKernelCommandInvocation, Kernel } from "./kernel";
 import { KernelHost } from "./kernelHost";
 import { KernelInvocationContext } from "./kernelInvocationContext";
@@ -10,7 +10,7 @@ import { Logger } from "./logger";
 
 export class CompositeKernel extends Kernel {
     private _host: KernelHost | null = null;
-    private readonly _defaultKernelNamesByCommandType: Map<contracts.KernelCommandType, string> = new Map();
+    private readonly _defaultKernelNamesByCommandType: Map<commandsAndEvents.KernelCommandType, string> = new Map();
 
     defaultKernelName: string | undefined;
     private _childKernels: KernelCollection;
@@ -39,18 +39,18 @@ export class CompositeKernel extends Kernel {
 
     protected override async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
 
-        const eventEnvelope: contracts.KernelEventEnvelope = {
-            eventType: contracts.KernelInfoProducedType,
+        const eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
+            eventType: commandsAndEvents.KernelInfoProducedType,
             command: invocation.commandEnvelope,
-            event: <contracts.KernelInfoProduced>{ kernelInfo: this.kernelInfo }
+            event: <commandsAndEvents.KernelInfoProduced>{ kernelInfo: this.kernelInfo }
         };//?
 
         invocation.context.publish(eventEnvelope);
 
         for (let kernel of this._childKernels) {
             if (kernel.supportsCommand(invocation.commandEnvelope.commandType)) {
-                const childCommand: contracts.KernelCommandEnvelope = {
-                    commandType: contracts.RequestKernelInfoType,
+                const childCommand: commandsAndEvents.KernelCommandEnvelope = {
+                    commandType: commandsAndEvents.RequestKernelInfoType,
                     command: {
                         targetKernelName: kernel.kernelInfo.localName
                     },
@@ -105,16 +105,16 @@ export class CompositeKernel extends Kernel {
         if (invocationContext) {
             invocationContext.commandEnvelope;//?
             invocationContext.publish({
-                eventType: contracts.KernelInfoProducedType,
-                event: <contracts.KernelInfoProduced>{
+                eventType: commandsAndEvents.KernelInfoProducedType,
+                event: <commandsAndEvents.KernelInfoProduced>{
                     kernelInfo: kernel.kernelInfo
                 },
                 command: invocationContext.commandEnvelope
             });
         } else {
             this.publishEvent({
-                eventType: contracts.KernelInfoProducedType,
-                event: <contracts.KernelInfoProduced>{
+                eventType: commandsAndEvents.KernelInfoProducedType,
+                event: <commandsAndEvents.KernelInfoProduced>{
                     kernelInfo: kernel.kernelInfo
                 }
             });
@@ -156,10 +156,10 @@ export class CompositeKernel extends Kernel {
         return this.childKernels.find(predicate);
     }
 
-    setDefaultTargetKernelNameForCommand(commandType: contracts.KernelCommandType, kernelName: string) {
+    setDefaultTargetKernelNameForCommand(commandType: commandsAndEvents.KernelCommandType, kernelName: string) {
         this._defaultKernelNamesByCommandType.set(commandType, kernelName);
     }
-    override handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
+    override handleCommand(commandEnvelope: commandsAndEvents.KernelCommandEnvelope): Promise<void> {
         const invocationContext = KernelInvocationContext.current;
 
         let kernel = commandEnvelope.command.targetKernelName === this.name
@@ -206,7 +206,7 @@ export class CompositeKernel extends Kernel {
         return Promise.reject(new Error("Kernel not found: " + commandEnvelope.command.targetKernelName));
     }
 
-    override getHandlingKernel(commandEnvelope: contracts.KernelCommandEnvelope, context?: KernelInvocationContext | null): Kernel | null {
+    override getHandlingKernel(commandEnvelope: commandsAndEvents.KernelCommandEnvelope, context?: KernelInvocationContext | null): Kernel | null {
 
         let kernel: Kernel | null = null;
         if (commandEnvelope.command.destinationUri) {

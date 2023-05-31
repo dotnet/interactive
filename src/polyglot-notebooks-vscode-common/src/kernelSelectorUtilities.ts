@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CompositeKernel } from './polyglot-notebooks';
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import * as metadataUtilities from './metadataUtilities';
 import * as vscodeLike from './interfaces/vscode-like';
 
@@ -22,7 +22,7 @@ export function getKernelInfoDisplayValue(kernelInfo: { localName: string, displ
     }
 }
 
-function extractInfo(kernelInfo: contracts.KernelInfo) {
+function extractInfo(kernelInfo: commandsAndEvents.KernelInfo) {
     return {
         localName: kernelInfo.localName,
         displayName: kernelInfo.displayName,
@@ -31,7 +31,7 @@ function extractInfo(kernelInfo: contracts.KernelInfo) {
     };
 }
 
-export function getKernelSelectorOptions(kernel: CompositeKernel, document: vscodeLike.NotebookDocument, requiredSupportedCommandType: contracts.KernelCommandType): KernelSelectorOption[] {
+export function getKernelSelectorOptions(kernel: CompositeKernel, document: vscodeLike.NotebookDocument, requiredSupportedCommandType: commandsAndEvents.KernelCommandType): KernelSelectorOption[] {
     const kernelInfos: Map<string, { localName: string, displayName: string, languageName?: string, supportedKernelCommands: string[] }> = new Map();
 
     // create and collect all `KernelInfo`s from document metadata...

@@ -3,7 +3,7 @@
 
 import * as rxjs from "rxjs";
 import * as routingslip from "./routingslip";
-import * as contracts from "./commandsAndEvents";
+import * as commandsAndEvents from "./commandsAndEvents";
 import { Disposable } from "./disposables";
 import { getKernelUri, Kernel } from "./kernel";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
@@ -15,9 +15,9 @@ export class KernelInvocationContext implements Disposable {
         return this.completionSource.promise;
     }
     private static _current: KernelInvocationContext | null = null;
-    private readonly _commandEnvelope: contracts.KernelCommandEnvelope;
-    private readonly _childCommands: contracts.KernelCommandEnvelope[] = [];
-    private readonly _eventSubject: rxjs.Subject<contracts.KernelEventEnvelope> = new rxjs.Subject<contracts.KernelEventEnvelope>();
+    private readonly _commandEnvelope: commandsAndEvents.KernelCommandEnvelope;
+    private readonly _childCommands: commandsAndEvents.KernelCommandEnvelope[] = [];
+    private readonly _eventSubject: rxjs.Subject<commandsAndEvents.KernelEventEnvelope> = new rxjs.Subject<commandsAndEvents.KernelEventEnvelope>();
 
     private _isComplete = false;
     private _handlingKernel: Kernel | null = null;
@@ -26,7 +26,7 @@ export class KernelInvocationContext implements Disposable {
         return this._handlingKernel;
     };
 
-    public get kernelEvents(): rxjs.Observable<contracts.KernelEventEnvelope> {
+    public get kernelEvents(): rxjs.Observable<commandsAndEvents.KernelEventEnvelope> {
         return this._eventSubject.asObservable();
     };
 
@@ -35,7 +35,7 @@ export class KernelInvocationContext implements Disposable {
     }
 
     private completionSource = new PromiseCompletionSource<void>();
-    static getOrCreateAmbientContext(kernelCommandInvocation: contracts.KernelCommandEnvelope): KernelInvocationContext {
+    static getOrCreateAmbientContext(kernelCommandInvocation: commandsAndEvents.KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
         if (!current || current._isComplete) {
             KernelInvocationContext._current = new KernelInvocationContext(kernelCommandInvocation);
@@ -52,19 +52,19 @@ export class KernelInvocationContext implements Disposable {
     }
 
     static get current(): KernelInvocationContext | null { return this._current; }
-    get command(): contracts.KernelCommand { return this._commandEnvelope.command; }
-    get commandEnvelope(): contracts.KernelCommandEnvelope { return this._commandEnvelope; }
-    constructor(kernelCommandInvocation: contracts.KernelCommandEnvelope) {
+    get command(): commandsAndEvents.KernelCommand { return this._commandEnvelope.command; }
+    get commandEnvelope(): commandsAndEvents.KernelCommandEnvelope { return this._commandEnvelope; }
+    constructor(kernelCommandInvocation: commandsAndEvents.KernelCommandEnvelope) {
         this._commandEnvelope = kernelCommandInvocation;
     }
 
-    complete(command: contracts.KernelCommandEnvelope) {
+    complete(command: commandsAndEvents.KernelCommandEnvelope) {
         if (areCommandsTheSame(command, this._commandEnvelope)) {
             this._isComplete = true;
-            let succeeded: contracts.CommandSucceeded = {};
-            let eventEnvelope: contracts.KernelEventEnvelope = {
+            let succeeded: commandsAndEvents.CommandSucceeded = {};
+            let eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
                 command: this._commandEnvelope,
-                eventType: contracts.CommandSucceededType,
+                eventType: commandsAndEvents.CommandSucceededType,
                 event: succeeded
             };
             this.internalPublish(eventEnvelope);
@@ -87,10 +87,10 @@ export class KernelInvocationContext implements Disposable {
         // The C# code accepts a message and/or an exception. Do we need to add support
         // for exceptions? (The TS CommandFailed interface doesn't have a place for it right now.)
         this._isComplete = true;
-        let failed: contracts.CommandFailed = { message: message ?? "Command Failed" };
-        let eventEnvelope: contracts.KernelEventEnvelope = {
+        let failed: commandsAndEvents.CommandFailed = { message: message ?? "Command Failed" };
+        let eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
             command: this._commandEnvelope,
-            eventType: contracts.CommandFailedType,
+            eventType: commandsAndEvents.CommandFailedType,
             event: failed
         };
 
@@ -98,13 +98,13 @@ export class KernelInvocationContext implements Disposable {
         this.completionSource.resolve();
     }
 
-    publish(kernelEvent: contracts.KernelEventEnvelope) {
+    publish(kernelEvent: commandsAndEvents.KernelEventEnvelope) {
         if (!this._isComplete) {
             this.internalPublish(kernelEvent);
         }
     }
 
-    private internalPublish(kernelEvent: contracts.KernelEventEnvelope) {
+    private internalPublish(kernelEvent: commandsAndEvents.KernelEventEnvelope) {
         if (!kernelEvent.command) {
             kernelEvent.command = this._commandEnvelope;
         }
@@ -136,7 +136,7 @@ export class KernelInvocationContext implements Disposable {
         }
     }
 
-    isParentOfCommand(commandEnvelope: contracts.KernelCommandEnvelope): boolean {
+    isParentOfCommand(commandEnvelope: commandsAndEvents.KernelCommandEnvelope): boolean {
         const childFound = this._childCommands.includes(commandEnvelope);
         return childFound;
     }
@@ -149,7 +149,7 @@ export class KernelInvocationContext implements Disposable {
     }
 }
 
-export function areCommandsTheSame(envelope1: contracts.KernelCommandEnvelope, envelope2: contracts.KernelCommandEnvelope): boolean {
+export function areCommandsTheSame(envelope1: commandsAndEvents.KernelCommandEnvelope, envelope2: commandsAndEvents.KernelCommandEnvelope): boolean {
     envelope1;//?
     envelope2;//?
     envelope1 === envelope2;//?

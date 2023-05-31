@@ -5,10 +5,10 @@ import { ClientMapper } from './../clientMapper';
 import { PositionLike } from './interfaces';
 import { Uri } from '../interfaces/vscode-like';
 
-import * as contracts from '../polyglot-notebooks/contracts';
+import * as commandsAndEvents from '../polyglot-notebooks/commandsAndEvents';
 import { debounceAndReject } from '../utilities';
 
-export function provideCompletion(clientMapper: ClientMapper, kernelName: string, documentUri: Uri, documentText: string, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<contracts.CompletionsProduced> {
+export function provideCompletion(clientMapper: ClientMapper, kernelName: string, documentUri: Uri, documentText: string, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<commandsAndEvents.CompletionsProduced> {
     return debounceAndReject(`completion-${documentUri.toString()}`, languageServiceDelay, async () => {
         const client = await clientMapper.getOrAddClient(documentUri);
         const completion = await client.completion(kernelName, documentText, position.line, position.character, token);

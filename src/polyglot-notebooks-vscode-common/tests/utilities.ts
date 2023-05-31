@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from '../../src/vscode-common/polyglot-notebooks/contracts';
+import * as commandsAndEvents from '../../src/vscode-common/polyglot-notebooks/commandsAndEvents';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
@@ -63,7 +63,7 @@ export function createChannelConfig(channelCreator: (notebookUri: vscodeLike.Uri
         ...defaultClientMapperConfig,
         channelCreator: async (uri: vscodeLike.Uri) => {
             const channel = await channelCreator(uri);
-            return { channel, kernelReady: <contracts.KernelReady>{} }
+            return { channel, kernelReady: <commandsAndEvents.KernelReady>{} }
         },
     };
 }

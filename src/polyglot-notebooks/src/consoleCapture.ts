@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as util from "util";
-import * as contracts from "./commandsAndEvents";
+import * as commandsAndEvents from "./commandsAndEvents";
 import { KernelInvocationContext } from "./kernelInvocationContext";
 import * as disposables from "./disposables";
 
@@ -106,7 +106,7 @@ export class ConsoleCapture implements disposables.Disposable {
                     value = JSON.stringify(arg);
                 }
 
-                const displayedValue: contracts.DisplayedValueProduced = {
+                const displayedValue: commandsAndEvents.DisplayedValueProduced = {
                     formattedValues: [
                         {
                             mimeType,
@@ -114,8 +114,8 @@ export class ConsoleCapture implements disposables.Disposable {
                         }
                     ]
                 };
-                const eventEnvelope: contracts.KernelEventEnvelope = {
-                    eventType: contracts.DisplayedValueProducedType,
+                const eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
+                    eventType: commandsAndEvents.DisplayedValueProducedType,
                     event: displayedValue,
                     command: this._kernelInvocationContext.commandEnvelope
                 };

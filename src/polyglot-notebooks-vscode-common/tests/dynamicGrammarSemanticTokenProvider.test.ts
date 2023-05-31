@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from '../../src/vscode-common/polyglot-notebooks/contracts';
+import * as commandsAndEvents from '../../src/vscode-common/polyglot-notebooks/commandsAndEvents';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
@@ -19,7 +19,7 @@ describe('dynamic grammar tests', async () => {
     };
     let dynamicTokenProvider: DynamicGrammarSemanticTokenProvider;
 
-    const defaultKernelInfos: contracts.KernelInfo[] = [
+    const defaultKernelInfos: commandsAndEvents.KernelInfo[] = [
         {
             isComposite: false,
             isProxy: false,
@@ -231,7 +231,7 @@ describe('dynamic grammar tests', async () => {
         ]);
 
         // rebuild the grammar with all new KernelInfos
-        const updatedKernelInfos: contracts.KernelInfo[] = [
+        const updatedKernelInfos: commandsAndEvents.KernelInfo[] = [
             {
                 isComposite: false,
                 isProxy: false,
@@ -286,7 +286,7 @@ describe('dynamic grammar tests', async () => {
         ]);
 
         // rebuild the grammar with an additional KernelInfo
-        const newKernelInfo: contracts.KernelInfo = {
+        const newKernelInfo: commandsAndEvents.KernelInfo = {
             isComposite: false,
             isProxy: false,
             localName: 'test-erlang',
@@ -314,7 +314,7 @@ describe('dynamic grammar tests', async () => {
     });
 
     it('tokens are parsed when kernel specifies a language alias instead of the root language name', async () => {
-        const kernelInfoWithAlias: contracts.KernelInfo = {
+        const kernelInfoWithAlias: commandsAndEvents.KernelInfo = {
             isComposite: false,
             isProxy: false,
             localName: 'test-kernel-with-alias',
@@ -341,7 +341,7 @@ describe('dynamic grammar tests', async () => {
     });
 
     it('tokens are not parsed when no language name is specified in KernelInfo', async () => {
-        const updatedKernelInfos: contracts.KernelInfo[] = [
+        const updatedKernelInfos: commandsAndEvents.KernelInfo[] = [
             {
                 isComposite: false,
                 isProxy: false,
@@ -366,7 +366,7 @@ $x = "this is perl code";
     });
 
     it('tokens are not parsed when language name in KernelInfo does not match any known language', async () => {
-        const updatedKernelInfos: contracts.KernelInfo[] = [
+        const updatedKernelInfos: commandsAndEvents.KernelInfo[] = [
             {
                 isComposite: false,
                 isProxy: false,
@@ -391,7 +391,7 @@ $x = "this is perl code";
     });
 
     it('http grammar can classify code', async () => {
-        const updatedKernelInfos: contracts.KernelInfo[] = [
+        const updatedKernelInfos: commandsAndEvents.KernelInfo[] = [
             {
                 isComposite: false,
                 isProxy: false,
@@ -508,7 +508,7 @@ This is \`markdown\`.
         });
 
         // rebuild the grammar with an additional KernelInfo
-        const newKernelInfo: contracts.KernelInfo = {
+        const newKernelInfo: commandsAndEvents.KernelInfo = {
             isComposite: false,
             isProxy: false,
             localName: 'test-erlang',
@@ -546,7 +546,7 @@ This is \`markdown\`.
         });
 
         // rebuild the grammar with an additional KernelInfo
-        const newKernelInfo: contracts.KernelInfo = {
+        const newKernelInfo: commandsAndEvents.KernelInfo = {
             isComposite: false,
             isProxy: false,
             localName: 'test-erlang',

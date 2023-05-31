@@ -7,7 +7,7 @@ import { LogEntry, Logger } from "../logger";
 import { KernelHost } from "../kernelHost";
 import * as rxjs from "rxjs";
 import * as connection from "../connection";
-import * as contracts from "../commandsAndEvents";
+import * as commandsAndEvents from "../commandsAndEvents";
 
 export function createHost(
     global: any,
@@ -27,8 +27,8 @@ export function createHost(
 
     kernelHost.defaultConnector.receiver.subscribe({
         next: (envelope) => {
-            if (connection.isKernelEventEnvelope(envelope) && envelope.eventType === contracts.KernelInfoProducedType) {
-                const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
+            if (connection.isKernelEventEnvelope(envelope) && envelope.eventType === commandsAndEvents.KernelInfoProducedType) {
+                const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>envelope.event;
                 connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced.kernelInfo, compositeKernel);
             }
         }

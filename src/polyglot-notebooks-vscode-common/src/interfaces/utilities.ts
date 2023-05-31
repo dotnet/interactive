@@ -1,22 +1,22 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from '../polyglot-notebooks/contracts';
+import * as commandsAndEvents from '../polyglot-notebooks/commandsAndEvents';
 import * as vscodeLike from './vscode-like';
 
-export function isErrorOutput(arg: any): arg is contracts.ErrorElement {
+export function isErrorOutput(arg: any): arg is commandsAndEvents.ErrorElement {
     return arg
         && typeof arg.errorName === 'string'
         && typeof arg.errorValue === 'string'
         && Array.isArray(arg.stackTrace);
 }
 
-export function isDisplayOutput(arg: any): arg is contracts.DisplayElement {
+export function isDisplayOutput(arg: any): arg is commandsAndEvents.DisplayElement {
     return arg
         && typeof arg.data === 'object';
 }
 
-export function isTextOutput(arg: any): arg is contracts.TextElement {
+export function isTextOutput(arg: any): arg is commandsAndEvents.TextElement {
     return arg
         && typeof arg.text === 'string';
 }
@@ -43,24 +43,24 @@ export function isUint8Array(arg: any): arg is Uint8Array {
         && (typeof arg.length === 'number' || arg.type === 'Buffer');
 }
 
-export function isNotebookParserServerResponse(arg: any): arg is contracts.NotebookParserServerResponse {
+export function isNotebookParserServerResponse(arg: any): arg is commandsAndEvents.NotebookParserServerResponse {
     return arg
         && typeof arg.id === 'string';
 }
 
-export function isNotebookParseResponse(arg: any): arg is contracts.NotebookParseResponse {
+export function isNotebookParseResponse(arg: any): arg is commandsAndEvents.NotebookParseResponse {
     return arg
         && typeof arg.id === 'string'
         && typeof arg.document === 'object';
 }
 
-export function isNotebookSerializeResponse(arg: any): arg is contracts.NotebookSerializeResponse {
+export function isNotebookSerializeResponse(arg: any): arg is commandsAndEvents.NotebookSerializeResponse {
     return arg
         && typeof arg.id === 'string'
         && isUint8Array(arg.rawData);
 }
 
-export function isNotebookParserServerError(arg: any): arg is contracts.NotebookErrorResponse {
+export function isNotebookParserServerError(arg: any): arg is commandsAndEvents.NotebookErrorResponse {
     return arg
         && typeof arg.id === 'string'
         && typeof arg.errorMessage === 'string';
