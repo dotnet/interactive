@@ -5,6 +5,8 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Pocket;
@@ -263,23 +265,21 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         {
             try
             {
-                // todo: this is still a problem with fsi
-
                 // ControlledExecution.Run isn't available in .NET Standard but since we're most likely actually running in .NET 7+, we can try to bind a delegate to it.
 
-                //if (Type.GetType("System.Runtime.ControlledExecution, System.Private.CoreLib", false) is { } controlledExecutionType &&
-                //    controlledExecutionType.GetMethod("Run", BindingFlags.Static | BindingFlags.Public) is { } runMethod)
-                //{
-                //    var actionParameter = Expression.Parameter(typeof(Action), "action");
+                if (Type.GetType("System.Runtime.ControlledExecution, System.Private.CoreLib", false) is { } controlledExecutionType &&
+                    controlledExecutionType.GetMethod("Run", BindingFlags.Static | BindingFlags.Public) is { } runMethod)
+                {
+                    var actionParameter = Expression.Parameter(typeof(Action), "action");
 
-                //    var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+                    var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
-                //    _runWithControlledExecution = Expression.Lambda<Action<Action, CancellationToken>>(
-                //                                                Expression.Call(runMethod, actionParameter, cancellationTokenParameter),
-                //                                                actionParameter,
-                //                                                cancellationTokenParameter)
-                //                                            .Compile();
-                //}
+                    _runWithControlledExecution = Expression.Lambda<Action<Action, CancellationToken>>(
+                                                                Expression.Call(runMethod, actionParameter, cancellationTokenParameter),
+                                                                actionParameter,
+                                                                cancellationTokenParameter)
+                                                            .Compile();
+                }
             }
             catch
             {
