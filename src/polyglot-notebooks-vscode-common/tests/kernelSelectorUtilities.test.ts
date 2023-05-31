@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from '../../src/vscode-common/polyglot-notebooks/contracts';
+import * as commandsAndEvents from '../../src/vscode-common/polyglot-notebooks/commandsAndEvents';
 import * as kernelSelectorUtilities from '../../src/vscode-common/kernelSelectorUtilities';
 import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 import { expect } from 'chai';
@@ -14,7 +14,7 @@ describe('kernel selector utility tests', async () => {
 
         // add C# kernel that supports `SubmitCode`
         const cs = new Kernel('csharp', 'csharp', '10.0', 'See Sharp');
-        cs.kernelInfo.supportedKernelCommands = [{ name: contracts.SubmitCodeType }];
+        cs.kernelInfo.supportedKernelCommands = [{ name: commandsAndEvents.SubmitCodeType }];
         kernel.add(cs);
 
         // add webview kernel that _doesn't_ support `SubmitCode`
@@ -45,7 +45,7 @@ describe('kernel selector utility tests', async () => {
             }
         };
 
-        const kernelSelectorOptions = kernelSelectorUtilities.getKernelSelectorOptions(kernel, notebookDocument, contracts.SubmitCodeType);
+        const kernelSelectorOptions = kernelSelectorUtilities.getKernelSelectorOptions(kernel, notebookDocument, commandsAndEvents.SubmitCodeType);
         expect(kernelSelectorOptions).to.deep.equal([
             {
                 kernelName: 'csharp',

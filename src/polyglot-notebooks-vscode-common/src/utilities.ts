@@ -7,7 +7,7 @@ import * as path from 'path';
 import { v4 as uuid } from 'uuid';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
 import { NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from './interfaces/vscode-like';
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 import { Logger } from './polyglot-notebooks';
 
@@ -290,12 +290,12 @@ export function isVersionGreaterOrEqual(firstVersion: string, secondVersion: str
     }
 }
 
-export function extensionToDocumentType(extension: string): contracts.DocumentSerializationType {
+export function extensionToDocumentType(extension: string): commandsAndEvents.DocumentSerializationType {
     switch (extension) {
         case '.dib':
-            return contracts.DocumentSerializationType.Dib;
+            return commandsAndEvents.DocumentSerializationType.Dib;
         case '.ipynb':
-            return contracts.DocumentSerializationType.Ipynb;
+            return commandsAndEvents.DocumentSerializationType.Ipynb;
         default:
             throw new Error(`Unsupported notebook extension '${extension}'`);
     }

@@ -8,7 +8,7 @@ import { Logger } from './polyglot-notebooks/logger';
 import { extractHostAndNomalize, isKernelCommandEnvelope, isKernelEventEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender, KernelCommandOrEventEnvelope } from './polyglot-notebooks';
 import * as rxjs from 'rxjs';
 import * as connection from './polyglot-notebooks/connection';
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import { areEquivalentObjects, isIpynbNotebook } from './metadataUtilities';
 
 export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
@@ -58,12 +58,12 @@ export async function handleCustomInputRequest(prompt: string, inputTypeHint: st
     return { handled: false, result: undefined };
 }
 
-export function hashBangConnect(clientMapper: ClientMapper, hostUri: string, kernelInfos: contracts.KernelInfo[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+export function hashBangConnect(clientMapper: ClientMapper, hostUri: string, kernelInfos: commandsAndEvents.KernelInfo[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
     Logger.default.info(`handling #!connect for ${documentUri.toString()}`);
     hashBangConnectPrivate(clientMapper, hostUri, kernelInfos, messageHandlerMap, controllerPostMessage, documentUri);
 }
 
-function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, kernelInfos: contracts.KernelInfo[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
+function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, kernelInfos: commandsAndEvents.KernelInfo[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
 
     Logger.default.info(`handling #!connect from '${hostUri}' for notebook: ${documentUri.toString()}`);
 
@@ -123,8 +123,8 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
                 }
 
                 if (isKernelEventEnvelope(envelope)) {
-                    if (envelope.eventType === contracts.KernelInfoProducedType) {
-                        const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
+                    if (envelope.eventType === commandsAndEvents.KernelInfoProducedType) {
+                        const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>envelope.event;
                         if (!connection.isKernelInfoForProxy(kernelInfoProduced.kernelInfo)) {
                             connection.ensureOrUpdateProxyForKernelInfo(kernelInfoProduced.kernelInfo, client.kernel);
                         }

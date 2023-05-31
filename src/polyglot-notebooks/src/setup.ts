@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from "./commandsAndEvents";
+import * as commandsAndEvents from "./commandsAndEvents";
 import { createHtmlKernelForBrowser, HtmlKernel, HtmlKernelInBrowserConfiguration } from "./htmlKernel";
 import * as frontEndHost from './webview/frontEndHost';
 import * as rxjs from "rxjs";
@@ -52,7 +52,7 @@ export function setup(configuration?: SetupConfiguration) {
     });
 
     if (global) {
-        global.sendKernelCommand = (kernelCommandEnvelope: contracts.KernelCommandEnvelope) => {
+        global.sendKernelCommand = (kernelCommandEnvelope: commandsAndEvents.KernelCommandEnvelope) => {
             remoteToLocal.next(kernelCommandEnvelope);
         };
     }

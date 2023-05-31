@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from "./commandsAndEvents";
+import * as commandsAndEvents from "./commandsAndEvents";
 import { Logger } from "./logger";
 import { Kernel, IKernelCommandHandler, IKernelCommandInvocation, getKernelUri } from "./kernel";
 import * as connection from "./connection";
@@ -16,7 +16,7 @@ export class ProxyKernel extends Kernel {
         this.kernelInfo.isProxy = true;
     }
 
-    override getCommandHandler(commandType: contracts.KernelCommandType): IKernelCommandHandler | undefined {
+    override getCommandHandler(commandType: commandsAndEvents.KernelCommandType): IKernelCommandHandler | undefined {
         return {
             commandType,
             handle: (invocation) => {
@@ -25,7 +25,7 @@ export class ProxyKernel extends Kernel {
         };
     }
 
-    private delegatePublication(envelope: contracts.KernelEventEnvelope, invocationContext: KernelInvocationContext): void {
+    private delegatePublication(envelope: commandsAndEvents.KernelEventEnvelope, invocationContext: KernelInvocationContext): void {
         let alreadyBeenSeen = false;
         const kernelUri = getKernelUri(this);
         if (kernelUri && !routingSlip.eventRoutingSlipContains(envelope, kernelUri)) {
@@ -41,7 +41,7 @@ export class ProxyKernel extends Kernel {
         }
     }
 
-    private hasSameOrigin(envelope: contracts.KernelEventEnvelope): boolean {
+    private hasSameOrigin(envelope: commandsAndEvents.KernelEventEnvelope): boolean {
         let commandOriginUri = envelope.command?.command?.originUri ?? this.kernelInfo.uri;
         if (commandOriginUri === this.kernelInfo.uri) {
             return true;
@@ -50,22 +50,22 @@ export class ProxyKernel extends Kernel {
         return commandOriginUri === null;
     }
 
-    private updateKernelInfoFromEvent(kernelInfoProduced: contracts.KernelInfoProduced) {
+    private updateKernelInfoFromEvent(kernelInfoProduced: commandsAndEvents.KernelInfoProduced) {
         connection.updateKernelInfo(this.kernelInfo, kernelInfoProduced.kernelInfo);
     }
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
         const commandToken = commandInvocation.commandEnvelope.token;
         const commandId = commandInvocation.commandEnvelope.id;
-        const completionSource = new PromiseCompletionSource<contracts.KernelEventEnvelope>();
+        const completionSource = new PromiseCompletionSource<commandsAndEvents.KernelEventEnvelope>();
         // fix : is this the right way? We are trying to avoid forwarding events we just did forward
         let eventSubscription = this._receiver.subscribe({
             next: (envelope) => {
                 if (connection.isKernelEventEnvelope(envelope)) {
-                    if (envelope.eventType === contracts.KernelInfoProducedType &&
+                    if (envelope.eventType === commandsAndEvents.KernelInfoProducedType &&
                         (envelope.command === null || envelope.command === undefined)) {
 
-                        const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
+                        const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>envelope.event;
                         kernelInfoProduced.kernelInfo;//?
                         this.kernelInfo;//?
                         if (kernelInfoProduced.kernelInfo.uri === this.kernelInfo.remoteUri) {
@@ -73,7 +73,7 @@ export class ProxyKernel extends Kernel {
                             this.updateKernelInfoFromEvent(kernelInfoProduced);
                             this.publishEvent(
                                 {
-                                    eventType: contracts.KernelInfoProducedType,
+                                    eventType: commandsAndEvents.KernelInfoProducedType,
                                     event: { kernelInfo: this.kernelInfo }
                                 });
                         }
@@ -93,14 +93,14 @@ export class ProxyKernel extends Kernel {
                         }
 
                         switch (envelope.eventType) {
-                            case contracts.KernelInfoProducedType:
+                            case commandsAndEvents.KernelInfoProducedType:
                                 {
-                                    const kernelInfoProduced = <contracts.KernelInfoProduced>envelope.event;
+                                    const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>envelope.event;
                                     if (kernelInfoProduced.kernelInfo.uri === this.kernelInfo.remoteUri) {
                                         this.updateKernelInfoFromEvent(kernelInfoProduced);
                                         this.delegatePublication(
                                             {
-                                                eventType: contracts.KernelInfoProducedType,
+                                                eventType: commandsAndEvents.KernelInfoProducedType,
                                                 event: { kernelInfo: this.kernelInfo },
                                                 routingSlip: envelope.routingSlip,
                                                 command: commandInvocation.commandEnvelope
@@ -111,8 +111,8 @@ export class ProxyKernel extends Kernel {
                                     }
                                 }
                                 break;
-                            case contracts.CommandFailedType:
-                            case contracts.CommandSucceededType:
+                            case commandsAndEvents.CommandFailedType:
+                            case commandsAndEvents.CommandSucceededType:
                                 Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] finished, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
                                 if (envelope.command!.id === commandId) {
                                     Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] resolving promise, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
@@ -139,7 +139,7 @@ export class ProxyKernel extends Kernel {
 
             commandInvocation.commandEnvelope.routingSlip;//?
 
-            if (commandInvocation.commandEnvelope.commandType === contracts.RequestKernelInfoType) {
+            if (commandInvocation.commandEnvelope.commandType === commandsAndEvents.RequestKernelInfoType) {
                 const destinationUri = this.kernelInfo.remoteUri!;
                 if (routingSlip.commandRoutingSlipContains(commandInvocation.commandEnvelope, destinationUri, true)) {
                     return Promise.resolve();
@@ -149,8 +149,8 @@ export class ProxyKernel extends Kernel {
             this._sender.send(commandInvocation.commandEnvelope);
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken} and  commandid ${commandId}`);
             const enventEnvelope = await completionSource.promise;
-            if (enventEnvelope.eventType === contracts.CommandFailedType) {
-                commandInvocation.context.fail((<contracts.CommandFailed>enventEnvelope.event).message);
+            if (enventEnvelope.eventType === commandsAndEvents.CommandFailedType) {
+                commandInvocation.context.fail((<commandsAndEvents.CommandFailed>enventEnvelope.event).message);
             }
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] done awaiting with token ${commandToken}} and  commandid ${commandId}`);
         }

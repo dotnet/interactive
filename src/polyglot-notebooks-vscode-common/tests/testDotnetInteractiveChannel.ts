@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { IKernelCommandAndEventSender, IKernelCommandAndEventReceiver, KernelCommandOrEventEnvelope, isKernelCommandEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender } from '../../src/vscode-common/polyglot-notebooks';
-import * as contracts from '../../src/vscode-common/polyglot-notebooks/commandsAndEvents';
+import * as commandsAndEvents from '../../src/vscode-common/polyglot-notebooks/commandsAndEvents';
 import { DotnetInteractiveChannel } from '../../src/vscode-common/DotnetInteractiveChannel';
 import * as rxjs from 'rxjs';
 
@@ -11,7 +11,7 @@ export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private fakedCommandCounter: Map<string, number> = new Map<string, number>();
     private _senderSubject: rxjs.Subject<KernelCommandOrEventEnvelope>;
     private _receiverSubject: rxjs.Subject<KernelCommandOrEventEnvelope>;
-    constructor(readonly fakedEventEnvelopes: { [key: string]: { eventType: contracts.KernelEventType, event: contracts.KernelEvent, token: string }[] }) {
+    constructor(readonly fakedEventEnvelopes: { [key: string]: { eventType: commandsAndEvents.KernelEventType, event: commandsAndEvents.KernelEvent, token: string }[] }) {
         this._senderSubject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
         this._receiverSubject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
 
@@ -31,7 +31,7 @@ export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
     receiver: IKernelCommandAndEventReceiver;
 
 
-    private submitCommand(commandEnvelope: contracts.KernelCommandEnvelope) {
+    private submitCommand(commandEnvelope: commandsAndEvents.KernelCommandEnvelope) {
         // find bare fake command events
         let eventEnvelopesToReturn = this.fakedEventEnvelopes[commandEnvelope.commandType];
         if (!eventEnvelopesToReturn) {
@@ -65,7 +65,7 @@ export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
     }
 
 
-    waitForReady(): Promise<contracts.KernelReady> {
+    waitForReady(): Promise<commandsAndEvents.KernelReady> {
         return Promise.resolve({ kernelInfos: [] });
     }
 

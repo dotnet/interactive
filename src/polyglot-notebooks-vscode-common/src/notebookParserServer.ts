@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import { MessageClient } from './messageClient';
 import { isNotebookParserServerResponse, isNotebookParserServerError, isNotebookParseResponse, isNotebookSerializeResponse } from './interfaces/utilities';
 import { Eol } from './interfaces';
@@ -13,9 +13,9 @@ export class NotebookParserServer {
     constructor(private readonly messageClient: MessageClient) {
     }
 
-    async parseInteractiveDocument(serializationType: contracts.DocumentSerializationType, rawData: Uint8Array): Promise<contracts.InteractiveDocument> {
-        const request: contracts.NotebookParseRequest = {
-            type: contracts.RequestType.Parse,
+    async parseInteractiveDocument(serializationType: commandsAndEvents.DocumentSerializationType, rawData: Uint8Array): Promise<commandsAndEvents.InteractiveDocument> {
+        const request: commandsAndEvents.NotebookParseRequest = {
+            type: commandsAndEvents.RequestType.Parse,
             id: this.getNextId(),
             serializationType,
             defaultLanguage: constants.CellLanguageIdentifier,
@@ -48,9 +48,9 @@ export class NotebookParserServer {
         throw new Error(`Error parsing interactive document: ${errorMessage}`);
     }
 
-    async serializeNotebook(serializationType: contracts.DocumentSerializationType, eol: Eol, document: contracts.InteractiveDocument): Promise<Uint8Array> {
-        const request: contracts.NotebookSerializeRequest = {
-            type: contracts.RequestType.Serialize,
+    async serializeNotebook(serializationType: commandsAndEvents.DocumentSerializationType, eol: Eol, document: commandsAndEvents.InteractiveDocument): Promise<Uint8Array> {
+        const request: commandsAndEvents.NotebookSerializeRequest = {
+            type: commandsAndEvents.RequestType.Serialize,
             id: this.getNextId(),
             serializationType,
             defaultLanguage: 'csharp',

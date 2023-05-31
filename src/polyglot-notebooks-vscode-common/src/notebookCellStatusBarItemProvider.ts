@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import * as metadataUtilities from './metadataUtilities';
 import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { ClientMapper } from './clientMapper';
@@ -19,7 +19,7 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
     clientMapper.onClientCreate((_uri, client) => {
         client.channel.receiver.subscribe({
             next: envelope => {
-                if (isKernelEventEnvelope(envelope) && envelope.eventType === contracts.KernelInfoProducedType) {
+                if (isKernelEventEnvelope(envelope) && envelope.eventType === commandsAndEvents.KernelInfoProducedType) {
                     cellItemProvider.updateKernelDisplayNames();
                 }
             }
@@ -31,7 +31,7 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
         if (cell) {
             const client = await clientMapper.tryGetClient(cell.notebook.uri);
             if (client) {
-                const availableOptions = kernelSelectorUtilities.getKernelSelectorOptions(client.kernel, cell.notebook, contracts.SubmitCodeType);
+                const availableOptions = kernelSelectorUtilities.getKernelSelectorOptions(client.kernel, cell.notebook, commandsAndEvents.SubmitCodeType);
                 const availableDisplayOptions = availableOptions.map(o => o.displayValue);
                 const selectedDisplayOption = await vscode.window.showQuickPick(availableDisplayOptions, { title: 'Select cell kernel' });
                 if (selectedDisplayOption) {

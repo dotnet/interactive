@@ -4,11 +4,11 @@
 import { ClientMapper } from './../clientMapper';
 import { PositionLike } from './interfaces';
 
-import * as contracts from '../polyglot-notebooks/contracts';
+import * as commandsAndEvents from '../polyglot-notebooks/commandsAndEvents';
 import { debounceAndReject } from '../utilities';
 import { Uri } from '../interfaces/vscode-like';
 
-export function provideSignatureHelp(clientMapper: ClientMapper, language: string, documentUri: Uri, documentText: string, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<contracts.SignatureHelpProduced> {
+export function provideSignatureHelp(clientMapper: ClientMapper, language: string, documentUri: Uri, documentText: string, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<commandsAndEvents.SignatureHelpProduced> {
     return debounceAndReject(`sighelp-${documentUri.toString()}`, languageServiceDelay, async () => {
         const client = await clientMapper.getOrAddClient(documentUri);
         const sigHelp = await client.signatureHelp(language, documentText, position.line, position.character, token);
