@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from './polyglot-notebooks/commandsAndEvents';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as oniguruma from 'vscode-oniguruma';
@@ -52,7 +52,7 @@ const wellKnownAliases: { languageName: string, aliases: string[] }[] = [
 ];
 
 export class DynamicGrammarSemanticTokenProvider {
-    private _documentKernelInfos: Map<vscodeLike.Uri, Map<string, contracts.KernelInfo>> = new Map();
+    private _documentKernelInfos: Map<vscodeLike.Uri, Map<string, commandsAndEvents.KernelInfo>> = new Map();
     private _documentGrammarRegistries: Map<vscodeLike.Uri, vsctm.Registry> = new Map();
     private _textMateScopeToSemanticType: Map<string, string> = new Map();
     private _languageNameConfigurationMap: Map<string, any> = new Map();
@@ -183,7 +183,7 @@ export class DynamicGrammarSemanticTokenProvider {
      * @param notebookUri The URI of the notebook for which we're updating the grammars.
      * @param kernelInfos The kernel info objects used to build the custom grammar.
      */
-    rebuildNotebookGrammar(notebookUri: vscodeLike.Uri, kernelInfos: contracts.KernelInfo[], replaceExistingGrammar?: boolean | undefined) {
+    rebuildNotebookGrammar(notebookUri: vscodeLike.Uri, kernelInfos: commandsAndEvents.KernelInfo[], replaceExistingGrammar?: boolean | undefined) {
         // ensure we have a collection of <kernelName, KernelInfo[]>
         let documentKernelInfos = this._documentKernelInfos.get(notebookUri);
         if (!documentKernelInfos || replaceExistingGrammar) {
@@ -335,7 +335,7 @@ export class DynamicGrammarSemanticTokenProvider {
         return languageInfo;
     }
 
-    private createGrammarRegistry(kernelInfos: contracts.KernelInfo[]): vsctm.Registry {
+    private createGrammarRegistry(kernelInfos: commandsAndEvents.KernelInfo[]): vsctm.Registry {
         const scopeNameToGrammarMap: Map<string, GrammarPair> = new Map();
         const allKernelNamesSet: Set<string> = new Set();
         for (const kernelInfo of kernelInfos) {
@@ -528,7 +528,7 @@ function normalizeLanguageName(languageName: string): string {
     return languageName.toLowerCase();
 }
 
-function languageNameFromKernelInfo(kernelInfo: contracts.KernelInfo): string {
+function languageNameFromKernelInfo(kernelInfo: commandsAndEvents.KernelInfo): string {
     // ensure we have some kind of language name, even if it doesn't map to anything
     return normalizeLanguageName(kernelInfo.languageName ?? `unknown-language-from-kernel-${kernelInfo.localName}`);
 }
