@@ -219,7 +219,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.428002",
+          "default": "1.0.428101",
           "description": "%description.requiredInteractiveToolVersion%"
         }
       }
@@ -489,6 +489,9 @@
           ],
           "polyglot-notebook-comment": [
             "comment"
+          ],
+          "polyglot-notebook-string-quoted-docstring": [
+            "string.quoted.docstring"
           ],
           "polyglot-notebook-constant-language": [
             "constant.language"

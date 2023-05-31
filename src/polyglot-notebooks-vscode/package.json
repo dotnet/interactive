@@ -219,7 +219,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.425803",
+          "default": "1.0.428101",
           "description": "%description.requiredInteractiveToolVersion%"
         }
       }
@@ -489,6 +489,9 @@
           ],
           "polyglot-notebook-comment": [
             "comment"
+          ],
+          "polyglot-notebook-string-quoted-docstring": [
+            "string.quoted.docstring"
           ],
           "polyglot-notebook-constant-language": [
             "constant.language"
@@ -794,6 +797,7 @@
     "pretest": "npm run compile",
     "test": "mocha out/tests/**/*.test.js",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
+    "testDebug": "mocha out/tests/**/*.test.js",
     "tdd": "npm test -- --watch",
     "package": "npx @vscode/vsce package",
     "clearUserData": "del-cli \"./userData/**/*\" \"!.gitignore\""
