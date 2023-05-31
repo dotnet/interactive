@@ -46,7 +46,7 @@ public class RuntimeTelemetryTests : IDisposable
             }
             .UseTelemetrySender(telemetrySender);
 
-        await kernel.SendAsync(new SubmitCode(@"
+        await kernel.SendAsync(new SubmitCode("""
 #!sql
 select * from db
 
@@ -56,7 +56,7 @@ telemetry
 
 #!csharp
 1+1
-"));
+"""));
 
         var properties = telemetrySender.TelemetryEvents.Where(e => e.EventName == "CodeSubmitted").SelectMany(e => e.Properties).Where(p => p.Key is "KernelName" or "KernelLanguageName").ToArray();
 
