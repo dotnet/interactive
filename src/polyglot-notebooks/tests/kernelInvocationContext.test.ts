@@ -41,7 +41,7 @@ describe("dotnet-interactive", () => {
         let commadnEnvelope = makeSubmitCode("123");
 
         it("publishes CommandHandled when Complete is called", async () => {
-            let context = use(KernelInvocationContext.establish(commadnEnvelope));
+            let context = use(KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.kernelEvents.subscribe(ew.watcher);
@@ -53,23 +53,23 @@ describe("dotnet-interactive", () => {
         });
 
         it("is established only once for same command", async () => {
-            let context = use(KernelInvocationContext.establish(commadnEnvelope));
-            let secondContext = use(KernelInvocationContext.establish(commadnEnvelope));
+            let context = use(KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope));
+            let secondContext = use(KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope));
 
             expect(context).to.equal(secondContext);
             expect(context.command).to.equal(secondContext.command);
         });
 
         it("is appends child comamnds", async () => {
-            let context = use(KernelInvocationContext.establish(commadnEnvelope));
-            let secondContext = use(KernelInvocationContext.establish(makeSubmitCode("456")));
+            let context = use(KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope));
+            let secondContext = use(KernelInvocationContext.getOrCreateAmbientContext(makeSubmitCode("456")));
 
             expect(context).to.equal(secondContext);
             expect(context.command).to.equal(secondContext.command);
         });
 
         it("does not publish CommandFailed when Complete is called", async () => {
-            let context = use(KernelInvocationContext.establish(commadnEnvelope));
+            let context = use(KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.kernelEvents.subscribe(ew.watcher);
@@ -90,7 +90,7 @@ describe("dotnet-interactive", () => {
         });
 
         it("does not publish further events after Complete is called", async () => {
-            let context = use(KernelInvocationContext.establish(commadnEnvelope));
+            let context = use(KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.kernelEvents.subscribe(ew.watcher);
@@ -115,7 +115,7 @@ describe("dotnet-interactive", () => {
         });
 
         it("publishes CommandFailed when Fail is called", async () => {
-            let context = use(KernelInvocationContext.establish(commadnEnvelope));
+            let context = use(KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.kernelEvents.subscribe(ew.watcher);
@@ -127,7 +127,7 @@ describe("dotnet-interactive", () => {
         });
 
         it("does not publish CommandHandled when Fail is called", async () => {
-            let context = use(KernelInvocationContext.establish(commadnEnvelope));
+            let context = use(KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.kernelEvents.subscribe(ew.watcher);
@@ -140,7 +140,7 @@ describe("dotnet-interactive", () => {
         });
 
         it("does not publish further events after Fail is called", async () => {
-            let context = use(KernelInvocationContext.establish(commadnEnvelope));
+            let context = use(KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope));
 
             let ew = makeEventWatcher();
             context.kernelEvents.subscribe(ew.watcher);
@@ -165,13 +165,13 @@ describe("dotnet-interactive", () => {
 
         it("completes only when child all commands complete if multiple commands are active", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.getOrCreateAmbientContext(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.kernelEvents.subscribe(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.getOrCreateAmbientContext(innerSubmitCode));
 
             inner.complete(innerSubmitCode);
 
@@ -182,13 +182,13 @@ describe("dotnet-interactive", () => {
 
         it("publishes events from inner context if both inner and outer are in progress", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.getOrCreateAmbientContext(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.kernelEvents.subscribe(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.getOrCreateAmbientContext(innerSubmitCode));
 
             let ev: commandsAndEvents.ErrorProduced = {
                 message: "oops",
@@ -208,13 +208,13 @@ describe("dotnet-interactive", () => {
 
         it("does not publish further events from inner context after outer context is completed", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.getOrCreateAmbientContext(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.kernelEvents.subscribe(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.getOrCreateAmbientContext(innerSubmitCode));
 
             outer.complete(outerSubmitCode);
 
@@ -237,13 +237,13 @@ describe("dotnet-interactive", () => {
 
         it("does not publish further events from inner context after it is completed", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.getOrCreateAmbientContext(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.kernelEvents.subscribe(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.getOrCreateAmbientContext(innerSubmitCode));
 
             inner.complete(outerSubmitCode);
 
@@ -265,7 +265,7 @@ describe("dotnet-interactive", () => {
         });
 
         it("set current to null when disposed", async () => {
-            let context = KernelInvocationContext.establish(commadnEnvelope);
+            let context = KernelInvocationContext.getOrCreateAmbientContext(commadnEnvelope);
 
             // TODO
             // The C# test registers a completion callback with OnComplete, but it's not
@@ -279,13 +279,13 @@ describe("dotnet-interactive", () => {
 
         it("publishes CommandFailed when inner context fails", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.getOrCreateAmbientContext(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.kernelEvents.subscribe(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.getOrCreateAmbientContext(innerSubmitCode));
 
             inner.fail();
 
@@ -296,13 +296,13 @@ describe("dotnet-interactive", () => {
 
         it("does not publish further events after inner context fails", async () => {
             let outerSubmitCode = makeSubmitCode("abc");
-            let outer = use(KernelInvocationContext.establish(outerSubmitCode));
+            let outer = use(KernelInvocationContext.getOrCreateAmbientContext(outerSubmitCode));
 
             let ew = makeEventWatcher();
             outer.kernelEvents.subscribe(ew.watcher);
 
             let innerSubmitCode = makeSubmitCode("def");
-            let inner = use(KernelInvocationContext.establish(innerSubmitCode));
+            let inner = use(KernelInvocationContext.getOrCreateAmbientContext(innerSubmitCode));
 
             inner.fail();
 
