@@ -3,16 +3,16 @@
 
 import { expect } from "chai";
 import { describe } from "mocha";
-import * as contracts from "../src/contracts";
+import * as commandsAndEvents from "../src/commandsAndEvents";
 import { JavascriptKernel } from "../src/javascriptKernel";
 import { IKernelCommandInvocation, Kernel, submitCommandAndGetResult } from "../src/kernel";
 import { Logger } from "../src/logger";
 
-interface CustomCommand1 extends contracts.KernelCommand {
+interface CustomCommand1 extends commandsAndEvents.KernelCommand {
     data: string
 }
 
-interface CustomCommand2 extends contracts.KernelCommand {
+interface CustomCommand2 extends commandsAndEvents.KernelCommand {
     moreData: string
 }
 
@@ -22,8 +22,8 @@ describe("dotnet-interactive", () => {
         Logger.configure("test", () => { });
     });
 
-    let commandType1: contracts.KernelCommandType = <contracts.KernelCommandType>"CustomCommand1";
-    let commandType2: contracts.KernelCommandType = <contracts.KernelCommandType>"CustomCommand2";
+    let commandType1: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand1";
+    let commandType2: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand2";
 
     let makeKernel = async () => {
         let kernel = new Kernel("client-side-kernel");
@@ -98,13 +98,13 @@ describe("dotnet-interactive", () => {
         it("does not invoke command handler when type does not match", async () => {
             var kernel = await makeKernel();
 
-            let commandType1: contracts.KernelCommandType = <contracts.KernelCommandType>"CustomCommand1";
-            let commandType2: contracts.KernelCommandType = <contracts.KernelCommandType>"CustomCommand2";
+            let commandType1: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand1";
+            let commandType2: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand2";
             let command2In: CustomCommand2 = {
                 moreData: "Test 2"
             };
 
-            let events: contracts.KernelEventEnvelope[] = [];
+            let events: commandsAndEvents.KernelEventEnvelope[] = [];
             let handlerInvocations: IKernelCommandInvocation[] = [];
             kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: IKernelCommandInvocation) => { handlerInvocations.push(a); } });
 
@@ -117,13 +117,13 @@ describe("dotnet-interactive", () => {
 
             expect(handlerInvocations.length).to.be.equal(0);
 
-            expect(events.find(e => e.eventType === contracts.CommandFailedType)).is.not.null;
+            expect(events.find(e => e.eventType === commandsAndEvents.CommandFailedType)).is.not.null;
         });
 
         it("can submit a command and wait for a specific event", async () => {
             let kernel = new JavascriptKernel();
-            const command: contracts.SubmitCode = { code: "return 1+1;" };
-            let event = await submitCommandAndGetResult<contracts.ReturnValueProduced>(kernel, { commandType: contracts.SubmitCodeType, command: command }, contracts.ReturnValueProducedType);
+            const command: commandsAndEvents.SubmitCode = { code: "return 1+1;" };
+            let event = await submitCommandAndGetResult<commandsAndEvents.ReturnValueProduced>(kernel, { commandType: commandsAndEvents.SubmitCodeType, command: command }, commandsAndEvents.ReturnValueProducedType);
             expect(event.formattedValues[0].value).to.equal("2");
         });
     });

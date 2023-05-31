@@ -3,13 +3,13 @@
 
 import { expect } from "chai";
 import { describe } from "mocha";
-import * as contracts from "../src/contracts";
+import * as commandsAndEvents from "../src/commandsAndEvents";
 import { createHtmlKernelForBrowser, HtmlDomFragmentInserterConfiguration } from "../src/htmlKernel";
 import * as jd from "jsdom";
 
 describe("htmlKernel", () => {
     it("can create a container for each code submission", async () => {
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
             getOrCreateContainer: () => {
@@ -32,15 +32,15 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0">a</div>' } });
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0">b</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0">a</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0">b</div>' } });
 
-        expect(events.find(e => e.eventType === contracts.CommandSucceededType)).to.not.be.undefined;
+        expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
         expect(dom.window.document.body.innerHTML).to.be.eql('<div class="html_kernel_container"><div id="0">a</div></div><div class="html_kernel_container"><div id="0">b</div></div>');
     });
 
     it("produces DisplayedValueProduced event with the content of the container", async () => {
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         const container = dom.window.document.createElement("div");
         dom.window.document.body.appendChild(container);
@@ -65,17 +65,17 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0">a</div>' } });
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0">b</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0">a</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0">b</div>' } });
 
-        const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === contracts.DisplayedValueProducedType).at(-1)?.event as contracts.DisplayedValueProduced;
+        const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === commandsAndEvents.DisplayedValueProducedType).at(-1)?.event as commandsAndEvents.DisplayedValueProduced;
         expect(lastDisplayedValueProducedEvent).to.not.be.undefined;
 
         expect(lastDisplayedValueProducedEvent).to.deep.equal({ displayedValueProduced: { formattedValues: [{ mimeType: 'text/html', value: '<div id="0">a</div><div id="0">b</div>' }] } });
     });
 
     it("evaluates script elements", async () => {
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`, { runScripts: "dangerously" });
         const container = dom.window.document.createElement("div");
         dom.window.document.body.appendChild(container);
@@ -104,9 +104,9 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>' } });
 
-        const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === contracts.DisplayedValueProducedType).at(-1)?.event as contracts.DisplayedValueProduced;
+        const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === commandsAndEvents.DisplayedValueProducedType).at(-1)?.event as commandsAndEvents.DisplayedValueProduced;
         expect(lastDisplayedValueProducedEvent).to.not.be.undefined;
 
         expect(lastDisplayedValueProducedEvent).to.deep.equal(
@@ -127,7 +127,7 @@ describe("htmlKernel", () => {
     });
 
     it("can reuse container", async () => {
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         const container = dom.window.document.createElement("div");
         dom.window.document.body.appendChild(container);
@@ -152,14 +152,14 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="1">a</div>' } });
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="2">b</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="2">b</div>' } });
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div><div id="1">a</div><div id="2">b</div></div>');
     });
 
     it("can use body as container", async () => {
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         const container = dom.window.document.body;
         let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
@@ -183,14 +183,14 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="1">a</div>' } });
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="2">b</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="2">b</div>' } });
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });
 
     it("can submit html fragment with multiple elements", async () => {
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>`);
         const container = dom.window.document.body;
         let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
@@ -214,13 +214,13 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' } });
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });
 
     it("can replace container content with html fragment", async () => {
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
         const dom = new jd.JSDOM(`<!DOCTYPE html>
         <html lang="en">
           <head>
@@ -253,7 +253,7 @@ describe("htmlKernel", () => {
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
-        await kernel.send({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' } });
+        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' } });
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });

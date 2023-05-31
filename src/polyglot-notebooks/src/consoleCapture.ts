@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as util from "util";
-import * as contracts from "./contracts";
+import * as contracts from "./commandsAndEvents";
 import { KernelInvocationContext } from "./kernelInvocationContext";
 import * as disposables from "./disposables";
 

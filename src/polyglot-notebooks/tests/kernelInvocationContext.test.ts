@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { describe } from "mocha";
 import { IKernelEventObserver } from "../src/kernel";
 import { KernelInvocationContext } from "../src/kernelInvocationContext";
-import * as contracts from "../src/contracts";
+import * as commandsAndEvents from "../src/commandsAndEvents";
 import * as disposables from "../src/disposables";
 import * as uuid from "uuid";
 
@@ -20,20 +20,20 @@ describe("dotnet-interactive", () => {
     afterEach(() => toDispose.forEach(d => d.dispose()));
     describe("client-side kernel invocation context", () => {
 
-        let makeEventWatcher: () => { watcher: IKernelEventObserver, events: contracts.KernelEventEnvelope[] } =
+        let makeEventWatcher: () => { watcher: IKernelEventObserver, events: commandsAndEvents.KernelEventEnvelope[] } =
             () => {
-                let events: contracts.KernelEventEnvelope[] = [];
+                let events: commandsAndEvents.KernelEventEnvelope[] = [];
                 return {
                     events,
-                    watcher: (kernelEvent: contracts.KernelEventEnvelope) => events.push(kernelEvent)
+                    watcher: (kernelEvent: commandsAndEvents.KernelEventEnvelope) => events.push(kernelEvent)
                 };
             };
-        function makeSubmitCode(code: string): contracts.KernelCommandEnvelope {
-            let command: contracts.SubmitCode = {
+        function makeSubmitCode(code: string): commandsAndEvents.KernelCommandEnvelope {
+            let command: commandsAndEvents.SubmitCode = {
                 code: code
             };
             return {
-                commandType: contracts.SubmitCodeType,
+                commandType: commandsAndEvents.SubmitCodeType,
                 command: command,
                 token: uuid.v4()
             };
@@ -49,7 +49,7 @@ describe("dotnet-interactive", () => {
             context.complete(commadnEnvelope);
 
             expect(ew.events.length).to.eql(1);
-            expect(ew.events[0].eventType).to.eql(contracts.CommandSucceededType);
+            expect(ew.events[0].eventType).to.eql(commandsAndEvents.CommandSucceededType);
         });
 
         it("is established only once for same command", async () => {
@@ -77,7 +77,7 @@ describe("dotnet-interactive", () => {
             context.complete(commadnEnvelope);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(contracts.CommandFailedType);
+                expect(event.eventType).is.not.eq(commandsAndEvents.CommandFailedType);
             });
         });
 
@@ -97,20 +97,20 @@ describe("dotnet-interactive", () => {
 
             context.complete(commadnEnvelope);
 
-            let ev: contracts.ErrorProduced = {
+            let ev: commandsAndEvents.ErrorProduced = {
                 message: "oops",
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: contracts.KernelEventEnvelope = {
+            let evEnv: commandsAndEvents.KernelEventEnvelope = {
                 event: ev,
-                eventType: contracts.ErrorProducedType,
+                eventType: commandsAndEvents.ErrorProducedType,
                 command: commadnEnvelope
             };
             context.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(contracts.ErrorProducedType);
+                expect(event.eventType).is.not.eq(commandsAndEvents.ErrorProducedType);
             });
         });
 
@@ -123,7 +123,7 @@ describe("dotnet-interactive", () => {
             context.fail("oops!");
 
             expect(ew.events.length).to.eql(1);
-            expect(ew.events[0].eventType).to.eql(contracts.CommandFailedType);
+            expect(ew.events[0].eventType).to.eql(commandsAndEvents.CommandFailedType);
         });
 
         it("does not publish CommandHandled when Fail is called", async () => {
@@ -135,7 +135,7 @@ describe("dotnet-interactive", () => {
             context.fail("oops!");
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(contracts.CommandSucceededType);
+                expect(event.eventType).is.not.eq(commandsAndEvents.CommandSucceededType);
             });
         });
 
@@ -147,19 +147,19 @@ describe("dotnet-interactive", () => {
 
             context.fail("oops!");
 
-            let ev: contracts.DisplayedValueProduced = {
+            let ev: commandsAndEvents.DisplayedValueProduced = {
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: contracts.KernelEventEnvelope = {
+            let evEnv: commandsAndEvents.KernelEventEnvelope = {
                 event: ev,
-                eventType: contracts.DisplayedValueProducedType,
+                eventType: commandsAndEvents.DisplayedValueProducedType,
                 command: commadnEnvelope
             };
             context.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(contracts.DisplayedValueProducedType);
+                expect(event.eventType).is.not.eq(commandsAndEvents.DisplayedValueProducedType);
             });
         });
 
@@ -176,7 +176,7 @@ describe("dotnet-interactive", () => {
             inner.complete(innerSubmitCode);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(contracts.CommandSucceededType);
+                expect(event.eventType).is.not.eq(commandsAndEvents.CommandSucceededType);
             });
         });
 
@@ -190,20 +190,20 @@ describe("dotnet-interactive", () => {
             let innerSubmitCode = makeSubmitCode("def");
             let inner = use(KernelInvocationContext.establish(innerSubmitCode));
 
-            let ev: contracts.ErrorProduced = {
+            let ev: commandsAndEvents.ErrorProduced = {
                 message: "oops",
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: contracts.KernelEventEnvelope = {
+            let evEnv: commandsAndEvents.KernelEventEnvelope = {
                 event: ev,
-                eventType: contracts.ErrorProducedType,
+                eventType: commandsAndEvents.ErrorProducedType,
                 command: innerSubmitCode
             };
             inner.publish(evEnv);
 
             expect(ew.events.length).to.eql(1);
-            expect(ew.events[0].eventType).to.eql(contracts.ErrorProducedType);
+            expect(ew.events[0].eventType).to.eql(commandsAndEvents.ErrorProducedType);
         });
 
         it("does not publish further events from inner context after outer context is completed", async () => {
@@ -218,20 +218,20 @@ describe("dotnet-interactive", () => {
 
             outer.complete(outerSubmitCode);
 
-            let ev: contracts.ErrorProduced = {
+            let ev: commandsAndEvents.ErrorProduced = {
                 message: "oops",
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: contracts.KernelEventEnvelope = {
+            let evEnv: commandsAndEvents.KernelEventEnvelope = {
                 event: ev,
-                eventType: contracts.ErrorProducedType,
+                eventType: commandsAndEvents.ErrorProducedType,
                 command: innerSubmitCode
             };
             inner.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(contracts.ErrorProducedType);
+                expect(event.eventType).is.not.eq(commandsAndEvents.ErrorProducedType);
             });
         });
 
@@ -247,20 +247,20 @@ describe("dotnet-interactive", () => {
 
             inner.complete(outerSubmitCode);
 
-            let ev: contracts.ErrorProduced = {
+            let ev: commandsAndEvents.ErrorProduced = {
                 message: "oops",
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: contracts.KernelEventEnvelope = {
+            let evEnv: commandsAndEvents.KernelEventEnvelope = {
                 event: ev,
-                eventType: contracts.ErrorProducedType,
+                eventType: commandsAndEvents.ErrorProducedType,
                 command: innerSubmitCode
             };
             inner.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(contracts.ErrorProducedType);
+                expect(event.eventType).is.not.eq(commandsAndEvents.ErrorProducedType);
             });
         });
 
@@ -290,7 +290,7 @@ describe("dotnet-interactive", () => {
             inner.fail();
 
             expect(ew.events.length).to.eql(1);
-            expect(ew.events[0].eventType).to.eql(contracts.CommandFailedType);
+            expect(ew.events[0].eventType).to.eql(commandsAndEvents.CommandFailedType);
             expect(ew.events[0].command).to.eql(outerSubmitCode);
         });
 
@@ -306,20 +306,20 @@ describe("dotnet-interactive", () => {
 
             inner.fail();
 
-            let ev: contracts.ErrorProduced = {
+            let ev: commandsAndEvents.ErrorProduced = {
                 message: "oops",
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: contracts.KernelEventEnvelope = {
+            let evEnv: commandsAndEvents.KernelEventEnvelope = {
                 event: ev,
-                eventType: contracts.ErrorProducedType,
+                eventType: commandsAndEvents.ErrorProducedType,
                 command: innerSubmitCode
             };
             inner.publish(evEnv);
 
             ew.events.forEach(event => {
-                expect(event.eventType).is.not.eq(contracts.ErrorProducedType);
+                expect(event.eventType).is.not.eq(commandsAndEvents.ErrorProducedType);
             });
         });
     });

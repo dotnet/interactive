@@ -3,7 +3,7 @@
 
 import { KernelInvocationContext, areCommandsTheSame } from "./kernelInvocationContext";
 import { TokenGenerator } from "./tokenGenerator";
-import * as contracts from "./contracts";
+import * as contracts from "./commandsAndEvents";
 import { Logger } from "./logger";
 import { CompositeKernel } from "./compositeKernel";
 import { KernelScheduler } from "./kernelScheduler";

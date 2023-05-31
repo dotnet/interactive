@@ -5,17 +5,17 @@ import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 import { configureFetchForKernelDiscovery, createMockChannel, MockKernelCommandAndEventChannel, asKernelClientContainer, delay } from "./testSupport";
-import * as contracts from "../src/polyglot-notebooks/contracts";
+import * as commandsAndEvents from "../src/polyglot-notebooks/commandsAndEvents";
 import { IKernelCommandInvocation, Kernel } from "../src/polyglot-notebooks/kernel";
 import { attachKernelToChannel } from "../src/kernel-factory";
 import { KernelInvocationContext } from "../src/polyglot-notebooks/kernelInvocationContext";
 
 
-interface CustomCommand extends contracts.KernelCommand {
+interface CustomCommand extends commandsAndEvents.KernelCommand {
     data: string
 }
 
-interface CustomCommand2 extends contracts.KernelCommand {
+interface CustomCommand2 extends commandsAndEvents.KernelCommand {
     moreData: string
 }
 
@@ -115,7 +115,7 @@ describe("polyglot-notebooks", () => {
                 });
 
                 await client.submitCode("var a = 12");
-                expect(transport!.commandsSent[0].commandType).to.be.equal(contracts.SubmitCodeType);
+                expect(transport!.commandsSent[0].commandType).to.be.equal(commandsAndEvents.SubmitCodeType);
             });
         });
     });
@@ -127,9 +127,9 @@ describe("polyglot-notebooks", () => {
         const rootUrl = "https://dotnet.interactive.com:999";
         let transport: MockKernelCommandAndEventChannel | undefined;
         let kernel: Kernel | undefined;
-        let commandsSentToKernel: contracts.KernelCommandEnvelope[] = [];
-        let kernelEventHandlers: contracts.KernelEventEnvelopeObserver[] = [];
-        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: contracts.KernelCommand, context: KernelInvocationContext }) => Promise<void>) } = {};
+        let commandsSentToKernel: commandsAndEvents.KernelCommandEnvelope[] = [];
+        let kernelEventHandlers: commandsAndEvents.KernelEventEnvelopeObserver[] = [];
+        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: commandsAndEvents.KernelCommand, context: KernelInvocationContext }) => Promise<void>) } = {};
 
         let makeClient = () => {
             configureFetchForKernelDiscovery(rootUrl);
@@ -180,8 +180,8 @@ describe("polyglot-notebooks", () => {
             let commandIn: CustomCommand = {
                 data: "Test"
             };
-            let commandType: contracts.KernelCommandType = <contracts.KernelCommandType>"CustomCommand";
-            let commandEnvelopeIn: contracts.KernelCommandEnvelope = {
+            let commandType: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand";
+            let commandEnvelopeIn: commandsAndEvents.KernelCommandEnvelope = {
                 commandType,
                 command: commandIn
             };
@@ -209,10 +209,10 @@ describe("polyglot-notebooks", () => {
         it("sends client-side kernel events to the kernel transport", async () => {
             let client = await makeClient();
             client.registerCommandHandler({
-                commandType: contracts.SubmitCodeType, handle: (invocation) => {
-                    let submitCode = <contracts.SubmitCode>invocation.commandEnvelope.command;
-                    let event: contracts.KernelEventEnvelope = {
-                        eventType: contracts.CodeSubmissionReceivedType,
+                commandType: commandsAndEvents.SubmitCodeType, handle: (invocation) => {
+                    let submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
+                    let event: commandsAndEvents.KernelEventEnvelope = {
+                        eventType: commandsAndEvents.CodeSubmissionReceivedType,
                         event: {
                             code: submitCode.code
                         },
@@ -225,14 +225,14 @@ describe("polyglot-notebooks", () => {
             });
 
 
-            transport!.fakeIncomingSubmitCommand({ commandType: contracts.SubmitCodeType, command: <contracts.SubmitCode>{ code: "39 + 3" } });
+            transport!.fakeIncomingSubmitCommand({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "39 + 3" } });
 
-            let eventIn: contracts.CodeSubmissionReceived = {
+            let eventIn: commandsAndEvents.CodeSubmissionReceived = {
                 code: "39 + 3"
             };
 
-            let eventEnvelopeIn: contracts.KernelEventEnvelope = {
-                eventType: contracts.CodeSubmissionReceivedType,
+            let eventEnvelopeIn: commandsAndEvents.KernelEventEnvelope = {
+                eventType: commandsAndEvents.CodeSubmissionReceivedType,
                 event: eventIn
             };
 
@@ -240,7 +240,7 @@ describe("polyglot-notebooks", () => {
             const publishedEvents = transport!.eventsPublished.filter(e => e.eventType === eventEnvelopeIn.eventType);
             expect(publishedEvents.length).to.equal(1);
             expect(publishedEvents[0].eventType).to.be.equal(eventEnvelopeIn.eventType);
-            const eventPublished = <contracts.CodeSubmissionReceived>publishedEvents[0].event;
+            const eventPublished = <commandsAndEvents.CodeSubmissionReceived>publishedEvents[0].event;
             expect(eventPublished.code).to.be.equal(eventIn.code);
         });
 

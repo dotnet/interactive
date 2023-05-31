@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { CompositeKernel } from '../src/compositeKernel';
 import * as connection from "../src/connection";
-import * as contracts from "../src/contracts";
+import * as commandsAndEvents from "../src/commandsAndEvents";
 import { clearTokenAndId } from "./testSupport";
 import * as frontEndHost from "../src/webview/frontEndHost";
 import * as rxjs from "rxjs";
@@ -96,8 +96,8 @@ describe("frontEndHost", () => {
         frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
         const compositeKernel = <CompositeKernel>testGlobal['testKernel'].compositeKernel;
         remoteToLocal.next({
-            eventType: contracts.KernelInfoProducedType,
-            event: <contracts.KernelInfoProduced>{
+            eventType: commandsAndEvents.KernelInfoProducedType,
+            event: <commandsAndEvents.KernelInfoProduced>{
                 kernelInfo: {
                     isComposite: false,
                     isProxy: false,
@@ -110,16 +110,16 @@ describe("frontEndHost", () => {
                     supportedDirectives: [],
                     supportedKernelCommands: [
                         {
-                            name: contracts.RequestKernelInfoType
+                            name: commandsAndEvents.RequestKernelInfoType
                         },
                         {
-                            name: contracts.SubmitCodeType
+                            name: commandsAndEvents.SubmitCodeType
                         },
                         {
-                            name: contracts.RequestValueInfosType
+                            name: commandsAndEvents.RequestValueInfosType
                         },
                         {
-                            name: contracts.RequestValueType
+                            name: commandsAndEvents.RequestValueType
                         }
                     ]
                 }
@@ -153,8 +153,8 @@ describe("frontEndHost", () => {
         frontEndHost.createHost(testGlobal, 'testKernel', noop, noop, localToRemote, remoteToLocal, noop);
         const compositeKernel = <CompositeKernel>testGlobal['testKernel'].compositeKernel;
         remoteToLocal.next({
-            eventType: contracts.KernelInfoProducedType,
-            event: <contracts.KernelInfoProduced>{
+            eventType: commandsAndEvents.KernelInfoProducedType,
+            event: <commandsAndEvents.KernelInfoProduced>{
                 kernelInfo: {
                     isComposite: false,
                     isProxy: false,
@@ -165,15 +165,15 @@ describe("frontEndHost", () => {
                     supportedDirectives: [],
                     supportedKernelCommands: [
                         {
-                            name: contracts.RequestKernelInfoType
+                            name: commandsAndEvents.RequestKernelInfoType
                         }
                     ]
                 }
             }
         });
         remoteToLocal.next({
-            eventType: contracts.KernelInfoProducedType,
-            event: <contracts.KernelInfoProduced>{
+            eventType: commandsAndEvents.KernelInfoProducedType,
+            event: <commandsAndEvents.KernelInfoProduced>{
                 kernelInfo: {
                     isComposite: false,
                     isProxy: false,
@@ -186,16 +186,16 @@ describe("frontEndHost", () => {
                     supportedDirectives: [],
                     supportedKernelCommands: [
                         {
-                            name: contracts.RequestKernelInfoType
+                            name: commandsAndEvents.RequestKernelInfoType
                         },
                         {
-                            name: contracts.SubmitCodeType
+                            name: commandsAndEvents.SubmitCodeType
                         },
                         {
-                            name: contracts.RequestValueInfosType
+                            name: commandsAndEvents.RequestValueInfosType
                         },
                         {
-                            name: contracts.RequestValueType
+                            name: commandsAndEvents.RequestValueType
                         }
                     ]
                 }

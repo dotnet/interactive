@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { CompositeKernel } from "../src/compositeKernel";
 import { JavascriptKernel } from "../src/javascriptKernel";
-import * as contracts from "../src/contracts";
+import * as commandsAndEvents from "../src/commandsAndEvents";
 import { createInMemoryChannels } from "./testSupport";
 import { KernelHost } from "../src/kernelHost";
 
@@ -16,21 +16,21 @@ describe("kernelRouting", () => {
 
         composite.defaultKernelName = "typescript";
 
-        let command: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
-            command: <contracts.SubmitCode>{
+        let command: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
+            command: <commandsAndEvents.SubmitCode>{
                 code: "return 12;",
                 targetKernelName: "javascript"
             }
         };
 
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
         composite.subscribeToKernelEvents(e => events.push(e));
 
         await composite.send(command);
         events;//?
-        const succededEvent = events.find(e => e.eventType === contracts.CommandSucceededType);
+        const succededEvent = events.find(e => e.eventType === commandsAndEvents.CommandSucceededType);
 
         expect(succededEvent).not.to.be.undefined;
 
@@ -51,15 +51,15 @@ describe("kernelRouting", () => {
 
         composite.defaultKernelName = "typescript";
 
-        let command: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
-            command: <contracts.SubmitCode>{
+        let command: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
+            command: <commandsAndEvents.SubmitCode>{
                 code: "return 12;",
                 targetKernelName: "javascript"
             }
         };
 
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
         composite.subscribeToKernelEvents(e => events.push(e));
 
@@ -81,9 +81,9 @@ describe("kernelRouting", () => {
 
         remoteCompositeKernel.defaultKernelName = "typescript";
 
-        let command: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
-            command: <contracts.SubmitCode>{
+        let command: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
+            command: <commandsAndEvents.SubmitCode>{
                 code: "return 12;",
                 targetKernelName: "javascript"
             }
@@ -102,7 +102,7 @@ describe("kernelRouting", () => {
         remoteHost.connect();
         localHost.connect();
 
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
         localCompositeKernel.kernelEvents.subscribe(e => events.push(e));
 
@@ -128,9 +128,9 @@ describe("kernelRouting", () => {
 
         remoteCompositeKernel.defaultKernelName = "typescript";
 
-        let command: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
-            command: <contracts.SubmitCode>{
+        let command: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
+            command: <commandsAndEvents.SubmitCode>{
                 code: "return 12;",
                 targetKernelName: "javascript"
             }
@@ -149,7 +149,7 @@ describe("kernelRouting", () => {
         remoteHost.connect();
         localHost.connect();
 
-        let events: contracts.KernelEventEnvelope[] = [];
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
         localCompositeKernel.kernelEvents.subscribe(e => events.push(e));
 

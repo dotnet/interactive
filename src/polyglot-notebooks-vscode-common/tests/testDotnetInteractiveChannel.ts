@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { IKernelCommandAndEventSender, IKernelCommandAndEventReceiver, KernelCommandOrEventEnvelope, isKernelCommandEnvelope, KernelCommandAndEventReceiver, KernelCommandAndEventSender } from '../../src/vscode-common/polyglot-notebooks';
-import * as contracts from '../../src/vscode-common/polyglot-notebooks/contracts';
+import * as contracts from '../../src/vscode-common/polyglot-notebooks/commandsAndEvents';
 import { DotnetInteractiveChannel } from '../../src/vscode-common/DotnetInteractiveChannel';
 import * as rxjs from 'rxjs';
 

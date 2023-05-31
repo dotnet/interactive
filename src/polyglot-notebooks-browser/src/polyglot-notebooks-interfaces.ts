@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as contracts from "./polyglot-notebooks/contracts";
+import * as commandsAndEvents from "./polyglot-notebooks/commandsAndEvents";
 import { DisposableSubscription } from "./polyglot-notebooks/disposables";
 import { IKernelCommandHandler } from "./polyglot-notebooks/kernel";
 
@@ -23,7 +23,7 @@ export interface KernelClient {
 
 // Implemented by the client-side kernel.
 export interface DotnetInteractiveClient {
-    subscribeToKernelEvents(observer: contracts.KernelEventEnvelopeObserver): DisposableSubscription;
+    subscribeToKernelEvents(observer: commandsAndEvents.KernelEventEnvelopeObserver): DisposableSubscription;
     registerCommandHandler(handler: IKernelCommandHandler): void;
     getVariable(kernelName: string, variableName: string): Promise<any>;
     getVariables(variableRequest: VariableRequest): Promise<VariableResponse>;

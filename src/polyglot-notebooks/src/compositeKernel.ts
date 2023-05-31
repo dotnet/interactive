@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as routingslip from "./routingslip";
-import * as contracts from "./contracts";
+import * as contracts from "./commandsAndEvents";
 import { getKernelUri, IKernelCommandInvocation, Kernel } from "./kernel";
 import { KernelHost } from "./kernelHost";
 import { KernelInvocationContext } from "./kernelInvocationContext";

@@ -2,14 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from "chai";
-import * as contracts from "../src/contracts";
+import * as commandsAndEvents from "../src/commandsAndEvents";
 import * as routingSlip from "../src/routingslip";
 
 describe("kernel event routingSlip", () => {
     it("cannot stamp twice", () => {
 
-        let envelope: contracts.KernelEventEnvelope = {
-            eventType: contracts.CommandSucceededType,
+        let envelope: commandsAndEvents.KernelEventEnvelope = {
+            eventType: commandsAndEvents.CommandSucceededType,
             event: {}
         };
 
@@ -20,8 +20,8 @@ describe("kernel event routingSlip", () => {
 
     it("can append a routing slip to another", () => {
 
-        let envelope: contracts.KernelEventEnvelope = {
-            eventType: contracts.CommandSucceededType,
+        let envelope: commandsAndEvents.KernelEventEnvelope = {
+            eventType: commandsAndEvents.CommandSucceededType,
             event: {},
             routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
         };
@@ -35,8 +35,8 @@ describe("kernel event routingSlip", () => {
 
     it("can append a routing slip to another if the other starts with the same list of uris", () => {
 
-        let envelope: contracts.KernelEventEnvelope = {
-            eventType: contracts.CommandSucceededType,
+        let envelope: commandsAndEvents.KernelEventEnvelope = {
+            eventType: commandsAndEvents.CommandSucceededType,
             event: {},
             routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
         };
@@ -50,8 +50,8 @@ describe("kernel event routingSlip", () => {
 
     it("cannot append a routing slip to another if the other adds in the same kernel", () => {
 
-        let envelope: contracts.KernelEventEnvelope = {
-            eventType: contracts.CommandSucceededType,
+        let envelope: commandsAndEvents.KernelEventEnvelope = {
+            eventType: commandsAndEvents.CommandSucceededType,
             event: {},
             routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
         };
@@ -65,8 +65,8 @@ describe("kernel event routingSlip", () => {
 describe("kernel command routingSlip", () => {
     it("cannot stamp twice as arrived", () => {
 
-        let envelope: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
+        let envelope: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
             command: {}
         };
 
@@ -77,8 +77,8 @@ describe("kernel command routingSlip", () => {
 
     it("can be stamped on arrival", () => {
 
-        let envelope: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
+        let envelope: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
             command: {}
         };
 
@@ -89,8 +89,8 @@ describe("kernel command routingSlip", () => {
 
     it("can be stamped", () => {
 
-        let envelope: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
+        let envelope: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
             command: {}
         };
 
@@ -102,8 +102,8 @@ describe("kernel command routingSlip", () => {
 
     it("cannot be stamped if the uri is not stamped as arrived before", () => {
 
-        let envelope: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
+        let envelope: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
             command: {},
             routingSlip: []
         };
@@ -112,8 +112,8 @@ describe("kernel command routingSlip", () => {
 
     it("can append a routing slip to another", () => {
 
-        let envelope: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
+        let envelope: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
             command: {},
             routingSlip: []
         };
@@ -135,8 +135,8 @@ describe("kernel command routingSlip", () => {
 
     it("can append a routing slip to another if the other starts with the same list of uris", () => {
 
-        let envelope: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
+        let envelope: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
             command: {},
             routingSlip: []
         };
@@ -156,8 +156,8 @@ describe("kernel command routingSlip", () => {
 
     it("cannot append a routing slip to another if the other adds in the same kernel", () => {
 
-        let envelope: contracts.KernelCommandEnvelope = {
-            commandType: contracts.SubmitCodeType,
+        let envelope: commandsAndEvents.KernelCommandEnvelope = {
+            commandType: commandsAndEvents.SubmitCodeType,
             command: {},
             routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
         };

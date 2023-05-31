@@ -7,7 +7,7 @@ import { LogEntry, Logger } from "../logger";
 import { KernelHost } from "../kernelHost";
 import * as rxjs from "rxjs";
 import * as connection from "../connection";
-import * as contracts from "../contracts";
+import * as contracts from "../commandsAndEvents";
 
 export function createHost(
     global: any,

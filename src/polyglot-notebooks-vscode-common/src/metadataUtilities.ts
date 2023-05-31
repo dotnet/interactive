@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { CompositeKernel } from './polyglot-notebooks';
-import * as contracts from './polyglot-notebooks/contracts';
+import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import * as vscodeLike from './interfaces/vscode-like';
 
 export interface NotebookDocumentMetadata {
-    kernelInfo: contracts.DocumentKernelInfoCollection;
+    kernelInfo: commandsAndEvents.DocumentKernelInfoCollection;
 }
 
 export interface NotebookCellMetadata {
@@ -38,7 +38,7 @@ export function isDotNetNotebook(notebook: vscodeLike.NotebookDocument): boolean
     return false;
 }
 
-export function getNotebookCellMetadataFromInteractiveDocumentElement(interactiveDocumentElement: contracts.InteractiveDocumentElement): NotebookCellMetadata {
+export function getNotebookCellMetadataFromInteractiveDocumentElement(interactiveDocumentElement: commandsAndEvents.InteractiveDocumentElement): NotebookCellMetadata {
     const cellMetadata = createDefaultNotebookCellMetadata();
 
     // first try to get the old `dotnet_interactive` value...
@@ -92,7 +92,7 @@ export function getNotebookCellMetadataFromNotebookCellElement(notebookCell: vsc
     return cellMetadata;
 }
 
-export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDocument: contracts.InteractiveDocument): NotebookDocumentMetadata {
+export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDocument: commandsAndEvents.InteractiveDocument): NotebookDocumentMetadata {
     const notebookMetadata = createDefaultNotebookDocumentMetadata();
     const kernelInfo = interactiveDocument.metadata.kernelInfo;
     if (typeof kernelInfo === 'object') {
@@ -162,12 +162,12 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
 export function getNotebookDocumentMetadataFromCompositeKernel(kernel: CompositeKernel): NotebookDocumentMetadata {
     const notebookMetadata = createDefaultNotebookDocumentMetadata();
     notebookMetadata.kernelInfo.defaultKernelName = kernel.defaultKernelName ?? notebookMetadata.kernelInfo.defaultKernelName;
-    notebookMetadata.kernelInfo.items = kernel.childKernels.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0).filter(k => k.supportsCommand(contracts.SubmitCodeType)).map(k => ({ name: k.name, aliases: k.kernelInfo.aliases, languageName: k.kernelInfo.languageName }));
+    notebookMetadata.kernelInfo.items = kernel.childKernels.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0).filter(k => k.supportsCommand(commandsAndEvents.SubmitCodeType)).map(k => ({ name: k.name, aliases: k.kernelInfo.aliases, languageName: k.kernelInfo.languageName }));
     cleanupMedata(notebookMetadata);
     return notebookMetadata;
 }
 
-function ensureProperShapeForDocumentKernelInfo(kernelInfo: contracts.DocumentKernelInfo) {
+function ensureProperShapeForDocumentKernelInfo(kernelInfo: commandsAndEvents.DocumentKernelInfo) {
     if (!kernelInfo.aliases) {
         kernelInfo.aliases = [];
     }
@@ -214,9 +214,9 @@ export function getKernelspecMetadataFromIpynbNotebookDocument(notebook: vscodeL
     return kernelspecMetadata;
 }
 
-export function getKernelInfosFromNotebookDocument(notebookDocument: vscodeLike.NotebookDocument): contracts.KernelInfo[] {
+export function getKernelInfosFromNotebookDocument(notebookDocument: vscodeLike.NotebookDocument): commandsAndEvents.KernelInfo[] {
     const notebookDocumentMetadata = getNotebookDocumentMetadataFromNotebookDocument(notebookDocument);
-    const kernelInfos: contracts.KernelInfo[] = notebookDocumentMetadata.kernelInfo.items.map(item => ({
+    const kernelInfos: commandsAndEvents.KernelInfo[] = notebookDocumentMetadata.kernelInfo.items.map(item => ({
         // these are the only important ones
         localName: item.name,
         isComposite: false,
@@ -389,11 +389,11 @@ function mergeArray(destination: any[], source: any[]) {
     }
 }
 
-function isKernelInfo(k: any): k is contracts.KernelInfo {
+function isKernelInfo(k: any): k is commandsAndEvents.KernelInfo {
     return k.localName !== undefined;
 }
 
-function isDocumentKernelInfo(k: any): k is contracts.DocumentKernelInfo {
+function isDocumentKernelInfo(k: any): k is commandsAndEvents.DocumentKernelInfo {
     return k.name !== undefined;
 }
 
@@ -458,7 +458,7 @@ export function mergeNotebookCellMetadata(baseMetadata: NotebookCellMetadata, me
 
 export function mergeNotebookDocumentMetadata(baseMetadata: NotebookDocumentMetadata, metadataWithNewValues: NotebookDocumentMetadata): NotebookDocumentMetadata {
     const resultMetadata = { ...baseMetadata };
-    const kernelInfoItems: Map<string, contracts.DocumentKernelInfo> = new Map();
+    const kernelInfoItems: Map<string, commandsAndEvents.DocumentKernelInfo> = new Map();
     for (const item of baseMetadata.kernelInfo.items) {
         kernelInfoItems.set(item.name, item);
     }
