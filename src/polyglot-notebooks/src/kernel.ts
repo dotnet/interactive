@@ -119,7 +119,7 @@ export class Kernel {
     // the callback set up by attachKernelToChannel, and the callback is expected to return void, so
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
-        const context = KernelInvocationContext.establish(commandEnvelope);
+        const context = KernelInvocationContext.getOrCreateAmbientContext(commandEnvelope);
         this.ensureCommandTokenAndId(commandEnvelope, context);
         const kernelUri = getKernelUri(this);
         if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
@@ -140,7 +140,7 @@ export class Kernel {
     }
 
     private async executeCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
-        let context = KernelInvocationContext.establish(commandEnvelope);
+        let context = KernelInvocationContext.getOrCreateAmbientContext(commandEnvelope);
         let previousHandlingKernel = context.handlingKernel;
 
         try {
@@ -160,7 +160,7 @@ export class Kernel {
 
     handleCommand(commandEnvelope: contracts.KernelCommandEnvelope): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
-            let context = KernelInvocationContext.establish(commandEnvelope);
+            let context = KernelInvocationContext.getOrCreateAmbientContext(commandEnvelope);
 
             const previoudHendlingKernel = context.handlingKernel;
             context.handlingKernel = this;

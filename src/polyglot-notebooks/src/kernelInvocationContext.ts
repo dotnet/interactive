@@ -35,7 +35,7 @@ export class KernelInvocationContext implements Disposable {
     }
 
     private completionSource = new PromiseCompletionSource<void>();
-    static establish(kernelCommandInvocation: contracts.KernelCommandEnvelope): KernelInvocationContext {
+    static getOrCreateAmbientContext(kernelCommandInvocation: contracts.KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
         if (!current || current._isComplete) {
             KernelInvocationContext._current = new KernelInvocationContext(kernelCommandInvocation);
