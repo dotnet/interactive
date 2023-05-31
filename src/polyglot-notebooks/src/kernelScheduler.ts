@@ -12,13 +12,13 @@ interface SchedulerOperation<T> {
 
 export class KernelScheduler<T> {
     setMustTrampoline(predicate: (c: T) => boolean) {
-        this._mustTrampoline = predicate ?? ((_c) => false);
+        this._runPreemptively = predicate ?? ((_c) => false);
     }
     private _operationQueue: Array<SchedulerOperation<T>> = [];
     private _inFlightOperation?: SchedulerOperation<T>;
-    private _mustTrampoline: (c: T) => boolean;
+    private _runPreemptively: (c: T) => boolean;
     constructor() {
-        this._mustTrampoline = (_c) => false;
+        this._runPreemptively = (_c) => true;
     }
 
     public cancelCurrentOperation(): void {
@@ -32,9 +32,9 @@ export class KernelScheduler<T> {
             promiseCompletionSource: new PromiseCompletionSource<void>(),
         };
 
-        const mustTrampoline = this._mustTrampoline(value);
+        const runPreemptively = this._runPreemptively(value);
 
-        if (this._inFlightOperation && !mustTrampoline) {
+        if (this._inFlightOperation && runPreemptively) {
             Logger.default.info(`kernelScheduler: starting immediate execution of ${JSON.stringify(operation.value)}`);
 
             // invoke immediately
