@@ -50,8 +50,11 @@ describe("compositeKernel", () => {
             events.push(e);
         });
 
-        await compositeKernel.send({ commandType: commandsAndEvent.SubmitCodeType, command: <commandsAndEvent.SubmitCode>{ code: "pytonCode", targetKernelName: python.name } });
-        await compositeKernel.send({ commandType: commandsAndEvent.SubmitCodeType, command: <commandsAndEvent.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
+        const command1 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "pytonCode", targetKernelName: python.name });
+        const command2 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "goCode", targetKernelName: go.name });
+
+        await compositeKernel.send(command1);
+        await compositeKernel.send(command2);
 
         expect(events.find(e => e.command!.command.targetKernelName === python.name)).not.to.be.undefined;
         expect(events.find(e => e.command!.command.targetKernelName === go.name)).not.to.be.undefined;
@@ -66,7 +69,7 @@ describe("compositeKernel", () => {
         compositeKernel.add(go);
 
         compositeKernel.registerCommandHandler({
-            commandType: commandsAndEvent.SubmitCodeType, handle: (invocation) => {
+            commandType: commandsAndEvent.SubmitCodeType, handle: (_invocation) => {
                 return Promise.resolve();
             }
         });
@@ -75,7 +78,8 @@ describe("compositeKernel", () => {
             events.push(e);
         });
 
-        await compositeKernel.send({ commandType: commandsAndEvent.SubmitCodeType, command: <commandsAndEvent.SubmitCode>{ code: "goCode", targetKernelName: compositeKernel.name } });
+        const command = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "pytonCode", targetKernelName: compositeKernel.name });
+        await compositeKernel.send(command);
 
         expect(events.find(e => e.command!.command.targetKernelName === compositeKernel.name)).not.to.be.undefined;
     });
@@ -90,9 +94,9 @@ describe("compositeKernel", () => {
 
         python.registerCommandHandler({
             commandType: commandsAndEvent.SubmitCodeType, handle: (invocation) => {
-                invocation.context.publish({
-                    eventType: commandsAndEvent.ReturnValueProducedType,
-                    event: {
+                const event = new commandsAndEvent.KernelEventEnvelope(
+                    commandsAndEvent.ReturnValueProducedType,
+                    {
                         formattedValues: [
                             {
                                 mimeType: "text/plain",
@@ -100,17 +104,18 @@ describe("compositeKernel", () => {
                             }
                         ]
                     },
-                    command: invocation.commandEnvelope
-                });
+                    invocation.commandEnvelope
+                );
+                invocation.context.publish(event);
                 return Promise.resolve();
             }
         });
 
         go.registerCommandHandler({
             commandType: commandsAndEvent.SubmitCodeType, handle: (invocation) => {
-                invocation.context.publish({
-                    eventType: commandsAndEvent.ReturnValueProducedType,
-                    event: {
+                const event = new commandsAndEvent.KernelEventEnvelope(
+                    commandsAndEvent.ReturnValueProducedType,
+                    {
                         formattedValues: [
                             {
                                 mimeType: "text/plain",
@@ -118,8 +123,9 @@ describe("compositeKernel", () => {
                             }
                         ]
                     },
-                    command: invocation.commandEnvelope
-                });
+                    invocation.commandEnvelope
+                );
+                invocation.context.publish(event);
                 return Promise.resolve();
             }
         });
@@ -128,11 +134,15 @@ describe("compositeKernel", () => {
             events.push(e);
         });
 
-        await compositeKernel.send({ commandType: commandsAndEvent.SubmitCodeType, command: <commandsAndEvent.SubmitCode>{ code: "pytonCode", targetKernelName: "python" } });
-        await compositeKernel.send({ commandType: commandsAndEvent.SubmitCodeType, command: <commandsAndEvent.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
+        const command1 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "pytonCode", targetKernelName: "python" });
+        const command2 = new commandsAndEvent.KernelCommandEnvelope(commandsAndEvent.SubmitCodeType, <commandsAndEvent.SubmitCode>{ code: "goCode", targetKernelName: "go" });
+
+        await compositeKernel.send(command1);
+        await compositeKernel.send(command2);
 
         const pythonReturnValueProduced = findEventFromKernel<commandsAndEvent.ReturnValueProduced>(events, commandsAndEvent.ReturnValueProducedType, "python")!;
         const goReturnValueProduced = findEventFromKernel<commandsAndEvent.ReturnValueProduced>(events, commandsAndEvent.ReturnValueProducedType, "go")!;
+
         expect(pythonReturnValueProduced).not.to.be.undefined;
         expect(pythonReturnValueProduced.formattedValues[0].value).to.be.eq("12");
         expect(goReturnValueProduced).not.to.be.undefined;
@@ -195,7 +205,9 @@ describe("compositeKernel", () => {
         });
 
         compositeKernel.setDefaultTargetKernelNameForCommand(<commandsAndEvent.KernelCommandType>CustomCommandType, compositeKernel.name);
-        await compositeKernel.send({ commandType: <commandsAndEvent.KernelCommandType>CustomCommandType, command: {} });
+
+        const command = new commandsAndEvent.KernelCommandEnvelope(<commandsAndEvent.KernelCommandType>CustomCommandType, {});
+        await compositeKernel.send(command);
 
         expect(handlingKernel).to.be.eq(compositeKernel.name);
     });

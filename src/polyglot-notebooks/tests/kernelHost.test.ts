@@ -29,35 +29,37 @@ describe("kernelHost",
             const kernelHost = new KernelHost(compositeKernel, inMemory.local.sender, inMemory.local.receiver, "kernel://vscode");
             kernelHost.connect();
 
-            expect(inMemory.local.messagesSent).to.deep.equal([{
-                event:
-                {
-                    kernelInfos:
-                        [{
-                            aliases: [],
-                            displayName: 'vscode',
-                            isComposite: true,
-                            isProxy: false,
-                            localName: 'vscode',
-                            supportedDirectives: [],
-                            supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
-                            uri: 'kernel://vscode/'
-                        },
-                        {
-                            aliases: ['test1', 'test2'],
-                            displayName: 'test',
-                            isComposite: false,
-                            isProxy: false,
-                            languageName: 'customLanguage',
-                            localName: 'test',
-                            supportedDirectives: [],
-                            supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'customCommand' }],
-                            uri: 'kernel://vscode/test'
-                        }]
-                },
-                eventType: 'KernelReady',
-                routingSlip: ['kernel://vscode/']
-            }]);
+            expect(inMemory.local.messagesSent).to.deep
+                .equal([{
+                    _routingSlip: { _uris: ['kernel://vscode/'] },
+                    command: undefined,
+                    event:
+                    {
+                        kernelInfos:
+                            [{
+                                aliases: [],
+                                displayName: 'vscode',
+                                isComposite: true,
+                                isProxy: false,
+                                localName: 'vscode',
+                                supportedDirectives: [],
+                                supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
+                                uri: 'kernel://vscode/'
+                            },
+                            {
+                                aliases: ['test1', 'test2'],
+                                displayName: 'test',
+                                isComposite: false,
+                                isProxy: false,
+                                languageName: 'customLanguage',
+                                localName: 'test',
+                                supportedDirectives: [],
+                                supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'customCommand' }],
+                                uri: 'kernel://vscode/test'
+                            }]
+                    },
+                    eventType: 'KernelReady'
+                }]);
         });
 
         it("provides uri for kernels", () => {
@@ -132,9 +134,9 @@ describe("kernelHost",
 
             python.registerCommandHandler({
                 commandType: commandsAndEvents.SubmitCodeType, handle: (invocation) => {
-                    invocation.context.publish({
-                        eventType: commandsAndEvents.ReturnValueProducedType,
-                        event: {
+                    const returnValueProduced = new commandsAndEvents.KernelEventEnvelope(
+                        commandsAndEvents.ReturnValueProducedType,
+                        {
                             formattedValues: [
                                 {
                                     mimeType: "text/plain",
@@ -142,17 +144,19 @@ describe("kernelHost",
                                 }
                             ]
                         },
-                        command: invocation.commandEnvelope
-                    });
+                        invocation.commandEnvelope
+                    );
+
+                    invocation.context.publish(returnValueProduced);
                     return Promise.resolve();
                 }
             });
 
             go.registerCommandHandler({
                 commandType: commandsAndEvents.SubmitCodeType, handle: (invocation) => {
-                    invocation.context.publish({
-                        eventType: commandsAndEvents.ReturnValueProducedType,
-                        event: {
+                    const returnValueProduced = new commandsAndEvents.KernelEventEnvelope(
+                        commandsAndEvents.ReturnValueProducedType,
+                        {
                             formattedValues: [
                                 {
                                     mimeType: "text/plain",
@@ -160,8 +164,10 @@ describe("kernelHost",
                                 }
                             ]
                         },
-                        command: invocation.commandEnvelope
-                    });
+                        invocation.commandEnvelope
+                    );
+
+                    invocation.context.publish(returnValueProduced);
                     return Promise.resolve();
                 }
             });
@@ -171,8 +177,10 @@ describe("kernelHost",
             vscodeHost.connect();
             remoteHost.connect();
 
-            await vscodeKernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "pytonCode", targetKernelName: "python" } });
-            await vscodeKernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "goCode", targetKernelName: "go" } });
+            const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "pytonCode", targetKernelName: "python" });
+            const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "goCode", targetKernelName: "go" });
+            await vscodeKernel.send(command1);
+            await vscodeKernel.send(command2);
 
 
             expect(events.find(e => e.command!.command.targetKernelName === "python")).not.to.be.undefined;

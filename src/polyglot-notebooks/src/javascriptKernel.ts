@@ -45,7 +45,8 @@ export class JavascriptKernel extends Kernel {
         super.kernelInfo.localName;//?
         super.kernelInfo.uri;//?
         super.kernelInfo.remoteUri;//?
-        invocation.context.publish({ eventType: commandsAndEvents.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
+        const codeSubmissionReceivedEvent = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CodeSubmissionReceivedType, { code }, invocation.commandEnvelope);
+        invocation.context.publish(codeSubmissionReceivedEvent);
         invocation.context.commandEnvelope.routingSlip;//?
         this.capture.kernelInvocationContext = invocation.context;
         let result: any = undefined;
@@ -59,7 +60,8 @@ export class JavascriptKernel extends Kernel {
                 const event: commandsAndEvents.ReturnValueProduced = {
                     formattedValues: [formattedValue]
                 };
-                invocation.context.publish({ eventType: commandsAndEvents.ReturnValueProducedType, event, command: invocation.commandEnvelope });
+                const returnValueProducedEvent = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.ReturnValueProducedType, event, invocation.commandEnvelope);
+                invocation.context.publish(returnValueProducedEvent);
             }
         } catch (e) {
             throw e;//?
@@ -81,7 +83,9 @@ export class JavascriptKernel extends Kernel {
         const event: commandsAndEvents.ValueInfosProduced = {
             valueInfos
         };
-        invocation.context.publish({ eventType: commandsAndEvents.ValueInfosProducedType, event, command: invocation.commandEnvelope });
+
+        const valueInfosProducedEvent = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.ValueInfosProducedType, event, invocation.commandEnvelope);
+        invocation.context.publish(valueInfosProducedEvent);
         return Promise.resolve();
     }
 
@@ -94,7 +98,9 @@ export class JavascriptKernel extends Kernel {
             name: requestValue.name,
             formattedValue
         };
-        invocation.context.publish({ eventType: commandsAndEvents.ValueProducedType, event, command: invocation.commandEnvelope });
+
+        const valueProducedEvent = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.ValueProducedType, event, invocation.commandEnvelope);
+        invocation.context.publish(valueProducedEvent);
         return Promise.resolve();
     }
 

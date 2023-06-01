@@ -16,13 +16,13 @@ describe("kernelRouting", () => {
 
         composite.defaultKernelName = "typescript";
 
-        let command: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: <commandsAndEvents.SubmitCode>{
+        let command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.SubmitCodeType,
+            <commandsAndEvents.SubmitCode>{
                 code: "return 12;",
                 targetKernelName: "javascript"
             }
-        };
+        );
 
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
@@ -35,7 +35,7 @@ describe("kernelRouting", () => {
         expect(succededEvent).not.to.be.undefined;
 
         succededEvent;//?
-        expect(Array.from(succededEvent!.command!.routingSlip!.values())).to.deep.equal(
+        expect(Array.from(succededEvent!.command!.routingSlip.toArray())).to.deep.equal(
             [
                 'kernel://local/vscode?tag=arrived',
                 'kernel://local/vscode/javascript?tag=arrived',
@@ -51,13 +51,13 @@ describe("kernelRouting", () => {
 
         composite.defaultKernelName = "typescript";
 
-        let command: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: <commandsAndEvents.SubmitCode>{
+        let command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.SubmitCodeType,
+            <commandsAndEvents.SubmitCode>{
                 code: "return 12;",
                 targetKernelName: "javascript"
             }
-        };
+        );
 
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
@@ -67,7 +67,7 @@ describe("kernelRouting", () => {
 
         expect(events[0].routingSlip).not.to.be.undefined;
 
-        expect(Array.from(events[0].routingSlip!.values())).to.deep.equal(
+        expect(Array.from(events[0].routingSlip!.toArray())).to.deep.equal(
             [
                 'kernel://local/vscode/javascript',
                 'kernel://local/vscode'
@@ -81,13 +81,13 @@ describe("kernelRouting", () => {
 
         remoteCompositeKernel.defaultKernelName = "typescript";
 
-        let command: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: <commandsAndEvents.SubmitCode>{
+        let command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.SubmitCodeType,
+            <commandsAndEvents.SubmitCode>{
                 code: "return 12;",
                 targetKernelName: "javascript"
             }
-        };
+        );
 
         const inMemory = createInMemoryChannels();
 
@@ -110,7 +110,7 @@ describe("kernelRouting", () => {
 
         expect(command.routingSlip).not.to.be.undefined;
 
-        expect(Array.from(command.routingSlip!.values())).to.deep.equal(
+        expect(Array.from(command.routingSlip!.toArray())).to.deep.equal(
             [
                 'kernel://local/?tag=arrived',
                 'kernel://local/javascript?tag=arrived',

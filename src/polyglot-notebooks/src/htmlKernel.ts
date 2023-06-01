@@ -20,7 +20,12 @@ export class HtmlKernel extends Kernel {
         const submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
         const code = submitCode.code;
 
-        invocation.context.publish({ eventType: commandsAndEvents.CodeSubmissionReceivedType, event: { code }, command: invocation.commandEnvelope });
+        const codeSubmissionReceivedEvent = new commandsAndEvents.KernelEventEnvelope(
+            commandsAndEvents.CodeSubmissionReceivedType,
+            { code },
+            invocation.commandEnvelope);
+
+        invocation.context.publish(codeSubmissionReceivedEvent);
 
         if (!this.htmlFragmentInserter) {
             throw new Error("No HTML fragment processor registered");
@@ -35,7 +40,12 @@ export class HtmlKernel extends Kernel {
                 }]
             };
 
-            invocation.context.publish({ eventType: commandsAndEvents.DisplayedValueProducedType, event: { displayedValueProduced }, command: invocation.commandEnvelope });
+            const valueProducedEvent = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.DisplayedValueProducedType,
+                { formattedValues: displayedValueProduced.formattedValues },
+                invocation.commandEnvelope);
+
+            invocation.context.publish(valueProducedEvent);
 
         } catch (e) {
             throw e;//?

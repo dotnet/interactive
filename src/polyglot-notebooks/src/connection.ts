@@ -10,6 +10,8 @@ import { Logger } from './logger';
 
 export type KernelCommandOrEventEnvelope = commandsAndEvents.KernelCommandEnvelope | commandsAndEvents.KernelEventEnvelope;
 
+export type KernelCommandOrEventEnvelopeModel = commandsAndEvents.KernelCommandEnvelopeModel | commandsAndEvents.KernelEventEnvelopeModel;
+
 export function isKernelCommandEnvelope(commandOrEvent: KernelCommandOrEventEnvelope): commandOrEvent is commandsAndEvents.KernelCommandEnvelope {
     return (<any>commandOrEvent).commandType !== undefined;
 }
@@ -76,11 +78,15 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
     send(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope): Promise<void> {
         if (this._sender) {
             try {
-                const serislized = JSON.parse(JSON.stringify(kernelCommandOrEventEnvelope));
+                const serislized = JSON.parse(JSON.stringify(kernelCommandOrEventEnvelope.toJson()));
                 if (typeof this._sender === "function") {
                     this._sender(serislized);
                 } else if (isObservable(this._sender)) {
-                    this._sender.next(serislized);
+                    if (isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
+                        this._sender.next(commandsAndEvents.KernelCommandEnvelope.fromJson(serislized));
+                    } else {
+                        this._sender.next(commandsAndEvents.KernelEventEnvelope.fromJson(serislized));
+                    }
                 } else {
                     return Promise.reject(new Error("Sender is not set"));
                 }

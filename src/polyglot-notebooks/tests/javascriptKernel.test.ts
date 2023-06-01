@@ -21,7 +21,8 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "1+1" } });
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "1+1" });
+        await kernel.send(command);
 
         expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
     });
@@ -33,15 +34,17 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({
-            commandType: commandsAndEvents.SendValueType, command: <commandsAndEvents.SendValue>{
+        const command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.SendValueType,
+            <commandsAndEvents.SendValue>{
                 formattedValue: {
                     value: JSON.stringify({ a: 1 }),
                     mimeType: "application/json",
                 },
                 name: "x0"
-            }
-        });
+            });
+
+        await kernel.send(command);
 
         expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
         let value: any = kernel.getLocalVariable("x0");
@@ -53,7 +56,8 @@ describe("javascriptKernel", () => {
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
 
-        await kernel.send({ commandType: commandsAndEvents.RequestValueInfosType, command: <commandsAndEvents.RequestValueInfos>{} });
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, <commandsAndEvents.RequestValueInfos>{});
+        await kernel.send(command);
 
         expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos).to.be.empty;
     });
@@ -63,8 +67,13 @@ describe("javascriptKernel", () => {
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
         const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: `${valueName} = 42;` } });
-        await kernel.send({ commandType: commandsAndEvents.RequestValueInfosType, command: <commandsAndEvents.RequestValueInfos>{} });
+
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `${valueName} = 42;` });
+        const requestValueInfos = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, <commandsAndEvents.RequestValueInfos>{});
+
+        await kernel.send(submitCode);
+        await kernel.send(requestValueInfos);
+
         expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos)
             .to.deep.equal(
                 [{
@@ -80,8 +89,13 @@ describe("javascriptKernel", () => {
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
         const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: `${valueName} = [42,43];` } });
-        await kernel.send({ commandType: commandsAndEvents.RequestValueInfosType, command: <commandsAndEvents.RequestValueInfos>{} });
+
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `${valueName} = [42,43];` });
+        const requestValueInfos = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, <commandsAndEvents.RequestValueInfos>{});
+
+        await kernel.send(submitCode);
+        await kernel.send(requestValueInfos);
+
         expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos)
             .to.deep.equal(
                 [{
@@ -97,8 +111,13 @@ describe("javascriptKernel", () => {
         const kernel = new JavascriptKernel();
         kernel.subscribeToKernelEvents((e) => events.push(e));
         const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: `${valueName} = 42;` } });
-        await kernel.send({ commandType: commandsAndEvents.RequestValueType, command: <commandsAndEvents.RequestValue>{ name: `${valueName}` } });
+
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `${valueName} = 42;` });
+        const requestValue = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueType, <commandsAndEvents.RequestValue>{ name: `${valueName}` });
+
+        await kernel.send(submitCode);
+        await kernel.send(requestValue);
+
         expect((<commandsAndEvents.ValueProduced>events.find(e => e.eventType === commandsAndEvents.ValueProducedType)!.event).formattedValue)
             .to.deep.equal({
                 mimeType: 'application/json',
@@ -113,7 +132,9 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "1+1" } });
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "1+1" });
+
+        await kernel.send(submitCode);
 
         expect(events.find(e => e.eventType === commandsAndEvents.CodeSubmissionReceivedType)).to.not.be.undefined;
     });
@@ -125,7 +146,9 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "return 1+1;" } });
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "return 1+1;" });
+
+        await kernel.send(submitCode);
 
         expect(events.find(e => e.eventType === commandsAndEvents.ReturnValueProducedType)).to.not.be.undefined;
     });
@@ -137,7 +160,9 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: `await Promise.resolve(20);` } });
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `await Promise.resolve(20);` });
+
+        await kernel.send(submitCode);
 
         expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
     });
@@ -149,11 +174,14 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({
-            commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.SubmitCodeType,
+            <commandsAndEvents.SubmitCode>{
                 code: `await Promise.resolve(20);
-        return 1+1;` }
-        });
+            return 1+1;` });
+
+        await kernel.send(submitCode);
+
         expect(events.find(e => e.eventType === commandsAndEvents.ReturnValueProducedType)).to.not.be.undefined;
     });
 
@@ -165,7 +193,8 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "console.log(12);" } });
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "console.log(12);" });
+        await kernel.send(submitCode);
         let event = <commandsAndEvents.DisplayedValueProduced><any>(events.find(e => e.eventType === commandsAndEvents.DisplayedValueProducedType))?.event;
         expect(event).to.not.be.undefined;
 
@@ -180,9 +209,14 @@ describe("javascriptKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "hello = function () { console.log('hello'); };" } });
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "hello();" } });
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "hello();" } });
+        const submitCodeToDeclareFunction = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "hello = function () { console.log('hello'); };" });
+        const submitCodeInvocation1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "hello();" });
+        const submitCodeInvocation2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "hello();" });
+
+        await kernel.send(submitCodeToDeclareFunction);
+        await kernel.send(submitCodeInvocation1);
+        await kernel.send(submitCodeInvocation2);
+
         const writtenLines = events.filter(e => e.eventType === commandsAndEvents.DisplayedValueProducedType).map(e => <commandsAndEvents.DisplayedValueProduced>e.event).map(e => e.formattedValues[0].value);
         expect(writtenLines).to.deep.equal([
             "hello",
