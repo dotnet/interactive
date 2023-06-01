@@ -42,17 +42,15 @@ describe("dotnet-interactive", () => {
 
             let handler1Invocations: IKernelCommandInvocation[] = [];
             let handler2Invocations: IKernelCommandInvocation[] = [];
+
             kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: IKernelCommandInvocation) => { handler1Invocations.push(a); } });
             kernel.registerCommandHandler({ commandType: commandType2, handle: async (a: IKernelCommandInvocation) => { handler2Invocations.push(a); } });
 
-            await kernel.send({
-                commandType: commandType1,
-                command: command1In
-            });
-            await kernel.send({
-                commandType: commandType2,
-                command: command2In
-            });
+
+            const command1 = new commandsAndEvents.KernelCommandEnvelope(commandType1, command1In);
+            const command2 = new commandsAndEvents.KernelCommandEnvelope(commandType2, command2In);
+            await kernel.send(command1);
+            await kernel.send(command2);
 
             expect(handler1Invocations.length).to.be.equal(1);
             let handler1Invocation = handler1Invocations[0];

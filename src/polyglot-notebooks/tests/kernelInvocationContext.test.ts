@@ -7,7 +7,6 @@ import { IKernelEventObserver } from "../src/kernel";
 import { KernelInvocationContext } from "../src/kernelInvocationContext";
 import * as commandsAndEvents from "../src/commandsAndEvents";
 import * as disposables from "../src/disposables";
-import * as uuid from "uuid";
 
 describe("dotnet-interactive", () => {
 
@@ -29,14 +28,14 @@ describe("dotnet-interactive", () => {
                 };
             };
         function makeSubmitCode(code: string): commandsAndEvents.KernelCommandEnvelope {
-            let command: commandsAndEvents.SubmitCode = {
-                code: code
-            };
-            return {
-                commandType: commandsAndEvents.SubmitCodeType,
-                command: command,
-                token: uuid.v4()
-            };
+
+            const command = new commandsAndEvents.KernelCommandEnvelope(
+                commandsAndEvents.SubmitCodeType,
+                <commandsAndEvents.SubmitCode>{
+                    code: code
+                }
+            );
+            return command;
         }
         let commadnEnvelope = makeSubmitCode("123");
 
@@ -102,11 +101,11 @@ describe("dotnet-interactive", () => {
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: commandsAndEvents.KernelEventEnvelope = {
-                event: ev,
-                eventType: commandsAndEvents.ErrorProducedType,
-                command: commadnEnvelope
-            };
+            let evEnv = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.ErrorProducedType,
+                ev,
+                commadnEnvelope
+            );
             context.publish(evEnv);
 
             ew.events.forEach(event => {
@@ -151,11 +150,11 @@ describe("dotnet-interactive", () => {
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: commandsAndEvents.KernelEventEnvelope = {
-                event: ev,
-                eventType: commandsAndEvents.DisplayedValueProducedType,
-                command: commadnEnvelope
-            };
+            let evEnv = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.DisplayedValueProducedType,
+                ev,
+                commadnEnvelope
+            );
             context.publish(evEnv);
 
             ew.events.forEach(event => {
@@ -195,11 +194,11 @@ describe("dotnet-interactive", () => {
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: commandsAndEvents.KernelEventEnvelope = {
-                event: ev,
-                eventType: commandsAndEvents.ErrorProducedType,
-                command: innerSubmitCode
-            };
+            let evEnv = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.ErrorProducedType,
+                ev,
+                innerSubmitCode
+            );
             inner.publish(evEnv);
 
             expect(ew.events.length).to.eql(1);
@@ -223,11 +222,11 @@ describe("dotnet-interactive", () => {
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: commandsAndEvents.KernelEventEnvelope = {
-                event: ev,
-                eventType: commandsAndEvents.ErrorProducedType,
-                command: innerSubmitCode
-            };
+            let evEnv = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.ErrorProducedType,
+                ev,
+                innerSubmitCode
+            );
             inner.publish(evEnv);
 
             ew.events.forEach(event => {
@@ -252,11 +251,11 @@ describe("dotnet-interactive", () => {
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: commandsAndEvents.KernelEventEnvelope = {
-                event: ev,
-                eventType: commandsAndEvents.ErrorProducedType,
-                command: innerSubmitCode
-            };
+            let evEnv = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.ErrorProducedType,
+                ev,
+                innerSubmitCode
+            );
             inner.publish(evEnv);
 
             ew.events.forEach(event => {
@@ -311,11 +310,11 @@ describe("dotnet-interactive", () => {
                 formattedValues: [],
                 valueId: undefined
             };
-            let evEnv: commandsAndEvents.KernelEventEnvelope = {
-                event: ev,
-                eventType: commandsAndEvents.ErrorProducedType,
-                command: innerSubmitCode
-            };
+            let evEnv = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.ErrorProducedType,
+                ev,
+                innerSubmitCode
+            );
             inner.publish(evEnv);
 
             ew.events.forEach(event => {

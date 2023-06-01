@@ -62,11 +62,12 @@ export class KernelInvocationContext implements Disposable {
         if (areCommandsTheSame(command, this._commandEnvelope)) {
             this._isComplete = true;
             let succeeded: commandsAndEvents.CommandSucceeded = {};
-            let eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
-                command: this._commandEnvelope,
-                eventType: commandsAndEvents.CommandSucceededType,
-                event: succeeded
-            };
+            let eventEnvelope: commandsAndEvents.KernelEventEnvelope = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.CommandSucceededType,
+                succeeded,
+                this._commandEnvelope
+            );
+
             this.internalPublish(eventEnvelope);
             this.completionSource.resolve();
             // TODO: C# version has completion callbacks - do we need these?
@@ -88,11 +89,11 @@ export class KernelInvocationContext implements Disposable {
         // for exceptions? (The TS CommandFailed interface doesn't have a place for it right now.)
         this._isComplete = true;
         let failed: commandsAndEvents.CommandFailed = { message: message ?? "Command Failed" };
-        let eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
-            command: this._commandEnvelope,
-            eventType: commandsAndEvents.CommandFailedType,
-            event: failed
-        };
+        let eventEnvelope: commandsAndEvents.KernelEventEnvelope = new commandsAndEvents.KernelEventEnvelope(
+            commandsAndEvents.CommandFailedType,
+            failed,
+            this._commandEnvelope
+        );
 
         this.internalPublish(eventEnvelope);
         this.completionSource.resolve();
@@ -113,8 +114,8 @@ export class KernelInvocationContext implements Disposable {
 
         if (this.handlingKernel) {
             const kernelUri = getKernelUri(this.handlingKernel);
-            if (!routingslip.eventRoutingSlipContains(kernelEvent, kernelUri)) {
-                routingslip.stampEventRoutingSlip(kernelEvent, kernelUri);
+            if (!kernelEvent.routingSlip.contains(kernelUri)) {
+                kernelEvent.routingSlip.stamp(kernelUri);
                 kernelEvent.routingSlip;//?
             } else {
                 "should not be here";//?
@@ -158,7 +159,7 @@ export function areCommandsTheSame(envelope1: commandsAndEvents.KernelCommandEnv
     }
 
     const sameCommandType = envelope1?.commandType === envelope2?.commandType; //?
-    const sameToken = envelope1?.token === envelope2?.token; //?
+    const sameToken = envelope1?.getOrCreateToken() === envelope2?.getOrCreateToken(); //?
     const sameCommandId = envelope1?.id === envelope2?.id; //?
     if (sameCommandType && sameToken && sameCommandId) {
         return true;

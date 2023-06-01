@@ -11,14 +11,14 @@ export interface DocumentKernelInfoCollection {
     items: contracts.DocumentKernelInfo[];
 }
 
-export interface KernelEventEnvelope {
+export interface KernelEventEnvelopeModel {
     eventType: contracts.KernelEventType;
     event: contracts.KernelEvent;
-    command?: KernelCommandEnvelope;
+    command?: KernelCommandEnvelopeModel;
     routingSlip?: string[];
 }
 
-export interface KernelCommandEnvelope {
+export interface KernelCommandEnvelopeModel {
     token?: string;
     id?: string;
     commandType: contracts.KernelCommandType;
@@ -34,12 +34,12 @@ export interface KernelCommandEnvelopeHandler {
     (eventEnvelope: KernelCommandEnvelope): Promise<void>;
 }
 
-export class KernelCommandEnvelope2 {
+export class KernelCommandEnvelope {
     private _childCommandCounter: number = 0;
     private _routingSlip: CommandRoutingSlip = new CommandRoutingSlip();
-    private _id?: string;
+    private _id: string;
     private _token?: string;
-    private _parentCommand?: KernelCommandEnvelope2;
+    private _parentCommand?: KernelCommandEnvelope;
 
     constructor(
         public commandType: contracts.KernelCommandType,
@@ -51,15 +51,19 @@ export class KernelCommandEnvelope2 {
         this._id = buffer.toString('base64');
     }
 
+    public get id(): string {
+        return this._id;
+    }
+
     public get routingSlip(): CommandRoutingSlip {
         return this._routingSlip;
     }
 
-    public get parentCommand(): KernelCommandEnvelope2 | undefined {
+    public get parentCommand(): KernelCommandEnvelope | undefined {
         return this._parentCommand;
     }
 
-    public set parent(parentCommand: KernelCommandEnvelope2 | undefined) {
+    public set parent(parentCommand: KernelCommandEnvelope | undefined) {
         if (this._parentCommand && this._parentCommand !== parentCommand) {
             throw new Error("Parent cannot be changed.");
         }
@@ -83,8 +87,34 @@ export class KernelCommandEnvelope2 {
         return this._token;
     }
 
-    public toJson(): KernelCommandEnvelope {
-        const model: KernelCommandEnvelope = {
+    public isSelforDescendantOf(otherCommand: KernelCommandEnvelope) {
+        const otherToken = otherCommand.getOrCreateToken();
+        const thisToken = this.getOrCreateToken();
+        if (thisToken && otherToken) {
+            return thisToken.startsWith(otherToken!);
+        }
+
+        throw new Error('both commands must have tokens');
+    }
+
+    public hasSameRootCommandAs(otherCommand: KernelCommandEnvelope) {
+        const otherToken = otherCommand.getOrCreateToken();
+        const thisToken = this.getOrCreateToken();
+        if (thisToken && otherToken) {
+            const otherRootToken = KernelCommandEnvelope.getRootToken(otherToken);
+            const thisRootToken = KernelCommandEnvelope.getRootToken(thisToken);
+            return thisRootToken === otherRootToken;
+        }
+        throw new Error('both commands must have tokens');
+    }
+
+    public static getRootToken(token: string): string {
+        const parts = token.split('.');
+        return parts[0];
+    }
+
+    public toJson(): KernelCommandEnvelopeModel {
+        const model: KernelCommandEnvelopeModel = {
             commandType: this.commandType,
             command: this.command,
             routingSlip: this._routingSlip.toArray(),
@@ -95,10 +125,12 @@ export class KernelCommandEnvelope2 {
         return model;
     }
 
-    public static fromJson(model: KernelCommandEnvelope): KernelCommandEnvelope2 {
-        const command = new KernelCommandEnvelope2(model.commandType, model.command);
+    public static fromJson(model: KernelCommandEnvelopeModel): KernelCommandEnvelope {
+        const command = new KernelCommandEnvelope(model.commandType, model.command);
         command._routingSlip = CommandRoutingSlip.fromUris(model.routingSlip || []);
-        command._id = model.id;
+        if (model.id) {
+            command._id = model.id;
+        }
         command._token = model.token;
         return command;
     }
@@ -108,20 +140,20 @@ export class KernelCommandEnvelope2 {
     }
 }
 
-export class KernelEventEnvelope2 {
+export class KernelEventEnvelope {
     private _routingSlip: EventRoutingSlip = new EventRoutingSlip();
     constructor(
         public eventType: contracts.KernelEventType,
         public event: contracts.KernelEvent,
-        public command?: KernelCommandEnvelope2) {
+        public command?: KernelCommandEnvelope) {
     }
 
     public get routingSlip(): EventRoutingSlip {
         return this._routingSlip;
     }
 
-    public toJson(): KernelEventEnvelope {
-        const model: KernelEventEnvelope = {
+    public toJson(): KernelEventEnvelopeModel {
+        const model: KernelEventEnvelopeModel = {
             eventType: this.eventType,
             event: this.event,
             command: this.command?.toJson(),
@@ -131,11 +163,11 @@ export class KernelEventEnvelope2 {
         return model;
     }
 
-    public static fromJson(model: KernelEventEnvelope): KernelEventEnvelope2 {
-        const event = new KernelEventEnvelope2(
+    public static fromJson(model: KernelEventEnvelopeModel): KernelEventEnvelope {
+        const event = new KernelEventEnvelope(
             model.eventType,
             model.event,
-            model.command ? KernelCommandEnvelope2.fromJson(model.command) : undefined);
+            model.command ? KernelCommandEnvelope.fromJson(model.command) : undefined);
         event._routingSlip = EventRoutingSlip.fromUris(model.routingSlip || []
         );
         return event;
