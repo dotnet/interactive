@@ -28,8 +28,8 @@ export class ProxyKernel extends Kernel {
     private delegatePublication(envelope: commandsAndEvents.KernelEventEnvelope, invocationContext: KernelInvocationContext): void {
         let alreadyBeenSeen = false;
         const kernelUri = getKernelUri(this);
-        if (kernelUri && !routingSlip.eventRoutingSlipContains(envelope, kernelUri)) {
-            routingSlip.stampEventRoutingSlip(envelope, kernelUri);
+        if (kernelUri && !envelope.routingSlip.contains(kernelUri)) {
+            envelope.routingSlip.stamp(kernelUri);
         } else {
             alreadyBeenSeen = true;
         }
@@ -55,9 +55,10 @@ export class ProxyKernel extends Kernel {
     }
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
-        const commandToken = commandInvocation.commandEnvelope.token;
+        const commandToken = commandInvocation.commandEnvelope.getOrCreateToken();
         const commandId = commandInvocation.commandEnvelope.id;
         const completionSource = new PromiseCompletionSource<commandsAndEvents.KernelEventEnvelope>();
+        const command = commandInvocation.commandEnvelope;
         // fix : is this the right way? We are trying to avoid forwarding events we just did forward
         let eventSubscription = this._receiver.subscribe({
             next: (envelope) => {
@@ -71,22 +72,19 @@ export class ProxyKernel extends Kernel {
                         if (kernelInfoProduced.kernelInfo.uri === this.kernelInfo.remoteUri) {
 
                             this.updateKernelInfoFromEvent(kernelInfoProduced);
-                            this.publishEvent(
-                                {
-                                    eventType: commandsAndEvents.KernelInfoProducedType,
-                                    event: { kernelInfo: this.kernelInfo }
-                                });
+                            const event = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.KernelInfoProducedType, { kernelInfo: this.kernelInfo });
+                            this.publishEvent(event);
                         }
                     }
-                    else if (envelope.command!.token === commandToken) {
+                    else if (envelope.command!.getOrCreateToken() === commandToken) {
 
                         Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
                         Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, ${JSON.stringify(envelope)}`);
 
                         try {
-                            const original = [...commandInvocation.commandEnvelope?.routingSlip ?? []];
-                            routingSlip.continueCommandRoutingSlip(commandInvocation.commandEnvelope, envelope.command!.routingSlip!);
-                            envelope.command!.routingSlip = [...commandInvocation.commandEnvelope.routingSlip ?? []];//?
+                            const original = [...commandInvocation.commandEnvelope?.routingSlip.toArray() ?? []];
+                            commandInvocation.commandEnvelope.routingSlip.continueWith(envelope.command!.routingSlip);
+                            //envelope.command!.routingSlip = [...commandInvocation.commandEnvelope.routingSlip ?? []];//?
                             Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, command routingSlip :${original}] has changed to: ${JSON.stringify(commandInvocation.commandEnvelope.routingSlip ?? [])}`);
                         } catch (e: any) {
                             Logger.default.error(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, error ${e?.message}`);
@@ -98,13 +96,15 @@ export class ProxyKernel extends Kernel {
                                     const kernelInfoProduced = <commandsAndEvents.KernelInfoProduced>envelope.event;
                                     if (kernelInfoProduced.kernelInfo.uri === this.kernelInfo.remoteUri) {
                                         this.updateKernelInfoFromEvent(kernelInfoProduced);
-                                        this.delegatePublication(
-                                            {
-                                                eventType: commandsAndEvents.KernelInfoProducedType,
-                                                event: { kernelInfo: this.kernelInfo },
-                                                routingSlip: envelope.routingSlip,
-                                                command: commandInvocation.commandEnvelope
-                                            }, commandInvocation.context);
+                                        const event = new commandsAndEvents.KernelEventEnvelope(
+                                            commandsAndEvents.KernelInfoProducedType,
+                                            { kernelInfo: this.kernelInfo },
+                                            commandInvocation.commandEnvelope
+                                        );
+
+                                        event.routingSlip.continueWith(envelope.routingSlip)
+
+                                        this.delegatePublication(event, commandInvocation.context);
                                         this.delegatePublication(envelope, commandInvocation.context);
                                     } else {
                                         this.delegatePublication(envelope, commandInvocation.context);
@@ -141,7 +141,7 @@ export class ProxyKernel extends Kernel {
 
             if (commandInvocation.commandEnvelope.commandType === commandsAndEvents.RequestKernelInfoType) {
                 const destinationUri = this.kernelInfo.remoteUri!;
-                if (routingSlip.commandRoutingSlipContains(commandInvocation.commandEnvelope, destinationUri, true)) {
+                if (commandInvocation.commandEnvelope.routingSlip.contains(destinationUri, true)) {
                     return Promise.resolve();
                 }
             }

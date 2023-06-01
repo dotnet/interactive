@@ -2,34 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { KernelCommandEnvelope } from "./commandsAndEvents";
-import * as uuid from "uuid";
 
-export class TokenGenerator {
-    private _counter: number = 1;
-    public createToken(parentCommand?: KernelCommandEnvelope): string {
-        if (parentCommand) {
-            if (!parentCommand.token) {
-                parentCommand.token = this.createToken();
-            }
-
-            return `${parentCommand.token}.${this._counter++}`;
-        }
-        else {
-            const guidBytes = uuid.parse(uuid.v4());
-            const data = new Uint8Array(guidBytes);
-            const buffer = Buffer.from(data.buffer);
-            return buffer.toString('base64');
-        }
-    }
-
-    public createId(): string {
-        return uuid.v4();
-    }
-}
-
-export function isSelforDescendantOf(thicCommand: KernelCommandEnvelope, otherCommand: KernelCommandEnvelope) {
-    const otherToken = otherCommand.token;
-    const thisToken = thicCommand.token;
+export function isSelforDescendantOf(thisCommand: KernelCommandEnvelope, otherCommand: KernelCommandEnvelope) {
+    const otherToken = otherCommand.getOrCreateToken();
+    const thisToken = thisCommand.getOrCreateToken();
     if (thisToken && otherToken) {
         return thisToken.startsWith(otherToken!);
     }
@@ -37,9 +13,9 @@ export function isSelforDescendantOf(thicCommand: KernelCommandEnvelope, otherCo
     throw new Error('both commands must have tokens');
 }
 
-export function hasSameRootCommandAs(thicCommand: KernelCommandEnvelope, otherCommand: KernelCommandEnvelope) {
-    const otherToken = otherCommand.token;
-    const thisToken = thicCommand.token;
+export function hasSameRootCommandAs(thisCommand: KernelCommandEnvelope, otherCommand: KernelCommandEnvelope) {
+    const otherToken = otherCommand.getOrCreateToken();
+    const thisToken = thisCommand.getOrCreateToken();
     if (thisToken && otherToken) {
         const otherRootToken = getRootToken(otherToken);
         const thisRootToken = getRootToken(thisToken);

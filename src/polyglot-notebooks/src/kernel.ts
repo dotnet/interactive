@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { KernelInvocationContext, areCommandsTheSame } from "./kernelInvocationContext";
-import { TokenGenerator } from "./tokenGenerator";
 import * as commandsAndEvents from "./commandsAndEvents";
 import { Logger } from "./logger";
 import { CompositeKernel } from "./compositeKernel";
@@ -31,7 +30,6 @@ export class Kernel {
     private _kernelInfo: commandsAndEvents.KernelInfo;
     private _commandHandlers = new Map<string, IKernelCommandHandler>();
     private _eventSubject = new rxjs.Subject<commandsAndEvents.KernelEventEnvelope>();
-    private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
     private _scheduler?: KernelScheduler<commandsAndEvents.KernelCommandEnvelope> | null = null;
@@ -67,11 +65,11 @@ export class Kernel {
     }
 
     protected async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
-        const eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
-            eventType: commandsAndEvents.KernelInfoProducedType,
-            command: invocation.commandEnvelope,
-            event: <commandsAndEvents.KernelInfoProduced>{ kernelInfo: this._kernelInfo }
-        };//?
+        const eventEnvelope: commandsAndEvents.KernelEventEnvelope = new commandsAndEvents.KernelEventEnvelope(
+            commandsAndEvents.KernelInfoProducedType,
+            <commandsAndEvents.KernelInfoProduced>{ kernelInfo: this._kernelInfo },
+            invocation.commandEnvelope
+        );//?
 
         invocation.context.publish(eventEnvelope);
         return Promise.resolve();
@@ -86,18 +84,7 @@ export class Kernel {
     }
 
     private ensureCommandTokenAndId(commandEnvelope: commandsAndEvents.KernelCommandEnvelope, context: KernelInvocationContext) {
-        if (!commandEnvelope.token) {
-            if (context.commandEnvelope !== commandEnvelope) {
-                let nextToken = this._tokenGenerator.createToken(KernelInvocationContext.current?.commandEnvelope);
-                commandEnvelope.token = nextToken;
-            } else {
-                commandEnvelope.token = this._tokenGenerator.createToken();
-            }
-        }
 
-        if (!commandEnvelope.id) {
-            commandEnvelope.id = this._tokenGenerator.createId();
-        }
     }
 
     static get current(): Kernel | null {
@@ -122,16 +109,16 @@ export class Kernel {
         const context = KernelInvocationContext.getOrCreateAmbientContext(commandEnvelope);
         this.ensureCommandTokenAndId(commandEnvelope, context);
         const kernelUri = getKernelUri(this);
-        if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
-            routingslip.stampCommandRoutingSlipAsArrived(commandEnvelope, kernelUri);
+        if (!commandEnvelope.routingSlip.contains(kernelUri)) {
+            commandEnvelope.routingSlip.stampAsArrived(kernelUri);
         } else {
             Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`);
         }
         commandEnvelope.routingSlip;//?
 
         return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value).finally(() => {
-            if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
-                routingslip.stampCommandRoutingSlip(commandEnvelope, kernelUri);
+            if (!commandEnvelope.routingSlip.contains(kernelUri)) {
+                commandEnvelope.routingSlip.stamp(kernelUri);
             }
             else {
                 Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as completed but uri ${kernelUri} is already present.`);
@@ -172,12 +159,12 @@ export class Kernel {
                 const kernelType = (this.kernelInfo.isProxy ? "proxy" : "") + (this.kernelInfo.isComposite ? "composite" : "");
                 Logger.default.info(`kernel ${this.name} of type ${kernelType} subscribing to context events`);
                 eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
-                    const message = `kernel ${this.name} of type ${kernelType} saw event ${e.eventType} with token ${e.command?.token}`;
+                    const message = `kernel ${this.name} of type ${kernelType} saw event ${e.eventType} with token ${e.command?.getOrCreateToken()}`;
                     message;//?
                     Logger.default.info(message);
                     const kernelUri = getKernelUri(this);
-                    if (!routingslip.eventRoutingSlipContains(e, kernelUri)) {
-                        routingslip.stampEventRoutingSlip(e, kernelUri);
+                    if (!e.routingSlip.contains(kernelUri)) {
+                        e.routingSlip.stamp(kernelUri);
                     } else {
                         "should not get here";//?
                     }
@@ -259,11 +246,13 @@ export class Kernel {
             const event: commandsAndEvents.KernelInfoProduced = {
                 kernelInfo: this._kernelInfo,
             };
-            const envelope: commandsAndEvents.KernelEventEnvelope = {
-                eventType: commandsAndEvents.KernelInfoProducedType,
-                event: event
-            };
-            routingslip.stampEventRoutingSlip(envelope, getKernelUri(this));
+            const envelope = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.KernelInfoProducedType,
+                event,
+                KernelInvocationContext.current?.commandEnvelope
+            );
+
+            envelope.routingSlip.stamp(getKernelUri(this));
             const context = KernelInvocationContext.current;
 
             if (context) {
@@ -299,7 +288,7 @@ export async function submitCommandAndGetResult<TEvent extends commandsAndEvents
     let completionSource = new PromiseCompletionSource<TEvent>();
     let handled = false;
     let disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
-        if (eventEnvelope.command?.token === commandEnvelope.token) {
+        if (eventEnvelope.command?.getOrCreateToken() === commandEnvelope.getOrCreateToken()) {
             switch (eventEnvelope.eventType) {
                 case commandsAndEvents.CommandFailedType:
                     if (!handled) {

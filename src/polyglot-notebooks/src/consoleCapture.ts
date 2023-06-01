@@ -114,11 +114,11 @@ export class ConsoleCapture implements disposables.Disposable {
                         }
                     ]
                 };
-                const eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
-                    eventType: commandsAndEvents.DisplayedValueProducedType,
-                    event: displayedValue,
-                    command: this._kernelInvocationContext.commandEnvelope
-                };
+                const eventEnvelope = new commandsAndEvents.KernelEventEnvelope(
+                    commandsAndEvents.DisplayedValueProducedType,
+                    displayedValue,
+                    this._kernelInvocationContext.commandEnvelope
+                );
 
                 this._kernelInvocationContext.publish(eventEnvelope);
             }

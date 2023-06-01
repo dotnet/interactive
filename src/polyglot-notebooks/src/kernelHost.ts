@@ -165,7 +165,10 @@ export class KernelHost {
             kernelInfos: kernelInfos
         };
 
-        await this._defaultConnector.sender.send({ eventType: commandsAndEvents.KernelReadyType, event: kernekReady, routingSlip: [this._kernel.kernelInfo.uri!] });
+        const event = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.KernelReadyType, kernekReady);
+        event.routingSlip.stamp(this._kernel.kernelInfo.uri!);
+
+        await this._defaultConnector.sender.send(event);
 
         return kernekReady;
     }
@@ -179,7 +182,12 @@ export class KernelHost {
     }
 
     public getKernelInfoProduced(): commandsAndEvents.KernelEventEnvelope[] {
-        let events: commandsAndEvents.KernelEventEnvelope[] = Array.from(this.getKernelInfos().map(kernelInfo => ({ eventType: commandsAndEvents.KernelInfoProducedType, event: <commandsAndEvents.KernelInfoProduced>{ kernelInfo: kernelInfo }, routingSlip: [kernelInfo.uri!] })));
+        let events: commandsAndEvents.KernelEventEnvelope[] = Array.from(this.getKernelInfos().map(kernelInfo => {
+            const event = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.KernelInfoProducedType, <commandsAndEvents.KernelInfoProduced>{ kernelInfo: kernelInfo });
+            event.routingSlip.stamp(kernelInfo.uri!);
+            return event;
+        }
+        ));
 
         return events;
     }

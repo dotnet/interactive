@@ -38,7 +38,7 @@ function configure(global: any, context: KernelMessagingApi) {
         if (arg.envelope && arg.webViewId === webViewId) {
             const envelope = <connection.KernelCommandOrEventEnvelope><any>(arg.envelope);
             if (connection.isKernelEventEnvelope(envelope)) {
-                Logger.default.info(`channel got ${envelope.eventType} with token ${envelope.command?.token} and id ${envelope.command?.id}`);
+                Logger.default.info(`channel got ${envelope.eventType} with token ${envelope.command?.getOrCreateToken()} and id ${envelope.command?.id}`);
             }
 
             remoteToLocal.next(envelope);

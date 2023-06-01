@@ -248,8 +248,9 @@ export class Connector implements Disposable {
                             }
                         }
                     }
-                    if ((kernelCommandOrEventEnvelope.routingSlip?.length ?? 0) > 0) {
-                        const eventOrigin = kernelCommandOrEventEnvelope.routingSlip![0];
+                    const eventRoutingSlip = kernelCommandOrEventEnvelope.routingSlip.toArray();
+                    if ((eventRoutingSlip.length ?? 0) > 0) {
+                        const eventOrigin = eventRoutingSlip![0];
                         const uri = extractHostAndNomalize(eventOrigin);
                         if (uri) {
                             this._remoteUris.add(uri);

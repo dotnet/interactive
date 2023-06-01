@@ -39,24 +39,22 @@ export class CompositeKernel extends Kernel {
 
     protected override async handleRequestKernelInfo(invocation: IKernelCommandInvocation): Promise<void> {
 
-        const eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
-            eventType: commandsAndEvents.KernelInfoProducedType,
-            command: invocation.commandEnvelope,
-            event: <commandsAndEvents.KernelInfoProduced>{ kernelInfo: this.kernelInfo }
-        };//?
+        const eventEnvelope = new commandsAndEvents.KernelEventEnvelope(
+            commandsAndEvents.KernelInfoProducedType,
+            <commandsAndEvents.KernelInfoProduced>{ kernelInfo: this.kernelInfo },
+            invocation.commandEnvelope
+        );//?
 
         invocation.context.publish(eventEnvelope);
 
         for (let kernel of this._childKernels) {
             if (kernel.supportsCommand(invocation.commandEnvelope.commandType)) {
-                const childCommand: commandsAndEvents.KernelCommandEnvelope = {
-                    commandType: commandsAndEvents.RequestKernelInfoType,
-                    command: {
+                const childCommand = new commandsAndEvents.KernelCommandEnvelope(
+                    commandsAndEvents.RequestKernelInfoType,
+                    {
                         targetKernelName: kernel.kernelInfo.localName
-                    },
-                    routingSlip: []
-                };
-                routingslip.continueCommandRoutingSlip(childCommand, invocation.commandEnvelope.routingSlip || []);
+                    });
+                childCommand.routingSlip.continueWith(invocation.commandEnvelope.routingSlip);
                 await kernel.handleCommand(childCommand);
             }
         }
@@ -78,8 +76,8 @@ export class CompositeKernel extends Kernel {
             next: (event) => {
                 event;//?
                 const kernelUri = getKernelUri(this);
-                if (!routingslip.eventRoutingSlipContains(event, kernelUri)) {
-                    routingslip.stampEventRoutingSlip(event, kernelUri);
+                if (!event.routingSlip.contains(kernelUri)) {
+                    event.routingSlip.stamp(kernelUri);
                 }
                 event;//?
                 this.publishEvent(event);
@@ -104,20 +102,22 @@ export class CompositeKernel extends Kernel {
 
         if (invocationContext) {
             invocationContext.commandEnvelope;//?
-            invocationContext.publish({
-                eventType: commandsAndEvents.KernelInfoProducedType,
-                event: <commandsAndEvents.KernelInfoProduced>{
+            const event = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.KernelInfoProducedType,
+                <commandsAndEvents.KernelInfoProduced>{
                     kernelInfo: kernel.kernelInfo
                 },
-                command: invocationContext.commandEnvelope
-            });
+                invocationContext.commandEnvelope
+            );//?
+            invocationContext.publish(event);
         } else {
-            this.publishEvent({
-                eventType: commandsAndEvents.KernelInfoProducedType,
-                event: <commandsAndEvents.KernelInfoProduced>{
+            const event = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.KernelInfoProducedType,
+                <commandsAndEvents.KernelInfoProduced>{
                     kernelInfo: kernel.kernelInfo
                 }
-            });
+            );//?
+            this.publishEvent(event);
         }
     }
 
@@ -183,8 +183,8 @@ export class CompositeKernel extends Kernel {
                 invocationContext.handlingKernel = kernel;
             }
             const kernelUri = getKernelUri(kernel);
-            if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
-                routingslip.stampCommandRoutingSlipAsArrived(commandEnvelope, kernelUri);
+            if (!commandEnvelope.routingSlip.contains(kernelUri)) {
+                commandEnvelope.routingSlip.stampAsArrived(kernelUri);
             } else {
                 Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`);
             }
@@ -192,8 +192,8 @@ export class CompositeKernel extends Kernel {
                 if (invocationContext !== null) {
                     invocationContext.handlingKernel = previusoHandlingKernel;
                 }
-                if (!routingslip.commandRoutingSlipContains(commandEnvelope, kernelUri)) {
-                    routingslip.stampCommandRoutingSlip(commandEnvelope, kernelUri);
+                if (!commandEnvelope.routingSlip.contains(kernelUri)) {
+                    commandEnvelope.routingSlip.stamp(kernelUri);
                 } else {
                     Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as completed but uri ${kernelUri} is already present.`);
                 }
