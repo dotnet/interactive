@@ -31,3 +31,18 @@ export interface KernelEventEnvelopeObserver {
 export interface KernelCommandEnvelopeHandler {
     (eventEnvelope: KernelCommandEnvelope): Promise<void>;
 }
+
+export class KernelCommandEnvelope2 {
+    constructor(
+        public commandType: contracts.KernelCommandType,
+        public command: contracts.KernelCommand) {
+    }
+}
+
+export class KernelEventEnvelope2 {
+    constructor(
+        public eventType: contracts.KernelEventType,
+        public event: contracts.KernelEvent,
+        public command?: KernelCommandEnvelope2) {
+    }
+}

@@ -6,7 +6,6 @@ import { URI } from 'vscode-uri';
 import { KernelCommandOrEventEnvelope, isKernelCommandEnvelope } from './connection';
 
 
-
 export function createKernelUri(kernelUri: string): string {
     kernelUri;//?
     const uri = URI.parse(kernelUri);
@@ -91,26 +90,26 @@ function stampRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnve
     }
 }
 
-function continueRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUris: string[]): void {
-    if (kernelCommandOrEventEnvelope.routingSlip === undefined || kernelCommandOrEventEnvelope.routingSlip === null) {
-        kernelCommandOrEventEnvelope.routingSlip = [];
+function continueRoutingSlip(toContinue: KernelCommandOrEventEnvelope, kernelUris: string[]): void {
+    if (toContinue.routingSlip === undefined || toContinue.routingSlip === null) {
+        toContinue.routingSlip = [];
     }
 
-    let toContinue = createRoutingSlip(kernelUris);
+    let continuationUris = createRoutingSlip(kernelUris);
 
-    if (routingSlipStartsWith(toContinue, kernelCommandOrEventEnvelope.routingSlip)) {
-        toContinue = toContinue.slice(kernelCommandOrEventEnvelope.routingSlip.length);
+    if (routingSlipStartsWith(continuationUris, toContinue.routingSlip)) {
+        continuationUris = continuationUris.slice(toContinue.routingSlip.length);
     }
 
-    const original = [...kernelCommandOrEventEnvelope.routingSlip];
-    for (let i = 0; i < toContinue.length; i++) {
-        const normalizedUri = toContinue[i];//?
-        const canAdd = !kernelCommandOrEventEnvelope.routingSlip.find(e => createKernelUriWithQuery(e) === normalizedUri);
+    const original = [...toContinue.routingSlip];
+    for (let i = 0; i < continuationUris.length; i++) {
+        const normalizedUri = continuationUris[i];//?
+        const canAdd = !toContinue.routingSlip.find(e => createKernelUriWithQuery(e) === normalizedUri);
         if (canAdd) {
-            if (isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
-                stampCommandRoutingSlip(kernelCommandOrEventEnvelope, normalizedUri);
+            if (isKernelCommandEnvelope(toContinue)) {
+                stampCommandRoutingSlip(toContinue, normalizedUri);
             } else {
-                stampEventRoutingSlip(kernelCommandOrEventEnvelope, normalizedUri);
+                stampEventRoutingSlip(toContinue, normalizedUri);
             }
         } else {
             throw new Error(`The uri ${normalizedUri} is already in the routing slip [${original}], cannot continue with routing slip [${kernelUris.map(e => createKernelUri(e))}]`);
@@ -118,12 +117,12 @@ function continueRoutingSlip(kernelCommandOrEventEnvelope: KernelCommandOrEventE
     }
 }
 
-export function continueCommandRoutingSlip(kernelCommandEnvelope: commandsAndEvents.KernelCommandEnvelope, kernelUris: string[]): void {
-    continueRoutingSlip(kernelCommandEnvelope, kernelUris);
+export function continueCommandRoutingSlip(toContinue: commandsAndEvents.KernelCommandEnvelope, kernelUris: string[]): void {
+    continueRoutingSlip(toContinue, kernelUris);
 }
 
-export function continueEventRoutingSlip(kernelEventEnvelope: commandsAndEvents.KernelEventEnvelope, kernelUris: string[]): void {
-    continueRoutingSlip(kernelEventEnvelope, kernelUris);
+export function continueEventRoutingSlip(toContinue: commandsAndEvents.KernelEventEnvelope, kernelUris: string[]): void {
+    continueRoutingSlip(toContinue, kernelUris);
 }
 
 export function createRoutingSlip(kernelUris: string[]): string[] {
@@ -163,14 +162,111 @@ function routingSlipStartsWith(thisKernelUris: string[], otherKernelUris: string
 }
 
 export function eventRoutingSlipContains(kernlEvent: commandsAndEvents.KernelEventEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
-    return routingSlipContains(kernlEvent, kernelUri, ignoreQuery);
+    return routingSlipContains(kernlEvent.routingSlip || [], kernelUri, ignoreQuery);
 }
 
 export function commandRoutingSlipContains(kernlEvent: commandsAndEvents.KernelCommandEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
-    return routingSlipContains(kernlEvent, kernelUri, ignoreQuery);
+    return routingSlipContains(kernlEvent.routingSlip || [], kernelUri, ignoreQuery);
 }
 
-function routingSlipContains(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope, kernelUri: string, ignoreQuery: boolean = false): boolean {
+function routingSlipContains(routingSlip: string[], kernelUri: string, ignoreQuery: boolean = false): boolean {
     const normalizedUri = ignoreQuery ? createKernelUri(kernelUri) : createKernelUriWithQuery(kernelUri);
-    return kernelCommandOrEventEnvelope?.routingSlip?.find(e => normalizedUri === (!ignoreQuery ? createKernelUriWithQuery(e) : createKernelUri(e))) !== undefined;
+    return routingSlip.find(e => normalizedUri === (!ignoreQuery ? createKernelUriWithQuery(e) : createKernelUri(e))) !== undefined;
+}
+
+export abstract class RoutingSlip {
+    private _uris: string[] = [];
+
+    protected get uris(): string[] {
+        return this._uris;
+    }
+
+    public contains(kernelUri: string, ignoreQuery: boolean = false): boolean {
+        return routingSlipContains(this._uris, kernelUri, ignoreQuery);
+    }
+
+    public startsWith(other: string[] | RoutingSlip): boolean {
+        if (other instanceof Array) {
+            return routingSlipStartsWith(this._uris, other);
+        } else {
+            return routingSlipStartsWith(this._uris, other._uris);
+        }
+    }
+
+    public continueWith(other: string[] | RoutingSlip): void {
+        let otherUris = (other instanceof Array ? other : other._uris) || [];
+        if (otherUris.length > 0) {
+            if (routingSlipStartsWith(otherUris, this._uris)) {
+                otherUris = otherUris.slice(this._uris.length);
+            }
+        }
+
+        for (let i = 0; i < otherUris.length; i++) {
+            if (!this.contains(otherUris[i])) {
+                this._uris.push(otherUris[i]);
+            } else {
+                throw new Error(`The uri ${otherUris[i]} is already in the routing slip [${this._uris}], cannot continue with routing slip [${otherUris}]`);
+            }
+        }
+    }
+
+    public toArray(): string[] {
+        return [...this._uris];
+    }
+
+    public abstract stamp(kernelUri: string): void;
+}
+
+export class CommandRoutingSlip extends RoutingSlip {
+    constructor() {
+        super();
+    }
+
+    public stampAsArrived(kernelUri: string): void {
+        this.stampAs(kernelUri, "arrived");
+
+    }
+
+    public override stamp(kernelUri: string): void {
+        this.stampAs(kernelUri);
+    }
+
+    private stampAs(kernelUri: string, tag?: string): void {
+        if (tag) {
+            const absoluteUriWithQuery = `${createKernelUri(kernelUri)}?tag=${tag}`;
+            const absoluteUriWithoutQuery = createKernelUri(kernelUri);
+            if (this.uris.find(e => e.startsWith(absoluteUriWithoutQuery))) {
+                throw new Error(`The uri ${absoluteUriWithQuery} is already in the routing slip [${this.uris}]`);
+            } else {
+                this.uris.push(absoluteUriWithQuery);
+            }
+        } else {
+            const absoluteUriWithQuery = `${createKernelUri(kernelUri)}?tag=arrived`;
+            const absoluteUriWithoutQuery = createKernelUri(kernelUri);
+            if (!this.uris.find(e => e.startsWith(absoluteUriWithQuery))) {
+                throw new Error(`The uri ${absoluteUriWithQuery} is not in the routing slip [${this.uris}]`);
+            } else if (this.uris.find(e => e === absoluteUriWithoutQuery)) {
+                throw new Error(`The uri ${absoluteUriWithoutQuery} is already in the routing slip [${this.uris}]`);
+            } else {
+                this.uris.push(absoluteUriWithoutQuery);
+            }
+        }
+    }
+}
+
+export class EventRoutingSlip extends RoutingSlip {
+    constructor() {
+        super();
+    }
+
+    public override stamp(kernelUri: string): void {
+        const normalizedUri = createKernelUriWithQuery(kernelUri);
+        const canAdd = !this.uris.find(e => createKernelUriWithQuery(e) === normalizedUri);
+        if (canAdd) {
+            this.uris.push(normalizedUri);
+            this.uris;//?
+        } else {
+            throw new Error(`The uri ${normalizedUri} is already in the routing slip [${this.uris}]`);
+        }
+    }
 }
