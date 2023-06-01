@@ -4,6 +4,7 @@
 import { expect } from "chai";
 import * as connection from "../src/connection";
 import * as rxjs from 'rxjs';
+import * as commandsAndEvents from "../src/commandsAndEvents";
 
 
 describe("connector", () => {
@@ -16,8 +17,13 @@ describe("connector", () => {
             remoteUris: ["kernerl://remote1"]
         });
 
-        remoteToLocal.next({ eventType: "CommandSucceeded", event: {}, routingSlip: ["kernerl://remote2/kernel1"] });
-        remoteToLocal.next({ eventType: "CommandSucceeded", event: {}, routingSlip: ["kernerl://remote2/kernel2"] });
+        const event1 = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CommandSucceededType, {});
+        event1.routingSlip.stamp("kernerl://remote2/kernel1");
+        const event2 = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CommandSucceededType, {});
+        event2.routingSlip.stamp("kernerl://remote2/kernel2");
+
+        remoteToLocal.next(event1);
+        remoteToLocal.next(event2);
 
         expect(connector.remoteHostUris).to.deep.equal(['kernerl://remote1', 'kernerl://remote2']);
     });

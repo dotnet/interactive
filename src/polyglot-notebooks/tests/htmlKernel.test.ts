@@ -32,8 +32,10 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0">a</div>' } });
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0">b</div>' } });
+        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0">a</div>' });
+        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0">b</div>' });
+        await kernel.send(command1);
+        await kernel.send(command2);
 
         expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
         expect(dom.window.document.body.innerHTML).to.be.eql('<div class="html_kernel_container"><div id="0">a</div></div><div class="html_kernel_container"><div id="0">b</div></div>');
@@ -65,13 +67,22 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0">a</div>' } });
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0">b</div>' } });
+        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0">a</div>' });
+        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0">b</div>' });
+
+        await kernel.send(command1);
+        await kernel.send(command2);
 
         const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === commandsAndEvents.DisplayedValueProducedType).at(-1)?.event as commandsAndEvents.DisplayedValueProduced;
         expect(lastDisplayedValueProducedEvent).to.not.be.undefined;
 
-        expect(lastDisplayedValueProducedEvent).to.deep.equal({ displayedValueProduced: { formattedValues: [{ mimeType: 'text/html', value: '<div id="0">a</div><div id="0">b</div>' }] } });
+        expect(lastDisplayedValueProducedEvent).to.deep.equal({
+            formattedValues:
+                [{
+                    mimeType: 'text/html',
+                    value: '<div id="0">a</div><div id="0">b</div>'
+                }]
+        });
     });
 
     it("evaluates script elements", async () => {
@@ -104,21 +115,19 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>' } });
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>' });
+        await kernel.send(command);
 
         const lastDisplayedValueProducedEvent = events.filter(e => e.eventType === commandsAndEvents.DisplayedValueProducedType).at(-1)?.event as commandsAndEvents.DisplayedValueProduced;
         expect(lastDisplayedValueProducedEvent).to.not.be.undefined;
 
         expect(lastDisplayedValueProducedEvent).to.deep.equal(
             {
-                displayedValueProduced:
-                {
-                    formattedValues:
-                        [{
-                            mimeType: 'text/html',
-                            value: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>'
-                        }]
-                }
+                formattedValues:
+                    [{
+                        mimeType: 'text/html',
+                        value: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>'
+                    }]
             }
         );
 
@@ -152,8 +161,11 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div>' } });
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="2">b</div>' } });
+        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div>' });
+        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="2">b</div>' });
+
+        await kernel.send(command1);
+        await kernel.send(command2);
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div><div id="1">a</div><div id="2">b</div></div>');
     });
@@ -183,8 +195,11 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div>' } });
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="2">b</div>' } });
+        const command1 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div>' });
+        const command2 = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="2">b</div>' });
+
+        await kernel.send(command1);
+        await kernel.send(command2);
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });
@@ -214,7 +229,8 @@ describe("htmlKernel", () => {
             events.push(e);
         });
 
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' } });
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' });
+        await kernel.send(command);
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });
@@ -253,7 +269,10 @@ describe("htmlKernel", () => {
         kernel.subscribeToKernelEvents((e) => {
             events.push(e);
         });
-        await kernel.send({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' } });
+
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: '<div id="1">a</div><div id="2">b</div>' });
+
+        await kernel.send(command);
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });
