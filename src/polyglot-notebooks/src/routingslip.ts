@@ -181,6 +181,10 @@ export abstract class RoutingSlip {
         return this._uris;
     }
 
+    protected set uris(value: string[]) {
+        this._uris = value;
+    }
+
     public contains(kernelUri: string, ignoreQuery: boolean = false): boolean {
         return routingSlipContains(this._uris, kernelUri, ignoreQuery);
     }
@@ -222,9 +226,14 @@ export class CommandRoutingSlip extends RoutingSlip {
         super();
     }
 
+    public static fromUris(uris: string[]): CommandRoutingSlip {
+        const routingSlip = new CommandRoutingSlip();
+        routingSlip.uris = uris;
+        return routingSlip;
+    }
+
     public stampAsArrived(kernelUri: string): void {
         this.stampAs(kernelUri, "arrived");
-
     }
 
     public override stamp(kernelUri: string): void {
@@ -257,6 +266,12 @@ export class CommandRoutingSlip extends RoutingSlip {
 export class EventRoutingSlip extends RoutingSlip {
     constructor() {
         super();
+    }
+
+    public static fromUris(uris: string[]): EventRoutingSlip {
+        const routingSlip = new EventRoutingSlip();
+        routingSlip.uris = uris;
+        return routingSlip;
     }
 
     public override stamp(kernelUri: string): void {
