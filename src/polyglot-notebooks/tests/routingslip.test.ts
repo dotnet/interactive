@@ -7,125 +7,100 @@ import * as routingSlip from "../src/routingslip";
 
 describe("kernel event routingSlip", () => {
     it("cannot stamp twice", () => {
+        let eventRoutingSlip = new routingSlip.EventRoutingSlip();
+        eventRoutingSlip.stamp("kernel://a");
 
-        let envelope: commandsAndEvents.KernelEventEnvelope = {
-            eventType: commandsAndEvents.CommandSucceededType,
-            event: {}
-        };
-
-        routingSlip.stampEventRoutingSlip(envelope, "kernel://a");
-
-        expect(() => routingSlip.stampEventRoutingSlip(envelope, "kernel://a")).to.throw("The uri kernel://a/ is already in the routing slip [kernel://a/]");
+        expect(() => eventRoutingSlip.stamp("kernel://a")).to.throw("The uri kernel://a/ is already in the routing slip [kernel://a/]");
     });
 
     it("can append a routing slip to another", () => {
+        let eventRoutingSlip = new routingSlip.EventRoutingSlip();
+        eventRoutingSlip.stamp("kernel://a");
+        eventRoutingSlip.stamp("kernel://b");
 
-        let envelope: commandsAndEvents.KernelEventEnvelope = {
-            eventType: commandsAndEvents.CommandSucceededType,
-            event: {},
-            routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
-        };
+        let otherEventRoutingSlip = new routingSlip.EventRoutingSlip();
+        otherEventRoutingSlip.stamp("kernel://c");
+        otherEventRoutingSlip.stamp("kernel://d");
 
-        let other = ["kernel://c", "kernel://d"];
+        eventRoutingSlip.continueWith(otherEventRoutingSlip);
 
-        routingSlip.continueEventRoutingSlip(envelope, other);
-
-        expect(envelope.routingSlip).to.deep.equal(['kernel://a/', 'kernel://b/', 'kernel://c/', 'kernel://d/']);
+        expect(eventRoutingSlip.toArray()).to.deep.equal(['kernel://a/', 'kernel://b/', 'kernel://c/', 'kernel://d/']);
     });
 
     it("can append a routing slip to another if the other starts with the same list of uris", () => {
+        let eventRoutingSlip = new routingSlip.EventRoutingSlip();
+        eventRoutingSlip.stamp("kernel://a");
+        eventRoutingSlip.stamp("kernel://b");
 
-        let envelope: commandsAndEvents.KernelEventEnvelope = {
-            eventType: commandsAndEvents.CommandSucceededType,
-            event: {},
-            routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
-        };
+        let otherEventRoutingSlip = new routingSlip.EventRoutingSlip();
+        otherEventRoutingSlip.stamp("kernel://a");
+        otherEventRoutingSlip.stamp("kernel://b");
+        otherEventRoutingSlip.stamp("kernel://c");
+        otherEventRoutingSlip.stamp("kernel://d");
 
-        let other = ["kernel://a", "kernel://b", "kernel://c", "kernel://d"];
+        eventRoutingSlip.continueWith(otherEventRoutingSlip);
 
-        routingSlip.continueEventRoutingSlip(envelope, other);
-
-        expect(envelope.routingSlip).to.deep.equal(['kernel://a/', 'kernel://b/', 'kernel://c/', 'kernel://d/']);
+        expect(eventRoutingSlip.toArray()).to.deep.equal(['kernel://a/', 'kernel://b/', 'kernel://c/', 'kernel://d/']);
     });
 
     it("cannot append a routing slip to another if the other adds in the same kernel", () => {
 
-        let envelope: commandsAndEvents.KernelEventEnvelope = {
-            eventType: commandsAndEvents.CommandSucceededType,
-            event: {},
-            routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
-        };
+        let eventRoutingSlip = new routingSlip.EventRoutingSlip();
+        eventRoutingSlip.stamp("kernel://a");
+        eventRoutingSlip.stamp("kernel://b");
 
-        let other = ["kernel://a", "kernel://c", "kernel://d", "kernel://e"];
-        expect(() => routingSlip.continueEventRoutingSlip(envelope, other)).to.throw("The uri kernel://a/ is already in the routing slip [kernel://a/,kernel://b/], cannot continue with routing slip [kernel://a/,kernel://c/,kernel://d/,kernel://e/]");
+        let otherEventRoutingSlip = new routingSlip.EventRoutingSlip();
+        otherEventRoutingSlip.stamp("kernel://a");
+        otherEventRoutingSlip.stamp("kernel://c");
+        otherEventRoutingSlip.stamp("kernel://d");
+        otherEventRoutingSlip.stamp("kernel://e");
+
+        expect(() => eventRoutingSlip.continueWith(otherEventRoutingSlip)).to.throw("The uri kernel://a/ is already in the routing slip [kernel://a/,kernel://b/], cannot continue with routing slip [kernel://a/,kernel://c/,kernel://d/,kernel://e/]");
     });
 });
 
 
 describe("kernel command routingSlip", () => {
     it("cannot stamp twice as arrived", () => {
+        let commandRoutingSlip = new routingSlip.CommandRoutingSlip();
+        commandRoutingSlip.stampAsArrived("kernel://a");
 
-        let envelope: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: {}
-        };
-
-        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
-
-        expect(() => routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a")).to.throw("The uri kernel://a/?tag=arrived is already in the routing slip [kernel://a/?tag=arrived]");
+        expect(() => commandRoutingSlip.stampAsArrived("kernel://a")).to.throw("The uri kernel://a/?tag=arrived is already in the routing slip [kernel://a/?tag=arrived]");
     });
 
     it("can be stamped on arrival", () => {
+        let commandRoutingSlip = new routingSlip.CommandRoutingSlip();
+        commandRoutingSlip.stampAsArrived("kernel://a");
 
-        let envelope: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: {}
-        };
-
-        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
-
-        expect(envelope.routingSlip).to.deep.equal(['kernel://a/?tag=arrived']);
+        expect(commandRoutingSlip.toArray()).to.deep.equal(['kernel://a/?tag=arrived']);
     });
 
     it("can be stamped", () => {
+        let commandRoutingSlip = new routingSlip.CommandRoutingSlip();
+        commandRoutingSlip.stampAsArrived("kernel://a");
+        commandRoutingSlip.stamp("kernel://a");
 
-        let envelope: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: {}
-        };
-
-        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
-        routingSlip.stampCommandRoutingSlip(envelope, "kernel://a");
-
-        expect(envelope.routingSlip).to.deep.equal(['kernel://a/?tag=arrived', 'kernel://a/']);
+        expect(commandRoutingSlip.toArray()).to.deep.equal(['kernel://a/?tag=arrived', 'kernel://a/']);
     });
 
     it("cannot be stamped if the uri is not stamped as arrived before", () => {
+        let commandRoutingSlip = new routingSlip.CommandRoutingSlip();
 
-        let envelope: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: {},
-            routingSlip: []
-        };
-        expect(() => routingSlip.stampCommandRoutingSlip(envelope, "kernel://a")).to.throw("The uri kernel://a/ is not in the routing slip []");
+        expect(() => commandRoutingSlip.stamp("kernel://a")).to.throw("The uri kernel://a/?tag=arrived is not in the routing slip []");
     });
 
     it("can append a routing slip to another", () => {
+        let commandRoutingSlip = new routingSlip.CommandRoutingSlip();
+        commandRoutingSlip.stampAsArrived("kernel://a");
+        commandRoutingSlip.stampAsArrived("kernel://b");
 
-        let envelope: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: {},
-            routingSlip: []
-        };
+        let otherCommandRoutingSlip = new routingSlip.CommandRoutingSlip();
+        otherCommandRoutingSlip.stampAsArrived("kernel://c");
+        otherCommandRoutingSlip.stampAsArrived("kernel://d");
 
-        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
-        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://b");
+        commandRoutingSlip.continueWith(otherCommandRoutingSlip);
 
-        let other = ["kernel://c/?tag=arrived", "kernel://d/?tag=arrived"];
-
-        routingSlip.continueCommandRoutingSlip(envelope, other);
-
-        expect(envelope.routingSlip).to.deep.equal([
+        expect(commandRoutingSlip.toArray()).to.deep.equal([
             'kernel://a/?tag=arrived',
             'kernel://b/?tag=arrived',
             'kernel://c/?tag=arrived',
@@ -134,35 +109,38 @@ describe("kernel command routingSlip", () => {
     });
 
     it("can append a routing slip to another if the other starts with the same list of uris", () => {
+        let commandRoutingSlip = new routingSlip.CommandRoutingSlip();
+        commandRoutingSlip.stampAsArrived("kernel://a");
+        commandRoutingSlip.stampAsArrived("kernel://b");
 
-        let envelope: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: {},
-            routingSlip: []
-        };
-        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://a");
-        routingSlip.stampCommandRoutingSlipAsArrived(envelope, "kernel://b");
+        let otherCommandRoutingSlip = new routingSlip.CommandRoutingSlip();
+        otherCommandRoutingSlip.stampAsArrived("kernel://a");
+        otherCommandRoutingSlip.stampAsArrived("kernel://b");
+        otherCommandRoutingSlip.stampAsArrived("kernel://c");
+        otherCommandRoutingSlip.stampAsArrived("kernel://d");
 
-        let other = ["kernel://a/?tag=arrived", "kernel://b/?tag=arrived", "kernel://c/?tag=arrived", "kernel://d/?tag=arrived", "kernel://d"];
+        commandRoutingSlip.continueWith(otherCommandRoutingSlip);
 
-        routingSlip.continueCommandRoutingSlip(envelope, other);
-
-        expect(envelope.routingSlip).to.deep.equal(['kernel://a/?tag=arrived',
+        expect(commandRoutingSlip.toArray()).to.deep.equal([
+            'kernel://a/?tag=arrived',
             'kernel://b/?tag=arrived',
             'kernel://c/?tag=arrived',
-            'kernel://d/?tag=arrived',
-            'kernel://d/']);
+            'kernel://d/?tag=arrived'
+        ]);
     });
 
     it("cannot append a routing slip to another if the other adds in the same kernel", () => {
+        let commandRoutingSlip = new routingSlip.CommandRoutingSlip();
+        commandRoutingSlip.stampAsArrived("kernel://a");
+        commandRoutingSlip.stampAsArrived("kernel://b");
 
-        let envelope: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: {},
-            routingSlip: routingSlip.createRoutingSlip(["kernel://a", "kernel://b"])
-        };
+        let otherCommandRoutingSlip = new routingSlip.CommandRoutingSlip();
+        otherCommandRoutingSlip.stampAsArrived("kernel://a");
+        otherCommandRoutingSlip.stampAsArrived("kernel://c");
+        otherCommandRoutingSlip.stampAsArrived("kernel://d");
 
-        let other = ["kernel://a", "kernel://c", "kernel://d", "kernel://e"];
-        expect(() => routingSlip.continueCommandRoutingSlip(envelope, other)).to.throw("The uri kernel://a/ is already in the routing slip [kernel://a/,kernel://b/], cannot continue with routing slip [kernel://a/,kernel://c/,kernel://d/,kernel://e/]");
+
+        expect(() => commandRoutingSlip.continueWith(otherCommandRoutingSlip)).to
+            .throw("The uri kernel://a/?tag=arrived is already in the routing slip [kernel://a/?tag=arrived,kernel://b/?tag=arrived], cannot continue with routing slip [kernel://a/?tag=arrived,kernel://c/?tag=arrived,kernel://d/?tag=arrived]");
     });
 });
