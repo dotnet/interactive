@@ -1,9 +1,9 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.IO;
 using System.Linq;
-using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -45,16 +45,16 @@ internal static partial class Format
         switch (command)
         {
             case ChangeWorkingDirectory changeWorkingDirectory:
-                writer.Write(changeWorkingDirectory.WorkingDirectory.TruncateForDisplay());
+                writer.Write(changeWorkingDirectory.WorkingDirectory.TruncateIfNeeded());
                 break;
 
             case DisplayError displayError:
-                writer.Write(displayError.Message.TruncateForDisplay());
+                writer.Write(displayError.Message.TruncateIfNeeded());
                 break;
 
             case DisplayValue displayValue:
                 writer.Write('\'');
-                writer.Write(displayValue.FormattedValue.Value.TruncateForDisplay());
+                writer.Write(displayValue.FormattedValue.Value.TruncateIfNeeded());
                 writer.Write("' (");
                 writer.Write(displayValue.FormattedValue.MimeType);
                 writer.Write(')');
@@ -63,7 +63,7 @@ internal static partial class Format
                 break;
 
             case RequestDiagnostics requestDiagnostics:
-                writer.Write(requestDiagnostics.Code.TruncateForDisplay());
+                writer.Write(requestDiagnostics.Code.TruncateIfNeeded());
                 break;
 
             case RequestInput requestInput:
@@ -86,7 +86,7 @@ internal static partial class Format
                 break;
 
             case SendEditableCode sendEditableCode:
-                writer.Write(sendEditableCode.Code.TruncateForDisplay());
+                writer.Write(sendEditableCode.Code.TruncateIfNeeded());
                 writer.AppendProperties(
                     (nameof(sendEditableCode.KernelName), sendEditableCode.KernelName));
                 break;
@@ -94,19 +94,19 @@ internal static partial class Format
             case SendValue sendValue:
                 writer.Write(sendValue.Name);
                 writer.Write(" '");
-                writer.Write(sendValue.FormattedValue.Value.TruncateForDisplay());
+                writer.Write(sendValue.FormattedValue.Value.TruncateIfNeeded());
                 writer.Write("' (");
                 writer.Write(sendValue.FormattedValue.MimeType);
                 writer.Write(')');
                 break;
 
             case SubmitCode submitCode:
-                writer.Write(submitCode.Code.TruncateForDisplay());
+                writer.Write(submitCode.Code.TruncateIfNeeded());
                 break;
 
             case UpdateDisplayedValue updateDisplayedValue:
                 writer.Write('\'');
-                writer.Write(updateDisplayedValue.FormattedValue.Value.TruncateForDisplay());
+                writer.Write(updateDisplayedValue.FormattedValue.Value.TruncateIfNeeded());
                 writer.Write("' (");
                 writer.Write(updateDisplayedValue.FormattedValue.MimeType);
                 writer.Write(')');
@@ -116,7 +116,7 @@ internal static partial class Format
 
             // Base command types.
             case LanguageServiceCommand languageServiceCommand:
-                writer.Write(languageServiceCommand.Code.TruncateForDisplay());
+                writer.Write(languageServiceCommand.Code.TruncateIfNeeded());
                 writer.Write(' ');
                 writer.Write(languageServiceCommand.LinePosition.ToString());
                 break;
@@ -140,15 +140,15 @@ internal static partial class Format
         switch (@event)
         {
             case CodeSubmissionReceived codeSubmissionReceived:
-                writer.Write(codeSubmissionReceived.Code.TruncateForDisplay());
+                writer.Write(codeSubmissionReceived.Code.TruncateIfNeeded());
                 break;
 
             case CommandFailed commandFailed:
-                writer.Write(commandFailed.Message.TruncateForDisplay());
+                writer.Write(commandFailed.Message.TruncateIfNeeded());
                 break;
 
             case CompleteCodeSubmissionReceived completeCodeSubmissionReceived:
-                writer.Write(completeCodeSubmissionReceived.Code.TruncateForDisplay());
+                writer.Write(completeCodeSubmissionReceived.Code.TruncateIfNeeded());
                 break;
 
             case CompletionsProduced completionsProduced:
@@ -159,7 +159,7 @@ internal static partial class Format
                 var diagnostics = diagnosticsProduced.Diagnostics;
                 if (diagnostics.Any()) // TODO: How come we produce empty DiagnosticsProduced events?
                 {
-                    var firstMessage = diagnostics.First().Message.TruncateForDisplay();
+                    var firstMessage = diagnostics.First().Message.TruncateIfNeeded();
                     writer.Write(firstMessage);
 
                     var diagnosticsCount = diagnostics.Count;
@@ -173,14 +173,14 @@ internal static partial class Format
                 break;
 
             case ErrorProduced errorProduced:
-                writer.Write(errorProduced.Message.TruncateForDisplay());
+                writer.Write(errorProduced.Message.TruncateIfNeeded());
                 break;
 
             case HoverTextProduced hoverTextProduced:
                 var content = hoverTextProduced.Content;
                 var firstContent = content.First();
                 writer.Write('\'');
-                writer.Write(firstContent.Value.TruncateForDisplay());
+                writer.Write(firstContent.Value.TruncateIfNeeded());
                 writer.Write("' (");
                 writer.Write(firstContent.MimeType);
                 writer.Write(')');
@@ -194,7 +194,7 @@ internal static partial class Format
                 break;
 
             case InputProduced inputProduced:
-                writer.Write(inputProduced.Value.TruncateForDisplay());
+                writer.Write(inputProduced.Value.TruncateIfNeeded());
                 break;
 
             case KernelInfoProduced kernelInfoProduced:
@@ -234,20 +234,20 @@ internal static partial class Format
             case ValueProduced valueProduced:
                 writer.Write(valueProduced.Name);
                 writer.Write(" '");
-                writer.Write(valueProduced.FormattedValue.Value.TruncateForDisplay());
+                writer.Write(valueProduced.FormattedValue.Value.TruncateIfNeeded());
                 writer.Write("' (");
                 writer.Write(valueProduced.FormattedValue.MimeType);
                 writer.Write(')');
                 break;
 
             case WorkingDirectoryChanged workingDirectoryChanged:
-                writer.Write(workingDirectoryChanged.WorkingDirectory.TruncateForDisplay());
+                writer.Write(workingDirectoryChanged.WorkingDirectory.TruncateIfNeeded());
                 break;
 
             // Base event types.
             case DisplayEvent displayEvent:
                 writer.Write('\'');
-                writer.Write(displayEvent.Value?.ToString().TruncateForDisplay());
+                writer.Write(displayEvent.Value?.ToString().TruncateIfNeeded());
                 writer.Write('\'');
 
                 var formattedValues = displayEvent.FormattedValues;
@@ -258,7 +258,7 @@ internal static partial class Format
                     writer.Write(": ");
                     var firstFormattedValue = formattedValues.First();
                     writer.Write('\'');
-                    writer.Write(firstFormattedValue.Value.TruncateForDisplay());
+                    writer.Write(firstFormattedValue.Value.TruncateIfNeeded());
                     writer.Write("' (");
                     writer.Write(firstFormattedValue.MimeType);
                     writer.Write(')');
@@ -316,5 +316,32 @@ internal static partial class Format
         writer.Write(name);
         writer.Write(": ");
         writer.Write(value);
+    }
+
+    internal static string TruncateIfNeeded(this string? value, int maxLength = 50)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        var lines = value!.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var firstLine = lines.FirstOrDefault();
+
+        if (string.IsNullOrEmpty(firstLine))
+        {
+            return string.Empty;
+        }
+
+        if (firstLine.Length > maxLength)
+        {
+            firstLine = firstLine.Substring(0, maxLength) + " ...";
+        }
+        else if (lines.Length > 1)
+        {
+            firstLine = firstLine + " ...";
+        }
+
+        return firstLine;
     }
 }
