@@ -35,6 +35,7 @@ export interface KernelCommandEnvelopeHandler {
 }
 
 export class KernelCommandEnvelope {
+
     private _childCommandCounter: number = 0;
     private _routingSlip: CommandRoutingSlip = new CommandRoutingSlip();
     private _id: string;
@@ -68,6 +69,10 @@ export class KernelCommandEnvelope {
             throw new Error("Parent cannot be changed.");
         }
         this._parentCommand = parentCommand;
+    }
+
+    public setId(id: string) {
+        this._id = id;
     }
 
     public getOrCreateToken(): string {
