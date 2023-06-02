@@ -3,7 +3,6 @@
 
 import * as dotnetInteractiveInterfaces from "./polyglot-notebooks-interfaces";
 import { Kernel, IKernelCommandHandler } from "./polyglot-notebooks/kernel";
-import { TokenGenerator } from "./polyglot-notebooks/tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
 import * as commandsAndEvents from "./polyglot-notebooks/commandsAndEvents";
 import { createDefaultClientFetch } from "./clientFetch";
@@ -97,10 +96,10 @@ class InteractiveConsoleWrapper {
                     }
                 ]
             };
-            const eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
-                eventType: commandsAndEvents.DisplayedValueProducedType,
-                event: displayedValue,
-            };
+            const eventEnvelope = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.DisplayedValueProducedType,
+                displayedValue,
+            );
 
             ClientEventQueueManager.addEventToClientQueue(this.clientFetch, this.commandToken, eventEnvelope);
         }
@@ -116,14 +115,12 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
         receiver: IKernelCommandAndEventReceiver;
     };
     private _clientSideKernel: Kernel;
-    private _tokenGenerator: TokenGenerator;
     private _configureRequire: (confing: any) => any;
 
     constructor(parameters: KernelClientImplParameteres) {
         this._clientFetch = parameters.clientFetch;
         this._rootUrl = parameters.rootUrl;
         this._kernelChannel = parameters.channel;
-        this._tokenGenerator = new TokenGenerator();
         this._configureRequire = parameters.configureRequire;
         this._clientSideKernel = parameters.clientSideKernel;
     }
@@ -222,18 +219,18 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
     }
 
     public async submitCode(code: string, targetKernelName?: string): Promise<string> {
-        let token: string = this._tokenGenerator.createToken();
         let command: commandsAndEvents.SubmitCode = {
             code: code,
             targetKernelName: targetKernelName
         }
 
-        await this._kernelChannel.sender.send({ command, commandType: commandsAndEvents.SubmitCodeType, token });
-        return token;
+        const commandEnvelpe = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, command);
+        await this._kernelChannel.sender.send(commandEnvelpe);
+        return commandEnvelpe.getOrCreateToken();
     }
 
     public async submitCommand(commandType: string, command?: any, targetKernelName?: string): Promise<string> {
-        let token: string = this._tokenGenerator.createToken();
+
 
         if (!command) {
             command = {};
@@ -242,9 +239,9 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
         if (targetKernelName) {
             command.targetKernelName = targetKernelName;
         }
-
-        await this._kernelChannel.sender.send({ command, commandType: <any>commandType, token });
-        return token;
+        const commandEnvelpe = new commandsAndEvents.KernelCommandEnvelope(<commandsAndEvents.KernelCommandType>commandType, command);
+        await this._kernelChannel.sender.send(commandEnvelpe);
+        return commandEnvelpe.getOrCreateToken();
     }
 
     public getConsole(commandToken: string): any {
@@ -268,10 +265,10 @@ export class KernelClientImpl implements dotnetInteractiveInterfaces.DotnetInter
         const failedEvent: commandsAndEvents.CommandFailed = {
             message: `${err}`
         };
-        const eventEnvelope: commandsAndEvents.KernelEventEnvelope = {
-            eventType: commandsAndEvents.CommandFailedType,
-            event: failedEvent,
-        };
+        const eventEnvelope = new commandsAndEvents.KernelEventEnvelope(
+            commandsAndEvents.CommandFailedType,
+            failedEvent,
+        );
         ClientEventQueueManager.addEventToClientQueue(this._clientFetch, commandToken, eventEnvelope);
     }
 
