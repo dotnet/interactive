@@ -102,7 +102,7 @@ export class ProxyKernel extends Kernel {
                                             commandInvocation.commandEnvelope
                                         );
 
-                                        event.routingSlip.continueWith(envelope.routingSlip)
+                                        event.routingSlip.continueWith(envelope.routingSlip);
 
                                         this.delegatePublication(event, commandInvocation.context);
                                         this.delegatePublication(envelope, commandInvocation.context);
