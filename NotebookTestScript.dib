@@ -107,11 +107,25 @@ return kernels;
 1234
 ```
 
-And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
+And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with name `csharpVarFromJs`, value `1234` and kernel Name `csharp`
 
 #!javascript
 
 await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var csharpVarFromJs = 1234; Console.WriteLine(csharpVarFromJs);', targetKernelName: 'csharp' } });
+
+#!markdown
+
+# Execute the next cell. After execution, the output immediately below should be:
+
+```
+2345
+```
+And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with name `csharpVarFromJsUsingApi`, value `1234` and kernel Name `csharp`
+
+#!javascript
+
+let command = new polyglotNotebooks.KernelCommandEnvelope(polyglotNotebooks.SubmitCodeType, { code: 'var csharpVarFromJsUsingApi = 2345; Console.WriteLine(csharpVarFromJsUsingApi);', targetKernelName: 'csharp' });
+await kernel.root.send(command);
 
 #!markdown
 

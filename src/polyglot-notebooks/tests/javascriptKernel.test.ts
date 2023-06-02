@@ -27,6 +27,34 @@ describe("javascriptKernel", () => {
         expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
     });
 
+    it("SubmitCode can access polyglotNotebooks api", async () => {
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{
+            code: `
+let command = new polyglotNotebooks.KernelCommandEnvelope(polyglotNotebooks.SubmitCodeType, { code: "return 1+2;"});
+return command.toJson();`
+        });
+        await kernel.send(command);
+
+        expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
+
+        const returnValueProduced = events.find(e => e.eventType === commandsAndEvents.ReturnValueProducedType)!.event as commandsAndEvents.ReturnValueProduced;
+
+        var parsed = JSON.parse(returnValueProduced.formattedValues[0].value);
+        delete parsed.token;
+        delete parsed.id;
+        expect(parsed).to.deep.equal({
+            command: { code: "return 1+2;" },
+            commandType: 'SubmitCode',
+            routingSlip: [],
+        });
+    });
+
     it("can handle SendValue with application/json", async () => {
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();

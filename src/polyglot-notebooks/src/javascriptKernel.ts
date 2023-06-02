@@ -5,6 +5,7 @@ import * as commandsAndEvents from "./commandsAndEvents";
 import { ConsoleCapture } from "./consoleCapture";
 import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
+import * as polyglotNotebooksApi from "./api";
 
 export class JavascriptKernel extends Kernel {
     private suppressedLocals: Set<string>;
@@ -53,8 +54,8 @@ export class JavascriptKernel extends Kernel {
 
         try {
             const AsyncFunction = eval(`Object.getPrototypeOf(async function(){}).constructor`);
-            const evaluator = AsyncFunction("console", code);
-            result = await evaluator(this.capture);
+            const evaluator = AsyncFunction("console", "polyglotNotebooks", code);
+            result = await evaluator(this.capture, polyglotNotebooksApi);
             if (result !== undefined) {
                 const formattedValue = formatValue(result, 'application/json');
                 const event: commandsAndEvents.ReturnValueProduced = {

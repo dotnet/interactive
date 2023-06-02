@@ -34,7 +34,7 @@ export class KernelScheduler<T> {
 
         const runPreemptively = this._runPreemptively(value);
 
-        if (this._inFlightOperation && runPreemptively) {
+        if (this._inFlightOperation || runPreemptively) {
             Logger.default.info(`kernelScheduler: starting immediate execution of ${JSON.stringify(operation.value)}`);
 
             // invoke immediately
@@ -77,6 +77,7 @@ export class KernelScheduler<T> {
                     nextOperation.promiseCompletionSource.reject(e);
                 })
                 .finally(() => {
+                    this._inFlightOperation = undefined;
                     setTimeout(() => {
                         this._operationQueue.shift();
                         this.executeNextCommand();

@@ -101,7 +101,14 @@ export class Kernel {
     // the command's progress? The only thing that actually calls this is the kernel channel, through
     // the callback set up by attachKernelToChannel, and the callback is expected to return void, so
     // nothing is ever going to look at the promise we return here.
-    async send(commandEnvelope: commandsAndEvents.KernelCommandEnvelope): Promise<void> {
+    async send(commandEnvelopeOrModel: commandsAndEvents.KernelCommandEnvelope | commandsAndEvents.KernelCommandEnvelopeModel): Promise<void> {
+        let commandEnvelope = <commandsAndEvents.KernelCommandEnvelope>commandEnvelopeOrModel;
+
+        if (!(<any>commandEnvelopeOrModel).getOrCreateToken) {
+            Logger.default.warn(`Converting command envelope model to command envelope for backawards compatibility.`);
+            commandEnvelope = commandsAndEvents.KernelCommandEnvelope.fromJson(<commandsAndEvents.KernelCommandEnvelopeModel>commandEnvelopeOrModel);
+        }
+
         const context = KernelInvocationContext.getOrCreateAmbientContext(commandEnvelope);
         if (context.commandEnvelope) {
             if (context.commandEnvelope !== commandEnvelope) {
