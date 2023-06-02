@@ -95,7 +95,7 @@ describe("polyglot-notebooks", () => {
                     }
                 });
                 let token = await client.submitCode("var a = 12");
-                expect(token).to.be.equal(transport!.commandsSent[0].token);
+                expect(token).to.be.equal(transport!.commandsSent[0].getOrCreateToken());
             });
 
             it("sends SubmitCode command", async () => {
@@ -181,10 +181,10 @@ describe("polyglot-notebooks", () => {
                 data: "Test"
             };
             let commandType: commandsAndEvents.KernelCommandType = <commandsAndEvents.KernelCommandType>"CustomCommand";
-            let commandEnvelopeIn: commandsAndEvents.KernelCommandEnvelope = {
+            let commandEnvelopeIn = new commandsAndEvents.KernelCommandEnvelope(
                 commandType,
-                command: commandIn
-            };
+                commandIn
+            );
 
             transport!.fakeIncomingSubmitCommand(commandEnvelopeIn);
             await delay(500);
@@ -211,13 +211,13 @@ describe("polyglot-notebooks", () => {
             client.registerCommandHandler({
                 commandType: commandsAndEvents.SubmitCodeType, handle: (invocation) => {
                     let submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
-                    let event: commandsAndEvents.KernelEventEnvelope = {
-                        eventType: commandsAndEvents.CodeSubmissionReceivedType,
-                        event: {
+                    let event = new commandsAndEvents.KernelEventEnvelope(
+                        commandsAndEvents.CodeSubmissionReceivedType,
+                        {
                             code: submitCode.code
                         },
-                        command: invocation.commandEnvelope
-                    };
+                        invocation.commandEnvelope
+                    );
 
                     invocation.context.publish(event);
                     return Promise.resolve();
@@ -225,16 +225,17 @@ describe("polyglot-notebooks", () => {
             });
 
 
-            transport!.fakeIncomingSubmitCommand({ commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "39 + 3" } });
+            const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "39 + 3" });
+            transport!.fakeIncomingSubmitCommand(command);
 
             let eventIn: commandsAndEvents.CodeSubmissionReceived = {
                 code: "39 + 3"
             };
 
-            let eventEnvelopeIn: commandsAndEvents.KernelEventEnvelope = {
-                eventType: commandsAndEvents.CodeSubmissionReceivedType,
-                event: eventIn
-            };
+            let eventEnvelopeIn = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.CodeSubmissionReceivedType,
+                eventIn
+            );
 
             await delay(500);
             const publishedEvents = transport!.eventsPublished.filter(e => e.eventType === eventEnvelopeIn.eventType);

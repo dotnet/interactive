@@ -6,7 +6,6 @@ import * as rxjs from "rxjs";
 import { DotnetInteractiveClient, KernelClientContainer } from "../src/polyglot-notebooks-interfaces";
 import * as connection from "../src/polyglot-notebooks/connection";
 import * as commandsAndEvents from "../src/polyglot-notebooks/commandsAndEvents";
-import { TokenGenerator } from "../src/polyglot-notebooks/tokenGenerator";
 
 
 export function asKernelClientContainer(client: DotnetInteractiveClient): KernelClientContainer {
@@ -18,10 +17,9 @@ export function configureFetchForKernelDiscovery(rootUrl: string) {
 }
 
 export class MockKernelCommandAndEventChannel {
-
+    private static _counter = 0;
     public commandsSent: Array<commandsAndEvents.KernelCommandEnvelope>;
     public eventsPublished: Array<commandsAndEvents.KernelEventEnvelope>;
-    private tokenGenerator = new TokenGenerator();
     private eventObservers: { [key: string]: commandsAndEvents.KernelEventEnvelopeObserver } = {};
     private commandHandlers: { [key: string]: commandsAndEvents.KernelCommandEnvelopeHandler } = {};
 
@@ -51,9 +49,11 @@ export class MockKernelCommandAndEventChannel {
         this.sender = connection.KernelCommandAndEventSender.FromObserver(this._senderSubject);
         this.receiver = connection.KernelCommandAndEventReceiver.FromObservable(this._receiverSubject);
     }
-
+    private static createToken() {
+        return `token-${MockKernelCommandAndEventChannel._counter++}`
+    }
     public subscribeToKernelEvents(observer: commandsAndEvents.KernelEventEnvelopeObserver) {
-        let key = this.tokenGenerator.createToken();
+        let key = MockKernelCommandAndEventChannel.createToken();
         this.eventObservers[key] = observer;
 
         return {
@@ -64,7 +64,7 @@ export class MockKernelCommandAndEventChannel {
     }
 
     public setCommandHandler(handler: commandsAndEvents.KernelCommandEnvelopeHandler) {
-        let key = this.tokenGenerator.createToken();
+        let key = MockKernelCommandAndEventChannel.createToken();
         this.commandHandlers[key] = handler;
     }
 
