@@ -157,18 +157,15 @@ internal static partial class Format
 
             case DiagnosticsProduced diagnosticsProduced:
                 var diagnostics = diagnosticsProduced.Diagnostics;
-                if (diagnostics.Any()) // TODO: How come we produce empty DiagnosticsProduced events?
-                {
-                    var firstMessage = diagnostics.First().Message.TruncateIfNeeded();
-                    writer.Write(firstMessage);
+                var firstMessage = diagnostics.First().Message.TruncateIfNeeded();
+                writer.Write(firstMessage);
 
-                    var diagnosticsCount = diagnostics.Count;
-                    if (diagnosticsCount > 1)
-                    {
-                        writer.Write(" (and ");
-                        writer.Write(diagnosticsCount - 1);
-                        writer.Write(" more)");
-                    }
+                var diagnosticsCount = diagnostics.Count;
+                if (diagnosticsCount > 1)
+                {
+                    writer.Write(" (and ");
+                    writer.Write(diagnosticsCount - 1);
+                    writer.Write(" more)");
                 }
                 break;
 
@@ -184,6 +181,7 @@ internal static partial class Format
                 writer.Write("' (");
                 writer.Write(firstContent.MimeType);
                 writer.Write(')');
+
                 var contentCount = content.Count;
                 if (contentCount > 1)
                 {
@@ -256,6 +254,7 @@ internal static partial class Format
                     writer.Write(" (");
                     writer.Write(nameof(displayEvent.FormattedValues));
                     writer.Write(": ");
+
                     var firstFormattedValue = formattedValues.First();
                     writer.Write('\'');
                     writer.Write(firstFormattedValue.Value.TruncateIfNeeded());
