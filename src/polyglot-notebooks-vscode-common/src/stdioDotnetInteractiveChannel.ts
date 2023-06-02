@@ -8,7 +8,9 @@ import {
     KernelEventEnvelopeObserver,
     KernelReadyType,
     SubmitCodeType,
-    KernelReady
+    KernelReady,
+    KernelEventEnvelope,
+    KernelCommandEnvelope
 } from './polyglot-notebooks/commandsAndEvents';
 import { ProcessStart } from './interfaces';
 import { ReportChannel } from './interfaces/vscode-like';
@@ -19,10 +21,13 @@ import {
     IKernelCommandAndEventReceiver,
     IKernelCommandAndEventSender,
     isKernelCommandEnvelope,
+    isKernelCommandEnvelopeModel,
     isKernelEventEnvelope,
+    isKernelEventEnvelopeModel,
     KernelCommandAndEventReceiver,
     KernelCommandAndEventSender,
-    KernelCommandOrEventEnvelope
+    KernelCommandOrEventEnvelope,
+    KernelCommandOrEventEnvelopeModel
 } from './polyglot-notebooks/connection';
 import { DisposableSubscription } from './polyglot-notebooks/disposables';
 import { Subject } from 'rxjs';
@@ -48,7 +53,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         this._receiverSubject = new Subject<KernelCommandOrEventEnvelope>();
 
         this._sender = KernelCommandAndEventSender.FromFunction(envelope => {
-            this.writeToProcessStdin(envelope);
+            this.writeToProcessStdin(envelope.toJson());
         });
 
         this._receiver = KernelCommandAndEventReceiver.FromObservable(this._receiverSubject);
@@ -115,7 +120,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         }
         const envelope = parse(line);
         Logger.default.info(`envelope received from stdio: ${JSON.stringify(envelope)}`);
-        if (isKernelEventEnvelope(envelope)) {
+        if (isKernelEventEnvelopeModel(envelope)) {
             switch (envelope.eventType) {
                 case CommandFailedType:
                 case CommandSucceededType:
@@ -125,14 +130,16 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
                     }
                     break;
             }
-            this._receiverSubject.next(envelope);
+            const event = KernelEventEnvelope.fromJson(envelope);
+            this._receiverSubject.next(event);
 
-        } else if (isKernelCommandEnvelope(envelope)) {
+        } else if (isKernelCommandEnvelopeModel(envelope)) {
             // TODO: pass in context with shortcut methods for publish, etc.
             // TODO: wrap and return succeed/failed
             // TODO: publish succeeded
             // TODO: publish failed
-            this._receiverSubject.next(envelope);
+            const command = KernelCommandEnvelope.fromJson(envelope);
+            this._receiverSubject.next(command);
         }
     }
 
@@ -151,7 +158,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
         };
     }
 
-    private writeToProcessStdin(content: KernelCommandOrEventEnvelope) {
+    private writeToProcessStdin(content: KernelCommandOrEventEnvelopeModel) {
         if (isNotNull(this.childProcess)) {
             let str = stringify(content);
             // send the command or event
@@ -176,7 +183,7 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
             // ping the server with a single newline character.  This is enough to break the read hang, but
             // doesn't negatively impact the command parsing or execution.  To prevent spamming the server,
             // this timer is only active until the command succeeds or fails.
-            if (process.platform === 'win32' && this.pingTimer === null && isKernelCommandEnvelope(content)) {
+            if (process.platform === 'win32' && this.pingTimer === null && isKernelCommandEnvelopeModel(content)) {
                 if (content.commandType === SubmitCodeType) {
                     this.pingTimer = setInterval(() => {
                         if (this.childProcess) {

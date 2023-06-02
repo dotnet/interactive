@@ -17,7 +17,6 @@ import { createChannelConfig, decodeNotebookCellOutputs } from './utilities';
 describe('InteractiveClient tests', () => {
 
     it('command execution returns deferred events', async () => {
-        const token = 'test-token';
         const code = '1 + 1';
         const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
@@ -33,22 +32,19 @@ describe('InteractiveClient tests', () => {
                                 value: 'deferred output'
                             }
                         ]
-                    },
-                    token: 'deferredCommand::token-for-deferred-command-doesnt-match-any-other-token'
+                    }
                 },
                 {
                     eventType: CodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CompleteCodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: ReturnValueProducedType,
@@ -61,20 +57,18 @@ describe('InteractiveClient tests', () => {
                                 value: '2'
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         const outputs: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', output => outputs.push(output), _ => { }, { token });
+        await client.execute(code, 'csharp', output => outputs.push(output), _ => { });
         const decodedResults = decodeNotebookCellOutputs(outputs);
         expect(decodedResults).to.deep.equal([
             {
@@ -117,13 +111,11 @@ describe('InteractiveClient tests', () => {
                                 value: '{}'
                             }
                         ]
-                    },
-                    token: 'token 1'
+                    }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token: 'token 1'
+                    event: {}
                 }
             ]
         }));
@@ -132,7 +124,7 @@ describe('InteractiveClient tests', () => {
 
         // execute first command
         const outputs1: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', output => outputs1.push(output), _ => { }, { token: 'token 1' });
+        await client.execute(code, 'csharp', output => outputs1.push(output), _ => { });
         let decodedResults1 = decodeNotebookCellOutputs(outputs1);
         expect(decodedResults1).to.deep.equal([
             {
@@ -151,41 +143,36 @@ describe('InteractiveClient tests', () => {
     });
 
     it('ErrorProduced resolve the execution promise reporting failuer', async () => {
-        const token = 'token';
         const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     eventType: ErrorProducedType,
-                    event: { message: "failed internal command" },
-                    token
+                    event: { message: "failed internal command" }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
-        const result = await client.execute('1+1', 'csharp', _ => { }, _ => { }, { token });
+        const result = await client.execute('1+1', 'csharp', _ => { }, _ => { });
         expect(result).to.be.equal(false);
     });
 
     it('CommandFailedEvent rejects the execution promise', (done) => {
-        const token = 'token';
         const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
                 {
                     eventType: CommandFailedType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
         const clientMapper = new ClientMapper(config);
         clientMapper.getOrAddClient(createUri('test/path')).then(client => {
-            client.execute('bad-code-that-will-fail', 'csharp', _ => { }, _ => { }, { token }).then(result => {
+            client.execute('bad-code-that-will-fail', 'csharp', _ => { }, _ => { }).then(result => {
                 done(`expected execution to fail promise, but passed with: ${result}`);
             }).catch(_err => {
                 done();
@@ -231,14 +218,12 @@ describe('InteractiveClient tests', () => {
     });
 
     it('execution prevents diagnostics request forwarding', async () => {
-        const token = 'test-token';
         const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
 
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
@@ -249,7 +234,7 @@ describe('InteractiveClient tests', () => {
         });
 
         const client = await clientMapper.getOrAddClient(createUri('test-path.dib'));
-        await client.execute("1+1", "csharp", (_outputs) => { }, (_diagnostics) => { }, { token: token, id: "id0" });
+        await client.execute("1+1", "csharp", (_outputs) => { }, (_diagnostics) => { }, { id: "id0" });
         await wait(1000);
         expect(diagnosticsCallbackFired).to.be.false;
     });
@@ -265,7 +250,7 @@ describe('InteractiveClient tests', () => {
         const clientMapper = new ClientMapper(config);
         let client = await clientMapper.getOrAddClient(createUri('test-path.dib'));
 
-        await expect(client.execute("1+1", "csharp", _outputs => { }, _diagnostics => { }, { token, id: '' }))
+        await expect(client.execute("1+1", "csharp", _outputs => { }, _diagnostics => { }))
             .eventually
             .rejectedWith('expected exception during submit');
     });
@@ -280,7 +265,7 @@ describe('InteractiveClient tests', () => {
         const clientMapper = new ClientMapper(config);
         const seenOutputs: Array<vscodeLike.NotebookCellOutput> = [];
         clientMapper.getOrAddClient(createUri('test-path.dib')).then(client => {
-            expect(client.execute("1+1", "csharp", output => seenOutputs.push(output), _diagnostics => { }, { token, id: '' })).eventually.rejected.then(() => {
+            expect(client.execute("1+1", "csharp", output => seenOutputs.push(output), _diagnostics => { })).eventually.rejected.then(() => {
                 try {
                     const decodedOutputs = decodeNotebookCellOutputs(seenOutputs);
                     expect(decodedOutputs).to.deep.equal([{

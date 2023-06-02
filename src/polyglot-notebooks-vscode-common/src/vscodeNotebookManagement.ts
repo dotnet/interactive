@@ -77,23 +77,23 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
             messageHandlerMap.set(documentUriString, messageHandler);
         }
         let extensionHostToWebviewSender = KernelCommandAndEventSender.FromFunction(envelope => {
-            controllerPostMessage({ envelope });
+            controllerPostMessage({ envelope: envelope.toJson() });
         });
 
         let WebviewToExtensionHostReceiver = KernelCommandAndEventReceiver.FromObservable(messageHandler);
 
         Logger.default.info(`configuring routing for host '${hostUri}'`);
 
-        let sub01 = client.channel.receiver.subscribe({
+        let subscriptionToExtensionHost = client.channel.receiver.subscribe({
             next: envelope => {
                 if (isKernelEventEnvelope(envelope)) {
-                    Logger.default.info(`forwarding event to '${hostUri}' ${JSON.stringify(envelope)}`);
+                    Logger.default.info(`forwarding event to '${hostUri}' ${JSON.stringify(envelope.toJson())}`);
                     extensionHostToWebviewSender.send(envelope);
                 }
             }
         });
 
-        let sub02 = WebviewToExtensionHostReceiver.subscribe({
+        let subscriptionToWebView = WebviewToExtensionHostReceiver.subscribe({
             next: envelope => {
                 if (isKernelCommandEnvelope(envelope)) {
                     // handle command routing
@@ -146,14 +146,6 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
             }
         });
 
-        // const knownKernels = client.kernelHost.getKernelInfoProduced();
-
-        // for (const knwonKernel of knownKernels) {
-        //     const kernelInfoProduced = <contracts.KernelInfoProduced>knwonKernel.event;
-        //     Logger.default.info(`forwarding kernelInfo [${JSON.stringify(kernelInfoProduced.kernelInfo)}] to webview`);
-        //     extensionHostToWebviewSender.send(knwonKernel);
-        // }
-
         client.kernelHost.tryAddConnector({
             sender: extensionHostToWebviewSender,
             receiver: WebviewToExtensionHostReceiver,
@@ -163,8 +155,8 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
         client.registerForDisposal(() => {
             messageHandlerMap.delete(documentUriString);
             client.kernelHost.tryRemoveConnector({ remoteUris: ["kernel://webview"] });
-            sub01.unsubscribe();
-            sub02.unsubscribe();
+            subscriptionToExtensionHost.unsubscribe();
+            subscriptionToWebView.unsubscribe();
         });
 
         for (const kernelInfo of kernelInfos) {

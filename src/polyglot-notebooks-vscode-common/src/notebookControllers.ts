@@ -11,7 +11,7 @@ import { reshapeOutputValueForVsCode } from './interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './commands';
 import { ErrorOutputCreator, InteractiveClient } from './interactiveClient';
 import { LogEntry, Logger } from './polyglot-notebooks/logger';
-import { isKernelEventEnvelope, KernelCommandOrEventEnvelope } from './polyglot-notebooks/connection';
+import { isKernelCommandEnvelopeModel, isKernelEventEnvelope, isKernelEventEnvelopeModel, KernelCommandOrEventEnvelope } from './polyglot-notebooks/connection';
 import * as rxjs from 'rxjs';
 import * as metadataUtilities from './metadataUtilities';
 import * as constants from './constants';
@@ -132,16 +132,27 @@ export class DotNetNotebookKernel {
 
             if (e.message.envelope) {
                 let messageHandler = this.uriMessageHandlerMap.get(notebookUriString);
-                messageHandler?.next(e.message.envelope);
+                if (isKernelEventEnvelopeModel(e.message.envelope)) {
+                    const event = commandsAndEvents.KernelEventEnvelope.fromJson(e.message.envelope);
+                    messageHandler?.next(event);
+                } else if (isKernelCommandEnvelopeModel(e.message.envelope)) {
+                    const command = commandsAndEvents.KernelCommandEnvelope.fromJson(e.message.envelope);
+                    messageHandler?.next(command);
+                }
             }
 
             switch (e.message.preloadCommand) {
                 case '#!connect':
                     this.config.clientMapper.getOrAddClient(notebookUri).then(() => {
                         const hostUri = e.message.hostUri;
-                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, <commandsAndEvents.KernelInfo[]>(e.message.kernelInfos), this.uriMessageHandlerMap, (arg) => controller.postMessage({ ...arg, webViewId: e.message.webViewId }), notebookUri);
+                        vscodeNotebookManagement.hashBangConnect(this.config.clientMapper, hostUri, <commandsAndEvents.KernelInfo[]>(e.message.kernelInfos), this.uriMessageHandlerMap,
+                            (arg) => {
+                                controller.postMessage({ ...arg, webViewId: e.message.webViewId });
+                            },
+                            notebookUri);
                         this.config.clientMapper.getOrAddClient(notebookUri).then(client => {
-                            controller.postMessage({ webViewId: e.message.webViewId, preloadCommand: "#!connect", kernelInfos: client.kernelHost.getKernelInfos() });
+                            const kernelInfos = client.kernelHost.getKernelInfos();
+                            controller.postMessage({ webViewId: e.message.webViewId, preloadCommand: "#!connect", kernelInfos });
                         });
                     });
                     break;

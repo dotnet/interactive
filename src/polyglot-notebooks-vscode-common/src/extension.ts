@@ -179,13 +179,13 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (!value) {
                     commandInvocation.context.fail('Input request cancelled');
                 } else {
-                    commandInvocation.context.publish({
-                        eventType: commandsAndEvents.InputProducedType,
-                        event: {
+                    commandInvocation.context.publish(new commandsAndEvents.KernelEventEnvelope(
+                        commandsAndEvents.InputProducedType,
+                        {
                             value
                         },
-                        command: commandInvocation.commandEnvelope,
-                    });
+                        commandInvocation.commandEnvelope,
+                    ));
                 }
             }
         });
