@@ -203,17 +203,18 @@ type FSharpKernel () as this =
                 with
                 | ex -> Error(ex), [||]
 
-            let diagnostics = fsiDiagnostics |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
-            
             // script.Eval can succeed with error diagnostics, see https://github.com/dotnet/interactive/issues/691
             let isError = fsiDiagnostics |> Array.exists (fun d -> d.Severity = FSharpDiagnosticSeverity.Error)
 
-            let formattedDiagnostics =
-                fsiDiagnostics
-                |> Array.map (fun d -> d.ToString())
-                |> Array.map (fun text -> new FormattedValue(PlainTextFormatter.MimeType, text))
+            if fsiDiagnostics.Length > 0 then
+                let diagnostics = fsiDiagnostics |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
 
-            context.Publish(DiagnosticsProduced(diagnostics, codeSubmission, formattedDiagnostics))
+                let formattedDiagnostics =
+                    fsiDiagnostics
+                    |> Array.map (fun d -> d.ToString())
+                    |> Array.map (fun text -> new FormattedValue(PlainTextFormatter.MimeType, text))
+
+                context.Publish(DiagnosticsProduced(diagnostics, codeSubmission, formattedDiagnostics))
 
             match result with
             | Ok(result) when not isError ->
@@ -368,8 +369,10 @@ type FSharpKernel () as this =
         task {
             let _parseResults, checkFileResults, _checkProjectResults = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
             let errors = checkFileResults.Diagnostics
-            let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
-            context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
+
+            if errors.Length > 0 then
+                let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
+                context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
         }
 
     let handleRequestValueValueInfos (requestValueInfos: RequestValueInfos) (context: KernelInvocationContext) =
