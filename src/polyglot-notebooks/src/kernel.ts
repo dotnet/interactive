@@ -83,10 +83,6 @@ export class Kernel {
         return this._scheduler;
     }
 
-    private ensureCommandTokenAndId(commandEnvelope: commandsAndEvents.KernelCommandEnvelope, context: KernelInvocationContext) {
-
-    }
-
     static get current(): Kernel | null {
         if (KernelInvocationContext.current) {
             return KernelInvocationContext.current.handlingKernel;
@@ -107,7 +103,11 @@ export class Kernel {
     // nothing is ever going to look at the promise we return here.
     async send(commandEnvelope: commandsAndEvents.KernelCommandEnvelope): Promise<void> {
         const context = KernelInvocationContext.getOrCreateAmbientContext(commandEnvelope);
-        this.ensureCommandTokenAndId(commandEnvelope, context);
+        if (context.commandEnvelope) {
+            if (context.commandEnvelope !== commandEnvelope) {
+                commandEnvelope.parent = context.commandEnvelope;
+            }
+        }
         const kernelUri = getKernelUri(this);
         if (!commandEnvelope.routingSlip.contains(kernelUri)) {
             commandEnvelope.routingSlip.stampAsArrived(kernelUri);

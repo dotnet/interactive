@@ -77,7 +77,7 @@ export class KernelCommandEnvelope {
 
         if (this._parentCommand) {
             this._token = `${this._parentCommand.getOrCreateToken()}.${this._parentCommand.getNextChildToken()}`;
-            return this._token
+            return this._token;
         }
         const guidBytes = uuid.parse(uuid.v4());
         const data = new Uint8Array(guidBytes);
