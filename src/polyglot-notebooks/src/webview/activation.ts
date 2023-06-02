@@ -8,6 +8,7 @@ import { Logger } from "../logger";
 import { KernelHost } from '../kernelHost';
 import { v4 as uuid } from 'uuid';
 import { KernelInfo } from '../contracts';
+import { KernelCommandEnvelope, KernelEventEnvelope } from '../commandsAndEvents';
 
 type KernelMessagingApi = {
     onDidReceiveKernelMessage: (arg: any) => any;
@@ -29,19 +30,24 @@ function configure(global: any, context: KernelMessagingApi) {
 
     localToRemote.subscribe({
         next: envelope => {
-            context.postKernelMessage({ envelope });
+            context.postKernelMessage({ envelope: envelope.toJson() });
         }
     });
 
     const webViewId = uuid();
     context.onDidReceiveKernelMessage((arg: any) => {
         if (arg.envelope && arg.webViewId === webViewId) {
-            const envelope = <connection.KernelCommandOrEventEnvelope><any>(arg.envelope);
-            if (connection.isKernelEventEnvelope(envelope)) {
-                Logger.default.info(`channel got ${envelope.eventType} with token ${envelope.command?.getOrCreateToken()} and id ${envelope.command?.id}`);
+            const envelope = <connection.KernelCommandOrEventEnvelopeModel><any>(arg.envelope);
+            if (connection.isKernelEventEnvelopeModel(envelope)) {
+                const event = KernelEventEnvelope.fromJson(envelope)
+
+                Logger.default.info(`channel got ${event.eventType} with token ${event.command?.getOrCreateToken()} and id ${event.command?.id}`);
+                remoteToLocal.next(event);
+            } else {
+                const command = KernelCommandEnvelope.fromJson(envelope)
+                remoteToLocal.next(command);
             }
 
-            remoteToLocal.next(envelope);
         } else if (arg.webViewId === webViewId) {
             const kernelHost = (<KernelHost>(global['webview'].kernelHost));
             if (kernelHost) {
