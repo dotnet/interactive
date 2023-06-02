@@ -25,6 +25,14 @@
     <EmbeddedResource Include="..\polyglot-notebooks\lib\polyglot-notebooks.js" />
   </ItemGroup>
 
+  <ItemGroup Label="Logging Customization">
+    <!-- Implementation for partial method in Pocket that customizes logging for commands and events -->
+    <None Include="..\dotnet-interactive\Pocket\Format.CustomizeLogString.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles\cs\any\(Pocket)\LoggerExtensions\Format.CustomizeLogString.cs</PackagePath>
+    </None>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.5" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
