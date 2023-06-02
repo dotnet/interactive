@@ -28,8 +28,13 @@ function ExecuteTestDirectory([string]$testDirectory, [string]$extraArgs = "") {
 
 try {
     $repoRoot = Resolve-Path $PSScriptRoot
-    $flakyTestAssemblyDirectory = "Microsoft.DotNet.Interactive.Tests"
-    $normalTestAssemblyDirectories = Get-ChildItem -Path "$repoRoot/src" -Directory -Filter *.Tests -Recurse | Where-Object { $_.Name -ne $flakyTestAssemblyDirectory }
+    $flakyTestAssemblyDirectories = @(
+        "Microsoft.DotNet.Interactive.Tests",
+        "Microsoft.DotNet.Interactive.App.Tests",
+        "Microsoft.DotNet.Interactive.Jupyter.Tests"
+        )
+    
+    $normalTestAssemblyDirectories = Get-ChildItem -Path "$repoRoot/src" -Directory -Filter *.Tests -Recurse | Where-Object { !$flakyTestAssemblyDirectories.contains($_.Name)}
 
     foreach ($testAssemblyDirectory in $normalTestAssemblyDirectories) {
         $projectName = $testAssemblyDirectory.Name
@@ -49,21 +54,23 @@ try {
         }
     }
 
-    $testNamePattern = "    ([^(]+)" # skip 4 spaces then get everything that's not a left paren because test names start with 4 spaces and [Theory] tests have a parenthesized argument list
-    $testNames = dotnet test "$repoRoot/src/$flakyTestAssemblyDirectory/" --no-restore --no-build --configuration $buildConfig --list-tests | Select-String -Pattern $testNamePattern | ForEach-Object { $_.Matches[0].Groups[1].Value }
-    $testClasses = $testNames | ForEach-Object { $_.Substring(0, $_.LastIndexOf([char]".")) } # trim off the test name, just get the class
-    $distinctTestClasses = $testClasses | Get-Unique
+    foreach ($flakyTestAssemblyDirectory in $flakyTestAssemblyDirectories){
+        $testNamePattern = "    ([^(]+)" # skip 4 spaces then get everything that's not a left paren because test names start with 4 spaces and [Theory] tests have a parenthesized argument list
+        $testNames = dotnet test "$repoRoot/src/$flakyTestAssemblyDirectory/" --no-restore --no-build --configuration $buildConfig --list-tests | Select-String -Pattern $testNamePattern | ForEach-Object { $_.Matches[0].Groups[1].Value }
+        $testClasses = $testNames | ForEach-Object { $_.Substring(0, $_.LastIndexOf([char]".")) } # trim off the test name, just get the class
+        $distinctTestClasses = $testClasses | Get-Unique
 
-    foreach ($testClass in $distinctTestClasses) {
-        for ($i = 1; $i -le $retryCount; $i++) {
-            Write-Host "Testing class $testClass, attempt $i"
-            ExecuteTestDirectory -testDirectory "$repoRoot/src/$flakyTestAssemblyDirectory" -extraArgs "--filter FullyQualifiedName~$testClass"
-            if ($LASTEXITCODE -eq 0) {
-                break
+        foreach ($testClass in $distinctTestClasses) {
+            for ($i = 1; $i -le $retryCount; $i++) {
+                Write-Host "Testing class $testClass, attempt $i"
+                ExecuteTestDirectory -testDirectory "$repoRoot/src/$flakyTestAssemblyDirectory" -extraArgs "--filter FullyQualifiedName~$testClass"
+                if ($LASTEXITCODE -eq 0) {
+                    break
+                }
             }
-        }
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
+            if ($LASTEXITCODE -ne 0) {
+                exit $LASTEXITCODE
+            }
         }
     }
 }
