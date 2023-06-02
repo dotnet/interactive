@@ -7,6 +7,8 @@ using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
+#nullable enable
+
 namespace Pocket;
 
 internal static partial class Format
@@ -285,7 +287,7 @@ internal static partial class Format
             ("CommandToken", @event.Command.GetOrCreateToken()));
     }
 
-    private static void AppendProperties(this TextWriter writer, params (string Name, string Value)[] properties)
+    private static void AppendProperties(this TextWriter writer, params (string Name, string? Value)[] properties)
     {
         if (properties.Length > 0)
         {
@@ -306,10 +308,10 @@ internal static partial class Format
         }
     }
 
-    private static void AppendProperty(this TextWriter writer, (string Name, string Value) property)
+    private static void AppendProperty(this TextWriter writer, (string Name, string? Value) property)
         => writer.AppendProperty(property.Name, property.Value);
 
-    private static void AppendProperty(this TextWriter writer, string name, string value)
+    private static void AppendProperty(this TextWriter writer, string name, string? value)
     {
         writer.Write(name);
         writer.Write(": ");
