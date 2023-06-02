@@ -11,6 +11,14 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Pocket;
 
+// ----------------------------------------------------------------------------
+// NOTE: The code in this file is shipped as content in a NuGet package and
+// utilized by some components that live outside the current repo. It should
+// therefore be kept self-sufficient. Avoid referencing any internal types,
+// extension methods or helper code defined within other files as much as
+// possible.
+// ----------------------------------------------------------------------------
+
 internal static partial class Format
 {
     static partial void CustomizeLogString(object value, ref string output)
