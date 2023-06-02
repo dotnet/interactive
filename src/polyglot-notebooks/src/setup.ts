@@ -47,7 +47,7 @@ export function setup(configuration?: SetupConfiguration) {
 
     localToRemote.subscribe({
         next: envelope => {
-            global?.publishCommandOrEvent(envelope);
+            global?.publishCommandOrEvent(envelope.toJson());
         }
     });
 
