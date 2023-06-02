@@ -119,7 +119,6 @@
     <None Remove="resources\logo-456x456.png" />
     <None Remove="resources\logo-64x64.png" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\StringExtensions.cs" Link="Utility\StringExtensions.cs" />
 
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive.js" />
 

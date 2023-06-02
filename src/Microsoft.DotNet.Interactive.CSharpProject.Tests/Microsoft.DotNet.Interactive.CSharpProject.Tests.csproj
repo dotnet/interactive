@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <Compile Include="..\dotnet-interactive\Pocket\Format.CustomizeLogString.cs" Link="Pocket\Format.CustomizeLogString.cs" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\StringExtensions.cs" Link="Utility\StringExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\%28Recipes%29\AsyncLazy{T}.cs" Link="Utility\AsyncLazy{T}.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\(Recipes)\JsonSerializationExtensions.cs" />
   </ItemGroup>

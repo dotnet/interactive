@@ -20,7 +20,6 @@
     <Compile Include="..\dotnet-interactive\(Recipes)\TaskExtensions.cs" />
     <Compile Include="..\dotnet-interactive\Pocket\Format.CustomizeLogString.cs" Link="Pocket\Format.CustomizeLogString.cs" />
     <Compile Include="..\dotnet-interactive\Utility\KernelDiagnostics.cs" Link="KernelDiagnostics.cs" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\StringExtensions.cs" Link="Utility\StringExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>
