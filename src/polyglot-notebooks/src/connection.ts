@@ -86,14 +86,14 @@ export class KernelCommandAndEventSender implements IKernelCommandAndEventSender
     send(kernelCommandOrEventEnvelope: KernelCommandOrEventEnvelope): Promise<void> {
         if (this._sender) {
             try {
-                const serislized = JSON.parse(JSON.stringify(kernelCommandOrEventEnvelope.toJson()));
+                const clone = kernelCommandOrEventEnvelope.clone();
                 if (typeof this._sender === "function") {
-                    this._sender(serislized);
+                    this._sender(clone);
                 } else if (isObservable(this._sender)) {
                     if (isKernelCommandEnvelope(kernelCommandOrEventEnvelope)) {
-                        this._sender.next(commandsAndEvents.KernelCommandEnvelope.fromJson(serislized));
+                        this._sender.next(clone);
                     } else {
-                        this._sender.next(commandsAndEvents.KernelEventEnvelope.fromJson(serislized));
+                        this._sender.next(clone);
                     }
                 } else {
                     return Promise.reject(new Error("Sender is not set"));

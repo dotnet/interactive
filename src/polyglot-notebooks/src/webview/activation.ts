@@ -30,7 +30,8 @@ function configure(global: any, context: KernelMessagingApi) {
 
     localToRemote.subscribe({
         next: envelope => {
-            context.postKernelMessage({ envelope: envelope.toJson() });
+            const envelopeJson = envelope.toJson();
+            context.postKernelMessage({ envelope: envelopeJson });
         }
     });
 
