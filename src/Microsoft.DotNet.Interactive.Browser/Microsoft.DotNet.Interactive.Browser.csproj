@@ -31,10 +31,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="%28Recipes%29\" />
-  </ItemGroup>
   
   <ItemGroup>
     <EmbeddedResource Include="..\polyglot-notebooks\lib\polyglot-notebooks.js" />

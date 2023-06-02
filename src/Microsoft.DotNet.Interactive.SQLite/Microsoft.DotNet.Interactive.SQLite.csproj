@@ -9,7 +9,6 @@
     <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn>
     <!-- dll outside of lib/ folder -->
   </PropertyGroup>
-
   
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.0" />
@@ -25,12 +24,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="%28Recipes%29\" />
-  </ItemGroup>
-  
-
 
   <ItemGroup>
     <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
