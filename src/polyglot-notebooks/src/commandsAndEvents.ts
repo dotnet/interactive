@@ -35,8 +35,9 @@ export interface KernelCommandEnvelopeHandler {
 }
 
 function toBase64String(value: Uint8Array): string {
-    if (global.window) {
-        return window.btoa(String.fromCharCode(...value));
+    const wnd = <any>(globalThis.window);
+    if (wnd) {
+        return wnd.btoa(String.fromCharCode(...value));
     } else {
         return Buffer.from(value).toString('base64');
     }
