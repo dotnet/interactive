@@ -34,8 +34,8 @@
     FSharp.Compiler.Service: https://dev.azure.com/dnceng/internal/_release?view=mine&_a=releases&definitionId=98
 
     -->
-    <PackageReference Update="FSharp.Core" Version="7.0.300-beta.23261.1" />
-    <PackageReference Update="FSharp.Compiler.Service" Version="43.7.300-preview.23261.1" />
+    <PackageReference Update="FSharp.Core" Version="7.0.300" />
+    <PackageReference Update="FSharp.Compiler.Service" Version="43.7.300" />
   </ItemGroup>
 
 </Project>
