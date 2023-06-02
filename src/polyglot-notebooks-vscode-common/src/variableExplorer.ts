@@ -37,10 +37,10 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
                             kernelName: targetKernelSelectorOption.kernelName,
                             code,
                         };
-                        const commandEnvelope: commandsAndEvents.KernelCommandEnvelope = {
-                            commandType: commandsAndEvents.SendEditableCodeType,
+                        const commandEnvelope = new commandsAndEvents.KernelCommandEnvelope(
+                            commandsAndEvents.SendEditableCodeType,
                             command,
-                        };
+                        );
 
                         await client.kernel.rootKernel.send(commandEnvelope);
                     }
@@ -81,8 +81,10 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                                     if (kernelName) {
                                         completedKernels.add(kernelName);
                                     }
-                                    if ((envelope.routingSlip?.length ?? 0) > 0) {
-                                        const kernelUri = envelope.routingSlip![0];
+
+                                    const uris = envelope.routingSlip.toArray();
+                                    if (uris.length > 0) {
+                                        const kernelUri = uris[0];
                                         let kernel = client.kernel.findKernelByUri(kernelUri);
                                         if (kernel) {
                                             completedKernels.add(kernel.name);

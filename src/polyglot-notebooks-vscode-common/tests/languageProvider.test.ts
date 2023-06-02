@@ -15,7 +15,6 @@ import { createChannelConfig } from './utilities';
 describe('LanguageProvider tests', () => {
 
     it('CompletionProvider', async () => {
-        const token = '123';
         const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'RequestCompletions': [
                 {
@@ -32,13 +31,11 @@ describe('LanguageProvider tests', () => {
                                 documentation: null
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
@@ -53,7 +50,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the completion request
-        const completion = await provideCompletion(clientMapper, 'csharp', uri, code, position, 0, token);
+        const completion = await provideCompletion(clientMapper, 'csharp', uri, code, position, 0);
         expect(completion).to.deep.equal({
             linePositionSpan: null,
             completions: [
@@ -70,7 +67,6 @@ describe('LanguageProvider tests', () => {
     });
 
     it('HoverProvider', async () => {
-        const token = '123';
         const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'RequestHoverText': [
                 {
@@ -93,13 +89,11 @@ describe('LanguageProvider tests', () => {
                                 character: 12
                             }
                         }
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
@@ -114,7 +108,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the hover request
-        const hover = await provideHover(clientMapper, 'csharp', uri, code, position, 0, token);
+        const hover = await provideHover(clientMapper, 'csharp', uri, code, position, 0);
         expect(hover).to.deep.equal({
             contents: 'readonly struct System.Int32',
             isMarkdown: true,
@@ -132,7 +126,6 @@ describe('LanguageProvider tests', () => {
     });
 
     it('SignatureHelpProvider', async () => {
-        const token = '123';
         const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'RequestSignatureHelp': [
                 {
@@ -158,13 +151,11 @@ describe('LanguageProvider tests', () => {
                                 ]
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
@@ -179,7 +170,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the sig help request
-        const sigHelp = await provideSignatureHelp(clientMapper, 'csharp', uri, code, position, 0, token);
+        const sigHelp = await provideSignatureHelp(clientMapper, 'csharp', uri, code, position, 0);
         expect(sigHelp).to.deep.equal({
             activeParameter: 0,
             activeSignature: 0,

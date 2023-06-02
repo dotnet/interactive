@@ -24,13 +24,13 @@ export class CallbackTestTestDotnetInteractiveChannel implements DotnetInteracti
                 try {
                     this._receiverSubject.next(eventEnvelope);
                 } catch (e) {
-                    const eventEnvelope: KernelEventEnvelope = {
-                        eventType: CommandFailedType,
-                        event: <CommandFailed>{
+                    const eventEnvelope = new KernelEventEnvelope(
+                        CommandFailedType,
+                        <CommandFailed>{
                             message: e
                         },
-                        command: envelope,
-                    }
+                        envelope,
+                    );
                     this._receiverSubject.next(eventEnvelope);
                     throw e;
                 }

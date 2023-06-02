@@ -6,10 +6,10 @@ import { HoverResult, PositionLike } from './interfaces';
 import { Uri } from '../interfaces/vscode-like';
 import { debounceAndReject } from '../utilities';
 
-export function provideHover(clientMapper: ClientMapper, language: string, documentUri: Uri, documentText: string, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<HoverResult> {
+export function provideHover(clientMapper: ClientMapper, language: string, documentUri: Uri, documentText: string, position: PositionLike, languageServiceDelay: number): Promise<HoverResult> {
     return debounceAndReject(`hover-${documentUri.toString()}`, languageServiceDelay, async () => {
         const client = await clientMapper.getOrAddClient(documentUri);
-        const hoverText = await client.hover(language, documentText, position.line, position.character, token);
+        const hoverText = await client.hover(language, documentText, position.line, position.character);
         const content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];
         const hoverResult = {
             contents: content.value,

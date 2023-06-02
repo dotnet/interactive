@@ -53,7 +53,8 @@ import {
     Cancel,
     ErrorProducedType,
     ErrorProduced,
-    KernelInfo
+    KernelInfo,
+    KernelCommandEnvelope
 } from './polyglot-notebooks/commandsAndEvents';
 import { clearDebounce, createOutput } from './utilities';
 
@@ -63,7 +64,6 @@ import { KernelHost } from './polyglot-notebooks/kernelHost';
 import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 import * as connection from './polyglot-notebooks/connection';
 import { DisposableSubscription } from './polyglot-notebooks/disposables';
-import { TokenGenerator } from './polyglot-notebooks/tokenGenerator';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -76,7 +76,6 @@ export interface InteractiveClientConfiguration {
 }
 
 export class InteractiveClient {
-    private _tokenGenerator = new TokenGenerator();
     private disposables: (() => void)[] = [];
     private nextExecutionCount = 1;
     private nextOutputId: number = 1;
@@ -140,7 +139,7 @@ export class InteractiveClient {
         clearDebounce(`sighelp-${requestId}`);
     }
 
-    execute(source: string, language: string, outputReporter: { (output: vscodeLike.NotebookCellOutput): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<boolean> {
+    execute(source: string, language: string, outputReporter: { (output: vscodeLike.NotebookCellOutput): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration?: { token?: string | undefined, id?: string | undefined }): Promise<boolean> {
         if (configuration !== undefined && configuration.id !== undefined) {
             this.clearExistingLanguageServiceRequests(configuration.id);
         }
@@ -152,10 +151,20 @@ export class InteractiveClient {
             };
 
             let failureReported = false;
-            const commandToken = configuration?.token ? configuration.token : this._tokenGenerator.createToken();
-            const commandId = this._tokenGenerator.createId();
+            const command = new KernelCommandEnvelope(
+                SubmitCodeType,
+                <SubmitCode>{
+                    code: source,
+                    submissionType: SubmissionType.Run,
+                    targetKernelName: language
+                }
+            );
+            if (configuration !== undefined && configuration.id !== undefined) {
+                command.setId(configuration.id);
+            }
+            const commandId = command.id;
             try {
-                return this.submitCode(source, language, eventEnvelope => {
+                return this.submitCode(command, language, eventEnvelope => {
                     if (this.deferredOutput.length > 0) {
                         for (const output of this.deferredOutput) {
                             outputReporter(output);
@@ -215,7 +224,7 @@ export class InteractiveClient {
                             }
                             break;
                     }
-                }, commandToken, commandId).catch(e => {
+                }).catch(e => {
                     // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
                     if (!failureReported) {
                         const errorMessage = typeof e?.message === 'string' ? <string>e.message : '' + e;
@@ -232,63 +241,72 @@ export class InteractiveClient {
 
     }
 
-    completion(kernelName: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionsProduced> {
-        let command: RequestCompletions = {
-            code: code,
-            linePosition: {
-                line,
-                character
-            },
-            targetKernelName: kernelName
-        };
-        return this.submitCommandAndGetResult<CompletionsProduced>(command, RequestCompletionsType, CompletionsProducedType, token);
+    completion(kernelName: string, code: string, line: number, character: number): Promise<CompletionsProduced> {
+
+        const command = new KernelCommandEnvelope(
+            RequestCompletionsType,
+            <RequestCompletions>{
+                code: code,
+                linePosition: {
+                    line,
+                    character
+                },
+                targetKernelName: kernelName
+            }
+        );
+        return this.submitCommandAndGetResult<CompletionsProduced>(command, CompletionsProducedType);
     }
 
-    hover(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<HoverTextProduced> {
-        let command: RequestHoverText = {
-            code: code,
-            linePosition: {
-                line: line,
-                character: character,
-            },
-            targetKernelName: language
-        };
-        return this.submitCommandAndGetResult<HoverTextProduced>(command, RequestHoverTextType, HoverTextProducedType, token);
+    hover(language: string, code: string, line: number, character: number): Promise<HoverTextProduced> {
+        const command = new KernelCommandEnvelope(
+            RequestHoverTextType,
+            <RequestHoverText>{
+                code: code,
+                linePosition: {
+                    line: line,
+                    character: character,
+                },
+                targetKernelName: language
+            }
+        );
+        return this.submitCommandAndGetResult<HoverTextProduced>(command, HoverTextProducedType);
     }
 
-    signatureHelp(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<SignatureHelpProduced> {
-        let command: RequestSignatureHelp = {
-            code,
-            linePosition: {
-                line,
-                character
-            },
-            targetKernelName: language
-        };
-        return this.submitCommandAndGetResult<SignatureHelpProduced>(command, RequestSignatureHelpType, SignatureHelpProducedType, token);
+    signatureHelp(language: string, code: string, line: number, character: number): Promise<SignatureHelpProduced> {
+        const command = new KernelCommandEnvelope(
+            RequestSignatureHelpType,
+            <RequestSignatureHelp>{
+                code,
+                linePosition: {
+                    line,
+                    character
+                },
+                targetKernelName: language
+            }
+        );
+        return this.submitCommandAndGetResult<SignatureHelpProduced>(command, SignatureHelpProducedType);
     }
 
-    async getDiagnostics(kernelName: string, code: string, token?: string | undefined): Promise<Array<Diagnostic>> {
-        const command: RequestDiagnostics = {
-            code,
-            targetKernelName: kernelName
-        };
-        const diagsProduced = await this.submitCommandAndGetResult<DiagnosticsProduced>(command, RequestDiagnosticsType, DiagnosticsProducedType, token);
+    async getDiagnostics(kernelName: string, code: string): Promise<Array<Diagnostic>> {
+        const command = new KernelCommandEnvelope(
+            RequestDiagnosticsType,
+            <RequestDiagnostics>{
+                code,
+                targetKernelName: kernelName
+            }
+        );
+
+        const diagsProduced = await this.submitCommandAndGetResult<DiagnosticsProduced>(command, DiagnosticsProducedType);
         return diagsProduced.diagnostics;
     }
 
-    async submitCode(code: string, language: string, observer: KernelEventEnvelopeObserver, token?: string | undefined, id?: string | undefined): Promise<DisposableSubscription> {
-        let command: SubmitCode = {
-            code: code,
-            submissionType: SubmissionType.Run,
-            targetKernelName: language
-        };
-        token = token || this._tokenGenerator.createToken();
-        id = id || this._tokenGenerator.createId();
-
-        let disposable = this.subscribeToKernelTokenEvents(token, observer);
+    private async submitCode(command: KernelCommandEnvelope, language: string, observer: KernelEventEnvelopeObserver): Promise<DisposableSubscription> {
+        if (command.commandType !== SubmitCodeType) {
+            throw new Error(`Commandm ust be SubmitCpde.`);
+        }
+        let disposable = this.subscribeToKernelTokenEvents(command.getOrCreateToken(), observer);
         try {
-            await this.submitCommand(command, SubmitCodeType, token, id);
+            await this.submitCommand(command);
         }
         catch (error) {
             return Promise.reject(error);
@@ -298,34 +316,41 @@ export class InteractiveClient {
     }
 
     requestValueInfos(kernelName: string): Promise<ValueInfosProduced> {
-        const command: RequestValueInfos = {
-            targetKernelName: kernelName,
-            mimeType: "text/plain+summary"
-        };
-        return this.submitCommandAndGetResult(command, RequestValueInfosType, ValueInfosProducedType, undefined);
+        const command = new KernelCommandEnvelope(
+            RequestValueInfosType,
+            <RequestValueInfos>{
+                targetKernelName: kernelName,
+                mimeType: "text/plain+summary"
+            }
+        );
+        return this.submitCommandAndGetResult(command, ValueInfosProducedType);
     }
 
     requestValue(valueName: string, kernelName: string): Promise<ValueProduced> {
-        const command: RequestValue = {
-            name: valueName,
-            mimeType: 'text/plain',
-            targetKernelName: kernelName,
-        };
-        return this.submitCommandAndGetResult(command, RequestValueType, ValueProducedType, undefined);
+        const command = new KernelCommandEnvelope(
+            RequestValueType,
+            <RequestValue>{
+                name: valueName,
+                mimeType: 'text/plain',
+                targetKernelName: kernelName,
+            }
+        );
+        return this.submitCommandAndGetResult(command, ValueProducedType);
     }
 
-    cancel(token?: string | undefined): Promise<void> {
-        let command: Cancel = {};
-        token = token || this._tokenGenerator.createToken();
-        return this.submitCommand(command, CancelType, token, undefined);
+    cancel(): Promise<void> {
+        const command = new KernelCommandEnvelope(
+            CancelType,
+            <Cancel>{}
+        );
+        return this.submitCommand(command);
     }
 
     dispose() {
-        const command: Quit = {};
-        this.config.channel.sender.send({
-            commandType: QuitType,
-            command,
-        });
+        this.config.channel.sender.send(new KernelCommandEnvelope(
+            QuitType,
+            <Quit>{},
+        ));
         this.config.channel.dispose();
         for (let disposable of this.disposables) {
             disposable();
@@ -336,13 +361,13 @@ export class InteractiveClient {
         this.disposables.push(disposable);
     }
 
-    private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommand, commandType: KernelCommandType, expectedEventType: KernelEventType, token: string | undefined): Promise<TEvent> {
+    private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommandEnvelope, expectedEventType: KernelEventType): Promise<TEvent> {
         return new Promise<TEvent>(async (resolve, reject) => {
             let handled = false;
-            token = token || this._tokenGenerator.createToken();
-            const id = this._tokenGenerator.createId();
+            const token = command.getOrCreateToken();
+            const id = command.id;
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
-                if (eventEnvelope.command?.token === token && eventEnvelope.eventType === expectedEventType) {
+                if (eventEnvelope.command?.getOrCreateToken() === token && eventEnvelope.eventType === expectedEventType) {
                     switch (eventEnvelope.eventType) {
                         case CommandFailedType:
                             if (!handled) {
@@ -370,15 +395,16 @@ export class InteractiveClient {
                     }
                 }
             });
-            await this.config.channel.sender.send({ command, commandType, token, id });
+            await this.config.channel.sender.send(command);
         });
     }
 
-    private submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string | undefined, id: string | undefined): Promise<void> {
+    private submitCommand(command: KernelCommandEnvelope): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             let failureReported = false;
-            token = token || this._tokenGenerator.createToken();
-            id = id || this._tokenGenerator.createId();
+            const token = command.getOrCreateToken();
+            const id = command.id;
+            const commandType = command.commandType;
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case CommandFailedType:
@@ -401,7 +427,7 @@ export class InteractiveClient {
             });
             try {
                 this.config.channel.sender
-                    .send({ command, commandType, token, id })
+                    .send(command)
                     .catch(e => {
                         // only report a failure if it's not a `CommandFailed` event from above (which has already called `reject()`)
                         if (!failureReported) {
@@ -438,7 +464,7 @@ export class InteractiveClient {
     }
 
     private eventListener(eventEnvelope: KernelEventEnvelope) {
-        let token = eventEnvelope.command?.token;
+        let token = eventEnvelope.command?.getOrCreateToken();
         if (token) {
             if (token.startsWith("deferredCommand::")) {
                 switch (eventEnvelope.eventType) {

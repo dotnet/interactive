@@ -29,9 +29,8 @@ import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 
 describe('Notebook tests', () => {
 
-    for (const language of ['csharp', 'fsharp']) {
+    for (const language of ['csharp', 'fsharp'])
         it(`executes and returns expected value: ${language}`, async () => {
-            const token = '123';
             const code = '1+1';
             const config = createChannelConfig(async (_notebookPath) =>
                 new TestDotnetInteractiveChannel({
@@ -40,15 +39,13 @@ describe('Notebook tests', () => {
                             eventType: CodeSubmissionReceivedType,
                             event: {
                                 code: code
-                            },
-                            token
+                            }
                         },
                         {
                             eventType: CompleteCodeSubmissionReceivedType,
                             event: {
                                 code: code
-                            },
-                            token
+                            }
                         },
                         {
                             eventType: ReturnValueProducedType,
@@ -60,20 +57,18 @@ describe('Notebook tests', () => {
                                         value: '2'
                                     }
                                 ]
-                            },
-                            token
+                            }
                         },
                         {
                             eventType: CommandSucceededType,
-                            event: {},
-                            token
+                            event: {}
                         }
                     ]
                 }));
             const clientMapper = new ClientMapper(config);
             const client = await clientMapper.getOrAddClient(createUri('test/path'));
             const outputs: Array<vscodeLike.NotebookCellOutput> = [];
-            await client.execute(code, language, output => outputs.push(output), _ => { }, { token });
+            await client.execute(code, language, output => outputs.push(output), _ => { });
             const decodedResults = decodeNotebookCellOutputs(outputs);
             expect(decodedResults).to.deep.equal([
                 {
@@ -87,10 +82,8 @@ describe('Notebook tests', () => {
                 }
             ]);
         });
-    }
 
     it('multiple stdout values cause the output to grow', async () => {
-        const token = '123';
         const code = `
 Console.WriteLine(1);
 Console.WriteLine(2);
@@ -103,15 +96,13 @@ Console.WriteLine(3);
                     eventType: CodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CompleteCodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: StandardOutputValueProducedType,
@@ -123,8 +114,7 @@ Console.WriteLine(3);
                                 value: '1\r\n'
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: StandardOutputValueProducedType,
@@ -136,8 +126,7 @@ Console.WriteLine(3);
                                 value: '2\r\n'
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: DisplayedValueProducedType,
@@ -149,8 +138,7 @@ Console.WriteLine(3);
                                 value: '<div></div>'
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: StandardOutputValueProducedType,
@@ -162,20 +150,18 @@ Console.WriteLine(3);
                                 value: '3\r\n'
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         const outputs: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', output => outputs.push(output), _ => { }, { token });
+        await client.execute(code, 'csharp', output => outputs.push(output), _ => { });
         const decodedResults = decodeNotebookCellOutputs(outputs);
         expect(decodedResults).to.deep.equal([
             {
@@ -221,7 +207,6 @@ Console.WriteLine(3);
     });
 
     it('returned json is properly parsed', async () => {
-        const token = '123';
         const code = 'JObject.FromObject(new { a = 1, b = false })';
         const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
@@ -229,15 +214,13 @@ Console.WriteLine(3);
                     eventType: CodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CompleteCodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: ReturnValueProducedType,
@@ -249,20 +232,18 @@ Console.WriteLine(3);
                                 value: '{"a":1,"b":false}' // encoded as a string, expected to be decoded when relayed back
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         const outputs: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', output => outputs.push(output), _ => { }, { token });
+        await client.execute(code, 'csharp', output => outputs.push(output), _ => { });
         const decodedResults = decodeNotebookCellOutputs(outputs);
         expect(decodedResults).to.deep.equal([
             {
@@ -281,7 +262,6 @@ Console.WriteLine(3);
     });
 
     it('diagnostics are reported on CommandFailed', (done) => {
-        const token = '123';
         const code = 'Console.WriteLin();';
         const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [
@@ -289,15 +269,13 @@ Console.WriteLine(3);
                     eventType: CodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CompleteCodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: DiagnosticsProducedType,
@@ -319,22 +297,20 @@ Console.WriteLine(3);
                                 message: "'Console' does not contain a definition for 'WritLin'"
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CommandFailedType,
                     event: {
                         message: "CS0117: (0,8)-(0,15) 'Console' does not contain a definition for 'WritLin'"
-                    },
-                    token
+                    }
                 }
             ]
         }));
         const clientMapper = new ClientMapper(config);
         clientMapper.getOrAddClient(createUri('test/path')).then(client => {
             let diagnostics: Array<Diagnostic> = [];
-            client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, { token }).then(result => {
+            client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags).then(result => {
                 done(`expected execution to fail, but it passed with: ${result}`);
             }).catch(_err => {
                 expect(diagnostics).to.deep.equal([
@@ -368,15 +344,13 @@ Console.WriteLine(3);
                     eventType: CodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CompleteCodeSubmissionReceivedType,
                     event: {
                         code: code
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: DiagnosticsProducedType,
@@ -398,20 +372,18 @@ Console.WriteLine(3);
                                 message: "This is a fake diagnostic for testing."
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let diagnostics: Array<Diagnostic> = [];
-        await client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, { token });
+        await client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags);
         expect(diagnostics).to.deep.equal([
             {
                 linePositionSpan: {
@@ -432,7 +404,7 @@ Console.WriteLine(3);
     });
 
     it('diagnostics are reported when directly requested', async () => {
-        const token = '123';
+
         const code = 'Console.WriteLine();';
         const config = createChannelConfig(async (_notebookPath) => new TestDotnetInteractiveChannel({
             'RequestDiagnostics': [
@@ -456,19 +428,17 @@ Console.WriteLine(3);
                                 message: "This is a fake diagnostic for testing."
                             }
                         ]
-                    },
-                    token
+                    }
                 },
                 {
                     eventType: CommandSucceededType,
-                    event: {},
-                    token
+                    event: {}
                 }
             ]
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
-        const diagnostics = await client.getDiagnostics('csharp', code, token);
+        const diagnostics = await client.getDiagnostics('csharp', code);
         expect(diagnostics).to.deep.equal([
             {
                 linePositionSpan: {

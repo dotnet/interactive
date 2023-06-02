@@ -11,7 +11,7 @@ export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
     private fakedCommandCounter: Map<string, number> = new Map<string, number>();
     private _senderSubject: rxjs.Subject<KernelCommandOrEventEnvelope>;
     private _receiverSubject: rxjs.Subject<KernelCommandOrEventEnvelope>;
-    constructor(readonly fakedEventEnvelopes: { [key: string]: { eventType: commandsAndEvents.KernelEventType, event: commandsAndEvents.KernelEvent, token: string }[] }) {
+    constructor(readonly fakedEventEnvelopes: { [key: string]: { eventType: commandsAndEvents.KernelEventType, event: commandsAndEvents.KernelEvent }[] }) {
         this._senderSubject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
         this._receiverSubject = new rxjs.Subject<KernelCommandOrEventEnvelope>();
 
@@ -53,14 +53,8 @@ export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
         }
 
         for (let envelope of eventEnvelopesToReturn) {
-            this._receiverSubject.next({
-                eventType: envelope.eventType,
-                event: envelope.event,
-                command: {
-                    ...commandEnvelope,
-                    token: envelope.token
-                }
-            });
+            const event = new commandsAndEvents.KernelEventEnvelope(envelope.eventType, envelope.event, commandEnvelope);
+            this._receiverSubject.next(event);
         }
     }
 
