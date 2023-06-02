@@ -140,6 +140,10 @@ export class KernelCommandEnvelope {
         return command;
     }
 
+    public clone(): KernelCommandEnvelope {
+        return KernelCommandEnvelope.fromJson(this.toJson());
+    }
+
     private getNextChildToken(): number {
         return this._childCommandCounter++;
     }
@@ -176,5 +180,9 @@ export class KernelEventEnvelope {
         event._routingSlip = EventRoutingSlip.fromUris(model.routingSlip || []
         );
         return event;
+    }
+
+    public clone(): KernelEventEnvelope {
+        return KernelEventEnvelope.fromJson(this.toJson());
     }
 }

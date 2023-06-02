@@ -63,6 +63,8 @@ describe("frontEndHost", () => {
                         displayName: 'testKernel',
                         isComposite: true,
                         isProxy: false,
+                        languageName: undefined,
+                        languageVersion: undefined,
                         localName: 'testKernel',
                         supportedDirectives: [],
                         supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
@@ -74,6 +76,7 @@ describe("frontEndHost", () => {
                         isComposite: false,
                         isProxy: false,
                         languageName: 'JavaScript',
+                        languageVersion: undefined,
                         localName: 'javascript',
                         supportedDirectives: [],
                         supportedKernelCommands:
