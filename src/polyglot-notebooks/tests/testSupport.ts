@@ -71,19 +71,15 @@ export function createInMemoryChannels(): {
     return channels;
 }
 
-export function clearTokenAndId(envelope: connection.KernelCommandOrEventEnvelope): connection.KernelCommandOrEventEnvelope {
-    if (connection.isKernelEventEnvelope(envelope)) {
-        let clone: commandsAndEvents.KernelEventEnvelope = { ...envelope };
-        if (clone.command) {
-            clone.command = <commandsAndEvents.KernelCommandEnvelope>clearTokenAndId(clone.command);
-        }
-        return clone;
-    } else if (connection.isKernelCommandEnvelope(envelope)) {
-        let clone = { ...envelope };
-        clone.token = "commandToken";
-        clone.id = "commandId";
-        return clone;
+export function clearTokenAndId(envelope: connection.KernelCommandOrEventEnvelopeModel) {
+    if (connection.isKernelEventEnvelopeModel(envelope)) {
+        delete envelope.command?.id;
+        delete envelope.command?.token;
+
+    } else if (connection.isKernelCommandEnvelopeModel(envelope)) {
+        delete envelope.id;
+        delete envelope.token;
     }
 
-    throw new Error("Unknown envelope type");
+    return envelope;
 }

@@ -7,20 +7,8 @@ import { ProxyKernel } from "../src/proxyKernel";
 import { Logger } from "../src/logger";
 import * as rxjs from "rxjs";
 import * as connection from "../src/connection";
-import { Kernel } from "../src/kernel";
+import { clearTokenAndId } from "./testSupport";
 
-function removeCommandTokenAndId(envelope: connection.KernelCommandOrEventEnvelope) {
-    if (connection.isKernelEventEnvelope(envelope)) {
-        delete envelope.command?.id;
-        delete envelope.command?.token;
-
-    } else if (connection.isKernelCommandEnvelope(envelope)) {
-        delete envelope.id;
-        delete envelope.token;
-    }
-
-    return envelope;
-}
 
 describe("proxyKernel", () => {
     before(() => {
@@ -33,7 +21,8 @@ describe("proxyKernel", () => {
 
         localToRemote.subscribe(e => {
             if (connection.isKernelCommandEnvelope(e)) {
-                remoteToLocal.next({ eventType: commandsAndEvents.CommandSucceededType, event: {}, command: e });
+                const commandSuucceeded = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CommandSucceededType, <commandsAndEvents.CommandSucceeded>{}, e);
+                remoteToLocal.next(commandSuucceeded);
             }
         });
 
@@ -41,7 +30,7 @@ describe("proxyKernel", () => {
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));
-        let command: commandsAndEvents.KernelCommandEnvelope = { commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "1+2" } };
+        let command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "1+2" });
         await kernel.send(command);
 
         expect(events[0]).to.include({
@@ -57,7 +46,8 @@ describe("proxyKernel", () => {
 
         localToRemote.subscribe(e => {
             if (connection.isKernelCommandEnvelope(e)) {
-                remoteToLocal.next({ eventType: commandsAndEvents.CommandFailedType, event: <commandsAndEvents.CommandFailed>{ message: "something is wrong" }, command: e });
+                const commandFailedEvent = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CommandFailedType, <commandsAndEvents.CommandFailed>{ message: "something is wrong" }, e);
+                remoteToLocal.next(commandFailedEvent);
             }
         });
 
@@ -65,7 +55,8 @@ describe("proxyKernel", () => {
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));
-        let command: commandsAndEvents.KernelCommandEnvelope = { commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "1+2" } };
+        const command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "1+2" });
+
         await kernel.send(command);
 
         expect(events[0]).to.include({
@@ -80,9 +71,9 @@ describe("proxyKernel", () => {
 
         localToRemote.subscribe(e => {
             if (connection.isKernelCommandEnvelope(e)) {
-                remoteToLocal.next({ eventType: commandsAndEvents.ValueProducedType, event: <commandsAndEvents.ValueProduced>{ name: "a", formattedValue: { mimeType: "text/plain", value: "variable a" } }, command: e });
-                remoteToLocal.next({ eventType: commandsAndEvents.ValueProducedType, event: <commandsAndEvents.ValueProduced>{ name: "b", formattedValue: { mimeType: "text/plain", value: "variable b" } }, command: e });
-                remoteToLocal.next({ eventType: commandsAndEvents.CommandSucceededType, event: <commandsAndEvents.CommandSucceeded>{}, command: e });
+                remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.ValueProducedType, <commandsAndEvents.ValueProduced>{ name: "a", formattedValue: { mimeType: "text/plain", value: "variable a" } }, e));
+                remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.ValueProducedType, <commandsAndEvents.ValueProduced>{ name: "b", formattedValue: { mimeType: "text/plain", value: "variable b" } }, e));
+                remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CommandSucceededType, <commandsAndEvents.CommandSucceeded>{}, e));
             }
         });
 
@@ -90,11 +81,11 @@ describe("proxyKernel", () => {
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));
-        let command: commandsAndEvents.KernelCommandEnvelope = { commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "1+2" } };
+        let command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "1+2" });
         await kernel.send(command);
 
         events;//?
-        expect(removeCommandTokenAndId(events[0])).to.deep.include({
+        expect(clearTokenAndId(events[0].toJson())).to.deep.include({
             eventType: commandsAndEvents.ValueProducedType,
             event: {
                 name: "a",
@@ -113,7 +104,7 @@ describe("proxyKernel", () => {
             }
         });
 
-        expect(removeCommandTokenAndId(events[1])).to.deep.include({
+        expect(clearTokenAndId(events[1].toJson())).to.deep.include({
             eventType: commandsAndEvents.ValueProducedType,
             event: {
                 name: "b",
@@ -132,7 +123,7 @@ describe("proxyKernel", () => {
             }
         });
 
-        expect(removeCommandTokenAndId(events[2])).to.deep.include({
+        expect(clearTokenAndId(events[2].toJson())).to.deep.include({
             eventType: commandsAndEvents.CommandSucceededType,
             command: {
                 command:
@@ -153,9 +144,9 @@ describe("proxyKernel", () => {
 
         localToRemote.subscribe(e => {
             if (connection.isKernelCommandEnvelope(e)) {
-                remoteToLocal.next({ eventType: commandsAndEvents.ValueProducedType, event: <commandsAndEvents.ValueProduced>{ name: "a", formattedValue: { mimeType: "text/plain", value: "variable a" } }, command: { ...e, id: "newId" } });
-                remoteToLocal.next({ eventType: commandsAndEvents.ValueProducedType, event: <commandsAndEvents.ValueProduced>{ name: "b", formattedValue: { mimeType: "text/plain", value: "variable b" } }, command: { ...e, id: "newId" } });
-                remoteToLocal.next({ eventType: commandsAndEvents.CommandSucceededType, event: <commandsAndEvents.CommandSucceeded>{}, command: e });
+                remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.ValueProducedType, <commandsAndEvents.ValueProduced>{ name: "a", formattedValue: { mimeType: "text/plain", value: "variable a" } }, e));
+                remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.ValueProducedType, <commandsAndEvents.ValueProduced>{ name: "b", formattedValue: { mimeType: "text/plain", value: "variable b" } }, e));
+                remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CommandSucceededType, <commandsAndEvents.CommandSucceeded>{}, e));
             }
         });
 
@@ -163,10 +154,10 @@ describe("proxyKernel", () => {
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));
-        let command: commandsAndEvents.KernelCommandEnvelope = { commandType: commandsAndEvents.SubmitCodeType, command: <commandsAndEvents.SubmitCode>{ code: "1+2" }, id: "newId" };
+        let command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "1+2" });
         await kernel.send(command);
 
-        expect(removeCommandTokenAndId(events[0])).to.be.deep.include({
+        expect(clearTokenAndId(events[0].toJson())).to.be.deep.include({
             eventType: commandsAndEvents.ValueProducedType,
             event: {
                 name: "a",
@@ -185,7 +176,7 @@ describe("proxyKernel", () => {
             }
         });
 
-        expect(removeCommandTokenAndId(events[1])).to.be.deep.include({
+        expect(clearTokenAndId(events[1].toJson())).to.be.deep.include({
             eventType: commandsAndEvents.ValueProducedType,
             event: {
                 name: "b",
@@ -216,9 +207,9 @@ describe("proxyKernel", () => {
 
         localToRemote.subscribe(e => {
             if (connection.isKernelCommandEnvelope(e)) {
-                remoteToLocal.next({
-                    eventType: commandsAndEvents.KernelInfoProducedType,
-                    event: <commandsAndEvents.KernelInfoProduced>{
+                const kernelInfoProduced = new commandsAndEvents.KernelEventEnvelope(
+                    commandsAndEvents.KernelInfoProducedType,
+                    <commandsAndEvents.KernelInfoProduced>{
                         kernelInfo: {
                             isComposite: false,
                             isProxy: false,
@@ -231,11 +222,12 @@ describe("proxyKernel", () => {
                             supportedKernelCommands: [{ name: "customCommand1" }, { name: "customCommand2" }],
                             supportedDirectives: []
                         }
-                    }
+                    },
+                    e
+                );
+                remoteToLocal.next(kernelInfoProduced);
 
-                });
-
-                remoteToLocal.next({ eventType: commandsAndEvents.CommandSucceededType, event: <commandsAndEvents.CommandSucceeded>{}, command: e });
+                remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CommandSucceededType, <commandsAndEvents.CommandSucceeded>{}, e));
             }
         });
 
@@ -251,7 +243,7 @@ describe("proxyKernel", () => {
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
 
         kernel.subscribeToKernelEvents((e) => events.push(e));
-        let command: commandsAndEvents.KernelCommandEnvelope = { commandType: commandsAndEvents.RequestKernelInfoType, command: <commandsAndEvents.RequestKernelInfo>{ targetKernelName: "proxy" } };
+        let command = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestKernelInfoType, <commandsAndEvents.RequestKernelInfo>{ targetKernelName: "proxy" });
         await kernel.send(command);
 
         expect(kernel.kernelInfo).to.deep.equal({

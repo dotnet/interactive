@@ -128,13 +128,13 @@ describe("kernelRouting", () => {
 
         remoteCompositeKernel.defaultKernelName = "typescript";
 
-        let command: commandsAndEvents.KernelCommandEnvelope = {
-            commandType: commandsAndEvents.SubmitCodeType,
-            command: <commandsAndEvents.SubmitCode>{
+        let command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.SubmitCodeType,
+            <commandsAndEvents.SubmitCode>{
                 code: "return 12;",
                 targetKernelName: "javascript"
             }
-        };
+        );
 
         const inMemory = createInMemoryChannels();
 
@@ -157,7 +157,7 @@ describe("kernelRouting", () => {
 
         expect(command.routingSlip).not.to.be.undefined;
 
-        expect(Array.from(events[0].routingSlip!.values())).to.deep.equal(
+        expect(Array.from(events[0].routingSlip!.toArray())).to.deep.equal(
             [
                 'kernel://remote/javascript',
                 'kernel://remote/',

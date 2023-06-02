@@ -78,10 +78,10 @@ describe("dotnet-interactive", () => {
             kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: IKernelCommandInvocation) => { handler1Invocations.push(a); } });
             kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: IKernelCommandInvocation) => { handler2Invocations.push(a); } });
 
-            await kernel.send({
-                commandType: commandType1,
-                command: command1In
-            });
+            await kernel.send(new commandsAndEvents.KernelCommandEnvelope(
+                commandType1,
+                command1In
+            ));
 
             expect(handler1Invocations.length).to.be.equal(0);
 
@@ -108,10 +108,10 @@ describe("dotnet-interactive", () => {
 
             kernel.subscribeToKernelEvents(e => events.push(e));
             let errorFromSend = null;
-            await kernel.send({
-                commandType: commandType2,
-                command: command2In
-            });
+            await kernel.send(new commandsAndEvents.KernelCommandEnvelope(
+                commandType2,
+                command2In
+            ));
 
             expect(handlerInvocations.length).to.be.equal(0);
 
@@ -121,7 +121,7 @@ describe("dotnet-interactive", () => {
         it("can submit a command and wait for a specific event", async () => {
             let kernel = new JavascriptKernel();
             const command: commandsAndEvents.SubmitCode = { code: "return 1+1;" };
-            let event = await submitCommandAndGetResult<commandsAndEvents.ReturnValueProduced>(kernel, { commandType: commandsAndEvents.SubmitCodeType, command: command }, commandsAndEvents.ReturnValueProducedType);
+            let event = await submitCommandAndGetResult<commandsAndEvents.ReturnValueProduced>(kernel, new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, command), commandsAndEvents.ReturnValueProducedType);
             expect(event.formattedValues[0].value).to.equal("2");
         });
     });
