@@ -34,6 +34,13 @@ export interface KernelCommandEnvelopeHandler {
     (eventEnvelope: KernelCommandEnvelope): Promise<void>;
 }
 
+function toBase64String(value: Uint8Array): string {
+    if (global.window) {
+        return window.btoa(String.fromCharCode(...value));
+    } else {
+        return Buffer.from(value).toString('base64');
+    }
+}
 export class KernelCommandEnvelope {
 
     private _childCommandCounter: number = 0;
@@ -48,8 +55,7 @@ export class KernelCommandEnvelope {
 
         const guidBytes = uuid.parse(uuid.v4());
         const data = new Uint8Array(guidBytes);
-        const buffer = Buffer.from(data.buffer);
-        this._id = buffer.toString('base64');
+        this._id = toBase64String(data);
     }
 
     public get id(): string {
@@ -86,8 +92,7 @@ export class KernelCommandEnvelope {
         }
         const guidBytes = uuid.parse(uuid.v4());
         const data = new Uint8Array(guidBytes);
-        const buffer = Buffer.from(data.buffer);
-        this._token = buffer.toString('base64');
+        this._token = toBase64String(data);
 
         return this._token;
     }
