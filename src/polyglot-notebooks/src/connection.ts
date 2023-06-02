@@ -16,7 +16,15 @@ export function isKernelCommandEnvelope(commandOrEvent: KernelCommandOrEventEnve
     return (<any>commandOrEvent).commandType !== undefined;
 }
 
+export function isKernelCommandEnvelopeModel(commandOrEvent: KernelCommandOrEventEnvelopeModel): commandOrEvent is commandsAndEvents.KernelCommandEnvelopeModel {
+    return (<any>commandOrEvent).commandType !== undefined;
+}
+
 export function isKernelEventEnvelope(commandOrEvent: KernelCommandOrEventEnvelope): commandOrEvent is commandsAndEvents.KernelEventEnvelope {
+    return (<any>commandOrEvent).eventType !== undefined;
+}
+
+export function isKernelEventEnvelopeModel(commandOrEvent: KernelCommandOrEventEnvelopeModel): commandOrEvent is commandsAndEvents.KernelEventEnvelopeModel {
     return (<any>commandOrEvent).eventType !== undefined;
 }
 
