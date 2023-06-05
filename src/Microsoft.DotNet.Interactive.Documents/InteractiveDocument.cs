@@ -170,6 +170,7 @@ public class InteractiveDocument : IEnumerable
             ".fsx" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "fsharp") },
             ".ps1" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "pwsh") },
             ".html" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "html") },
+            ".http" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "http") },
             ".js" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "javascript") },
 
             _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}")
