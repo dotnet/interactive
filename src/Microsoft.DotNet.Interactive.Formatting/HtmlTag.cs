@@ -130,7 +130,6 @@ public class HtmlTag : IHtmlContent
     /// <summary>
     ///   Writes the tag contents (without outer HTML elements) to the specified writer.
     /// </summary>
-    /// <param name = "writer">The writer.</param>
     /// <param name="context">The context for the current format operation.</param>
     protected virtual void WriteContentsTo(FormatContext context)
     {
