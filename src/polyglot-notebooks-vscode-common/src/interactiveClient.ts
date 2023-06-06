@@ -365,9 +365,8 @@ export class InteractiveClient {
         return new Promise<TEvent>(async (resolve, reject) => {
             let handled = false;
             const token = command.getOrCreateToken();
-            const id = command.id;
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
-                if (eventEnvelope.command?.getOrCreateToken() === token && eventEnvelope.eventType === expectedEventType) {
+                if (eventEnvelope.command?.hasSameRootCommandAs(command) && eventEnvelope.eventType === expectedEventType) {
                     switch (eventEnvelope.eventType) {
                         case CommandFailedType:
                             if (!handled) {
