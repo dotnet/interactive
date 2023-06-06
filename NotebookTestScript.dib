@@ -14,6 +14,15 @@ The next code cell should have empty square brackets on the left, e.g., "`[ ]`".
 
 #!markdown
 
+# Verify Completions.
+The next code cell contains the code`Console` at the end type `.`. The completions list with properties and methods should be displayed.
+
+#!csharp
+
+Console
+
+#!markdown
+
 # Execute the following cell.
 
 You'll notice a counter that appears and starts incrementing.  After a second or two, stop the cell.  Your output should look similar to:
