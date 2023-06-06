@@ -15,7 +15,7 @@ The next code cell should have empty square brackets on the left, e.g., "`[ ]`".
 #!markdown
 
 # Verify Completions.
-The next code cell contains the code`Console` at the end type `.`. The completions list with properties and methods should be displayed.
+The next code cell contains the code `Console`. At the end type, `.`. The completions list with properties and methods should be displayed.
 
 #!csharp
 
