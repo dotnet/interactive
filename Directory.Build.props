@@ -19,7 +19,7 @@
     <NewtonsoftJsonVersion>13.0.2</NewtonsoftJsonVersion>
     <MicrosoftCodeAnalysisCommonVersion>4.5.0</MicrosoftCodeAnalysisCommonVersion>
     <SystemDrawingCommonVersion>7.0.0</SystemDrawingCommonVersion>
-    <SystemReactiveVersion>5.0.0</SystemReactiveVersion>
+    <SystemReactiveVersion>6.0.0</SystemReactiveVersion>
     <SystemSecurityCryptographyXmlVersion>7.0.0</SystemSecurityCryptographyXmlVersion>
     <xunitVersion>2.4.2</xunitVersion>
     <xunitrunnervisualstudioVersion>2.4.5</xunitrunnervisualstudioVersion>
