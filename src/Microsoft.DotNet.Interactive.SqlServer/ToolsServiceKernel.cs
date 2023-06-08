@@ -32,6 +32,7 @@ public abstract class ToolsServiceKernel :
     protected bool Connected;
     protected readonly ToolsServiceClient ServiceClient;
     private readonly Dictionary<string, object> _variables  = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, object> _resultSets = new(StringComparer.Ordinal);
 
 
     protected ToolsServiceKernel(string name, ToolsServiceClient client, string languageName) : base(name)
@@ -335,12 +336,20 @@ public abstract class ToolsServiceKernel :
 
     public bool TryGetValue<T>(string name, out T value)
     {
-        if (_variables.TryGetValue(name, out var resultSet) &&
+        if (_variables.TryGetValue(name, out var variable) &&
+            variable is T variableValue)
+        {
+            value = variableValue;
+            return true;
+        }
+
+        if (_resultSets.TryGetValue(name, out var resultSet) &&
             resultSet is T resultSetT)
         {
             value = resultSetT;
             return true;
         }
+
         value = default;
         return false;
     }
@@ -361,21 +370,26 @@ public abstract class ToolsServiceKernel :
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var valueInfos = _variables.Keys.Select(key =>
-        {
-            var formattedValues = FormattedValue.CreateSingleFromObject(
-                _variables[key],
-                command.MimeType);
-
-            return new KernelValueInfo(
-                key, 
-                formattedValues,
-                type: typeof(IEnumerable<TabularDataResource>));
-        }).ToArray();
+        var valueInfos = CreateKernelValueInfos(_variables, command.MimeType).Concat(CreateKernelValueInfos(_resultSets, command.MimeType)).ToArray();
 
         context.Publish(new ValueInfosProduced(valueInfos, command));
 
         return Task.CompletedTask;
+
+        static IEnumerable<KernelValueInfo> CreateKernelValueInfos(IReadOnlyDictionary<string, object> source, string mimeType)
+        {
+            return source.Keys.Select(key =>
+            {
+                var formattedValues = FormattedValue.CreateSingleFromObject(
+                    source[key],
+                    mimeType);
+
+                return new KernelValueInfo(
+                    key,
+                    formattedValues,
+                    type: typeof(IEnumerable<TabularDataResource>));
+            });
+        }
     }
 
     private string PrependVariableDeclarationsToCode(SubmitCode command, KernelInvocationContext context)
@@ -431,6 +445,6 @@ public abstract class ToolsServiceKernel :
 
     protected void StoreQueryResultSet(string name, IReadOnlyCollection<TabularDataResource> queryResultSet)
     {
-        _variables[name] = queryResultSet;
+        _resultSets[name] = queryResultSet;
     }
 }
