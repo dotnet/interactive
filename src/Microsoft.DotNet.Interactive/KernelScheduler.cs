@@ -129,8 +129,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     private void Run(ScheduledOperation operation)
     {
-        using var logOp = Log.OnEnterAndConfirmOnExit();
-        logOp.Info("{value}", operation.Value);
+        using var logOp = Log.OnEnterAndConfirmOnExit(arg: operation.Value);
 
         try
         {
