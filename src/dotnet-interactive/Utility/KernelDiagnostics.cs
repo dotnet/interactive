@@ -16,7 +16,7 @@ internal static class KernelDiagnostics
         kernel.AddMiddleware(async (command, context, next) =>
         {
             using var _ = Logger.Log.OnEnterAndExit();
-            Logger.Log.Info("{command}", command);
+            Logger.Log.Info(command);
 
             await next(command, context);
         });
