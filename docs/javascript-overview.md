@@ -43,6 +43,15 @@ try { console.log(declaredWithConst); }        catch (e) { console.log(e.toStrin
 try { console.log(declaredWithoutKeyword); }   catch (e) { console.log(e.toString()); }
 ```
 
+This code produces the following output: 
+
+```console
+ReferenceError: declaredWithLet is not defined
+ReferenceError: declaredWithVar is not defined
+ReferenceError: declaredWithConst is not defined
+4
+```
+
 So why does the fourth example work? By not using the `let`, `const`, or `var` keywords with your variable declaration, you're enabling JavaScript variable hoisting to add the variable to the top-level scope. When running in a browser (including the notebook webview), this means the variable will be added to `window`. For this reason, the final line of the above example is equivalent to the following:
 
 ```javascript
