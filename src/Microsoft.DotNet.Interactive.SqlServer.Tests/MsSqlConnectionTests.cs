@@ -359,6 +359,37 @@ select * from sys.databases
     }
 
     [MsSqlFact]
+    public async Task Storing_results_does_interfere_with_subsequent_executions()
+    {
+        var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
+        using var kernel = await CreateKernelAsync();
+        await kernel.SubmitCodeAsync(
+            $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
+
+        // Run query with result set
+        await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks --name my_data_result
+select * from sys.databases
+");
+
+        var sqlKernel = kernel.FindKernelByName("sql-adventureworks");
+
+        var result = await sqlKernel.SendAsync(new RequestValueInfos());
+
+        var valueInfos = result.Events.Should().ContainSingle<ValueInfosProduced>()
+            .Which.ValueInfos;
+
+        valueInfos.Should().Contain(v => v.Name == "my_data_result");
+
+         result =  await kernel.SubmitCodeAsync($@"
+#!sql-adventureworks --name my_data_result
+select * from sys.databases
+");
+
+         result.Events.Should().NotContainErrors();
+    }
+
+    [MsSqlFact]
     public async Task When_variable_does_not_exist_then_an_error_is_returned()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();

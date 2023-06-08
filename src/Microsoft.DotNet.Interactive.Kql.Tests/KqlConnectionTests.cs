@@ -5,7 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
+using Microsoft.Diagnostics.Runtime.Utilities;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -14,6 +17,7 @@ using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.SqlServer;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Kql.Tests;
@@ -153,6 +157,36 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    public async Task Storing_results_does_interfere_with_subsequent_executions()
+    {
+        var cluster = KqlFactAttribute.GetClusterForTests();
+        using var kernel = await CreateKernelAsync();
+        await kernel.SubmitCodeAsync(
+             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
+
+        await kernel.SubmitCodeAsync(@"
+#!kql-KustoHelp --name my_data_result
+StormEvents | take 10
+            ");
+
+        var kqlKernel = kernel.FindKernelByName("kql-KustoHelp");
+
+        var result = await kqlKernel.SendAsync(new RequestValue("my_data_result"));
+
+        result.Events.Should().ContainSingle<ValueProduced>()
+            .Which.Value.Should().BeAssignableTo<IEnumerable<TabularDataResource>>();
+
+        await kernel.SubmitCodeAsync(@"
+#!kql-KustoHelp
+StormEvents | take 11
+            ");
+
+        result.Events
+            .Should()
+            .NotContainErrors();
+    }
+
+    [KqlFact]
     public async Task Stored_query_results_are_listed_in_ValueInfos()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -191,7 +225,7 @@ StormEvents | take 10
         result.Events
             .Should()
             .NotContainErrors();
-            
+
         var kqlKernel = kernel.FindKernelByName("kql-KustoHelp");
 
         result = await kqlKernel.SendAsync(new RequestValue("my_data_result"));
@@ -362,7 +396,7 @@ print testVar";
               .Should()
               .ContainValue(expectedValue);
     }
-    
+
     [KqlTheory]
     [InlineData("string testVar = null;")] // Don't support null vars currently
     [InlineData("nint testVar = 123456;")] // Unsupported type
