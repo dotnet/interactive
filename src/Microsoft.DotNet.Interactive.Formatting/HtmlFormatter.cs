@@ -12,6 +12,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Formatting.Http;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
@@ -44,7 +45,7 @@ public static class HtmlFormatter
         FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
 
     internal static void FormatAndStyleAsPlainText(
-        object value, 
+        object value,
         FormatContext context)
     {
         context.RequireDefaultStyles();
@@ -160,7 +161,7 @@ public static class HtmlFormatter
                 var typeLookupName =
                     genericTypeDefinition.FullName.ToLower().Replace("+",".").Replace("`","-");
 
-                PocketView view = 
+                PocketView view =
                     span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-7.0"](
                         text));
                 view.WriteTo(context);

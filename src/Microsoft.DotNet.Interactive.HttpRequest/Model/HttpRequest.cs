@@ -1,11 +1,17 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System.Collections.Generic;
 
+#if HTTP_REQUEST_KERNEL
 namespace Microsoft.DotNet.Interactive.HttpRequest;
-
-public class HttpRequest
+public sealed class HttpRequest
+#else
+namespace Microsoft.DotNet.Interactive.Formatting.Http;
+internal sealed class HttpRequest
+#endif
 {
     public string Method { get; }
     public string Version { get; }

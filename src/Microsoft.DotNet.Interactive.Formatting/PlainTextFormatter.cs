@@ -16,6 +16,7 @@ using System.Threading;
 
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Formatting.Http;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
 
@@ -38,7 +39,7 @@ public static class PlainTextFormatter
     {
         var accessors = forMembers.GetMemberAccessors<T>().ToArray();
 
-        if (Formatter<T>.TypeIsValueTuple || 
+        if (Formatter<T>.TypeIsValueTuple ||
             Formatter<T>.TypeIsTuple)
         {
             return FormatTuple;
@@ -195,9 +196,9 @@ public static class PlainTextFormatter
             return true;
         }),
 
-        new PlainTextFormatter<ReadOnlyMemory<char>>((memory, context) => 
+        new PlainTextFormatter<ReadOnlyMemory<char>>((memory, context) =>
         {
-            context.Writer.Write(memory.Span.ToString()); 
+            context.Writer.Write(memory.Span.ToString());
             return true;
         }),
 
@@ -236,7 +237,7 @@ public static class PlainTextFormatter
                                                var array = toArray.Invoke(null, new[] { obj });
 
                                                array.FormatTo(context, PlainTextFormatter.MimeType);
-                        
+
                                                return true;
                                            }),
 
@@ -304,7 +305,7 @@ public static class PlainTextFormatter
         })
     };
 
-    private static string IndentAtNewLines(this string s, FormatContext context) => 
+    private static string IndentAtNewLines(this string s, FormatContext context) =>
         Regex.Replace(s, @"^\s+", new string(' ', (context.Depth + 1) * NumberOfSpacesToIndent), RegexOptions.Multiline);
 
     internal static void WriteIndent(FormatContext context, string bonus = "    ")

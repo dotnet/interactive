@@ -1,11 +1,17 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System.Collections.Generic;
 
+#if HTTP_REQUEST_KERNEL
 namespace Microsoft.DotNet.Interactive.HttpRequest;
-
-public class HttpResponse
+public sealed class HttpResponse
+#else
+namespace Microsoft.DotNet.Interactive.Formatting.Http;
+internal sealed class HttpResponse
+#endif
 {
     public int StatusCode { get; }
     public string ReasonPhrase { get; }

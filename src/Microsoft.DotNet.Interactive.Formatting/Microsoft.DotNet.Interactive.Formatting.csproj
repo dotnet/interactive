@@ -13,6 +13,11 @@
 
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive.CSharp\CSharpCodeGeneration.cs" Link="CSharpCodeGeneration.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequest\HttpResponseFormattingExtensions.cs" Link="Http\HttpResponseFormattingExtensions.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequest\Model\HttpContent.cs" Link="Http\Model\HttpContent.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequest\Model\HttpMessageExtensions.cs" Link="Http\Model\HttpMessageExtensions.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequest\Model\HttpRequest.cs" Link="Http\Model\HttpRequest.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequest\Model\HttpResponse.cs" Link="Http\Model\HttpResponse.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\DictionaryExtensions.cs" Link="Utility\DictionaryExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="Utility\NullableAttributes.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\Range.cs" Link="Utility\Range.cs" />
@@ -35,6 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Http\Model\" />
     <Folder Include="Utility\" />
   </ItemGroup>
 

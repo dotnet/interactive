@@ -7,6 +7,7 @@
     <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
     <Nullable>enable</Nullable>
+    <DefineConstants>HTTP_REQUEST_KERNEL</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>

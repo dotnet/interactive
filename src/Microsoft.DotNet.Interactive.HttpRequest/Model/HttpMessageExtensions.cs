@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -8,13 +10,17 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if HTTP_REQUEST_KERNEL
 namespace Microsoft.DotNet.Interactive.HttpRequest;
+#else
+namespace Microsoft.DotNet.Interactive.Formatting.Http;
+#endif
 
 internal static class HttpMessageExtensions
 {
     internal static async Task<HttpRequest> ToHttpRequestAsync(
         this HttpRequestMessage requestMessage,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var method = requestMessage.Method.ToString();
         var version = requestMessage.Version.ToString();
@@ -24,7 +30,11 @@ internal static class HttpMessageExtensions
         HttpContent? content = null;
         if (requestMessage.Content is { } requestMessageContent)
         {
+#if NETSTANDARD2_0
+            var contentRaw = await requestMessageContent.ReadAsStringAsync();
+#else
             var contentRaw = await requestMessageContent.ReadAsStringAsync(cancellationToken);
+#endif
             var contentByteLength = requestMessageContent.Headers.ContentLength ?? 0;
             var contentHeaders = requestMessageContent.Headers.ToDictionary();
             var contentType = requestMessageContent.Headers.ContentType?.ToString();
@@ -36,7 +46,7 @@ internal static class HttpMessageExtensions
 
     internal static async Task<HttpResponse> ToHttpResponseAsync(
         this HttpResponseMessage responseMessage,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var statusCode = (int)responseMessage.StatusCode;
         var reasonPhrase = responseMessage.ReasonPhrase;
@@ -57,7 +67,11 @@ internal static class HttpMessageExtensions
         HttpContent? content = null;
         if (responseMessage.Content is { } responseMessageContent)
         {
+#if NETSTANDARD2_0
+            var contentRaw = await responseMessageContent.ReadAsStringAsync();
+#else
             var contentRaw = await responseMessageContent.ReadAsStringAsync(cancellationToken);
+#endif
             var contentByteLength = responseMessageContent.Headers.ContentLength ?? 0;
             var contentHeaders = responseMessageContent.Headers.ToDictionary();
             var contentType = responseMessageContent.Headers.ContentType?.ToString();
