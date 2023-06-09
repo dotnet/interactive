@@ -65,6 +65,8 @@ export class CachedDotNetPathManager {
 
 export const DotNetPathManager = new CachedDotNetPathManager();
 
+const disposables: (() => void)[] = [];
+
 export async function activate(context: vscode.ExtensionContext) {
 
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
@@ -255,11 +257,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ////////////////////////////////////////////////////////////////////////////////
     const launchOptions = await getInteractiveLaunchOptions();
-    const serializerCommand = <string[]>dotnetConfig.get('notebookParserArgs') || []; // TODO: fallback values?
+    const serializerCommand = <string[]>dotnetConfig.get('notebookParserArgs') || [];
     const serializerCommandProcessStart = processArguments({ args: serializerCommand, workingDirectory: launchOptions!.workingDirectory }, '.', DotNetPathManager.getDotNetPath(), context.globalStorageUri.fsPath);
     const serializerLineAdapter = new ChildProcessLineAdapter(serializerCommandProcessStart.command, serializerCommandProcessStart.args, serializerCommandProcessStart.workingDirectory, true, diagnosticsChannel);
     const messageClient = new MessageClient(serializerLineAdapter);
     const parserServer = new NotebookParserServer(messageClient);
+    disposables.push(() => serializerLineAdapter.dispose());
     // startup time consistently <300ms
     // old startup time ~4800ms
     ////////////////////////////////////////////////////////////////////////////////
@@ -335,6 +338,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
+    disposables.forEach(d => d());
 }
 
 function getPreloads(extensionPath: string): vscode.Uri[] {
