@@ -258,7 +258,8 @@ public static class CommandLineParser
                     if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
                     {
                         var parsed = result.Parent as OptionResult;
-                        result.ErrorMessage = LocalizationResources.Cli_dotnet_interactive_stdio_http_port_ErrorMessageCannotSpecifyBoth(conflictingOption.Token.Value, parsed.Token.Value);
+                        result.ErrorMessage =
+                            LocalizationResources.Cli_dotnet_interactive_stdio_http_port_ErrorMessageCannotSpecifyBoth(conflictingOption.Token.Value, parsed.Token.Value);
                         return null;
                     }
 
@@ -325,8 +326,8 @@ public static class CommandLineParser
                     Environment.CurrentDirectory = startupOptions.WorkingDir.FullName;
 
                     FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
-                        ? new HtmlNotebookFrontendEnvironment()
-                        : new BrowserFrontendEnvironment();
+                                                                  ? new HtmlNotebookFrontendEnvironment()
+                                                                  : new BrowserFrontendEnvironment();
 
                     var kernel = CreateKernel(
                         options.DefaultKernel,
@@ -404,11 +405,12 @@ public static class CommandLineParser
             var notebookParserCommand = new Command(
                 "notebook-parser",
                 LocalizationResources.Cli_dotnet_interactive_notebook_parserDescription());
-            notebookParserCommand.Handler = CommandHandler.Create(async () =>
+            notebookParserCommand.Handler = CommandHandler.Create(async (InvocationContext context) =>
             {
                 Console.InputEncoding = Encoding.UTF8;
                 Console.OutputEncoding = Encoding.UTF8;
                 var notebookParserServer = new NotebookParserServer(Console.In, Console.Out);
+                context.GetCancellationToken().Register(() => notebookParserServer.Dispose());
                 await startNotebookParser(notebookParserServer);
             });
             return notebookParserCommand;
