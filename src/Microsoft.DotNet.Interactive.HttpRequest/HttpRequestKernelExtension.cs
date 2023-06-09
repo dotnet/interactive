@@ -16,7 +16,12 @@ public class HttpRequestKernelExtension
             compositeKernel.Add(httpRequestKernel);
             httpRequestKernel.UseValueSharing();
 
-            RegisterFormatters();
+            // Include html, plain text and json formatted outputs in display event responses.
+            Formatter.SetPreferredMimeTypesFor(
+                typeof(HttpResponse),
+                    HtmlFormatter.MimeType,
+                    PlainTextFormatter.MimeType,
+                    JsonFormatter.MimeType);
 
             KernelInvocationContext.Current?.DisplayAs($"""
                 Added kernel `{httpRequestKernel.Name}`. Send HTTP requests using the following syntax:
@@ -26,26 +31,5 @@ public class HttpRequestKernelExtension
                 ```
                 """, "text/markdown");
         }
-    }
-
-    private static void RegisterFormatters()
-    {
-        Formatter.SetPreferredMimeTypesFor(typeof(HttpResponse), HtmlFormatter.MimeType, PlainTextFormatter.MimeType, JsonFormatter.MimeType);
-
-        Formatter.Register<HttpResponse>(
-            (value, context) =>
-            {
-                value.FormatAsHtml(context);
-                return true;
-            },
-            HtmlFormatter.MimeType);
-
-        Formatter.Register<HttpResponse>(
-            (value, context) =>
-            {
-                value.FormatAsPlainText(context);
-                return true;
-            },
-            PlainTextFormatter.MimeType);
     }
 }

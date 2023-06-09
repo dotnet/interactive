@@ -4,9 +4,11 @@
 #nullable enable
 
 using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.Formatting;
 
 #if HTTP_REQUEST_KERNEL
 namespace Microsoft.DotNet.Interactive.HttpRequest;
+[TypeFormatterSource(typeof(HttpResponseFormatterSource))]
 public sealed class HttpResponse
 #else
 namespace Microsoft.DotNet.Interactive.Formatting.Http;
