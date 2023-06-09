@@ -12,10 +12,15 @@ namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal static class HttpMessageExtensions
 {
-    internal static async Task<HttpRequest> ToHttpRequestAsync(
-        this HttpRequestMessage requestMessage,
-        CancellationToken cancellationToken)
+    internal static async Task<HttpRequest?> ToHttpRequestAsync(
+        this HttpRequestMessage? requestMessage,
+        CancellationToken cancellationToken = default)
     {
+        if (requestMessage is null)
+        {
+            return null;
+        }
+
         var method = requestMessage.Method.ToString();
         var version = requestMessage.Version.ToString();
         var headers = requestMessage.Headers.ToDictionary();
@@ -24,7 +29,11 @@ internal static class HttpMessageExtensions
         HttpContent? content = null;
         if (requestMessage.Content is { } requestMessageContent)
         {
+#if NETSTANDARD2_0
+            var contentRaw = await requestMessageContent.ReadAsStringAsync();
+#else
             var contentRaw = await requestMessageContent.ReadAsStringAsync(cancellationToken);
+#endif
             var contentByteLength = requestMessageContent.Headers.ContentLength ?? 0;
             var contentHeaders = requestMessageContent.Headers.ToDictionary();
             var contentType = requestMessageContent.Headers.ContentType?.ToString();
@@ -34,10 +43,15 @@ internal static class HttpMessageExtensions
         return new HttpRequest(method, version, headers, uri, content);
     }
 
-    internal static async Task<HttpResponse> ToHttpResponseAsync(
-        this HttpResponseMessage responseMessage,
-        CancellationToken cancellationToken)
+    internal static async Task<HttpResponse?> ToHttpResponseAsync(
+        this HttpResponseMessage? responseMessage,
+        CancellationToken cancellationToken = default)
     {
+        if (responseMessage is null)
+        {
+            return null;
+        }
+
         var statusCode = (int)responseMessage.StatusCode;
         var reasonPhrase = responseMessage.ReasonPhrase;
         if (string.IsNullOrWhiteSpace(reasonPhrase))
@@ -57,7 +71,11 @@ internal static class HttpMessageExtensions
         HttpContent? content = null;
         if (responseMessage.Content is { } responseMessageContent)
         {
+#if NETSTANDARD2_0
+            var contentRaw = await responseMessageContent.ReadAsStringAsync();
+#else
             var contentRaw = await responseMessageContent.ReadAsStringAsync(cancellationToken);
+#endif
             var contentByteLength = responseMessageContent.Headers.ContentLength ?? 0;
             var contentHeaders = responseMessageContent.Headers.ToDictionary();
             var contentType = responseMessageContent.Headers.ContentType?.ToString();

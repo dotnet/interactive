@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
-public class HttpRequest
+public sealed class HttpRequest
 {
     public string Method { get; }
     public string Version { get; }

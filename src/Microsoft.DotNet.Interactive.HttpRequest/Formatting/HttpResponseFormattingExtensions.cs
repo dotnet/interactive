@@ -39,8 +39,15 @@ internal static class HttpResponseFormattingExtensions
                 font-weight: 700;
             }}");
 
-    internal static void FormatAsHtml(this HttpResponse response, FormatContext context)
+    internal static void FormatAsHtml(this HttpResponse? response, FormatContext context)
     {
+        if (response is null)
+        {
+            PocketView result = PocketViewTags.pre("null");
+            result.WriteTo(context);
+            return;
+        }
+
         dynamic? requestDiv;
         if (response.Request is { } request)
         {
@@ -147,8 +154,14 @@ internal static class HttpResponseFormattingExtensions
         return headerTable;
     }
 
-    internal static void FormatAsPlainText(this HttpResponse response, FormatContext context)
+    internal static void FormatAsPlainText(this HttpResponse? response, FormatContext context)
     {
+        if (response is null)
+        {
+            context.Writer.WriteLine("null");
+            return;
+        }
+
         if (response.Request is { } request)
         {
             context.Writer.WriteLine($"Request Method: {request.Method}");

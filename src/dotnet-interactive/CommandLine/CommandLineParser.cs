@@ -24,6 +24,7 @@ using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
+using Microsoft.DotNet.Interactive.HttpRequest;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.Mermaid;
@@ -549,6 +550,8 @@ public static class CommandLineParser
                         PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());
                     content.WriteTo(writer, HtmlEncoder.Default);
                 }, HtmlFormatter.MimeType);
+
+                HttpResponseMessageFormattingExtensions.RegisterFormatters();
 
                 break;
 

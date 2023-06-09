@@ -2,10 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
-public class HttpResponse
+[TypeFormatterSource(
+    typeof(HttpResponseFormatterSource),
+    PreferredMimeTypes = new[] { HtmlFormatter.MimeType, PlainTextFormatter.MimeType, JsonFormatter.MimeType })]
+public sealed class HttpResponse
 {
     public int StatusCode { get; }
     public string ReasonPhrase { get; }
