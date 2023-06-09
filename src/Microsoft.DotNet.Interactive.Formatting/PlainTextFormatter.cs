@@ -6,13 +6,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Net.Http;
 using System.Numerics;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -38,7 +36,7 @@ public static class PlainTextFormatter
     {
         var accessors = forMembers.GetMemberAccessors<T>().ToArray();
 
-        if (Formatter<T>.TypeIsValueTuple || 
+        if (Formatter<T>.TypeIsValueTuple ||
             Formatter<T>.TypeIsTuple)
         {
             return FormatTuple;
@@ -195,9 +193,9 @@ public static class PlainTextFormatter
             return true;
         }),
 
-        new PlainTextFormatter<ReadOnlyMemory<char>>((memory, context) => 
+        new PlainTextFormatter<ReadOnlyMemory<char>>((memory, context) =>
         {
-            context.Writer.Write(memory.Span.ToString()); 
+            context.Writer.Write(memory.Span.ToString());
             return true;
         }),
 
@@ -236,7 +234,7 @@ public static class PlainTextFormatter
                                                var array = toArray.Invoke(null, new[] { obj });
 
                                                array.FormatTo(context, PlainTextFormatter.MimeType);
-                        
+
                                                return true;
                                            }),
 
@@ -273,23 +271,6 @@ public static class PlainTextFormatter
             return true;
         }),
 
-        new PlainTextFormatter<HttpResponseMessage>((value, context) =>
-            {
-                // Formatter.Register() doesn't support async formatters yet.
-                // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
-                ExecutionContext.SuppressFlow();
-                try
-                {
-                    value.FormatAsPlainText(context).Wait();
-                }
-                finally
-                {
-                    ExecutionContext.RestoreFlow();
-                }
-
-                return true;
-        }),
-
         // Fallback for any object
         new PlainTextFormatter<object>((obj, context) =>
         {
@@ -304,7 +285,7 @@ public static class PlainTextFormatter
         })
     };
 
-    private static string IndentAtNewLines(this string s, FormatContext context) => 
+    private static string IndentAtNewLines(this string s, FormatContext context) =>
         Regex.Replace(s, @"^\s+", new string(' ', (context.Depth + 1) * NumberOfSpacesToIndent), RegexOptions.Multiline);
 
     internal static void WriteIndent(FormatContext context, string bonus = "    ")

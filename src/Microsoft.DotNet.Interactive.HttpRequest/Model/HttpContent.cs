@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
-public class HttpContent
+public sealed class HttpContent
 {
     public string Raw { get; }
     public long ByteLength { get; }

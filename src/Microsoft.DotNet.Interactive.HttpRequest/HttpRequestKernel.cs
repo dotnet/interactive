@@ -145,7 +145,7 @@ public class HttpRequestKernel :
         try
         {
             var responseMessage = await _client.SendAsync(requestMessage, cancellationToken);
-            response = await responseMessage.ToHttpResponseAsync(cancellationToken);
+            response = (await responseMessage.ToHttpResponseAsync(cancellationToken))!;
         }
         finally
         {

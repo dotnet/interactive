@@ -27,3 +27,5 @@ Microsoft.DotNet.Interactive.HttpRequest
     public HttpRequest Request { get;}
     public System.Int32 StatusCode { get;}
     public System.String Version { get;}
+  public static class HttpResponseMessageFormattingExtensions
+    public static System.Void RegisterFormatters()
