@@ -59,9 +59,3 @@ export function isNotebookSerializeResponse(arg: any): arg is commandsAndEvents.
         && typeof arg.id === 'string'
         && isUint8Array(arg.rawData);
 }
-
-export function isNotebookParserServerError(arg: any): arg is commandsAndEvents.NotebookErrorResponse {
-    return arg
-        && typeof arg.id === 'string'
-        && typeof arg.errorMessage === 'string';
-}
