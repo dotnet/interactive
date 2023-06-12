@@ -360,8 +360,6 @@ public static class KernelExtensions
                 requestValue = new RequestValue(sourceValueName, JsonFormatter.MimeType, sourceKernelName);
                 isByref = false;
             }
-
-            var valueSourceKernel = destinationKernel.RootKernel.FindKernelByName(sourceValueName);
             
             var result = destinationKernel.RootKernel.SendAsync(requestValue).GetAwaiter().GetResult();
 
