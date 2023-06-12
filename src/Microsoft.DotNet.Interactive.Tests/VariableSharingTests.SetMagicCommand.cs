@@ -495,7 +495,7 @@ public partial class VariableSharingTests
         }
 
         [Fact]
-        public async Task ProxyKernels_can_share_values()
+        public async Task ProxyKernels_sharing_values_receives_them_as_deserialized_values()
         {
             using var localCompositeKernel = new CompositeKernel
             {
