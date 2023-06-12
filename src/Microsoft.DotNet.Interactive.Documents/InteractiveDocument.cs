@@ -10,10 +10,12 @@ using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents.Json;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Documents.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 
@@ -21,6 +23,24 @@ namespace Microsoft.DotNet.Interactive.Documents;
 
 public class InteractiveDocument : IEnumerable
 {
+    static InteractiveDocument()
+    {
+        JsonSerializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = false,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters =
+            {
+                new ByteArrayConverter(),
+                new DataDictionaryConverter(),
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+                new InteractiveDocumentConverter(),
+            }
+        };
+    }
+
     private static Parser? _importFieldsParser;
     private static Argument<FileInfo>? _importedFileArgument;
 
@@ -254,7 +274,7 @@ public class InteractiveDocument : IEnumerable
             if (metadata.TryGetValue("kernelInfo", out var kernelInfoObj) )
             {
                 if (kernelInfoObj is JsonElement kernelInfoJson &&
-                    kernelInfoJson.Deserialize<KernelInfoCollection>(ParserServerSerializer.JsonSerializerOptions) is
+                    JsonSerializer.Deserialize<KernelInfoCollection>(kernelInfoJson, JsonSerializerOptions) is
                         { } kernelInfoDeserialized)
                 {
                     kernelInfo = kernelInfoDeserialized;
@@ -262,7 +282,7 @@ public class InteractiveDocument : IEnumerable
                 }
 
                 // todo: the kernelInfo should not deserialize as a dictionary
-                if (kernelInfoObj is Dictionary<string,object> kernelInfoAsDictionary)
+                if (kernelInfoObj is Dictionary<string, object> kernelInfoAsDictionary)
                 {
                     var deserializedKernelInfo  = new KernelInfoCollection();
                     if (kernelInfoAsDictionary.TryGetValue("defaultKernelName", out var defaultKernelNameObj) &&
@@ -272,11 +292,11 @@ public class InteractiveDocument : IEnumerable
                     }
 
                     if (kernelInfoAsDictionary.TryGetValue("items",
-                            out var items))
+                                                           out var items))
                     {
                         if (items is IEnumerable<object> itemList)
                         {
-                            foreach (var item in itemList.Cast<IDictionary<string,object>>())
+                            foreach (var item in itemList.Cast<IDictionary<string, object>>())
                             {
                                 if (item.TryGetValue("name", out var nameObj) &&
                                     nameObj is string name)
@@ -437,4 +457,5 @@ public class InteractiveDocument : IEnumerable
                              .Build();
     }
 
+    internal static JsonSerializerOptions JsonSerializerOptions { get; }
 }

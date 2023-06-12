@@ -118,6 +118,9 @@
   <ItemGroup>
     <None Remove="resources\logo-456x456.png" />
     <None Remove="resources\logo-64x64.png" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Documents\JsonReaderExtensions.cs" Link="ParserServer\JsonReaderExtensions.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Documents\Json\ByteArrayConverter.cs" Link="ParserServer\ByteArrayConverter.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\DictionaryExtensions.cs" Link="%28Recipes%29\DictionaryExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
 
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive.js" />

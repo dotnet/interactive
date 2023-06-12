@@ -4,11 +4,11 @@
 using System;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
 public abstract class NotebookParserServerResponse
 {
-    protected NotebookParserServerResponse(string id)
+    private protected NotebookParserServerResponse(string id)
     {
         Id = id;
     }
@@ -22,7 +22,7 @@ public abstract class NotebookParserServerResponse
             throw new ArgumentNullException(nameof(json));
         }
 
-        var request = JsonSerializer.Deserialize<NotebookParserServerResponse>(json, ParserServerSerializer.JsonSerializerOptions);
+        var request = JsonSerializer.Deserialize<NotebookParserServerResponse>(json, App.ParserServer.ParserServerSerializer.JsonSerializerOptions);
 
         return request ?? throw new InvalidOperationException();
     }

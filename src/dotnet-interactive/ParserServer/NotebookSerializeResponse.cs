@@ -3,9 +3,9 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
-public class NotebookSerializeResponse : NotebookParserServerResponse
+public sealed class NotebookSerializeResponse : NotebookParserServerResponse
 {
     public byte[] RawData { get; }
 

@@ -33,7 +33,7 @@ internal static class StringExtensions
         }
         else if (lines.Length > 1)
         {
-            firstLine = firstLine + " ...";
+            // firstLine = firstLine + " ...";
         }
 
         return firstLine;

@@ -3,6 +3,7 @@
 
 using System;
 using System.CommandLine.Parsing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -11,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,17 +38,18 @@ public class Program
         typeof(Startup).Assembly, // dotnet-interactive.dll
         typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
         typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
+        typeof(InteractiveDocument).Assembly, // Microsoft.DotNet.Interactive.Documents.dll
     };
 
-    internal static IDisposable StartToolLogging(StartupOptions options)
+    internal static IDisposable StartToolLogging(DirectoryInfo logPath = null)
     {
         var disposables = new CompositeDisposable();
 
-        if (options.LogPath is not null)
+        if (logPath is not null)
         {
             var log = new SerilogLoggerConfiguration()
                 .WriteTo
-                .RollingFileAlternate(options.LogPath.FullName, outputTemplate: "{Message}{NewLine}")
+                .RollingFileAlternate(logPath.FullName, outputTemplate: "{Message}{NewLine}")
                 .CreateLogger();
 
             var subscription = LogEvents.Subscribe(
@@ -73,7 +76,7 @@ public class Program
         // TODO: (ConstructWebHostBuilder) dispose me
         var disposables = new CompositeDisposable
         {
-            StartToolLogging(options)
+            StartToolLogging(options.LogPath)
         };
 
         using var _ = Log.OnEnterAndExit();

@@ -536,12 +536,12 @@ Console.Write(""hello"");
 
     private static string GetDibContent(Dictionary<string, object> metadata)
     {
-        if (metadata == null)
+        if (metadata is null)
         {
             throw new ArgumentNullException(nameof(metadata));
         }
 
-        var serializedMetadata = JsonSerializer.Serialize(metadata, ParserServer.ParserServerSerializer.JsonSerializerOptions);
+        var serializedMetadata = JsonSerializer.Serialize(metadata, App.ParserServer.ParserServerSerializer.JsonSerializerOptions);
 
         return $@"#!meta
 

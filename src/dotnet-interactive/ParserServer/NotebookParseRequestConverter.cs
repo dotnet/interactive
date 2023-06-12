@@ -1,10 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
 using System;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Documents;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
 internal class NotebookParseRequestConverter : JsonConverter<NotebookParseOrSerializeRequest>
 {
@@ -41,8 +43,8 @@ internal class NotebookParseRequestConverter : JsonConverter<NotebookParseOrSeri
                         {
                             id = reader.GetString();
                         }
-                    
                         break;
+
                     case "serializationType":
                         if (reader.Read() && reader.TokenType == JsonTokenType.String)
                         {
@@ -86,7 +88,13 @@ internal class NotebookParseRequestConverter : JsonConverter<NotebookParseOrSeri
                     serializationType is null ||
                     defaultLanguage is null)
                 {
-                    throw new JsonException($"Missing required property 'id' when deserializing {typeof(NotebookParseOrSerializeRequest)}");
+                    throw new JsonException($"""
+                    Unable to deserialize {typeof(NotebookParseOrSerializeRequest)}.
+                        {nameof(type)} = {type}
+                        {nameof(id)} = {id}
+                        {nameof(serializationType)} = {serializationType}
+                        {nameof(defaultLanguage)} = {defaultLanguage}
+                    """);
                 }
 
                 switch (type.GetValueOrDefault())

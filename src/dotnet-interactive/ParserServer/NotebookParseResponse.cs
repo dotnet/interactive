@@ -2,10 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using Microsoft.DotNet.Interactive.Documents;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
-public class NotebookParseResponse : NotebookParserServerResponse
+public sealed class NotebookParseResponse : NotebookParserServerResponse
 {
     public InteractiveDocument Document { get; }
 

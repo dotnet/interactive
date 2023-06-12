@@ -8,7 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Documents.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 
@@ -53,7 +52,7 @@ public static class CodeSubmission
 
                 var metadataString = sb.ToString();
 
-                metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataString, ParserServerSerializer.JsonSerializerOptions);
+                metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataString, InteractiveDocument.JsonSerializerOptions);
 
                 if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
                 {
@@ -170,7 +169,7 @@ public static class CodeSubmission
         {
             lines.Add($"{MagicCommandPrefix}meta");
             lines.Add("");
-            lines.Add(JsonSerializer.Serialize(document.Metadata, ParserServerSerializer.JsonSerializerOptions));
+            lines.Add(JsonSerializer.Serialize(document.Metadata, InteractiveDocument.JsonSerializerOptions));
             lines.Add("");
         }
 
