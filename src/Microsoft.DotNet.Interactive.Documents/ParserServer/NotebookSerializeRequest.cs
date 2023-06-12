@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
-public class NotebookSerializeRequest : NotebookParseOrSerializeRequest
+public sealed class NotebookSerializeRequest : NotebookParseOrSerializeRequest
 {
     public override RequestType Type => RequestType.Serialize;
     public string NewLine { get; }

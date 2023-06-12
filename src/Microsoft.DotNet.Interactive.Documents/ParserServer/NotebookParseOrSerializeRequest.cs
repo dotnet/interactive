@@ -13,7 +13,7 @@ public abstract class NotebookParseOrSerializeRequest
     public DocumentSerializationType SerializationType { get; }
     public string DefaultLanguage { get; }
 
-    protected NotebookParseOrSerializeRequest(string id, DocumentSerializationType serializationType, string defaultLanguage)
+    private protected NotebookParseOrSerializeRequest(string id, DocumentSerializationType serializationType, string defaultLanguage)
     {
         Id = id;
         SerializationType = serializationType;

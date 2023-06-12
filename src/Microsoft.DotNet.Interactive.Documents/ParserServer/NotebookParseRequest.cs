@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
-public class NotebookParseRequest : NotebookParseOrSerializeRequest
+public sealed class NotebookParseRequest : NotebookParseOrSerializeRequest
 {
     public override RequestType Type => RequestType.Parse;
     public byte[] RawData { get; }
