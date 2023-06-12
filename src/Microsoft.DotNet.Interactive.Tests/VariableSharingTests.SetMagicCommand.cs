@@ -494,6 +494,43 @@ public partial class VariableSharingTests
                    .Which.Message.Should().Be("Option '--value' is required.");
         }
 
+        [Fact]
+        public async Task ProxyKernels_can_share_values()
+        {
+            using var localCompositeKernel = new CompositeKernel
+            {
+                (new CSharpKernel()).UseValueSharing()
+            };
+            using var remoteCompositeKernel = new CompositeKernel
+            {
+                (new FSharpKernel()).UseValueSharing()
+            };
+
+            ConnectHost.ConnectInProcessHost(
+                localCompositeKernel,
+                remoteCompositeKernel);
+
+            await localCompositeKernel
+                .Host
+                .ConnectProxyKernelOnDefaultConnectorAsync(
+                    "fsharp",
+                    new Uri("kernel://remote/fsharp"));
+
+            await remoteCompositeKernel.SendAsync(new SubmitCode("let x = 123"));
+
+            var result = await localCompositeKernel.SendAsync(new SubmitCode("""
+                #!set --name x --value @fsharp:x
+                x
+                """, targetKernelName: "csharp"));
+
+            result.Events.Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
+                .Value
+                .Should()
+                .Be(123);
+        }
+
         private static Kernel CreateKernel(Language language)
         {
             return language switch

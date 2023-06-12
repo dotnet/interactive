@@ -98,7 +98,6 @@ public sealed class ProxyKernel : Kernel
                 return Task.CompletedTask;
             }
         }
-
         var targetKernelName = command.TargetKernelName;
         if (command.TargetKernelName == Name)
         {
@@ -127,6 +126,7 @@ public sealed class ProxyKernel : Kernel
         return completionSource.Task.ContinueWith(te =>
         {
             command.TargetKernelName = targetKernelName;
+
 
             if (te.Result is CommandFailed cf)
             {
