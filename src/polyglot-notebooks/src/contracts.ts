@@ -206,10 +206,6 @@ export interface NotebookSerializeResponse extends NotebookParserServerResponse 
     rawData: Uint8Array;
 }
 
-export interface NotebookErrorResponse extends NotebookParserServerResponse {
-    errorMessage: string;
-}
-
 // --------------------------------------------- Kernel events
 
 export const AssemblyProducedType = "AssemblyProduced";

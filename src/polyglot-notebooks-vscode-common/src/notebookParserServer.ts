@@ -3,7 +3,7 @@
 
 import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import { MessageClient } from './messageClient';
-import { isNotebookParserServerResponse, isNotebookParserServerError, isNotebookParseResponse, isNotebookSerializeResponse } from './interfaces/utilities';
+import { isNotebookParserServerResponse, isNotebookParseResponse, isNotebookSerializeResponse } from './interfaces/utilities';
 import { Eol } from './interfaces';
 import * as constants from './constants';
 
@@ -39,8 +39,6 @@ export class NotebookParserServer {
                 }
 
                 return responseDocument;
-            } else if (isNotebookParserServerError(response)) {
-                errorMessage = response.errorMessage;
             }
         }
 
@@ -63,8 +61,6 @@ export class NotebookParserServer {
         if (isNotebookParserServerResponse(response)) {
             if (isNotebookSerializeResponse(response)) {
                 return response.rawData;
-            } else if (isNotebookParserServerError(response)) {
-                errorMessage = response.errorMessage;
             }
         }
 
