@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -7,6 +7,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Pocket;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServer>;
 
 namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
 
@@ -37,9 +39,11 @@ public class NotebookParserServer : IDisposable
         new("http", languageName: "HTTP"),
         new("value"),
     };
-        
+
     public async Task RunAsync()
     {
+        using var op = Log.OnEnterAndConfirmOnExit();
+
         while (!_cancellationTokenSource.IsCancellationRequested)
         {
             var line = await Input.ReadLineAsync();
@@ -47,19 +51,27 @@ public class NotebookParserServer : IDisposable
             {
                 NotebookParserServerResponse? response = null;
                 string? requestId = null;
+                NotebookParseOrSerializeRequest? request = null;
+
                 try
                 {
-                    var request = NotebookParseOrSerializeRequest.FromJson(line);
+                    request = NotebookParseOrSerializeRequest.FromJson(line);
+                }
+                catch (Exception ex)
+                {
+                    op.Error("Exception while parsing {line}", ex, line);
+                    continue;
+                }
+
+                try
+                {
                     requestId = request.Id;
                     response = HandleRequest(request);
                 }
                 catch (Exception ex)
                 {
-                    if (requestId is not null)
-                    {
-                        // if no ID could be parsed, there's no point in returning an error since it can't be associated with the request
-                        response = new NotebookErrorResponse(requestId, ex.ToString());
-                    }
+                    op.Error("Exception while handling request with id {requestId}: {request}", ex, requestId, request);
+                    break;
                 }
 
                 if (response is not null)
@@ -70,51 +82,48 @@ public class NotebookParserServer : IDisposable
                 }
             }
         }
+
+        op.Succeed();
     }
 
     public static NotebookParserServerResponse HandleRequest(NotebookParseOrSerializeRequest request)
     {
-        try
+        switch (request)
         {
-            switch (request)
+            case NotebookParseRequest parse:
             {
-                case NotebookParseRequest parse:
+                using var contentStream = new MemoryStream(parse.RawData);
+                var document = request.SerializationType switch
                 {
-                    using var contentStream = new MemoryStream(parse.RawData);
-                    var document = request.SerializationType switch
-                    {
-                        DocumentSerializationType.Dib => CodeSubmission.Read(contentStream, WellKnownKernelInfos),
-                        DocumentSerializationType.Ipynb => Notebook.Read(contentStream, WellKnownKernelInfos),
-                        _ => throw new NotSupportedException($"Unable to parse an interactive document with type '{request.SerializationType }'"),
-                    };
-                    return new NotebookParseResponse(request.Id, document);
-                }
-                case NotebookSerializeRequest serialize:
-                {
-                    using var resultStream = new MemoryStream();
-                    switch (request.SerializationType)
-                    {
-                        case DocumentSerializationType.Dib:
-                            CodeSubmission.Write(serialize.Document, resultStream, WellKnownKernelInfos);
-                            break;
-                        case DocumentSerializationType.Ipynb:
-                            Notebook.Write(serialize.Document, resultStream, WellKnownKernelInfos);
-                            break;
-                        default:
-                            throw new NotSupportedException($"Unable to serialize a interactive document of type '{request.SerializationType}'");
-                    }
-
-                    resultStream.Position = 0;
-                    var resultArray = resultStream.ToArray();
-                    return new NotebookSerializeResponse(request.Id, resultArray);
-                }
-                default:
-                    return new NotebookErrorResponse(request.Id, $"Unsupported request: {request}");
+                    DocumentSerializationType.Dib => CodeSubmission.Read(contentStream, WellKnownKernelInfos),
+                    DocumentSerializationType.Ipynb => Notebook.Read(contentStream, WellKnownKernelInfos),
+                    _ => throw new NotSupportedException($"Unable to parse an interactive document with type '{request.SerializationType}'"),
+                };
+                return new NotebookParseResponse(request.Id, document);
             }
-        }
-        catch (Exception ex)
-        {
-            return new NotebookErrorResponse(request.Id, ex.ToString());
+
+            case NotebookSerializeRequest serialize:
+            {
+                using var resultStream = new MemoryStream();
+                switch (request.SerializationType)
+                {
+                    case DocumentSerializationType.Dib:
+                        CodeSubmission.Write(serialize.Document, resultStream, WellKnownKernelInfos);
+                        break;
+                    case DocumentSerializationType.Ipynb:
+                        Notebook.Write(serialize.Document, resultStream, WellKnownKernelInfos);
+                        break;
+                    default:
+                        throw new NotSupportedException($"Unable to serialize a interactive document of type '{request.SerializationType}'");
+                }
+
+                resultStream.Position = 0;
+                var resultArray = resultStream.ToArray();
+                return new NotebookSerializeResponse(request.Id, resultArray);
+            }
+
+            default:
+                return new NotebookErrorResponse(request.Id, $"Unsupported request: {request}");
         }
     }
 
