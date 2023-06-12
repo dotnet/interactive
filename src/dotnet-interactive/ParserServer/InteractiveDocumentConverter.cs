@@ -1,15 +1,17 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
 using System;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
 internal class InteractiveDocumentConverter : JsonConverter<InteractiveDocument>
 {
-    public override InteractiveDocument? Read(
+    public override InteractiveDocument Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
         JsonSerializerOptions options)

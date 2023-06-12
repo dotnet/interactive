@@ -1,10 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
 using System;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Documents;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
 internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServerResponse>
 {
@@ -47,13 +49,6 @@ internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServ
                         }
                         break;
 
-                    case "errorMessage":
-                        if (reader.Read() && reader.TokenType == JsonTokenType.String)
-                        {
-                            errorMessage = reader.GetString();
-                        }
-                        break;
-
                     default: 
                         reader.Skip();
                         break;
@@ -74,11 +69,6 @@ internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServ
                 if (rawData is not null)
                 {
                     return new NotebookSerializeResponse(id, rawData);
-                }
-
-                if (errorMessage is not null)
-                {
-                    return new NotebookErrorResponse(id, errorMessage);
                 }
 
                 throw new JsonException($"Cannot deserialize {typeToConvert} due to missing properties");

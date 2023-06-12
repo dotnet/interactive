@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
 public sealed class NotebookParseRequest : NotebookParseOrSerializeRequest
 {

@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
@@ -54,7 +56,8 @@ internal static class JsonReaderExtensions
             {
                 case JsonTokenType.StartArray:
                     var lines = JsonSerializer.Deserialize<string[]>(ref reader);
-                    return string.Join("", lines);
+
+                    return string.Join("", lines ?? Array.Empty<string>());
 
                 case JsonTokenType.String:
                     return reader.GetString();

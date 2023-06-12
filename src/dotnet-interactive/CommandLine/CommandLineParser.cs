@@ -16,9 +16,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.App.Connection;
+using Microsoft.DotNet.Interactive.App.ParserServer;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
@@ -57,7 +57,8 @@ public static class CommandLineParser
         IConsole console);
 
     public delegate Task StartNotebookParser(
-        NotebookParserServer notebookParserServer);
+        NotebookParserServer notebookParserServer,
+        DirectoryInfo logPath = null);
 
     public delegate Task StartHttp(
         StartupOptions options,
@@ -99,7 +100,7 @@ public static class CommandLineParser
 
         startKernelHost ??= StdIoMode.Do;
 
-        startNotebookParser ??= ParseNotebookCommand.Do;
+        startNotebookParser ??=  ParseNotebookCommand.RunParserServer;
 
         startHttp ??= HttpCommand.Do;
 
@@ -312,10 +313,10 @@ public static class CommandLineParser
             stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                 async (startupOptions, options, console, context, cancellationToken) =>
                 {
-                    using var c =
+                    using var _ =
                         console is TestConsole
                             ? Disposable.Empty
-                            : Program.StartToolLogging(startupOptions);
+                            : Program.StartToolLogging(startupOptions.LogPath);
 
                     using var operation = Log.OnEnterAndExit();
                     operation.Trace("Command line: {0}", Environment.CommandLine);
@@ -411,7 +412,7 @@ public static class CommandLineParser
                 Console.OutputEncoding = Encoding.UTF8;
                 var notebookParserServer = new NotebookParserServer(Console.In, Console.Out);
                 context.GetCancellationToken().Register(() => notebookParserServer.Dispose());
-                await startNotebookParser(notebookParserServer);
+                await startNotebookParser(notebookParserServer, context.ParseResult.GetValueForOption(logPathOption));
             });
             return notebookParserCommand;
         }

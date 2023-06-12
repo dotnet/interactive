@@ -1,16 +1,17 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Pocket;
-using static Pocket.Logger<Microsoft.DotNet.Interactive.Documents.ParserServer.NotebookParserServer>;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.App.ParserServer.NotebookParserServer>;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
 public class NotebookParserServer : IDisposable
 {
@@ -46,12 +47,12 @@ public class NotebookParserServer : IDisposable
 
         while (!_cancellationTokenSource.IsCancellationRequested)
         {
-            var line = await Input.ReadLineAsync();
+            var line = await Input.ReadLineAsync(_cancellationTokenSource.Token);
+
             if (line is not null)
             {
-                NotebookParserServerResponse? response = null;
-                string? requestId = null;
-                NotebookParseOrSerializeRequest? request = null;
+                NotebookParserServerResponse? response;
+                NotebookParseOrSerializeRequest? request;
 
                 try
                 {
@@ -65,21 +66,17 @@ public class NotebookParserServer : IDisposable
 
                 try
                 {
-                    requestId = request.Id;
                     response = HandleRequest(request);
                 }
                 catch (Exception ex)
                 {
-                    op.Error("Exception while handling request with id {requestId}: {request}", ex, requestId, request);
+                    op.Error("Exception while handling request with id {requestId}: {request}", ex, request.Id, request);
                     break;
                 }
 
-                if (response is not null)
-                {
-                    var responsePayload = response.ToJson();
-                    await Output.WriteLineAsync(responsePayload);
-                    await Output.FlushAsync();
-                }
+                var responsePayload = response.ToJson();
+                await Output.WriteLineAsync(responsePayload);
+                await Output.FlushAsync();
             }
         }
 
@@ -88,6 +85,11 @@ public class NotebookParserServer : IDisposable
 
     public static NotebookParserServerResponse HandleRequest(NotebookParseOrSerializeRequest request)
     {
+        if (request is null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+
         switch (request)
         {
             case NotebookParseRequest parse:
@@ -123,7 +125,7 @@ public class NotebookParserServer : IDisposable
             }
 
             default:
-                return new NotebookErrorResponse(request.Id, $"Unsupported request: {request}");
+                throw new IndexOutOfRangeException($"Request type not supported: {request.GetType()}");
         }
     }
 

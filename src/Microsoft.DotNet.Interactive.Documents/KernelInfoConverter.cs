@@ -4,7 +4,7 @@
 using System;
 using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.Documents.ParserServer;
+namespace Microsoft.DotNet.Interactive.Documents;
 
 internal class KernelInfoConverter : JsonConverter<KernelInfo>
 {
