@@ -173,50 +173,28 @@ public static class KernelExtensions
 
             var valueOptionResult = cmdLineContext.ParseResult.GetValueForOption(valueOption);
 
-            // FIX: (HandleSetMagicCommand) 
+            var sourceKernel = Kernel.Root.FindKernelByName(valueOptionResult.Kernel);
 
-            switch (events.Count)
+            ValueProduced valueProduced;
+            if (
+                sourceKernel?.KernelInfo.IsProxy == false
+                && valueOptionResult is { Name: var sourceValueName, Kernel: var sourceKernelName } 
+                && sourceKernelName != "input")
             {
-                case 0: break;
-                case 1: break;
-                case 2: break;
-                default: break;
-            }
-
-            if (valueOptionResult is { })
+                valueProduced = events.SingleOrDefault(e =>
+                    e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName);
+            }else if (sourceKernel?.KernelInfo.IsProxy == true 
+                      && valueOptionResult is { Name: var sourceValueName1 })
             {
-                if (valueOptionResult.Kernel is { } sourceKernelName)
-                {
-                    switch (sourceKernelName)
-                    {
-                        case "input": break;
-                        case "password": break;
-                        default: break;
-                    }
-                }
-                else
-                {
-                }
-
-                if (valueOptionResult.Kernel is { } sourceValueName)
-                {
-                }
-                else
-                {
-                }
+                var destinationUri = sourceKernel?.KernelInfo.RemoteUri;
+                
+                valueProduced = events.SingleOrDefault(e =>
+                    e.Name == sourceValueName1 && e.Command.DestinationUri == destinationUri); 
             }
             else
             {
+                valueProduced = null;
             }
-
-            var valueProduced = valueOptionResult switch
-            {
-                { Name: var sourceValueName, Kernel: var sourceKernelName } when
-                    // !string.IsNullOrWhiteSpace(sourceKernelName) &&
-                    sourceKernelName != "input" => events.SingleOrDefault(
-                        e => e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName),
-                _ => null
-            };
 
             if (valueProduced is { })
             {
@@ -383,6 +361,8 @@ public static class KernelExtensions
                 isByref = false;
             }
 
+            var valueSourceKernel = destinationKernel.RootKernel.FindKernelByName(sourceValueName);
+            
             var result = destinationKernel.RootKernel.SendAsync(requestValue).GetAwaiter().GetResult();
 
             if (result.Events.LastOrDefault() is CommandFailed failed)
