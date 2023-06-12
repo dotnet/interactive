@@ -90,7 +90,8 @@ export async function setCellKernelName(cell: vscode.NotebookCell, kernelName: s
         kernelName
     };
     const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(cellMetadata);
-    await vscodeNotebookManagement.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, rawCellMetadata);
+    const mergedMetadata = metadataUtilities.mergeRawMetadata(cell.metadata, rawCellMetadata);
+    await vscodeNotebookManagement.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, mergedMetadata);
 }
 
 export async function ensureCellKernelKind(cell: vscode.NotebookCell, kind: vscode.NotebookCellKind): Promise<vscode.NotebookCell> {
