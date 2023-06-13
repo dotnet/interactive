@@ -31,11 +31,7 @@ internal static class StringExtensions
         {
             firstLine = firstLine[..maxLength] + " ...";
         }
-        else if (lines.Length > 1)
-        {
-            // firstLine = firstLine + " ...";
-        }
-
+       
         return firstLine;
     }
 }
