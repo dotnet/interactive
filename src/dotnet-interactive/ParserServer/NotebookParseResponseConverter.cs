@@ -20,7 +20,6 @@ internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServ
         string? id = null;
         InteractiveDocument? document = null;
         byte[]? rawData = null;
-        string? errorMessage = null;
 
         while (reader.Read())
         {
