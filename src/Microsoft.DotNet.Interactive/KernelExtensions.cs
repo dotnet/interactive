@@ -188,7 +188,6 @@ public static class KernelExtensions
                 }
                 else
                 {
-
                     valueProduced = events.SingleOrDefault(e =>
                         e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName);
                 }
