@@ -176,20 +176,22 @@ public static class KernelExtensions
             var sourceKernel = Kernel.Root.FindKernelByName(valueOptionResult.Kernel);
 
             ValueProduced valueProduced;
-            if (
-                sourceKernel?.KernelInfo.IsProxy == false
-                && valueOptionResult is { Name: var sourceValueName, Kernel: var sourceKernelName } 
+            if (valueOptionResult is { Name: var sourceValueName, Kernel: var sourceKernelName } 
                 && sourceKernelName != "input")
             {
-                valueProduced = events.SingleOrDefault(e =>
-                    e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName);
-            }else if (sourceKernel?.KernelInfo.IsProxy == true 
-                      && valueOptionResult is { Name: var sourceValueName1 })
-            {
-                var destinationUri = sourceKernel?.KernelInfo.RemoteUri;
-                
-                valueProduced = events.SingleOrDefault(e =>
-                    e.Name == sourceValueName1 && e.Command.DestinationUri == destinationUri); 
+                if (sourceKernel?.KernelInfo.IsProxy == true)
+                {
+                    var destinationUri = sourceKernel?.KernelInfo.RemoteUri;
+
+                    valueProduced = events.SingleOrDefault(e =>
+                        e.Name == sourceValueName && e.Command.DestinationUri == destinationUri);
+                }
+                else
+                {
+
+                    valueProduced = events.SingleOrDefault(e =>
+                        e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName);
+                }
             }
             else
             {
