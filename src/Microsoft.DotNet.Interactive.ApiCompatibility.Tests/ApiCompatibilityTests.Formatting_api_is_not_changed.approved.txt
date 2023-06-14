@@ -272,6 +272,7 @@ Microsoft.DotNet.Interactive.Formatting
   public class TypeFormatterSourceAttribute : System.Attribute
     .ctor(System.Type formatterSourceType)
     public System.Type FormatterSourceType { get;}
+    public System.String[] PreferredMimeTypes { get; set;}
 Microsoft.DotNet.Interactive.Formatting.Csv
   public static class CsvFormatter
     public static Microsoft.DotNet.Interactive.Formatting.ITypeFormatter GetPreferredFormatterFor(System.Type type)
