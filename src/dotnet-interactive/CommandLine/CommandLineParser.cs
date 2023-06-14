@@ -8,6 +8,7 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -130,6 +131,10 @@ public static class CommandLineParser
             description: LocalizationResources.Cli_dotnet_interactive_jupyter_default_kernel_Description(),
             getDefaultValue: () => "csharp").AddCompletions("fsharp", "csharp", "pwsh");
 
+        var cultureOption = new Option<string>(
+            "--culture",
+            LocalizationResources.Cli_dotnet_interactive_culture_Description());
+
         var rootCommand = DotnetInteractive();
 
         rootCommand.AddCommand(Jupyter());
@@ -172,6 +177,7 @@ public static class CommandLineParser
 
             command.AddGlobalOption(logPathOption);
             command.AddGlobalOption(verboseOption);
+            command.AddGlobalOption(cultureOption);
 
             return command;
         }

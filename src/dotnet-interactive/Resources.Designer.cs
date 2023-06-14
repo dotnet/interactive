@@ -61,6 +61,15 @@ namespace Microsoft.DotNet.Interactive.App {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Set current culture for dotnet interactive command line commands.
+        /// </summary>
+        internal static string Cli_dotnet_interactive_culture_Description {
+            get {
+                return ResourceManager.GetString("Cli_dotnet_interactive_culture_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Interactive programming for .NET..
         /// </summary>
         internal static string Cli_dotnet_interactive_Description {

@@ -22,6 +22,11 @@
         <target state="translated">.NET 的交互式编程。</target>
         <note />
       </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_culture_Description">
+        <source>Set current culture for dotnet interactive command line commands</source>
+        <target state="new">Set current culture for dotnet interactive command line commands</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Cli_dotnet_interactive_jupyter_Description">
         <source>Starts dotnet-interactive as a Jupyter kernel</source>
         <target state="translated">启动 dotnet-interactive 作为 Jupyter 内核</target>

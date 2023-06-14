@@ -139,6 +139,12 @@ internal static class LocalizationResources
         => GetResourceString(Resources.Cli_dotnet_interactive_verbose_Description);
 
     /// <summary>
+    ///   Interpolates values into a localized string Set current culture for dotnet interactive command line commands
+    /// </summary>
+    internal static string Cli_dotnet_interactive_culture_Description()
+        => GetResourceString(Resources.Cli_dotnet_interactive_culture_Description);
+
+    /// <summary>
     /// Interpolates values into a localized string.
     /// </summary>
     /// <param name="resourceString">The string template into which values will be interpolated.</param>
