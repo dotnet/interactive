@@ -12,7 +12,6 @@ using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis.Text;
