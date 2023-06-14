@@ -162,7 +162,7 @@ public static class Formatter
     }
 
     public static IReadOnlyCollection<string> GetPreferredMimeTypesFor(Type type) =>
-        _preferredMimeTypesTable.GetOrAdd(type ??= typeof(object), InferMimeTypes);
+        _preferredMimeTypesTable.GetOrAdd(type ?? typeof(object), FindPreferredMimeTypes);
 
     private class SortByRelevanceAndOrder<T> : IComparer<T>
     {
@@ -199,7 +199,7 @@ public static class Formatter
         }
     }
 
-    private static string TryInferMimeType(Type type, IEnumerable<(Type type, string mimeType)> mimeTypes)
+    private static string TryFindPreferredMimeType(Type type, IEnumerable<(Type type, string mimeType)> mimeTypes)
     {
         // Find the most specific type that specifies a mimeType
         var candidates =
@@ -222,7 +222,7 @@ public static class Formatter
         }
     }
 
-    private static HashSet<string> TryInferMimeTypes(Type type, IEnumerable<(Type type, HashSet<string> mimeTypes)> mimeTypes)
+    private static HashSet<string> TryFindPreferredMimeTypes(Type type, IEnumerable<(Type type, HashSet<string> mimeTypes)> mimeTypes)
     {
         // Find the most specific type that specifies a mimeType
         var candidates =
@@ -245,10 +245,23 @@ public static class Formatter
         }
     }
 
-    private static HashSet<string> InferMimeTypes(Type type) =>
-        TryInferMimeTypes(type, _preferredMimeTypes)  ?? 
-        new HashSet<string>{ TryInferMimeType(type, _defaultPreferredMimeTypes) ?? 
-                             _defaultMimeType};
+    private static HashSet<string> FindPreferredMimeTypes(Type type)
+    {
+        TryRegisterFromFormatterSources(type);
+
+        var preferredMimeTypes = TryFindPreferredMimeTypes(type, _preferredMimeTypes);
+
+        if (preferredMimeTypes is not null)
+        {
+            return preferredMimeTypes;
+        }
+
+        return new HashSet<string>
+        {
+            TryFindPreferredMimeType(type, _defaultPreferredMimeTypes) ??
+            _defaultMimeType
+        };
+    }
 
     public static string ToDisplayString(
         this object obj,
@@ -541,36 +554,21 @@ public static class Formatter
         return _typeFormattersTable
             .GetOrAdd(
                 (actualType, mimeType),
-                tuple => InferPreferredFormatter(actualType, mimeType));
+                tuple => FindPreferredFormatter(tuple.type, tuple.mimeType));
     }
 
-    internal static ITypeFormatter InferPreferredFormatter(Type actualType, string mimeType)
+    private static ITypeFormatter FindPreferredFormatter(Type actualType, string mimeType)
     {
         // Try to find a user-specified type formatter, use the most specific type with a matching mime type
-        if (TryInferPreferredFormatter(actualType, mimeType, _userTypeFormatters) is { } userFormatter)
+        if (TryFindPreferredFormatter(actualType, mimeType, _userTypeFormatters) is { } userFormatter)
         {
             return userFormatter;
         }
 
-        if (!_typesThatHaveBeenCheckedForFormatters.ContainsKey(actualType))
-        {
-            var foundFormatter = false;
-            var customAttributes = actualType.GetCustomAttributes<TypeFormatterSourceAttribute>().ToArray();
-
-            if (customAttributes.Length > 0)
-            {
-                foundFormatter = TryRegisterFromWellKnownFormatterSources(customAttributes);
-            }
-            else
-            {
-                foundFormatter = TryRegisterFromConventionBasedFormatterSources();
-            }
-
-            _typesThatHaveBeenCheckedForFormatters.TryAdd(actualType, foundFormatter);
-        }
+        TryRegisterFromFormatterSources(actualType);
 
         // Try to find a default built-in type formatter, use the most specific type with a matching mime type
-        if (TryInferPreferredFormatter(actualType, mimeType, _defaultTypeFormatters) is { } defaultFormatter)
+        if (TryFindPreferredFormatter(actualType, mimeType, _defaultTypeFormatters) is { } defaultFormatter)
         {
             return defaultFormatter;
         }
@@ -584,6 +582,28 @@ public static class Formatter
         }
 
         return GetPreferredFormatterFor(actualType, preferredMimeType);
+    }
+
+    private static void TryRegisterFromFormatterSources(Type type)
+    {
+        if (_typesThatHaveBeenCheckedForFormatters.ContainsKey(type))
+        {
+            return;
+        }
+
+        var foundFormatter = false;
+        var customAttributes = type.GetCustomAttributes<TypeFormatterSourceAttribute>().ToArray();
+
+        if (customAttributes.Length > 0)
+        {
+            foundFormatter = TryRegisterFromWellKnownFormatterSources(customAttributes);
+        }
+        else
+        {
+            foundFormatter = TryRegisterFromConventionBasedFormatterSources();
+        }
+
+        _typesThatHaveBeenCheckedForFormatters.TryAdd(type, foundFormatter);
 
         bool TryRegisterFromWellKnownFormatterSources(TypeFormatterSourceAttribute[] customAttributes)
         {
@@ -593,7 +613,7 @@ public static class Formatter
             {
                 if (Activator.CreateInstance(formatterSourceAttribute.FormatterSourceType) is not ITypeFormatterSource source)
                 {
-                    throw new InvalidOperationException($"The formatter source specified on '{actualType}' does not implement {nameof(ITypeFormatterSource)}");
+                    throw new InvalidOperationException($"The formatter source specified on '{type}' does not implement {nameof(ITypeFormatterSource)}");
                 }
 
                 var formatters = source.CreateTypeFormatters();
@@ -603,6 +623,11 @@ public static class Formatter
                     _defaultTypeFormatters.Push(formatter);
                     foundFormatter = true;
                 }
+
+                if (formatterSourceAttribute.PreferredMimeTypes is not null)
+                {
+                    SetPreferredMimeTypesFor(type, formatterSourceAttribute.PreferredMimeTypes);
+                }
             }
 
             return foundFormatter;
@@ -611,7 +636,7 @@ public static class Formatter
         bool TryRegisterFromConventionBasedFormatterSources()
         {
             bool foundFormatter = false;
-            var attributesByConvention = actualType.GetCustomAttributes(true).Where(a => a.GetType().Name == nameof(TypeFormatterSourceAttribute));
+            var attributesByConvention = type.GetCustomAttributes(true).Where(a => a.GetType().Name == nameof(TypeFormatterSourceAttribute));
 
             foreach (var attr in attributesByConvention)
             {
@@ -621,8 +646,8 @@ public static class Formatter
                     var formatterSource = Activator.CreateInstance(formatterSourceType);
 
                     if (formatterSource.GetType()
-                            .GetMethod(nameof(ITypeFormatterSource.CreateTypeFormatters))
-                            .Invoke(formatterSource, null) is IEnumerable formatters)
+                                       .GetMethod(nameof(ITypeFormatterSource.CreateTypeFormatters))
+                                       .Invoke(formatterSource, null) is IEnumerable formatters)
                     {
                         foreach (var formatterByConvention in formatters)
                         {
@@ -646,19 +671,19 @@ public static class Formatter
                                     });
 
                                 var formatExpr = Expression.Lambda<Func<object, TextWriter, bool>>(
-                                        methodCallExpression,
-                                        valueToFormatExpr,
-                                        writerExpr)
-                                    .Compile();
+                                                               methodCallExpression,
+                                                               valueToFormatExpr,
+                                                               writerExpr)
+                                                           .Compile();
 
                                 if (!TryGetPropertyValue(formatterByConvention, nameof(ITypeFormatter.Type), out Type formattedType))
                                 {
-                                    formattedType = actualType;
+                                    formattedType = type;
                                 }
 
                                 var formatter = new AnonymousTypeFormatter<object>(
-                                    (value, context) => formatExpr(value, context.Writer), 
-                                    mimeTyp, 
+                                    (value, context) => formatExpr(value, context.Writer),
+                                    mimeTyp,
                                     formattedType);
 
                                 _defaultTypeFormatters.Push(formatter);
@@ -668,13 +693,18 @@ public static class Formatter
                         }
                     }
                 }
+
+                if (TryGetPropertyValue<string[]>(attr, nameof(TypeFormatterSourceAttribute.PreferredMimeTypes), out var mimeTypes))
+                {
+                    SetPreferredMimeTypesFor(type, mimeTypes);
+                }
             }
 
             return foundFormatter;
         }
     }
 
-    internal static ITypeFormatter TryInferPreferredFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)
+    internal static ITypeFormatter TryFindPreferredFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)
     {
         // Find the most specific type that specifies a mimeType
         var candidates =

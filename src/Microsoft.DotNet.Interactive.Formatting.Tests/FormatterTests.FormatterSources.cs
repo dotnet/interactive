@@ -52,6 +52,24 @@ public sealed partial class FormatterTests
         }
 
         [Fact]
+        public void Formatter_sources_can_set_preferred_MIME_type()
+        {
+            var obj = new TypeWithCustomFormatterAndMimeType();
+
+            var preferredMimeTypes = Formatter.GetPreferredMimeTypesFor(obj.GetType());
+
+            preferredMimeTypes
+                .Should()
+                .BeEquivalentTo(
+                    new[]
+                    {
+                        "text/one",
+                        "text/two"
+                    },
+                    c => c.WithStrictOrdering());
+        }
+
+        [Fact]
         public void Convention_based_formatter_sources_are_still_registered_after_formatters_are_reset()
         {
             var obj = new TypeWithConventionBasedFormatter();
@@ -64,9 +82,32 @@ public sealed partial class FormatterTests
 
             formattedAfter.Should().Be(formattedBefore);
         }
-        
+
+        [Fact]
+        public void Convention_based_formatter_sources_can_set_preferred_MIME_type()
+        {
+            var obj = new TypeWithConventionBasedFormatterAndMimeType();
+
+            var preferredMimeTypes = Formatter.GetPreferredMimeTypesFor(obj.GetType());
+
+            preferredMimeTypes
+                .Should()
+                .BeEquivalentTo(
+                    new[]
+                    {
+                        "text/one",
+                        "text/two"
+                    },
+                    c => c.WithStrictOrdering());
+        }
+
         [TypeFormatterSource(typeof(CustomFormatterSource))]
         private class TypeWithCustomFormatter
+        {
+        }
+
+        [TypeFormatterSource(typeof(CustomFormatterSource), PreferredMimeTypes = new[] { "text/one", "text/two" })]
+        private class TypeWithCustomFormatterAndMimeType
         {
         }
 
@@ -87,6 +128,11 @@ public sealed partial class FormatterTests
         {
         }
 
+        [ConventionBased.TypeFormatterSourceAttribute(typeof(ConventionBased.FormatterSource), PreferredMimeTypes = new []{ "text/one", "text/two" })]
+        private class TypeWithConventionBasedFormatterAndMimeType
+        {
+        }
+
         private static class ConventionBased
         {
             // This class is here to allow this type not to conflict with the Microsoft.DotNet.Interactive.Formatting.TypeFormatterSourceAttribute
@@ -100,6 +146,8 @@ public sealed partial class FormatterTests
                 }
 
                 public Type FormatterSourceType { get; }
+
+                public string[] PreferredMimeTypes { get; set; }
             }
 
             internal class FormatterSource
