@@ -45,7 +45,7 @@ public static class AssertionExtensions
             assertions.Subject.Should(),
             assertions.Subject);
 
-        string Normalize(string value) => 
+        static string Normalize(string value) =>
             value
                 .Trim()
                 .Crunch()

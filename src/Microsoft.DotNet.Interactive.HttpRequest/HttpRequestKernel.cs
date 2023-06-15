@@ -29,10 +29,8 @@ public class HttpRequestKernel :
        IKernelCommandHandler<RequestDiagnostics>
 {
     private readonly HttpClient _client;
-    private readonly Argument<Uri> _hostArgument = new();
 
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
-    private Uri? _baseAddress;
     private static readonly Regex IsRequest;
     private static readonly Regex IsHeader;
 
@@ -56,31 +54,10 @@ public class HttpRequestKernel :
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - HTTP Request";
 
         _client = client ?? new HttpClient();
-        var setHost = new Command("#!set-host", "Sets the host name to be used when sending requests using relative URLs");
-        setHost.AddArgument(_hostArgument);
-        setHost.SetHandler(context =>
-        {
-            var host = context.ParseResult.GetValueForArgument(_hostArgument);
-            BaseAddress = host;
-        });
-        AddDirective(setHost);
-
+    
         RegisterForDisposal(_client);
     }
-
-    public Uri? BaseAddress
-    {
-        get => _baseAddress;
-        set
-        {
-            _baseAddress = value;
-            if (value is not null)
-            {
-                SetValue("host", value.Host);
-            }
-        }
-    }
-
+    
     Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (_variables.TryGetValue(command.Name, out var value))
@@ -203,7 +180,6 @@ public class HttpRequestKernel :
 
     private IEnumerable<(string Request, List<Diagnostic> Diagnostics)> InterpolateAndGetDiagnostics(string code)
     {
-        var canResolveHost = BaseAddress is { };
         var lines = code.Split('\n');
 
         var result = new List<(string Request, List<Diagnostic>)>();
@@ -282,12 +258,6 @@ public class HttpRequestKernel :
     {
         var parsedRequests = new List<ParsedHttpRequest>();
 
-        /*
-         * A request as first verb and endpoint (optional version), this command could be multiline
-         * optional headers
-         * optional body
-         */
-
         foreach (var (request, diagnostics) in InterpolateAndGetDiagnostics(requests))
         {
             var body = new StringBuilder();
@@ -342,24 +312,16 @@ public class HttpRequestKernel :
 
     private string GetAbsoluteUriString(string? address)
     {
-        Uri uri;
-
         if (string.IsNullOrWhiteSpace(address))
         {
-            uri = BaseAddress is null
-                ? throw new InvalidOperationException("Cannot perform HttpRequest without a valid uri.")
-                : BaseAddress;
+            throw new InvalidOperationException("Cannot perform HttpRequest without a valid uri.");
         }
-        else
-        {
-            uri = new Uri(address, UriKind.RelativeOrAbsolute);
 
-            if (!uri.IsAbsoluteUri)
-            {
-                uri = BaseAddress is null
-                    ? throw new InvalidOperationException($"Cannot use relative path {uri} without a base address.")
-                    : new Uri(BaseAddress, uri);
-            }
+        var uri = new Uri(address, UriKind.RelativeOrAbsolute);
+
+        if (!uri.IsAbsoluteUri)
+        {
+            throw new InvalidOperationException($"Cannot use relative path {uri} without a base address.");
         }
 
         return uri.AbsoluteUri;
