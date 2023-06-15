@@ -11,6 +11,7 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -29,7 +30,7 @@ public class HttpRequestKernelTests
     [InlineData("POST")]
     [InlineData("DELETE")]
     [InlineData("HEAD")]
-    public async Task supports_verbs(string verb)
+    public async Task supports_sending_requests_with_common_verbs(string verb)
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -50,40 +51,7 @@ public class HttpRequestKernelTests
     }
 
     [Fact]
-    public async Task requires_base_address_when_using_relative_uris()
-    {
-        using var kernel = new HttpRequestKernel();
-
-        var result = await kernel.SendAsync(new SubmitCode("get  /relativePath"));
-
-        var error = result.Events.Should().ContainSingle<CommandFailed>().Which;
-
-        error.Message.Should().Contain("Cannot use relative path /relativePath without a base address.");
-    }
-
-    [Fact]
-    public async Task ignores_base_address_when_using_absolute_paths()
-    {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            request = message;
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            return Task.FromResult(response);
-        });
-        var client = new HttpClient(handler);
-        using var kernel = new HttpRequestKernel(client: client);
-        kernel.BaseAddress = new Uri("http://example.com");
-
-        var result = await kernel.SendAsync(new SubmitCode("get  https://anotherlocation.com/endpoint"));
-
-        result.Events.Should().NotContainErrors();
-
-        request.RequestUri.Should().Be("https://anotherlocation.com/endpoint");
-    }
-
-    [Fact]
-    public async Task can_replace_symbols()
+    public async Task it_can_interpolate_variable_for_URL_host()
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -102,27 +70,6 @@ public class HttpRequestKernelTests
         result.Events.Should().NotContainErrors();
 
         request.RequestUri.Should().Be("https://my.host.com:1200/endpoint");
-    }
-
-    [Fact]
-    public async Task can_use_base_address_to_resolve_host_symbol()
-    {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            request = message;
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            return Task.FromResult(response);
-        });
-        var client = new HttpClient(handler);
-        using var kernel = new HttpRequestKernel(client: client);
-        kernel.BaseAddress = new Uri("http://example.com");
-
-        var result = await kernel.SendAsync(new SubmitCode("get  https://{{host}}:1200/endpoint"));
-
-        result.Events.Should().NotContainErrors();
-
-        request.RequestUri.Should().Be("https://example.com:1200/endpoint");
     }
 
     [Fact]
@@ -171,7 +118,7 @@ Authorization: Basic username password"));
     }
 
     [Fact]
-    public async Task can_set_body()
+    public async Task can_set_body_from_single_line()
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -183,18 +130,63 @@ Authorization: Basic username password"));
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
 
-        var result = await kernel.SendAsync(new SubmitCode(@"
-post  https://location1.com:1200/endpoint
-Authorization: Basic username password
-Content-Type: application/json
+        var result = await kernel.SendAsync(new SubmitCode("""
+            
+            post  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            Content-Type: application/json
+            
+            { "key" : "value", "list": [1, 2, 3] }
 
-{ ""key"" : ""value"", ""list"": [1, 2, 3] }
-"));
+            """));
 
         result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        bodyAsString.Should().Be("{ \"key\" : \"value\", \"list\": [1, 2, 3] }");
+        bodyAsString.Should().Be("""{ "key" : "value", "list": [1, 2, 3] }""");
+    }
+
+    [Fact]
+    public async Task can_set_body_from_multiline_text()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpRequestKernel(client: client);
+
+        var result = await kernel.SendAsync(new SubmitCode("""
+            post  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            Content-Type: application/json
+
+            {
+                "key" : "value",
+                "list": [1, 2, 3]
+            }
+
+            """));
+
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        bodyAsString.Should().BeExceptingWhitespace("""
+            {
+                "key" : "value",
+                "list": [1, 2, 3]
+            }
+            """);
+    }
+
+    [Fact(Skip = "Requires updates to HTTP parser")]
+    public void it_can_set_http_version()
+    {
+        // TODO (it_can_set_http_version) write test
+        throw new NotImplementedException();
     }
 
     [Fact]
@@ -273,10 +265,9 @@ GET https://{{theHost}}";
     }
 
     [Fact]
-    public async Task diagnostic_messages_are_produced_for_unresolved_symbols()
+    public async Task diagnostic_positions_are_correct_for_unresolved_symbols_in_URL()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
 
         var result = await kernel.SendAsync(new RequestDiagnostics("get https://anotherlocation.com/{{api_endpoint}}"));
 
@@ -287,11 +278,22 @@ GET https://{{theHost}}";
         diagnostics.Diagnostics.First().Message.Should().Be(@"Cannot resolve symbol 'api_endpoint'");
     }
 
+    [Fact(Skip = "Requires updates to HTTP parser")]
+    public void diagnostic_positions_are_correct_for_unresolved_symbols_in_request_body()
+    {
+        throw new NotImplementedException();
+    }
+
+    [Fact(Skip = "Requires updates to HTTP parser")]
+    public void diagnostic_positions_are_correct_for_unresolved_symbols_in_request_headers()
+    {
+        throw new NotImplementedException();
+    }
+
     [Fact]
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
 
         var code = @"
 // something to ensure we're not on the first line
@@ -305,30 +307,15 @@ GET https://example.com/{{unresolved_symbol}}";
 
         diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 26), new LinePosition(2, 43)));
     }
-
-    [Fact]
-    public async Task Setting_BaseAddress_sets_host_variable()
-    {
-        using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
-
-        var result = await kernel.SendAsync(new RequestValue("host"));
-
-        result.Events.Should().NotContainErrors();
-
-        result.Events.Should().ContainSingle<ValueProduced>()
-              .Which.Value.Should().Be("example.com");
-    }
-
+    
     [Fact]
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols_after_other_symbols_were_successfully_resolved()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
 
         var code = @"
-GET {{host}}/index.html
-User-Agent: {{user_agent}}";
+GET https://example.com/
+User-Agent: {{unresolved_symbol}}";
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
@@ -336,14 +323,13 @@ User-Agent: {{user_agent}}";
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 14), new LinePosition(2, 24)));
+        diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 14), new LinePosition(2, 31)));
     }
 
     [Fact]
     public async Task multiple_diagnostics_are_returned_from_the_same_submission()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
 
         var code = @"
 GET {{missing_value_1}}/index.html
@@ -379,10 +365,50 @@ User-Agent: {{missing_value_2}}";
 
         result.Events.Should().NotContainErrors();
 
-        var displayEvent =
-            result.Events.Should().ContainSingle<DisplayEvent>().Which.FormattedValues.Should()
-                .Contain(f => f.MimeType == HtmlFormatter.MimeType).And
-                .Contain(f => f.MimeType == PlainTextFormatter.MimeType).And
-                .Contain(f => f.MimeType == JsonFormatter.MimeType);
+        result.Events.Should().ContainSingle<DisplayEvent>().Which.FormattedValues.Should()
+              .Contain(f => f.MimeType == HtmlFormatter.MimeType).And
+              .Contain(f => f.MimeType == PlainTextFormatter.MimeType).And
+              .Contain(f => f.MimeType == JsonFormatter.MimeType);
+    }
+
+    [Fact(Skip = "Requires updates to HTTP parser")]
+    public void responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+
+        // TODO (responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact(Skip = "Requires updates to HTTP parser")]
+    public void prompt_symbol_sends_input_request_to_user()
+    {
+        /*
+###
+# @prompt username
+# @prompt refCode Your reference code display on webpage
+# @prompt otp Your one-time password in your mailbox
+POST https://{{host}}/verify-otp/{{refCode}} HTTP/1.1
+Content-Type: {{contentType}}
+{
+    "username": "{{username}}",
+    "otp": "{{otp}}"
+}
+         */
+
+        // TODO (prompt_symbol_sends_input_request_to_user) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact(Skip = "Requires updates to HTTP parser")]
+    public void JSONPath_can_be_used_to_access_response_properties()
+    {
+        // example:
+        // @authToken = {{login.response.headers.X-AuthToken}}
+
+        // TODO (dot_notation_can_be_used_to_access_response_properties) write test
+        throw new NotImplementedException();
     }
 }

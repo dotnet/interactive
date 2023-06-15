@@ -14,7 +14,6 @@ Microsoft.DotNet.Interactive.HttpRequest
     public System.String Version { get;}
   public class HttpRequestKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestDiagnostics>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor(System.String name = null, System.Net.Http.HttpClient client = null)
-    public System.Uri BaseAddress { get; set;}
     public System.Void SetValue(System.String valueName, System.String value)
   public class HttpRequestKernelExtension
     public static System.Void Load(Microsoft.DotNet.Interactive.Kernel kernel, System.Net.Http.HttpClient httpClient = null)
