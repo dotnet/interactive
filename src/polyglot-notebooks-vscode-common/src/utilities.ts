@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
 import { NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from './interfaces/vscode-like';
 import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
+import * as connection from './polyglot-notebooks/connection';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 import { Logger } from './polyglot-notebooks';
 
@@ -231,17 +232,9 @@ export function parse(text: string): any {
             const buffer = Buffer.from(value, 'base64');
             return Uint8Array.from(buffer.values());
         }
-
         //handling NaN, Infinity and -Infinity
-        if (value === "Infinity") {
-            return Infinity;
-        } else if (value === "-Infinity") {
-            return -Infinity;
-        } else if (value === "NaN") {
-            return NaN;
-        }
-
-        return value;
+        const parsed = connection.DeserializeNumberLiterals(value);
+        return parsed;
     });
 }
 
@@ -260,15 +253,8 @@ export function stringify(value: any): string {
         }
 
         //handling NaN, Infinity and -Infinity
-        if (value === Infinity) {
-            return "Infinity";
-        } else if (value === -Infinity) {
-            return "-Infinity";
-        } else if (value !== value) {
-            return "NaN";
-        }
-
-        return value;
+        const serialzied = connection.SerializeNumberLiterals(value);
+        return serialzied;
     });
 }
 
