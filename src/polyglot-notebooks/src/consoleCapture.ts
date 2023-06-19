@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as util from "util";
+import * as connection from "./connection";
 import * as commandsAndEvents from "./commandsAndEvents";
 import { KernelInvocationContext } from "./kernelInvocationContext";
 import * as disposables from "./disposables";
@@ -103,7 +104,7 @@ export class ConsoleCapture implements disposables.Disposable {
                     value = arg?.toString();
                 } else {
                     mimeType = 'application/json';
-                    value = JSON.stringify(arg);
+                    value = connection.Serialize(arg);
                 }
 
                 const displayedValue: commandsAndEvents.DisplayedValueProduced = {

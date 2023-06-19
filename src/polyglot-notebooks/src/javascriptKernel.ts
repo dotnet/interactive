@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as commandsAndEvents from "./commandsAndEvents";
+import * as connection from "./connection";
 import { ConsoleCapture } from "./consoleCapture";
 import { Kernel, IKernelCommandInvocation } from "./kernel";
 import { Logger } from "./logger";
@@ -28,7 +29,7 @@ export class JavascriptKernel extends Kernel {
         if (sendValue.formattedValue) {
             switch (sendValue.formattedValue.mimeType) {
                 case 'application/json':
-                    (<any>globalThis)[sendValue.name] = JSON.parse(sendValue.formattedValue.value);
+                    (<any>globalThis)[sendValue.name] = connection.Deserialize(sendValue.formattedValue.value);
                     break;
                 default:
                     (<any>globalThis)[sendValue.name] = sendValue.formattedValue.value;
@@ -140,7 +141,7 @@ export function formatValue(arg: any, mimeType: string): commandsAndEvents.Forma
             }
             break;
         case 'application/json':
-            value = JSON.stringify(arg);
+            value = connection.Serialize(arg);
             break;
         default:
             throw new Error(`unsupported mime type: ${mimeType}`);
@@ -157,6 +158,10 @@ export function getType(arg: any): string {
 
     if (Array.isArray(arg)) {
         type = `${typeof (arg[0])}[]`;//?
+    }
+
+    if (arg === Infinity || arg === -Infinity || (arg !== arg)) {
+        type = "number";
     }
 
     return type; //?

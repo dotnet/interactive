@@ -134,6 +134,41 @@ return command.toJson();`
                 }]);
     });
 
+    it("valueinfo report variable type for NaN, Infinity and -Infinity", async () => {
+        const events: commandsAndEvents.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => events.push(e));
+        const valueName = `value_${uuid.v4().replace(/-/g, "_")}`; //?
+
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: `${valueName}1 = NaN; ${valueName}2 = Infinity; ${valueName}3 = -Infinity;` });
+        const requestValueInfos = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.RequestValueInfosType, <commandsAndEvents.RequestValueInfos>{});
+
+        await kernel.send(submitCode);
+        await kernel.send(requestValueInfos);
+
+        expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos)
+            .to.deep.equal(
+                [{
+                    formattedValue: { mimeType: 'text/plain', value: 'NaN' },
+                    name: `${valueName}1`,
+                    preferredMimeTypes: [],
+                    typeName: 'number'
+                },
+                {
+                    formattedValue: { mimeType: 'text/plain', value: 'Infinity' },
+                    name: `${valueName}2`,
+                    preferredMimeTypes: [],
+                    typeName: 'number'
+                },
+                {
+                    formattedValue: { mimeType: 'text/plain', value: '-Infinity' },
+                    name: `${valueName}3`,
+                    preferredMimeTypes: [],
+                    typeName: 'number'
+                }]);
+    });
+
+
     it("returns values from RequestValue", async () => {
         const events: commandsAndEvents.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();
