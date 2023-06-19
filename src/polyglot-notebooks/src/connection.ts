@@ -307,27 +307,38 @@ export function extractHostAndNomalize(kernelUri: string): string {
 export function Serialize<T>(source: T): string {
     return JSON.stringify(source, function (key, value) {
         //handling NaN, Infinity and -Infinity
-        if (value === Infinity) {
-            return "Infinity";
-        } else if (value === -Infinity) {
-            return "-Infinity";
-        } else if (value !== value) {
-            return "NaN";
-        }
-        return value;
+        const processed = SerializeNumberLiterals(value);
+        return processed;
     });
+}
+
+export function SerializeNumberLiterals(value: any): string {
+    if (value !== value) {
+        return "NaN";
+    } else if (value === Infinity) {
+        return "Infinity";
+    } else if (value === -Infinity) {
+        return "-Infinity";
+    }
+    return value;
 }
 
 export function Deserialize(json: string): any {
     return JSON.parse(json, function (key, value) {
         //handling NaN, Infinity and -Infinity
-        if (value === "Infinity") {
-            return Infinity;
-        } else if (value === "-Infinity") {
-            return -Infinity;
-        } else if (value === "NaN") {
-            return NaN;
-        }
-        return value;
+        const deserialized = DeserializeNumberLiterals(value);
+        return deserialized;
     });
+}
+
+
+export function DeserializeNumberLiterals(value: any): any {
+    if (value === "NaN") {
+        return NaN;
+    } else if (value === "Infinity") {
+        return Infinity;
+    } else if (value === "-Infinity") {
+        return -Infinity;
+    }
+    return value;
 }

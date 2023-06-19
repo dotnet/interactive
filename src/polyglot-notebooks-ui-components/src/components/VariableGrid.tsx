@@ -38,22 +38,6 @@ function ensureId(rows: VariableGridRow[]) {
     }
 }
 
-function processNumerics(rows: VariableGridRow[]) {
-    for (let row of rows) {
-        if (couldBeNumeric(row.typeName)) {
-
-        }
-    }
-}
-
-function couldBeNumeric(typeName: string): boolean {
-    const lower = typeName.toLowerCase();
-    if (lower.match(/(int|float|double|decimal|short|byte|long)/)) {
-        return true;
-    }
-    return false;
-}
-
 const defaultGridLocalization: GridLocalization = {
     actionsColumnHeader: 'Actions',
     nameColumnHeader: 'Name',
@@ -132,7 +116,6 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                         if (event.data.rows) {
                             const rows = [...event.data.rows];
                             ensureId(rows);
-                            processNumerics(rows);
                             const localization = event.data.localizationStrings ?? defaultGridLocalization;
                             this.setState({
                                 ...this.state,
