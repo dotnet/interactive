@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from './clientMapper';
 import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
+import * as connection from './polyglot-notebooks/connection';
 import * as utilities from './utilities';
 import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { Disposable } from './polyglot-notebooks/disposables';
@@ -161,9 +162,10 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                 shareTemplate: this.translate('VariableGridshareTemplate', 'Share value {value-name} from {kernel-name} kernel')
             };
 
+            const jsonRows = JSON.parse(connection.Serialize(rows));
             this.webview.postMessage({
                 command: 'set-rows',
-                rows,
+                rows: jsonRows,
                 localizationStrings: localizationStrings
             });
         }

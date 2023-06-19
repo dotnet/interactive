@@ -232,6 +232,15 @@ export function parse(text: string): any {
             return Uint8Array.from(buffer.values());
         }
 
+        //handling NaN, Infinity and -Infinity
+        if (value === "Infinity") {
+            return Infinity;
+        } else if (value === "-Infinity") {
+            return -Infinity;
+        } else if (value === "NaN") {
+            return NaN;
+        }
+
         return value;
     });
 }
@@ -248,6 +257,15 @@ export function stringify(value: any): string {
             // this looks like a cell output where `key` is a mime type and `value` is a UTF-8 string
             const buffer = Buffer.from(value);
             return buffer.toString('utf-8');
+        }
+
+        //handling NaN, Infinity and -Infinity
+        if (value === Infinity) {
+            return "Infinity";
+        } else if (value === -Infinity) {
+            return "-Infinity";
+        } else if (value !== value) {
+            return "NaN";
         }
 
         return value;
