@@ -3,7 +3,8 @@
     "formattedValues": [
       {
         "mimeType": "text/html",
-        "value": "<b>hi!</b>"
+        "value": "<b>hi!</b>",
+        "suppressDisplay": false
       }
     ],
     "valueId": null

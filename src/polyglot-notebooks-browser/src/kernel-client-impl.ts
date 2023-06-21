@@ -93,6 +93,7 @@ class InteractiveConsoleWrapper {
                     {
                         mimeType,
                         value,
+                        suppressDisplay: false
                     }
                 ]
             };

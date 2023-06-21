@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -37,17 +38,81 @@ internal static class HttpResponseFormattingExtensions
                 margin: 1em 0;
                 font-size: 1.17em;
                 font-weight: 700;
+            }}
+
+            @keyframes blink {{
+                0% {{
+                  opacity: .2;
+                }}
+                20% {{
+                  opacity: 1;
+                }}
+                100% {{
+                  opacity: .2;
+                }}
+            }}
+
+            .ellipsis span {{
+                animation-name: blink;
+                animation-duration: 1.4s;
+                animation-iteration-count: infinite;
+                animation-fill-mode: both;
+            }}
+
+            .ellipsis span:nth-child(2) {{
+                animation-delay: .2s;
+            }}
+
+            .ellipsis span:nth-child(3) {{
+                animation-delay: .4s;
             }}");
 
-    internal static void FormatAsHtml(this HttpResponse? response, FormatContext context)
+    internal static void FormatAsHtml(this EmptyHttpResponse? response, FormatContext context)
     {
         if (response is null)
         {
-            PocketView result = PocketViewTags.pre("null");
+            PocketView result = pre("null");
             result.WriteTo(context);
             return;
         }
 
+        PocketView? output = null;
+
+        if (response is HttpResponse fullResponse)
+        {
+            output = fullResponse.FormatAsHtml();
+        }
+        else if (response is PartialHttpResponse partialResponse)
+        {
+            output =
+                div[@class: ContainerClass](
+                    style[type: "text/css"](CSS),
+                    h3[@class: "ellipsis"](
+                        $"HTTP/{partialResponse.Version} {partialResponse.StatusCode} {partialResponse.ReasonPhrase} ({partialResponse.ElapsedMilliseconds:0.##} ms)",
+                        br,
+                        "Loading content ",
+                        span("."),
+                        span("."),
+                        span(".")));
+        }
+        else if (response is EmptyHttpResponse)
+        {
+            output =
+                div[@class: ContainerClass](
+                    style[type: "text/css"](CSS),
+                    h3[@class: "ellipsis"](
+                        "Awaiting response ",
+                        span("."),
+                        span("."),
+                        span(".")));
+        }
+
+        output?.WriteTo(context);
+    }
+
+    private static PocketView FormatAsHtml(this HttpResponse response)
+    {
+        PocketView? output;
         dynamic? requestDiv;
         if (response.Request is { } request)
         {
@@ -55,15 +120,15 @@ internal static class HttpResponseFormattingExtensions
             var requestHyperLink =
                 string.IsNullOrWhiteSpace(requestUriString)
                     ? "[Unknown]"
-                    : PocketViewTags.a[href: requestUriString](requestUriString);
+                    : a[href: requestUriString](requestUriString);
 
             var requestLine =
-                PocketViewTags.h3(
+                h3(
                     $"{request.Method} ", requestHyperLink, $" HTTP/{request.Version}");
 
             var requestHeaders =
-                PocketViewTags.details(
-                    PocketViewTags.summary("Headers"),
+                details(
+                    summary("Headers"),
                     HeaderTable(request.Headers, request.Content?.Headers));
 
             var requestBodyString = request.Content?.Raw ?? string.Empty;
@@ -72,30 +137,30 @@ internal static class HttpResponseFormattingExtensions
             var requestContentTypePrefix = requestContentType is null ? null : $"{requestContentType}, ";
 
             var requestBody =
-                PocketViewTags.details(
-                    PocketViewTags.summary($"Body ({requestContentTypePrefix}{requestBodyLength} bytes)"),
-                    PocketViewTags.pre(requestBodyString));
+                details(
+                    summary($"Body ({requestContentTypePrefix}{requestBodyLength} bytes)"),
+                    pre(requestBodyString));
 
             requestDiv =
-                PocketViewTags.div(
-                    PocketViewTags.h2("Request"),
-                    PocketViewTags.hr(),
+                div(
+                    h2("Request"),
+                    hr(),
                     requestLine,
                     requestHeaders,
                     requestBody);
         }
         else
         {
-            requestDiv = PocketViewTags.div(PocketViewTags.h2("Request"), PocketViewTags.hr());
+            requestDiv = div(h2("Request"), hr());
         }
 
         var responseLine =
-            PocketViewTags.h3(
+            h3(
                 $"HTTP/{response.Version} {response.StatusCode} {response.ReasonPhrase} ({response.ElapsedMilliseconds:0.##} ms)");
 
         var responseHeaders =
-            PocketViewTags.details[open: true](
-                PocketViewTags.summary("Headers"),
+            details[open: true](
+                summary("Headers"),
                 HeaderTable(response.Headers, response.Content?.Headers));
 
         var responseBodyString = response.Content?.Raw ?? string.Empty;
@@ -116,45 +181,27 @@ internal static class HttpResponseFormattingExtensions
         }
 
         var responseBody =
-            PocketViewTags.details[open: true](
-                PocketViewTags.summary($"Body ({responseContentTypePrefix}{responseBodyLength} bytes)"),
+            details[open: true](
+                summary($"Body ({responseContentTypePrefix}{responseBodyLength} bytes)"),
                 responseObjToFormat);
 
         var responseDiv =
-            PocketViewTags.div(
-                PocketViewTags.h2("Response"),
-                PocketViewTags.hr(),
+            div(
+                h2("Response"),
+                hr(),
                 responseLine,
                 responseHeaders,
                 responseBody);
 
-        PocketView output =
-            PocketViewTags.div[@class: ContainerClass](
-                PocketViewTags.style[type: "text/css"](CSS),
+        output =
+            div[@class: ContainerClass](
+                style[type: "text/css"](CSS),
                 requestDiv,
                 responseDiv);
-
-        output.WriteTo(context);
+        return output;
     }
 
-    private static dynamic HeaderTable(Dictionary<string, string[]> headers, Dictionary<string, string[]>? contentHeaders = null)
-    {
-        var allHeaders = contentHeaders is null ? headers : headers.Concat(contentHeaders);
-
-        var headerTable =
-            PocketViewTags.table(
-                PocketViewTags.thead(
-                    PocketViewTags.tr(
-                        PocketViewTags.th("Name"), PocketViewTags.th("Value"))),
-                PocketViewTags.tbody(
-                    allHeaders.Select(header =>
-                        PocketViewTags.tr(
-                            PocketViewTags.td(header.Key), PocketViewTags.td(string.Join("; ", header.Value))))));
-
-        return headerTable;
-    }
-
-    internal static void FormatAsPlainText(this HttpResponse? response, FormatContext context)
+    internal static void FormatAsPlainText(this EmptyHttpResponse? response, FormatContext context)
     {
         if (response is null)
         {
@@ -162,6 +209,26 @@ internal static class HttpResponseFormattingExtensions
             return;
         }
 
+        if (response is HttpResponse fullResponse)
+        {
+            fullResponse.FormatAsPlainText(context);
+        }
+        else if (response is PartialHttpResponse partialResponse)
+        {
+            context.Writer.WriteLine($"Status Code: {partialResponse.StatusCode} {partialResponse.ReasonPhrase}");
+            context.Writer.WriteLine($"Elapsed: {partialResponse.ElapsedMilliseconds:0.##} ms");
+            context.Writer.WriteLine($"Version: HTTP/{partialResponse.Version}");
+            context.Writer.WriteLine();
+            context.Writer.WriteLine("Loading content ...");
+        }
+        else
+        {
+            context.Writer.WriteLine("Awaiting response ...");
+        }
+    }
+
+    private static void FormatAsPlainText(this HttpResponse response, FormatContext context)
+    {
         if (response.Request is { } request)
         {
             context.Writer.WriteLine($"Request Method: {request.Method}");
@@ -207,5 +274,22 @@ internal static class HttpResponseFormattingExtensions
                     break;
             }
         }
+    }
+
+    private static dynamic HeaderTable(Dictionary<string, string[]> headers, Dictionary<string, string[]>? contentHeaders = null)
+    {
+        var allHeaders = contentHeaders is null ? headers : headers.Concat(contentHeaders);
+
+        var headerTable =
+            table(
+                thead(
+                    tr(
+                        th("Name"), th("Value"))),
+                tbody(
+                    allHeaders.Select(header =>
+                        tr(
+                            td(header.Key), td(string.Join("; ", header.Value))))));
+
+        return headerTable;
     }
 }

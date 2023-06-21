@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.CommandLine;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -28,7 +27,12 @@ public class HttpRequestKernel :
        IKernelCommandHandler<SubmitCode>,
        IKernelCommandHandler<RequestDiagnostics>
 {
+    internal const int DefaultResponseDelayThresholdInMilliseconds = 1000;
+    internal const int DefaultContentByteLengthThreshold = 500_000;
+
     private readonly HttpClient _client;
+    private readonly int _responseDelayThresholdInMilliseconds;
+    private readonly long _contentByteLengthThreshold;
 
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
     private static readonly Regex IsRequest;
@@ -47,17 +51,22 @@ public class HttpRequestKernel :
         IsHeader = new Regex(@"^\s*(?<key>[\w-]+):\s*(?<value>.*)", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
     }
 
-    public HttpRequestKernel(string? name = null, HttpClient? client = null)
-        : base(name ?? "http")
+    public HttpRequestKernel(
+        string? name = null,
+        HttpClient? client = null,
+        int responseDelayThresholdInMilliseconds = DefaultResponseDelayThresholdInMilliseconds,
+        int contentByteLengthThreshold = DefaultContentByteLengthThreshold) : base(name ?? "http")
     {
         KernelInfo.LanguageName = "HTTP";
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - HTTP Request";
 
         _client = client ?? new HttpClient();
-    
+        _responseDelayThresholdInMilliseconds = responseDelayThresholdInMilliseconds;
+        _contentByteLengthThreshold = contentByteLengthThreshold;
+
         RegisterForDisposal(_client);
     }
-    
+
     Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (_variables.TryGetValue(command.Name, out var value))
@@ -75,14 +84,12 @@ public class HttpRequestKernel :
 
     Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
     {
-        SetValue(command.Name, command.FormattedValue.Value);
+        SetValue(command.Name, command.FormattedValue.Value.Trim('"'));
         return Task.CompletedTask;
     }
 
-    public void SetValue(string valueName, string value)
-    {
-        _variables[valueName] = value;
-    }
+    private void SetValue(string valueName, string value)
+        => _variables[valueName] = value;
 
     async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
@@ -97,42 +104,148 @@ public class HttpRequestKernel :
             return;
         }
 
-        foreach (var parsedRequest in parsedRequests)
+        try
         {
-            var requestMessage = new HttpRequestMessage(new HttpMethod(parsedRequest.Verb), parsedRequest.Address);
-            if (!string.IsNullOrWhiteSpace(parsedRequest.Body))
+            foreach (var parsedRequest in parsedRequests)
             {
-                requestMessage.Content = new StringContent(parsedRequest.Body);
+                await HandleRequestAsync(parsedRequest, command, context);
             }
+        }
+        catch (Exception ex) when (ex is OperationCanceledException || ex is HttpRequestException)
+        {
+            context.Fail(command, message: ex.Message);
+        }
+    }
 
-            foreach (var kvp in parsedRequest.Headers)
+    private async Task HandleRequestAsync(
+        ParsedHttpRequest parsedRequest,
+        KernelCommand command,
+        KernelInvocationContext context)
+    {
+        var cancellationToken = context.CancellationToken;
+        var requestMessage = GetRequestMessage(parsedRequest);
+
+        var isResponseAvailable = false;
+        var semaphore = new SemaphoreSlim(1);
+        string? valueId = null;
+
+        try
+        {
+            await Task.WhenAll(SendRequestAndHandleResponseAsync(), HandleDelayedResponseAsync());
+        }
+        catch
+        {
+            ClearDisplayedValue();
+            throw;
+        }
+
+        async Task HandleDelayedResponseAsync()
+        {
+            await Task.Delay(_responseDelayThresholdInMilliseconds);
+
+            await semaphore.WaitAsync(cancellationToken);
+            try
             {
-                switch (kvp.Key.ToLowerInvariant())
+                if (!isResponseAvailable)
                 {
-                    case "content-type":
-                        if (requestMessage.Content is null)
-                        {
-                            requestMessage.Content = new StringContent(parsedRequest.Body);
-                        }
-                        requestMessage.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
-                        break;
-                    case "accept":
-                        requestMessage.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(kvp.Value));
-                        break;
-                    case "user-agent":
-                        requestMessage.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(kvp.Value));
-                        break;
-                    default:
-                        requestMessage.Headers.Add(kvp.Key, kvp.Value);
-                        break;
+                    var emptyResponse = new EmptyHttpResponse();
+                    UpdateDisplayedValue(emptyResponse);
                 }
             }
-
-            var response = await GetResponseWithTimingAsync(requestMessage, context.CancellationToken);
-            // TODO: Store response in a dictionary if it happens to be a named request.
-
-            context.Display(response);
+            finally
+            {
+                semaphore.Release();
+            }
         }
+
+        async Task SendRequestAndHandleResponseAsync()
+        {
+            var response = await GetResponseWithTimingAsync(requestMessage, cancellationToken);
+
+            await semaphore.WaitAsync(cancellationToken);
+            isResponseAvailable = true;
+            semaphore.Release();
+
+            var contentLength = response.Content?.ByteLength ?? 0;
+            if (contentLength >= _contentByteLengthThreshold)
+            {
+                var partialResponse = response.ToPartialHttpResponse();
+                UpdateDisplayedValue(partialResponse);
+            }
+
+            UpdateDisplayedValue(response);
+
+            var jsonFormattedResponse =
+                FormattedValue.CreateSingleFromObject(response, JsonFormatter.MimeType);
+
+            jsonFormattedResponse.SuppressDisplay = true;
+
+            context.Publish(
+                new ReturnValueProduced(
+                    response,
+                    command,
+                    formattedValues: new[] { jsonFormattedResponse }));
+        }
+
+        void UpdateDisplayedValue(object response)
+        {
+            var formattedValues = FormattedValue.CreateManyFromObject(response);
+
+            if (string.IsNullOrEmpty(valueId))
+            {
+                valueId = Guid.NewGuid().ToString();
+                context.Publish(new DisplayedValueProduced(response, command, formattedValues, valueId));
+            }
+            else
+            {
+                context.Publish(new DisplayedValueUpdated(response, valueId, command, formattedValues));
+            }
+        }
+
+        void ClearDisplayedValue()
+        {
+            if (!string.IsNullOrEmpty(valueId))
+            {
+                var htmlFormattedValue = new FormattedValue(HtmlFormatter.MimeType, "<span/>");
+                var plainTextFormattedValue = new FormattedValue(PlainTextFormatter.MimeType, string.Empty);
+                var formattedValues = new[] { htmlFormattedValue, plainTextFormattedValue };
+                context.Publish(new DisplayedValueUpdated(value: null, valueId, command, formattedValues));
+            }
+        }
+    }
+
+    private static HttpRequestMessage GetRequestMessage(ParsedHttpRequest parsedRequest)
+    {
+        var requestMessage = new HttpRequestMessage(new HttpMethod(parsedRequest.Verb), parsedRequest.Address);
+        if (!string.IsNullOrWhiteSpace(parsedRequest.Body))
+        {
+            requestMessage.Content = new StringContent(parsedRequest.Body);
+        }
+
+        foreach (var kvp in parsedRequest.Headers)
+        {
+            switch (kvp.Key.ToLowerInvariant())
+            {
+                case "content-type":
+                    if (requestMessage.Content is null)
+                    {
+                        requestMessage.Content = new StringContent(parsedRequest.Body);
+                    }
+                    requestMessage.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
+                    break;
+                case "accept":
+                    requestMessage.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(kvp.Value));
+                    break;
+                case "user-agent":
+                    requestMessage.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(kvp.Value));
+                    break;
+                default:
+                    requestMessage.Headers.Add(kvp.Key, kvp.Value);
+                    break;
+            }
+        }
+
+        return requestMessage;
     }
 
     private async Task<HttpResponse> GetResponseWithTimingAsync(

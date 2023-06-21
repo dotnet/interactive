@@ -76,6 +76,7 @@ Microsoft.DotNet.Interactive
     public static FormattedValue CreateSingleFromObject(System.Object value, System.String mimeType = null)
     .ctor(System.String mimeType, System.String value)
     public System.String MimeType { get;}
+    public System.Boolean SuppressDisplay { get; set;}
     public System.String Value { get;}
   public abstract class FrontendEnvironment
     public System.Threading.Tasks.Task ExecuteClientScript(System.String code, KernelInvocationContext context)

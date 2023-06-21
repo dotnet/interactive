@@ -112,6 +112,7 @@ export class ConsoleCapture implements disposables.Disposable {
                         {
                             mimeType,
                             value,
+                            suppressDisplay: false
                         }
                     ]
                 };

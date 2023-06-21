@@ -3,7 +3,8 @@
     "formattedValues": [
       {
         "mimeType": "text/plain",
-        "value": "oops!"
+        "value": "oops!",
+        "suppressDisplay": false
       }
     ],
     "valueId": null

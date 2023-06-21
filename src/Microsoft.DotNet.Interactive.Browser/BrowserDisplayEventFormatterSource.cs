@@ -35,7 +35,12 @@ internal class BrowserDisplayEventFormatterSource :
                              @event.FormattedValues.FirstOrDefault(v => v.MimeType == PlainTextFormatter.MimeType) ??
                              @event.FormattedValues.FirstOrDefault();
 
-        IHtmlContent html = formattedValue!.MimeType switch
+        if (formattedValue!.SuppressDisplay)
+        {
+            return false;
+        }
+
+        IHtmlContent html = formattedValue.MimeType switch
         {
             HtmlFormatter.MimeType => new HtmlString(formattedValue.Value),
             _ => code(formattedValue.Value)
@@ -44,7 +49,7 @@ internal class BrowserDisplayEventFormatterSource :
         var codeSummary = browserDisplayEvent.DisplayEvent.Command is SubmitCode submitCode
                               ? submitCode.ToString().Substring("SubmitCode: ".Length)
                               : "";
-        
+
 
         html = div[@class: "dni-treeview"](
             table(

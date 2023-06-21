@@ -429,6 +429,7 @@ export enum DocumentSerializationType {
 export interface FormattedValue {
     mimeType: string;
     value: string;
+    suppressDisplay: boolean;
 }
 
 export interface InteractiveDocument {
