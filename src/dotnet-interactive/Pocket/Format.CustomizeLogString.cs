@@ -332,7 +332,7 @@ internal static partial class Format
             return string.Empty;
         }
 
-        var lines = value.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var lines = value!.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         var firstLine = lines.FirstOrDefault();
 
         if (string.IsNullOrEmpty(firstLine))
