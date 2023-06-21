@@ -21,7 +21,7 @@ echo ""
 ####################
 echo "Installing .NET..."
 curl -L https://dot.net/v1/dotnet-install.sh | bash -e
-curl -L https://dot.net/v1/dotnet-install.sh | bash -e -s -- --channel 5.0
+curl -L https://dot.net/v1/dotnet-install.sh | bash -e -s -- --channel 7.0
 echo ""
 
 echo "Updating PATH and DOTNET_ROOT environment variables..."
