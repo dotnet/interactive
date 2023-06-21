@@ -36,7 +36,8 @@ export class HtmlKernel extends Kernel {
             const displayedValueProduced: commandsAndEvents.DisplayedValueProduced = {
                 formattedValues: [{
                     mimeType: "text/html",
-                    value: formattedValue
+                    value: formattedValue,
+                    suppressDisplay: false
                 }]
             };
 

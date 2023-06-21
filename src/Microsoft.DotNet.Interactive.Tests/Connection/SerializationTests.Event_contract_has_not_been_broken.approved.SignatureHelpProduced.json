@@ -5,21 +5,24 @@
         "label": "label",
         "documentation": {
           "mimeType": "text/html",
-          "value": "sig-help-result"
+          "value": "sig-help-result",
+          "suppressDisplay": false
         },
         "parameters": [
           {
             "label": "param1",
             "documentation": {
               "mimeType": "text/html",
-              "value": "param1"
+              "value": "param1",
+              "suppressDisplay": false
             }
           },
           {
             "label": "param2",
             "documentation": {
               "mimeType": "text/html",
-              "value": "param2"
+              "value": "param2",
+              "suppressDisplay": false
             }
           }
         ]

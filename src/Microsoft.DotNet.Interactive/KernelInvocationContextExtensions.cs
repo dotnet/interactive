@@ -60,7 +60,7 @@ public static class KernelInvocationContextExtensions
             new DisplayedValueProduced(
                 value,
                 context.Command,
-                new [] { formattedValue },
+                new[] { formattedValue },
                 displayId));
 
         var displayedValue = new DisplayedValue(displayId, mimeType, context);
@@ -101,8 +101,8 @@ public static class KernelInvocationContextExtensions
     }
 
     public static void PublishValueProduced(
-        this KernelInvocationContext context, 
-        RequestValue requestValue, 
+        this KernelInvocationContext context,
+        RequestValue requestValue,
         object value)
     {
         var valueType = value?.GetType();
@@ -115,13 +115,13 @@ public static class KernelInvocationContextExtensions
         formatter.Format(value, writer);
 
         var formatted = new FormattedValue(
-            requestedMimeType, 
+            requestedMimeType,
             writer.ToString());
 
         context.Publish(new ValueProduced(
             value,
             requestValue.Name,
-            formatted, 
+            formatted,
             requestValue));
     }
 }

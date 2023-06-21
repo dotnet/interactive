@@ -3,7 +3,8 @@
     "content": [
       {
         "mimeType": "text/markdown",
-        "value": "markdown"
+        "value": "markdown",
+        "suppressDisplay": false
       }
     ],
     "linePositionSpan": {

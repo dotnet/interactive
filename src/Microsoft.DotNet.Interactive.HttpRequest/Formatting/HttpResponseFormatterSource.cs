@@ -14,22 +14,22 @@ internal sealed class HttpResponseFormatterSource : ITypeFormatterSource
         yield return new HttpResponsePlainTextFormatter();
     }
 
-    private sealed class HttpResponseHtmlFormatter : TypeFormatter<HttpResponse>
+    private sealed class HttpResponseHtmlFormatter : TypeFormatter<EmptyHttpResponse>
     {
         public override string MimeType => HtmlFormatter.MimeType;
 
-        public override bool Format(HttpResponse value, FormatContext context)
+        public override bool Format(EmptyHttpResponse value, FormatContext context)
         {
             value.FormatAsHtml(context);
             return true;
         }
     }
 
-    private sealed class HttpResponsePlainTextFormatter : TypeFormatter<HttpResponse>
+    private sealed class HttpResponsePlainTextFormatter : TypeFormatter<EmptyHttpResponse>
     {
         public override string MimeType => PlainTextFormatter.MimeType;
 
-        public override bool Format(HttpResponse value, FormatContext context)
+        public override bool Format(EmptyHttpResponse value, FormatContext context)
         {
             value.FormatAsPlainText(context);
             return true;

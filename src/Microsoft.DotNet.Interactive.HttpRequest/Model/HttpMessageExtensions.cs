@@ -87,4 +87,12 @@ internal static class HttpMessageExtensions
 
     private static Dictionary<string, string[]> ToDictionary(this HttpHeaders headers)
         => headers.ToDictionary(header => header.Key, header => header.Value.ToArray());
+
+    internal static PartialHttpResponse ToPartialHttpResponse(this HttpResponse response) =>
+        new PartialHttpResponse(
+            response.StatusCode,
+            response.ReasonPhrase,
+            response.Version,
+            response.ElapsedMilliseconds,
+            response.Content?.ByteLength);
 }

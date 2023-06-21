@@ -5,7 +5,8 @@
   "command": {
     "formattedValue": {
       "mimeType": "text/plain",
-      "value": "formatted value"
+      "value": "formatted value",
+      "suppressDisplay": false
     },
     "name": "name",
     "targetKernelName": "fsharp",

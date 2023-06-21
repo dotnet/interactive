@@ -7,11 +7,20 @@ namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 public class HttpRequestKernelExtension
 {
-    public static void Load(Kernel kernel, HttpClient? httpClient = null)
+    public static void Load(
+        Kernel kernel,
+        HttpClient? httpClient = null,
+        int responseDelayThresholdInMilliseconds = HttpRequestKernel.DefaultResponseDelayThresholdInMilliseconds,
+        int contentByteLengthThreshold = HttpRequestKernel.DefaultContentByteLengthThreshold)
     {
         if (kernel.RootKernel is CompositeKernel compositeKernel)
         {
-            var httpRequestKernel = new HttpRequestKernel(client: httpClient);
+            var httpRequestKernel =
+                new HttpRequestKernel(
+                    client: httpClient,
+                    responseDelayThresholdInMilliseconds: responseDelayThresholdInMilliseconds,
+                    contentByteLengthThreshold: contentByteLengthThreshold);
+
             compositeKernel.Add(httpRequestKernel);
             httpRequestKernel.UseValueSharing();
 

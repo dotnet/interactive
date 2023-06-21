@@ -211,7 +211,9 @@ export class InteractiveClient {
                                 const disp = <DisplayEvent>eventEnvelope.event;
                                 const stream = eventEnvelope.eventType === StandardErrorValueProducedType ? 'stderr' : 'stdout';
                                 const output = this.displayEventToCellOutput(disp, stream);
-                                outputReporter(output);
+                                if (output) {
+                                    outputReporter(output);
+                                }
                             }
                             break;
                         case DisplayedValueProducedType:
@@ -220,7 +222,9 @@ export class InteractiveClient {
                             {
                                 const disp = <DisplayEvent>eventEnvelope.event;
                                 const output = this.displayEventToCellOutput(disp);
-                                outputReporter(output);
+                                if (output) {
+                                    outputReporter(output);
+                                }
                             }
                             break;
                     }
@@ -472,7 +476,9 @@ export class InteractiveClient {
                     case ReturnValueProducedType:
                         let disp = <DisplayEvent>eventEnvelope.event;
                         let output = this.displayEventToCellOutput(disp);
-                        this.deferredOutput.push(output);
+                        if (output) {
+                            this.deferredOutput.push(output);
+                        }
                         break;
                 }
             } else {
@@ -490,29 +496,34 @@ export class InteractiveClient {
         }
     }
 
-    private displayEventToCellOutput(disp: DisplayEvent, stream?: 'stdout' | 'stderr'): vscodeLike.NotebookCellOutput {
-
+    private displayEventToCellOutput(disp: DisplayEvent, stream?: 'stdout' | 'stderr'): vscodeLike.NotebookCellOutput | null {
         const encoder = new TextEncoder();
         const outputItems: Array<vscodeLike.NotebookCellOutputItem> = [];
         if (disp.formattedValues && disp.formattedValues.length > 0) {
             for (let formatted of disp.formattedValues) {
-                let data = this.IsEncodedMimeType(formatted.mimeType)
-                    ? Buffer.from(formatted.value, 'base64')
-                    : encoder.encode(formatted.value);
-                const outputItem: vscodeLike.NotebookCellOutputItem = {
-                    mime: formatted.mimeType,
-                    data
-                };
-                if (stream) {
-                    outputItem.stream = stream;
+                if (!formatted.suppressDisplay) {
+                    let data = this.IsEncodedMimeType(formatted.mimeType)
+                        ? Buffer.from(formatted.value, 'base64')
+                        : encoder.encode(formatted.value);
+                    const outputItem: vscodeLike.NotebookCellOutputItem = {
+                        mime: formatted.mimeType,
+                        data
+                    };
+                    if (stream) {
+                        outputItem.stream = stream;
+                    }
+                    outputItems.push(outputItem);
                 }
-                outputItems.push(outputItem);
             }
         }
 
-        const outputId = disp.valueId ?? this.getNextOutputId();
-        const output = createOutput(outputItems, outputId);
-        return output;
+        if (outputItems.length === 0) {
+            return null;
+        } else {
+            const outputId = disp.valueId ?? this.getNextOutputId();
+            const output = createOutput(outputItems, outputId);
+            return output;
+        }
     }
 
     private IsEncodedMimeType(mimeType: string): boolean {

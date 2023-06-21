@@ -15,10 +15,9 @@ public class DisplayedValue
     private readonly string _displayId;
     private readonly HashSet<string> _mimeTypes;
     private KernelInvocationContext _context;
-        
-    public DisplayedValue(string displayId, string mimeType, KernelInvocationContext context): this(displayId, new []{mimeType}, context)
+
+    public DisplayedValue(string displayId, string mimeType, KernelInvocationContext context) : this(displayId, new[] { mimeType }, context)
     {
-           
     }
 
     public DisplayedValue(string displayId, string[] mimeTypes, KernelInvocationContext context)

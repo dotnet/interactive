@@ -1,4 +1,6 @@
 Microsoft.DotNet.Interactive.HttpRequest
+  public class EmptyHttpResponse
+    .ctor()
   public class HttpContent
     .ctor(System.String raw, System.Int64 byteLength, System.Collections.Generic.Dictionary<System.String,System.String[]> headers, System.String contentType = null)
     public System.Int64 ByteLength { get;}
@@ -13,19 +15,21 @@ Microsoft.DotNet.Interactive.HttpRequest
     public System.String Uri { get;}
     public System.String Version { get;}
   public class HttpRequestKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestDiagnostics>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
-    .ctor(System.String name = null, System.Net.Http.HttpClient client = null)
-    public System.Void SetValue(System.String valueName, System.String value)
+    .ctor(System.String name = null, System.Net.Http.HttpClient client = null, System.Int32 responseDelayThresholdInMilliseconds = 1000, System.Int32 contentByteLengthThreshold = 500000)
   public class HttpRequestKernelExtension
-    public static System.Void Load(Microsoft.DotNet.Interactive.Kernel kernel, System.Net.Http.HttpClient httpClient = null)
+    public static System.Void Load(Microsoft.DotNet.Interactive.Kernel kernel, System.Net.Http.HttpClient httpClient = null, System.Int32 responseDelayThresholdInMilliseconds = 1000, System.Int32 contentByteLengthThreshold = 500000)
     .ctor()
-  public class HttpResponse
+  public class HttpResponse : PartialHttpResponse
     .ctor(System.Int32 statusCode, System.String reasonPhrase, System.String version, System.Collections.Generic.Dictionary<System.String,System.String[]> headers, HttpRequest request = null, HttpContent content = null, System.Nullable<System.Double> elapsedMilliseconds = null)
     public HttpContent Content { get;}
-    public System.Nullable<System.Double> ElapsedMilliseconds { get;}
     public System.Collections.Generic.Dictionary<System.String,System.String[]> Headers { get;}
-    public System.String ReasonPhrase { get;}
     public HttpRequest Request { get;}
-    public System.Int32 StatusCode { get;}
-    public System.String Version { get;}
   public static class HttpResponseMessageFormattingExtensions
     public static System.Void RegisterFormatters()
+  public class PartialHttpResponse : EmptyHttpResponse
+    .ctor(System.Int32 statusCode, System.String reasonPhrase, System.String version, System.Nullable<System.Double> elapsedMilliseconds = null, System.Nullable<System.Int64> contentByteLength = null)
+    public System.Nullable<System.Int64> ContentByteLength { get;}
+    public System.Nullable<System.Double> ElapsedMilliseconds { get;}
+    public System.String ReasonPhrase { get;}
+    public System.Int32 StatusCode { get;}
+    public System.String Version { get;}

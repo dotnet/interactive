@@ -150,6 +150,7 @@ export function formatValue(arg: any, mimeType: string): commandsAndEvents.Forma
     return {
         mimeType,
         value,
+        suppressDisplay: false
     };
 }
 
