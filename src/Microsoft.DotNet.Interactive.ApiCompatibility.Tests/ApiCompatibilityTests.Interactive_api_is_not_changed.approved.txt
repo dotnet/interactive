@@ -406,6 +406,10 @@ Microsoft.DotNet.Interactive.Commands
   public class Quit : KernelCommand, System.IEquatable<KernelCommand>
     .ctor()
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
+  public class ReplaceHtml : KernelCommand, System.IEquatable<KernelCommand>
+    .ctor(System.String elementSelector, System.String replacementHtml, System.String targetKernelName = null)
+    public System.String ElementSelector { get;}
+    public System.String ReplacementHtml { get;}
   public class RequestCompletions : LanguageServiceCommand, System.IEquatable<KernelCommand>
     .ctor(System.String code, Microsoft.DotNet.Interactive.LinePosition linePosition, System.String targetKernelName = null)
   public class RequestDiagnostics : KernelCommand, System.IEquatable<KernelCommand>

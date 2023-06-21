@@ -118,7 +118,7 @@ document.head.insertAdjacentHTML('afterbegin', `<style>${notebookCSS}</style>`);
                                    var html = new BrowserDisplayEvent(@event, root.SubmissionCount + 1).ToDisplayString(HtmlFormatter.MimeType);
 
                                    var htmlCommand = new SubmitCode(html);
-                                   htmlKernel.SendAsync(htmlCommand).ConfigureAwait(false);
+                                   var _ = htmlKernel.SendAsync(htmlCommand);
                                });
 
             htmlKernel.RegisterForDisposal(subscription);

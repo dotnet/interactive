@@ -13,6 +13,7 @@ export const DisplayValueType = "DisplayValue";
 export const OpenDocumentType = "OpenDocument";
 export const OpenProjectType = "OpenProject";
 export const QuitType = "Quit";
+export const ReplaceHtmlType = "ReplaceHtml";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
@@ -35,6 +36,7 @@ export type KernelCommandType =
     | typeof OpenDocumentType
     | typeof OpenProjectType
     | typeof QuitType
+    | typeof ReplaceHtmlType
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
@@ -83,6 +85,11 @@ export interface OpenProject extends KernelCommand {
 }
 
 export interface Quit extends KernelCommand {
+}
+
+export interface ReplaceHtml extends KernelCommand {
+    elementSelector: string;
+    replacementHtml: string;
 }
 
 export interface RequestCompletions extends LanguageServiceCommand {

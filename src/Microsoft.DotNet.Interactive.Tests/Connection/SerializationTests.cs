@@ -175,6 +175,8 @@ public class SerializationTests
                 new FormattedValue("text/html", "<b>hi!</b>")
             );
 
+            yield return new ReplaceHtml("""div[id="the-id"]""", """<div id="the-id">hi!</div>""", "html");
+
             yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
             yield return new RequestDiagnostics("the-code");

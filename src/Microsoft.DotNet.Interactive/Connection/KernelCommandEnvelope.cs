@@ -62,6 +62,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
             [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
             [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
+            [nameof(ReplaceHtml)] = typeof(KernelCommandEnvelope<ReplaceHtml>),
             [nameof(RequestCompletions)] = typeof(KernelCommandEnvelope<RequestCompletions>),
             [nameof(RequestDiagnostics)] = typeof(KernelCommandEnvelope<RequestDiagnostics>),
             [nameof(RequestHoverText)] = typeof(KernelCommandEnvelope<RequestHoverText>),

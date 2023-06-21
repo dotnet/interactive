@@ -1,0 +1,16 @@
+{
+  "token": "the-token",
+  "id": "command-id",
+  "commandType": "ReplaceHtml",
+  "command": {
+    "elementSelector": "div[id=\"the-id\"]",
+    "replacementHtml": "<div id=\"the-id\">hi!</div>",
+    "targetKernelName": "html",
+    "originUri": null,
+    "destinationUri": null
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName?tag=arrived",
+    "kernel://somelocation/kernelName"
+  ]
+}

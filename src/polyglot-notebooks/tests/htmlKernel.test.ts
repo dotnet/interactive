@@ -276,4 +276,251 @@ describe("htmlKernel", () => {
 
         expect(dom.window.document.body.innerHTML).to.be.eql('<div id="1">a</div><div id="2">b</div>');
     });
+
+    it("can replace any selected element's content using replaceHtml command", async () => {
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
+        const dom = new jd.JSDOM(`<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <title>Replace Inner HTML of Element</title>
+          </head>
+          <body>
+            <div id="parent"><div id="child">Replace me!!</div><div id="3">c</div></div>
+          </body>
+        </html>`);
+
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
+            normalizeHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
+                return new dom.window.MutationObserver(callback);
+            },
+            selectElement: (elementSelector: string) => {
+                return dom.window.document.querySelector(elementSelector);
+            }
+        };
+
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        const command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.ReplaceHtmlType,
+            <commandsAndEvents.ReplaceHtml>{
+                elementSelector: 'div[id="child"]',
+                replacementHtml: '<div id="1">a</div><div id="2">b</div>'
+            });
+
+        await kernel.send(command);
+
+        expect(events.length).to.be.eql(1);
+        expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
+
+        const parent = dom.window.document.body.querySelector('div[id="parent"]')!;
+        expect(parent.innerHTML).to.be.eql(`<div id="1">a</div><div id="2">b</div><div id="3">c</div>`);
+    });
+
+    it("fails replaceHtml commands that specify an element selector that is null", async () => {
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
+        const dom = new jd.JSDOM(`<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <title>Replace Inner HTML of Element</title>
+          </head>
+          <body>
+            <div id="parent"><div id="child">Replace me!!</div><div id="3">c</div></div>
+          </body>
+        </html>`);
+
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
+            normalizeHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
+                return new dom.window.MutationObserver(callback);
+            },
+            selectElement: (elementSelector: string) => {
+                return dom.window.document.querySelector(elementSelector);
+            }
+        };
+
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        const command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.ReplaceHtmlType,
+            <commandsAndEvents.ReplaceHtml>{
+                elementSelector: (null as unknown),
+                replacementHtml: '<div id="1">a</div><div id="2">b</div>'
+            });
+
+        await kernel.send(command);
+
+        expect(events.length).to.be.eql(1);
+        expect(events.find(e => e.eventType === commandsAndEvents.CommandFailedType)).to.not.be.undefined;
+
+        const parent = dom.window.document.body.querySelector('div[id="parent"]')!;
+        expect(parent.innerHTML).to.be.eql(`<div id="child">Replace me!!</div><div id="3">c</div>`);
+    });
+
+    it("fails replaceHtml commands that specify an element selector for a nonexistent element", async () => {
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
+        const dom = new jd.JSDOM(`<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <title>Replace Inner HTML of Element</title>
+          </head>
+          <body>
+            <div id="parent"><div id="child">Replace me!!</div><div id="3">c</div></div>
+          </body>
+        </html>`);
+
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
+            normalizeHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
+                return new dom.window.MutationObserver(callback);
+            },
+            selectElement: (elementSelector: string) => {
+                return dom.window.document.querySelector(elementSelector);
+            }
+        };
+
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        const command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.ReplaceHtmlType,
+            <commandsAndEvents.ReplaceHtml>{
+                elementSelector: 'div[id="nonexistent"]',
+                replacementHtml: '<div id="1">a</div><div id="2">b</div>'
+            });
+
+        await kernel.send(command);
+
+        expect(events.length).to.be.eql(1);
+        expect(events.find(e => e.eventType === commandsAndEvents.CommandFailedType)).to.not.be.undefined;
+
+        const parent = dom.window.document.body.querySelector('div[id="parent"]')!;
+        expect(parent.innerHTML).to.be.eql(`<div id="child">Replace me!!</div><div id="3">c</div>`);
+    });
+
+    it("fails replaceHtml commands that specify an element selector for the root element", async () => {
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
+        const dom = new jd.JSDOM(`<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <title>Replace Inner HTML of Element</title>
+          </head>
+          <body>
+            <div id="parent"><div id="child">Replace me!!</div><div id="3">c</div></div>
+          </body>
+        </html>`);
+
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
+            normalizeHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
+                return new dom.window.MutationObserver(callback);
+            },
+            selectElement: (elementSelector: string) => {
+                return dom.window.document.querySelector(elementSelector);
+            }
+        };
+
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        const command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.ReplaceHtmlType,
+            <commandsAndEvents.ReplaceHtml>{
+                elementSelector: 'html',
+                replacementHtml: '<div id="1">a</div><div id="2">b</div>'
+            });
+
+        await kernel.send(command);
+
+        expect(events.length).to.be.eql(1);
+        expect(events.find(e => e.eventType === commandsAndEvents.CommandFailedType)).to.not.be.undefined;
+
+        const parent = dom.window.document.body.querySelector('div[id="parent"]')!;
+        expect(parent.innerHTML).to.be.eql(`<div id="child">Replace me!!</div><div id="3">c</div>`);
+    });
+
+    it("evaluates script elements present in new html added via replaceHtml command", async () => {
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
+        const dom = new jd.JSDOM(`<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <title>Replace Inner HTML of Element</title>
+          </head>
+          <body>
+            <div id="parent"><div id="child">Replace me!!</div></div>
+          </body>
+        </html>`, { runScripts: "dangerously" });
+
+        let htmlDomFragmentInserterConfiguration: HtmlDomFragmentInserterConfiguration = {
+            normalizeHtmlFragment: (htmlFragment: string) => {
+                const container = dom.window.document.createElement("div");
+                container.innerHTML = htmlFragment;
+                return container.innerHTML;
+            },
+            createMutationObserver: (callback: MutationCallback) => {
+                return new dom.window.MutationObserver(callback);
+            },
+            jsEvaluator: (code: string) => {
+                dom.window.eval(code);
+                return Promise.resolve();
+            },
+            selectElement: (elementSelector: string) => {
+                return dom.window.document.querySelector(elementSelector);
+            }
+        };
+
+        const kernel = createHtmlKernelForBrowser({ kernelName: "html", htmlDomFragmentInserterConfiguration });
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        const command = new commandsAndEvents.KernelCommandEnvelope(
+            commandsAndEvents.ReplaceHtmlType,
+            <commandsAndEvents.ReplaceHtml>{
+                elementSelector: 'div[id="child"]',
+                replacementHtml: '<div id="1"><script type="module">a = 1;</script></div><div id="2"><script type="module">b = 2;</script></div>'
+            });
+
+        await kernel.send(command);
+
+        expect(events.length).to.be.eql(1);
+        expect(events.find(e => e.eventType === commandsAndEvents.CommandSucceededType)).to.not.be.undefined;
+
+        const parent = dom.window.document.body.querySelector('div[id="parent"]')!;
+        expect(parent.innerHTML).to.be.eql(`<div id="1"><script type="module">a = 1;</script></div><div id="2"><script type="module">b = 2;</script></div>`);
+
+        expect(dom.window.globalThis["a"]).to.be.equal(1);
+        expect(dom.window.globalThis["b"]).to.be.equal(2);
+    });
 });
