@@ -88,7 +88,7 @@ Telemetry is collected when .NET Interactive is started. Once .NET Interactive i
 * `dotnet interactive jupyter install`
 * `dotnet interactive stdio`
 
-Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in Polyglot Notebooks. 
+Read our [privacy statement](https://go.microsoft.com/fwlink/?LinkId=521839) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in Polyglot Notebooks. 
 
 ## License
 
