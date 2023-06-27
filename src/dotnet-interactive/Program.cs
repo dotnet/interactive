@@ -3,6 +3,7 @@
 
 using System;
 using System.CommandLine.Parsing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -30,6 +31,20 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         Console.OutputEncoding = Encoding.UTF8;
+
+        var culture = Environment.GetEnvironmentVariable("DOTNET_CLI_CULTURE");
+        var uiLanguage = Environment.GetEnvironmentVariable("DOTNET_CLI_UI_LANGUAGE");
+
+        if (!string.IsNullOrWhiteSpace(culture))
+        {
+            CultureInfo.CurrentCulture = new CultureInfo(culture);
+        }
+
+        if (!string.IsNullOrWhiteSpace(uiLanguage))
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo(uiLanguage);
+        }
+
         return await CommandLineParser.Create(_serviceCollection).InvokeAsync(args);
     }
 
