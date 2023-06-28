@@ -31,7 +31,13 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         Console.OutputEncoding = Encoding.UTF8;
+        SetCultureFromEnvironmentVariables();
 
+        return await CommandLineParser.Create(_serviceCollection).InvokeAsync(args);
+    }
+
+    public static void SetCultureFromEnvironmentVariables()
+    {
         var culture = Environment.GetEnvironmentVariable("DOTNET_CLI_CULTURE");
         var uiLanguage = Environment.GetEnvironmentVariable("DOTNET_CLI_UI_LANGUAGE");
 
@@ -44,8 +50,6 @@ public class Program
         {
             CultureInfo.CurrentUICulture = new CultureInfo(uiLanguage);
         }
-
-        return await CommandLineParser.Create(_serviceCollection).InvokeAsync(args);
     }
 
     private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
