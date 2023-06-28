@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -99,7 +100,9 @@ public class StdIoKernelConnector : IKernelConnector
                     {
                         ["DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
                         ["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
-                        ["DOTNET_DbgEnableMiniDump"] = "0" // https://docs.microsoft.com/en-us/dotnet/core/diagnostics/dumps
+                        ["DOTNET_DbgEnableMiniDump"] = "0", // https://docs.microsoft.com/en-us/dotnet/core/diagnostics/dumps
+                        ["DOTNET_CLI_UI_LANGUAGE"] = GetCurrentUICulture(),
+                        ["DOTNET_CLI_CULTURE"] = GetCurrentCulture()
                     },
                     WorkingDirectory = _workingDirectory.FullName,
                     RedirectStandardInput = true,
@@ -207,6 +210,19 @@ public class StdIoKernelConnector : IKernelConnector
         var remoteRootKernelInfo = GetCachedKernelInfoForRemoteRoot();
         rootProxyKernel.UpdateKernelInfo(remoteRootKernelInfo);
         return rootProxyKernel;
+    }
+
+    // Get the current culture from Visual Studio
+    private string GetCurrentCulture()
+    {
+        CultureInfo culture = Thread.CurrentThread.CurrentCulture;
+        return culture.Name;
+    }
+
+    private string GetCurrentUICulture()
+    {
+        CultureInfo culture = Thread.CurrentThread.CurrentUICulture;
+        return culture.Name;
     }
 
     private void UpdateRemoteKernelInfoCache(IEnumerable<KernelInfo> infos)
