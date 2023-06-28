@@ -140,7 +140,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
         const workspaceFolderUris = vscode.workspace.workspaceFolders?.map(folder => folder.uri) || [];
         const workingDirectory = getWorkingDirectoryForNotebook(notebookUri, workspaceFolderUris, fallbackWorkingDirectory);
-        const environmentVariables = polyglotConfig.get<{ [key: string]: string }>('kernelEnvironmentVariables');
+        const environmentVariables = { ...polyglotConfig.get<{ [key: string]: string }>('kernelEnvironmentVariables'), 'DOTNET_CLI_CULTURE': getCurrentCulture(), 'DOTNET_CLI_UI_LANGUAGE': getCurrentCulture() };
+
         const processStart = processArguments(argsTemplate, workingDirectory, DotNetPathManager.getDotNetPath(), launchOptions!.workingDirectory, environmentVariables);
         let notification = {
             displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
@@ -156,6 +157,11 @@ export async function activate(context: vscode.ExtensionContext) {
             kernelReady
         };
     }
+
+    function getCurrentCulture(): string {
+        return vscode.env.language;
+    }
+
 
     function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {
         compositeKernel.setDefaultTargetKernelNameForCommand(commandsAndEvents.RequestInputType, compositeKernel.name);
