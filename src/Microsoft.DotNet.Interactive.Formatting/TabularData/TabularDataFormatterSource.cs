@@ -24,10 +24,18 @@ internal class TabularDataFormatterSource : ITypeFormatterSource
                     .Select(f => (IHtmlContent)td(span(f.Name)))
                     .ToArray();
 
-            IReadOnlyList<IHtmlContent> rows =
-                value.Data
+            var (rowData, remainingCount) = value.Data
+                .TakeAndCountRemaining(Formatter.ListExpansionLimit, true);
+
+            var rows =
+                rowData
                     .Select(d => (IHtmlContent)tr(d.Select(v => td(v.Value))))
-                    .ToArray();
+                    .ToList();
+
+            if (remainingCount > 0)
+            {
+                rows.Add(tr(td[colspan: $"{headers.Count}"](i($"({remainingCount} more)"))));
+            }
 
             Html.Table(headers, rows).WriteTo(context);
         });
