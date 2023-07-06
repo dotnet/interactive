@@ -775,7 +775,37 @@ public static class Formatter
             return false;
         }
 
+        if (type.IsNestedPrivate) //e.g. RangeIterator
+        {
+            return false;
+        }
 
-        return false;
+        // FIX: (ShouldDisplayProperties) 
+
+        if (typeof(ICollection).IsAssignableFrom(type))
+        {
+            return false;
+        }
+        
+        if (type.IsConstructedGenericType)
+        {
+            foreach (var @interface in type.GetTypeInfo().ImplementedInterfaces)
+            {
+                if (@interface.IsConstructedGenericType)
+                {
+                    if (@interface.GetGenericTypeDefinition() == typeof(IOrderedEnumerable<>))
+                    {
+                        return false;
+                    }
+                    
+                    if (@interface.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 }

@@ -137,15 +137,17 @@ public static class HtmlFormatter
         new HtmlFormatter<Type>((type, context) =>
         {
             var text = type.ToDisplayString(PlainTextFormatter.MimeType);
-                    
+
             // This is approximate
             var isKnownDocType =
                 type.Namespace is not null &&
+                type.FullName is not null &&
                 (type.Namespace == "System" ||
                  type.Namespace.StartsWith("System.") ||
-                 type.Namespace.StartsWith("Microsoft."));
+                 type.Namespace.StartsWith("Microsoft.")) &&
+                !type.IsAnonymous();
 
-            if (!isKnownDocType || type.IsAnonymous())
+            if (!isKnownDocType)
             {
                 context.Writer.Write(text.HtmlEncode());
             }
@@ -153,10 +155,18 @@ public static class HtmlFormatter
             {
                 //system.collections.generic.list-1
                 //system.collections.generic.list-1.enumerator
-                var genericTypeDefinition = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+                Type genericTypeDefinition;
+                if (type.IsGenericType)
+                {
+                    genericTypeDefinition = type.GetGenericTypeDefinition();
+                }
+                else
+                {
+                    genericTypeDefinition = type;
+                }
 
                 var typeLookupName =
-                    genericTypeDefinition.FullName.ToLower().Replace("+",".").Replace("`","-");
+                    genericTypeDefinition.FullName.ToLower().Replace("+", ".").Replace("`", "-");
 
                 PocketView view =
                     span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-7.0"](
@@ -189,15 +199,7 @@ public static class HtmlFormatter
             view.WriteTo(context);
             return true;
         }),
-
-        // Try to display enumerable results as tables. This will return false for nested tables.
-        new HtmlFormatter<IEnumerable>((value, context) =>
-        {
-            var type = value.GetType();
-            var formatter = GetDefaultFormatterForAnyEnumerable(type);
-            return formatter.Format(value, context);
-        }),
-
+        
         // BigInteger should be displayed as plain text
         new HtmlFormatter<BigInteger>((value, context) =>
         {

@@ -63,19 +63,6 @@ internal static class TypeExtensions
                    .ToArray();
     }
 
-    public static IEnumerable<Type> GetAllInterfaces(this Type type)
-    {
-        if (type.IsInterface)
-        {
-            yield return type;
-        }
-
-        foreach (var i in type.GetInterfaces())
-        {
-            yield return i;
-        }
-    }
-
     public static bool IsRelevantFormatterFor(this Type type, Type actualType)
     {
         if (!type.IsGenericTypeDefinition)
@@ -252,10 +239,10 @@ internal static class TypeExtensions
         out Type valueType)
     {
         var dictType =
-            type.GetAllInterfaces()
+            type.GetTypeInfo().ImplementedInterfaces
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
             ??
-            type.GetAllInterfaces()
+            type.GetTypeInfo().ImplementedInterfaces
                 .FirstOrDefault(i => i == typeof(IDictionary));
 
         if (dictType is null)

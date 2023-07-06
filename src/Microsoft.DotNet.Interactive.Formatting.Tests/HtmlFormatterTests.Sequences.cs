@@ -563,7 +563,9 @@ public partial class HtmlFormatterTests
             var html = dict.ToDisplayString("text/html").RemoveStyleElement();
 
             html.Should().BeEquivalentHtmlTo(
-                $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{Tags.PlainTextBegin}1{Tags.PlainTextEnd}</td><td>2</td></tr></tbody></table>");
+                $"""
+                    <table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{Tags.PlainTextBegin}1{Tags.PlainTextEnd}</td><td>{Tags.PlainTextBegin}2{Tags.PlainTextEnd}</td></tr></tbody></table>
+                    """);
         }
 
         [Fact]
@@ -918,32 +920,38 @@ public partial class HtmlFormatterTests
 
             html.Should().BeEquivalentHtmlTo($"""
                 <details open="open" class="dni-treeview">
-                    <summary>
-                        <span class="dni-code-hint">
-                            <code>{instance.ToDisplayString(PlainTextSummaryFormatter.MimeType)}</code>
-                        </span>
-                    </summary>
-                    <div>
-                        <table>
-                            <thead>
-                                <tr></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Property</td>
-                                    <td>cherry</td>
-                                </tr>
-                                <tr>
-                                    <td><i>(values)</i></td>
-                                    <td>
-                                        <div class="dni-plaintext">
-                                            <pre>[ apple, banana ]</pre>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                  <summary>
+                    <span class="dni-code-hint">
+                      <code>[ apple, banana ]</code>
+                    </span>
+                  </summary>
+                  <div>
+                    <table>
+                      <thead>
+                        <tr></tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Property</td>
+                          <td>
+                            <div class="dni-plaintext">
+                              <pre>cherry</pre>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <i>(values)</i>
+                          </td>
+                          <td>
+                            <div class="dni-plaintext">
+                              <pre>[ apple, banana ]</pre>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </details>
                 """);
         }
@@ -960,32 +968,38 @@ public partial class HtmlFormatterTests
 
             html.Should().BeEquivalentHtmlTo($"""
                 <details open="open" class="dni-treeview">
-                    <summary>
-                        <span class="dni-code-hint">
-                            <code>{instance.ToDisplayString(PlainTextSummaryFormatter.MimeType)}</code>
-                        </span>
-                    </summary>
-                    <div>
-                        <table>
-                            <thead>
-                                <tr></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Property</td>
-                                    <td>cherry</td>
-                                </tr>
-                                <tr>
-                                    <td><i>(values)</i></td>
-                                    <td>
-                                        <div class="dni-plaintext">
-                                            <pre>[ apple, banana ]</pre>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                  <summary>
+                    <span class="dni-code-hint">
+                      <code>[ apple, banana ]</code>
+                    </span>
+                  </summary>
+                  <div>
+                    <table>
+                      <thead>
+                        <tr></tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Property</td>
+                          <td>
+                            <div class="dni-plaintext">
+                              <pre>cherry</pre>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <i>(values)</i>
+                          </td>
+                          <td>
+                            <div class="dni-plaintext">
+                              <pre>[ apple, banana ]</pre>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </details>
                 """);
         }

@@ -207,7 +207,7 @@ namespace Dummy
 
         bool IDictionary<int, string>.ContainsKey(int key)
         {
-            return (key == 1);
+            return key == 1;
         }
 
         void ICollection<KeyValuePair<int, string>>.CopyTo(KeyValuePair<int, string>[] array, int arrayIndex)

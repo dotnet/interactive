@@ -225,17 +225,24 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                                       }))))
                      .ToArray();
 
-        // represent IEnumerable as a separate special property at the end of the list
-        if (typeof(T).IsEnumerable() && typeof(T).ShouldDisplayProperties())
+        // represent IEnumerable as a separate special property "(values)" at the end of the list
+        if (typeof(T).IsEnumerable())
         {
-            var enumerableFormatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(typeof(T));
-            (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag) enumerableAccessor =
-                (new HtmlTag("td", new HtmlTag("i", "(values)")), obj => new HtmlTag("td", c =>
-                    {
-                        enumerableFormatter.Format(obj, c);
-                    }));
-            Array.Resize(ref rows, rows.Length + 1);
-            rows[^1] = enumerableAccessor;
+            if (typeof(T).ShouldDisplayProperties())
+            {
+                var enumerableFormatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(typeof(T));
+                (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag) enumerableAccessor =
+                    (new HtmlTag("td", new HtmlTag("i", "(values)")), obj => new HtmlTag("td", c =>
+                        {
+                            enumerableFormatter.Format(obj, c);
+                        }));
+                Array.Resize(ref rows, rows.Length + 1);
+                rows[^1] = enumerableAccessor;
+            }
+            else
+            {
+                return (HtmlFormatter<T>)HtmlFormatter.GetDefaultFormatterForAnyEnumerable(typeof(T));
+            }
         }
 
         return new HtmlFormatter<T>((instance, context) => BuildTreeView(instance, context, rows));
