@@ -267,7 +267,6 @@ TheWidgets: Widget[]
                 """.ReplaceLineEndings());
         }
 
-
         [Fact]
         public void When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements()
         {
@@ -277,19 +276,20 @@ TheWidgets: Widget[]
             };
 
 
-            // TODO (When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements) write test
+
+            // FIX (When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements) write test
             throw new NotImplementedException();
         }
 
         [Fact]
         public void When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements()
         {
-            var instance = new ClassWithPropertiesThatIsAlsoIEnumerable(new[] { "apple", "banana" })
+            var instance = new ClassWithPropertiesThatIsAlsoIEnumerable<string>(new[] { "durian", "elderberry" })
             {
-                Property = "cherry"
+                Property = "fig"
             };
 
-            // TODO (When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements) write test
+            // FIX (When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements) write test
             throw new NotImplementedException();
         }
     }

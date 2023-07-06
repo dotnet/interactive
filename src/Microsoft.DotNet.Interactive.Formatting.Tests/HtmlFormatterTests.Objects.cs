@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -117,17 +118,38 @@ public partial class HtmlFormatterTests
                                 <tbody>
                                     <tr>
                                         <td>TypeName</td>
-                                        <td>TheEntity</td>
+                                        <td>
+                                            <div class="dni-plaintext">
+                                                <pre>TheEntity</pre>
+                                            </div>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td>Id</td>
-                                        <td>123</td>
+                                        <td>
+                                            <div class="dni-plaintext">
+                                                <pre>123</pre>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </details>
                     """);
+        }
+
+        [Fact]
+        public void Recursive_formatter_calls_do_not_cause_exceptions()
+        {
+            var widget = new Widget();
+            widget.Parts = new List<Part> { new() { Widget = widget } };
+
+            var formatter = HtmlFormatter.GetPreferredFormatterFor(widget.GetType());
+
+            FormatContext context = new(new StringWriter());
+
+            formatter.Invoking(f => f.Format(widget, context)).Should().NotThrow();
         }
 
         [Fact]
@@ -172,12 +194,18 @@ public partial class HtmlFormatterTests
                                 <tr>
                                     <td>Item1</td>
                                     <td>
-                                        <div class="dni-plaintext"><pre>123</pre></div>
+                                        <div class="dni-plaintext">
+                                            <pre>123</pre>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>Item2</td>
-                                    <td>hello</td>
+                                    <td>
+                                        <div class="dni-plaintext">
+                                            <pre>hello</pre>
+                                        </div>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

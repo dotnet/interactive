@@ -226,7 +226,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                      .ToArray();
 
         // represent IEnumerable as a separate special property at the end of the list
-        if (typeof(T).IsEnumerable())
+        if (typeof(T).IsEnumerable() && typeof(T).ShouldDisplayProperties())
         {
             var enumerableFormatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(typeof(T));
             (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag) enumerableAccessor =

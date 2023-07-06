@@ -767,4 +767,15 @@ public static class Formatter
         value = default;
         return false;
     }
+
+    internal static bool ShouldDisplayProperties(this Type type)
+    {
+        if (type.IsArray)
+        {
+            return false;
+        }
+
+
+        return false;
+    }
 }

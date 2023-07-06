@@ -139,6 +139,8 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
         };
         
 
+
+
         // TODO (When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements) write test
         throw new NotImplementedException();
     }
@@ -150,6 +152,9 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
         {
             Property = "cherry"
         };
+
+
+
 
         // TODO (When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements) write test
         throw new NotImplementedException();

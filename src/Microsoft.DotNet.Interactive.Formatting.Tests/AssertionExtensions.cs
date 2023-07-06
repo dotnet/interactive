@@ -18,9 +18,11 @@ public static class AssertionExtensions
 
         var actual = subject.IndentHtml();
 
+        expected = expected.IndentHtml();
+
         var diff = new DefaultStringComparer(true).Compare(
             actual,
-            expected.IndentHtml()).Error;
+            expected).Error;
 
         (diff ?? "")
             .Replace("Received:", "\nActual:\n")
