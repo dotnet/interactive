@@ -176,13 +176,13 @@ namespace Dummy
     {
         string IDictionary<int, string>.this[int key]
         {
-            get => "2";
+            get => "one";
             set => throw new NotImplementedException();
         }
 
         ICollection<int> IDictionary<int, string>.Keys => new[] { 1 };
 
-        ICollection<string> IDictionary<int, string>.Values => new[] { "2" };
+        ICollection<string> IDictionary<int, string>.Values => new[] { "one" };
 
         int ICollection<KeyValuePair<int, string>>.Count => 1;
 
@@ -202,7 +202,7 @@ namespace Dummy
 
         bool ICollection<KeyValuePair<int, string>>.Contains(KeyValuePair<int, string> item)
         {
-            return (item.Key == 1 && item.Value == "2");
+            return (item.Key == 1 && item.Value == "one");
         }
 
         bool IDictionary<int, string>.ContainsKey(int key)
@@ -217,7 +217,7 @@ namespace Dummy
 
         IEnumerator<KeyValuePair<int, string>> IEnumerable<KeyValuePair<int, string>>.GetEnumerator()
         {
-            return ((IEnumerable<KeyValuePair<int, string>>)new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+            return ((IEnumerable<KeyValuePair<int, string>>)new[] { new KeyValuePair<int, string>(1, "one") }).GetEnumerator();
         }
 
         bool IDictionary<int, string>.Remove(int key)
@@ -232,13 +232,13 @@ namespace Dummy
 
         bool IDictionary<int, string>.TryGetValue(int key, out string value)
         {
-            value = "2";
+            value = "one";
             return (key == 1);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable)new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+            return ((IEnumerable)new[] { new KeyValuePair<int, string>(1, "one") }).GetEnumerator();
         }
     }
 

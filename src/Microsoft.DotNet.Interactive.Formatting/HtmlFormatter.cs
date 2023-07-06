@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -46,10 +45,15 @@ public static class HtmlFormatter
         FormatContext context)
     {
         context.RequireDefaultStyles();
+        var tag = TagWithPlainTextStyling(value);
+        tag.WriteTo(context);
+    }
 
+    internal static PocketView TagWithPlainTextStyling(object value)
+    {
         PocketView tag = div(pre(value.ToDisplayString(PlainTextFormatter.MimeType)));
         tag.HtmlAttributes["class"] = "dni-plaintext";
-        tag.WriteTo(context);
+        return tag;
     }
 
     internal static FormatterMapByType FormattersForAnyObject;
@@ -121,7 +125,7 @@ public static class HtmlFormatter
 
         new HtmlFormatter<string>((s, context) =>
         {
-            // If PlainTextPreformat is true, then strings
+            // If PreformatPlainText is true, then strings
             // will have line breaks and white-space preserved
             FormatAndStyleAsPlainText(s, context);
             return true;

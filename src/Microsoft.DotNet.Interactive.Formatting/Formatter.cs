@@ -373,9 +373,9 @@ public static class Formatter
             return;
         }
 
-        var condensed = Formatter<T>.TypeIsScalar || !context.AllowRecursion;
+        var singleLine = Formatter<T>.TypeIsScalar || !context.AllowRecursion;
 
-        if (condensed)
+        if (singleLine)
         {
             context.Writer.Write("[ ");
         }
@@ -397,7 +397,7 @@ public static class Formatter
             {
                 if (i > 0)
                 {
-                    if (condensed)
+                    if (singleLine)
                     {
                         context.Writer.Write(", ");
                     }
@@ -409,7 +409,7 @@ public static class Formatter
 
                 context.IsStartingObjectWithinSequence = true;
 
-                if (typeof(T) == typeof(object))
+                if (!singleLine && typeof(T) == typeof(object))
                 {
                     context.Writer.Write("  - ");
                 }
@@ -432,7 +432,7 @@ public static class Formatter
             writer.Write("more)");
         }
 
-        if (condensed)
+        if (singleLine)
         {
             context.Writer.Write(" ]");
         }
@@ -787,21 +787,18 @@ public static class Formatter
             return false;
         }
         
-        if (type.IsConstructedGenericType)
+        foreach (var @interface in type.GetTypeInfo().ImplementedInterfaces)
         {
-            foreach (var @interface in type.GetTypeInfo().ImplementedInterfaces)
+            if (@interface.IsConstructedGenericType)
             {
-                if (@interface.IsConstructedGenericType)
+                if (@interface.GetGenericTypeDefinition() == typeof(IOrderedEnumerable<>))
                 {
-                    if (@interface.GetGenericTypeDefinition() == typeof(IOrderedEnumerable<>))
-                    {
-                        return false;
-                    }
-                    
-                    if (@interface.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                    {
-                        return false;
-                    }
+                    return false;
+                }
+
+                if (@interface.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                {
+                    return false;
                 }
             }
         }

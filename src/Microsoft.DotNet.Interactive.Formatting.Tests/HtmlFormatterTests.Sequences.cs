@@ -10,7 +10,6 @@ using Dummy;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
@@ -161,82 +160,101 @@ public partial class HtmlFormatterTests
             html.Should()
                 .BeEquivalentHtmlTo(
                     """
+                        
                         <table>
-                            <thead>
-                                <tr>
-                                    <th><i>key</i></th>
-                                    <th>value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>first</td>
-                                    <td>
-                                        <details open="open" class="dni-treeview">
-                                            <summary><span class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span></summary>
-                                            <div>
-                                                <table>
-                                                    <thead>
-                                                        <tr></tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <td>TypeName</td>
-                                                            <td>
-                                                                <div class="dni-plaintext">
-                                                                    <pre>entity one</pre>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Id</td>
-                                                            <td>
-                                                                <div class="dni-plaintext">
-                                                                    <pre>123</pre>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
+                          <thead>
+                            <tr>
+                              <th>
+                                <i>key</i>
+                              </th>
+                              <th>value</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>
+                                <div class="dni-plaintext">
+                                  <pre>first</pre>
+                                </div>
+                              </td>
+                              <td>
+                                <details open="open" class="dni-treeview">
+                                  <summary>
+                                    <span class="dni-code-hint">
+                                      <code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code>
+                                    </span>
+                                  </summary>
+                                  <div>
+                                    <table>
+                                      <thead>
+                                        <tr></tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td>TypeName</td>
+                                          <td>
+                                            <div class="dni-plaintext">
+                                              <pre>entity one</pre>
                                             </div>
-                                        </details>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>second</td>
-                                    <td>
-                                        <details open="open" class="dni-treeview">
-                                            <summary><span class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span></summary>
-                                            <div>
-                                                <table>
-                                                    <thead>
-                                                        <tr></tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <td>TypeName</td>
-                                                            <td>
-                                                                <div class="dni-plaintext">
-                                                                    <pre>entity two</pre>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Id</td>
-                                                            <td>
-                                                                <div class="dni-plaintext">
-                                                                    <pre>456</pre>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td>Id</td>
+                                          <td>
+                                            <div class="dni-plaintext">
+                                              <pre>123</pre>
                                             </div>
-                                        </details>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table> 
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </details>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <div class="dni-plaintext">
+                                  <pre>second</pre>
+                                </div>
+                              </td>
+                              <td>
+                                <details open="open" class="dni-treeview">
+                                  <summary>
+                                    <span class="dni-code-hint">
+                                      <code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code>
+                                    </span>
+                                  </summary>
+                                  <div>
+                                    <table>
+                                      <thead>
+                                        <tr></tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td>TypeName</td>
+                                          <td>
+                                            <div class="dni-plaintext">
+                                              <pre>entity two</pre>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td>Id</td>
+                                          <td>
+                                            <div class="dni-plaintext">
+                                              <pre>456</pre>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </details>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                         """);
         }
 
@@ -261,80 +279,98 @@ public partial class HtmlFormatterTests
                   .BeEquivalentHtmlTo(
                       """
                           <table>
-                              <thead>
-                                  <tr>
-                                      <th><i>key</i></th>
-                                      <th>value</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                  <tr>
-                                      <td>first</td>
-                                      <td>
-                                          <details open="open" class="dni-treeview">
-                                              <summary><span class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span></summary>
-                                              <div>
-                                                  <table>
-                                                      <thead>
-                                                          <tr></tr>
-                                                      </thead>
-                                                      <tbody>
-                                                          <tr>
-                                                              <td>TypeName</td>
-                                                              <td>
-                                                                  <div class="dni-plaintext">
-                                                                      <pre>entity one</pre>
-                                                                  </div>
-                                                              </td>
-                                                          </tr>
-                                                          <tr>
-                                                              <td>Id</td>
-                                                              <td>
-                                                                  <div class="dni-plaintext">
-                                                                      <pre>123</pre>
-                                                                  </div>
-                                                              </td>
-                                                          </tr>
-                                                      </tbody>
-                                                  </table>
+                            <thead>
+                              <tr>
+                                <th>
+                                  <i>key</i>
+                                </th>
+                                <th>value</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td>
+                                  <div class="dni-plaintext">
+                                    <pre>first</pre>
+                                  </div>
+                                </td>
+                                <td>
+                                  <details open="open" class="dni-treeview">
+                                    <summary>
+                                      <span class="dni-code-hint">
+                                        <code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code>
+                                      </span>
+                                    </summary>
+                                    <div>
+                                      <table>
+                                        <thead>
+                                          <tr></tr>
+                                        </thead>
+                                        <tbody>
+                                          <tr>
+                                            <td>TypeName</td>
+                                            <td>
+                                              <div class="dni-plaintext">
+                                                <pre>entity one</pre>
                                               </div>
-                                          </details>
-                                      </td>
-                                  </tr>
-                                  <tr>
-                                      <td>second</td>
-                                      <td>
-                                          <details open="open" class="dni-treeview">
-                                              <summary><span class="dni-code-hint"><code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code></span></summary>
-                                              <div>
-                                                  <table>
-                                                      <thead>
-                                                          <tr></tr>
-                                                      </thead>
-                                                      <tbody>
-                                                          <tr>
-                                                              <td>TypeName</td>
-                                                              <td>
-                                                                  <div class="dni-plaintext">
-                                                                      <pre>entity two</pre>
-                                                                  </div>
-                                                              </td>
-                                                          </tr>
-                                                          <tr>
-                                                              <td>Id</td>
-                                                              <td>
-                                                                  <div class="dni-plaintext">
-                                                                      <pre>456</pre>
-                                                                  </div>
-                                                              </td>
-                                                          </tr>
-                                                      </tbody>
-                                                  </table>
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td>Id</td>
+                                            <td>
+                                              <div class="dni-plaintext">
+                                                <pre>123</pre>
                                               </div>
-                                          </details>
-                                      </td>
-                                  </tr>
-                              </tbody>
+                                            </td>
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </details>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td>
+                                  <div class="dni-plaintext">
+                                    <pre>second</pre>
+                                  </div>
+                                </td>
+                                <td>
+                                  <details open="open" class="dni-treeview">
+                                    <summary>
+                                      <span class="dni-code-hint">
+                                        <code>Microsoft.DotNet.Interactive.Formatting.Tests.EntityId</code>
+                                      </span>
+                                    </summary>
+                                    <div>
+                                      <table>
+                                        <thead>
+                                          <tr></tr>
+                                        </thead>
+                                        <tbody>
+                                          <tr>
+                                            <td>TypeName</td>
+                                            <td>
+                                              <div class="dni-plaintext">
+                                                <pre>entity two</pre>
+                                              </div>
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td>Id</td>
+                                            <td>
+                                              <div class="dni-plaintext">
+                                                <pre>456</pre>
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </details>
+                                </td>
+                              </tr>
+                            </tbody>
                           </table>
                           """);
         }
@@ -564,7 +600,7 @@ public partial class HtmlFormatterTests
 
             html.Should().BeEquivalentHtmlTo(
                 $"""
-                    <table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{Tags.PlainTextBegin}1{Tags.PlainTextEnd}</td><td>{Tags.PlainTextBegin}2{Tags.PlainTextEnd}</td></tr></tbody></table>
+                    <table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{Tags.PlainTextBegin}1{Tags.PlainTextEnd}</td><td>{Tags.PlainTextBegin}one{Tags.PlainTextEnd}</td></tr></tbody></table>
                     """);
         }
 
@@ -646,48 +682,62 @@ public partial class HtmlFormatterTests
             formatter.Format(GetCollection(), writer);
 
             writer.ToString().RemoveStyleElement().Should()
-                  .BeEquivalentHtmlTo($@"<table>
-      <thead>
-        <tr>
-          <th>
-            <i>index</i>
-          </th>
-          <th>
-            <i>type</i>
-          </th>
-          <th>value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>0</td>
-          <td>
-            <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=net-7.0\""}>System.Boolean</a>
-            </span>
-          </td>
-          <td>{Tags.PlainTextBegin}True{Tags.PlainTextEnd}</td>
-        </tr>
-        <tr>
-          <td>1</td>
-          <td>
-            <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\""}>System.Int32</a>
-            </span>
-          </td>
-          <td>{Tags.PlainTextBegin}99{Tags.PlainTextEnd}</td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>
-            <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0\""}>System.String</a>
-            </span>
-          </td>
-          <td>Hello, World</td>
-        </tr>
-      </tbody>
-    </table>");
+                  .BeEquivalentHtmlTo($"""
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>
+                              <i>index</i>
+                            </th>
+                            <th>
+                              <i>type</i>
+                            </th>
+                            <th>value</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>0</td>
+                            <td>
+                              <span>
+                                <a href="https://docs.microsoft.com/dotnet/api/system.boolean?view=net-7.0">System.Boolean</a>
+                              </span>
+                            </td>
+                            <td>
+                              <div class="dni-plaintext">
+                                <pre>True</pre>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>1</td>
+                            <td>
+                              <span>
+                                <a href="https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0">System.Int32</a>
+                              </span>
+                            </td>
+                            <td>
+                              <div class="dni-plaintext">
+                                <pre>99</pre>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>2</td>
+                            <td>
+                              <span>
+                                <a href="https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0">System.String</a>
+                              </span>
+                            </td>
+                            <td>
+                              <div class="dni-plaintext">
+                                <pre>Hello, World</pre>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      """);
         }
             
         [Fact]
@@ -918,7 +968,7 @@ public partial class HtmlFormatterTests
 
             var html = instance.ToDisplayString("text/html").RemoveStyleElement();
 
-            html.Should().BeEquivalentHtmlTo($"""
+            html.Should().BeEquivalentHtmlTo("""
                 <details open="open" class="dni-treeview">
                   <summary>
                     <span class="dni-code-hint">
@@ -944,9 +994,34 @@ public partial class HtmlFormatterTests
                             <i>(values)</i>
                           </td>
                           <td>
-                            <div class="dni-plaintext">
-                              <pre>[ apple, banana ]</pre>
-                            </div>
+                            <table>
+                              <thead>
+                                <tr>
+                                  <th>
+                                    <i>index</i>
+                                  </th>
+                                  <th>value</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td>0</td>
+                                  <td>
+                                    <div class="dni-plaintext">
+                                      <pre>apple</pre>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td>1</td>
+                                  <td>
+                                    <div class="dni-plaintext">
+                                      <pre>banana</pre>
+                                    </div>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
                           </td>
                         </tr>
                       </tbody>
@@ -966,7 +1041,7 @@ public partial class HtmlFormatterTests
 
             var html = instance.ToDisplayString("text/html").RemoveStyleElement();
 
-            html.Should().BeEquivalentHtmlTo($"""
+            html.Should().BeEquivalentHtmlTo("""
                 <details open="open" class="dni-treeview">
                   <summary>
                     <span class="dni-code-hint">

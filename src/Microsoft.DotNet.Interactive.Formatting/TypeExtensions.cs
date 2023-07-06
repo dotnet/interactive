@@ -183,7 +183,7 @@ internal static class TypeExtensions
 
         Type enumerableInterface;
 
-        if (type.IsEnumerable()   )
+        if (type.IsEnumerable())
         {
             enumerableInterface = type;
         }

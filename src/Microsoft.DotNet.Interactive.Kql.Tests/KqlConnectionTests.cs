@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 
-using Microsoft.Diagnostics.Runtime.Utilities;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;

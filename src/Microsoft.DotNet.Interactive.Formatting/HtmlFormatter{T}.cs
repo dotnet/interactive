@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -54,35 +54,41 @@ public class HtmlFormatter<T> : TypeFormatter<T>
     }
 
     public override string MimeType => HtmlFormatter.MimeType;
-    
+
     internal static HtmlFormatter<T> CreateTableFormatterForAnyEnumerable()
     {
         Func<T, IEnumerable> getKeys = null;
         Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
-        bool flatten = false;
+        bool summarize = false;
 
         if (typeof(T).IsDictionary(
                 out var getKeys1,
                 out var getValues1,
                 out var keyType1,
                 out var valueType1))
-        { 
-            getKeys = instance => getKeys1(instance);  
+        {
+            getKeys = instance => getKeys1(instance);
             getValues = instance => getValues1(instance);
         }
         else
         {
             var elementType = typeof(T).GetElementTypeIfEnumerable();
-
+            
             if (elementType?.IsScalar() is true)
             {
-                flatten = true;
+                summarize = true;
             }
         }
 
-        return new HtmlFormatter<T>((value, context) => BuildTable(value, context, flatten));
+        return new HtmlFormatter<T>((value, context) =>
+                                        BuildTable(value, context, getKeys, getValues, summarize));
 
-        bool BuildTable(T source, FormatContext context, bool summarize)
+        static bool BuildTable(
+            T source,
+            FormatContext context,
+            Func<T, IEnumerable> getKeys,
+            Func<T, IEnumerable> getValues,
+            bool summarize)
         {
             context.RequireDefaultStyles();
 
@@ -98,7 +104,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
             var (rowData, remainingCount) = getValues(source)
                                             .Cast<object>()
-                                            .Select((v, i) => (v, i))
+                                            .Select((value, index) => (value, index))
                                             .TakeAndCountRemaining(Formatter.ListExpansionLimit, canCountRemainder);
 
             if (rowData.Count == 0)
@@ -169,7 +175,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
                 if (typesAreDifferent)
                 {
-                    var type = rowData[rowIndex].v?.GetType();
+                    var type = rowData[rowIndex].value?.GetType();
 
                     rowValues.Add(type);
                 }
@@ -186,7 +192,17 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                     }
                 }
 
-                rows.Add(tr(rowValues.Select(r => td(r))));
+                rows.Add(tr(rowValues.Select(value =>
+                {
+                    if (value is string stringValue)
+                    {
+                        return td(HtmlFormatter.TagWithPlainTextStyling(stringValue));
+                    }
+                    else
+                    {
+                        return td(value);
+                    }
+                })));
             }
 
             if (remainingCount > 0)
@@ -231,6 +247,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             if (typeof(T).ShouldDisplayProperties())
             {
                 var enumerableFormatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(typeof(T));
+
                 (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag) enumerableAccessor =
                     (new HtmlTag("td", new HtmlTag("i", "(values)")), obj => new HtmlTag("td", c =>
                         {
