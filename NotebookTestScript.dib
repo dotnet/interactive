@@ -227,10 +227,10 @@ input
 
 #!fsharp
 
-let input = task  {
+let input = (task  {
                     return! Microsoft.DotNet.Interactive.Kernel.GetInputAsync ("give me data")
-                  } 
-input.Result
+                  }).Result
+input
 
 #!markdown
 
