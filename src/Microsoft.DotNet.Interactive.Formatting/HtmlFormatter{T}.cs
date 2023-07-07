@@ -93,10 +93,10 @@ public class HtmlFormatter<T> : TypeFormatter<T>
             context.RequireDefaultStyles();
 
             using var _ = context.IncrementTableDepth();
-
-            if (summarize || !context.AllowRecursion)
+            
+            if (summarize)
             {
-                HtmlFormatter.FormatAndStyleAsPlainText(source, context);
+                HtmlFormatter.FormatAndStyleAsPlainText(source, context, PlainTextSummaryFormatter.MimeType);
                 return true;
             }
 
@@ -196,7 +196,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                 {
                     if (value is string stringValue)
                     {
-                        return td(HtmlFormatter.TagWithPlainTextStyling(stringValue));
+                        return td(HtmlFormatter.TagWithPlainTextStyling(stringValue, PlainTextFormatter.MimeType));
                     }
                     else
                     {
@@ -244,7 +244,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
         // represent IEnumerable as a separate special property "(values)" at the end of the list
         if (typeof(T).IsEnumerable())
         {
-            if (typeof(T).ShouldDisplayProperties())
+            if (typeof(T).ShouldIncludePropertiesInOutput())
             {
                 var enumerableFormatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(typeof(T));
 
@@ -274,11 +274,11 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                 return true;
             }
 
-            HtmlTag code = new HtmlTag("code", c =>
+            HtmlTag summaryContent = new("code", context =>
             {
-                var formatter = PlainTextSummaryFormatter.GetPreferredFormatterFor(source?.GetType());
+                var summary = source.ToDisplayString(PlainTextSummaryFormatter.MimeType).HtmlEncode();
 
-                formatter.Format(source, c);
+                context.Writer.Write(summary);
             });
 
             var attributes = new HtmlAttributes();
@@ -292,7 +292,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
             PocketView view = details[attributes](
                 summary(
-                    span[@class: "dni-code-hint"](code)),
+                    span[@class: "dni-code-hint"](summaryContent)),
                 div(
                     Html.Table(
                         headers: null,

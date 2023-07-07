@@ -210,10 +210,12 @@ TheWidgets: Widget[]
 
             formatter.Format(new object[] { 1, null, 3 }, writer);
 
-            writer.ToString().Should().Be(@"Object[]
-  - 1
-  - <null>
-  - 3".ReplaceLineEndings());
+            writer.ToString().Should().Be("""
+                Object[]
+                  - 1
+                  - <null>
+                  - 3
+                """.ReplaceLineEndings());
         }
 
         [Fact]
@@ -270,15 +272,20 @@ TheWidgets: Widget[]
         [Fact]
         public void When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements()
         {
-            var instance = new ClassWithPropertiesThatIsAlsoIEnumerable(new[] { "apple", "banana" })
+            var instance = new ClassWithPropertiesThatIsAlsoIEnumerable(new object[] { "apple", "banana" })
             {
                 Property = "cherry"
             };
 
+            var formatted  = instance.ToDisplayString(PlainTextFormatter.MimeType);
 
-
-            // FIX (When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements) write test
-            throw new NotImplementedException();
+            formatted.Should().Match("""
+                ClassWithPropertiesThatIsAlsoIEnumerable
+                      Property: cherry
+                      (values): *
+                        - apple
+                        - banana
+                """);
         }
 
         [Fact]
@@ -289,8 +296,14 @@ TheWidgets: Widget[]
                 Property = "fig"
             };
 
-            // FIX (When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements) write test
-            throw new NotImplementedException();
+            var formatted  = instance.ToDisplayString(PlainTextFormatter.MimeType);
+
+
+            formatted.Should().Be("""
+                ClassWithPropertiesThatIsAlsoIEnumerable<String>
+                      Property: fig
+                      (values): [ durian, elderberry ]
+                """);
         }
     }
 }

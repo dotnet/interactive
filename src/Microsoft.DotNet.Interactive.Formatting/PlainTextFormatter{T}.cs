@@ -87,7 +87,7 @@ public class PlainTextFormatter<T> : TypeFormatter<T>
                 .Select(i => i.GenericTypeArguments[0])
                 .FirstOrDefault() is { } t)
         {
-            var joinMethod = typeof(Formatter).GetMethod(nameof(Formatter.JoinGeneric), BindingFlags.NonPublic | BindingFlags.Static);
+            var joinMethod = typeof(PlainTextFormatter).GetMethod(nameof(PlainTextFormatter.JoinGeneric), BindingFlags.NonPublic | BindingFlags.Static);
 
             var genericMethod = joinMethod!.MakeGenericMethod(new[] { t });
 
@@ -107,10 +107,14 @@ public class PlainTextFormatter<T> : TypeFormatter<T>
 
         return new((value, context) =>
         {
+            using var a = context.IncrementDepth();
+            using var b = context.IncrementDepth();
+
             switch (value)
             {
                 case IEnumerable enumerable:
-                    Formatter.Join(enumerable,
+
+                    PlainTextFormatter.Join(enumerable,
                         context.Writer,
                         context);
                     break;

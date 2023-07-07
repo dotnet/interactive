@@ -426,7 +426,6 @@ public class SubmissionParser
 
             if (valueProduced is { })
             {
-                // FIX: (InterpolateValueFromKernel) clean up
                 string interpolatedValue = null;
 
                 if (valueProduced.Value is { } value)

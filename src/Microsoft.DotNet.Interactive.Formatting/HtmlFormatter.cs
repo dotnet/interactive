@@ -42,16 +42,19 @@ public static class HtmlFormatter
 
     internal static void FormatAndStyleAsPlainText(
         object value,
-        FormatContext context)
+        FormatContext context,
+        string mimeType = PlainTextFormatter.MimeType)
     {
         context.RequireDefaultStyles();
-        var tag = TagWithPlainTextStyling(value);
+        var tag = TagWithPlainTextStyling(value, mimeType);
         tag.WriteTo(context);
     }
 
-    internal static PocketView TagWithPlainTextStyling(object value)
+    internal static PocketView TagWithPlainTextStyling(
+        object value, 
+        string mimeType = PlainTextFormatter.MimeType)
     {
-        PocketView tag = div(pre(value.ToDisplayString(PlainTextFormatter.MimeType)));
+        PocketView tag = div(pre(value.ToDisplayString(mimeType)));
         tag.HtmlAttributes["class"] = "dni-plaintext";
         return tag;
     }
@@ -286,7 +289,6 @@ public static class HtmlFormatter
                     break;
 
                 case JsonValueKind.String:
-
                     var value = element.GetString();
                     view = span($"\"{value}\"");
 

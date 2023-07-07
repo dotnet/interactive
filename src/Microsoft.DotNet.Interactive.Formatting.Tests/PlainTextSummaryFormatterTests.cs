@@ -129,34 +129,4 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
 
         formatted.Should().StartWith("System.Exception: oops!");
     }
-
-    [Fact]
-    public void When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements()
-    {
-        var instance = new ClassWithPropertiesThatIsAlsoIEnumerable(new[] { "apple", "banana" })
-        {
-            Property = "cherry"
-        };
-        
-
-
-
-        // TODO (When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements) write test
-        throw new NotImplementedException();
-    }
-
-    [Fact]
-    public void When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements()
-    {
-         var instance = new ClassWithPropertiesThatIsAlsoIEnumerable(new[] { "apple", "banana" })
-        {
-            Property = "cherry"
-        };
-
-
-
-
-        // TODO (When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements) write test
-        throw new NotImplementedException();
-    }
 }

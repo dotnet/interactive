@@ -356,88 +356,6 @@ public static class Formatter
             mimeTypeParam).Compile();
     }
 
-    internal static void Join(
-        IEnumerable list,
-        TextWriter writer,
-        FormatContext context) =>
-        JoinGeneric(list.Cast<object>(), writer, context);
-
-    internal static void JoinGeneric<T>(
-        IEnumerable<T> seq,
-        TextWriter writer,
-        FormatContext context)
-    {
-        if (seq is null)
-        {
-            writer.Write(NullString);
-            return;
-        }
-
-        var singleLine = Formatter<T>.TypeIsScalar || !context.AllowRecursion;
-
-        if (singleLine)
-        {
-            context.Writer.Write("[ ");
-        }
-        else
-        {
-            seq.GetType().WriteCSharpDeclarationTo(context.Writer, true);
-
-            context.Writer.WriteLine();
-        }
-
-        var listExpansionLimit = Formatter<T>.ListExpansionLimit;
-
-        var (itemsToWrite, remainingCount) = seq.TakeAndCountRemaining(listExpansionLimit);
-
-        for (var i = 0; i < itemsToWrite.Count; i++)
-        {
-            var item = itemsToWrite[i];
-            if (i < listExpansionLimit)
-            {
-                if (i > 0)
-                {
-                    if (singleLine)
-                    {
-                        context.Writer.Write(", ");
-                    }
-                    else
-                    {
-                        context.Writer.WriteLine();
-                    }
-                }
-
-                context.IsStartingObjectWithinSequence = true;
-
-                if (!singleLine && typeof(T) == typeof(object))
-                {
-                    context.Writer.Write("  - ");
-                }
-
-                item.FormatTo(context);
-
-                context.IsStartingObjectWithinSequence = false;
-            }
-        }
-
-        if (remainingCount != 0)
-        {
-            writer.Write(" ... (");
-
-            if (remainingCount is { })
-            {
-                writer.Write($"{remainingCount} ");
-            }
-
-            writer.Write("more)");
-        }
-
-        if (singleLine)
-        {
-            context.Writer.Write(" ]");
-        }
-    }
-
     /// <summary>
     /// Registers a formatter to be used when formatting.
     /// </summary>
@@ -768,7 +686,7 @@ public static class Formatter
         return false;
     }
 
-    internal static bool ShouldDisplayProperties(this Type type)
+    internal static bool ShouldIncludePropertiesInOutput(this Type type)
     {
         if (type.IsArray)
         {
@@ -779,8 +697,6 @@ public static class Formatter
         {
             return false;
         }
-
-        // FIX: (ShouldDisplayProperties) 
 
         if (typeof(ICollection).IsAssignableFrom(type))
         {

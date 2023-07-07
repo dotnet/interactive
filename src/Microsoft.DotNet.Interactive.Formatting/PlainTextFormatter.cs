@@ -5,15 +5,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-
+using System.Threading;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
 
@@ -51,50 +53,67 @@ public static class PlainTextFormatter
             };
         }
 
+        var formatEnumerableValues = typeof(T).IsEnumerable();
+        var shouldOnlyDisplayEnumerableValues = formatEnumerableValues &&
+                                                !typeof(T).ShouldIncludePropertiesInOutput();
+
+        if (!shouldOnlyDisplayEnumerableValues && accessors.Length == 0)
+        {
+            // If we haven't got any members to show, just resort to ToString()
+            return FormatUsingToString;
+        }
+
         return FormatObject;
+
+        bool FormatUsingToString(T target, FormatContext context)
+        {
+            context.Writer.Write(target.ToString());
+            return true;
+        }
 
         bool FormatObject(T target, FormatContext context)
         {
-            // If we haven't got any members to show, just resort to ToString()
-            if (accessors.Length == 0)
+            if (accessors.Length > 0 && !shouldOnlyDisplayEnumerableValues)
             {
-                context.Writer.Write(target.ToString());
-                return true;
-            }
-
-            var indent = context.Indent;
-
-            if (!context.IsStartingObjectWithinSequence)
-            {
-                var type = target.GetType();
-                type.WriteCSharpDeclarationTo(context.Writer, true);
-                context.Writer.WriteLine();
-            }
-
-            for (var i = 0; i < accessors.Length; i++)
-            {
-                var accessor = accessors[i];
-
-                object value = accessor.GetValueOrException(target);
-
-                WriteStartProperty(context);
-                context.Writer.Write(accessor.MemberName);
-                context.Writer.Write(": ");
-                value.FormatTo(context);
-
-                if (i < accessors.Length - 1)
+                if (!context.IsStartingObjectWithinSequence)
                 {
+                    var type = target.GetType();
+                    type.WriteCSharpDeclarationTo(context.Writer, true);
                     context.Writer.WriteLine();
+                }
+
+                for (var i = 0; i < accessors.Length; i++)
+                {
+                    var accessor = accessors[i];
+
+                    object value = accessor.GetValueOrException(target);
+
+                    WriteStartProperty(context);
+                    context.Writer.Write(accessor.MemberName);
+                    context.Writer.Write(": ");
+                    value.FormatTo(context);
+
+                    if (i < accessors.Length - 1 && !formatEnumerableValues)
+                    {
+                        context.Writer.WriteLine();
+                    }
                 }
             }
 
-            if (accessors.Length < accessors.Length)
+            if (formatEnumerableValues)
             {
-                WriteIndent(context);
-                context.Writer.Write("...");
-            }
+                if (!shouldOnlyDisplayEnumerableValues)
+                {
+                    context.Writer.WriteLine();
+                    WriteStartProperty(context);
+                    context.Writer.Write("(values)");
+                    context.Writer.Write(": ");
+                }
 
-            context.Indent = indent;
+                var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(typeof(T));
+
+                formatter.Format(target, context);
+            }
 
             return true;
         }
@@ -244,19 +263,6 @@ public static class PlainTextFormatter
             return true;
         }),
 
-        // Fallback for IEnumerable
-        new PlainTextFormatter<IEnumerable>((obj, context) =>
-        {
-            if (obj is null)
-            {
-                context.Writer.Write(Formatter.NullString);
-                return true;
-            }
-            var type = obj.GetType();
-            var formatter = FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
-            return formatter.Format(obj, context);
-        }),
-
         // BigInteger should be displayed as plain text
         new PlainTextFormatter<BigInteger>((value, context) =>
         {
@@ -306,6 +312,88 @@ public static class PlainTextFormatter
         else
         {
             WriteIndent(context);
+        }
+    }
+
+    internal static void Join(
+        IEnumerable list,
+        TextWriter writer,
+        FormatContext context) =>
+        JoinGeneric(list.Cast<object>(), writer, context);
+
+    internal static void JoinGeneric<T>(
+        IEnumerable<T> seq,
+        TextWriter writer,
+        FormatContext context)
+    {
+        if (seq is null)
+        {
+            writer.Write(Formatter.NullString);
+            return;
+        }
+
+        var singleLine = Formatter<T>.TypeIsScalar || !context.AllowRecursion;
+
+        if (singleLine)
+        {
+            context.Writer.Write("[ ");
+        }
+        else
+        {
+            seq.GetType().WriteCSharpDeclarationTo(context.Writer, true);
+
+            context.Writer.WriteLine();
+        }
+
+        var listExpansionLimit = Formatter<T>.ListExpansionLimit;
+
+        var (itemsToWrite, remainingCount) = seq.TakeAndCountRemaining(listExpansionLimit);
+
+        for (var i = 0; i < itemsToWrite.Count; i++)
+        {
+            var item = itemsToWrite[i];
+            if (i < listExpansionLimit)
+            {
+                if (i > 0)
+                {
+                    if (singleLine)
+                    {
+                        context.Writer.Write(", ");
+                    }
+                    else
+                    {
+                        context.Writer.WriteLine();
+                    }
+                }
+
+                context.IsStartingObjectWithinSequence = true;
+
+                if (!singleLine && typeof(T) == typeof(object))
+                {
+                    WriteIndent(context, "  - ");
+                }
+
+                item.FormatTo(context);
+
+                context.IsStartingObjectWithinSequence = false;
+            }
+        }
+
+        if (remainingCount != 0)
+        {
+            writer.Write(" ... (");
+
+            if (remainingCount is { })
+            {
+                writer.Write($"{remainingCount} ");
+            }
+
+            writer.Write("more)");
+        }
+
+        if (singleLine)
+        {
+            context.Writer.Write(" ]");
         }
     }
 }
