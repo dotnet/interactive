@@ -105,7 +105,11 @@ return command.toJson();`
         expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos)
             .to.deep.equal(
                 [{
-                    formattedValue: { mimeType: 'text/plain', value: '42' },
+                    formattedValue: {
+                        mimeType: 'text/plain',
+                        suppressDisplay: false,
+                        value: '42'
+                    },
                     name: valueName,
                     preferredMimeTypes: [],
                     typeName: 'number'
@@ -127,7 +131,11 @@ return command.toJson();`
         expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos)
             .to.deep.equal(
                 [{
-                    formattedValue: { mimeType: 'text/plain', value: '[42,43]' },
+                    formattedValue: {
+                        mimeType: 'text/plain',
+                        suppressDisplay: false,
+                        value: '[42,43]'
+                    },
                     name: valueName,
                     preferredMimeTypes: [],
                     typeName: 'number[]'
@@ -149,19 +157,31 @@ return command.toJson();`
         expect((<commandsAndEvents.ValueInfosProduced>events.find(e => e.eventType === commandsAndEvents.ValueInfosProducedType)!.event).valueInfos)
             .to.deep.equal(
                 [{
-                    formattedValue: { mimeType: 'text/plain', value: 'NaN' },
+                    formattedValue: {
+                        mimeType: 'text/plain',
+                        suppressDisplay: false,
+                        value: 'NaN'
+                    },
                     name: `${valueName}1`,
                     preferredMimeTypes: [],
                     typeName: 'number'
                 },
                 {
-                    formattedValue: { mimeType: 'text/plain', value: 'Infinity' },
+                    formattedValue: {
+                        mimeType: 'text/plain',
+                        suppressDisplay: false,
+                        value: 'Infinity'
+                    },
                     name: `${valueName}2`,
                     preferredMimeTypes: [],
                     typeName: 'number'
                 },
                 {
-                    formattedValue: { mimeType: 'text/plain', value: '-Infinity' },
+                    formattedValue: {
+                        mimeType: 'text/plain',
+                        suppressDisplay: false,
+                        value: '-Infinity'
+                    },
                     name: `${valueName}3`,
                     preferredMimeTypes: [],
                     typeName: 'number'
@@ -184,6 +204,7 @@ return command.toJson();`
         expect((<commandsAndEvents.ValueProduced>events.find(e => e.eventType === commandsAndEvents.ValueProducedType)!.event).formattedValue)
             .to.deep.equal({
                 mimeType: 'application/json',
+                suppressDisplay: false,
                 value: '42'
             });
     });
