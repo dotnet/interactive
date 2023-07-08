@@ -80,6 +80,7 @@ describe("htmlKernel", () => {
             formattedValues:
                 [{
                     mimeType: 'text/html',
+                    suppressDisplay: false,
                     value: '<div id="0">a</div><div id="0">b</div>'
                 }]
         });
@@ -126,6 +127,7 @@ describe("htmlKernel", () => {
                 formattedValues:
                     [{
                         mimeType: 'text/html',
+                        suppressDisplay: false,
                         value: '<div id="0"><script type="module">foo = 122;</script><div id="1"><script type="module">bar = 211;</script></div></div>'
                     }]
             }
