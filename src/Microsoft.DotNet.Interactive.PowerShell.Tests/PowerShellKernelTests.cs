@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Tests;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -218,48 +221,68 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         var kernel = CreateKernel(Language.PowerShell);
         var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
 
-        var mimeType = "text/html";
         var formattedHtml =
-            @"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>prop1</td><td>value1</td></tr><tr><td>prop2</td><td>value2</td></tr><tr><td>prop3</td><td>value3</td></tr></tbody></table><style>
-.dni-code-hint {
-    font-style: italic;
-    overflow: hidden;
-    white-space: nowrap;
-}
-.dni-treeview {
-    white-space: nowrap;
-}
-.dni-treeview td {
-    vertical-align: top;
-    text-align: start;
-}
-details.dni-treeview {
-    padding-left: 1em;
-}
-table td {
-    text-align: start;
-}
-table tr { 
-    vertical-align: top; 
-    margin: 0em 0px;
-}
-table tr td pre 
-{ 
-    vertical-align: top !important; 
-    margin: 0em 0px !important;
-} 
-table th {
-    text-align: start;
-}
-</style>";
-        var fv = new FormattedValue(mimeType, formattedHtml);
+            """
+                <table>
+                  <thead>
+                    <tr>
+                      <th>
+                        <i>key</i>
+                      </th>
+                      <th>value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>prop1</pre>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>value1</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>prop2</pre>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>value2</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>prop3</pre>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>value3</pre>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                """;
 
-        result.Events.Should().SatisfyRespectively(
-            e => e.Should().BeOfType<CodeSubmissionReceived>(),
-            e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-            e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.ElementAt(0).Should().BeEquivalentToRespectingRuntimeTypes(fv),
-            e => e.Should().BeOfType<CommandSucceeded>()
-        );
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+              .Which
+              .Value.RemoveStyleElement()
+              .Should()
+              .BeEquivalentHtmlTo(formattedHtml);
     }
 
     [Fact]
