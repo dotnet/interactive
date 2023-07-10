@@ -26,7 +26,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.String NullString { get; set;}
     public static System.Int32 RecursionLimit { get; set;}
     public static System.Void Format(System.Object instance, System.IO.TextWriter writer)
-    public static System.Void FormatTo<T>(FormatContext context, System.String mimeType = text/plain)
+    public static System.Void FormatTo<T>(FormatContext context, System.String mimeType)
     public static ITypeFormatter GetPreferredFormatterFor(System.Type actualType, System.String mimeType)
     public static System.Collections.Generic.IReadOnlyCollection<System.String> GetPreferredMimeTypesFor(System.Type type)
     public static System.Void Register(ITypeFormatter formatter)
@@ -105,6 +105,7 @@ Microsoft.DotNet.Interactive.Formatting
   public class HtmlTag, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String name)
     .ctor(System.String name, System.String text)
+    .ctor(System.String name, Microsoft.AspNetCore.Html.IHtmlContent content)
     .ctor(System.String name, System.Action<FormatContext> content)
     public System.Action<FormatContext> Content { get; set;}
     public HtmlAttributes HtmlAttributes { get; set;}
