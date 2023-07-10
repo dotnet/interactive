@@ -91,7 +91,7 @@ public static class PlainTextFormatter
                     WriteStartProperty(context);
                     context.Writer.Write(accessor.MemberName);
                     context.Writer.Write(": ");
-                    value.FormatTo(context);
+                    value.FormatTo(context, MimeType);
 
                     if (i < accessors.Length - 1 && !formatEnumerableValues)
                     {
@@ -128,7 +128,7 @@ public static class PlainTextFormatter
                 {
                     var value = accessors[i].GetValueOrException(target);
 
-                    value.FormatTo(context);
+                    value.FormatTo(context, MimeType);
 
                     if (i < accessors.Length - 1)
                     {
@@ -148,7 +148,7 @@ public static class PlainTextFormatter
 
                     WriteStartProperty(context);
 
-                    value.FormatTo(context);
+                    value.FormatTo(context, MimeType);
 
                     context.IsStartingObjectWithinSequence = true;
 
@@ -187,7 +187,7 @@ public static class PlainTextFormatter
                 var pair = pairs[i];
                 context.Writer.Write(pair.Key);
                 context.Writer.Write(": ");
-                pair.Value.FormatTo(context);
+                pair.Value.FormatTo(context, MimeType);
 
                 if (i < length - 1)
                 {
@@ -208,7 +208,7 @@ public static class PlainTextFormatter
         {
             context.Writer.Write(pair.Key);
             context.Writer.Write(": ");
-            pair.Value.FormatTo(context);
+            pair.Value.FormatTo(context, MimeType);
             return true;
         }),
 
@@ -373,7 +373,7 @@ public static class PlainTextFormatter
                     WriteIndent(context, "  - ");
                 }
 
-                item.FormatTo(context);
+                item.FormatTo(context, MimeType);
 
                 context.IsStartingObjectWithinSequence = false;
             }
