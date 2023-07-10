@@ -128,8 +128,6 @@ public static class HtmlFormatter
 
         new HtmlFormatter<string>((s, context) =>
         {
-            // If PreformatPlainText is true, then strings
-            // will have line breaks and white-space preserved
             FormatAndStyleAsPlainText(s, context);
             return true;
         }),

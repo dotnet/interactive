@@ -107,8 +107,8 @@ public class PlainTextFormatter<T> : TypeFormatter<T>
 
         return new((value, context) =>
         {
-            using var a = context.IncrementDepth();
-            using var b = context.IncrementDepth();
+            using var _ = context.IncrementDepth();
+            using var __ = context.IncrementDepth();
 
             switch (value)
             {

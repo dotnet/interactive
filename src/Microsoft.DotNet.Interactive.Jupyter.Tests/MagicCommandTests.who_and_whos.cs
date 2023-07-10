@@ -12,8 +12,6 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
-using static System.Environment;
-using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 #pragma warning disable 8509 // don't warn on incomplete pattern matches
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
