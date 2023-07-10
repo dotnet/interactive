@@ -69,7 +69,6 @@ public class KernelInvocationContext : IDisposable
             };
         }));
 
-        // FIX: (KernelInvocationContext) can we get this as a return value when Console.Subscribe is called?
         if (AsyncContext.Id is not null)
         {
             _consoleAsyncContextId = AsyncContext.Id.Value;

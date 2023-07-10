@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Csv;
 
@@ -40,10 +41,10 @@ public class CsvFormatter<T> : TypeFormatter<T>
         }
 
         var isDictionary =
-            typeof(T).GetAllInterfaces()
+            typeof(T).GetTypeInfo().ImplementedInterfaces
                      .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)) is not null
             ||
-            typeof(T).GetAllInterfaces()
+            typeof(T).GetTypeInfo().ImplementedInterfaces
                      .FirstOrDefault(i => i == typeof(IDictionary)) is not null;
 
         if (isDictionary)

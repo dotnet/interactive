@@ -216,6 +216,10 @@ public class PocketView : DynamicObject, IHtmlContent
                     view.WriteTo(context);
                     break;
 
+                case HtmlTag tag:
+                    tag.WriteTo(context);
+                    break;
+
                 case IHtmlContent html:
                     html.WriteTo(context.Writer, HtmlEncoder.Default);
                     break;

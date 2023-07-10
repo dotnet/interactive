@@ -309,7 +309,7 @@ public static class Formatter
     public static void FormatTo<T>(
         this T obj,
         FormatContext context,
-        string mimeType = PlainTextFormatter.MimeType)
+        string mimeType)
     {
         if (obj is not null)
         {
@@ -353,88 +353,6 @@ public static class Formatter
             contextParam,
             targetParam,
             mimeTypeParam).Compile();
-    }
-
-    internal static void Join(
-        IEnumerable list,
-        TextWriter writer,
-        FormatContext context) =>
-        JoinGeneric(list.Cast<object>(), writer, context);
-
-    internal static void JoinGeneric<T>(
-        IEnumerable<T> seq,
-        TextWriter writer,
-        FormatContext context)
-    {
-        if (seq is null)
-        {
-            writer.Write(NullString);
-            return;
-        }
-
-        var condensed = Formatter<T>.TypeIsScalar || !context.AllowRecursion;
-
-        if (condensed)
-        {
-            context.Writer.Write("[ ");
-        }
-        else
-        {
-            seq.GetType().WriteCSharpDeclarationTo(context.Writer, true);
-
-            context.Writer.WriteLine();
-        }
-
-        var listExpansionLimit = Formatter<T>.ListExpansionLimit;
-
-        var (itemsToWrite, remainingCount) = seq.TakeAndCountRemaining(listExpansionLimit);
-
-        for (var i = 0; i < itemsToWrite.Count; i++)
-        {
-            var item = itemsToWrite[i];
-            if (i < listExpansionLimit)
-            {
-                if (i > 0)
-                {
-                    if (condensed)
-                    {
-                        context.Writer.Write(", ");
-                    }
-                    else
-                    {
-                        context.Writer.WriteLine();
-                    }
-                }
-
-                context.IsStartingObjectWithinSequence = true;
-
-                if (typeof(T) == typeof(object))
-                {
-                    context.Writer.Write("  - ");
-                }
-
-                item.FormatTo(context);
-
-                context.IsStartingObjectWithinSequence = false;
-            }
-        }
-
-        if (remainingCount != 0)
-        {
-            writer.Write(" ... (");
-
-            if (remainingCount is { })
-            {
-                writer.Write($"{remainingCount} ");
-            }
-
-            writer.Write("more)");
-        }
-
-        if (condensed)
-        {
-            context.Writer.Write(" ]");
-        }
     }
 
     /// <summary>
@@ -765,5 +683,41 @@ public static class Formatter
 
         value = default;
         return false;
+    }
+
+    internal static bool ShouldIncludePropertiesInOutput(this Type type)
+    {
+        if (type.IsArray)
+        {
+            return false;
+        }
+
+        if (type.IsNestedPrivate) //e.g. RangeIterator
+        {
+            return false;
+        }
+
+        if (typeof(ICollection).IsAssignableFrom(type))
+        {
+            return false;
+        }
+        
+        foreach (var @interface in type.GetTypeInfo().ImplementedInterfaces)
+        {
+            if (@interface.IsConstructedGenericType)
+            {
+                if (@interface.GetGenericTypeDefinition() == typeof(IOrderedEnumerable<>))
+                {
+                    return false;
+                }
+
+                if (@interface.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

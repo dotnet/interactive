@@ -37,6 +37,13 @@ public class HtmlTag : IHtmlContent
 
         void Write(FormatContext context) => context.Writer.Write(text);
     }
+    
+    public HtmlTag(string name, IHtmlContent content) : this(name)
+    {
+        Content = Write;
+
+        void Write(FormatContext context) => content.WriteTo(context.Writer, HtmlEncoder.Default);
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HtmlTag"/> class.
@@ -123,7 +130,6 @@ public class HtmlTag : IHtmlContent
     /// <summary>
     ///   Writes the tag contents (without outer HTML elements) to the specified writer.
     /// </summary>
-    /// <param name = "writer">The writer.</param>
     /// <param name="context">The context for the current format operation.</param>
     protected virtual void WriteContentsTo(FormatContext context)
     {

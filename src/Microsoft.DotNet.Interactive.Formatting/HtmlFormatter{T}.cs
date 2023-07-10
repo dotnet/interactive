@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -54,43 +54,49 @@ public class HtmlFormatter<T> : TypeFormatter<T>
     }
 
     public override string MimeType => HtmlFormatter.MimeType;
-    
+
     internal static HtmlFormatter<T> CreateTableFormatterForAnyEnumerable()
     {
         Func<T, IEnumerable> getKeys = null;
         Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
-        bool flatten = false;
+        bool summarize = false;
 
         if (typeof(T).IsDictionary(
                 out var getKeys1,
                 out var getValues1,
                 out var keyType1,
                 out var valueType1))
-        { 
-            getKeys = instance => getKeys1(instance);  
+        {
+            getKeys = instance => getKeys1(instance);
             getValues = instance => getValues1(instance);
         }
         else
         {
             var elementType = typeof(T).GetElementTypeIfEnumerable();
-
+            
             if (elementType?.IsScalar() is true)
             {
-                flatten = true;
+                summarize = true;
             }
         }
 
-        return new HtmlFormatter<T>((value, context) => BuildTable(value, context, flatten));
+        return new HtmlFormatter<T>((value, context) =>
+                                        BuildTable(value, context, getKeys, getValues, summarize));
 
-        bool BuildTable(T source, FormatContext context, bool summarize)
+        static bool BuildTable(
+            T source,
+            FormatContext context,
+            Func<T, IEnumerable> getKeys,
+            Func<T, IEnumerable> getValues,
+            bool summarize)
         {
             context.RequireDefaultStyles();
 
             using var _ = context.IncrementTableDepth();
-
-            if (summarize || !context.AllowRecursion)
+            
+            if (summarize)
             {
-                HtmlFormatter.FormatAndStyleAsPlainText(source, context);
+                HtmlFormatter.FormatAndStyleAsPlainText(source, context, PlainTextSummaryFormatter.MimeType);
                 return true;
             }
 
@@ -98,7 +104,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
             var (rowData, remainingCount) = getValues(source)
                                             .Cast<object>()
-                                            .Select((v, i) => (v, i))
+                                            .Select((value, index) => (value, index))
                                             .TakeAndCountRemaining(Formatter.ListExpansionLimit, canCountRemainder);
 
             if (rowData.Count == 0)
@@ -169,7 +175,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
                 if (typesAreDifferent)
                 {
-                    var type = rowData[rowIndex].v?.GetType();
+                    var type = rowData[rowIndex].value?.GetType();
 
                     rowValues.Add(type);
                 }
@@ -186,7 +192,17 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                     }
                 }
 
-                rows.Add(tr(rowValues.Select(r => td(r))));
+                rows.Add(tr(rowValues.Select(value =>
+                {
+                    if (value is string stringValue)
+                    {
+                        return td(HtmlFormatter.TagWithPlainTextStyling(stringValue, PlainTextFormatter.MimeType));
+                    }
+                    else
+                    {
+                        return td(value);
+                    }
+                })));
             }
 
             if (remainingCount > 0)
@@ -210,15 +226,45 @@ public class HtmlFormatter<T> : TypeFormatter<T>
     {
         if (typeof(T).IsScalar())
         {
-            return new HtmlFormatter<T>((value, context) => { HtmlFormatter.FormatAndStyleAsPlainText(value, context); });
+            return new HtmlFormatter<T>((value, context) => HtmlFormatter.FormatAndStyleAsPlainText(value, context));
         }
 
-        var members = typeof(T).GetMembersToFormat()
-                               .GetMemberAccessors<T>();
+        (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag)[] rows =
+            typeof(T).GetMembersToFormat()
+                     .GetMemberAccessors<T>()
+                     .Select(a => (
+                                      new HtmlTag("td", a.MemberName),
+                                      new Func<T, HtmlTag>(obj => new HtmlTag("td", c =>
+                                      {
+                                          var value = a.GetValueOrException(obj);
+                                          value.FormatTo(c, HtmlFormatter.MimeType);
+                                      }))))
+                     .ToArray();
 
-        return new HtmlFormatter<T>((instance, context) => BuildTreeView(instance, context, members));
+        // represent IEnumerable as a separate special property "(values)" at the end of the list
+        if (typeof(T).IsEnumerable())
+        {
+            if (typeof(T).ShouldIncludePropertiesInOutput())
+            {
+                var enumerableFormatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(typeof(T));
 
-        static bool BuildTreeView(T source, FormatContext context, MemberAccessor<T>[] memberAccessors)
+                (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag) enumerableAccessor =
+                    (new HtmlTag("td", new HtmlTag("i", "(values)")), obj => new HtmlTag("td", c =>
+                        {
+                            enumerableFormatter.Format(obj, c);
+                        }));
+                Array.Resize(ref rows, rows.Length + 1);
+                rows[^1] = enumerableAccessor;
+            }
+            else
+            {
+                return (HtmlFormatter<T>)HtmlFormatter.GetDefaultFormatterForAnyEnumerable(typeof(T));
+            }
+        }
+
+        return new HtmlFormatter<T>((instance, context) => BuildTreeView(instance, context, rows));
+
+        static bool BuildTreeView(T source, FormatContext context, (HtmlTag propertyLabelTdTag, Func<T, HtmlTag> getPropertyValueTdTag)[] rows)
         {
             context.RequireDefaultStyles();
 
@@ -228,11 +274,11 @@ public class HtmlFormatter<T> : TypeFormatter<T>
                 return true;
             }
 
-            HtmlTag code = new HtmlTag("code", c =>
+            HtmlTag summaryContent = new("code", context =>
             {
-                var formatter = PlainTextSummaryFormatter.GetPreferredFormatterFor(source?.GetType());
+                var summary = source.ToDisplayString(PlainTextSummaryFormatter.MimeType).HtmlEncode();
 
-                formatter.Format(source, context);
+                context.Writer.Write(summary);
             });
 
             var attributes = new HtmlAttributes();
@@ -246,14 +292,16 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
             PocketView view = details[attributes](
                 summary(
-                    span[@class: "dni-code-hint"](code)),
+                    span[@class: "dni-code-hint"](summaryContent)),
                 div(
                     Html.Table(
                         headers: null,
-                        rows: memberAccessors.Select(
+                        rows: rows.Select(
                             a => (IHtmlContent)
                                 tr(
-                                    td(a.Member.Name), td(a.GetValueOrException(source)))).ToArray())));
+                                    a.propertyLabelTdTag, a.getPropertyValueTdTag(source)
+                                )
+                        ).ToArray())));
 
             view.WriteTo(context);
 

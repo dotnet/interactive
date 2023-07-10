@@ -53,7 +53,7 @@ internal static class TypeExtensions
 
     public static MemberAccessor<T>[] GetMemberAccessors<T>(this IEnumerable<MemberInfo> forMembers) =>
         forMembers
-            .Select(MemberAccessor.CreateMemberAccessor<T>)
+            .Select(memberInfo => new MemberAccessor<T>(memberInfo))
             .ToArray();
 
     public static IEnumerable<MemberInfo> GetMembersToFormat(this Type type)
@@ -61,19 +61,6 @@ internal static class TypeExtensions
         return type.GetMembers(BindingFlagsForFormattedMembers)
                    .Where(ShouldDisplay)
                    .ToArray();
-    }
-
-    public static IEnumerable<Type> GetAllInterfaces(this Type type)
-    {
-        if (type.IsInterface)
-        {
-            yield return type;
-        }
-
-        foreach (var i in type.GetInterfaces())
-        {
-            yield return i;
-        }
     }
 
     public static bool IsRelevantFormatterFor(this Type type, Type actualType)
@@ -153,8 +140,7 @@ internal static class TypeExtensions
 
     public static bool ShouldDisplay(MemberInfo m)
     {
-        if (!(m.MemberType == MemberTypes.Property ||
-              m.MemberType == MemberTypes.Field))
+        if (m.MemberType is not (MemberTypes.Property or MemberTypes.Field))
         {
             return false;
         }
@@ -165,7 +151,7 @@ internal static class TypeExtensions
             return false;
         }
 
-        if (m.MemberType != MemberTypes.Property)
+        if (m.MemberType is not MemberTypes.Property)
         {
             return true;
         }
@@ -197,7 +183,7 @@ internal static class TypeExtensions
 
         Type enumerableInterface;
 
-        if (type.IsEnumerable()   )
+        if (type.IsEnumerable())
         {
             enumerableInterface = type;
         }
@@ -253,10 +239,10 @@ internal static class TypeExtensions
         out Type valueType)
     {
         var dictType =
-            type.GetAllInterfaces()
+            type.GetTypeInfo().ImplementedInterfaces
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
             ??
-            type.GetAllInterfaces()
+            type.GetTypeInfo().ImplementedInterfaces
                 .FirstOrDefault(i => i == typeof(IDictionary));
 
         if (dictType is null)

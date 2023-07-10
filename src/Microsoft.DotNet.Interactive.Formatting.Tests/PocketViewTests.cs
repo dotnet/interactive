@@ -54,7 +54,7 @@ public class PocketViewTests : FormatterTestBase
     }
 
     [Fact]
-    public void A_simple_tag()
+    public void Tag_content_can_be_specified_using_a_string()
     {
         string output = div("foo").ToString();
 

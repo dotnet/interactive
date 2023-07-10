@@ -141,8 +141,8 @@ public class InteractiveDocument : IEnumerable
             return inputFields;
         }
     }
-    
-    public IEnumerator GetEnumerator() => Elements.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => Elements.GetEnumerator();
 
     public void Add(InteractiveDocumentElement element) => Elements.Add(element);
 
