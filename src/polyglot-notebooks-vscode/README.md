@@ -2,6 +2,8 @@
 
 The [Polyglot Notebooks extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode), powered by [.NET Interactive](https://github.com/dotnet/interactive), brings support for multi-language notebooks to Visual Studio Code. Classic notebook software typically supports notebooks that use only one language at a time. With Polyglot Notebooks, features such as completions, documentation, syntax highlighting, and diagnostics are available for many languages in one notebook. In addition, different cells in the same notebook can run in separate processes or on different machines, allowing a notebook to span local and cloud environments in one combined workflow.
 
+Read more in our [FAQ](https://github.com/dotnet/interactive/blob/main/docs/FAQ.md).
+
 ## Fully Interoperable with Jupyter
 
 Polyglot Notebooks are fully interoperable with Jupyter and support the `.ipynb` file extension. You don't need to choose between the capabilities of Polyglot Notebooks and the rich Jupyter ecosystem. If your notebook is saved in the `.ipynb` format, you can open it in Jupyter and the cell languages will still be recognized. When working in Jupyter using the .NET Interactive kernel, you can switch cell languages using magic commands. 
@@ -10,18 +12,18 @@ Polyglot Notebooks are fully interoperable with Jupyter and support the `.ipynb`
 
 The following languages are supported by Polyglot Notebooks:
 
-| Language                                    | Variable sharing supported |
+| Language                                    | Variable sharing supported                             |
 |---------------------------------------------|-------------------------------------------------------|
-| C#                                          |        ✅                 |
-| F#                                          |        ✅                 |   
-| PowerShell                                  |        ✅                 |          
-| JavaScript                                  |        ✅                 |          
-| SQL                                         |        ✅                 |   
-| KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))    |        ✅       |       
-| HTML                                        |        ⛔                 |     
-| [Mermaid](https://mermaid.js.org/intro/)    |        ⛔                 |        
-| [Python](https://github.com/dotnet/interactive/blob/main/docs/jupyter-in-polyglot-notebooks.md)     |        ✅       |
-| [R](https://github.com/dotnet/interactive/blob/main/docs/jupyter-in-polyglot-notebooks.md)          |        ✅       |          
+| C#                                          |        ✅                                             |
+| F#                                          |        ✅                                             |
+| PowerShell                                  |        ✅                                             |
+| JavaScript                                  |        ✅                                             |
+| SQL                                         |        ✅                                             |
+| KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))    |        ✅       |
+| HTML                                        |        ⛔                                             |
+| [Mermaid](https://mermaid.js.org/intro/)    |        ⛔                                             |
+| [Python](https://github.com/dotnet/interactive/blob/main/docs/jupyter-in-polyglot-notebooks.md) (Preview)     |        ✅       |
+| [R](https://github.com/dotnet/interactive/blob/main/docs/jupyter-in-polyglot-notebooks.md) (Preview)          |        ✅       |
   
 ## Features
 

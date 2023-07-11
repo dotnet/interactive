@@ -15,9 +15,9 @@ Formatters are also used to format the output you see for .NET objects in the Po
 
 For any given object, many different string representations are possible. These different representations have associated MIME types, identified by short strings such as `text/html` or `application/json`. MIME types can be used to request specific formatting for an object using the `Display` extension method, which you can call with any object. In this example, we can display a `Rectangle` object assigned to variable `rect` by calling `rect.Display()`:
 
-<img width="519" alt="hmmmm" src="https://user-images.githubusercontent.com/547415/223595260-b465d560-1b09-479b-a930-3c5ba271992d.png">
+<img width="519" src="https://user-images.githubusercontent.com/547415/223595260-b465d560-1b09-479b-a930-3c5ba271992d.png">
 
-Note that the default MIME type in Polyglot Notebooks is `text/html`. This can vary from one type to another, but in the example above, no custom settings have been applied for the `Rectangle` type. (We'll show more about how to do that below.)
+Note that the default MIME type in Polyglot Notebooks is `text/html`. This can vary from one .NET type to another, but in the example above, no custom settings have been applied for the `Rectangle` type. (We'll show more about how to do that below.)
 
 > _Note: For a cell's return value in C# or F#, only the formatter for the default MIME type can be used._ 
 
@@ -100,6 +100,61 @@ Running this code now produces this shorter output:
 
 <details open="open" class="dni-treeview"><summary><span class="dni-code-hint"><code>Submission#3+Node</code></span></summary><div><table><thead><tr></tr></thead><tbody><tr><td>Next</td><td><details class="dni-treeview"><summary><span class="dni-code-hint"><code>Submission#3+Node</code></span></summary><div><table><thead><tr></tr></thead><tbody><tr><td>Next</td><td>Submission#3+Node</td></tr></tbody></table></div></details></td></tr></tbody></table></div></details>
 
+
+###  Preferred MIME types
+
+We mentioned above that the default MIME type used for formatting in Polyglot Notebooks is `text/html`. This default is applied when using the `Display()` method without passing a value to the `mimeType` parameter, or when using a `return` statement or trailing expression in C# or F#. This default can be changed globally or for a specific type.
+
+The following example changes the default for `Rectangle` to `text/plain`.
+
+```csharp
+using System.Drawing;
+using Microsoft.DotNet.Interactive.Formatting;
+
+Formatter.SetPreferredMimeTypesFor(typeof(Rectangle), "text/plain");
+
+new Rectangle
+{   
+    Height = 50, 
+    Width = 100
+}
+```
+
+```console
+Rectangle
+  Location: Point
+    IsEmpty: True
+    X: 0
+    Y: 0
+  Size: Size
+    IsEmpty: False
+    Width: 100
+    Height: 50
+  X: 0
+  Y: 0
+  Width: 100
+  Height: 50
+  Left: 0
+  Top: 0
+  Right: 100
+  Bottom: 50
+  IsEmpty: False
+```
+
+You'll also notice that the method can be used to set more than one preferred MIME type. The second parameter is a `params` parameter which allows you to pass multiple values. 
+
+```csharp
+Formatter.SetPreferredMimeTypesFor(
+  typeof(Rectangle), 
+  "text/plain",
+  "application/json");
+```
+<img width="519" src="https://github.com/dotnet/interactive/assets/547415/c3c3856f-92a3-47c9-bc03-379b24eefdb9">
+
+If you click on the `...` (`More Actions...`) button to the left of the output and select `Change presentation`, you'll be given a choice of [notebook renderer](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer) that you can use to display the different outputs in different ways.
+
+<img width="600" src="https://github.com/dotnet/interactive/assets/547415/849f3033-809b-4d22-9d29-dc8814e80095">
+
 ### Replacing the default formatting for a type
 
 The default formatters typically show the values of the objects being displayed by printing lists and properties. The output is mostly textual. If you would like to see something different for a given type, whether a different textual output or an image or a plot, you can do this by register custom formatters for specific types. These can be types you defined or types defined in other .NET libraries. One common case where a custom formatter is used is when rendering plots. Some NuGet packages, such as [Plotly.NET](https://www.nuget.org/packages/Plotly.NET/), carry .NET Interactive [extensions](extending-dotnet-interactive.md) that use this feature to provide interactive HTML- and JavaScript-based outputs.
@@ -170,45 +225,101 @@ one (254814599) two (656421459) three (-1117028319)
 
 #### `TypeFormatterSourceAttribute`
 
-Another approach that can be used to register custom formatters is to decorate a type with `TypeFormatterSourceAttribute`. For use within a notebook, this isn't as convenient as `Formatter.Register`. But if you're writing a .NET Interactive extension or a library or app that uses `Microsoft.DotNet.Interactive.Formatting`, this is the recommended approach.
+There is another approach that can be used to register custom formatters. You can decorate a type with `TypeFormatterSourceAttribute`. This isn't the most convenient approach if you want to redefine formatter settings directly within a notebook. But if you're writing a .NET Interactive extension, or a library or app that includes custom formatting for certain types, this is the recommended approach. One reason for this is that the attribute-based approach is simpler. Another reason is that attribute-based formatter customizations are not cleared when `Formatter.ResetToDefault()` is called, while formatters configured using `Formatter.Register` are cleared. You can think of the attribute-based registration approach as a way to set the _default_ formatting for a type.
 
-###  Registering preferred MIME types
+There are two approaches to attribute-based formatter registration: one for when your project references `Microsoft.DotNet.Interactive.Formatting` and another for when it does not.
 
-We mentioned above that the default MIME type used for formatting in Polyglot Notebooks is `text/html`. This default is applied when using the `Display()` method without passing a value to the `mimeType` parameter or when using a `return` statement or trailing expression in C# or F#. This default can be changed globally or for a specific type.
-
-The following example changes the default for `Rectangle` to `text/plain`.
+If you already have a reference to `Microsoft.DotNet.Interactive.Formatting`, for example because you're writing a .NET Interactive extension, then you can decorate your types that need custom formatting with the `TypeFormatterSourceAttribute` defined in `Microsoft.DotNet.Interactive.Formatting`. Here's an example:
 
 ```csharp
-using System.Drawing;
-
-Formatter.SetPreferredMimeTypesFor(typeof(Rectangle), "text/plain");
-
-new Rectangle
-{   
-    Height = 50, 
-    Width = 100
+[TypeFormatterSource(typeof(MyFormatterSource))]
+public class MyTypeWithCustomFormatting
+{
 }
 ```
 
-```console
-Rectangle
-  Location: Point
-    IsEmpty: True
-    X: 0
-    Y: 0
-  Size: Size
-    IsEmpty: False
-    Width: 100
-    Height: 50
-  X: 0
-  Y: 0
-  Width: 100
-  Height: 50
-  Left: 0
-  Top: 0
-  Right: 100
-  Bottom: 50
-  IsEmpty: False
+A formatter source specified by the `TypeFormatterSourceAttribute` must implement `ITypeFormatterSource` and must have an empty constructor. It does not need to be a public type. Here's an example implementation:
+
+```csharp
+internal class MyFormatterSource : ITypeFormatterSource
+{
+    public IEnumerable<ITypeFormatter> CreateTypeFormatters()
+    {
+        return new ITypeFormatter[]
+        {
+            new PlainTextFormatter<MyTypeWithCustomFormatting>(context => 
+              $"Hello from {nameof(MyFormatterSource)} using MIME type text/plain"),
+            new HtmlFormatter<MyTypeWithCustomFormatting>(context => 
+              $"Hello from {nameof(MyFormatterSource)} using MIME type text/html")
+        };
+    }
+}
+```
+
+As the example above shows, a formatter source can return multiple formatters. These can be formatters for different MIME types and also for different .NET types.
+
+A formatter source can also specify the preferred MIME types for your type:
+
+```csharp
+[TypeFormatterSource(
+  typeof(MyFormatterSource), 
+  PreferredMimeTypes = new[] { "text/html", "application/json" })]
+public class MyTypeWithCustomFormatting
+{
+}
+```
+
+Specifying several MIME types results in a call to `Formatter.SetPreferredMimeTypesFor`, as described under [Preferred MIME types](#preferred-mime-types). The behavior is equivalent.
+
+If you don't want to take a dependency on `Microsoft.DotNet.Interactive.Formatting`, there's another to way to provide custom formatting for your types. This can be the simpler approach if you're building a library and you'd like to provide an augmented experience in notebooks but you don't need the other tools available to .NET Interactive extensions, such as magic commands and custom kernels.
+
+With this approach, you declare your own `TypeFormatterSourceAttribute` and apply it. The shape of the class should match the `TypeFormatterSourceAttribute` defined in `Microsoft.DotNet.Interactive.Formatting`. The `TypeFormatterSourceAttribute` class that you define will be recognized by name. Like the formatter source, it can be declared as internal so that it has no impact on your public API surface.
+
+Here's the complete definition, which you can copy into your project:
+
+```csharp
+[AttributeUsage(AttributeTargets.Class)]
+internal class TypeFormatterSourceAttribute : Attribute
+{
+    public TypeFormatterSourceAttribute(Type formatterSourceType)
+    {
+        FormatterSourceType = formatterSourceType;
+    }
+
+    public Type FormatterSourceType { get; }
+
+    public string[] PreferredMimeTypes { get; set; }
+}
+```
+
+As with the attribute class itself, the specified formatter source and the formatters it returns are based on naming conventions rather than types. The following is a complete example that you can use as a template:
+
+```csharp
+internal class MyConventionBasedFormatterSource
+{
+    public IEnumerable<object> CreateTypeFormatters()
+    {
+        yield return new MyConventionBasedFormatter { MimeType = "text/html" };
+    }
+}
+
+internal class MyConventionBasedFormatter
+{
+    public string MimeType { get; set; }
+
+    public bool Format(object instance, TextWriter writer)
+    {
+        if (instance is MyTypeWithCustomFormatting myObj)
+        {
+            writer.Write($"<div>Custom formattering for {obj}</div>");
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
 ```
 
 ### Resetting formatting configurations
@@ -219,7 +330,7 @@ As you experiment with different formatting configurations, you might find you w
 Formatter.ResetToDefault();
 ```
 
-This will reset all of the configurations that might have been changed by using the APIs described above. Note that this might also reset formatting set up by extensions installed using NuGet packages. 
+This will reset all of the configurations that might have been changed by using the APIs described above. Note that this might also reset formatting set up by extensions installed using NuGet packages.
 
 ##  How a formatter is chosen
 

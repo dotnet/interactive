@@ -135,7 +135,7 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
             "[vscode]",
             "stdio",
             "--log-path",
-            "/path/to/a/folder/for/your/logs/",
+            "/path/to/a/folder/for/your/kernel-logs/",
             "--verbose",
             "--working-dir",
             "{working_dir}"
@@ -144,7 +144,9 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
         "dotnet-interactive.notebookParserArgs": [
             "{dotnet_path}",
             "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net7.0/Microsoft.DotNet.Interactive.App.dll",
-            "notebook-parser"
+            "notebook-parser",
+            "--log-path",
+            "/path/to/a/folder/for/your/parser-logs/",
         ]
       ```
 
@@ -156,11 +158,11 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
 
 ### Use a local build of a Polyglot Notebooks extension
 
-If you've made changes to one of the Polyglot Notebooks extensions and want to use them locally, follow these steps:
+If you've made changes to the Polyglot Notebooks extension and want to try your changes locally, follow these steps:
 
 1. Run `build.cmd -pack`/`./build.sh --pack` to create the Nuget packages for the extensions
 
-2. Ensure that there aren't any kernels running for the extension in question. It's generally best to close all Notebooks opened in VS Code to accomplish this.
+2. Ensure that there aren't any kernels running for the extension in question. It's generally best to close all notebooks opened in VS Code as they might be locking some of these files.
 
 3. Run the `Polyglot Notebook: Create a new blank notebook` command in VS Code. Select `.dib` or `.ipynb` as the extension and any language as default.
 
@@ -174,35 +176,35 @@ If you've made changes to one of the Polyglot Notebooks extensions and want to u
    - On the `#i` line, fill in the path to the `dotnet-interactive` repo root
    - On the `#r` line, use the same `EXTENSIONNAME` above, and then look in the `artifacts\packages\Debug\Shipping` folder for the package you're using and get the version number from the name. e.g. a package named `Microsoft.DotNet.Interactive.SqlServer.1.0.0-dev.nupkg` would result in this line `#r "nuget: Microsoft.DotNet.Interactive.SqlServer, 1.0.0-dev"`
 
-```powershell
-#!powershell
+    ```powershell
+    #!powershell
 
-$FolderName = "\PATH\TO\NUGET\CACHE\packages\microsoft.dotnet.interactive.<EXTENSIONNAME>"
-if (Test-Path $FolderName) {
+    $FolderName = "\PATH\TO\NUGET\CACHE\packages\microsoft.dotnet.interactive.<EXTENSIONNAME>"
+    if (Test-Path $FolderName) {
 
-    Remove-Item $FolderName -Recurse -Force
-}
-else
-{
-    Write-Host "Folder Doesn't Exist"
-}
+        Remove-Item $FolderName -Recurse -Force
+    }
+    else
+    {
+        Write-Host "Folder Doesn't Exist"
+    }
 
-#!csharp
+    #!csharp
 
-#i "nuget: \PATH\TO\REPO\ROOT\artifacts\packages\Debug\Shipping"
+    #i "nuget: \PATH\TO\REPO\ROOT\artifacts\packages\Debug\Shipping"
 
-#r "nuget: Microsoft.DotNet.Interactive.<EXTENSIONNAME>, <EXTENSIONVERSION>"
-```
+    #r "nuget: Microsoft.DotNet.Interactive.<EXTENSIONNAME>, <EXTENSIONVERSION>"
+    ```
 
 7. Run the cell
-   - If you get an error about access being denied, ensure that all other Notebooks are closed and then restart the kernel again as in step 5
+   - If you get an error about access being denied, ensure that all other notebooks are closed and then restart the kernel again as in step 5.
 
 8. Now, use the kernel as you normally would. You should see your local changes being used by the extension.
 
 
-### Setup full suite of tests to run
+### Set up full suite of tests to run
 
-Some tests require additional setup or will be skipped. `JupyterKernel` tests for e.g. are setup to have the same test run against a Jupyter server, directly against the Jupyter kernel over ZMQ and with a simulation of the messages. Jupyter server and Jupyter kernel tests require the following setup or will be skipped while the tests with simulation can be run without additional steps. 
+Some tests require additional setup or will be skipped. `JupyterKernel` tests for example are set up to have the same test run against a Jupyter server, directly against the Jupyter kernel over ZMQ, and with a simulation of the messages. Jupyter server and Jupyter kernel tests require the following setup or will be skipped. The simulation tests can be run without additional steps. 
 
 ### Run tests with a local Jupyter Server
 
@@ -224,16 +226,22 @@ jupyter notebook --no-browser --NotebookApp.token=<your_token> --port=8888
 ### Run tests with a Jupyter Kernel over ZMQ
 
 1. Install [Anaconda](https://www.anaconda.com/products/distribution)
+
 2. [Install R kernel](https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/) for R tests by calling the following in Anaconda Prompt (Windows) or the terminal (Mac/Linux) 
-```
-conda install -c r r-irkernel
-```
+
+    ```console
+    conda install -c r r-irkernel
+    ```
+
 3. Start Anaconda Bash prompt and create an environment variable `TEST_DOTNET_JUPYTER_ZMQ_CONN` and set to `true` and reactivate your conda environment
-```bash
-conda env config vars set TEST_DOTNET_JUPYTER_ZMQ_CONN=true 
-conda activate base
-```
-3. Restart `dotnet-interactive.sln` from the Anaconda Bash prompt. 
+
+    ```bash
+    conda env config vars set TEST_DOTNET_JUPYTER_ZMQ_CONN=true 
+    conda activate base
+    ```
+
+3. Restart `dotnet-interactive.sln` from the Anaconda Bash prompt.
+
 4. The tests will now use the environment variable to connect to your server. 
 
 ### Run tests directly against the language handler scripts
@@ -241,6 +249,8 @@ conda activate base
 These tests can be run directly against the language handler scripts. This is useful for when making changes on the scripts sent to the jupyter kernel without needing a full integration.
 
 1. Python tests can be run directly in the Anaconda Prompt with IPython by calling `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\run_python_tests.bat`
+
 2. R tests can be run directly in the Anaconda Prompt with RScript by calling `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\run_r_tests.bat`
+
 3. Both Python and R tests can be run together in the Anaconda Prompt by calling `src\Microsoft.DotNet.Interactive.Jupyter.Tests\LanguageHandlerTests\run_tests.bat`
 
