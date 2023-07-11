@@ -3,22 +3,43 @@
 The organization of this extension is a bit complicated.
 ===
 
-This repo depends on symbolic links between directories.  By default Windows doesn't support this feature.  To work around this scenario, please run the PowerShell script `<root>/src/ensure-symlinks.ps1` as an administrator.  This usually only needs to be run once.
+This repo depends on symbolic links between directories.  By default Windows doesn't support this feature.  To work around this scenario, please run the PowerShell script `<root>/src/ensure-symlinks.ps1` as an administrator.  This usually only needs to be run once. If you run `git clean` you will need to repeat this step.
 
-## tl;dr -
+## Setup steps
 
 0. Requirements:
-  - nodejs v12.16.1.
-  - npm v6.14.11.
-  - git **with symlink support**
-    _or_
-  - Latest stable [PowerShell 7](https://github.com/PowerShell/PowerShell/releases/) on the path
-    _and_
-    [Developer Mode](https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development) enabled for Windows.
+    * nodejs v12.16.1.
+    * npm v6.14.11.
+    * Shell requirements:
+      * git **with symlink support**
+
+      **_or_**
+
+      * Latest stable [PowerShell 7](https://github.com/PowerShell/PowerShell/releases/) on the path 
+      
+        **_and_** 
+      
+      * [Developer Mode](https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development) enabled for Windows.
+
 1. Open a terminal in either the `src/polyglot-notebooks-vscode/` or `src/polyglot-notebooks-insiders/` directory.
+
 2. `npm install`
-3. Open the appropriate VS Code, e.g., for stable: `code .`, for insiders: `code-insiders .`
-4. F5.
+
+3. Open the appropriate VS Code.
+   
+   For VS Code stable run:
+
+    ```console
+    code .
+    ```
+
+    For VS Code Insiders run:
+
+    ```console
+    code-insiders .
+    ```
+
+4. Press F5.
 
 ## The complicated bits
 

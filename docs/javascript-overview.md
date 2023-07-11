@@ -153,15 +153,15 @@ Many polyglot notebook workflows use languages such as C#, F#, and SQL to gather
 var array = new[] { 1, 2, 3 };
 ```
 
-```javascript
-#!share --from csharp array
+```csharp
+#!set --value @javascript:array --name array
 
-return array;
+array
 ```
 
 When you run this code in Polyglot Notebooks, you can see that the `array` variable has been copied to the JavaScript kernel.
 
-<img width="509" alt="image" src="https://user-images.githubusercontent.com/547415/211658845-ac8563ec-accc-462d-bf24-23bef205a0c7.png">
+<img width="509" alt="image" src="https://github.com/dotnet/interactive/assets/547415/acecdcf8-5597-4258-a1d3-5cf10c3e54d8">
 
 You can also share back in the other direction. Let's modify the JavaScript array and share it back to C#.
 
