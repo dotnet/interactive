@@ -26,5 +26,26 @@ It's common to use `Console.WriteLine` (or `Console.Out.WriteLine`) in C# to wri
 
 <img src="https://user-images.githubusercontent.com/547415/81758123-cd059100-9475-11ea-8474-02d2f71966e4.png" width="70%">
 
+## Displaying Collections
 
+The default display format for a type that implements `IEnumerable` is a tree view showing a row for each item and a one-line text representation of that object. The values can be expanded to show a more detailed view of the object. If you have a flat object with a small number of fields and properties it's often more useful to display the properties as columns in the top level table so you can see them without drilling down into each item. This can be done using the `ToTabularDataResource` extension method, which is in the `Microsoft.DotNet.Interactive.Formatting.TabularData` namespace.
 
+For example:
+```
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
+
+class Person
+{
+    public string Title {get; set;}
+    public string Name {get; set;}
+}
+
+var groupofheroes = new[]{
+    new Person{Title = "Captain", Name = "Marvel"},
+    new Person{Title = "General", Name = "Okoye"},
+    new Person{Title = "Team Lead", Name = "Romanova"},
+    new Person{Title = "Lead Engineer", Name = "Washington"}
+};
+
+groupofheroes.ToTabularDataResource()
+```
