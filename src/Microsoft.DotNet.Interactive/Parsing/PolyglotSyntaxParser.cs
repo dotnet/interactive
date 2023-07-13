@@ -135,6 +135,7 @@ internal class PolyglotSyntaxParser
                     rootNode.Add(directiveNode);
 
                     break;
+
                 case LanguageToken languageToken:
                     AppendAsLanguageNode(languageToken);
                     break;

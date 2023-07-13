@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -14,6 +14,18 @@
     <Compile Remove="TestProjects\**" />
     <EmbeddedResource Remove="TestResults\**" />
     <None Remove="TestResults\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequestParser\*.cs" LinkBase="Parser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\Microsoft.DotNet.Interactive.HttpRequestParser\obj\Debug\netstandard2.0\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="Utility\MarkupTestFile.cs" />
   </ItemGroup>
 
   <ItemGroup>
