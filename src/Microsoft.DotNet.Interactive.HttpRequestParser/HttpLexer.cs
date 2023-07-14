@@ -1,17 +1,18 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal class HttpLexer
 {
-    private TextWindow _textWindow;
     private readonly string _sourceText;
     private readonly HttpSyntaxTree _syntaxTree;
+    private TextWindow? _textWindow;
     private readonly List<HttpSyntaxToken> _tokens = new();
 
     public HttpLexer(string sourceText, HttpSyntaxTree syntaxTree)
@@ -40,8 +41,7 @@ internal class HttpLexer
             };
 
             if (previousTokenKind is { } previousTokenKindValue &&
-                (previousTokenKind != currentTokenKind ||
-                 currentTokenKind == HttpTokenKind.Punctuation))
+                (previousTokenKind != currentTokenKind || currentTokenKind is HttpTokenKind.Punctuation))
             {
                 FlushToken(previousTokenKindValue);
             }
@@ -59,22 +59,9 @@ internal class HttpLexer
         return _tokens;
     }
 
-    private bool IsNextCharacterLetter() => Char.IsLetter(GetNextChar());
-
-    [DebuggerHidden]
-    private char GetNextChar() => _sourceText[_textWindow.End];
-
-    [DebuggerHidden]
-    private char GetPreviousChar() =>
-        _textWindow.End switch
-        {
-            0 => default,
-            _ => _sourceText[_textWindow.End - 1]
-        };
-
     private void FlushToken(HttpTokenKind kind)
     {
-        if (_textWindow.IsEmpty)
+        if (_textWindow is null || _textWindow.IsEmpty)
         {
             return;
         }
@@ -86,6 +73,11 @@ internal class HttpLexer
 
     private bool More()
     {
+        if (_textWindow is null)
+        {
+            return false;
+        }
+
         return _textWindow.End < _sourceText.Length;
     }
 }

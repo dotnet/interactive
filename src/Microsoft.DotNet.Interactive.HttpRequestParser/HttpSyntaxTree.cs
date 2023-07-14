@@ -1,8 +1,9 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.HttpRequest;
+#nullable enable
 
+namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 /*
 
@@ -29,9 +30,7 @@ internal class HttpSyntaxTree
     private readonly string _sourceText;
 
     public HttpSyntaxTree(string sourceText)
-    {
-        _sourceText = sourceText;
-    }
+        => _sourceText = sourceText;
 
-    public HttpRootSyntaxNode RootNode { get; set; }
+    public HttpRootSyntaxNode? RootNode { get; set; }
 }

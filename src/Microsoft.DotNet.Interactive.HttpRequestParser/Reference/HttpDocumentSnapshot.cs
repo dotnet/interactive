@@ -1,14 +1,14 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.HttpRequest;
+namespace Microsoft.DotNet.Interactive.HttpRequest.Reference;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-internal partial class HttpDocumentSnapshot: IHttpDocumentSnapshot
+internal partial class HttpDocumentSnapshot : IHttpDocumentSnapshot
 {
     private HttpDocumentSnapshot(ITextSnapshot snapshot, IValueParser valueParser)
     {
@@ -55,7 +55,7 @@ internal partial class HttpDocumentSnapshot: IHttpDocumentSnapshot
 
         public bool TryGetValueProviderWithMatchingPrefix<T>(string prefix, out T provider) where T : class, IValueProvider
         {
-  provider = default;
+            provider = default;
             return false;
         }
 
@@ -68,7 +68,7 @@ internal partial class HttpDocumentSnapshot: IHttpDocumentSnapshot
     {
         public HttpTextSnapshot(string code)
         {
-            Lines = code.Split(new[]{"\n", "\r\n"}, StringSplitOptions.None).Select((line, lineNumber) => new HttpTextSnapshotLine(line, lineNumber));
+            Lines = code.Split(new[] { "\n", "\r\n" }, StringSplitOptions.None).Select((line, lineNumber) => new HttpTextSnapshotLine(line, lineNumber));
         }
 
         public IEnumerable<ITextSnapshotLine> Lines { get; }
@@ -103,10 +103,10 @@ internal partial class HttpDocumentSnapshot: IHttpDocumentSnapshot
         return documentSnapshot;
     }
 
-    public ParseItem? FindItemFromPosition(int position)
+    public ParseItem FindItemFromPosition(int position)
     {
-        ParseItem? item = Items.LastOrDefault(t => t.Contains(position));
-        ParseItem? reference = item?.References.FirstOrDefault(v => v.Contains(position));
+        ParseItem item = Items.LastOrDefault(t => t.Contains(position));
+        ParseItem reference = item?.References.FirstOrDefault(v => v.Contains(position));
 
         // Return the reference if it exist; otherwise the item
         return reference ?? item;
@@ -165,7 +165,7 @@ internal partial class HttpDocumentSnapshot: IHttpDocumentSnapshot
 
     public IReadOnlyList<Error> GetErrorsForParseItem(ParseItem item)
     {
-        if (Errors.TryGetValue(item, out IReadOnlyList<Error>? errors))
+        if (Errors.TryGetValue(item, out IReadOnlyList<Error> errors))
         {
             return errors!;
         }

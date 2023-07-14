@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.HttpRequest;
 internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 {
     private TextSpan _span;
-    private readonly List<HttpSyntaxNodeOrToken>  _childNodesAndTokens = new();
+    private readonly List<HttpSyntaxNodeOrToken> _childNodesAndTokens = new();
 
     private protected HttpSyntaxNode(
         string sourceText,

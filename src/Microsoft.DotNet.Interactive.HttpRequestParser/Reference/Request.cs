@@ -1,7 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.HttpRequest;
+namespace Microsoft.DotNet.Interactive.HttpRequest.Reference;
 
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +12,7 @@ internal sealed class Request : ParseItem
 {
     private readonly HttpDocumentSnapshot _document;
 
-    public Request(HttpDocumentSnapshot document, ParseItem method, ParseItem url, ParseItem? version)
+    public Request(HttpDocumentSnapshot document, ParseItem method, ParseItem url, ParseItem version)
         : base(method.Start, method.Text, document, ItemType.Request)
     {
         _document = document;
@@ -39,11 +39,11 @@ internal sealed class Request : ParseItem
     public ParseItem Method { get; }
     public ParseItem Url { get; }
 
-    public ParseItem? Version { get; }
+    public ParseItem Version { get; }
 
     public IReadOnlyList<Header> Headers { get; }
 
-    public string? Body { get; set; }
+    public string Body { get; set; }
     public override int Start => Method?.Start ?? 0;
     public override int End => Children.Count > 0 ? Children[Children.Count - 1].End : 0;
 

@@ -5,9 +5,9 @@
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
-internal class HttpMethodNode : HttpSyntaxNode
+internal class HttpHeaderSeparatorNode : HttpSyntaxNode
 {
-    internal HttpMethodNode(string sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpHeaderSeparatorNode(string sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 }

@@ -1,11 +1,13 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
-public readonly struct TextSpan : IEquatable<TextSpan>, IComparable<TextSpan>
+internal readonly struct TextSpan : IEquatable<TextSpan>, IComparable<TextSpan>
 {
     /// <summary>
     /// Creates a TextSpan instance beginning with the position Start and having the Length
@@ -45,7 +47,7 @@ public readonly struct TextSpan : IEquatable<TextSpan>, IComparable<TextSpan>
     /// <summary>
     /// Determines whether or not the span is empty.
     /// </summary>
-    public bool IsEmpty => this.Length == 0;
+    public bool IsEmpty => Length == 0;
 
     /// <summary>
     /// Determines whether the position lies within the span.
@@ -73,7 +75,7 @@ public readonly struct TextSpan : IEquatable<TextSpan>, IComparable<TextSpan>
     /// </returns>
     public bool Contains(TextSpan span)
     {
-        return span.Start >= Start && span.End <= this.End;
+        return span.Start >= Start && span.End <= End;
     }
 
     /// <summary>
@@ -90,7 +92,7 @@ public readonly struct TextSpan : IEquatable<TextSpan>, IComparable<TextSpan>
     public bool OverlapsWith(TextSpan span)
     {
         int overlapStart = Math.Max(Start, span.Start);
-        int overlapEnd = Math.Min(this.End, span.End);
+        int overlapEnd = Math.Min(End, span.End);
 
         return overlapStart < overlapEnd;
     }
@@ -107,7 +109,7 @@ public readonly struct TextSpan : IEquatable<TextSpan>, IComparable<TextSpan>
     public TextSpan? Overlap(TextSpan span)
     {
         int overlapStart = Math.Max(Start, span.Start);
-        int overlapEnd = Math.Min(this.End, span.End);
+        int overlapEnd = Math.Min(End, span.End);
 
         return overlapStart < overlapEnd
                    ? FromBounds(overlapStart, overlapEnd)
@@ -127,7 +129,7 @@ public readonly struct TextSpan : IEquatable<TextSpan>, IComparable<TextSpan>
     /// </returns>
     public bool IntersectsWith(TextSpan span)
     {
-        return span.Start <= this.End && span.End >= Start;
+        return span.Start <= End && span.End >= Start;
     }
 
     /// <summary>
@@ -158,7 +160,7 @@ public readonly struct TextSpan : IEquatable<TextSpan>, IComparable<TextSpan>
     public TextSpan? Intersection(TextSpan span)
     {
         int intersectStart = Math.Max(Start, span.Start);
-        int intersectEnd = Math.Min(this.End, span.End);
+        int intersectEnd = Math.Min(End, span.End);
 
         return intersectStart <= intersectEnd
                    ? FromBounds(intersectStart, intersectEnd)

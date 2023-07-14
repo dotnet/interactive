@@ -1,8 +1,9 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Threading.Tasks;
+using System.Linq;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
 using Xunit;
 
@@ -12,62 +13,98 @@ public class ParserTests
 {
     [Theory]
     [InlineData("GET https://example.com", "GET")]
-    [InlineData("POST https://example.com?hat&ost", "POST")]
+    [InlineData("POST https://example.com", "POST")]
     [InlineData("OPTIONS https://example.com", "OPTIONS")]
-    [InlineData("TRACE https://example.com?hat&ost", "TRACE")]
-    public async Task common_verbs_are_parsed_correctly(string line, string method)
+    [InlineData("TRACE https://example.com", "TRACE")]
+    public void common_verbs_are_parsed_correctly(string line, string method)
     {
-        HttpRequestParseResult result = HttpRequestParser.Parse(line);
+        var result = HttpRequestParser.Parse(line);
 
-        result.SyntaxTree
-              .RootNode
-              .ChildNodes
-              .Should()
-              .ContainSingle<HttpRequestNode>()
-              .Which.MethodNode.Text.Should().Be(method);
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .MethodNode.Text.Should().Be(method);
     }
 
-    // [Theory]
-    // [InlineData(@"GET https://example.com")]
-    // [InlineData(@"get https://example.com")]
-    // [InlineData(@"OPTIONS https://example.com")]
-    // [InlineData(@"options https://example.com")]
-    //     
-    // public async Task it_can_parse_verbs_regardless_of_their_casing(string line)
-    // {
-    //     IRestDocumentSnapshot doc = await CreateDocumentSnapshotAsync(line);
-    //     ParseItem request = doc.Items[0];
-    //     ParseItem method = doc.Items[1];
-    //
-    //     throw new NotImplementedException();
-    //     Assert.IsNotNull(method);
-    //     Assert.AreEqual(ItemType.Request, request.Type);
-    //     Assert.AreEqual(ItemType.Method, method.Type);
-    //     Assert.AreEqual(0, method.Start);
-    //     Assert.IsTrue(line.StartsWith(method.Text));
-    // }
-    //
-    // [Theory]
-    // [InlineData(@"Trace https://example.com?hat&ost HTTP/1.1")]
-    // public async Task OneLinersAsync(string line)
-    // {
-    //     IRestDocumentSnapshot doc = await CreateDocumentSnapshotAsync(line);
-    //     ParseItem request = doc.Items[0];
-    //     ParseItem method = doc.Items[1];
-    //
-    //     throw new NotImplementedException();
-    //     Assert.IsNotNull(method);
-    //     Assert.AreEqual(ItemType.Request, request.Type);
-    //     Assert.AreEqual(ItemType.Method, method.Type);
-    //     Assert.AreEqual(0, method.Start);
-    //     Assert.IsTrue(line.StartsWith(method.Text));
-    // }
+    [Theory]
+    [InlineData("https://example.com?hat&ost=foo")]
+    [InlineData("https://example.com?q=3081#blah-2%203")]
+    public void common_url_structures_are_parsed_correctly(string url)
+    {
+        var result = HttpRequestParser.Parse($"GET {url}");
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .UrlNode.Text.Should().Be(url);
+    }
+
+    [Theory]
+    [InlineData(@"GET https://example.com", "GET")]
+    [InlineData(@"Get https://example.com", "Get")]
+    [InlineData(@"OPTIONS https://example.com", "OPTIONS")]
+    [InlineData(@"options https://example.com", "options")]
+    public void it_can_parse_verbs_regardless_of_their_casing(string line, string method)
+    {
+        var result = HttpRequestParser.Parse(line);
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .MethodNode.Text.Should().Be(method);
+    }
+
+    [Fact]
+    public void http_version_is_parsed_correctly()
+    {
+        var result = HttpRequestParser.Parse("GET https://example.com HTTP/1.1");
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .VersionNode.Text.Should().Be("HTTP/1.1");
+    }
+
+    [Fact]
+    public void headers_are_parsed_correctly()
+    {
+        var result = HttpRequestParser.Parse(
+            """
+            GET https://example.com HTTP/1.1
+            Accept: */*
+            Accept-Encoding : gzip, deflate, br
+            Accept-Language : en-US,en;q=0.9
+            ContentLength:7060
+            Cookie: expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;
+            """);
+
+        using var _ = new AssertionScope();
+
+        var headersNode = result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .ChildNodes.Should().ContainSingle<HttpHeadersNode>().Which;
+
+        var headerNodes = headersNode.HeaderNodes.ToArray();
+        headerNodes.Should().HaveCount(5);
+
+        headerNodes[0].NameNode.Text.Should().Be("Accept");
+        headerNodes[0].ValueNode.Text.Should().Be("*/*");
+
+        headerNodes[1].NameNode.Text.Should().Be("Accept-Encoding");
+        headerNodes[1].ValueNode.Text.Should().Be("gzip, deflate, br");
+
+        headerNodes[2].NameNode.Text.Should().Be("Accept-Language");
+        headerNodes[2].ValueNode.Text.Should().Be("en-US,en;q=0.9");
+
+        headerNodes[3].NameNode.Text.Should().Be("ContentLength");
+        headerNodes[3].ValueNode.Text.Should().Be("7060");
+
+        headerNodes[4].NameNode.Text.Should().Be("Cookie");
+        headerNodes[4].ValueNode.Text.Should().Be("expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;");
+    }
 }
 
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// TODO: Test empty string
+// TODO: Test string with whitespaces and newline only
+// TODO: Test string with variable declarations but no requests
 
-/*namespace Microsoft.WebTools.Languages.Rest.VS.Test.Parser;
-
+/*
 using System;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -78,7 +115,6 @@ using Microsoft.WebTools.Languages.Rest.VS.Test.TestUtils;
 [TestClass]
 public class TokenTest
 {
-
     [Fact]
     public async Task RequestTextAfterLineBreakAsync()
     {

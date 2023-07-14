@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.HttpRequest;
+namespace Microsoft.DotNet.Interactive.HttpRequest.Reference;
 
 internal class ParseItem
 {
@@ -18,7 +18,7 @@ internal class ParseItem
     {
     }
 
-    public ParseItem(int start, string text, IHttpDocumentSnapshot document, ItemType type, IReadOnlyList<ParseItem> references, IValueProvider? valueProvider)
+    public ParseItem(int start, string text, IHttpDocumentSnapshot document, ItemType type, IReadOnlyList<ParseItem> references, IValueProvider valueProvider)
     {
         Start = start;
         Text = text;
@@ -47,7 +47,7 @@ internal class ParseItem
     public SnapshotSpan Span => new SnapshotSpan(Start, Length);
 
     public IReadOnlyList<ParseItem> References { get; }
-    public IValueProvider? ValueProvider { get; }
+    public IValueProvider ValueProvider { get; }
 
     public IReadOnlyList<Error> Errors => DocumentSnapshot.GetErrorsForParseItem(this);
 
@@ -65,7 +65,6 @@ internal class ParseItem
 
     public string ExpandVariables(string text, IReadOnlyDictionary<string, ParsedVariable> variablesExpanded)
     {
-        return text;
         return DocumentSnapshot.ValueParser.ParseValues(text, variablesExpanded);
     }
 

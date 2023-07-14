@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>preview</LangVersion>
-    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -21,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="NullableAttributes.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="Reference\NullableAttributes.cs" />
   </ItemGroup>
 
 </Project>

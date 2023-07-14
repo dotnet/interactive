@@ -4,6 +4,6 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace Microsoft.DotNet.Interactive.HttpRequest;
+namespace Microsoft.DotNet.Interactive.HttpRequest.Reference;
 
 internal record DynamicVariable(Regex Expression, Func<HttpDocumentSnapshot, string, MatchCollection, string> InvokeHandler);
