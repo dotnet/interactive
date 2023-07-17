@@ -47,17 +47,18 @@ internal class PackageDirectoryExtensionLoader
         }
 
         using var op = new ConfirmationLogger(
-            Log.Category,
+            operationName: nameof(LoadFromDirectoryAsync),
+            category: Log.Category,
             message: $"Loading extensions in directory {directory}",
             logOnStart: true,
             args: new object[] { directory });
 
-        await LoadFromDllsInDirectory(
+        await LoadFromDllsInDirectoryAsync(
             directory,
             kernel,
             context);
 
-        await LoadFromExtensionDibScript(
+        await LoadFromExtensionDibScriptAsync(
             directory,
             kernel,
             context);
@@ -65,7 +66,7 @@ internal class PackageDirectoryExtensionLoader
         op.Succeed();
     }
 
-    public async Task LoadFromDllsInDirectory(
+    private async Task LoadFromDllsInDirectoryAsync(
         DirectoryInfo directory,
         Kernel kernel,
         KernelInvocationContext context)
@@ -128,7 +129,7 @@ internal class PackageDirectoryExtensionLoader
         }
     }
 
-    private async Task LoadFromExtensionDibScript(
+    private async Task LoadFromExtensionDibScriptAsync(
         DirectoryInfo directory,
         Kernel kernel,
         KernelInvocationContext context)
@@ -140,7 +141,8 @@ internal class PackageDirectoryExtensionLoader
             var logMessage = $"Loading extension script from `{extensionFile.FullName}`";
 
             using var op = new ConfirmationLogger(
-                Log.Category,
+                operationName: nameof(LoadFromExtensionDibScriptAsync),
+                category: Log.Category,
                 message: logMessage,
                 logOnStart: true,
                 args: new object[] { extensionFile });
@@ -148,6 +150,8 @@ internal class PackageDirectoryExtensionLoader
             context.Display(logMessage);
 
             await kernel.LoadAndRunInteractiveDocument(extensionFile);
+
+            op.Succeed();
         }
     }
 }
