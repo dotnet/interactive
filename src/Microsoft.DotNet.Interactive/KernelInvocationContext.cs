@@ -40,6 +40,7 @@ public class KernelInvocationContext : IDisposable
     private KernelInvocationContext(KernelCommand command)
     {
         var operation = new OperationLogger(
+            operationName: nameof(KernelInvocationContext),
             args: new object[] { command },
             category: nameof(KernelInvocationContext),
             logOnStart: true);
