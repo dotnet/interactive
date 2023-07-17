@@ -277,7 +277,8 @@ public sealed class StartupTelemetryEventBuilder
                     return directive.Key;
             }
 
-            if (directive.Key.StartsWith("vs")) // VS also appends the process id to the string.
+            if (directive.Key.StartsWith("vs") &&
+                int.TryParse(directive.Key.Substring(2), out _)) // VS appends the process id after the "vs" prefix.
             {
                 return "vs";
             }
