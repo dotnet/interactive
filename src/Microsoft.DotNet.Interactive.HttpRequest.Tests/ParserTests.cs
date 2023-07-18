@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
-using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
@@ -12,6 +11,88 @@ namespace Microsoft.DotNet.Interactive.HttpRequest.Tests;
 
 public class ParserTests
 {
+    [Fact]
+    public void it_can_parse_an_empty_string()
+    {
+        var result = HttpRequestParser.Parse("");
+        result.SyntaxTree.Should().BeNull();
+
+        // TODO: Test error reporting.
+    }
+
+    [Fact]
+    public void it_can_parse_a_string_with_only_whitespace()
+    {
+        var result = HttpRequestParser.Parse(" \t ");
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .MethodNode.ChildTokens.First().TextWithTrivia.Should().Be(" \t ");
+
+        // TODO: Test error reporting.
+    }
+
+    [Fact]
+    public void it_can_parse_a_string_with_only_newlines()
+    {
+        var result = HttpRequestParser.Parse("\r\n\n\r\n");
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .MethodNode.TextWithTrivia.Should().Be("\r\n\n\r\n");
+
+        // TODO: Test error reporting.
+    }
+
+    [Fact]
+    public void whitespace_is_legal_at_the_beginning_of_a_request()
+    {
+        var result = HttpRequestParser.Parse("  GET https://example.com");
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .MethodNode.ChildTokens.First().TextWithTrivia.Should().Be("  ");
+    }
+
+    [Fact]
+    public void newline_is_legal_at_the_beginning_of_a_request()
+    {
+        var result = HttpRequestParser.Parse(
+            """
+            
+            GET https://example.com
+            """);
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .MethodNode.ChildTokens.First().TextWithTrivia.Should().Be("\r\n");
+    }
+
+
+    [Fact]
+    public void whitespace_is_legal_at_the_end_of_a_request()
+    {
+        var result = HttpRequestParser.Parse("GET https://example.com  ");
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .UrlNode.ChildTokens.Last().TextWithTrivia.Should().Be("  ");
+    }
+
+    [Fact]
+    public void newline_is_legal_at_the_end_of_a_request()
+    {
+        var result = HttpRequestParser.Parse(
+            """
+            GET https://example.com
+
+            """);
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .UrlNode.ChildTokens.Last().TextWithTrivia.Should().Be("\r\n");
+    }
+
     [Theory]
     [InlineData("GET https://example.com", "GET")]
     [InlineData("POST https://example.com", "POST")]
@@ -85,18 +166,23 @@ public class ParserTests
         headerNodes.Should().HaveCount(5);
 
         headerNodes[0].NameNode.Text.Should().Be("Accept");
+        headerNodes[0].SeparatorNode.Text.Should().Be(":");
         headerNodes[0].ValueNode.Text.Should().Be("*/*");
 
         headerNodes[1].NameNode.Text.Should().Be("Accept-Encoding");
+        headerNodes[1].SeparatorNode.Text.Should().Be(":");
         headerNodes[1].ValueNode.Text.Should().Be("gzip, deflate, br");
 
         headerNodes[2].NameNode.Text.Should().Be("Accept-Language");
+        headerNodes[2].SeparatorNode.Text.Should().Be(":");
         headerNodes[2].ValueNode.Text.Should().Be("en-US,en;q=0.9");
 
         headerNodes[3].NameNode.Text.Should().Be("ContentLength");
+        headerNodes[3].SeparatorNode.Text.Should().Be(":");
         headerNodes[3].ValueNode.Text.Should().Be("7060");
 
         headerNodes[4].NameNode.Text.Should().Be("Cookie");
+        headerNodes[4].SeparatorNode.Text.Should().Be(":");
         headerNodes[4].ValueNode.Text.Should().Be("expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;");
     }
 
@@ -115,19 +201,24 @@ public class ParserTests
             </request>
             """);
 
-        result.SyntaxTree.RootNode
-              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-              .BodyNode.Text.Should().Be(
-                    """
-                    <request>
-                        <name>sample</name>
-                        <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
-                    </request>
-                    """);
+        using var _ = new AssertionScope();
+
+        var requestNode = result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+        requestNode.HeadersNode.HeaderNodes.Count.Should().Be(2);
+        requestNode.BodySeparatorNode.TextWithTrivia.Should().Be("\r\n");
+        requestNode.BodyNode.Text.Should().Be(
+            """
+            <request>
+                <name>sample</name>
+                <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+            </request>
+            """);
     }
 
-    //TODO: Is this a valid syntax to test?
-    /*[Fact]
+    //TODO: Is it an error to include a body with no headers?
+    [Fact]
     public void body_without_header_is_parsed_correctly()
     {
         var result = HttpRequestParser.Parse(
@@ -140,16 +231,55 @@ public class ParserTests
             </request>
             """);
 
-        result.SyntaxTree.RootNode
-              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-              .BodyNode.Text.Should().Be(
-                    """
-                    <request>
-                        <name>sample</name>
-                        <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
-                    </request>
-                    """);
-    }*/
+        using var _ = new AssertionScope();
+
+        var requestNode = result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+        requestNode.HeadersNode.HeaderNodes.Count.Should().Be(0);
+        requestNode.BodySeparatorNode.TextWithTrivia.Should().Be("\r\n");
+        requestNode.BodyNode.Text.Should().Be(
+            """
+            <request>
+                <name>sample</name>
+                <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+            </request>
+            """);
+    }
+
+    [Fact]
+    public void multiple_new_lines_before_body_are_parsed_correctly()
+    {
+        var result = HttpRequestParser.Parse(
+            """
+            POST https://example.com/comments HTTP/1.1
+            Content-Type: application/xml
+            Authorization: token xxx
+
+
+
+
+            <request>
+                <name>sample</name>
+                <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+            </request>
+            """);
+
+        using var _ = new AssertionScope();
+
+        var requestNode = result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+        requestNode.HeadersNode.HeaderNodes.Count.Should().Be(2);
+        requestNode.BodySeparatorNode.TextWithTrivia.Should().Be("\r\n\r\n\r\n\r\n");
+        requestNode.BodyNode.Text.Should().Be(
+            """
+            <request>
+                <name>sample</name>
+                <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+            </request>
+            """);
+    }
 }
 
 // TODO: Test empty string

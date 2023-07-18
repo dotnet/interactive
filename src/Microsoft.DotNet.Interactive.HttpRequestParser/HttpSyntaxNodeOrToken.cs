@@ -24,7 +24,7 @@ internal abstract class HttpSyntaxNodeOrToken
     /// <summary>
     /// Gets the significant text of the current node or token, without trivia.
     /// </summary>
-    public string Text => SourceText.Substring(Span.Start, Span.Length).Trim();
+    public string Text => TextWithTrivia.Trim();
 
     /// <summary>
     /// Gets the text of the current node or token, including trivia.

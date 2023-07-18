@@ -70,6 +70,16 @@ internal class HttpRequestParser
             AdvanceToNextToken();
         }
 
+        private T ParseLeadingTrivia<T>(T node) where T : HttpSyntaxNode
+        {
+            while (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine)
+            {
+                ConsumeCurrentTokenInto(node);
+            }
+
+            return node;
+        }
+
         private T ParseTrailingTrivia<T>(T node, bool stopAfterNewLine = false) where T : HttpSyntaxNode
         {
             while (MoreTokens())
@@ -115,7 +125,9 @@ internal class HttpRequestParser
         {
             var node = new HttpMethodNode(_sourceText, _syntaxTree);
 
-            if (CurrentToken.Kind is HttpTokenKind.Word)
+            ParseLeadingTrivia(node);
+
+            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
             {
                 ConsumeCurrentTokenInto(node);
 
@@ -136,17 +148,14 @@ internal class HttpRequestParser
         {
             var node = new HttpUrlNode(_sourceText, _syntaxTree);
 
-            while (MoreTokens())
-            {
-                if (CurrentToken.Kind is not (HttpTokenKind.Word or HttpTokenKind.Punctuation))
-                {
-                    break;
-                }
+            ParseLeadingTrivia(node);
 
+            while (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation)
+            {
                 ConsumeCurrentTokenInto(node);
             }
 
-            return ParseTrailingTrivia(node);
+            return ParseTrailingTrivia(node, stopAfterNewLine: true);
         }
 
         private HttpVersionNode? ParseVersion()
@@ -158,22 +167,19 @@ internal class HttpRequestParser
 
             var node = new HttpVersionNode(_sourceText, _syntaxTree);
 
-            if (CurrentToken.Kind is HttpTokenKind.Word)
+            ParseLeadingTrivia(node);
+
+            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
             {
                 ConsumeCurrentTokenInto(node);
 
-                while (MoreTokens())
+                while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine)
                 {
-                    if (CurrentToken.Kind is HttpTokenKind.NewLine)
-                    {
-                        break;
-                    }
-
                     ConsumeCurrentTokenInto(node);
                 }
             }
 
-            return ParseTrailingTrivia(node);
+            return ParseTrailingTrivia(node, stopAfterNewLine: true);
         }
 
         private HttpHeadersNode? ParseHeaders()
@@ -184,14 +190,9 @@ internal class HttpRequestParser
             }
 
             var headerNodes = new List<HttpHeaderNode>();
-            while (MoreTokens())
+            while (MoreTokens() && CurrentToken.Kind is not (HttpTokenKind.NewLine or HttpTokenKind.Whitespace))
             {
                 headerNodes.Add(ParseHeader());
-
-                if (CurrentToken.Kind is HttpTokenKind.NewLine or HttpTokenKind.Whitespace)
-                {
-                    break;
-                }
             }
 
             return new HttpHeadersNode(_sourceText, _syntaxTree, headerNodes);
@@ -210,7 +211,9 @@ internal class HttpRequestParser
         {
             var node = new HttpHeaderNameNode(_sourceText, _syntaxTree);
 
-            if (CurrentToken.Kind is HttpTokenKind.Word)
+            ParseLeadingTrivia(node);
+
+            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
             {
                 ConsumeCurrentTokenInto(node);
 
@@ -237,7 +240,9 @@ internal class HttpRequestParser
         {
             var node = new HttpHeaderSeparatorNode(_sourceText, _syntaxTree);
 
-            if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: ":" })
+            ParseLeadingTrivia(node);
+
+            if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: ":" })
             {
                 ConsumeCurrentTokenInto(node);
             }
@@ -249,7 +254,9 @@ internal class HttpRequestParser
         {
             var node = new HttpHeaderValueNode(_sourceText, _syntaxTree);
 
-            if (CurrentToken.Kind is not HttpTokenKind.NewLine)
+            ParseLeadingTrivia(node);
+
+            if (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine)
             {
                 ConsumeCurrentTokenInto(node);
 
@@ -269,31 +276,40 @@ internal class HttpRequestParser
 
         private HttpBodySeparatorNode? ParseBodySeparator()
         {
+            if (!MoreTokens())
+            {
+                return null;
+            }
+
             var node = new HttpBodySeparatorNode(_sourceText, _syntaxTree);
 
-            if (CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine)
+            ParseLeadingTrivia(node);
+
+            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine)
             {
                 ConsumeCurrentTokenInto(node);
 
-                while (MoreTokens())
+                while (MoreTokens() && CurrentToken.Kind is (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
                 {
-                    if (CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
-                    {
-                        break;
-                    }              
-
                     ConsumeCurrentTokenInto(node);
                 }
             }
 
             return ParseTrailingTrivia(node);
-        }   
+        }
 
         private HttpBodyNode? ParseBody()
         {
+            if (!MoreTokens())
+            {
+                return null;
+            }
+
             var node = new HttpBodyNode(_sourceText, _syntaxTree);
 
-            if (CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
+            ParseLeadingTrivia(node);
+
+            if (MoreTokens() && CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
             {
                 ConsumeCurrentTokenInto(node);
 
@@ -305,7 +321,6 @@ internal class HttpRequestParser
             }
 
             return ParseTrailingTrivia(node);
-
         }
     }
 }
