@@ -27,6 +27,8 @@ internal class HttpLexer
 
         HttpTokenKind? previousTokenKind = null;
 
+        char previousCharacter = default;
+
         while (More())
         {
             var currentCharacter = _sourceText[_textWindow.End];
@@ -40,13 +42,24 @@ internal class HttpLexer
                          : HttpTokenKind.Word,
             };
 
-            if (previousTokenKind is { } previousTokenKindValue &&
-                (previousTokenKind != currentTokenKind || currentTokenKind is HttpTokenKind.Punctuation))
+            if (previousTokenKind is { } previousTokenKindValue)
             {
-                FlushToken(previousTokenKindValue);
+                if (currentTokenKind is HttpTokenKind.NewLine && previousTokenKindValue is HttpTokenKind.NewLine 
+                    && previousCharacter is '\r' && currentCharacter is '\n')
+                {
+
+                }
+                else if (previousTokenKind != currentTokenKind 
+                    || currentTokenKind is HttpTokenKind.NewLine || currentTokenKind is HttpTokenKind.Punctuation)
+                {
+                    FlushToken(previousTokenKindValue);
+                }
             }
+            
 
             previousTokenKind = currentTokenKind;
+           
+            previousCharacter = currentCharacter;
 
             _textWindow.Advance();
         }

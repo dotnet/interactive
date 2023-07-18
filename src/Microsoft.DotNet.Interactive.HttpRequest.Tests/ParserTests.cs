@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
@@ -98,6 +99,57 @@ public class ParserTests
         headerNodes[4].NameNode.Text.Should().Be("Cookie");
         headerNodes[4].ValueNode.Text.Should().Be("expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;");
     }
+
+    [Fact]
+    public void header_with_body_is_parsed_correctly()
+    {
+        var result = HttpRequestParser.Parse(
+            """
+            POST https://example.com/comments HTTP/1.1
+            Content-Type: application/xml
+            Authorization: token xxx
+
+            <request>
+                <name>sample</name>
+                <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+            </request>
+            """);
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .BodyNode.Text.Should().Be(
+                    """
+                    <request>
+                        <name>sample</name>
+                        <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                    </request>
+                    """);
+    }
+
+    //TODO: Is this a valid syntax to test?
+    /*[Fact]
+    public void body_without_header_is_parsed_correctly()
+    {
+        var result = HttpRequestParser.Parse(
+            """
+            POST https://example.com/comments HTTP/1.1
+
+            <request>
+                <name>sample</name>
+                <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+            </request>
+            """);
+
+        result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .BodyNode.Text.Should().Be(
+                    """
+                    <request>
+                        <name>sample</name>
+                        <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                    </request>
+                    """);
+    }*/
 }
 
 // TODO: Test empty string

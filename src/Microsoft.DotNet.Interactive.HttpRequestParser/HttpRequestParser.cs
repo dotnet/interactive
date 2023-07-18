@@ -70,10 +70,16 @@ internal class HttpRequestParser
             AdvanceToNextToken();
         }
 
-        private T ParseTrailingTrivia<T>(T node) where T : HttpSyntaxNode
+        private T ParseTrailingTrivia<T>(T node, bool stopAfterNewLine = false) where T : HttpSyntaxNode
         {
             while (MoreTokens())
             {
+                if (stopAfterNewLine && CurrentToken.Kind is HttpTokenKind.NewLine)
+                {
+                    ConsumeCurrentTokenInto(node);
+                    break;
+                }
+
                 if (CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
                 {
                     break;
@@ -91,6 +97,7 @@ internal class HttpRequestParser
             var urlNode = ParseUrl();
             var versionNode = ParseVersion();
             var headersNode = ParseHeaders();
+            var bodySeparatorNode = ParseBodySeparator();
             var bodyNode = ParseBody();
 
             return new HttpRequestNode(
@@ -100,6 +107,7 @@ internal class HttpRequestParser
                 urlNode,
                 versionNode,
                 headersNode,
+                bodySeparatorNode,
                 bodyNode);
         }
 
@@ -179,6 +187,11 @@ internal class HttpRequestParser
             while (MoreTokens())
             {
                 headerNodes.Add(ParseHeader());
+
+                if (CurrentToken.Kind is HttpTokenKind.NewLine or HttpTokenKind.Whitespace)
+                {
+                    break;
+                }
             }
 
             return new HttpHeadersNode(_sourceText, _syntaxTree, headerNodes);
@@ -251,12 +264,48 @@ internal class HttpRequestParser
                 }
             }
 
-            return ParseTrailingTrivia(node);
+            return ParseTrailingTrivia(node, stopAfterNewLine: true);
         }
+
+        private HttpBodySeparatorNode? ParseBodySeparator()
+        {
+            var node = new HttpBodySeparatorNode(_sourceText, _syntaxTree);
+
+            if (CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine)
+            {
+                ConsumeCurrentTokenInto(node);
+
+                while (MoreTokens())
+                {
+                    if (CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
+                    {
+                        break;
+                    }              
+
+                    ConsumeCurrentTokenInto(node);
+                }
+            }
+
+            return ParseTrailingTrivia(node);
+        }   
 
         private HttpBodyNode? ParseBody()
         {
-            return null;
+            var node = new HttpBodyNode(_sourceText, _syntaxTree);
+
+            if (CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
+            {
+                ConsumeCurrentTokenInto(node);
+
+                while (MoreTokens())
+                {
+
+                    ConsumeCurrentTokenInto(node);
+                }
+            }
+
+            return ParseTrailingTrivia(node);
+
         }
     }
 }
