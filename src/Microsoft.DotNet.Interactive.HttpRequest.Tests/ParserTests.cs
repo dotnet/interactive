@@ -280,10 +280,30 @@ public class ParserTests
             </request>
             """);
     }
-}
 
-// TODO: Test empty string
-// TODO: Test string with whitespaces and newline only
+    [Fact]
+    public void comments_are_parsed_correctly()
+    {
+
+        var result = HttpRequestParser.Parse(
+            """
+            # This is a comment
+            GET https://example.com HTTP/1.1"
+            """);
+
+        using var _ = new AssertionScope();
+
+        var methodNode = result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+              .MethodNode;
+
+        methodNode.ChildNodes.Should().ContainSingle<HttpCommentNode>().Which.Text.Should().Be(
+          "# This is a comment");
+
+              
+    }
+
+}
 // TODO: Test string with variable declarations but no requests
 
 /*

@@ -60,6 +60,15 @@ internal class HttpRequestParser
 
         private HttpSyntaxToken CurrentToken => _tokens![_currentTokenIndex];
 
+        private HttpSyntaxToken? NextToken 
+        { 
+            get 
+            { 
+                var nextTokenIndex = _currentTokenIndex + 1;
+                return nextTokenIndex >= _tokens!.Count ? null : _tokens![nextTokenIndex];
+            } 
+        }    
+
         private bool MoreTokens() => _tokens!.Count > _currentTokenIndex;
 
         private void AdvanceToNextToken() => _currentTokenIndex++;
@@ -70,11 +79,32 @@ internal class HttpRequestParser
             AdvanceToNextToken();
         }
 
+
         private T ParseLeadingTrivia<T>(T node) where T : HttpSyntaxNode
         {
-            while (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine)
+            while (MoreTokens())
             {
-                ConsumeCurrentTokenInto(node);
+                if (CurrentToken.Kind is HttpTokenKind.Whitespace)
+                {
+                    ConsumeCurrentTokenInto(node);
+                }
+                else if (CurrentToken.Kind is HttpTokenKind.NewLine)
+                {
+                    ConsumeCurrentTokenInto(node);                   
+                }
+                else if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })
+                {                                   
+                    node.Add(ParseComment());
+                } 
+                else if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } && 
+                    NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
+                {
+                    node.Add(ParseComment());
+                }
+                else
+                {
+                    break;
+                }
             }
 
             return node;
@@ -322,5 +352,50 @@ internal class HttpRequestParser
 
             return ParseTrailingTrivia(node);
         }
+
+        private HttpCommentNode ParseComment()
+        {
+            var commentStartNode = ParseCommentStart();
+            var commentBodyNode = ParseCommentBody();
+
+            return new HttpCommentNode(_sourceText, _syntaxTree, commentStartNode, commentBodyNode);
+        }
+
+        private HttpCommentBodyNode? ParseCommentBody()
+        {
+            if (!MoreTokens())
+            {
+                return null;
+            }
+
+            var node = new HttpCommentBodyNode(_sourceText, _syntaxTree);
+            ParseLeadingTrivia(node);
+
+            while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine)
+            {
+                ConsumeCurrentTokenInto(node);
+            }
+
+            return node;
+        }
+
+        private HttpCommentStartNode ParseCommentStart()
+        {
+            var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
+
+            if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })
+            {
+                ConsumeCurrentTokenInto(node);
+            } 
+            else if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
+                NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
+            {
+                ConsumeCurrentTokenInto(node);
+                ConsumeCurrentTokenInto(node);
+            }
+
+            return ParseTrailingTrivia(node);
+        }
+
     }
 }

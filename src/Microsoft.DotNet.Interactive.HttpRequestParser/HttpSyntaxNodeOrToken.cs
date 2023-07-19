@@ -32,4 +32,5 @@ internal abstract class HttpSyntaxNodeOrToken
     public string TextWithTrivia => SourceText.Substring(Span.Start, Span.Length);
 
     public override string ToString() => $"{GetType().Name}: {Text}";
+    
 }
