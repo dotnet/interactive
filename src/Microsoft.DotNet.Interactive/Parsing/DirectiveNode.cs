@@ -43,9 +43,9 @@ public abstract class DirectiveNode : LanguageNode
         foreach (var error in parseResult.Errors)
         {
             yield return new Diagnostic(
-                error.Message,
-                DiagnosticSeverity.Error,
-                new Location(SyntaxTree, Span));
+                message: error.Message,
+                severity: CodeAnalysis.DiagnosticSeverity.Error,
+                linePositionSpan: GetLinePositionSpan(), code: "DNI0001");
         }
     }
 

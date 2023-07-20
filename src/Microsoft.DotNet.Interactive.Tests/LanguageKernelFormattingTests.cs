@@ -1,8 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
@@ -116,7 +117,7 @@ using {typeof(PocketView).Namespace};
     [Theory]
     [InlineData(Language.CSharp, "{ \"hello\": 123 ", "application/json")]
     [InlineData(Language.CSharp, "<span class=\"test\">hello!&nbsp;</span>", "text/html")]
-    public async Task String_is_rendered_as_specified_mime_type_DisplayAs(
+    public async Task DisplayAs_renders_string_as_specified_mime_type(
         Language language,
         string stringValue,
         string mimeType)
@@ -145,7 +146,69 @@ using {typeof(PocketView).Namespace};
     [Theory]
     [InlineData(Language.CSharp)]
     [InlineData(Language.FSharp)]
-    public async Task Display_helper_can_be_called_without_specifying_class_name(Language language)
+    public async Task DisplayTable_produces_tabular_HTML_output_for_IEnumerable_T(Language language)
+    {
+        var kernel = CreateKernel(language, openTestingNamespaces: true);
+
+        var code = language switch
+        {
+            Language.CSharp => """
+            new[] { 
+                new { Title = "Troll 2", Stars = 0.25 },
+                new { Title = "The Room", Stars = 0.4 } }.DisplayTable();
+            """,
+            Language.FSharp => """
+            type MovieRating = { Title: string; Stars: float }
+            let ratings = 
+                [ { Title = "Troll 2"; Stars = 0.25 };
+                  { Title = "The Room"; Stars = 0.4 } ]
+            ratings.DisplayTable()
+            """
+        };
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.Should().NotContainErrors();
+
+        result.Events
+              .Should().ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues.Should().ContainSingle()
+              .Which
+              .Value.Should().ContainEquivalentHtmlFragments("""
+                <table>
+                  <thead>
+                      <tr>
+                          <td><span>Title</span></td>
+                          <td><span>Stars</span></td>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr>
+                          <td>Troll 2</td>
+                          <td>
+                              <div class="dni-plaintext">
+                                  <pre>0.25</pre>
+                              </div>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>The Room</td>
+                          <td>
+                              <div class="dni-plaintext">
+                                  <pre>0.4</pre>
+                              </div>
+                          </td>
+                      </tr>
+                  </tbody>
+              </table>
+              """);
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task display_can_be_called_without_specifying_class_name(Language language)
     {
         var kernel = CreateKernel(language, openTestingNamespaces: true);
 
@@ -188,7 +251,6 @@ using {typeof(PocketView).Namespace};
             .ContainSingle(v =>
                 v.MimeType == "text/html" &&
                 v.Value.ToString().Contains("<b>hello</b>"));
-
 
         KernelEvents
             .OfType<DisplayedValueUpdated>()

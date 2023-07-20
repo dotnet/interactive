@@ -6,7 +6,6 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting.Tests;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests;

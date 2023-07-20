@@ -4,11 +4,10 @@
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Primitives;
-using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using System.Linq;
 using System;
 
-namespace Microsoft.DotNet.Interactive.Formatting.Tests;
+namespace Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 
 public static class AssertionExtensions
 {

@@ -19,18 +19,16 @@ public static class KernelInvocationContextExtensions
         object value,
         params string[] mimeTypes)
     {
-        var displayId = Guid.NewGuid().ToString();
+        var formattedValues = FormattedValue.CreateManyFromObject(value, mimeTypes).ToArray();
 
-        var formattedValues = FormattedValue.CreateManyFromObject(value, mimeTypes);
+        var displayedValue = new DisplayedValue(formattedValues, context);
 
         context.Publish(
             new DisplayedValueProduced(
                 value,
                 context?.Command,
                 formattedValues,
-                displayId));
-
-        var displayedValue = new DisplayedValue(displayId, formattedValues.Select(fv => fv.MimeType).ToArray(), context);
+                displayedValue.DisplayId));
 
         return displayedValue;
     }
@@ -50,20 +48,20 @@ public static class KernelInvocationContextExtensions
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
         }
 
-        var displayId = Guid.NewGuid().ToString();
-
         var formattedValue = new FormattedValue(
             mimeType,
             value);
+
+        var formattedValues = new[] { formattedValue };
+
+        var displayedValue = new DisplayedValue(formattedValues, context);
 
         context.Publish(
             new DisplayedValueProduced(
                 value,
                 context.Command,
-                new[] { formattedValue },
-                displayId));
-
-        var displayedValue = new DisplayedValue(displayId, mimeType, context);
+                formattedValues,
+                displayedValue.DisplayId));
 
         return displayedValue;
     }
