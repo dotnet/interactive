@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -55,7 +56,7 @@ public class HtmlFormatter<T> : TypeFormatter<T>
 
     public override string MimeType => HtmlFormatter.MimeType;
 
-    internal static HtmlFormatter<T> CreateTableFormatterForAnyEnumerable()
+    internal static HtmlFormatter<T> CreateTreeViewFormatterForAnyEnumerable()
     {
         Func<T, IEnumerable> getKeys = null;
         Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;

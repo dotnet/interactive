@@ -134,15 +134,24 @@ x
             .Should()
             .ContainSingle<DirectiveNode>()
             .Which;
-        node
-            .GetDiagnostics()
+
+        var diagnostics = node.GetDiagnostics();
+
+        diagnostics
             .Should()
-            .ContainSingle(d => d.Severity == DiagnosticSeverity.Error)
+            .ContainSingle(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error)
             .Which
-            .Location
-            .SourceSpan
+            .LinePositionSpan.End.Character
             .Should()
-            .BeEquivalentTo(node.Span);
+            .Be(node.Span.End);
+
+        diagnostics
+            .Should()
+            .ContainSingle(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error)
+            .Which
+            .LinePositionSpan.Start.Character
+            .Should()
+            .Be(node.Span.Start);
     }
 
     [Theory]
