@@ -529,6 +529,34 @@ User-Agent: {{missing_value_2}}";
     }
 
     [Fact]
+    public async Task when_response_is_slow_and_an_error_happens_the_awaiting_response_displayed_value_is_cleared()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        HttpRequestMessage request = null;
+        var throwingResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            throw new HttpRequestException();
+        });
+        var client = new HttpClient(throwingResponseHandler);
+
+        using var root = new CompositeKernel();
+        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
+        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+        var displayedValueUpdated = result.Events.OfType<DisplayedValueUpdated>().First();
+
+        using var _ = new AssertionScope();
+
+        displayedValueUpdated.Value.Should().Be(null);
+        displayedValueUpdated.FormattedValues.Single(f => f.MimeType is HtmlFormatter.MimeType).Value.Should().Be("<span/>");
+    }
+
+    [Fact]
     public async Task produces_initial_displayed_value_that_is_updated_when_response_is_large()
     {
         const int ContentByteLengthThreshold = 100;
