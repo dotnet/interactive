@@ -63,7 +63,7 @@
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
-    <PackageReference Include="PocketLogger" Version="0.8.1">
+    <PackageReference Include="PocketLogger" Version="0.8.2">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
