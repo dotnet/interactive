@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 

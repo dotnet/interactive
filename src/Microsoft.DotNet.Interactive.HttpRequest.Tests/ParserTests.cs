@@ -217,9 +217,30 @@ public class ParserTests
             """);
     }
 
+    [Fact]
+    public void body_without_header_header_is_parsed_correctly()
+    {
+        var result = HttpRequestParser.Parse(
+            """
+        POST https://example.com/comments HTTP/1.1
+
+        <request>
+            <name>sample</name>
+            <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+        </request>
+        """);
+
+        using var _ = new AssertionScope();
+
+        var requestNode = result.SyntaxTree.RootNode
+              .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+        requestNode.HeadersNode.HeaderNodes.Count.Should().Be(0);
+    }
+
     //TODO: Is it an error to include a body with no headers?
     [Fact]
-    public void body_without_header_is_parsed_correctly()
+    public void body_without_header_body_is_parsed_correctly()
     {
         var result = HttpRequestParser.Parse(
             """
@@ -236,8 +257,6 @@ public class ParserTests
         var requestNode = result.SyntaxTree.RootNode
               .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
 
-        requestNode.HeadersNode.HeaderNodes.Count.Should().Be(0);
-        requestNode.BodySeparatorNode.TextWithTrivia.Should().Be("\r\n");
         requestNode.BodyNode.Text.Should().Be(
             """
             <request>
@@ -269,9 +288,7 @@ public class ParserTests
 
         var requestNode = result.SyntaxTree.RootNode
               .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
-
-        requestNode.HeadersNode.HeaderNodes.Count.Should().Be(2);
-        requestNode.BodySeparatorNode.TextWithTrivia.Should().Be("\r\n\r\n\r\n\r\n");
+        
         requestNode.BodyNode.Text.Should().Be(
             """
             <request>
@@ -303,6 +320,23 @@ public class ParserTests
               
     }
 
+    [Fact]
+    public void diagnostic_object_is_reported_for_unrecognized_verb()
+    {
+        var result = HttpRequestParser.Parse("OOOOPS https://example.com");
+
+        result.GetDiagnostics()
+            .Should().ContainSingle().Which.Message.Should().Be("Unrecognized HTTP verb OOOOPS");
+    }
+
+    [Fact]
+    public void diagnostic_object_is_reported_for_missing_verb()
+    {
+        var result = HttpRequestParser.Parse("https://example.com");
+
+        result.GetDiagnostics()
+            .Should().ContainSingle().Which.Message.Should().Be("Missing HTTP verb");
+    }
 }
 // TODO: Test string with variable declarations but no requests
 

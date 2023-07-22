@@ -29,4 +29,9 @@ internal class HttpRequestParseResult
             }
         }
     }
+
+    public IEnumerable<Diagnostic> GetDiagnostics()
+    {
+        return SyntaxTree?.RootNode?.GetDiagnostics() ?? Enumerable.Empty<Diagnostic>();
+    }
 }

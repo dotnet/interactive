@@ -3,12 +3,14 @@
 
 #nullable enable
 
+using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal class HttpRequestNode : HttpSyntaxNode
 {
     internal HttpRequestNode(
-        string sourceText,
+        SourceText sourceText,
         HttpSyntaxTree? syntaxTree,
         HttpMethodNode methodNode,
         HttpUrlNode urlNode,

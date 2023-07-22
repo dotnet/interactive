@@ -3,11 +3,13 @@
 
 #nullable enable
 
+using Microsoft.CodeAnalysis.Text; 
+
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal class HttpCommentStartNode : HttpSyntaxNode
 {
-    internal HttpCommentStartNode(string sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpCommentStartNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 }

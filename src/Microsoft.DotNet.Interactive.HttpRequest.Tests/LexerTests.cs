@@ -6,4 +6,5 @@ namespace Microsoft.DotNet.Interactive.HttpRequest.Tests;
 public class LexerTests
 {
     // TODO: Add tests for tokenization of words, newline, whitespace, punctuation etc.
+    // TODO: Add tests for tokenization of windows versus linux newlines
 }

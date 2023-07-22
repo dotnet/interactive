@@ -5,17 +5,18 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal class HttpLexer
 {
-    private readonly string _sourceText;
+    private readonly SourceText _sourceText;
     private readonly HttpSyntaxTree _syntaxTree;
     private TextWindow? _textWindow;
     private readonly List<HttpSyntaxToken> _tokens = new();
 
-    public HttpLexer(string sourceText, HttpSyntaxTree syntaxTree)
+    public HttpLexer(SourceText sourceText, HttpSyntaxTree syntaxTree)
     {
         _sourceText = sourceText;
         _syntaxTree = syntaxTree;

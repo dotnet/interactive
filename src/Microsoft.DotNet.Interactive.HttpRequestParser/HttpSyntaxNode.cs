@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -15,7 +16,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
     private readonly List<HttpSyntaxNodeOrToken> _childNodesAndTokens = new();
 
     private protected HttpSyntaxNode(
-        string sourceText,
+        SourceText sourceText,
         HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
@@ -79,6 +80,27 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
     public IEnumerable<HttpSyntaxNodeOrToken> ChildTokens => _childNodesAndTokens.OfType<HttpSyntaxToken>();
 
     public IReadOnlyList<HttpSyntaxNodeOrToken> ChildNodesAndTokens => _childNodesAndTokens;
+
+    public override IEnumerable<Diagnostic> GetDiagnostics()
+    {
+        foreach(var child in ChildNodesAndTokens)
+        {
+            foreach(var diagnostic in child.GetDiagnostics())
+            {
+                yield return diagnostic;
+            }
+
+        }
+
+        if (_diagnostics is not null)
+        {
+            foreach (var diagnostic in _diagnostics)
+            {
+                yield return diagnostic;
+            }
+        }
+
+    }
 
     public IEnumerable<HttpSyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()
     {

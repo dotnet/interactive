@@ -3,6 +3,8 @@
 
 #nullable enable
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -11,7 +13,7 @@ internal class HttpRequestParser
 {
     public static HttpRequestParseResult Parse(string code)
     {
-        var parser = new HttpSyntaxParser(code);
+        var parser = new HttpSyntaxParser(SourceText.From(code));
 
         var tree = parser.Parse();
 
@@ -20,12 +22,12 @@ internal class HttpRequestParser
 
     private class HttpSyntaxParser
     {
-        private readonly string _sourceText;
+        private readonly SourceText _sourceText;
         private IReadOnlyList<HttpSyntaxToken>? _tokens;
         private int _currentTokenIndex = 0;
         private readonly HttpSyntaxTree _syntaxTree;
 
-        public HttpSyntaxParser(string sourceText)
+        public HttpSyntaxParser(SourceText sourceText)
         {
             _sourceText = sourceText;
             _syntaxTree = new HttpSyntaxTree(_sourceText);
@@ -158,17 +160,25 @@ internal class HttpRequestParser
             ParseLeadingTrivia(node);
 
             if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
-            {
-                ConsumeCurrentTokenInto(node);
+            {         
 
-                if (CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
-                {
-                    // TODO: (ParseMethod) add diagnostics for unrecognized verb
+                if (CurrentToken.Kind is HttpTokenKind.Word && CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
+                {        
+                    var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);                
+
+                    var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text.ToLower(), $"Unrecognized HTTP verb {CurrentToken.Text}");
+                    node.AddDiagnostic(diagnostic); 
+
                 }
+
+                ConsumeCurrentTokenInto(node);
             }
             else
             {
-                // TODO: (ParseMethod) add diagnostics for missing verb
+                var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);
+
+                var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text.ToLower(), $"Missing HTTP verb");
+                node.AddDiagnostic(diagnostic);
             }
 
             return ParseTrailingTrivia(node);

@@ -4,13 +4,14 @@
 #nullable enable
 
 using System;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal class HttpCommentNode : HttpSyntaxNode
 {
     internal HttpCommentNode(
-        string sourceText,
+        SourceText sourceText,
         HttpSyntaxTree? syntaxTree,
         HttpCommentStartNode commentStartNode,
         HttpCommentBodyNode? commentBodyNode) : base(sourceText, syntaxTree)

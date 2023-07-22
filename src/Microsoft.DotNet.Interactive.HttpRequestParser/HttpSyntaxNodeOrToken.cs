@@ -3,23 +3,29 @@
 
 #nullable enable
 
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal abstract class HttpSyntaxNodeOrToken
 {
-    private protected HttpSyntaxNodeOrToken(string sourceText, HttpSyntaxTree? syntaxTree)
+    private protected HttpSyntaxNodeOrToken(SourceText sourceText, HttpSyntaxTree? syntaxTree)
     {
         SourceText = sourceText;
         SyntaxTree = syntaxTree;
     }
 
-    protected string SourceText { get; }
+    protected SourceText SourceText { get; }
 
     public HttpSyntaxNode? Parent { get; internal set; }
 
     public abstract TextSpan Span { get; }
 
     public HttpSyntaxTree? SyntaxTree { get; }
+
+    protected List<Diagnostic>? _diagnostics = null;
 
     /// <summary>
     /// Gets the significant text of the current node or token, without trivia.
@@ -29,8 +35,17 @@ internal abstract class HttpSyntaxNodeOrToken
     /// <summary>
     /// Gets the text of the current node or token, including trivia.
     /// </summary>
-    public string TextWithTrivia => SourceText.Substring(Span.Start, Span.Length);
+    public string TextWithTrivia => SourceText.ToString(Span); 
 
     public override string ToString() => $"{GetType().Name}: {Text}";
-    
+
+    public abstract IEnumerable<Diagnostic> GetDiagnostics();
+
+    public void AddDiagnostic(Diagnostic d)
+    {
+        _diagnostics ??= new List<Diagnostic>();        
+        _diagnostics.Add(d);
+        
+    }
+
 }

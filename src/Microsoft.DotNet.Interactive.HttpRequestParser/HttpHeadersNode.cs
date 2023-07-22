@@ -3,6 +3,8 @@
 
 #nullable enable
 
+using Microsoft.CodeAnalysis.Text;
+
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -10,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.HttpRequest;
 internal class HttpHeadersNode : HttpSyntaxNode
 {
     internal HttpHeadersNode(
-        string sourceText,
+        SourceText sourceText,
         HttpSyntaxTree? syntaxTree,
         IReadOnlyList<HttpHeaderNode> headerNodes) : base(sourceText, syntaxTree)
     {

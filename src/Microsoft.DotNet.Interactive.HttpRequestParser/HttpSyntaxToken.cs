@@ -3,13 +3,16 @@
 
 #nullable enable
 
+using System.Collections.Generic;
+using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal sealed class HttpSyntaxToken : HttpSyntaxNodeOrToken
 {
     internal HttpSyntaxToken(
         HttpTokenKind kind,
-        string sourceText,
+        SourceText sourceText,
         TextSpan span,
         HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
@@ -22,4 +25,17 @@ internal sealed class HttpSyntaxToken : HttpSyntaxNodeOrToken
     public HttpTokenKind Kind { get; set; }
 
     public override string ToString() => $"{Kind}: {Text}";
+
+    public override IEnumerable<Diagnostic> GetDiagnostics()
+    {
+
+        if (_diagnostics is not null)
+        {
+            foreach (var diagnostic in _diagnostics)
+            {
+                yield return diagnostic;
+            }
+        }
+
+    }
 }

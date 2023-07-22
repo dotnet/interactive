@@ -23,4 +23,8 @@
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="Reference\NullableAttributes.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.VisualStudio\Microsoft.DotNet.Interactive.VisualStudio.csproj" />
+  </ItemGroup>
+
 </Project>
