@@ -153,32 +153,39 @@ internal class HttpRequestParser
                 bodyNode);
         }
 
-        private HttpMethodNode ParseMethod()
+        private HttpMethodNode? ParseMethod()
         {
             var node = new HttpMethodNode(_sourceText, _syntaxTree);
 
             ParseLeadingTrivia(node);
 
             if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
-            {         
-
-                if (CurrentToken.Kind is HttpTokenKind.Word && CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
+            {
+                if (CurrentToken.Kind is HttpTokenKind.Word && CurrentToken.Text.ToLower() is ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
+                {                 
+                    ConsumeCurrentTokenInto(node);
+                }
+                else if (CurrentToken.Kind is HttpTokenKind.Word && CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace" or "https"))
                 {        
                     var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);                
 
                     var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text.ToLower(), $"Unrecognized HTTP verb {CurrentToken.Text}");
-                    node.AddDiagnostic(diagnostic); 
-
+                    node.AddDiagnostic(diagnostic);
+                    ConsumeCurrentTokenInto(node);
+                }
+                else if (CurrentToken.Kind is HttpTokenKind.Word && CurrentToken.Text.ToLower() is "https")
+                {
+                    return null;
                 }
 
-                ConsumeCurrentTokenInto(node);
+
             }
             else
             {
-                var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);
+                /*var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);
 
                 var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text.ToLower(), $"Missing HTTP verb");
-                node.AddDiagnostic(diagnostic);
+                node.AddDiagnostic(diagnostic);*/
             }
 
             return ParseTrailingTrivia(node);

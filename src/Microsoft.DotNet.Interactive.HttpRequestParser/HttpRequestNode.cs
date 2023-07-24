@@ -12,15 +12,20 @@ internal class HttpRequestNode : HttpSyntaxNode
     internal HttpRequestNode(
         SourceText sourceText,
         HttpSyntaxTree? syntaxTree,
-        HttpMethodNode methodNode,
+        HttpMethodNode? methodNode,
         HttpUrlNode urlNode,
         HttpVersionNode? versionNode = null,
         HttpHeadersNode? headersNode = null,
         HttpBodySeparatorNode? bodySeparatorNode = null,
         HttpBodyNode? bodyNode = null) : base(sourceText, syntaxTree)
     {
-        MethodNode = methodNode;
-        Add(MethodNode);
+
+        if (methodNode is not null)
+        {
+            MethodNode = methodNode;
+            Add(MethodNode);
+        }
+        
 
         UrlNode = urlNode;
         
@@ -51,7 +56,7 @@ internal class HttpRequestNode : HttpSyntaxNode
         }
     }
 
-    public HttpMethodNode MethodNode { get; }
+    public HttpMethodNode? MethodNode { get; }
 
     public HttpUrlNode UrlNode { get; }
 

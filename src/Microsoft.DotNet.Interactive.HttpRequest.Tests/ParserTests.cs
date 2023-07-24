@@ -330,12 +330,21 @@ public class ParserTests
     }
 
     [Fact]
-    public void diagnostic_object_is_reported_for_missing_verb()
+    public void request_node_without_method_node_created_correctly()
     {
         var result = HttpRequestParser.Parse("https://example.com");
 
-        result.GetDiagnostics()
-            .Should().ContainSingle().Which.Message.Should().Be("Missing HTTP verb");
+        result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+            .MethodNode.Should().BeNull();
+    }
+
+    [Fact]
+    public void request_node_without_method_node_created()
+    {
+        var result = HttpRequestParser.Parse("https://example.com");
+
+        result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+            .MethodNode.Should().BeNull();
     }
 }
 // TODO: Test string with variable declarations but no requests
