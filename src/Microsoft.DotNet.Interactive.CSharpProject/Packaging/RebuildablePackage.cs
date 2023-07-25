@@ -122,7 +122,7 @@ public class RebuildablePackage : Package
         if (DesignTimeBuildResult != null)
         {
             var filesInDirectory = Directory.GetFiles("*.cs", SearchOption.AllDirectories).Select(file => file.FullName);
-            var documentsInLastBuild = DesignTimeBuildResult.GetWorkspace().CurrentSolution.Projects.First().Documents.Select(document => document.FilePath);
+            var documentsInLastBuild = DesignTimeBuildResult.RoslynWorkspace.CurrentSolution.Projects.First().Documents.Select(document => document.FilePath);
 
             return filesInDirectory.Count() != documentsInLastBuild.Count() || !documentsInLastBuild.All(filesInDirectory.Contains);
         }

@@ -26,6 +26,7 @@ using Pocket;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package>;
 using Disposable = System.Reactive.Disposables.Disposable;
+using Microsoft.DotNet.Interactive.CSharpProject.MSBuildTools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
@@ -131,32 +132,27 @@ public abstract class Package :
         if (projectFile != null &&
             binLog.LastWriteTimeUtc >= projectFile.LastWriteTimeUtc)
         {
-            IAnalyzerResults results;
+            MyAnalyzerResult result;
             using (await FileLock.TryCreateAsync(package.Directory))
             {
-                var manager = new AnalyzerManager();
-                var analyzer = manager.GetProject(projectFile.FullName);
-                results = analyzer.Build();
+                var manager = new MyBuildalyzer();
+                result = manager.Analyze(projectFile.FullName);
             }
 
-            if (results.Count == 0)
+            if (result is null)
             {
                 throw new InvalidOperationException("The build log seems to contain no solutions or projects");
             }
 
-            var result = results.FirstOrDefault(p => p.ProjectFilePath == projectFile.FullName);
-            if (result != null)
+            package.RoslynWorkspace = null;
+            package.DesignTimeBuildResult = result;
+            package.LastDesignTimeBuild = binLog.LastWriteTimeUtc;
+            if (result.Succeeded && !binLog.Name.EndsWith(DesignTimeBuildBinlogFileName))
             {
-                package.RoslynWorkspace = null;
-                package.DesignTimeBuildResult = result;
-                package.LastDesignTimeBuild = binLog.LastWriteTimeUtc;
-                if (result.Succeeded && !binLog.Name.EndsWith(DesignTimeBuildBinlogFileName))
+                package.LastSuccessfulBuildTime = binLog.LastWriteTimeUtc;
+                if (package.MyDesignTimeBuildResult.TryGetWorkspace(out var ws))
                 {
-                    package.LastSuccessfulBuildTime = binLog.LastWriteTimeUtc;
-                    if (package.DesignTimeBuildResult.TryGetWorkspace(out var ws))
-                    {
-                        package.RoslynWorkspace = ws;
-                    }
+                    package.RoslynWorkspace = ws;
                 }
             }
         }
@@ -363,7 +359,7 @@ public abstract class Package :
             throw new InvalidOperationException("No design time or full build available");
         }
 
-        var ws = build.GetWorkspace();
+        var ws = build.RoslynWorkspace;
 
         if (!ws.CanBeUsedToGenerateCompilation())
         {
@@ -553,7 +549,9 @@ public abstract class Package :
         }
     }
 
-    protected IAnalyzerResult DesignTimeBuildResult { get; set; }
+    protected MyAnalyzerResult DesignTimeBuildResult { get; set; }
+
+    protected MyAnalyzerResult MyDesignTimeBuildResult { get; set; }
 
     protected virtual bool ShouldDoFullBuild()
     {
@@ -568,25 +566,18 @@ public abstract class Package :
                || DesignTimeBuildResult.Succeeded == false;
     }
 
-    protected async Task<IAnalyzerResult> DesignTimeBuild()
+    protected async Task<MyAnalyzerResult> DesignTimeBuild()
     {
         using (var operation = _log.OnEnterAndConfirmOnExit())
         {
-            IAnalyzerResult result;
+            MyAnalyzerResult result;
             var csProj = this.GetProjectFile();
             var logWriter = new StringWriter();
 
             using (await FileLock.TryCreateAsync(Directory))
             {
-                var manager = new AnalyzerManager(new AnalyzerManagerOptions
-                {
-                    LogWriter = logWriter
-                });
-                var analyzer = manager.GetProject(csProj.FullName);
-                analyzer.AddBinaryLogger(Path.Combine(Directory.FullName, DesignTimeBuildBinlogFileName));
-                var languageVersion = csProj.SuggestedLanguageVersion();
-                analyzer.SetGlobalProperty("langVersion", languageVersion);
-                result = analyzer.Build().Results.First();
+                var manager = new MyBuildalyzer();
+                result = manager.Analyze(csProj.FullName);
             }
 
             DesignTimeBuildResult = result;
