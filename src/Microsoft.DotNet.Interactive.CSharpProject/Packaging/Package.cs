@@ -135,7 +135,8 @@ public abstract class Package :
             using (await FileLock.TryCreateAsync(package.Directory))
             {
                 var manager = new AnalyzerManager();
-                results = manager.Analyze(binLog.FullName);
+                var analyzer = manager.GetProject(projectFile.FullName);
+                results = analyzer.Build();
             }
 
             if (results.Count == 0)
