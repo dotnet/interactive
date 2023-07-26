@@ -131,9 +131,9 @@ x.Display(""text/plain"");");
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task fast_path_commands_over_proxy_can_be_handled()
     {
-        var connector = CreateConnector();
+        var createKernel = CreateConnector();
 
-        using var kernel = await connector("newKernelName");
+        using var kernel = await createKernel("newKernelName");
         kernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestHoverText)));
 
         var markedCode = "var x = 12$$34;";

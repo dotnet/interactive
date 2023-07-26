@@ -31,7 +31,7 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 
         RegisterForDisposal(connector);
 
-        return name => connector.CreateKernelAsync(name);
+        return connector.CreateKernelAsync;
     }
 
     protected override SubmitCode CreateConnectCommand(string localKernelName)

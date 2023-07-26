@@ -20,14 +20,13 @@ public class ConnectSQLiteCommand : ConnectKernelCommand
     public Argument<string> ConnectionStringArgument { get; } =
         new("connectionString", "The connection string used to connect to the database");
 
-    public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
+    public override Task<IEnumerable<Kernel>> ConnectKernelsAsync(
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
         var connectionString = commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument);
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
-        var kernel1 = new SQLiteKernel($"sql-{localName}", connectionString);
-        var kernel = await Task.FromResult<Kernel>(kernel1);
-        return new[] { kernel };
+        var kernel = new SQLiteKernel($"sql-{localName}", connectionString);
+        return Task.FromResult<IEnumerable<Kernel>>(new[] { kernel });
     }
 }
