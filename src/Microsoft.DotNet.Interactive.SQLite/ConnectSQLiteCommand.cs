@@ -25,9 +25,9 @@ public class ConnectSQLiteCommand : ConnectKernelCommand
         InvocationContext commandLineContext)
     {
         var connectionString = commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument);
-        var connector = new SQLiteKernelConnector(connectionString);
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
-        var kernel = await connector.CreateKernelAsync(localName);
+        var kernel1 = new SQLiteKernel($"sql-{localName}", connectionString);
+        var kernel = await Task.FromResult<Kernel>(kernel1);
         return new[] { kernel };
     }
 }

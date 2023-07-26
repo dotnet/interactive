@@ -34,7 +34,7 @@ public class SQLiteKernelExtensionTests : IDisposable
             new KeyValueStoreKernel()
         };
 
-        SQLiteKernelConnector.AddSQLiteKernelConnectorTo(kernel);
+        SQLiteKernel.AddSQLiteKernelConnectorTo(kernel);
 
         using var _ = SQLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
 
@@ -62,7 +62,7 @@ SELECT * FROM fruit
             new KeyValueStoreKernel()
         };
 
-        SQLiteKernelConnector.AddSQLiteKernelConnectorTo(kernel);
+        SQLiteKernel.AddSQLiteKernelConnectorTo(kernel);
 
         using var _ = SQLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
 
