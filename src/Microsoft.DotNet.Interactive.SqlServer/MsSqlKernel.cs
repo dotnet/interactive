@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Data.SqlClient.Server;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 

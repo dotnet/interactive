@@ -7,12 +7,11 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Kusto.Data;
 using Kusto.Data.Security;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.SqlServer;
 
 namespace Microsoft.DotNet.Interactive.Kql;
 
-public class KqlKernelConnector : IKernelConnector
+internal class KqlKernelConnector
 {
     public KqlKernelConnector(string cluster, string database)
     {

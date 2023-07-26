@@ -222,7 +222,7 @@ Microsoft.DotNet.Interactive
     public System.Uri Uri { get;}
     public System.Threading.Tasks.Task ConnectAndWaitAsync()
     public System.Threading.Tasks.Task ConnectAsync()
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel> ConnectProxyKernelAsync(System.String localName, Microsoft.DotNet.Interactive.Connection.IKernelConnector kernelConnector, System.Uri remoteKernelUri, System.String[] aliases = null)
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel> ConnectProxyKernelAsync(System.String localName, System.Func<System.String,System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel>> createKernelAsync, System.Uri remoteKernelUri, System.String[] aliases = null)
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel> ConnectProxyKernelOnDefaultConnectorAsync(System.String localName, System.Uri remoteKernelUri, System.String[] aliases = null)
     public System.Void Dispose()
   public class KernelInfo
@@ -485,8 +485,6 @@ Microsoft.DotNet.Interactive.Connection
     public System.String CommandId { get;}
     public System.String CommandType { get;}
     public System.String Token { get;}
-  public abstract class IKernelConnector
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String kernelName)
   public abstract class IKernelEventEnvelope
     public Microsoft.DotNet.Interactive.Events.KernelEvent Event { get;}
     public System.String EventType { get;}
@@ -542,11 +540,11 @@ Microsoft.DotNet.Interactive.Connection
     .ctor(T event)
     public T Event { get;}
     public System.String EventType { get;}
-  public class NamedPipeKernelConnector, IKernelConnector, System.IDisposable
+  public class NamedPipeKernelConnector, System.IDisposable
     .ctor(System.String pipeName)
     public System.String PipeName { get;}
     public System.Uri RemoteHostUri { get;}
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String localName)
+    public System.Threading.Tasks.Task<ProxyKernel> CreateKernelAsync(System.String localName)
     public System.Void Dispose()
   public class ProxyKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.IDisposable
     .ctor(System.String name, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, System.Uri remoteUri = null)

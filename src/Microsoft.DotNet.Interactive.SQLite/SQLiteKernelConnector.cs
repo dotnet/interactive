@@ -4,21 +4,22 @@
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SQLite;
 
-public class SQLiteKernelConnector : IKernelConnector
+public class SQLiteKernelConnector
 {
-    public SQLiteKernelConnector(string connectionString)
+    // FIX: (SQLiteKernelConnector) make static
+    internal SQLiteKernelConnector(string connectionString)
     {
         ConnectionString = connectionString;
     }
 
-    public string ConnectionString { get; }
+    internal string ConnectionString { get; }
 
-    public Task<Kernel> CreateKernelAsync(string kernelName)
+    internal Task<Kernel> CreateKernelAsync(string kernelName)
     {
+        // FIX: (CreateKernelAsync) inline this
         var kernel = new SQLiteKernel(
             $"sql-{kernelName}",
             ConnectionString);
@@ -37,15 +38,12 @@ public class SQLiteKernelConnector : IKernelConnector
 
     public static void AddSQLiteKernelConnectorTo(CompositeKernel kernel)
     {
+        kernel.AddKernelConnector(new ConnectSQLiteCommand());
 
-
-            kernel.AddKernelConnector(new ConnectSQLiteCommand());
-
-            KernelInvocationContext.Current?.Display(
-                new HtmlString(@"<details><summary>Query SQLite databases.</summary>
+        KernelInvocationContext.Current?.Display(
+            new HtmlString(@"<details><summary>Query SQLite databases.</summary>
     <p>This extension adds support for connecting to SQLite databases using the <code>#!connect sqlite</code> magic command. For more information, run a cell using the <code>#!sql</code> magic command.</p>
     </details>"),
-                "text/html");
-
-        }
+            "text/html");
+    }
 }
