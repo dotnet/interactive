@@ -24,7 +24,7 @@ internal class HttpRequestParseResult
             foreach (var requestNode in rootNode.ChildNodes.OfType<HttpRequestNode>())
             {
                 yield return new HttpRequestMessage(
-                    new HttpMethod(requestNode.MethodNode.Text),
+                    new HttpMethod(requestNode.MethodNode?.Text ?? "GET"),
                     new Uri(@"https://something.we.wont.use.in.our.tests.com"));
             }
         }

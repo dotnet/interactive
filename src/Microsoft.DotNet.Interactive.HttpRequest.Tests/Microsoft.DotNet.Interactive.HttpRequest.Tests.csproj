@@ -21,14 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="..\Microsoft.DotNet.Interactive.HttpRequestParser\obj\Debug\netstandard2.0\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="Utility\MarkupTestFile.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="6.8.0" />
     <PackageReference Include="Pocket.Disposable" Version="1.1.0">
       <PrivateAssets>all</PrivateAssets>

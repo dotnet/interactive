@@ -15,6 +15,5 @@ internal enum HttpTokenKind
     Word,
     Whitespace,
     Punctuation,
-    NewLine,
-    Missing
+    NewLine
 }

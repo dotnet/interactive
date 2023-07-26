@@ -180,13 +180,6 @@ internal class HttpRequestParser
 
 
             }
-            else
-            {
-                /*var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);
-
-                var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text.ToLower(), $"Missing HTTP verb");
-                node.AddDiagnostic(diagnostic);*/
-            }
 
             return ParseTrailingTrivia(node);
         }
