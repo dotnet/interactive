@@ -22,6 +22,9 @@ try {
 
     $stablePackageJsonContents.scripts.package = $stablePackageJsonContents.scripts.package.Replace("--pre-release","").Trim()
 
+    # ensure the stable is using the available proposed apis
+    $stablePackageJsonContents.enabledApiProposals = @("notebookMessaging")
+
     $stablePackageJsonContents | ConvertTo-Json -depth 100 | Out-File "$stableDirectory\package.json"
 
     # copy grammar files
