@@ -174,7 +174,7 @@ internal class HttpRequestParser
                 {        
                     var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);                
 
-                    var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text.ToLower(), $"Unrecognized HTTP verb {CurrentToken.Text}");
+                    var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text, $"Unrecognized HTTP verb {CurrentToken.Text}");
                     node.AddDiagnostic(diagnostic);
                     ConsumeCurrentTokenInto(node);
                 }
