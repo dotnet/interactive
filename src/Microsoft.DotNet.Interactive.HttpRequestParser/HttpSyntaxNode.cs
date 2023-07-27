@@ -77,7 +77,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
     public IEnumerable<HttpSyntaxNode> ChildNodes =>
         _childNodesAndTokens.OfType<HttpSyntaxNode>();
 
-    public IEnumerable<HttpSyntaxNodeOrToken> ChildTokens => _childNodesAndTokens.OfType<HttpSyntaxToken>();
+    public IEnumerable<HttpSyntaxToken> ChildTokens => _childNodesAndTokens.OfType<HttpSyntaxToken>();
 
     public IReadOnlyList<HttpSyntaxNodeOrToken> ChildNodesAndTokens => _childNodesAndTokens;
 
