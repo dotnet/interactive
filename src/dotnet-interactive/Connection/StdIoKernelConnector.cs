@@ -31,7 +31,7 @@ using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive.App.Connection;
 
-public class StdIoKernelConnector : IKernelConnector
+public class StdIoKernelConnector
 {
     private readonly string[] _command;
     private readonly string _rootProxyKernelLocalName;
@@ -60,17 +60,6 @@ public class StdIoKernelConnector : IKernelConnector
         _remoteKernelInfoCache = new ConcurrentDictionary<string, KernelInfo>();
     }
 
-    /// <remarks>
-    /// TODO: Does it even make sense to implement <see cref="IKernelConnector"/> here considering that we have
-    /// concepts (such as a single root <see cref="ProxyKernel"/>, and zero or more (child) <see cref="ProxyKernel"/>s)
-    /// that the <see cref="IKernelConnector"/> abstraction does not understand / support? Should the '#!connect stdio'
-    /// command be removed?
-    /// 
-    /// The current implementation only supports creating / retrieving the root <see cref="ProxyKernel"/>.
-    /// </remarks>
-    async Task<Kernel> IKernelConnector.CreateKernelAsync(string kernelName)
-        => await CreateRootProxyKernelAsync();
-
     public async Task<ProxyKernel> CreateRootProxyKernelAsync()
     {
         ProxyKernel rootProxyKernel;
@@ -81,14 +70,11 @@ public class StdIoKernelConnector : IKernelConnector
 
             var command = _command[0];
             var arguments = _command.Skip(1).ToArray();
-            if (_kernelHostUri is { })
+            arguments = arguments.Concat(new[]
             {
-                arguments = arguments.Concat(new[]
-                {
-                    "--kernel-host",
-                    _kernelHostUri.Authority
-                }).ToArray();
-            }
+                "--kernel-host",
+                _kernelHostUri.Authority
+            }).ToArray();
 
             _process = new Process
             {
@@ -98,8 +84,8 @@ public class StdIoKernelConnector : IKernelConnector
                     Arguments = string.Join(" ", arguments),
                     EnvironmentVariables =
                     {
-                        ["DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
-                        ["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"]  = "1",
+                        ["DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE"] = "1",
+                        ["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"] = "1",
                         ["DOTNET_DbgEnableMiniDump"] = "0", // https://docs.microsoft.com/en-us/dotnet/core/diagnostics/dumps
                         ["DOTNET_CLI_UI_LANGUAGE"] = GetCurrentUICulture(),
                         ["DOTNET_CLI_CULTURE"] = GetCurrentCulture()

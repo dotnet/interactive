@@ -25,7 +25,7 @@ public class KernelHost : IDisposable
     private readonly IKernelCommandAndEventSender _defaultSender;
     private readonly IKernelCommandAndEventReceiver _receiver;
     private IDisposable? _kernelEventSubscription;
-    private readonly IKernelConnector _defaultConnector;
+    private readonly Func<string, Task<ProxyKernel>> _defaultConnector;
     private EventLoopScheduler? _eventLoop;
 
     internal ConcurrentDictionary<string, KernelInvocationContext> ContextsByRootToken { get; } =
@@ -41,13 +41,17 @@ public class KernelHost : IDisposable
         _kernel = kernel;
         _defaultSender = sender;
         _receiver = receiver;
-        _defaultConnector = new DefaultKernelConnector(
-            _defaultSender,
-            _receiver);
+        _defaultConnector = async (name) =>
+        {
+            var connector = new DefaultKernelConnector(
+                _defaultSender,
+                _receiver);
+            return await connector.CreateKernelAsync(name);
+        };
         _kernel.SetHost(this);
     }
 
-    private class DefaultKernelConnector : IKernelConnector
+    private class DefaultKernelConnector
     {
         private readonly IKernelCommandAndEventSender _sender;
         private readonly IKernelCommandAndEventReceiver? _receiver;
@@ -60,7 +64,7 @@ public class KernelHost : IDisposable
             _receiver = receiver;
         }
 
-        public Task<Kernel> CreateKernelAsync(string kernelName)
+        public Task<ProxyKernel> CreateKernelAsync(string kernelName)
         {
             var proxy = new ProxyKernel(
                 kernelName,
@@ -68,7 +72,7 @@ public class KernelHost : IDisposable
                 _receiver,
                 new Uri(_sender.RemoteHostUri, kernelName));
 
-            return Task.FromResult<Kernel>(proxy);
+            return Task.FromResult(proxy);
         }
     }
 
@@ -167,16 +171,16 @@ public class KernelHost : IDisposable
 
     public async Task<ProxyKernel> ConnectProxyKernelAsync(
         string localName,
-        IKernelConnector kernelConnector,
+        Func<string, Task<ProxyKernel>> createKernelAsync,
         Uri remoteKernelUri,
         string[]? aliases = null)
     {
-        if (kernelConnector is null)
+        if (createKernelAsync is null)
         {
-            throw new ArgumentNullException(nameof(kernelConnector));
+            throw new ArgumentNullException(nameof(createKernelAsync));
         }
 
-        var proxyKernel = (ProxyKernel)await kernelConnector.CreateKernelAsync(localName);
+        var proxyKernel = await createKernelAsync(localName);
 
         proxyKernel.KernelInfo.RemoteUri = remoteKernelUri;
 

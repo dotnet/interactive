@@ -98,21 +98,21 @@ public class ApiCompatibilityTests
     [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void sqLite_api_is_not_changed()
     {
-        var contract = ApiContract.GenerateContract<SQLiteKernelConnector>();
+        var contract = ApiContract.GenerateContract<SQLiteKernel>();
         this.Assent(contract, _configuration);
     }
 
     [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void mssql_api_is_not_changed()
     {
-        var contract = ApiContract.GenerateContract<MsSqlKernelConnector>();
+        var contract = ApiContract.GenerateContract<MsSqlKernelExtension>();
         this.Assent(contract, _configuration);
     }
 
     [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void kql_api_is_not_changed()
     {
-        var contract = ApiContract.GenerateContract<KqlKernelConnector>();
+        var contract = ApiContract.GenerateContract<KqlKernelExtension>();
         this.Assent(contract, _configuration);
     }
 
