@@ -45,13 +45,10 @@ internal class HttpLexer
 
             if (previousTokenKind is { } previousTokenKindValue)
             {
-                if (currentTokenKind is HttpTokenKind.NewLine && previousTokenKindValue is HttpTokenKind.NewLine 
-                    && previousCharacter is '\r' && currentCharacter is '\n')
-                {
-
-                }
-                else if (previousTokenKind != currentTokenKind 
-                    || currentTokenKind is HttpTokenKind.NewLine || currentTokenKind is HttpTokenKind.Punctuation)
+               
+                if (!IsCurrentTokenANewLinePrecededByACarriageReturn(previousTokenKindValue, previousCharacter,
+                    currentTokenKind, currentCharacter) && (previousTokenKind != currentTokenKind || currentTokenKind 
+                    is HttpTokenKind.NewLine || currentTokenKind is HttpTokenKind.Punctuation))
                 {
                     FlushToken(previousTokenKindValue);
                 }
@@ -93,5 +90,14 @@ internal class HttpLexer
         }
 
         return _textWindow.End < _sourceText.Length;
+    }
+
+    private bool IsCurrentTokenANewLinePrecededByACarriageReturn(HttpTokenKind previousTokenKindValue, char previousCharacter, HttpTokenKind currentTokenKind, char currentCharacter)
+    {
+        return (currentTokenKind is HttpTokenKind.NewLine && previousTokenKindValue is HttpTokenKind.NewLine 
+            && previousCharacter is '\r' && currentCharacter is '\n');
+        {
+
+        }
     }
 }

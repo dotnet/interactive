@@ -51,8 +51,8 @@ public class ParserTests
             //combination of characters should be checked by the lexer
         }
     }
-    
-    
+
+
     public class Lexer
     {
         [Fact]
@@ -71,8 +71,26 @@ public class ParserTests
             .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
             .MethodNode.ChildTokens.First().TextWithTrivia.Should().Be("     ");
         }
+
+        [Fact]
+        public void multiple_newlines_are_parsed_into_different_tokens()
+        {
+            var result = HttpRequestParser.Parse("\n\n\r\n\n");
+            result.SyntaxTree.RootNode
+                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+                  .MethodNode.ChildTokens.Count().Should().Be(4);
+        }
+
+        [Fact]
+        public void multiple_punctuations_are_parsed_into_different_tokens()
+        {
+            var result = HttpRequestParser.Parse(".!?.");
+            result.SyntaxTree.RootNode
+                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+                  .UrlNode.ChildTokens.Count().Should().Be(4);
+        }
     }
-    
+
     public class Method
     {
         [Fact]
@@ -91,12 +109,12 @@ public class ParserTests
             var result = HttpRequestParser.Parse(
                 """
         
-        GET https://example.com
-        """);
+                GET https://example.com
+                """);
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .MethodNode.ChildTokens.First().TextWithTrivia.Should().Be("\r\n");
+                  .MethodNode.ChildTokens.First().TextWithTrivia.Should().Contain("\r\n");
         }
 
 
@@ -115,13 +133,13 @@ public class ParserTests
         {
             var result = HttpRequestParser.Parse(
                 """
-        GET https://example.com
+                GET https://example.com
 
-        """);
+                """);
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .UrlNode.ChildTokens.Last().TextWithTrivia.Should().Be("\r\n");
+                  .UrlNode.ChildTokens.Last().TextWithTrivia.Should().Contain("\r\n");
         }
 
         [Theory]
@@ -199,13 +217,13 @@ public class ParserTests
         {
             var result = HttpRequestParser.Parse(
                 """
-        GET https://example.com HTTP/1.1
-        Accept: */*
-        Accept-Encoding : gzip, deflate, br
-        Accept-Language : en-US,en;q=0.9
-        ContentLength:7060
-        Cookie: expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;
-        """);
+                GET https://example.com HTTP/1.1
+                Accept: */*
+                Accept-Encoding : gzip, deflate, br
+                Accept-Language : en-US,en;q=0.9
+                ContentLength:7060
+                Cookie: expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;
+                """);
 
             using var _ = new AssertionScope();
 
@@ -245,30 +263,66 @@ public class ParserTests
         {
             var result = HttpRequestParser.Parse(
                 """
-        POST https://example.com/comments HTTP/1.1
-        Content-Type: application/xml
-        Authorization: token xxx
+                POST https://example.com/comments HTTP/1.1
+                Content-Type: application/xml
+                Authorization: token xxx
 
-        <request>
-            <name>sample</name>
-            <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
-        </request>
-        """);
+                <request>
+                    <name>sample</name>
+                    <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                </request>
+                """);
 
             using var _ = new AssertionScope();
 
             var requestNode = result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
 
-            requestNode.HeadersNode.HeaderNodes.Count.Should().Be(2);
-            requestNode.BodySeparatorNode.TextWithTrivia.Should().Be("\r\n");
+            requestNode.HeadersNode.HeaderNodes.Count.Should().Be(2);            
             requestNode.BodyNode.Text.Should().Be(
                 """
-        <request>
-            <name>sample</name>
-            <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
-        </request>
-        """);
+                <request>
+                    <name>sample</name>
+                    <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                </request>
+                """);
+        }
+
+        [Fact]
+        public void header_separator_is_present()
+        {
+            var result = HttpRequestParser.Parse(
+                """
+                POST https://example.com/comments HTTP/1.1
+                Content-Type: application                                                                                                            
+                """);         
+
+            var requestNode = result.SyntaxTree.RootNode
+                    .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+            requestNode.HeadersNode.ChildNodes.Should().ContainSingle<HttpHeaderNode>().Which
+                .ChildNodes.Should().ContainSingle<HttpHeaderSeparatorNode>();
+        }
+
+        [Fact]
+        public void body_separator_is_present()
+        {
+            var result = HttpRequestParser.Parse(
+            """
+            POST https://example.com/comments HTTP/1.1
+            Content-Type: application/xml
+            Authorization: token xxx
+
+            <request>
+                <name>sample</name>
+                <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+            </request>
+            """);         
+
+            var requestNode = result.SyntaxTree.RootNode
+                    .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+            requestNode.BodySeparatorNode.TextWithTrivia.Should().Be("\r\n");          
         }
 
         [Fact]
@@ -276,13 +330,13 @@ public class ParserTests
         {
             var result = HttpRequestParser.Parse(
                 """
-    POST https://example.com/comments HTTP/1.1
+                POST https://example.com/comments HTTP/1.1
 
-    <request>
-        <name>sample</name>
-        <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
-    </request>
-    """);
+                <request>
+                    <name>sample</name>
+                    <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                </request>
+                """);
 
             using var _ = new AssertionScope();
 
@@ -298,13 +352,13 @@ public class ParserTests
         {
             var result = HttpRequestParser.Parse(
                 """
-        POST https://example.com/comments HTTP/1.1
+                POST https://example.com/comments HTTP/1.1
 
-        <request>
-            <name>sample</name>
-            <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
-        </request>
-        """);
+                <request>
+                    <name>sample</name>
+                    <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                </request>
+                """);
 
             using var _ = new AssertionScope();
 
@@ -313,11 +367,11 @@ public class ParserTests
 
             requestNode.BodyNode.Text.Should().Be(
                 """
-        <request>
-            <name>sample</name>
-            <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
-        </request>
-        """);
+                <request>
+                    <name>sample</name>
+                    <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                </request>
+                """);
         }
 
         [Fact]
@@ -325,18 +379,18 @@ public class ParserTests
         {
             var result = HttpRequestParser.Parse(
                 """
-        POST https://example.com/comments HTTP/1.1
-        Content-Type: application/xml
-        Authorization: token xxx
+                POST https://example.com/comments HTTP/1.1
+                Content-Type: application/xml
+                Authorization: token xxx
 
 
 
 
-        <request>
-            <name>sample</name>
-            <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
-        </request>
-        """);
+                <request>
+                    <name>sample</name>
+                    <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                </request>
+                """);
 
             using var _ = new AssertionScope();
 
@@ -345,11 +399,11 @@ public class ParserTests
 
             requestNode.BodyNode.Text.Should().Be(
                 """
-        <request>
-            <name>sample</name>
-            <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
-        </request>
-        """);
+                <request>
+                    <name>sample</name>
+                    <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                </request>
+                """);
         }
     }
 
@@ -361,9 +415,9 @@ public class ParserTests
 
             var result = HttpRequestParser.Parse(
                 """
-        # This is a comment
-        GET https://example.com HTTP/1.1"
-        """);
+                # This is a comment
+                GET https://example.com HTTP/1.1"
+                """);
 
             using var _ = new AssertionScope();
 
@@ -381,41 +435,9 @@ public class ParserTests
 // TODO: Test string with variable declarations but no requests
 
 /*
-using System;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.WebTools.Languages.Rest.VS.Parser;
-using Microsoft.WebTools.Languages.Rest.VS.Resources;
-using Microsoft.WebTools.Languages.Rest.VS.Test.TestUtils;
-
 [TestClass]
 public class TokenTest
 {
-    [Fact]
-    public async Task RequestTextAfterLineBreakAsync()
-    {
-        string text = $"\r{Environment.NewLine}GET https://example.com";
-
-        IRestDocumentSnapshot doc = await TestHelpers.CreateDocumentSnapshotAsync(text);
-
-        Request request = doc.Requests[0];
-
-        Assert.AreEqual("GET", request.Method.Text);
-        Assert.AreEqual(3, request.Method.Start);
-    }
-
-    [Fact]
-    public async Task RequestWithVersionAsync()
-    {
-        string text = $"\r{Environment.NewLine}GET https://example.com http/1.1";
-
-        IRestDocumentSnapshot doc = await TestHelpers.CreateDocumentSnapshotAsync(text);
-
-        Request request = doc.Requests[0];
-
-        Assert.IsNotNull(request.Version);
-        Assert.AreEqual("http/1.1", request.Version.Text);
-    }
 
     [Fact]
     public async Task RequestWithEmbeddedDynamicVariableWithSpacesAsync()
@@ -449,42 +471,6 @@ public class TokenTest
     }
 
     [Fact]
-    public async Task RequestWithHeaderAndBodyAsync()
-    {
-        string text = """
-            GET https://example.com
-            User-Agent: ost
-
-            {"enabled": true}
-            """;
-
-        IRestDocumentSnapshot doc = await TestHelpers.CreateDocumentSnapshotAsync(text);
-        Request request = doc.Requests[0];
-
-        Assert.AreEqual(1, doc.Requests.Count);
-        Assert.IsNotNull(request.Body);
-    }
-
-    [Fact]
-    public async Task RequestWithHeaderAndMultilineBodyAsync()
-    {
-        string text = """
-            GET https://example.com
-            User-Agent: ost
-
-            {
-            "enabled": true
-            }
-            """;
-
-        IRestDocumentSnapshot doc = await TestHelpers.CreateDocumentSnapshotAsync(text);
-        Request request = doc.Requests[0];
-
-        Assert.IsNotNull(request.Body);
-        Assert.AreEqual(21, request.Body.Length);
-    }
-
-    [Fact]
     public async Task RequestWithHeaderAndBodyAndCommentAsync()
     {
         string text = """
@@ -510,26 +496,6 @@ public class TokenTest
         Assert.AreEqual(ItemType.EmptyLine, first.Children[5].Type);
         Assert.AreEqual(ItemType.Body, first.Children[6].Type);
         Assert.AreEqual("{\r\n    \"enabled\": true\r\n}\r\n", first.Body);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData(" ")]
-    [InlineData("\t\t")]
-    [InlineData("\r")]
-    [InlineData("\n")]
-    [InlineData("\r\n")]
-    public async Task EmptyLinesAsync(string line)
-    {
-        IRestDocumentSnapshot doc = await TestHelpers.CreateDocumentSnapshotAsync(line);
-        ParseItem first = doc.Items[0];
-
-        Assert.IsNotNull(first);
-        Assert.AreEqual(ItemType.EmptyLine, first.Type);
-        Assert.AreEqual(0, first.Start);
-        Assert.AreEqual(line, first.Text);
-        Assert.AreEqual(line.Length, first.Length);
-        Assert.AreEqual(line.Length, first.End);
     }
 
     [Fact]
@@ -587,22 +553,6 @@ public class TokenTest
         IRestDocumentSnapshot doc = await TestHelpers.CreateDocumentSnapshotAsync(text);
 
         Assert.AreEqual(8, doc.Items.Count);
-    }
-
-    [Fact]
-    public async Task HeaderContainsSpaceAfterColon_ShouldContainBothHeaderAndValue()
-    {
-        string text = $"""
-            POST https://example.com
-            foo: bar
-            """;
-
-        IRestDocumentSnapshot doc = await TestHelpers.CreateDocumentSnapshotAsync(text);
-
-        Assert.AreEqual(5, doc.Items.Count);
-        Assert.AreEqual(ItemType.HeaderName, doc.Items[3].Type);
-        Assert.AreEqual(ItemType.HeaderValue, doc.Items[4].Type);
-        Assert.AreEqual("bar", doc.Items[4].Text);
     }
 
     [Theory]

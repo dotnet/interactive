@@ -7,26 +7,6 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
-/*
-
-Rough sketch, probably out of date:
- 
-HttpRootSyntaxNode
-|-HttpVariableDeclarationNode
-  |--VariablePrefixToken
-  |--VariableNameToken
-  |--VariableAssignmentOperatorToken
-  |--ValueExpressionNode
-|--HttpRequestNode
-  |--HttpMethodToken
-  |--HttpUrlNode
-     |--HttpUrlSchemeToken
-     |--HttpUrlHostToken
-     |--HttpUrlQueryToken
-  |--HttpRequestBodyNode
-
- */
-
 internal class HttpSyntaxTree
 {
     private readonly SourceText _sourceText;

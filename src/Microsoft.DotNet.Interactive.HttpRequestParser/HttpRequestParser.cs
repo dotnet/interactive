@@ -155,27 +155,28 @@ internal class HttpRequestParser
 
         private HttpMethodNode? ParseMethod()
         {
+            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word && (CurrentToken.Text.ToLower() is "https" || CurrentToken.Text.ToLower() is "http"))
+            {
+                return null;
+            }
+
             var node = new HttpMethodNode(_sourceText, _syntaxTree);
 
             ParseLeadingTrivia(node);
 
             if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
             {
-                if (CurrentToken.Kind is HttpTokenKind.Word && CurrentToken.Text.ToLower() is ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
+                if (CurrentToken.Text.ToLower() is ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
                 {                 
                     ConsumeCurrentTokenInto(node);
                 }
-                else if (CurrentToken.Kind is HttpTokenKind.Word && CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace" or "https"))
+                else
                 {        
                     var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);                
 
                     var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text.ToLower(), $"Unrecognized HTTP verb {CurrentToken.Text}");
                     node.AddDiagnostic(diagnostic);
                     ConsumeCurrentTokenInto(node);
-                }
-                else if (CurrentToken.Kind is HttpTokenKind.Word && CurrentToken.Text.ToLower() is "https")
-                {
-                    return null;
                 }
 
 
