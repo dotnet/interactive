@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7</TargetFramework>
-    <LangVersion>11</LangVersion>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);2003;CS8002;VSTHRD002;NU5100</NoWarn>
     <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
@@ -17,11 +17,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="bin\**" />
-    <EmbeddedResource Remove="bin\**" />
-    <None Remove="bin\**" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequestParser\*.cs" LinkBase="Parser" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
