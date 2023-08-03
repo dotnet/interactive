@@ -15,7 +15,7 @@ internal class HttpUrlNode : HttpSyntaxNode
     {
     }
 
-    /*internal bool TryGetUri(BindingDelegate bind, out Uri uri)
+    internal Uri GetUri(Func<HttpExpressionNode, object> value)
     {
         var urlText = new StringBuilder();
         
@@ -23,17 +23,10 @@ internal class HttpUrlNode : HttpSyntaxNode
         {
             urlText.Append(node switch
             {
-                HttpEmbeddedExpressionNode n => bind(n.ExpressionNode),
+                HttpEmbeddedExpressionNode n => value(n.ExpressionNode),
                 _ => node.Text
             });
         }
-        var uri = new Uri(urlText.ToString(), UriKind.Absolute);
-    }*/
-}
-
-internal delegate bool BindingDelegate(HttpExpressionNode name, BindingContext context, out object? value);
-
-internal class BindingContext
-{
-
+        return new Uri(urlText.ToString(), UriKind.Absolute);
+    }
 }

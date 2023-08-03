@@ -242,7 +242,7 @@ public class ParserTests : IDisposable
                 .MethodNode.Should().BeNull();
         }
 
-        /*[Fact]
+        [Fact]
         public void url_node_can_give_url()
         {
             var result = Parse(
@@ -254,13 +254,14 @@ public class ParserTests : IDisposable
                 .Should().ContainSingle<HttpRequestNode>().Which;
 
             var urlNode = requestNode.UrlNode;
-            urlNode.TryGetUri(x => x.Text switch
+            urlNode.GetUri(x => x.Text switch
             {
                 "host" => "example.com", 
                 "version" => "123-"
             }).ToString().Should().Be("https://example.com/api/123-comments/1");            
         }
 
+        /*
         [Fact]
         public void error_is_reported_for_incorrect_uri()
         {
