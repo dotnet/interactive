@@ -157,8 +157,6 @@ internal class HttpRequestParser
             var headersNode = ParseHeaders();
             var bodySeparatorNode = ParseBodySeparator();
             var bodyNode = ParseBody();
-           // var requestSeparatorNode = ParseRequestSeparator();
-            //TODO ParseRequestSeparator() if there is the ### separator
 
             var requestNode = new HttpRequestNode(
                 _sourceText,

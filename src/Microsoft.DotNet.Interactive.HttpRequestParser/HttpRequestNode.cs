@@ -40,7 +40,7 @@ internal class HttpRequestNode : HttpSyntaxNode
         {
             HeadersNode = headersNode;
             Add(HeadersNode);
-        }
+         }
 
         if(bodySeparatorNode is not null)
         {
