@@ -23,6 +23,9 @@ changelog:
     - title: Area-Auth
       labels:
         - Area-Auth
+    - title: Area-API
+      labels:
+        - Area-API
     - title: Area-C#
       labels:
         - Area-C#
