@@ -113,30 +113,30 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
     }
 
     public IEnumerable<HttpSyntaxNodeOrToken> DescendantNodesAndTokens() =>
-        FlattenDepthFirst(_childNodesAndTokens, n => n switch
+        FlattenBreadthFirst(_childNodesAndTokens, n => n switch
         {
             HttpSyntaxNode node => node.ChildNodesAndTokens,
             _ => Array.Empty<HttpSyntaxNodeOrToken>()
         });
 
-    private static IEnumerable<T> FlattenDepthFirst<T>(
-        IEnumerable<T> source,
-        Func<T, IEnumerable<T>> children)
+    private static IEnumerable<T> FlattenBreadthFirst<T>(
+    IEnumerable<T> source,
+    Func<T, IEnumerable<T>> children)
     {
-        var stack = new Stack<T>();
+        var queue = new Queue<T>();
 
         foreach (var item in source)
         {
-            stack.Push(item);
+            queue.Enqueue(item);
         }
 
-        while (stack.Count > 0)
+        while (queue.Count > 0)
         {
-            var current = stack.Pop();
+            var current = queue.Dequeue();
 
             foreach (var item in children(current))
             {
-                stack.Push(item);
+                queue.Enqueue(item);
             }
 
             yield return current;

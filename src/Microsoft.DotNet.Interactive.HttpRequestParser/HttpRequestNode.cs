@@ -17,7 +17,8 @@ internal class HttpRequestNode : HttpSyntaxNode
         HttpVersionNode? versionNode = null,
         HttpHeadersNode? headersNode = null,
         HttpBodySeparatorNode? bodySeparatorNode = null,
-        HttpBodyNode? bodyNode = null) : base(sourceText, syntaxTree)
+        HttpBodyNode? bodyNode = null,
+        HttpRequestSeparatorNode? requestSeparatorNode = null) : base(sourceText, syntaxTree)
     {
 
         if (methodNode is not null)
@@ -27,8 +28,7 @@ internal class HttpRequestNode : HttpSyntaxNode
         }
         
 
-        UrlNode = urlNode;
-        
+        UrlNode = urlNode;        
         Add(UrlNode);
 
         if (versionNode is not null)
@@ -54,12 +54,18 @@ internal class HttpRequestNode : HttpSyntaxNode
             BodyNode = bodyNode;
             Add(BodyNode);
         }
+
+        if (requestSeparatorNode is not null)
+        {
+            RequestSeparatorNode = requestSeparatorNode;
+            Add(RequestSeparatorNode);
+        }
     }
 
     public HttpMethodNode? MethodNode { get; }
 
     public HttpUrlNode UrlNode { get; }
-
+    public HttpRequestSeparatorNode? RequestSeparatorNode { get; }
     public HttpVersionNode? VersionNode { get; set; }
 
     public HttpHeadersNode? HeadersNode { get; }
