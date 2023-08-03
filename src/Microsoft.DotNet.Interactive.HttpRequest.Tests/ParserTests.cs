@@ -257,7 +257,8 @@ public class ParserTests : IDisposable
             urlNode.GetUri(x => x.Text switch
             {
                 "host" => "example.com",
-                "version" => "123-"
+                "version" => "123-",
+                _ => throw new NotImplementedException()
             }).ToString().Should().Be("https://example.com/api/123-comments/1");
         }
 
