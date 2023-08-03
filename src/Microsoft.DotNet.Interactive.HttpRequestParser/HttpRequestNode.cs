@@ -58,7 +58,7 @@ internal class HttpRequestNode : HttpSyntaxNode
     public HttpMethodNode? MethodNode { get; }
 
     public HttpUrlNode UrlNode { get; }
-    public HttpRequestSeparatorNode? RequestSeparatorNode { get; }
+    
     public HttpVersionNode? VersionNode { get; set; }
 
     public HttpHeadersNode? HeadersNode { get; }
