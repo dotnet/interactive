@@ -62,7 +62,7 @@ public static class HtmlFormatter
     internal static FormatterMapByType FormattersForAnyObject;
 
     internal static FormatterMapByType FormattersForAnyEnumerable =
-        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTableFormatterForAnyEnumerable));
+        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTreeViewFormatterForAnyEnumerable));
 
     internal static readonly ITypeFormatter[] DefaultFormatters =
     {
@@ -212,11 +212,11 @@ public static class HtmlFormatter
             return true;
         }),
 
-         new HtmlFormatter<decimal>((value, context) =>
-         {
-             FormatAndStyleAsPlainText(value, context);
-             return true;
-         }),
+        new HtmlFormatter<decimal>((value, context) =>
+        {
+            FormatAndStyleAsPlainText(value, context);
+            return true;
+        }),
 
         new HtmlFormatter<object>((value, context) =>
         {
@@ -226,22 +226,7 @@ public static class HtmlFormatter
             var formatter = GetDefaultFormatterForAnyObject(type);
             return formatter.Format(value, context);
         }),
-
-        // Final last resort is to convert to plain text
-        new HtmlFormatter<object>((value, context) =>
-        {
-            if (value is null)
-            {
-                FormatAndStyleAsPlainText(Formatter.NullString, context);
-            }
-            else
-            {
-                FormatAndStyleAsPlainText(value, context);
-            }
-
-            return true;
-        }),
-
+        
         new HtmlFormatter<JsonDocument>((doc, context) =>
         {
             doc.RootElement.FormatTo(context, MimeType);

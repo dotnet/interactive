@@ -64,9 +64,9 @@ Microsoft.DotNet.Interactive
     public System.String ToString()
     public Diagnostic WithLinePositionSpan(LinePositionSpan linePositionSpan)
   public class DisplayedValue
-    .ctor(System.String displayId, System.String mimeType, KernelInvocationContext context)
-    .ctor(System.String displayId, System.String[] mimeTypes, KernelInvocationContext context)
-    public System.Collections.Generic.IReadOnlyCollection<System.String> MimeTypes { get;}
+    .ctor(System.Collections.Generic.IReadOnlyList<FormattedValue> formattedValues, KernelInvocationContext context)
+    public System.String DisplayId { get;}
+    public System.Collections.Generic.IReadOnlyList<FormattedValue> FormattedValues { get;}
     public System.Void Update(System.Object updatedValue)
   public class EventRoutingSlip : RoutingSlip
     .ctor()
@@ -222,7 +222,7 @@ Microsoft.DotNet.Interactive
     public System.Uri Uri { get;}
     public System.Threading.Tasks.Task ConnectAndWaitAsync()
     public System.Threading.Tasks.Task ConnectAsync()
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel> ConnectProxyKernelAsync(System.String localName, Microsoft.DotNet.Interactive.Connection.IKernelConnector kernelConnector, System.Uri remoteKernelUri, System.String[] aliases = null)
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel> ConnectProxyKernelAsync(System.String localName, System.Func<System.String,System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel>> createKernelAsync, System.Uri remoteKernelUri, System.String[] aliases = null)
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel> ConnectProxyKernelOnDefaultConnectorAsync(System.String localName, System.Uri remoteKernelUri, System.String[] aliases = null)
     public System.Void Dispose()
   public class KernelInfo
@@ -485,8 +485,6 @@ Microsoft.DotNet.Interactive.Connection
     public System.String CommandId { get;}
     public System.String CommandType { get;}
     public System.String Token { get;}
-  public abstract class IKernelConnector
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String kernelName)
   public abstract class IKernelEventEnvelope
     public Microsoft.DotNet.Interactive.Events.KernelEvent Event { get;}
     public System.String EventType { get;}
@@ -542,11 +540,11 @@ Microsoft.DotNet.Interactive.Connection
     .ctor(T event)
     public T Event { get;}
     public System.String EventType { get;}
-  public class NamedPipeKernelConnector, IKernelConnector, System.IDisposable
+  public class NamedPipeKernelConnector, System.IDisposable
     .ctor(System.String pipeName)
     public System.String PipeName { get;}
     public System.Uri RemoteHostUri { get;}
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String localName)
+    public System.Threading.Tasks.Task<ProxyKernel> CreateKernelAsync(System.String localName)
     public System.Void Dispose()
   public class ProxyKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.IDisposable
     .ctor(System.String name, IKernelCommandAndEventSender sender, IKernelCommandAndEventReceiver receiver, System.Uri remoteUri = null)
@@ -672,10 +670,6 @@ Microsoft.DotNet.Interactive.Http
 Microsoft.DotNet.Interactive.Parsing
   public class ActionDirectiveNode : DirectiveNode
     public System.String ParentKernelName { get;}
-  public class Diagnostic
-    public Location Location { get;}
-    public System.String Message { get;}
-    public DiagnosticSeverity Severity { get;}
   public enum DiagnosticSeverity : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Hidden=0
     Info=1
@@ -687,22 +681,19 @@ Microsoft.DotNet.Interactive.Parsing
     public System.String GetHelpForSymbol(System.CommandLine.Symbol symbol)
     public System.Void Write(System.CommandLine.Help.HelpContext context)
   public abstract class DirectiveNode : LanguageNode
-    public System.Collections.Generic.IEnumerable<Diagnostic> GetDiagnostics()
+    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Diagnostic> GetDiagnostics()
     public System.CommandLine.Parsing.ParseResult GetDirectiveParseResult()
   public class DirectiveToken : SyntaxToken
     public System.String DirectiveName { get;}
   public class KernelNameDirectiveNode : DirectiveNode
   public class LanguageNode : SyntaxNode
     public System.String Name { get;}
-    public System.Collections.Generic.IEnumerable<Diagnostic> GetDiagnostics()
+    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Diagnostic> GetDiagnostics()
   public class LanguageSpecificParseResult
     public static LanguageSpecificParseResult None { get;}
     .ctor()
-    public System.Collections.Generic.IEnumerable<Diagnostic> GetDiagnostics()
+    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Diagnostic> GetDiagnostics()
   public class LanguageToken : SyntaxToken
-  public class Location
-    public Microsoft.CodeAnalysis.Text.TextSpan SourceSpan { get;}
-    public PolyglotSyntaxTree SourceTree { get;}
   public class PolyglotSubmissionNode : SyntaxNode
     public System.String DefaultLanguage { get;}
   public class PolyglotSyntaxTree
@@ -731,7 +722,7 @@ Microsoft.DotNet.Interactive.Parsing
     public SyntaxNode FindNode(Microsoft.CodeAnalysis.Text.TextSpan span)
     public SyntaxNode FindNode(System.Int32 position)
     public SyntaxToken FindToken(System.Int32 position)
-    public System.Collections.Generic.IEnumerable<Diagnostic> GetDiagnostics()
+    public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Diagnostic> GetDiagnostics()
   public abstract class SyntaxNodeOrToken
     public SyntaxNode Parent { get;}
     public Microsoft.CodeAnalysis.Text.TextSpan Span { get;}
@@ -944,3 +935,4 @@ System
   public static class DisplayExtensions
     public static Microsoft.DotNet.Interactive.DisplayedValue Display(String[] mimeTypes)
     public static Microsoft.DotNet.Interactive.DisplayedValue DisplayAs(String mimeType)
+    public static Microsoft.DotNet.Interactive.DisplayedValue DisplayTable<T>(String[] mimeTypes)

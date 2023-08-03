@@ -13,7 +13,7 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.Tests;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -526,6 +526,34 @@ User-Agent: {{missing_value_2}}";
 
         result.Events.OfType<DisplayEvent>().Skip(1).First()
             .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
+    }
+
+    [Fact]
+    public async Task when_response_is_slow_and_an_error_happens_the_awaiting_response_displayed_value_is_cleared()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        HttpRequestMessage request = null;
+        var throwingResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            throw new HttpRequestException();
+        });
+        var client = new HttpClient(throwingResponseHandler);
+
+        using var root = new CompositeKernel();
+        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
+        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+        var displayedValueUpdated = result.Events.OfType<DisplayedValueUpdated>().First();
+
+        using var _ = new AssertionScope();
+
+        displayedValueUpdated.Value.Should().Be(null);
+        displayedValueUpdated.FormattedValues.Single(f => f.MimeType is HtmlFormatter.MimeType).Value.Should().Be("<span/>");
     }
 
     [Fact]

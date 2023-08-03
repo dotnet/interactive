@@ -55,7 +55,7 @@ internal class HttpRequestParser
                 if (ParseRequest() is { } requestNode)
                 {
                     _syntaxTree.RootNode.Add(requestNode);
-                } 
+                }
                 if(ParseRequestSeparator() is { } separatorNode)
                 {
                     _syntaxTree.RootNode.Add(separatorNode);
@@ -191,7 +191,7 @@ internal class HttpRequestParser
                     ConsumeCurrentTokenInto(node);
                 }
             }
-            
+
             return ParseTrailingTrivia(node);
         }
 
@@ -306,7 +306,7 @@ internal class HttpRequestParser
             {
                 ConsumeCurrentTokenInto(node);
 
-                while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine && 
+                while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine &&
                     !IsRequestSeparator())
                 {
                     ConsumeCurrentTokenInto(node);
@@ -333,7 +333,7 @@ internal class HttpRequestParser
             if (headerNodes.Count == 0)
             {
                 return null;
-            }   
+            }
             return new HttpHeadersNode(_sourceText, _syntaxTree, headerNodes);
         }
 
@@ -428,7 +428,7 @@ internal class HttpRequestParser
             {
                 ConsumeCurrentTokenInto(node);
 
-                while (MoreTokens() && CurrentToken.Kind is (HttpTokenKind.Whitespace or HttpTokenKind.NewLine) && 
+                while (MoreTokens() && CurrentToken.Kind is (HttpTokenKind.Whitespace or HttpTokenKind.NewLine) &&
                     !IsRequestSeparator())
                 {
                     ConsumeCurrentTokenInto(node);
@@ -510,7 +510,7 @@ internal class HttpRequestParser
 
         private bool IsRequestSeparator()
         {
-            return CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } && 
+            return CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
                 (NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
                 NextNextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" });
         }

@@ -141,7 +141,7 @@ public class ParserTests : IDisposable
         {
             var result = Parse(
                 """
-        
+
                 GET https://example.com
                 """);
 
@@ -249,16 +249,16 @@ public class ParserTests : IDisposable
                 """
         GET https://{{host}}/api/{{version}}comments/1
         """);
-            
+
             var requestNode = result.SyntaxTree.RootNode.ChildNodes
                 .Should().ContainSingle<HttpRequestNode>().Which;
 
             var urlNode = requestNode.UrlNode;
             urlNode.GetUri(x => x.Text switch
             {
-                "host" => "example.com", 
+                "host" => "example.com",
                 "version" => "123-"
-            }).ToString().Should().Be("https://example.com/api/123-comments/1");            
+            }).ToString().Should().Be("https://example.com/api/123-comments/1");
         }
 
         /*
@@ -297,7 +297,7 @@ public class ParserTests : IDisposable
             <name>sample</name>
             <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
         </request>
-        """);       
+        """);
 
             var requestNode = result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
@@ -318,7 +318,7 @@ public class ParserTests : IDisposable
             var result = Parse(
                 """
         POST https://example.com/comments HTTP/1.1
-        Content-Type: application                                                                                                            
+        Content-Type: application
         """);
 
             var requestNode = result.SyntaxTree.RootNode

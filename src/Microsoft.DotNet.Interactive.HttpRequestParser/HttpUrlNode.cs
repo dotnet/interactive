@@ -18,7 +18,7 @@ internal class HttpUrlNode : HttpSyntaxNode
     internal Uri GetUri(Func<HttpExpressionNode, object> value)
     {
         var urlText = new StringBuilder();
-        
+
         foreach(var node in ChildNodesAndTokens)
         {
             urlText.Append(node switch

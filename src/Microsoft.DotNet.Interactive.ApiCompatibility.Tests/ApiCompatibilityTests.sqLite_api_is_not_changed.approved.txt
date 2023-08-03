@@ -4,12 +4,8 @@ Microsoft.DotNet.Interactive.SQLite
     public System.CommandLine.Argument<System.String> ConnectionStringArgument { get;}
     public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
   public class SQLiteKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
-    .ctor(System.String name, System.String connectionString)
-  public class SQLiteKernelConnector, Microsoft.DotNet.Interactive.Connection.IKernelConnector
     public static System.Void AddSQLiteKernelConnectorTo(Microsoft.DotNet.Interactive.CompositeKernel kernel)
     public static System.Void AddSQLiteKernelConnectorToCurrentRoot()
-    .ctor(System.String connectionString)
-    public System.String ConnectionString { get;}
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String kernelName)
+    .ctor(System.String name, System.String connectionString)
   public class SqlRow : System.Collections.Generic.Dictionary<System.String,System.Object>, System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<System.String,System.Object>>, System.Collections.Generic.IDictionary<System.String,System.Object>, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.String,System.Object>>, System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<System.String,System.Object>>, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object>, System.Collections.ICollection, System.Collections.IDictionary, System.Collections.IEnumerable, System.Runtime.Serialization.IDeserializationCallback, System.Runtime.Serialization.ISerializable
     .ctor()

@@ -14,7 +14,7 @@ using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class NamedPipeKernelConnector : IKernelConnector, IDisposable
+public class NamedPipeKernelConnector : IDisposable
 {
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
@@ -31,7 +31,7 @@ public class NamedPipeKernelConnector : IKernelConnector, IDisposable
 
     public Uri RemoteHostUri { get; }
 
-    public async Task<Kernel> CreateKernelAsync(string localName)
+    public async Task<ProxyKernel> CreateKernelAsync(string localName)
     {
         ProxyKernel? proxyKernel;
 

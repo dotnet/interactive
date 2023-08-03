@@ -39,13 +39,13 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task it_can_reuse_connection_for_multiple_proxy_kernels()
     {
-        var connector = CreateConnector();
+        var createKernel = CreateConnector();
 
         // use same connection to create 2 proxy kernel
-        using var proxyKernel1 = await connector.CreateKernelAsync("kernel1");
+        using var proxyKernel1 = await createKernel("kernel1");
         proxyKernel1.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
 
-        using var proxyKernel2 = await connector.CreateKernelAsync("kernel2");
+        using var proxyKernel2 = await createKernel("kernel2");
         proxyKernel2.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
 
         var kernelCommand1 = new SubmitCode("\"echo1\"");
@@ -131,9 +131,9 @@ x.Display(""text/plain"");");
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task fast_path_commands_over_proxy_can_be_handled()
     {
-        var connector = CreateConnector();
+        var createKernel = CreateConnector();
 
-        using var kernel = await connector.CreateKernelAsync("newKernelName");
+        using var kernel = await createKernel("newKernelName");
         kernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestHoverText)));
 
         var markedCode = "var x = 12$$34;";
@@ -147,7 +147,8 @@ x.Display(""text/plain"");");
               .ContainSingle<HoverTextProduced>();
     }
 
-    protected abstract IKernelConnector CreateConnector();
+    // FIX: (ProxyKernelConnectionTestsBase.CreateConnector) rename this 
+    protected abstract Func<string, Task<ProxyKernel>> CreateConnector();
 
     protected abstract SubmitCode CreateConnectCommand(string localKernelName);
 

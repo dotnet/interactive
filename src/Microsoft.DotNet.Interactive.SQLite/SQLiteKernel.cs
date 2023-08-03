@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Html;
 using Microsoft.Data.Sqlite;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
@@ -101,6 +102,26 @@ public class SQLiteKernel :
                     nameCounts[columnName] = 1;
                 }
             }
+        }
+    }
+
+    public static void AddSQLiteKernelConnectorTo(CompositeKernel kernel)
+    {
+        kernel.AddKernelConnector(new ConnectSQLiteCommand());
+
+        KernelInvocationContext.Current?.Display(
+            new HtmlString(@"<details><summary>Query SQLite databases.</summary>
+    <p>This extension adds support for connecting to SQLite databases using the <code>#!connect sqlite</code> magic command. For more information, run a cell using the <code>#!sql</code> magic command.</p>
+    </details>"),
+            "text/html");
+    }
+
+    public static void AddSQLiteKernelConnectorToCurrentRoot()
+    {
+        if (KernelInvocationContext.Current is { } context &&
+            context.HandlingKernel.RootKernel is CompositeKernel root)
+        {
+            SQLiteKernel.AddSQLiteKernelConnectorTo(root);
         }
     }
 }

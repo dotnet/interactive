@@ -31,7 +31,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
         _configuration = CreateConnectionConfiguration();
     }
 
-    protected override IKernelConnector CreateConnector()
+    protected override Func<string, Task<ProxyKernel>> CreateConnector()
     {
         var command = new List<string> { _configuration.Command };
 
@@ -40,11 +40,11 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
             command.AddRange(_configuration.Args);
         }
 
-        return new StdIoKernelConnector(
+        return _ => new StdIoKernelConnector(
             command.ToArray(),
             rootProxyKernelLocalName: "rootProxy",
             kernelHostUri: new Uri("kernel://test-kernel"),
-            workingDirectory: _configuration.WorkingDirectory);
+            workingDirectory: _configuration.WorkingDirectory).CreateRootProxyKernelAsync();
     }
 
     protected StdioConnectionTestConfiguration CreateConnectionConfiguration()

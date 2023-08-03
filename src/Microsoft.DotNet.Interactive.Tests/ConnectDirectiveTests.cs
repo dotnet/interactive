@@ -203,7 +203,7 @@ hello!
     }
 }
 
-public class FakeKernelConnector : IKernelConnector
+public class FakeKernelConnector 
 {
     public int FakenessLevel { get; set; }
 

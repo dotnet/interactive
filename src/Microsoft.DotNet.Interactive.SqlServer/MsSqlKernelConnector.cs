@@ -3,11 +3,10 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
-public class MsSqlKernelConnector : IKernelConnector
+internal class MsSqlKernelConnector
 {
     public MsSqlKernelConnector(bool createDbContext, string connectionString)
     {

@@ -18,7 +18,7 @@ public sealed class StartupTelemetryEventBuilder
     public StartupTelemetryEventBuilder(Func<string, string> hash)
     {
         _hash = hash ?? throw new ArgumentNullException(nameof(hash));
-     
+
     }
 
     public IEnumerable<TelemetryEvent> GetTelemetryEventsFrom(ParseResult parseResult)
@@ -275,6 +275,12 @@ public sealed class StartupTelemetryEventBuilder
                 case "synapse":
                 case "vscode":
                     return directive.Key;
+            }
+
+            if (directive.Key.StartsWith("vs") &&
+                int.TryParse(directive.Key.Substring(2), out _)) // VS appends the process id after the "vs" prefix.
+            {
+                return "vs";
             }
         }
 
