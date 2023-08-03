@@ -53,7 +53,7 @@ The multi-language experience of .NET Interactive is truly a collaborative effor
 
 - **PowerShell Team:** PowerShell support
 - **Azure Data Team:** SQL and KQL support
-- **Azure Notebooks Team**: Python, R, and Jupyter subkernel support (coming soon...)
+- **Azure Notebooks Team**: Python, R, and Jupyter subkernel support
 
 ## Telemetry
 
