@@ -55,6 +55,10 @@ internal class HttpRequestParser
                 if (ParseRequest() is { } requestNode)
                 {
                     _syntaxTree.RootNode.Add(requestNode);
+                } 
+                if(ParseRequestSeparator() is { } separatorNode)
+                {
+                    _syntaxTree.RootNode.Add(separatorNode);
                 }
             }
 
@@ -153,10 +157,10 @@ internal class HttpRequestParser
             var headersNode = ParseHeaders();
             var bodySeparatorNode = ParseBodySeparator();
             var bodyNode = ParseBody();
-            var requestSeparatorNode = ParseRequestSeparator();
+           // var requestSeparatorNode = ParseRequestSeparator();
             //TODO ParseRequestSeparator() if there is the ### separator
 
-            return new HttpRequestNode(
+            var requestNode = new HttpRequestNode(
                 _sourceText,
                 _syntaxTree,
                 methodNode,
@@ -164,13 +168,13 @@ internal class HttpRequestParser
                 versionNode,
                 headersNode,
                 bodySeparatorNode,
-                bodyNode,
-                requestSeparatorNode);
+                bodyNode);
+            return requestNode;
         }
 
         private HttpRequestSeparatorNode? ParseRequestSeparator()
         {
-            if (!MoreTokens())
+            if (!MoreTokens() || !IsRequestSeparator())
             {
                 return null;
             }
@@ -289,7 +293,7 @@ internal class HttpRequestParser
 
         private HttpVersionNode? ParseVersion()
         {
-            if (!MoreTokens())
+            if (!MoreTokens() || IsRequestSeparator())
             {
                 return null;
             }
@@ -302,7 +306,8 @@ internal class HttpRequestParser
             {
                 ConsumeCurrentTokenInto(node);
 
-                while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine)
+                while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine && 
+                    !IsRequestSeparator())
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -313,17 +318,22 @@ internal class HttpRequestParser
 
         private HttpHeadersNode? ParseHeaders()
         {
-            if (!MoreTokens())
+            if (!MoreTokens() || IsRequestSeparator())
             {
                 return null;
             }
 
             var headerNodes = new List<HttpHeaderNode>();
-            while (MoreTokens() && CurrentToken.Kind is not (HttpTokenKind.NewLine or HttpTokenKind.Whitespace))
+            while (MoreTokens() && CurrentToken.Kind is not (HttpTokenKind.NewLine or HttpTokenKind.Whitespace) &&
+                !IsRequestSeparator())
             {
                 headerNodes.Add(ParseHeader());
             }
 
+            if (headerNodes.Count == 0)
+            {
+                return null;
+            }   
             return new HttpHeadersNode(_sourceText, _syntaxTree, headerNodes);
         }
 
@@ -404,7 +414,7 @@ internal class HttpRequestParser
 
         private HttpBodySeparatorNode? ParseBodySeparator()
         {
-            if (!MoreTokens())
+            if (!MoreTokens() || IsRequestSeparator())
             {
                 return null;
             }
@@ -413,11 +423,13 @@ internal class HttpRequestParser
 
             ParseLeadingTrivia(node);
 
-            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine)
+            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine &&
+                !IsRequestSeparator())
             {
                 ConsumeCurrentTokenInto(node);
 
-                while (MoreTokens() && CurrentToken.Kind is (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
+                while (MoreTokens() && CurrentToken.Kind is (HttpTokenKind.Whitespace or HttpTokenKind.NewLine) && 
+                    !IsRequestSeparator())
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -438,15 +450,11 @@ internal class HttpRequestParser
             ParseLeadingTrivia(node);
 
             if (MoreTokens() && CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine) &&
-             !(CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-(NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-NextNextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })))
+             !IsRequestSeparator())
             {
                 ConsumeCurrentTokenInto(node);
 
-                while (MoreTokens() && !(CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-(NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-NextNextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })))
+                while (MoreTokens() && !IsRequestSeparator())
                 {
 
                     ConsumeCurrentTokenInto(node);

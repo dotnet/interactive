@@ -403,7 +403,7 @@ public class ParserTests : IDisposable
             var requestNode = result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
 
-            requestNode.HeadersNode.HeaderNodes.Count.Should().Be(0);
+            requestNode.HeadersNode.Should().BeNull();
         }
 
         [Fact]
@@ -495,24 +495,24 @@ public class ParserTests : IDisposable
         {
             var result = Parse(
                 """
-                  GET https://example.com HTTP/1.1
+                  GET https://example.com
 
                   ###
 
-                  GET https://example.com HTTP/1.1
+                  GET https://example1.com
 
                   ###
 
-                  GET https://example.com HTTP/1.1
+                  GET https://example2.com
                   """);
 
 
             var requestNodes = result.SyntaxTree.RootNode
-                  .ChildNodes;
+                  .ChildNodes.OfType<HttpRequestNode>();
 
             requestNodes.Select(r => r.Text).Should()
-                .BeEquivalentSequenceTo(new[] { "GET https://example.com HTTP/1.1",
-                "GET https://example.com HTTP/1.1", "GET https://example.com HTTP/1.1"});
+                .BeEquivalentSequenceTo(new[] { "GET https://example.com",
+                "GET https://example1.com", "GET https://example2.com"});
         }
     }
 

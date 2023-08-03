@@ -17,8 +17,7 @@ internal class HttpRequestNode : HttpSyntaxNode
         HttpVersionNode? versionNode = null,
         HttpHeadersNode? headersNode = null,
         HttpBodySeparatorNode? bodySeparatorNode = null,
-        HttpBodyNode? bodyNode = null,
-        HttpRequestSeparatorNode? requestSeparatorNode = null) : base(sourceText, syntaxTree)
+        HttpBodyNode? bodyNode = null) : base(sourceText, syntaxTree)
     {
 
         if (methodNode is not null)
@@ -53,12 +52,6 @@ internal class HttpRequestNode : HttpSyntaxNode
         {
             BodyNode = bodyNode;
             Add(BodyNode);
-        }
-
-        if (requestSeparatorNode is not null)
-        {
-            RequestSeparatorNode = requestSeparatorNode;
-            Add(RequestSeparatorNode);
         }
     }
 
