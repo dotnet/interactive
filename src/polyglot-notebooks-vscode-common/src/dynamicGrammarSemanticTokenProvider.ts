@@ -538,6 +538,8 @@ export function parseLanguageConfiguration(content: string): any {
 
     fixRegExpProperty(languageConfigurationObject, 'wordPattern');
 
+    fixAutoClosingPairs(languageConfigurationObject);
+
     if (typeof languageConfigurationObject.indentationRules === 'object') {
         fixRegExpProperty(languageConfigurationObject.indentationRules, 'decreaseIndentPattern');
         fixRegExpProperty(languageConfigurationObject.indentationRules, 'increaseIndentPattern');
@@ -554,6 +556,26 @@ export function parseLanguageConfiguration(content: string): any {
     }
 
     return languageConfigurationObject;
+}
+
+function fixAutoClosingPairs(value: any) {
+    if (value.autoClosingPairs && Array.isArray(value.autoClosingPairs)) {
+        const newAutoClosingPairs: any[] = [];
+        for (let i = 0; i < value.autoClosingPairs.length; i++) {
+            const pair = value.autoClosingPairs[i];
+            if (Array.isArray(pair) && pair.length === 2) {
+                newAutoClosingPairs.push({
+                    open: pair[0],
+                    close: pair[1]
+                }
+                )
+            } else if (typeof pair === 'object' && pair.open && pair.close) {
+                newAutoClosingPairs.push(pair);
+            }
+        }
+
+        value.autoClosingPairs = newAutoClosingPairs;
+    }
 }
 
 function fixRegExpProperty(value: any, propertyName: string) {
