@@ -10,10 +10,7 @@ try {
     function DownloadVsCodeApi([string] $branchName, [string] $destinationDirectory, [bool] $isInsiders = $false) {
         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.d.ts"
         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.notebookMessaging.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.notebookMessaging.d.ts"
-        if ($isInsiders) {
-             Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.languageConfigurationAutoClosingPairs.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.languageConfigurationAutoClosingPairs.d.ts"
-        }
-
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/vscode/$branchName/src/vscode-dts/vscode.proposed.languageConfigurationAutoClosingPairs.d.ts" -OutFile "$PSScriptRoot\$destinationDirectory\vscode.proposed.languageConfigurationAutoClosingPairs.d.ts"
     }
 
     # stable
