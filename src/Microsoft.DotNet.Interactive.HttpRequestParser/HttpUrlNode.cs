@@ -3,9 +3,10 @@
 
 #nullable enable
 
-using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Collections.Generic;
 using System.Text;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -14,19 +15,47 @@ internal class HttpUrlNode : HttpSyntaxNode
     internal HttpUrlNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
-
-    internal Uri GetUri(Func<HttpExpressionNode, object> value)
+    
+    internal HttpBindingResult<Uri> TryGetUri(HttpBindingDelegate bind)
     {
         var urlText = new StringBuilder();
 
-        foreach(var node in ChildNodesAndTokens)
+        var diagnostics = new List<Diagnostic>();
+        var success = true;
+
+        foreach (var node in ChildNodesAndTokens)
         {
-            urlText.Append(node switch
+            if (node is HttpEmbeddedExpressionNode n)
             {
-                HttpEmbeddedExpressionNode n => value(n.ExpressionNode),
-                _ => node.Text
-            });
+                var innerResult = bind(n.ExpressionNode);
+
+                if (!innerResult.IsSuccessful)
+                {
+                    success = false;
+                }
+                else
+                {
+                    var nodeText = innerResult.Value?.ToString();
+                    urlText.Append(nodeText);
+                }
+
+                diagnostics.AddRange(innerResult.Diagnostics);
+            }
+            else
+            {
+                urlText.Append(node.Text);
+            }
         }
-        return new Uri(urlText.ToString(), UriKind.Absolute);
+
+        if (success)
+        {
+            var uri = new Uri(urlText.ToString(), UriKind.Absolute);
+
+            return HttpBindingResult<Uri>.Success(uri);
+        }
+        else
+        {
+            return HttpBindingResult<Uri>.Failure(diagnostics.ToArray());
+        }
     }
 }

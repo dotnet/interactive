@@ -70,30 +70,39 @@ public partial class ParserTests
                                     .Should().ContainSingle<HttpRequestNode>().Which;
 
             var urlNode = requestNode.UrlNode;
-            urlNode.GetUri(x => x.Text switch
+            var bindingResult = urlNode.TryGetUri(node =>
             {
-                "host" => "example.com",
-                "version" => "123-",
-                _ => throw new NotImplementedException()
-            }).ToString().Should().Be("https://example.com/api/123-comments/1");
+                return node.Text switch
+                {
+                    "host" => node.CreateBindingSuccess("example.com"),
+                    "version" => node.CreateBindingSuccess("123-")
+                };
+            });
+
+            bindingResult.IsSuccessful.Should().BeTrue();
+            bindingResult.Value.ToString().Should().Be("https://example.com/api/123-comments/1");
         }
 
         [Fact]
-        public void error_is_reported_for_incorrect_uri()
+        public void error_is_reported_for_undefined_variable()
         {
             var result = Parse(
                 """
-            GET https://{{host}}/api/{{version}}comments/1
+            GET https://example.com/api/{{version}}comments/1
             """);
 
             var requestNode = result.SyntaxTree.RootNode.ChildNodes
                                     .Should().ContainSingle<HttpRequestNode>().Which;
 
             var urlNode = requestNode.UrlNode;
-            urlNode.TryGetUri(x => x.Text switch
-            {
-                "host" => "example.com"
-            }).Should().BeFalse();
+
+            var message = "Variable 'version' was not defined.";
+
+            HttpBindingDelegate bind = node => node.CreateBindingFailure(message);
+
+            var bindingResult = urlNode.TryGetUri(bind);
+            bindingResult.IsSuccessful.Should().BeFalse();
+            bindingResult.Diagnostics.Should().ContainSingle().Which.Message.Should().Be(message);
         }
     }
 }

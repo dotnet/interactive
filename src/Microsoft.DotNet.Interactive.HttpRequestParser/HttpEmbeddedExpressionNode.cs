@@ -5,8 +5,6 @@
 
 using Microsoft.CodeAnalysis.Text;
 
-using System.Collections.Generic;
-
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal class HttpEmbeddedExpressionNode : HttpSyntaxNode
@@ -31,5 +29,4 @@ internal class HttpEmbeddedExpressionNode : HttpSyntaxNode
     public HttpExpressionStartNode StartNode { get; }
     public HttpExpressionNode ExpressionNode { get; }
     public HttpExpressionEndNode EndNode { get; }
-
 }

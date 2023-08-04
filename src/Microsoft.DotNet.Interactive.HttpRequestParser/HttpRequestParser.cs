@@ -94,7 +94,6 @@ internal class HttpRequestParser
             AdvanceToNextToken();
         }
 
-
         private T ParseLeadingTrivia<T>(T node) where T : HttpSyntaxNode
         {
             while (MoreTokens())
@@ -211,14 +210,14 @@ internal class HttpRequestParser
                 }
                 else
                 {
-                    var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);
+                    var message = $"Unrecognized HTTP verb {CurrentToken.Text}";
 
-                    var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text, $"Unrecognized HTTP verb {CurrentToken.Text}");
+                    var diagnostic = CurrentToken.CreateDiagnostic(message);
+
                     node.AddDiagnostic(diagnostic);
+                    
                     ConsumeCurrentTokenInto(node);
                 }
-
-
             }
 
             return ParseTrailingTrivia(node);
