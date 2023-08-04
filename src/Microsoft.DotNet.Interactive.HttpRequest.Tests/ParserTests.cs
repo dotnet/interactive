@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest.Tests;
 
-public class ParserTests: IDisposable
+public class ParserTests : IDisposable
 {
 
     public ParserTests()
@@ -32,7 +32,7 @@ public class ParserTests: IDisposable
         if (result.SyntaxTree is not null && result.SyntaxTree.RootNode is not null)
         {
             result.SyntaxTree.RootNode.TextWithTrivia.Should().Be(code);
-        }        
+        }
         return result;
     }
 
@@ -85,8 +85,6 @@ public class ParserTests: IDisposable
         {
             var result = Parse("  \t  ");
 
-            using var _ = new AssertionScope();
-
             result.SyntaxTree.RootNode
             .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
             .MethodNode.ChildTokens.First().Should().BeOfType<HttpSyntaxToken>();
@@ -98,14 +96,14 @@ public class ParserTests: IDisposable
 
         [Fact]
         public void multiple_newlines_are_parsed_into_different_tokens()
-        {            
-            var result = Parse("\n\v\r\n\n");     
+        {
+            var result = Parse("\n\v\r\n\n");
 
             result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                .MethodNode.ChildTokens.Select(t => new {t.TextWithTrivia, t.Kind}).Should().BeEquivalentSequenceTo(
-                new {TextWithTrivia = "\n", Kind = HttpTokenKind.NewLine }, 
+                .MethodNode.ChildTokens.Select(t => new { t.TextWithTrivia, t.Kind }).Should().BeEquivalentSequenceTo(
+                new { TextWithTrivia = "\n", Kind = HttpTokenKind.NewLine },
                 new { TextWithTrivia = "\v", Kind = HttpTokenKind.NewLine },
-                new { TextWithTrivia = "\r\n", Kind = HttpTokenKind.NewLine }, 
+                new { TextWithTrivia = "\r\n", Kind = HttpTokenKind.NewLine },
                 new { TextWithTrivia = "\n", Kind = HttpTokenKind.NewLine });
         }
 
@@ -132,11 +130,10 @@ public class ParserTests: IDisposable
         {
             var result = Parse("  GET https://example.com");
 
-            using var _ = new AssertionScope();
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .MethodNode.ChildTokens.First().Kind
-                  .Should().Be(HttpTokenKind.Whitespace);          
+                  .Should().Be(HttpTokenKind.Whitespace);
         }
 
         [Fact]
@@ -144,7 +141,7 @@ public class ParserTests: IDisposable
         {
             var result = Parse(
                 """
-        
+
                 GET https://example.com
                 """);
 
@@ -244,6 +241,46 @@ public class ParserTests: IDisposable
             result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                 .MethodNode.Should().BeNull();
         }
+
+        [Fact]
+        public void url_node_can_give_url()
+        {
+            var result = Parse(
+                """
+        GET https://{{host}}/api/{{version}}comments/1
+        """);
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes
+                .Should().ContainSingle<HttpRequestNode>().Which;
+
+            var urlNode = requestNode.UrlNode;
+            urlNode.GetUri(x => x.Text switch
+            {
+                "host" => "example.com",
+                "version" => "123-",
+                _ => throw new NotImplementedException()
+            }).ToString().Should().Be("https://example.com/api/123-comments/1");
+        }
+
+        /*
+        [Fact]
+        public void error_is_reported_for_incorrect_uri()
+        {
+            var result = Parse(
+                """
+            GET https://{{host}}/api/{{version}}comments/1
+            """);
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes
+                .Should().ContainSingle<HttpRequestNode>().Which;
+
+            var urlNode = requestNode.UrlNode;
+            urlNode.TryGetUri(x => x.Text switch
+            {
+                "host" => "example.com"
+            }).Should().BeFalse();
+
+        }*/
     }
 
     public class Headers
@@ -262,8 +299,6 @@ public class ParserTests: IDisposable
             <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
         </request>
         """);
-
-            using var _ = new AssertionScope();
 
             var requestNode = result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
@@ -284,7 +319,7 @@ public class ParserTests: IDisposable
             var result = Parse(
                 """
         POST https://example.com/comments HTTP/1.1
-        Content-Type: application                                                                                                            
+        Content-Type: application
         """);
 
             var requestNode = result.SyntaxTree.RootNode
@@ -306,8 +341,6 @@ public class ParserTests: IDisposable
                 Cookie: expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;
                 """);
 
-            using var _ = new AssertionScope();
-
             var headersNode = result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .ChildNodes.Should().ContainSingle<HttpHeadersNode>().Which;
@@ -315,19 +348,19 @@ public class ParserTests: IDisposable
             var headerNodes = headersNode.HeaderNodes.ToArray();
             headerNodes.Should().HaveCount(5);
 
-            headerNodes[0].NameNode.Text.Should().Be("Accept");           
+            headerNodes[0].NameNode.Text.Should().Be("Accept");
             headerNodes[0].ValueNode.Text.Should().Be("*/*");
 
-            headerNodes[1].NameNode.Text.Should().Be("Accept-Encoding");            
+            headerNodes[1].NameNode.Text.Should().Be("Accept-Encoding");
             headerNodes[1].ValueNode.Text.Should().Be("gzip, deflate, br");
 
-            headerNodes[2].NameNode.Text.Should().Be("Accept-Language");            
+            headerNodes[2].NameNode.Text.Should().Be("Accept-Language");
             headerNodes[2].ValueNode.Text.Should().Be("en-US,en;q=0.9");
 
-            headerNodes[3].NameNode.Text.Should().Be("ContentLength");            
+            headerNodes[3].NameNode.Text.Should().Be("ContentLength");
             headerNodes[3].ValueNode.Text.Should().Be("7060");
 
-            headerNodes[4].NameNode.Text.Should().Be("Cookie");            
+            headerNodes[4].NameNode.Text.Should().Be("Cookie");
             headerNodes[4].ValueNode.Text.Should().Be("expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;");
         }
     }
@@ -347,12 +380,12 @@ public class ParserTests: IDisposable
                 <name>sample</name>
                 <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
             </request>
-            """);         
+            """);
 
             var requestNode = result.SyntaxTree.RootNode
                     .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
 
-            requestNode.BodySeparatorNode.ChildTokens.First().Kind.Should().Be(HttpTokenKind.NewLine);          
+            requestNode.BodySeparatorNode.ChildTokens.First().Kind.Should().Be(HttpTokenKind.NewLine);
         }
 
         [Fact]
@@ -368,14 +401,13 @@ public class ParserTests: IDisposable
                 </request>
                 """);
 
-            using var _ = new AssertionScope();
 
             var requestNode = result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
 
-            requestNode.HeadersNode.HeaderNodes.Count.Should().Be(0);
+            requestNode.HeadersNode.Should().BeNull();
         }
-        
+
         [Fact]
         public void body_is_parsed_correctly_when_headers_are_not_present()
         {
@@ -389,7 +421,6 @@ public class ParserTests: IDisposable
                 </request>
                 """);
 
-            using var _ = new AssertionScope();
 
             var requestNode = result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
@@ -421,7 +452,6 @@ public class ParserTests: IDisposable
                 </request>
                 """);
 
-            using var _ = new AssertionScope();
 
             var requestNode = result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
@@ -448,7 +478,6 @@ public class ParserTests: IDisposable
                 GET https://example.com HTTP/1.1"
                 """);
 
-            using var _ = new AssertionScope();
 
             var methodNode = result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
@@ -459,7 +488,58 @@ public class ParserTests: IDisposable
 
 
         }
+    }
 
+    public class Tree
+    {
+        [Fact]
+        public void multiple_request_are_parsed_correctly()
+        {
+            var result = Parse(
+                """
+                  GET https://example.com
+
+                  ###
+
+                  GET https://example1.com
+
+                  ###
+
+                  GET https://example2.com
+                  """);
+
+
+            var requestNodes = result.SyntaxTree.RootNode
+                  .ChildNodes.OfType<HttpRequestNode>();
+
+            requestNodes.Select(r => r.Text).Should()
+                .BeEquivalentSequenceTo(new[] { "GET https://example.com",
+                "GET https://example1.com", "GET https://example2.com"});
+        }
+    }
+
+    public class Variables
+    {
+        [Fact]
+        public void expression_is_parsed_correctly()
+        {
+            var result = Parse(
+                """
+                GET https://{{host}}/api/{{version}}comments/1 HTTP/1.1
+                Authorization: {{token}}
+                """);
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes
+                .Should().ContainSingle<HttpRequestNode>().Which;
+
+            requestNode.UrlNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Select(e => e.Text)
+                .Should().BeEquivalentSequenceTo(new[] { "host", "version" });
+
+            requestNode.HeadersNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>()
+                .Should().ContainSingle().Which.Text.Should().Be("token");
+        }
+
+        //TODO Test all parsers for expression
     }
 }
 // TODO: Test string with variable declarations but no requests

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <NoWarn>$(NoWarn);2003;CS8002;VSTHRD002;NU5100</NoWarn>
+    <NoWarn>$(NoWarn);2003;CS8002;(CS8509);VSTHRD002;NU5100</NoWarn>
     <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
     <Nullable>enable</Nullable>

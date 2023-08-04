@@ -25,10 +25,9 @@ internal class HttpRequestNode : HttpSyntaxNode
             MethodNode = methodNode;
             Add(MethodNode);
         }
-        
+
 
         UrlNode = urlNode;
-        
         Add(UrlNode);
 
         if (versionNode is not null)
@@ -41,11 +40,11 @@ internal class HttpRequestNode : HttpSyntaxNode
         {
             HeadersNode = headersNode;
             Add(HeadersNode);
-        }
+         }
 
         if(bodySeparatorNode is not null)
         {
-            BodySeparatorNode = bodySeparatorNode; 
+            BodySeparatorNode = bodySeparatorNode;
             Add(bodySeparatorNode);
         }
 
