@@ -29,14 +29,14 @@ internal class HttpUrlNode : HttpSyntaxNode
             {
                 var innerResult = bind(n.ExpressionNode);
 
-                if (!innerResult.IsSuccessful)
-                {
-                    success = false;
-                }
-                else
+                if (innerResult.IsSuccessful)
                 {
                     var nodeText = innerResult.Value?.ToString();
                     urlText.Append(nodeText);
+                }
+                else
+                {
+                    success = false;
                 }
 
                 diagnostics.AddRange(innerResult.Diagnostics);

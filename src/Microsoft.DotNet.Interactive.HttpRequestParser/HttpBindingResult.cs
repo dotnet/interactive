@@ -16,9 +16,9 @@ internal class HttpBindingResult<T>
     public List<Diagnostic> Diagnostics { get; } = new();
     public bool IsSuccessful { get; private set; }
 
-    public object? Value { get; set; }
+    public T? Value { get; set; }
 
-    public static HttpBindingResult<T?> Success(T? value) => new()
+    public static HttpBindingResult<T> Success(T value) => new()
     {
         IsSuccessful = true,
         Value = value

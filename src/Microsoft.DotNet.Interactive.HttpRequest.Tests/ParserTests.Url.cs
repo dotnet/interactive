@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
@@ -59,7 +58,7 @@ public partial class ParserTests
         }
 
         [Fact]
-        public void url_node_can_give_url()
+        public void url_node_can_return_url()
         {
             var result = Parse(
                 """

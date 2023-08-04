@@ -3,10 +3,8 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -16,19 +14,6 @@ internal class HttpRequestParseResult
         => SyntaxTree = syntaxTree;
 
     public HttpSyntaxTree? SyntaxTree { get; }
-
-    public IEnumerable<HttpRequestMessage> GetHttpRequestMessages()
-    {
-        if (SyntaxTree?.RootNode is { } rootNode)
-        {
-            foreach (var requestNode in rootNode.ChildNodes.OfType<HttpRequestNode>())
-            {
-                yield return new HttpRequestMessage(
-                    new HttpMethod(requestNode.MethodNode?.Text ?? "GET"),
-                    new Uri(@"https://something.we.wont.use.in.our.tests.com"));
-            }
-        }
-    }
 
     public IEnumerable<Diagnostic> GetDiagnostics()
     {
