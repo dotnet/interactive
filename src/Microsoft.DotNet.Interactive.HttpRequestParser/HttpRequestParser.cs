@@ -5,7 +5,6 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -94,7 +93,6 @@ internal class HttpRequestParser
             node.Add(CurrentToken);
             AdvanceToNextToken();
         }
-
 
         private T ParseLeadingTrivia<T>(T node) where T : HttpSyntaxNode
         {
@@ -212,14 +210,14 @@ internal class HttpRequestParser
                 }
                 else
                 {
-                    var tokenSpan = _sourceText.GetSubText(CurrentToken.Span).Lines.GetLinePositionSpan(CurrentToken.Span);
+                    var message = $"Unrecognized HTTP verb {CurrentToken.Text}";
 
-                    var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, CurrentToken.Text, $"Unrecognized HTTP verb {CurrentToken.Text}");
+                    var diagnostic = CurrentToken.CreateDiagnostic(message);
+
                     node.AddDiagnostic(diagnostic);
+                    
                     ConsumeCurrentTokenInto(node);
                 }
-
-
             }
 
             return ParseTrailingTrivia(node);

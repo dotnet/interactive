@@ -3,6 +3,8 @@
 
 #nullable enable
 
+using System.Collections.Generic;
+using System.Net.Http;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -19,13 +21,11 @@ internal class HttpRequestNode : HttpSyntaxNode
         HttpBodySeparatorNode? bodySeparatorNode = null,
         HttpBodyNode? bodyNode = null) : base(sourceText, syntaxTree)
     {
-
         if (methodNode is not null)
         {
             MethodNode = methodNode;
             Add(MethodNode);
         }
-
 
         UrlNode = urlNode;
         Add(UrlNode);
@@ -40,9 +40,9 @@ internal class HttpRequestNode : HttpSyntaxNode
         {
             HeadersNode = headersNode;
             Add(HeadersNode);
-         }
+        }
 
-        if(bodySeparatorNode is not null)
+        if (bodySeparatorNode is not null)
         {
             BodySeparatorNode = bodySeparatorNode;
             Add(bodySeparatorNode);
@@ -66,4 +66,36 @@ internal class HttpRequestNode : HttpSyntaxNode
     public HttpBodySeparatorNode? BodySeparatorNode { get; }
 
     public HttpBodyNode? BodyNode { get; }
+
+    public HttpBindingResult<HttpRequestMessage> TryGetHttpRequestMessage(HttpBindingDelegate bind)
+    {
+        var request = new HttpRequestMessage();
+        var diagnostics = new List<Diagnostic>();
+        var success = true;
+
+        if (MethodNode is { Span.IsEmpty: false })
+        {
+            request.Method = new HttpMethod(MethodNode.Text);
+        }
+
+        var uriBindingResult = UrlNode.TryGetUri(bind);
+        if (uriBindingResult.IsSuccessful)
+        {
+            request.RequestUri = uriBindingResult.Value;
+        }
+        else
+        {
+            success = false;
+            diagnostics.AddRange(uriBindingResult.Diagnostics);
+        }
+
+        if (success)
+        {
+            return HttpBindingResult<HttpRequestMessage>.Success(request);
+        }
+        else
+        {
+            return HttpBindingResult<HttpRequestMessage>.Failure(diagnostics.ToArray());
+        }
+    }
 }

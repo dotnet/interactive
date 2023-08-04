@@ -3,10 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
-    <NoWarn>$(NoWarn);VSTHRD200</NoWarn>
-    <!-- Ignore: Use "Async" suffix for async methods -->
-    <NoWarn>$(NoWarn);8002</NoWarn>
+
     <!-- Assent isn't strongly signed -->
+    <NoWarn>$(NoWarn);VSTHRD200;CS8002;CS8509</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +17,10 @@
 
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequestParser\*.cs" LinkBase="Parser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\Microsoft.DotNet.Interactive.HttpRequestParser\BindingResult.cs" />
   </ItemGroup>
 
   <ItemGroup>

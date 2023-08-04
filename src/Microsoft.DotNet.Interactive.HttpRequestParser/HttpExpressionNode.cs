@@ -12,4 +12,10 @@ internal class HttpExpressionNode : HttpSyntaxNode
     internal HttpExpressionNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
+
+    public HttpBindingResult<object?> CreateBindingFailure(string message) =>
+        HttpBindingResult<object?>.Failure(CreateDiagnostic(message));
+
+    public HttpBindingResult<object?> CreateBindingSuccess(object? value) =>
+        HttpBindingResult<object?>.Success(value);
 }

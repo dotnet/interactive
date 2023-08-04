@@ -19,6 +19,10 @@
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequestParser\*.cs" LinkBase="Parser" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\Microsoft.DotNet.Interactive.HttpRequestParser\BindingResult.cs" />
+  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
