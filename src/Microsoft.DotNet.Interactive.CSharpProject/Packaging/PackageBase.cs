@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
+using Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
@@ -33,7 +34,7 @@ public abstract class PackageBase :
         Directory = directory ?? new DirectoryInfo(Path.Combine(Package.DefaultPackagesDirectory.FullName, Name));
 
         _lazyCreation = new AsyncLazy<bool>(() => this.Create(Initializer));
-        LastBuildErrorLogFile = new FileInfo(Path.Combine(Directory.FullName, ".trydotnet-builderror"));
+        LastBuildErrorLogFile = new FileInfo(Path.Combine(Directory.FullName, ".net-interactive-builderror"));
     }
 
     public IPackageInitializer Initializer { get; protected set; }
@@ -89,12 +90,16 @@ public abstract class PackageBase :
         {
             this.CleanObjFolder();
             var projectFile = this.GetProjectFile();
-            var args = $"/bl:{FullBuildBinlogFileName}";
+
+            string tempDirectoryBuildTargetsFile =
+                Path.Combine(Path.GetDirectoryName(projectFile.FullName), BuildCacheFileUtilities.DirectoryBuildTargetFilename);
+            File.WriteAllText(tempDirectoryBuildTargetsFile, BuildCacheFileUtilities.DirectoryBuildTargetsContent);
+
+            var args = "";
             if (projectFile?.Exists == true)
             {
                 args = $@"""{projectFile.FullName}"" {args}";
             }
-
 
             var result = await new Dotnet(Directory).Build(args: args);
 
@@ -108,6 +113,9 @@ public abstract class PackageBase :
             {
                 LastBuildErrorLogFile.Delete();
             }
+
+            // Clean up the temp project file
+            File.Delete(tempDirectoryBuildTargetsFile);
 
             result.ThrowOnFailure();
         }
