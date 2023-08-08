@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq;
 using System.Net.Http;
 using FluentAssertions;
@@ -33,6 +32,9 @@ public partial class ParserTests
 
             var requestNodes = result.SyntaxTree.RootNode
                                      .ChildNodes.OfType<HttpRequestNode>();
+
+            var request = requestNodes.First();
+            var span = request.Span;
 
             requestNodes.Select(r => r.Text).Should()
                         .BeEquivalentSequenceTo(new[]

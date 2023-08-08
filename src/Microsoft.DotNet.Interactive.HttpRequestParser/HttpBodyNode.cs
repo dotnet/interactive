@@ -42,7 +42,7 @@ internal class HttpBodyNode : HttpSyntaxNode
             }
             else
             {
-                bodyText.Append(node.TextWithTrivia);
+                bodyText.Append(node.Text);
             }
         }
 

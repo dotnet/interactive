@@ -12,13 +12,14 @@ public partial class ParserTests
     public class Comments
     {
         [Fact]
-        public void comments_are_parsed_correctly()
+        public void line_comments_before_method_and_url_is_parsed_correctly()
         {
-            var result = Parse(
-                """
+            var code = """
                 # This is a comment
-                GET https://example.com HTTP/1.1"
-                """);
+                GET https://example.com HTTP/1.1
+                """;
+
+            var result = Parse(code);
 
             var methodNode = result.SyntaxTree.RootNode
                                    .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which

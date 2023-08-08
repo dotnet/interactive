@@ -22,4 +22,17 @@ internal static class AssertionExtensions
 
         return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
     }
+    
+    public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
+        this GenericCollectionAssertions<HttpSyntaxNodeOrToken> should)
+        where T : HttpSyntaxNode
+    {
+        should.ContainSingle(e => e is T);
+
+        var subject = should.Subject
+                            .OfType<T>()
+                            .Single();
+
+        return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
+    }
 }

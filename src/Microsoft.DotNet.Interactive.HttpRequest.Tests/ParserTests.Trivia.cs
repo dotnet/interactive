@@ -26,7 +26,7 @@ public partial class ParserTests
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .MethodNode.ChildTokens.First().TextWithTrivia.Should().Be(" \t ");
+                  .MethodNode.ChildTokens.First().Text.Should().Be(" \t ");
         }
 
         [Fact]
@@ -36,7 +36,7 @@ public partial class ParserTests
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .MethodNode.TextWithTrivia.Should().Be("\r\n\n\r\n");
+                  .MethodNode.FullText.Should().Be("\r\n\n\r\n");
         }
     }
 }

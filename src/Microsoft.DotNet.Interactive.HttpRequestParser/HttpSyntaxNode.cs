@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 {
-    private TextSpan _span;
+    private TextSpan _fullSpan;
     private readonly List<HttpSyntaxNodeOrToken> _childNodesAndTokens = new();
 
     private protected HttpSyntaxNode(
@@ -21,7 +21,52 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
     {
     }
 
-    public override TextSpan Span => _span;
+    public override TextSpan FullSpan => _fullSpan;
+
+    public override bool IsSignificant
+    {
+        get
+        {
+            foreach (var child in ChildNodesAndTokens)
+            {
+                if (child.IsSignificant)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    public override string Text => SourceText.ToString(Span);
+
+    public override TextSpan Span
+    {
+        get
+        {
+            var firstSignificantNodeOrToken = ChildNodesAndTokens
+                .FirstOrDefault(n => n.IsSignificant);
+
+            var lastSignificantNodeOrToken = ChildNodesAndTokens
+                .LastOrDefault(n => n.IsSignificant);
+
+            var startOfNonTriviaAndComments =
+                firstSignificantNodeOrToken?.Span.Start ??
+                FullSpan.Start;
+
+            var endOfNonTriviaAndComments =
+                lastSignificantNodeOrToken?.Span.End ??
+                FullSpan.End;
+
+            return TextSpan.FromBounds(startOfNonTriviaAndComments, endOfNonTriviaAndComments);
+        }
+    }
+    
+    /// <summary>
+    /// Gets the text of the current node, including trivia.
+    /// </summary>
+    public string FullText => SourceText.ToString(FullSpan);
 
     public bool Contains(HttpSyntaxNode node) => false;
 
@@ -29,14 +74,14 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         DescendantNodesAndTokensAndSelf()
             .OfType<HttpSyntaxNode>()
             .Reverse()
-            .FirstOrDefault(n => n.Span.Contains(span));
+            .FirstOrDefault(n => n.FullSpan.Contains(span));
 
     public HttpSyntaxNode? FindNode(int position) =>
         FindToken(position)?.Parent;
 
     public HttpSyntaxToken? FindToken(int position)
     {
-        var candidate = _childNodesAndTokens.FirstOrDefault(n => n.Span.Contains(position));
+        var candidate = _childNodesAndTokens.FirstOrDefault(n => n.FullSpan.Contains(position));
 
         return candidate switch
         {
@@ -48,15 +93,15 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
     private void GrowSpan(HttpSyntaxNodeOrToken child)
     {
-        if (_span == default)
+        if (_fullSpan == default)
         {
-            _span = child.Span;
+            _fullSpan = child.FullSpan;
         }
         else
         {
-            var _spanStart = Math.Min(_span.Start, child.Span.Start);
-            var _spanEnd = Math.Max(_span.End, child.Span.End);
-            _span = new TextSpan(_spanStart, _spanEnd - _span.Start);
+            var _spanStart = Math.Min(_fullSpan.Start, child.FullSpan.Start);
+            var _spanEnd = Math.Max(_fullSpan.End, child.FullSpan.End);
+            _fullSpan = new TextSpan(_spanStart, _spanEnd - _fullSpan.Start);
         }
     }
 
@@ -83,13 +128,12 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
-        foreach(var child in ChildNodesAndTokens)
+        foreach (var child in ChildNodesAndTokens)
         {
-            foreach(var diagnostic in child.GetDiagnostics())
+            foreach (var diagnostic in child.GetDiagnostics())
             {
                 yield return diagnostic;
             }
-
         }
 
         if (_diagnostics is not null)
@@ -99,7 +143,6 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
                 yield return diagnostic;
             }
         }
-
     }
 
     public IEnumerable<HttpSyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()
@@ -120,8 +163,8 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         });
 
     private static IEnumerable<T> FlattenBreadthFirst<T>(
-    IEnumerable<T> source,
-    Func<T, IEnumerable<T>> children)
+        IEnumerable<T> source,
+        Func<T, IEnumerable<T>> children)
     {
         var queue = new Queue<T>();
 

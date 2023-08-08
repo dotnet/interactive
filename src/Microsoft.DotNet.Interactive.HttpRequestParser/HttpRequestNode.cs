@@ -73,7 +73,7 @@ internal class HttpRequestNode : HttpSyntaxNode
         var diagnostics = new List<Diagnostic>();
         var success = true;
 
-        if (MethodNode is { Span.IsEmpty: false })
+        if (MethodNode is { FullSpan.IsEmpty: false })
         {
             request.Method = new HttpMethod(MethodNode.Text);
         }

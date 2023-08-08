@@ -21,11 +21,11 @@ using Microsoft.DotNet.Interactive.Formatting;
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 public class HttpRequestKernel :
-       Kernel,
-       IKernelCommandHandler<RequestValue>,
-       IKernelCommandHandler<SendValue>,
-       IKernelCommandHandler<SubmitCode>,
-       IKernelCommandHandler<RequestDiagnostics>
+    Kernel,
+    IKernelCommandHandler<RequestValue>,
+    IKernelCommandHandler<SendValue>,
+    IKernelCommandHandler<SubmitCode>,
+    IKernelCommandHandler<RequestDiagnostics>
 {
     internal const int DefaultResponseDelayThresholdInMilliseconds = 1000;
     internal const int DefaultContentByteLengthThreshold = 500_000;
@@ -36,8 +36,6 @@ public class HttpRequestKernel :
 
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
     private static readonly Regex IsRequest;
-    private static readonly Regex IsHeader;
-    private bool _useNewParser = true;
 
     private const string InterpolationStartMarker = "{{";
     private const string InterpolationEndMarker = "}}";
@@ -46,11 +44,9 @@ public class HttpRequestKernel :
     {
         // FIX: (HttpRequestKernel) delete me
         var verbs = string.Join("|",
-            typeof(HttpMethod).GetProperties(BindingFlags.Static | BindingFlags.Public).Select(p => p.GetValue(null)!.ToString()));
+                                typeof(HttpMethod).GetProperties(BindingFlags.Static | BindingFlags.Public).Select(p => p.GetValue(null)!.ToString()));
 
         IsRequest = new Regex(@"^\s*(" + verbs + ")", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        IsHeader = new Regex(@"^\s*(?<key>[\w-]+):\s*(?<value>.*)", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
     }
 
     public HttpRequestKernel(
@@ -233,6 +229,7 @@ public class HttpRequestKernel :
                     {
                         requestMessage.Content = new StringContent("");
                     }
+
                     requestMessage.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
                     break;
                 case "accept":
@@ -302,8 +299,6 @@ public class HttpRequestKernel :
             // FIX: (InterpolateAndGetDiagnostics) 
         }
 
-
-
         var lines = code.Split('\n');
 
         var result = new List<(string Request, List<Diagnostic>)>();
@@ -315,12 +310,6 @@ public class HttpRequestKernel :
             var lineText = lines[line];
             if (IsRequest.IsMatch(lineText))
             {
-                if (MightContainRequest(currentLines))
-                {
-                    var requestCode = string.Join('\n', currentLines);
-                    result.Add((requestCode, currentDiagnostics));
-                }
-
                 currentLines = new List<string>();
                 currentDiagnostics = new List<Diagnostic>();
             }
@@ -397,12 +386,14 @@ public class HttpRequestKernel :
             {
                 address = uriResult.Value;
             }
+
             diagnostics.AddRange(uriResult.Diagnostics);
 
             var methodNodeText = requestNode.MethodNode?.Text;
 
             var bodyResult = requestNode.BodyNode?.TryGetBody(BindExpressionValues);
             string body = null;
+
             if (bodyResult is not null)
             {
                 if (bodyResult.IsSuccessful)
@@ -420,66 +411,7 @@ public class HttpRequestKernel :
                 headers: headers,
                 diagnostics);
 
-            if (_useNewParser)
-            {
-                parsedRequests.Add(parsedRequest);
-            }
-
-            // FIX: (ParseRequests) 
-        }
-
-        if (_useNewParser)
-        {
-            return parsedRequests;
-        }
-
-        foreach (var (request, diagnostics) in InterpolateAndGetDiagnostics(requests))
-        {
-            var body = new StringBuilder();
-            string? verb = null;
-            string? address = null;
-            var headerValues = new Dictionary<string, string>();
-            var lines = request.Split(new[] { '\n' });
-            for (var index = 0; index < lines.Length; index++)
-            {
-                var line = lines[index];
-                if (verb is null)
-                {
-                    if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//"))
-                    {
-                        continue;
-                    }
-
-                    var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    verb = parts[0].Trim();
-                    address = parts[1].Trim();
-                }
-                else if (!string.IsNullOrWhiteSpace(line) && IsHeader.Matches(line) is { } matches && matches.Count != 0)
-                {
-                    foreach (Match match in matches)
-                    {
-                        var key = match.Groups["key"].Value;
-                        var value = match.Groups["value"].Value.Trim();
-                        headerValues[key] = value;
-                    }
-                }
-                else
-                {
-                    for (; index < lines.Length; index++)
-                    {
-                        body.AppendLine(lines[index]);
-                    }
-                }
-            }
-
-            if (string.IsNullOrWhiteSpace(verb))
-            {
-                throw new InvalidOperationException("Cannot perform HttpRequest without a valid verb.");
-            }
-
-            var uri = GetAbsoluteUriString(address);
-            var bodyText = body.ToString().Trim();
-            parsedRequests.Add(new ParsedHttpRequest(verb, uri, bodyText, headerValues.ToList(), diagnostics));
+            parsedRequests.Add(parsedRequest);
         }
 
         return parsedRequests;
@@ -492,7 +424,7 @@ public class HttpRequestKernel :
 
         if (_variables.TryGetValue(expression, out var value))
         {
-            return  HttpBindingResult<object?>.Success(value);
+            return HttpBindingResult<object?>.Success(value);
         }
 
         return HttpBindingResult<object?>.Failure(node.CreateDiagnostic($"Undefined value: {variableName}"));
@@ -518,10 +450,10 @@ public class HttpRequestKernel :
     private class ParsedHttpRequest
     {
         public ParsedHttpRequest(
-            string verb, 
-            Uri address, 
-            string body, 
-            IReadOnlyList<KeyValuePair<string, string>> headers, 
+            string verb,
+            Uri address,
+            string body,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
             IReadOnlyList<Diagnostic> diagnostics)
         {
             Verb = verb;

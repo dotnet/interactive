@@ -30,5 +30,6 @@ internal class HttpCommentNode : HttpSyntaxNode
     public HttpCommentStartNode CommentStartNode { get; }
 
     public HttpCommentBodyNode? CommentBodyNode { get; }
-    
+
+    public override bool IsSignificant => false;
 }

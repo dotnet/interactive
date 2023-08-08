@@ -200,7 +200,7 @@ internal class HttpRequestParser
 
             if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
             {
-                if (CurrentToken.Text.ToLower() is ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
+                if (CurrentToken.Text.ToLower() is "get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace")
                 {
                     ConsumeCurrentTokenInto(node);
                 }

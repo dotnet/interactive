@@ -276,9 +276,10 @@ Content-Type: application/json
         var result = await kernel.SendAsync(new SendValue("theHost", "example.com"));
         result.Events.Should().NotContainErrors();
 
-        var code = @"
-# something to ensure we're not on the first line
-GET https://{{theHost}}";
+        var code = """
+            # something to ensure we're not on the first line
+            GET https://{{theHost}}
+            """;
 
         result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
