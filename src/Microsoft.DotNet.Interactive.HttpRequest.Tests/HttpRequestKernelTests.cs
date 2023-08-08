@@ -93,7 +93,7 @@ public class HttpRequestKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode(@"
 get  https://location1.com:1200/endpoint
-
+###
 put  https://location2.com:1200/endpoint"));
 
         using var _ = new AssertionScope();
@@ -147,7 +147,6 @@ Authorization: Basic username password"));
             Content-Type: application/json
             
             { "key" : "value", "list": [1, 2, 3] }
-
             """));
 
         using var _ = new AssertionScope();
@@ -245,17 +244,18 @@ Content-Type: application/json
         var result = await kernel.SendAsync(new SendValue("one", 1));
         result.Events.Should().NotContainErrors();
 
-        result = await kernel.SendAsync(new SubmitCode(@"
-post  https://location1.com:1200/endpoint
-Authorization: Basic username password
-Content-Type: application/json
-
-{ ""key"" : ""value"", ""list"": [{{one}}, 2, 3] }
-"));
+        result = await kernel.SendAsync(new SubmitCode("""
+            
+            post  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            Content-Type: application/json
+            
+            { "key" : "value", "list": [{{one}}, 2, 3] }
+            """));
         result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        bodyAsString.Should().Be("{ \"key\" : \"value\", \"list\": [1, 2, 3] }");
+        bodyAsString.Should().Be("""{ "key" : "value", "list": [1, 2, 3] }""");
     }
 
     [Fact]
@@ -277,7 +277,7 @@ Content-Type: application/json
         result.Events.Should().NotContainErrors();
 
         var code = @"
-// something to ensure we're not on the first line
+# something to ensure we're not on the first line
 GET https://{{theHost}}";
 
         result = await kernel.SendAsync(new SubmitCode(code));

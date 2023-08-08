@@ -16,9 +16,7 @@ public partial class ParserTests
         public void it_can_parse_an_empty_string()
         {
             var result = Parse("");
-            result.SyntaxTree.Should().BeNull();
-
-            // TODO: Test error reporting.
+            result.SyntaxTree.Should().NotBeNull();
         }
 
         [Fact]
@@ -29,8 +27,6 @@ public partial class ParserTests
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .MethodNode.ChildTokens.First().TextWithTrivia.Should().Be(" \t ");
-
-            // TODO: Test error reporting.
         }
 
         [Fact]

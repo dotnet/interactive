@@ -37,12 +37,14 @@ public class HttpRequestKernel :
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
     private static readonly Regex IsRequest;
     private static readonly Regex IsHeader;
+    private bool _useNewParser = true;
 
     private const string InterpolationStartMarker = "{{";
     private const string InterpolationEndMarker = "}}";
 
     static HttpRequestKernel()
     {
+        // FIX: (HttpRequestKernel) delete me
         var verbs = string.Join("|",
             typeof(HttpMethod).GetProperties(BindingFlags.Static | BindingFlags.Public).Select(p => p.GetValue(null)!.ToString()));
 
@@ -229,7 +231,7 @@ public class HttpRequestKernel :
                 case "content-type":
                     if (requestMessage.Content is null)
                     {
-                        requestMessage.Content = new StringContent(parsedRequest.Body);
+                        requestMessage.Content = new StringContent("");
                     }
                     requestMessage.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
                     break;
@@ -293,6 +295,15 @@ public class HttpRequestKernel :
 
     private IEnumerable<(string Request, List<Diagnostic> Diagnostics)> InterpolateAndGetDiagnostics(string code)
     {
+        var parseResult = HttpRequestParser.Parse(code);
+
+        foreach (var diagnostic in parseResult.GetDiagnostics())
+        {
+            // FIX: (InterpolateAndGetDiagnostics) 
+        }
+
+
+
         var lines = code.Split('\n');
 
         var result = new List<(string Request, List<Diagnostic>)>();
@@ -364,12 +375,63 @@ public class HttpRequestKernel :
     private static bool MightContainRequest(IEnumerable<string> lines)
     {
         return lines.Any(line => IsRequest.IsMatch(line));
-        //return lines.Any() && lines.Any(line => !string.IsNullOrWhiteSpace(line));
     }
 
     private IEnumerable<ParsedHttpRequest> ParseRequests(string requests)
     {
+        var parseResult = HttpRequestParser.Parse(requests);
         var parsedRequests = new List<ParsedHttpRequest>();
+
+        foreach (var requestNode in parseResult.SyntaxTree.RootNode!.ChildNodes.OfType<HttpRequestNode>())
+        {
+            var headers =
+                requestNode.HeadersNode?.HeaderNodes.Select(h => KeyValuePair.Create(h.NameNode.Text, h.ValueNode.Text)).ToArray()
+                ??
+                Array.Empty<KeyValuePair<string, string>>();
+
+            var diagnostics = requestNode.GetDiagnostics().ToList();
+
+            var uriResult = requestNode.UrlNode.TryGetUri(BindExpressionValues);
+            Uri? address = null;
+            if (uriResult.IsSuccessful)
+            {
+                address = uriResult.Value;
+            }
+            diagnostics.AddRange(uriResult.Diagnostics);
+
+            var methodNodeText = requestNode.MethodNode?.Text;
+
+            var bodyResult = requestNode.BodyNode?.TryGetBody(BindExpressionValues);
+            string body = null;
+            if (bodyResult is not null)
+            {
+                if (bodyResult.IsSuccessful)
+                {
+                    body = bodyResult.Value;
+                }
+
+                diagnostics.AddRange(bodyResult.Diagnostics);
+            }
+
+            var parsedRequest = new ParsedHttpRequest(
+                methodNodeText,
+                address,
+                body: body,
+                headers: headers,
+                diagnostics);
+
+            if (_useNewParser)
+            {
+                parsedRequests.Add(parsedRequest);
+            }
+
+            // FIX: (ParseRequests) 
+        }
+
+        if (_useNewParser)
+        {
+            return parsedRequests;
+        }
 
         foreach (var (request, diagnostics) in InterpolateAndGetDiagnostics(requests))
         {
@@ -381,7 +443,7 @@ public class HttpRequestKernel :
             for (var index = 0; index < lines.Length; index++)
             {
                 var line = lines[index];
-                if (verb == null)
+                if (verb is null)
                 {
                     if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//"))
                     {
@@ -417,13 +479,26 @@ public class HttpRequestKernel :
 
             var uri = GetAbsoluteUriString(address);
             var bodyText = body.ToString().Trim();
-            parsedRequests.Add(new ParsedHttpRequest(verb, uri, bodyText, headerValues, diagnostics));
+            parsedRequests.Add(new ParsedHttpRequest(verb, uri, bodyText, headerValues.ToList(), diagnostics));
         }
 
         return parsedRequests;
     }
 
-    private string GetAbsoluteUriString(string? address)
+    private HttpBindingResult<object?> BindExpressionValues(HttpExpressionNode node)
+    {
+        var variableName = node.Text;
+        var expression = variableName;
+
+        if (_variables.TryGetValue(expression, out var value))
+        {
+            return  HttpBindingResult<object?>.Success(value);
+        }
+
+        return HttpBindingResult<object?>.Failure(node.CreateDiagnostic($"Undefined value: {variableName}"));
+    }
+
+    private Uri GetAbsoluteUriString(string? address)
     {
         if (string.IsNullOrWhiteSpace(address))
         {
@@ -437,12 +512,17 @@ public class HttpRequestKernel :
             throw new InvalidOperationException($"Cannot use relative path {uri} without a base address.");
         }
 
-        return uri.AbsoluteUri;
+        return uri;
     }
 
     private class ParsedHttpRequest
     {
-        public ParsedHttpRequest(string verb, string address, string body, IEnumerable<KeyValuePair<string, string>> headers, IEnumerable<Diagnostic> diagnostics)
+        public ParsedHttpRequest(
+            string verb, 
+            Uri address, 
+            string body, 
+            IReadOnlyList<KeyValuePair<string, string>> headers, 
+            IReadOnlyList<Diagnostic> diagnostics)
         {
             Verb = verb;
             Address = address;
@@ -452,9 +532,9 @@ public class HttpRequestKernel :
         }
 
         public string Verb { get; }
-        public string Address { get; }
+        public Uri Address { get; }
         public string Body { get; }
-        public IEnumerable<KeyValuePair<string, string>> Headers { get; }
-        public IEnumerable<Diagnostic> Diagnostics { get; }
+        public IReadOnlyList<KeyValuePair<string, string>> Headers { get; }
+        public IReadOnlyList<Diagnostic> Diagnostics { get; }
     }
 }

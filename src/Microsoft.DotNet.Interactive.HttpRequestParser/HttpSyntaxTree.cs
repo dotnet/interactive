@@ -3,16 +3,9 @@
 
 #nullable enable
 
-using Microsoft.CodeAnalysis.Text;
-
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal class HttpSyntaxTree
 {
-    private readonly SourceText _sourceText;
-
-    public HttpSyntaxTree(SourceText sourceText)
-        => _sourceText = sourceText;
-
     public HttpRootSyntaxNode? RootNode { get; set; }
 }

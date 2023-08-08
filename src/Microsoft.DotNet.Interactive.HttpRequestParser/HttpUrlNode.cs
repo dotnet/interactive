@@ -19,7 +19,6 @@ internal class HttpUrlNode : HttpSyntaxNode
     internal HttpBindingResult<Uri> TryGetUri(HttpBindingDelegate bind)
     {
         var urlText = new StringBuilder();
-
         var diagnostics = new List<Diagnostic>();
         var success = true;
 
