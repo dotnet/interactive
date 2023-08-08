@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -14,6 +14,8 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 {
     private TextSpan _fullSpan;
     private readonly List<HttpSyntaxNodeOrToken> _childNodesAndTokens = new();
+    private TextSpan _span;
+    private bool _isSignificant = false;
 
     private protected HttpSyntaxNode(
         SourceText sourceText,
@@ -23,46 +25,12 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
     public override TextSpan FullSpan => _fullSpan;
 
-    public override bool IsSignificant
-    {
-        get
-        {
-            foreach (var child in ChildNodesAndTokens)
-            {
-                if (child.IsSignificant)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }
+    public override bool IsSignificant => _isSignificant;
 
     public override string Text => SourceText.ToString(Span);
 
-    public override TextSpan Span
-    {
-        get
-        {
-            var firstSignificantNodeOrToken = ChildNodesAndTokens
-                .FirstOrDefault(n => n.IsSignificant);
+    public override TextSpan Span => _span;
 
-            var lastSignificantNodeOrToken = ChildNodesAndTokens
-                .LastOrDefault(n => n.IsSignificant);
-
-            var startOfNonTriviaAndComments =
-                firstSignificantNodeOrToken?.Span.Start ??
-                FullSpan.Start;
-
-            var endOfNonTriviaAndComments =
-                lastSignificantNodeOrToken?.Span.End ??
-                FullSpan.End;
-
-            return TextSpan.FromBounds(startOfNonTriviaAndComments, endOfNonTriviaAndComments);
-        }
-    }
-    
     /// <summary>
     /// Gets the text of the current node, including trivia.
     /// </summary>
@@ -96,12 +64,31 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         if (_fullSpan == default)
         {
             _fullSpan = child.FullSpan;
+            _span = child.Span;
         }
         else
         {
-            var _spanStart = Math.Min(_fullSpan.Start, child.FullSpan.Start);
-            var _spanEnd = Math.Max(_fullSpan.End, child.FullSpan.End);
-            _fullSpan = new TextSpan(_spanStart, _spanEnd - _fullSpan.Start);
+            var fullSpanStart = Math.Min(_fullSpan.Start, child.FullSpan.Start);
+            var fullSpanEnd = Math.Max(_fullSpan.End, child.FullSpan.End);
+            _fullSpan = new TextSpan(fullSpanStart, fullSpanEnd - _fullSpan.Start);
+
+            var firstSignificantNodeOrToken = ChildNodesAndTokens
+                .FirstOrDefault(n => n.IsSignificant);
+
+            var lastSignificantNodeOrToken = ChildNodesAndTokens
+                .LastOrDefault(n => n.IsSignificant);
+
+            var startOfSignificantText =
+                firstSignificantNodeOrToken?.Span.Start ??
+                FullSpan.Start;
+
+            var endOfSignificantText =
+                lastSignificantNodeOrToken?.Span.End ??
+                FullSpan.End;
+
+            _span = TextSpan.FromBounds(
+                startOfSignificantText, 
+                endOfSignificantText);
         }
     }
 
@@ -114,9 +101,14 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
         child.Parent = this;
 
-        GrowSpan(child);
+        if (child.IsSignificant)
+        {
+            _isSignificant = true;
+        }
 
         _childNodesAndTokens.Add(child);
+
+        GrowSpan(child);
     }
 
     public IEnumerable<HttpSyntaxNode> ChildNodes =>
@@ -149,9 +141,9 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
     {
         yield return this;
 
-        foreach (var syntaxNodeOrToken1 in DescendantNodesAndTokens())
+        foreach (var node in DescendantNodesAndTokens())
         {
-            yield return syntaxNodeOrToken1;
+            yield return node;
         }
     }
 
