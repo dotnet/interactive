@@ -21,7 +21,8 @@ public class DiagnosticsProduced : KernelEvent
         {
             throw new ArgumentNullException(nameof(diagnostics));
         }
-        else if (!diagnostics.Any())
+
+        if (!diagnostics.Any())
         {
             throw new ArgumentException("At least one diagnostic required.", nameof(diagnostics));
         }

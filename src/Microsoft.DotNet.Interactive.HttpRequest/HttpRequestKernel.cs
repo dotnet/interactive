@@ -3,14 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -35,20 +31,7 @@ public class HttpRequestKernel :
     private readonly long _contentByteLengthThreshold;
 
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
-    private static readonly Regex IsRequest;
-
-    private const string InterpolationStartMarker = "{{";
-    private const string InterpolationEndMarker = "}}";
-
-    static HttpRequestKernel()
-    {
-        // FIX: (HttpRequestKernel) delete me
-        var verbs = string.Join("|",
-                                typeof(HttpMethod).GetProperties(BindingFlags.Static | BindingFlags.Public).Select(p => p.GetValue(null)!.ToString()));
-
-        IsRequest = new Regex(@"^\s*(" + verbs + ")", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    }
-
+    
     public HttpRequestKernel(
         string? name = null,
         HttpClient? client = null,
@@ -76,6 +59,10 @@ public class HttpRequestKernel :
                 command);
             context.Publish(valueProduced);
         }
+        else
+        {
+            context.Fail(command, message: $"Value not found: {command.Name}");
+        }
 
         return Task.CompletedTask;
     }
@@ -91,8 +78,9 @@ public class HttpRequestKernel :
 
     async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
-        var parsedRequests = ParseRequests(command.Code).ToArray();
-        var diagnostics = parsedRequests.SelectMany(r => r.Diagnostics).ToArray();
+        var parseResult = HttpRequestParser.Parse(command.Code);
+        var parsedRequests = GetParsedRequests(parseResult);
+        var diagnostics = GetAllDiagnostics(parseResult);
 
         PublishDiagnostics(context, command, diagnostics);
 
@@ -268,7 +256,7 @@ public class HttpRequestKernel :
         return response;
     }
 
-    private void PublishDiagnostics(KernelInvocationContext context, KernelCommand command, IEnumerable<Diagnostic> diagnostics)
+    private void PublishDiagnostics(KernelInvocationContext context, KernelCommand command, IReadOnlyCollection<Diagnostic> diagnostics)
     {
         if (diagnostics.Any())
         {
@@ -276,7 +264,7 @@ public class HttpRequestKernel :
                 diagnostics
                     .Select(d => d.ToString())
                     .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                    .ToImmutableArray();
+                    .ToArray();
 
             context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
         }
@@ -284,91 +272,35 @@ public class HttpRequestKernel :
 
     Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
     {
-        var requestsAndDiagnostics = InterpolateAndGetDiagnostics(command.Code);
-        var diagnostics = requestsAndDiagnostics.SelectMany(r => r.Diagnostics);
+        var parseResult = HttpRequestParser.Parse(command.Code);
+        var requestsAndDiagnostics = GetAllDiagnostics(parseResult);
+        var diagnostics = requestsAndDiagnostics;
         PublishDiagnostics(context, command, diagnostics);
         return Task.CompletedTask;
     }
 
-    private IEnumerable<(string Request, List<Diagnostic> Diagnostics)> InterpolateAndGetDiagnostics(string code)
+    private List<Diagnostic> GetAllDiagnostics(HttpRequestParseResult parseResult)
     {
-        var parseResult = HttpRequestParser.Parse(code);
+        var diagnostics = new List<Diagnostic>();
 
         foreach (var diagnostic in parseResult.GetDiagnostics())
         {
-            // FIX: (InterpolateAndGetDiagnostics) 
+            diagnostics.Add(diagnostic);
         }
 
-        var lines = code.Split('\n');
-
-        var result = new List<(string Request, List<Diagnostic>)>();
-        var currentLines = new List<string>();
-        var currentDiagnostics = new List<Diagnostic>();
-
-        for (var line = 0; line < lines.Length; line++)
+        foreach (var expressionNode in parseResult.SyntaxTree.RootNode.DescendantNodesAndTokensAndSelf().OfType<HttpExpressionNode>())
         {
-            var lineText = lines[line];
-            if (IsRequest.IsMatch(lineText))
+            if (BindExpressionValues(expressionNode) is { IsSuccessful: false } bindResult)
             {
-                currentLines = new List<string>();
-                currentDiagnostics = new List<Diagnostic>();
+                diagnostics.AddRange(bindResult.Diagnostics);
             }
-
-            var rebuiltLine = new StringBuilder();
-            var lastStart = 0;
-            var interpolationStart = lineText.IndexOf(InterpolationStartMarker);
-            while (interpolationStart >= 0)
-            {
-                rebuiltLine.Append(lineText[lastStart..interpolationStart]);
-                var interpolationEnd = lineText.IndexOf(InterpolationEndMarker, interpolationStart + InterpolationStartMarker.Length);
-                if (interpolationEnd < 0)
-                {
-                    // no end marker
-                    // TODO: error?
-                }
-
-                var variableName = lineText[(interpolationStart + InterpolationStartMarker.Length)..interpolationEnd];
-                if (_variables.TryGetValue(variableName, out var value))
-                {
-                    rebuiltLine.Append(value);
-                }
-                else
-                {
-                    // no variable found; keep old code and report diagnostic
-                    rebuiltLine.Append(InterpolationStartMarker);
-                    rebuiltLine.Append(variableName);
-                    rebuiltLine.Append(InterpolationEndMarker);
-                    var position = new LinePositionSpan(
-                        new LinePosition(line, interpolationStart + InterpolationStartMarker.Length),
-                        new LinePosition(line, interpolationEnd));
-                    currentDiagnostics.Add(new Diagnostic(position, DiagnosticSeverity.Error, "HTTP404", $"Cannot resolve symbol '{variableName}'"));
-                }
-
-                lastStart = interpolationEnd + InterpolationEndMarker.Length;
-                interpolationStart = lineText.IndexOf(InterpolationStartMarker, lastStart);
-            }
-
-            rebuiltLine.Append(lineText[lastStart..]);
-            currentLines.Add(rebuiltLine.ToString());
         }
 
-        if (MightContainRequest(currentLines))
-        {
-            var requestCode = string.Join('\n', currentLines);
-            result.Add((requestCode, currentDiagnostics));
-        }
-
-        return result;
+        return diagnostics;
     }
 
-    private static bool MightContainRequest(IEnumerable<string> lines)
+    private IEnumerable<ParsedHttpRequest> GetParsedRequests(HttpRequestParseResult parseResult)
     {
-        return lines.Any(line => IsRequest.IsMatch(line));
-    }
-
-    private IEnumerable<ParsedHttpRequest> ParseRequests(string requests)
-    {
-        var parseResult = HttpRequestParser.Parse(requests);
         var parsedRequests = new List<ParsedHttpRequest>();
 
         foreach (var requestNode in parseResult.SyntaxTree.RootNode!.ChildNodes.OfType<HttpRequestNode>())
@@ -427,24 +359,9 @@ public class HttpRequestKernel :
             return HttpBindingResult<object?>.Success(value);
         }
 
-        return HttpBindingResult<object?>.Failure(node.CreateDiagnostic($"Undefined value: {variableName}"));
-    }
+        var diagnostic = node.CreateDiagnostic($"Cannot resolve symbol '{variableName}'");
 
-    private Uri GetAbsoluteUriString(string? address)
-    {
-        if (string.IsNullOrWhiteSpace(address))
-        {
-            throw new InvalidOperationException("Cannot perform HttpRequest without a valid uri.");
-        }
-
-        var uri = new Uri(address, UriKind.RelativeOrAbsolute);
-
-        if (!uri.IsAbsoluteUri)
-        {
-            throw new InvalidOperationException($"Cannot use relative path {uri} without a base address.");
-        }
-
-        return uri;
+        return HttpBindingResult<object?>.Failure(diagnostic);
     }
 
     private class ParsedHttpRequest
