@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -397,9 +397,7 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(handler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel(client: client);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -419,9 +417,7 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(handler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -441,11 +437,9 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(handler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client);
 
-        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+        var result = await kernel.SendAsync(new SubmitCode("GET http://testuri.ninja"));
 
         result.Events.Should().ContainSingle<ReturnValueProduced>().Which
             .FormattedValues.Should().ContainSingle().Which
@@ -465,9 +459,7 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(slowResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -495,9 +487,7 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(slowResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -520,9 +510,7 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(slowResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -543,11 +531,9 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(throwingResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
 
-        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+        var result = await kernel.SendAsync(new SubmitCode("GET http://testuri.ninja"));
         var displayedValueUpdated = result.Events.OfType<DisplayedValueUpdated>().First();
 
         using var _ = new AssertionScope();
@@ -575,10 +561,7 @@ public class HttpRequestKernelTests
         });
 
         var client = new HttpClient(largeResponseHandler);
-
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, contentByteLengthThreshold: ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -613,9 +596,7 @@ public class HttpRequestKernelTests
 
         var client = new HttpClient(largeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, contentByteLengthThreshold: ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -643,9 +624,7 @@ public class HttpRequestKernelTests
 
         var client = new HttpClient(largeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, contentByteLengthThreshold: ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -675,9 +654,7 @@ public class HttpRequestKernelTests
 
         var client = new HttpClient(slowAndLargeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -715,9 +692,7 @@ public class HttpRequestKernelTests
 
         var client = new HttpClient(slowAndLargeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -747,9 +722,7 @@ public class HttpRequestKernelTests
 
         var client = new HttpClient(slowAndLargeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -779,9 +752,7 @@ public class HttpRequestKernelTests
 
         var client = new HttpClient(slowAndLargeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode("GET http://testuri.ninja"));
 
