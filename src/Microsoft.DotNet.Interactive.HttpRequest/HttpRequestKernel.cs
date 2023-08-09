@@ -96,7 +96,10 @@ public class HttpRequestKernel :
         {
             foreach (var requestMessage in requestMessages)
             {
-                await SendRequestAsync(requestMessage, command, context);
+                if (requestMessage is not null)
+                {
+                    await SendRequestAsync(requestMessage, command, context);
+                }
             }
         }
         catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException)
