@@ -29,18 +29,12 @@ internal class HttpRequestParser
         public HttpSyntaxParser(SourceText sourceText)
         {
             _sourceText = sourceText;
-            _syntaxTree = new HttpSyntaxTree();
+            _syntaxTree = new HttpSyntaxTree(_sourceText);
         }
 
         public HttpSyntaxTree Parse()
         {
-            var rootNode = new HttpRootSyntaxNode(
-                _sourceText,
-                _syntaxTree);
-
             _tokens = new HttpLexer(_sourceText, _syntaxTree).Lex();
-
-            _syntaxTree.RootNode = rootNode;
 
             while (MoreTokens())
             {
