@@ -52,7 +52,11 @@ internal abstract class HttpSyntaxNodeOrToken
 
         var tokenSpan = lines.GetLinePositionSpan(FullSpan);
 
-        var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, Text, message);
+        var diagnostic = new Diagnostic(
+            LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), 
+            DiagnosticSeverity.Error, 
+            Text, 
+            message);
 
         return diagnostic;
     }

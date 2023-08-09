@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -373,6 +373,24 @@ User-Agent: {{missing_value_2}}";
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task when_error_diagnostics_are_present_then_request_is_not_sent()
+    {
+        var messageWasSent = false;
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
+        {
+            messageWasSent = true;
+            throw new Exception();
+        });
+        var client = new HttpClient(handler);
+
+        using var kernel = new HttpRequestKernel(client:client);
+
+        await kernel.SendAsync(new SubmitCode("OOPS http://testuri.ninja"));
+
+        messageWasSent.Should().BeFalse();
     }
 
     [Fact]
