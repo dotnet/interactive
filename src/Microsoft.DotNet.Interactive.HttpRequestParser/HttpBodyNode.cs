@@ -3,7 +3,6 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.CodeAnalysis.Text;
@@ -16,7 +15,7 @@ internal class HttpBodyNode : HttpSyntaxNode
     {
     }
 
-    public HttpBindingResult<string> TryGetBody(Func<HttpExpressionNode, HttpBindingResult<object?>> bind)
+    public HttpBindingResult<string> TryGetBody(HttpBindingDelegate bind)
     {
         var bodyText = new StringBuilder();
         var diagnostics = new List<Diagnostic>();

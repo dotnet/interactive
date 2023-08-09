@@ -3,8 +3,12 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -70,8 +74,7 @@ internal class HttpRequestNode : HttpSyntaxNode
     public HttpBindingResult<HttpRequestMessage> TryGetHttpRequestMessage(HttpBindingDelegate bind)
     {
         var request = new HttpRequestMessage();
-        var diagnostics = new List<Diagnostic>();
-        var success = true;
+        var diagnostics = new List<Diagnostic>(base.GetDiagnostics());
 
         if (MethodNode is { FullSpan.IsEmpty: false })
         {
@@ -85,11 +88,57 @@ internal class HttpRequestNode : HttpSyntaxNode
         }
         else
         {
-            success = false;
             diagnostics.AddRange(uriBindingResult.Diagnostics);
         }
 
-        if (success)
+        var headers =
+            HeadersNode?.HeaderNodes.Select(h => new KeyValuePair<string, string>(h.NameNode.Text, h.ValueNode.Text)).ToArray()
+            ??
+            Array.Empty<KeyValuePair<string, string>>();
+
+        foreach (var kvp in headers)
+        {
+            switch (kvp.Key.ToLowerInvariant())
+            {
+                case "content-type":
+                    if (request.Content is null)
+                    {
+                        request.Content = new StringContent("");
+                    }
+
+                    request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
+                    break;
+                case "accept":
+                    request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(kvp.Value));
+                    break;
+                case "user-agent":
+                    request.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(kvp.Value));
+                    break;
+                default:
+                    request.Headers.Add(kvp.Key, kvp.Value);
+                    break;
+            }
+        }
+
+        var bodyResult = BodyNode?.TryGetBody(bind);
+        string? body = null;
+
+        if (bodyResult is not null)
+        {
+            if (bodyResult.IsSuccessful)
+            {
+                body = bodyResult.Value ?? "";
+            }
+
+            diagnostics.AddRange(bodyResult.Diagnostics);
+        }
+
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            request.Content = new StringContent(body);
+        }
+
+        if (diagnostics.All(d => d.Severity != DiagnosticSeverity.Error))
         {
             return HttpBindingResult<HttpRequestMessage>.Success(request);
         }

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -31,7 +30,7 @@ public class HttpRequestKernel :
     private readonly long _contentByteLengthThreshold;
 
     private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
-    
+
     public HttpRequestKernel(
         string? name = null,
         HttpClient? client = null,
@@ -79,8 +78,11 @@ public class HttpRequestKernel :
     async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         var parseResult = HttpRequestParser.Parse(command.Code);
-        var parsedRequests = GetParsedRequests(parseResult);
-        var diagnostics = GetAllDiagnostics(parseResult);
+
+        var httpRequestResults = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>().Select(n => n.TryGetHttpRequestMessage(BindExpressionValues)).ToArray();
+
+        var requestMessages = httpRequestResults.Select(r => r.Value).ToArray();
+        var diagnostics = httpRequestResults.SelectMany(r => r.Diagnostics).ToArray();
 
         PublishDiagnostics(context, command, diagnostics);
 
@@ -92,25 +94,20 @@ public class HttpRequestKernel :
 
         try
         {
-            foreach (var parsedRequest in parsedRequests)
+            foreach (var requestMessage in requestMessages)
             {
-                await HandleRequestAsync(parsedRequest, command, context);
+                await SendRequestAsync(requestMessage, command, context);
             }
         }
-        catch (Exception ex) when (ex is OperationCanceledException || ex is HttpRequestException)
+        catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException)
         {
             context.Fail(command, message: ex.Message);
         }
     }
 
-    private async Task HandleRequestAsync(
-        ParsedHttpRequest parsedRequest,
-        KernelCommand command,
-        KernelInvocationContext context)
+    private async Task SendRequestAsync(HttpRequestMessage requestMessage, KernelCommand command, KernelInvocationContext context)
     {
         var cancellationToken = context.CancellationToken;
-        var requestMessage = GetRequestMessage(parsedRequest);
-
         var isResponseAvailable = false;
         var semaphore = new SemaphoreSlim(1);
         string? valueId = null;
@@ -200,41 +197,6 @@ public class HttpRequestKernel :
         }
     }
 
-    private static HttpRequestMessage GetRequestMessage(ParsedHttpRequest parsedRequest)
-    {
-        var requestMessage = new HttpRequestMessage(new HttpMethod(parsedRequest.Verb), parsedRequest.Address);
-        if (!string.IsNullOrWhiteSpace(parsedRequest.Body))
-        {
-            requestMessage.Content = new StringContent(parsedRequest.Body);
-        }
-
-        foreach (var kvp in parsedRequest.Headers)
-        {
-            switch (kvp.Key.ToLowerInvariant())
-            {
-                case "content-type":
-                    if (requestMessage.Content is null)
-                    {
-                        requestMessage.Content = new StringContent("");
-                    }
-
-                    requestMessage.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
-                    break;
-                case "accept":
-                    requestMessage.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(kvp.Value));
-                    break;
-                case "user-agent":
-                    requestMessage.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(kvp.Value));
-                    break;
-                default:
-                    requestMessage.Headers.Add(kvp.Key, kvp.Value);
-                    break;
-            }
-        }
-
-        return requestMessage;
-    }
-
     private async Task<HttpResponse> GetResponseWithTimingAsync(
         HttpRequestMessage requestMessage,
         CancellationToken cancellationToken)
@@ -299,56 +261,6 @@ public class HttpRequestKernel :
         return diagnostics;
     }
 
-    private IEnumerable<ParsedHttpRequest> GetParsedRequests(HttpRequestParseResult parseResult)
-    {
-        var parsedRequests = new List<ParsedHttpRequest>();
-
-        foreach (var requestNode in parseResult.SyntaxTree.RootNode!.ChildNodes.OfType<HttpRequestNode>())
-        {
-            var headers =
-                requestNode.HeadersNode?.HeaderNodes.Select(h => KeyValuePair.Create(h.NameNode.Text, h.ValueNode.Text)).ToArray()
-                ??
-                Array.Empty<KeyValuePair<string, string>>();
-
-            var diagnostics = requestNode.GetDiagnostics().ToList();
-
-            var uriResult = requestNode.UrlNode.TryGetUri(BindExpressionValues);
-            Uri? address = null;
-            if (uriResult.IsSuccessful)
-            {
-                address = uriResult.Value;
-            }
-
-            diagnostics.AddRange(uriResult.Diagnostics);
-
-            var methodNodeText = requestNode.MethodNode?.Text;
-
-            var bodyResult = requestNode.BodyNode?.TryGetBody(BindExpressionValues);
-            string body = null;
-
-            if (bodyResult is not null)
-            {
-                if (bodyResult.IsSuccessful)
-                {
-                    body = bodyResult.Value;
-                }
-
-                diagnostics.AddRange(bodyResult.Diagnostics);
-            }
-
-            var parsedRequest = new ParsedHttpRequest(
-                methodNodeText,
-                address,
-                body: body,
-                headers: headers,
-                diagnostics);
-
-            parsedRequests.Add(parsedRequest);
-        }
-
-        return parsedRequests;
-    }
-
     private HttpBindingResult<object?> BindExpressionValues(HttpExpressionNode node)
     {
         var variableName = node.Text;
@@ -362,28 +274,5 @@ public class HttpRequestKernel :
         var diagnostic = node.CreateDiagnostic($"Cannot resolve symbol '{variableName}'");
 
         return HttpBindingResult<object?>.Failure(diagnostic);
-    }
-
-    private class ParsedHttpRequest
-    {
-        public ParsedHttpRequest(
-            string verb,
-            Uri address,
-            string body,
-            IReadOnlyList<KeyValuePair<string, string>> headers,
-            IReadOnlyList<Diagnostic> diagnostics)
-        {
-            Verb = verb;
-            Address = address;
-            Body = body;
-            Headers = headers;
-            Diagnostics = diagnostics;
-        }
-
-        public string Verb { get; }
-        public Uri Address { get; }
-        public string Body { get; }
-        public IReadOnlyList<KeyValuePair<string, string>> Headers { get; }
-        public IReadOnlyList<Diagnostic> Diagnostics { get; }
     }
 }
