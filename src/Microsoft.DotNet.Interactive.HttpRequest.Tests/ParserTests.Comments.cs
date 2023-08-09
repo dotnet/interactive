@@ -12,11 +12,11 @@ public partial class ParserTests
     public class Comments
     {
         [Fact]
-        public void line_comments_before_method_and_url_is_parsed_correctly()
+        public void line_comment_before_method_and_url_is_parsed_correctly()
         {
             var code = """
                 # This is a comment
-                GET https://example.com HTTP/1.1
+                GET https://example.com
                 """;
 
             var result = Parse(code);

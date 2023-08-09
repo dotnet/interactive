@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -34,7 +34,7 @@ internal abstract class HttpSyntaxNodeOrToken
     /// <summary>
     /// Gets the significant text of the current node or token, without trivia.
     /// </summary>
-    public abstract string Text { get; }
+    public string Text => SourceText.ToString(Span);
 
     public override string ToString() => $"{GetType().Name}: {Text}";
 
@@ -50,7 +50,7 @@ internal abstract class HttpSyntaxNodeOrToken
     {
         var lines = SourceText.Lines;
 
-        var tokenSpan = lines.GetLinePositionSpan(FullSpan);
+        var tokenSpan = lines.GetLinePositionSpan(Span);
 
         var diagnostic = new Diagnostic(
             LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), 

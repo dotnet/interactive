@@ -33,9 +33,6 @@ public partial class ParserTests
             var requestNodes = result.SyntaxTree.RootNode
                                      .ChildNodes.OfType<HttpRequestNode>();
 
-            var request = requestNodes.First();
-            var span = request.Span;
-
             requestNodes.Select(r => r.Text).Should()
                         .BeEquivalentSequenceTo(new[]
                         {

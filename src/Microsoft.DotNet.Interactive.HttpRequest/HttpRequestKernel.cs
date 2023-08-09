@@ -82,7 +82,7 @@ public class HttpRequestKernel :
         await SetValueAsync(command, context, SetValueAsync);
     }
 
-    private Task SetValueAsync(string valueName, object value, Type declaredType = null)
+    private Task SetValueAsync(string valueName, object value, Type? declaredType = null)
     {
         _variables[valueName] = value;
         return Task.CompletedTask;

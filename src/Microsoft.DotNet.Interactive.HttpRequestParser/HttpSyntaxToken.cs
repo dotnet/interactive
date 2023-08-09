@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -25,8 +25,6 @@ internal sealed class HttpSyntaxToken : HttpSyntaxNodeOrToken
     public override bool IsSignificant => this is not { Kind: HttpTokenKind.Whitespace or HttpTokenKind.NewLine };
 
     public override TextSpan Span => FullSpan;
-
-    public override string Text => SourceText.ToString(FullSpan);
 
     public HttpTokenKind Kind { get; set; }
 

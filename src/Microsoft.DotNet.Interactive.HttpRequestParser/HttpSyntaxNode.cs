@@ -27,8 +27,6 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
     public override bool IsSignificant => _isSignificant;
 
-    public override string Text => SourceText.ToString(Span);
-
     public override TextSpan Span => _span;
 
     /// <summary>
