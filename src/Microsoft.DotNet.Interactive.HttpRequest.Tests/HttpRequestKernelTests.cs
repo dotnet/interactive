@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -799,5 +799,46 @@ Content-Type: {{contentType}}
 
         // TODO (dot_notation_can_be_used_to_access_response_properties) write test
         throw new NotImplementedException();
+    }
+
+    [Fact]
+    public async Task It_supports_RequestValueInfos()
+    {
+        using var kernel = new HttpRequestKernel();
+
+        var sendValueResult = await kernel.SendAsync(new SendValue("theValue", 123, FormattedValue.CreateSingleFromObject(123, JsonFormatter.MimeType)));
+
+        sendValueResult.Events.Should().NotContainErrors();
+
+        var result = await kernel.SendAsync(new RequestValueInfos());
+
+        using var _ = new AssertionScope();
+        result.Events.Should().NotContainErrors();
+        var valueInfo = result.Events.Should().ContainSingle<ValueInfosProduced>()
+                              .Which
+                              .ValueInfos.Should().ContainSingle()
+                              .Which;
+        valueInfo.Name.Should().Be("theValue");
+        valueInfo.FormattedValue.Should().BeEquivalentTo(new FormattedValue(PlainTextSummaryFormatter.MimeType, "123"));
+    }
+
+    [Fact]
+    public async Task It_supports_RequestValue()
+    {
+        using var kernel = new HttpRequestKernel();
+
+        var sendValueResult = await kernel.SendAsync(new SendValue("theValue", 123, FormattedValue.CreateSingleFromObject(123, JsonFormatter.MimeType)));
+
+        sendValueResult.Events.Should().NotContainErrors();
+
+        var result = await kernel.SendAsync(new RequestValue("theValue", JsonFormatter.MimeType));
+
+        using var _ = new AssertionScope();
+        var valueProduced = result.Events.Should().ContainSingle<ValueProduced>()
+                                  .Which;
+        valueProduced.Name.Should().Be("theValue");
+        valueProduced
+            .FormattedValue.Should()
+            .BeEquivalentTo(new FormattedValue(JsonFormatter.MimeType, "123"));
     }
 }

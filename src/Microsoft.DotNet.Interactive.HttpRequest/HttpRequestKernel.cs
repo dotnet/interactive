@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -20,7 +21,8 @@ public class HttpRequestKernel :
     IKernelCommandHandler<RequestValue>,
     IKernelCommandHandler<SendValue>,
     IKernelCommandHandler<SubmitCode>,
-    IKernelCommandHandler<RequestDiagnostics>
+    IKernelCommandHandler<RequestDiagnostics>,
+    IKernelCommandHandler<RequestValueInfos>
 {
     internal const int DefaultResponseDelayThresholdInMilliseconds = 1000;
     internal const int DefaultContentByteLengthThreshold = 500_000;
@@ -29,7 +31,7 @@ public class HttpRequestKernel :
     private readonly int _responseDelayThresholdInMilliseconds;
     private readonly long _contentByteLengthThreshold;
 
-    private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
+    private readonly Dictionary<string, object> _variables = new(StringComparer.InvariantCultureIgnoreCase);
 
     public HttpRequestKernel(
         string? name = null,
@@ -54,7 +56,7 @@ public class HttpRequestKernel :
             var valueProduced = new ValueProduced(
                 value,
                 command.Name,
-                FormattedValue.CreateSingleFromObject(value),
+                FormattedValue.CreateSingleFromObject(value, JsonFormatter.MimeType),
                 command);
             context.Publish(valueProduced);
         }
@@ -66,14 +68,25 @@ public class HttpRequestKernel :
         return Task.CompletedTask;
     }
 
-    Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        SetValue(command.Name, command.FormattedValue.Value.Trim('"'));
+        var valueInfos = _variables.Select(v => new KernelValueInfo(v.Key, FormattedValue.CreateSingleFromObject(v.Value, PlainTextSummaryFormatter.MimeType))).ToArray();
+
+        context.Publish(new ValueInfosProduced(valueInfos, command));
+
         return Task.CompletedTask;
     }
 
-    private void SetValue(string valueName, string value)
-        => _variables[valueName] = value;
+    async Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
+    {
+        await SetValueAsync(command, context, SetValueAsync);
+    }
+
+    private Task SetValueAsync(string valueName, object value, Type declaredType = null)
+    {
+        _variables[valueName] = value;
+        return Task.CompletedTask;
+    }
 
     async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
