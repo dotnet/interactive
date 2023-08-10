@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -13,14 +13,18 @@ internal sealed class HttpSyntaxToken : HttpSyntaxNodeOrToken
     internal HttpSyntaxToken(
         HttpTokenKind kind,
         SourceText sourceText,
-        TextSpan span,
+        TextSpan fullSpan,
         HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
         Kind = kind;
-        Span = span;
+        FullSpan = fullSpan;
     }
 
-    public override TextSpan Span { get; }
+    public override TextSpan FullSpan { get; }
+
+    public override bool IsSignificant => this is not { Kind: HttpTokenKind.Whitespace or HttpTokenKind.NewLine };
+
+    public override TextSpan Span => FullSpan;
 
     public HttpTokenKind Kind { get; set; }
 
@@ -28,7 +32,6 @@ internal sealed class HttpSyntaxToken : HttpSyntaxNodeOrToken
 
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
-
         if (_diagnostics is not null)
         {
             foreach (var diagnostic in _diagnostics)
@@ -36,6 +39,5 @@ internal sealed class HttpSyntaxToken : HttpSyntaxNodeOrToken
                 yield return diagnostic;
             }
         }
-
     }
 }

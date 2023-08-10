@@ -24,7 +24,7 @@ public partial class ParserTests
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .MethodNode.ChildTokens.Single().TextWithTrivia.Should().Be("  \t  ");
+                  .MethodNode.ChildTokens.Single().Text.Should().Be("  \t  ");
         }
 
         [Fact]
@@ -33,11 +33,11 @@ public partial class ParserTests
             var result = Parse("\n\v\r\n\n");
 
             result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .MethodNode.ChildTokens.Select(t => new { t.TextWithTrivia, t.Kind }).Should().BeEquivalentSequenceTo(
-                      new { TextWithTrivia = "\n", Kind = HttpTokenKind.NewLine },
-                      new { TextWithTrivia = "\v", Kind = HttpTokenKind.NewLine },
-                      new { TextWithTrivia = "\r\n", Kind = HttpTokenKind.NewLine },
-                      new { TextWithTrivia = "\n", Kind = HttpTokenKind.NewLine });
+                  .MethodNode.ChildTokens.Select(t => new { t.Text, t.Kind }).Should().BeEquivalentSequenceTo(
+                      new { Text = "\n", Kind = HttpTokenKind.NewLine },
+                      new { Text = "\v", Kind = HttpTokenKind.NewLine },
+                      new { Text = "\r\n", Kind = HttpTokenKind.NewLine },
+                      new { Text = "\n", Kind = HttpTokenKind.NewLine });
         }
 
         [Fact]
@@ -45,13 +45,13 @@ public partial class ParserTests
         {
             var result = Parse(".!?.:/");
             result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .UrlNode.ChildTokens.Select(t => new { t.TextWithTrivia, t.Kind }).Should().BeEquivalentSequenceTo(
-                      new { TextWithTrivia = ".", Kind = HttpTokenKind.Punctuation },
-                      new { TextWithTrivia = "!", Kind = HttpTokenKind.Punctuation },
-                      new { TextWithTrivia = "?", Kind = HttpTokenKind.Punctuation },
-                      new { TextWithTrivia = ".", Kind = HttpTokenKind.Punctuation },
-                      new { TextWithTrivia = ":", Kind = HttpTokenKind.Punctuation },
-                      new { TextWithTrivia = "/", Kind = HttpTokenKind.Punctuation });
+                  .UrlNode.ChildTokens.Select(t => new { t.Text, t.Kind }).Should().BeEquivalentSequenceTo(
+                      new { Text = ".", Kind = HttpTokenKind.Punctuation },
+                      new { Text = "!", Kind = HttpTokenKind.Punctuation },
+                      new { Text = "?", Kind = HttpTokenKind.Punctuation },
+                      new { Text = ".", Kind = HttpTokenKind.Punctuation },
+                      new { Text = ":", Kind = HttpTokenKind.Punctuation },
+                      new { Text = "/", Kind = HttpTokenKind.Punctuation });
         }
     }
 }

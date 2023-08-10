@@ -32,9 +32,35 @@ public partial class ParserTests
                 GET https://example.com
                 """);
 
-            result.SyntaxTree.RootNode
-                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .MethodNode.ChildTokens.First().Kind.Should().Be(HttpTokenKind.NewLine);
+            var methodNode = result.SyntaxTree
+                                   .RootNode
+                                   .ChildNodes
+                                   .Should()
+                                   .ContainSingle<HttpRequestNode>().Which
+                                   .MethodNode;
+
+            methodNode.ChildTokens.First().Kind.Should().Be(HttpTokenKind.NewLine);
+            methodNode.Text.Should().Be("GET");
+        }
+
+        [Fact]
+        public void comment_is_legal_at_the_beginning_of_a_request()
+        {
+            var result = Parse(
+                """
+                # this is a comment
+                GET https://example.com
+                """);
+
+            var methodNode = result.SyntaxTree
+                                   .RootNode
+                                   .ChildNodes
+                                   .Should()
+                                   .ContainSingle<HttpRequestNode>().Which
+                                   .MethodNode;
+
+            methodNode.ChildNodes.First().Should().BeOfType<HttpCommentNode>();
+            methodNode.Text.Should().Be("GET");
         }
 
         [Theory]
@@ -52,10 +78,10 @@ public partial class ParserTests
         }
 
         [Theory]
-        [InlineData(@"GET https://example.com", "GET")]
-        [InlineData(@"Get https://example.com", "Get")]
-        [InlineData(@"OPTIONS https://example.com", "OPTIONS")]
-        [InlineData(@"options https://example.com", "options")]
+        [InlineData("GET https://example.com", "GET")]
+        [InlineData("Get https://example.com", "Get")]
+        [InlineData("OPTIONS https://example.com", "OPTIONS")]
+        [InlineData("options https://example.com", "options")]
         public void it_can_parse_verbs_regardless_of_their_casing(string line, string method)
         {
             var result = Parse(line);

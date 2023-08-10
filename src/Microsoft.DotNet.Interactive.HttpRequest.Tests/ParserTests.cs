@@ -26,7 +26,7 @@ public partial class ParserTests : IDisposable
         var result = HttpRequestParser.Parse(code);
         if (result.SyntaxTree?.RootNode is not null)
         {
-            result.SyntaxTree.RootNode.TextWithTrivia.Should().Be(code);
+            result.SyntaxTree.RootNode.FullText.Should().Be(code);
         }
 
         return result;

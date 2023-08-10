@@ -3,7 +3,6 @@
 
 #nullable enable
 
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
 
@@ -33,19 +32,9 @@ internal class HttpRequestParser
             _syntaxTree = new HttpSyntaxTree(_sourceText);
         }
 
-        public HttpSyntaxTree? Parse()
+        public HttpSyntaxTree Parse()
         {
             _tokens = new HttpLexer(_sourceText, _syntaxTree).Lex();
-            if (_tokens.Count == 0)
-            {
-                return null;
-            }
-
-            var rootNode = new HttpRootSyntaxNode(
-                _sourceText,
-                _syntaxTree);
-
-            _syntaxTree.RootNode = rootNode;
 
             while (MoreTokens())
             {
@@ -55,7 +44,8 @@ internal class HttpRequestParser
                 {
                     _syntaxTree.RootNode.Add(requestNode);
                 }
-                if(ParseRequestSeparator() is { } separatorNode)
+
+                if (ParseRequestSeparator() is { } separatorNode)
                 {
                     _syntaxTree.RootNode.Add(separatorNode);
                 }
@@ -204,7 +194,7 @@ internal class HttpRequestParser
 
             if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
             {
-                if (CurrentToken.Text.ToLower() is ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
+                if (CurrentToken.Text.ToLower() is "get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace")
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -231,8 +221,7 @@ internal class HttpRequestParser
 
             while (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation)
             {
-                if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" } &&
-                    NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" })
+                if (IsAtStartOfEmbeddedExpression())
                 {
                     node.Add(ParseEmbeddedExpression());
                 }
@@ -243,6 +232,12 @@ internal class HttpRequestParser
             }
 
             return ParseTrailingTrivia(node, stopAfterNewLine: true);
+        }
+
+        private bool IsAtStartOfEmbeddedExpression()
+        {
+            return CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" } &&
+                   NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" };
         }
 
         private HttpEmbeddedExpressionNode ParseEmbeddedExpression()
@@ -298,7 +293,9 @@ internal class HttpRequestParser
 
             ParseLeadingTrivia(node);
 
-            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
+            if (MoreTokens() && 
+                CurrentToken.Kind is HttpTokenKind.Word && 
+                CurrentToken.Text.ToLowerInvariant() == "http")
             {
                 ConsumeCurrentTokenInto(node);
 
@@ -402,7 +399,6 @@ internal class HttpRequestParser
                 {
                     ConsumeCurrentTokenInto(node);
                 }
-
             }
 
             return ParseTrailingTrivia(node, stopAfterNewLine: true);
@@ -445,15 +441,22 @@ internal class HttpRequestParser
 
             ParseLeadingTrivia(node);
 
-            if (MoreTokens() && CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine) &&
-             !IsRequestSeparator())
+            if (MoreTokens() &&
+                CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine) &&
+                !IsRequestSeparator())
             {
                 ConsumeCurrentTokenInto(node);
 
                 while (MoreTokens() && !IsRequestSeparator())
                 {
-
-                    ConsumeCurrentTokenInto(node);
+                    if (!IsAtStartOfEmbeddedExpression())
+                    {
+                        ConsumeCurrentTokenInto(node);
+                    }
+                    else
+                    {
+                        node.Add(ParseEmbeddedExpression());
+                    }
                 }
             }
 

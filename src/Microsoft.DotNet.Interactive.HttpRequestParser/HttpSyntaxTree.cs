@@ -9,10 +9,10 @@ namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal class HttpSyntaxTree
 {
-    private readonly SourceText _sourceText;
-
     public HttpSyntaxTree(SourceText sourceText)
-        => _sourceText = sourceText;
+    {
+        RootNode = new HttpRootSyntaxNode(sourceText, this);
+    }
 
-    public HttpRootSyntaxNode? RootNode { get; set; }
+    public HttpRootSyntaxNode RootNode { get; }
 }

@@ -17,7 +17,7 @@ public partial class ParserTests
         {
             var result = Parse(
                 """
-        POST https://example.com/comments HTTP/1.1
+        POST https://example.com/comments
         Content-Type: application/xml
         Authorization: token xxx
 
@@ -41,7 +41,7 @@ public partial class ParserTests
         }
 
         [Fact]
-        public void header_separator_is_present()
+        public void header_separator_is_parsed()
         {
             var result = Parse(
                 """

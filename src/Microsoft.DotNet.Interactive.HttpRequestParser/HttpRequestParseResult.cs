@@ -3,6 +3,7 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,13 +11,13 @@ namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 internal class HttpRequestParseResult
 {
-    public HttpRequestParseResult(HttpSyntaxTree? syntaxTree)
-        => SyntaxTree = syntaxTree;
+    public HttpRequestParseResult(HttpSyntaxTree syntaxTree)
+        => SyntaxTree = syntaxTree ?? throw new ArgumentNullException(nameof(syntaxTree));
 
-    public HttpSyntaxTree? SyntaxTree { get; }
+    public HttpSyntaxTree SyntaxTree { get; }
 
     public IEnumerable<Diagnostic> GetDiagnostics()
     {
-        return SyntaxTree?.RootNode?.GetDiagnostics() ?? Enumerable.Empty<Diagnostic>();
+        return SyntaxTree.RootNode?.GetDiagnostics() ?? Enumerable.Empty<Diagnostic>();
     }
 }

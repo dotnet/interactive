@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -23,6 +23,10 @@ internal abstract class HttpSyntaxNodeOrToken
 
     public HttpSyntaxNode? Parent { get; internal set; }
 
+    public abstract bool IsSignificant { get; }
+
+    public abstract TextSpan FullSpan { get; }
+
     public abstract TextSpan Span { get; }
 
     public HttpSyntaxTree? SyntaxTree { get; }
@@ -30,12 +34,7 @@ internal abstract class HttpSyntaxNodeOrToken
     /// <summary>
     /// Gets the significant text of the current node or token, without trivia.
     /// </summary>
-    public string Text => TextWithTrivia.Trim();
-
-    /// <summary>
-    /// Gets the text of the current node or token, including trivia.
-    /// </summary>
-    public string TextWithTrivia => SourceText.ToString(Span);
+    public string Text => SourceText.ToString(Span);
 
     public override string ToString() => $"{GetType().Name}: {Text}";
 
@@ -53,7 +52,11 @@ internal abstract class HttpSyntaxNodeOrToken
 
         var tokenSpan = lines.GetLinePositionSpan(Span);
 
-        var diagnostic = new Diagnostic(LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), DiagnosticSeverity.Warning, Text, message);
+        var diagnostic = new Diagnostic(
+            LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), 
+            DiagnosticSeverity.Error, 
+            Text, 
+            message);
 
         return diagnostic;
     }

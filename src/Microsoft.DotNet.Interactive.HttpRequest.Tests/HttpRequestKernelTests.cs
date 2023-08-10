@@ -91,10 +91,12 @@ public class HttpRequestKernelTests
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
 
-        var result = await kernel.SendAsync(new SubmitCode(@"
-get  https://location1.com:1200/endpoint
-
-put  https://location2.com:1200/endpoint"));
+        var result = await kernel.SendAsync(new SubmitCode("""
+            
+            get  https://location1.com:1200/endpoint
+            ###
+            put  https://location2.com:1200/endpoint
+            """));
 
         using var _ = new AssertionScope();
 
@@ -116,9 +118,11 @@ put  https://location2.com:1200/endpoint"));
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
 
-        var result = await kernel.SendAsync(new SubmitCode(@"
-get  https://location1.com:1200/endpoint
-Authorization: Basic username password"));
+        var result = await kernel.SendAsync(new SubmitCode("""
+            
+            get  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            """));
 
         using var _ = new AssertionScope();
 
@@ -147,7 +151,6 @@ Authorization: Basic username password"));
             Content-Type: application/json
             
             { "key" : "value", "list": [1, 2, 3] }
-
             """));
 
         using var _ = new AssertionScope();
@@ -196,13 +199,6 @@ Authorization: Basic username password"));
             """);
     }
 
-    [Fact(Skip = "Requires updates to HTTP parser")]
-    public void it_can_set_http_version()
-    {
-        // TODO (it_can_set_http_version) write test
-        throw new NotImplementedException();
-    }
-
     [Fact]
     public async Task can_set_contenttype_without_a_body()
     {
@@ -216,11 +212,13 @@ Authorization: Basic username password"));
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
 
-        var result = await kernel.SendAsync(new SubmitCode(@"
-Get  https://location1.com:1200/endpoint
-Authorization: Basic username password
-Content-Type: application/json
-"));
+        var result = await kernel.SendAsync(new SubmitCode("""
+            
+            Get  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            Content-Type: application/json
+
+            """));
 
         using var _ = new AssertionScope();
         result.Events.Should().NotContainErrors();
@@ -245,17 +243,18 @@ Content-Type: application/json
         var result = await kernel.SendAsync(new SendValue("one", 1));
         result.Events.Should().NotContainErrors();
 
-        result = await kernel.SendAsync(new SubmitCode(@"
-post  https://location1.com:1200/endpoint
-Authorization: Basic username password
-Content-Type: application/json
-
-{ ""key"" : ""value"", ""list"": [{{one}}, 2, 3] }
-"));
+        result = await kernel.SendAsync(new SubmitCode("""
+            
+            post  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            Content-Type: application/json
+            
+            { "key" : "value", "list": [{{one}}, 2, 3] }
+            """));
         result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        bodyAsString.Should().Be("{ \"key\" : \"value\", \"list\": [1, 2, 3] }");
+        bodyAsString.Should().Be("""{ "key" : "value", "list": [1, 2, 3] }""");
     }
 
     [Fact]
@@ -276,9 +275,10 @@ Content-Type: application/json
         var result = await kernel.SendAsync(new SendValue("theHost", "example.com"));
         result.Events.Should().NotContainErrors();
 
-        var code = @"
-// something to ensure we're not on the first line
-GET https://{{theHost}}";
+        var code = """
+            # something to ensure we're not on the first line
+            GET https://{{theHost}}
+            """;
 
         result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
@@ -299,19 +299,7 @@ GET https://{{theHost}}";
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be(@"Cannot resolve symbol 'api_endpoint'");
-    }
-
-    [Fact(Skip = "Requires updates to HTTP parser")]
-    public void diagnostic_positions_are_correct_for_unresolved_symbols_in_request_body()
-    {
-        throw new NotImplementedException();
-    }
-
-    [Fact(Skip = "Requires updates to HTTP parser")]
-    public void diagnostic_positions_are_correct_for_unresolved_symbols_in_request_headers()
-    {
-        throw new NotImplementedException();
+        diagnostics.Diagnostics.First().Message.Should().Be("Cannot resolve symbol 'api_endpoint'");
     }
 
     [Fact]
@@ -319,9 +307,11 @@ GET https://{{theHost}}";
     {
         using var kernel = new HttpRequestKernel();
 
-        var code = @"
-// something to ensure we're not on the first line
-GET https://example.com/{{unresolved_symbol}}";
+        var code = """
+            
+            // something to ensure we're not on the first line
+            GET https://example.com/{{unresolved_symbol}}
+            """;
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
@@ -339,9 +329,11 @@ GET https://example.com/{{unresolved_symbol}}";
     {
         using var kernel = new HttpRequestKernel();
 
-        var code = @"
-GET https://example.com/
-User-Agent: {{unresolved_symbol}}";
+        var code = """
+            
+            GET https://example.com/
+            User-Agent: {{unresolved_symbol}}
+            """;
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
@@ -359,9 +351,11 @@ User-Agent: {{unresolved_symbol}}";
     {
         using var kernel = new HttpRequestKernel();
 
-        var code = @"
-GET {{missing_value_1}}/index.html
-User-Agent: {{missing_value_2}}";
+        var code = """
+            
+            GET {{missing_value_1}}/index.html
+            User-Agent: {{missing_value_2}}
+            """;
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
@@ -375,21 +369,35 @@ User-Agent: {{missing_value_2}}";
     }
 
     [Fact]
+    public async Task when_error_diagnostics_are_present_then_request_is_not_sent()
+    {
+        var messageWasSent = false;
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
+        {
+            messageWasSent = true;
+            throw new Exception();
+        });
+        var client = new HttpClient(handler);
+
+        using var kernel = new HttpRequestKernel(client:client);
+
+        await kernel.SendAsync(new SubmitCode("OOPS http://testuri.ninja"));
+
+        messageWasSent.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task produces_html_formatted_display_value()
     {
-        HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             return Task.FromResult(response);
         });
         var client = new HttpClient(handler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel(client: client);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -401,19 +409,15 @@ User-Agent: {{missing_value_2}}";
     [Fact]
     public async Task produces_json_formatted_return_value()
     {
-        HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             return Task.FromResult(response);
         });
         var client = new HttpClient(handler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -425,21 +429,17 @@ User-Agent: {{missing_value_2}}";
     [Fact]
     public async Task display_should_be_suppressed_for_return_value()
     {
-        HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             return Task.FromResult(response);
         });
         var client = new HttpClient(handler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client);
 
-        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+        var result = await kernel.SendAsync(new SubmitCode("GET http://testuri.ninja"));
 
         result.Events.Should().ContainSingle<ReturnValueProduced>().Which
             .FormattedValues.Should().ContainSingle().Which
@@ -450,10 +450,8 @@ User-Agent: {{missing_value_2}}";
     public async Task produces_initial_displayed_value_that_is_updated_when_response_is_slow()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
-        HttpRequestMessage request = null;
         var slowResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
@@ -461,9 +459,7 @@ User-Agent: {{missing_value_2}}";
         });
         var client = new HttpClient(slowResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -482,10 +478,8 @@ User-Agent: {{missing_value_2}}";
     public async Task when_response_is_slow_initial_displayed_value_conveys_that_it_is_awaiting_response()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
-        HttpRequestMessage request = null;
         var slowResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
@@ -493,9 +487,7 @@ User-Agent: {{missing_value_2}}";
         });
         var client = new HttpClient(slowResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -518,9 +510,7 @@ User-Agent: {{missing_value_2}}";
         });
         var client = new HttpClient(slowResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -532,10 +522,8 @@ User-Agent: {{missing_value_2}}";
     public async Task when_response_is_slow_and_an_error_happens_the_awaiting_response_displayed_value_is_cleared()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
-        HttpRequestMessage request = null;
         var throwingResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
@@ -543,11 +531,9 @@ User-Agent: {{missing_value_2}}";
         });
         var client = new HttpClient(throwingResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
 
-        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+        var result = await kernel.SendAsync(new SubmitCode("GET http://testuri.ninja"));
         var displayedValueUpdated = result.Events.OfType<DisplayedValueUpdated>().First();
 
         using var _ = new AssertionScope();
@@ -561,10 +547,8 @@ User-Agent: {{missing_value_2}}";
     {
         const int ContentByteLengthThreshold = 100;
 
-        HttpRequestMessage request = null;
         var largeResponseHandler = new InterceptingHttpMessageHandler((message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             var builder = new StringBuilder();
@@ -577,10 +561,7 @@ User-Agent: {{missing_value_2}}";
         });
 
         var client = new HttpClient(largeResponseHandler);
-
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, contentByteLengthThreshold: ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -600,10 +581,8 @@ User-Agent: {{missing_value_2}}";
     {
         const int ContentByteLengthThreshold = 100;
 
-        HttpRequestMessage request = null;
         var largeResponseHandler = new InterceptingHttpMessageHandler((message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             var builder = new StringBuilder();
@@ -617,9 +596,7 @@ User-Agent: {{missing_value_2}}";
 
         var client = new HttpClient(largeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, contentByteLengthThreshold: ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -632,10 +609,8 @@ User-Agent: {{missing_value_2}}";
     {
         const int ContentByteLengthThreshold = 100;
 
-        HttpRequestMessage request = null;
         var largeResponseHandler = new InterceptingHttpMessageHandler((message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             var builder = new StringBuilder();
@@ -649,9 +624,7 @@ User-Agent: {{missing_value_2}}";
 
         var client = new HttpClient(largeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, contentByteLengthThreshold: ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -665,10 +638,8 @@ User-Agent: {{missing_value_2}}";
         const int ResponseDelayThresholdInMilliseconds = 5;
         const int ContentByteLengthThreshold = 100;
 
-        HttpRequestMessage request = null;
         var slowAndLargeResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             var builder = new StringBuilder();
@@ -683,9 +654,7 @@ User-Agent: {{missing_value_2}}";
 
         var client = new HttpClient(slowAndLargeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -707,10 +676,8 @@ User-Agent: {{missing_value_2}}";
         const int ResponseDelayThresholdInMilliseconds = 5;
         const int ContentByteLengthThreshold = 100;
 
-        HttpRequestMessage request = null;
         var slowAndLargeResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             var builder = new StringBuilder();
@@ -725,9 +692,7 @@ User-Agent: {{missing_value_2}}";
 
         var client = new HttpClient(slowAndLargeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -741,10 +706,8 @@ User-Agent: {{missing_value_2}}";
         const int ResponseDelayThresholdInMilliseconds = 5;
         const int ContentByteLengthThreshold = 100;
 
-        HttpRequestMessage request = null;
         var slowAndLargeResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             var builder = new StringBuilder();
@@ -759,9 +722,7 @@ User-Agent: {{missing_value_2}}";
 
         var client = new HttpClient(slowAndLargeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -775,10 +736,8 @@ User-Agent: {{missing_value_2}}";
         const int ResponseDelayThresholdInMilliseconds = 5;
         const int ContentByteLengthThreshold = 100;
 
-        HttpRequestMessage request = null;
         var slowAndLargeResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             var builder = new StringBuilder();
@@ -793,11 +752,9 @@ User-Agent: {{missing_value_2}}";
 
         var client = new HttpClient(slowAndLargeResponseHandler);
 
-        using var root = new CompositeKernel();
-        HttpRequestKernelExtension.Load(root, client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
-        var kernel = root.FindKernels(k => k is HttpRequestKernel).Single();
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
 
-        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+        var result = await kernel.SendAsync(new SubmitCode("GET http://testuri.ninja"));
 
         result.Events.OfType<DisplayEvent>().Skip(2).First()
             .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
@@ -842,5 +799,46 @@ Content-Type: {{contentType}}
 
         // TODO (dot_notation_can_be_used_to_access_response_properties) write test
         throw new NotImplementedException();
+    }
+
+    [Fact]
+    public async Task It_supports_RequestValueInfos()
+    {
+        using var kernel = new HttpRequestKernel();
+
+        var sendValueResult = await kernel.SendAsync(new SendValue("theValue", 123, FormattedValue.CreateSingleFromObject(123, JsonFormatter.MimeType)));
+
+        sendValueResult.Events.Should().NotContainErrors();
+
+        var result = await kernel.SendAsync(new RequestValueInfos());
+
+        using var _ = new AssertionScope();
+        result.Events.Should().NotContainErrors();
+        var valueInfo = result.Events.Should().ContainSingle<ValueInfosProduced>()
+                              .Which
+                              .ValueInfos.Should().ContainSingle()
+                              .Which;
+        valueInfo.Name.Should().Be("theValue");
+        valueInfo.FormattedValue.Should().BeEquivalentTo(new FormattedValue(PlainTextSummaryFormatter.MimeType, "123"));
+    }
+
+    [Fact]
+    public async Task It_supports_RequestValue()
+    {
+        using var kernel = new HttpRequestKernel();
+
+        var sendValueResult = await kernel.SendAsync(new SendValue("theValue", 123, FormattedValue.CreateSingleFromObject(123, JsonFormatter.MimeType)));
+
+        sendValueResult.Events.Should().NotContainErrors();
+
+        var result = await kernel.SendAsync(new RequestValue("theValue", JsonFormatter.MimeType));
+
+        using var _ = new AssertionScope();
+        var valueProduced = result.Events.Should().ContainSingle<ValueProduced>()
+                                  .Which;
+        valueProduced.Name.Should().Be("theValue");
+        valueProduced
+            .FormattedValue.Should()
+            .BeEquivalentTo(new FormattedValue(JsonFormatter.MimeType, "123"));
     }
 }

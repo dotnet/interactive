@@ -3,6 +3,8 @@
 
 #nullable enable
 
+using System.Collections.Generic;
+using System.Text;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -11,5 +13,45 @@ internal class HttpBodyNode : HttpSyntaxNode
 {
     internal HttpBodyNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
+    }
+
+    public HttpBindingResult<string> TryGetBody(HttpBindingDelegate bind)
+    {
+        var bodyText = new StringBuilder();
+        var diagnostics = new List<Diagnostic>();
+        var success = true;
+
+        foreach (var node in ChildNodesAndTokens)
+        {
+            if (node is HttpEmbeddedExpressionNode n)
+            {
+                var innerResult = bind(n.ExpressionNode);
+
+                if (innerResult.IsSuccessful)
+                {
+                    var nodeText = innerResult.Value?.ToString();
+                    bodyText.Append(nodeText);
+                }
+                else
+                {
+                    success = false;
+                }
+
+                diagnostics.AddRange(innerResult.Diagnostics);
+            }
+            else
+            {
+                bodyText.Append(node.Text);
+            }
+        }
+
+        if (success)
+        {
+            return HttpBindingResult<string>.Success(bodyText.ToString());
+        }
+        else
+        {
+            return HttpBindingResult<string>.Failure(diagnostics.ToArray());
+        }
     }
 }
