@@ -28,7 +28,7 @@ public class PackageRestoreContext : IDisposable
 
     public PackageRestoreContext()
     {
-        _dependencyProvider = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots, useResultsCache: true);
+        _dependencyProvider = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots, useResultsCache: false);
         AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
     }
 
