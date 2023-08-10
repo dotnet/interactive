@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive;
 
 public static class KernelSupportsNugetExtensions
 {
-    public static T UseNugetDirective<T>(this T kernel) 
+    public static T UseNugetDirective<T>(this T kernel, bool useResultsCache = true) 
         where T: Kernel, ISupportNuget
     {
         kernel.AddDirective(i());
@@ -24,7 +24,7 @@ public static class KernelSupportsNugetExtensions
             Handler = CommandHandler.Create(DoNugetRestore()),
             IsHidden = true
         };
-
+        kernel.Configure(useResultsCache);
         kernel.AddDirective(restore);
 
         return kernel;

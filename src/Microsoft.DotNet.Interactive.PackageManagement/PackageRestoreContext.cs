@@ -26,9 +26,9 @@ public class PackageRestoreContext : IDisposable
 
     private readonly DependencyProvider _dependencyProvider;
 
-    public PackageRestoreContext()
+    public PackageRestoreContext(bool useResultsCache = true)
     {
-        _dependencyProvider = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots, useResultsCache: false);
+        _dependencyProvider = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots, useResultsCache: useResultsCache);
         AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
     }
 

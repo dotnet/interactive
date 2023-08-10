@@ -16,6 +16,8 @@ public interface ISupportNuget
 
     IEnumerable<ResolvedPackageReference> ResolvedPackageReferences { get; }
 
+    void Configure(bool useResultsCache);
+
     PackageReference GetOrAddPackageReference(
         string packageName,
         string packageVersion = null);

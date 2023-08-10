@@ -114,6 +114,18 @@ public class CSharpKernel :
         return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
     }
 
+    void ISupportNuget.Configure(bool useResultsCache)
+    {
+        _lazyPackageRestoreContext = new Lazy<PackageRestoreContext>(() =>
+        {
+            var packageRestoreContext = new PackageRestoreContext(useResultsCache);
+
+            RegisterForDisposal(packageRestoreContext);
+
+            return packageRestoreContext;
+        });
+    }
+
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
         var valueInfos =

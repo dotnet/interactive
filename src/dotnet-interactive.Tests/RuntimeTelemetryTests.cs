@@ -27,7 +27,7 @@ public class RuntimeTelemetryTests : IDisposable
         _telemetrySender = new FakeTelemetrySender();
         _kernel = new CompositeKernel
             {
-                new CSharpKernel().UseNugetDirective()
+                new CSharpKernel().UseNugetDirective(false)
             }
             .UseTelemetrySender(_telemetrySender);
     }
