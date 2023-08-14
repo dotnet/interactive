@@ -150,7 +150,9 @@ telemetry
     [Fact]
     public async Task Package_and_version_number_are_sent_on_successful_package_load()
     {
-        await _kernel.SendAsync(new SubmitCode("#r \"nuget:NodaTime,3.1.0\"", "csharp"));
+        var results = await _kernel.SendAsync(new SubmitCode("#r \"nuget:NodaTime,3.1.0\"", "csharp"));
+
+        results.Events.Should().NotContainErrors();
 
         _telemetrySender.TelemetryEvents
                         .Should()
