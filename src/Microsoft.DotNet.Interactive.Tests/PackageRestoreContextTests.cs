@@ -240,14 +240,14 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     public async Task Allows_duplicate_package_specifications()
     {
         using var restoreContext = new PackageRestoreContext(false);
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
+        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
 
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
+            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0");
     }
 
     [Fact]
@@ -255,27 +255,27 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     public async Task Ignores_subsequent_package_specifications_with_different_higher_version()
     {
         using var restoreContext = new PackageRestoreContext(false);
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.1-preview");
+        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.17.0");
+        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.17.1");
 
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
+            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.17.0");
     }
 
     [Fact]
     public async Task Disallows_package_specifications_with_different_lower_version()
     {
         using var restoreContext = new PackageRestoreContext(false);
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.17.0-preview");
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.17.0");
+        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.17.0-preview");
+            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.17.0");
     }
 
     [Fact]
@@ -283,26 +283,26 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     {
         using var restoreContext = new PackageRestoreContext(false);
         restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "*");
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
 
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion != "0.16.0-preview");
+            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion != "0.16.0");
     }
 
     [Fact]
     public async Task Disallows_package_specifications_with_different_lower_unspecified_version_last()
     {
         using var restoreContext = new PackageRestoreContext(false);
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
         restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "*");
 
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
+            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0");
     }
 }
