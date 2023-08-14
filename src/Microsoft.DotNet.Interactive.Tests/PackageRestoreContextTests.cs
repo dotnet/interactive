@@ -240,14 +240,14 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     public async Task Allows_duplicate_package_specifications()
     {
         using var restoreContext = new PackageRestoreContext(false);
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
+        restoreContext.GetOrAddPackageReference("NodaTime", "3.1.9");
+        restoreContext.GetOrAddPackageReference("NodaTime", "3.1.9");
 
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0");
+            .ContainSingle(r => r.PackageName == "NodaTime" && r.PackageVersion == "3.1.9");
     }
 
     [Fact]
@@ -255,54 +255,54 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     public async Task Ignores_subsequent_package_specifications_with_different_higher_version()
     {
         using var restoreContext = new PackageRestoreContext(false);
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.17.0");
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.17.1");
+        restoreContext.GetOrAddPackageReference("NodaTime", "3.1.0");
+        restoreContext.GetOrAddPackageReference("NodaTime", "3.1.9");
 
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.17.0");
+            .ContainSingle(r => r.PackageName == "NodaTime" && r.PackageVersion == "3.1.0");
     }
 
     [Fact]
     public async Task Disallows_package_specifications_with_different_lower_version()
     {
         using var restoreContext = new PackageRestoreContext(false);
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.17.0");
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
+        restoreContext.GetOrAddPackageReference("NodaTime", "3.1.9");
+        restoreContext.GetOrAddPackageReference("NodaTime", "3.1.0");
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.17.0");
+            .ContainSingle(r => r.PackageName == "NodaTime" && r.PackageVersion == "3.1.9");
     }
 
     [Fact]
     public async Task Disallows_package_specifications_with_different_lower_unspecified_version_first()
     {
         using var restoreContext = new PackageRestoreContext(false);
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "*");
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
+        restoreContext.GetOrAddPackageReference("NodaTime", "*");
+        restoreContext.GetOrAddPackageReference("NodaTime", "3.1.0");
 
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion != "0.16.0");
+            .ContainSingle(r => r.PackageName == "NodaTime" && r.PackageVersion != "3.1.0");
     }
 
     [Fact]
     public async Task Disallows_package_specifications_with_different_lower_unspecified_version_last()
     {
         using var restoreContext = new PackageRestoreContext(false);
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0");
-        restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "*");
+        restoreContext.GetOrAddPackageReference("NodaTime", "3.1.0");
+        restoreContext.GetOrAddPackageReference("NodaTime", "*");
 
         await restoreContext.RestoreAsync();
 
         var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
         resolvedPackageReferences.Should()
-            .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0");
+            .ContainSingle(r => r.PackageName == "NodaTime" && r.PackageVersion == "3.1.0");
     }
 }
