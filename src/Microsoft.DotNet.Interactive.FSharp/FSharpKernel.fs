@@ -421,13 +421,13 @@ type FSharpKernel () as this =
         | _ ->
             false
 
-    member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
+    member _.RestoreSources with get () = _packageRestoreContext.Value.RestoreSources
 
-    member _.RequestedPackageReferences = _packageRestoreContext.Value.RequestedPackageReferences;
+    member _.RequestedPackageReferences with get () = _packageRestoreContext.Value.RequestedPackageReferences;
 
-    member _.ResolvedPackageReferences = _packageRestoreContext.Value.ResolvedPackageReferences;
+    member _.ResolvedPackageReferences with get () = _packageRestoreContext.Value.ResolvedPackageReferences;
 
-    member _.PackageRestoreContext = _packageRestoreContext.Value
+    member _.PackageRestoreContext with get () = _packageRestoreContext.Value
 
     interface IKernelCommandHandler<RequestCompletions> with
         member this.HandleAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context
