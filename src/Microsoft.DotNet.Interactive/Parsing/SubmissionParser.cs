@@ -117,9 +117,9 @@ public class SubmissionParser
                             }
                             else
                             {
-                                sendExtraDiagnostics = new((c, context) =>
+                                sendExtraDiagnostics = new((_, context) =>
                                 {
-                                    var diagnostic = new Interactive.Diagnostic(
+                                    var diagnostic = new Diagnostic(
                                         adn.GetLinePositionSpan(),
                                         CodeAnalysis.DiagnosticSeverity.Error,
                                         "NI0001", // QUESTION: (SplitSubmission) what code should this be?
