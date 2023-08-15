@@ -3,7 +3,6 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -76,7 +75,7 @@ internal class HttpRequestNode : HttpSyntaxNode
         var request = new HttpRequestMessage();
         var diagnostics = new List<Diagnostic>(base.GetDiagnostics());
 
-        if (MethodNode is { FullSpan.IsEmpty: false })
+        if (MethodNode is { Span.IsEmpty: false })
         {
             request.Method = new HttpMethod(MethodNode.Text);
         }
@@ -91,37 +90,8 @@ internal class HttpRequestNode : HttpSyntaxNode
             diagnostics.AddRange(uriBindingResult.Diagnostics);
         }
 
-        var headers =
-            HeadersNode?.HeaderNodes.Select(h => new KeyValuePair<string, string>(h.NameNode.Text, h.ValueNode.Text)).ToArray()
-            ??
-            Array.Empty<KeyValuePair<string, string>>();
-
-        foreach (var kvp in headers)
-        {
-            switch (kvp.Key.ToLowerInvariant())
-            {
-                case "content-type":
-                    if (request.Content is null)
-                    {
-                        request.Content = new StringContent("");
-                    }
-
-                    request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
-                    break;
-                case "accept":
-                    request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(kvp.Value));
-                    break;
-                case "user-agent":
-                    request.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(kvp.Value));
-                    break;
-                default:
-                    request.Headers.Add(kvp.Key, kvp.Value);
-                    break;
-            }
-        }
-
         var bodyResult = BodyNode?.TryGetBody(bind);
-        string? body = null;
+        string body = "";
 
         if (bodyResult is not null)
         {
@@ -133,9 +103,35 @@ internal class HttpRequestNode : HttpSyntaxNode
             diagnostics.AddRange(bodyResult.Diagnostics);
         }
 
-        if (!string.IsNullOrWhiteSpace(body))
+        request.Content = new StringContent(body);
+
+        if (HeadersNode is { HeaderNodes: { } headerNodes })
         {
-            request.Content = new StringContent(body);
+            foreach (var headerNode in headerNodes)
+            {
+                var headerName = headerNode.NameNode.Text.ToLowerInvariant();
+                var headerValue = headerNode.ValueNode.Text;
+
+                // FIX: (TryGetHttpRequestMessage) better testing
+
+                switch (headerName)
+                {
+                    case "accept":
+                        request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(headerValue));
+                        break;
+                    case "allow" or "content-disposition" or "content-encoding" or "content-language" or "content-length" or "content-location" or "content-md5" or "content-range"
+                        or "expires" or "last-modified"
+                        or "content-type":
+                        request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(headerValue);
+                        break;
+                    case "user-agent":
+                        request.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(headerValue));
+                        break;
+                    default:
+                        request.Headers.Add(headerNode.NameNode.Text, headerNode.ValueNode.Text);
+                        break;
+                }
+            }
         }
 
         if (diagnostics.All(d => d.Severity != DiagnosticSeverity.Error))
