@@ -64,6 +64,8 @@ public sealed class ProxyKernel : Kernel
         RegisterForDisposal(subscription);
     }
 
+    internal override bool AcceptsUnknownDirectives => true;
+
     private void UpdateKernelInfoFromEvent(KernelInfoProduced kernelInfoProduced)
     {
         var kernelInfo = kernelInfoProduced.KernelInfo;

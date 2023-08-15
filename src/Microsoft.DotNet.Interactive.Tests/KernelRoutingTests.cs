@@ -3,8 +3,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -25,9 +28,90 @@ public class KernelRoutingTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
+    [Fact]
+    public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_custom_magics()
+    {
+        using var localCompositeKernel = new CompositeKernel();
+        using var remoteCompositeKernel = new CompositeKernel
+        {
+            new FakeKernel("csharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            }
+        };
+
+        var fakeMagic = new Command("#!fake");
+        var fakeMagicWasCalled = false;
+        fakeMagic.SetHandler(() => { fakeMagicWasCalled = true; });
+        remoteCompositeKernel.AddDirective(fakeMagic);
+
+        ConnectHost.ConnectInProcessHost(
+            localCompositeKernel,
+            remoteCompositeKernel);
+
+        await localCompositeKernel
+              .Host
+              .ConnectProxyKernelOnDefaultConnectorAsync(
+                  "csharp-proxy",
+                  new(remoteCompositeKernel.Host.Uri, "csharp"));
+
+        var code = """
+            #!fake
+            123
+            """;
+
+        var result = await localCompositeKernel.SendAsync(new SubmitCode(code, "csharp-proxy"));
+
+        result.Events.Should().NotContainErrors();
+
+        fakeMagicWasCalled.Should().BeTrue();
+
+        result.Events.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should().Be(code);
+    }
 
     [Fact]
-    public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_magics()
+    public async Task When_target_kernel_name_is_not_specified_then_ProxyKernel_does_not_split_custom_magics()
+    {
+        using var localCompositeKernel = new CompositeKernel();
+        using var remoteCompositeKernel = new CompositeKernel
+        {
+            new FakeKernel("csharp")
+            {
+                Handle = (_, _) => Task.CompletedTask
+            }
+        };
+
+        var fakeMagic = new Command("#!fake");
+        var fakeMagicWasCalled = false;
+        fakeMagic.SetHandler(() => { fakeMagicWasCalled = true; });
+        remoteCompositeKernel.AddDirective(fakeMagic);
+
+        ConnectHost.ConnectInProcessHost(
+            localCompositeKernel,
+            remoteCompositeKernel);
+
+        await localCompositeKernel
+              .Host
+              .ConnectProxyKernelOnDefaultConnectorAsync(
+                  "csharp-proxy",
+                  new(remoteCompositeKernel.Host.Uri, "csharp"));
+
+        var code = """
+            #!fake
+            123
+            """;
+
+        var result = await localCompositeKernel.SendAsync(new SubmitCode(code));
+
+        result.Events.Should().NotContainErrors();
+
+        fakeMagicWasCalled.Should().BeTrue();
+
+        result.Events.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should().Be(code);
+    }
+
+    [Fact]
+    public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_pound_r_and_pound_i()
     {
         var handledCommands = new List<KernelCommand>();
         using var localCompositeKernel = new CompositeKernel();
@@ -40,10 +124,6 @@ public class KernelRoutingTests : IDisposable
                     handledCommands.Add(command);
                     return Task.CompletedTask;
                 }
-            },
-            new FakeKernel("fsharp")
-            {
-                Handle = (_, _) => Task.CompletedTask
             }
         };
 
@@ -78,7 +158,7 @@ Console.WriteLine(1);";
     }
 
     [Fact]
-    public async Task When_target_kernel_name_is_not_specified_then_proxyKernel_does_not_split_magics()
+    public async Task When_target_kernel_name_is_not_specified_then_proxyKernel_does_not_split_pound_r_and_pound_i()
     {
         var handledCommands = new List<KernelCommand>();
         using var localCompositeKernel = new CompositeKernel();
@@ -92,10 +172,6 @@ Console.WriteLine(1);";
                     return Task.CompletedTask;
                 }
             },
-            new FakeKernel("fsharp")
-            {
-                Handle = (_, _) => Task.CompletedTask
-            }
         };
 
         ConnectHost.ConnectInProcessHost(
