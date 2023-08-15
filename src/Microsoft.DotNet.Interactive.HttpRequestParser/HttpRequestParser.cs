@@ -449,13 +449,13 @@ internal class HttpRequestParser
 
                 while (MoreTokens() && !IsRequestSeparator())
                 {
-                    if (!IsAtStartOfEmbeddedExpression())
+                    if (IsAtStartOfEmbeddedExpression())
                     {
-                        ConsumeCurrentTokenInto(node);
+                        node.Add(ParseEmbeddedExpression());
                     }
                     else
                     {
-                        node.Add(ParseEmbeddedExpression());
+                        ConsumeCurrentTokenInto(node);
                     }
                 }
             }

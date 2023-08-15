@@ -94,7 +94,6 @@ public class HttpRequestKernel :
 
         var httpRequestResults = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>().Select(n => n.TryGetHttpRequestMessage(BindExpressionValues)).ToArray();
 
-        var requestMessages = httpRequestResults.Select(r => r.Value).ToArray();
         var diagnostics = httpRequestResults.SelectMany(r => r.Diagnostics).ToArray();
 
         PublishDiagnostics(context, command, diagnostics);
@@ -105,14 +104,15 @@ public class HttpRequestKernel :
             return;
         }
 
+        var requestMessages = httpRequestResults
+                              .Where(r => r is { IsSuccessful: true, Value: not null })
+                              .Select(r => r.Value!).ToArray();
+
         try
         {
             foreach (var requestMessage in requestMessages)
             {
-                if (requestMessage is not null)
-                {
-                    await SendRequestAsync(requestMessage, command, context);
-                }
+                await SendRequestAsync(requestMessage, command, context);
             }
         }
         catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException)
@@ -251,8 +251,7 @@ public class HttpRequestKernel :
     Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
     {
         var parseResult = HttpRequestParser.Parse(command.Code);
-        var requestsAndDiagnostics = GetAllDiagnostics(parseResult);
-        var diagnostics = requestsAndDiagnostics;
+        var diagnostics = GetAllDiagnostics(parseResult);
         PublishDiagnostics(context, command, diagnostics);
         return Task.CompletedTask;
     }

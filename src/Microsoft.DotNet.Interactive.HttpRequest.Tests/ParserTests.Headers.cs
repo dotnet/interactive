@@ -41,6 +41,25 @@ public partial class ParserTests
         }
 
         [Fact]
+        public void when_headers_are_not_present_there_should_be_no_header_nodes()
+        {
+            var result = Parse(
+                """
+                POST https://example.com/comments HTTP/1.1
+
+                <request>
+                    <name>sample</name>
+                    <time>Wed, 21 Oct 2015 18:27:50 GMT</time>
+                </request>
+                """);
+
+            var requestNode = result.SyntaxTree.RootNode
+                                    .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+            requestNode.HeadersNode.Should().BeNull();
+        }
+
+        [Fact]
         public void header_separator_is_parsed()
         {
             var result = Parse(
