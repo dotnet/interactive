@@ -16,11 +16,11 @@ internal class HttpHeaderNode : HttpSyntaxNode
     {
     }
 
-    public HttpHeaderNameNode NameNode { get; private set; }
+    public HttpHeaderNameNode? NameNode { get; private set; }
 
-    public HttpHeaderSeparatorNode SeparatorNode { get; private set; }
+    public HttpHeaderSeparatorNode? SeparatorNode { get; private set; }
 
-    public HttpHeaderValueNode ValueNode { get; private set; }
+    public HttpHeaderValueNode? ValueNode { get; private set; }
 
     public void Add(HttpHeaderNameNode node)
     {
