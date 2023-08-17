@@ -80,7 +80,7 @@ public static class KernelExtensions
 
             var document = fromFile switch
             {
-                { } => await NotebookLessonParser.ReadFileAsInteractiveDocument(fromFile, kernel),
+                { } => NotebookLessonParser.ReadFileAsInteractiveDocument(fromFile, kernel),
                 _ => await NotebookLessonParser.LoadNotebookFromUrl(fromUrl, httpClient)
             };
 

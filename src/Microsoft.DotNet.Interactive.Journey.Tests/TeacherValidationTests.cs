@@ -1,13 +1,13 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -17,9 +17,9 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
 {
     private async Task RunAllCells(FileInfo file, CompositeKernel kernel)
     {
-        var notebook = await NotebookLessonParser.ReadFileAsInteractiveDocument(file, kernel);
-            
-        foreach (var cell in notebook.Elements.Where(e=> e.KernelName != "markdown"))
+        var notebook = NotebookLessonParser.ReadFileAsInteractiveDocument(file, kernel);
+
+        foreach (var cell in notebook.Elements.Where(e => e.KernelName != "markdown"))
         {
             await kernel.SendAsync(new SubmitCode(cell.Contents, cell.KernelName));
         }
@@ -30,7 +30,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
     {
         var filename = "teacherValidation.dib";
         var file = new FileInfo(GetPatchedNotebookPath(filename));
-            
+
         var kernel = await CreateKernel(LessonMode.TeacherMode);
         using var events = kernel.KernelEvents.ToSubscribedList();
 

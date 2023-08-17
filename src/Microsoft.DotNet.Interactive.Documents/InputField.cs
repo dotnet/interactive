@@ -17,11 +17,6 @@ public class InputField
 
     public string TypeHint { get; set; }
 
-    protected bool Equals(InputField other)
-    {
-        return ValueName == other.ValueName && TypeHint == other.TypeHint;
-    }
-
     public override bool Equals(object? obj)
     {
         if (ReferenceEquals(null, obj))
@@ -34,12 +29,14 @@ public class InputField
             return true;
         }
 
-        if (obj.GetType() != this.GetType())
+        if (obj is InputField other)
+        {
+            return ValueName == other.ValueName && TypeHint == other.TypeHint;
+        }
+        else
         {
             return false;
         }
-
-        return Equals((InputField)obj);
     }
 
     public override int GetHashCode()
