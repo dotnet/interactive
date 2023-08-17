@@ -16,7 +16,7 @@ internal class HttpCommentNode : HttpSyntaxNode
     {
     }
 
-    public HttpCommentStartNode CommentStartNode { get; private set; }
+    public HttpCommentStartNode? CommentStartNode { get; private set; }
 
     public HttpCommentBodyNode? CommentBodyNode { get; private set; }
 

@@ -99,15 +99,21 @@ internal class HttpRequestParser
                     ConsumeCurrentTokenInto(node);
                 }
                 else if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-                    !(NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-                    NextNextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" }))
+                         !(NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
+                           NextNextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" }))
                 {
-                    node.Add(ParseComment());
+                    if (ParseComment() is { } commentNode)
+                    {
+                        node.Add(commentNode);
+                    }
                 }
                 else if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
-                    NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
+                         NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
                 {
-                    node.Add(ParseComment());
+                    if (ParseComment() is { } commentNode)
+                    {
+                        node.Add(commentNode);
+                    }
                 }
                 else
                 {
@@ -361,10 +367,10 @@ internal class HttpRequestParser
 
         private HttpHeaderNameNode ParseHeaderName()
         {
+            var node = new HttpHeaderNameNode(_sourceText, _syntaxTree);
+
             if (MoreTokens())
             {
-                var node = new HttpHeaderNameNode(_sourceText, _syntaxTree);
-
                 ParseLeadingTrivia(node);
 
                 if (MoreTokens())
@@ -386,11 +392,9 @@ internal class HttpRequestParser
                         ConsumeCurrentTokenInto(node);
                     }
                 }
-
-                return ParseTrailingTrivia(node);
             }
 
-            return null;
+            return ParseTrailingTrivia(node);
         }
 
         private HttpHeaderSeparatorNode ParserHeaderSeparator()
@@ -488,7 +492,7 @@ internal class HttpRequestParser
             return ParseTrailingTrivia(node);
         }
 
-        private HttpCommentNode ParseComment()
+        private HttpCommentNode? ParseComment()
         {
             var commentNode = new HttpCommentNode(_sourceText, _syntaxTree);
 

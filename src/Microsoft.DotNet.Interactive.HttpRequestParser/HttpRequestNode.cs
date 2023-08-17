@@ -101,14 +101,20 @@ internal class HttpRequestNode : HttpSyntaxNode
             request.Method = new HttpMethod(MethodNode.Text);
         }
 
-        var uriBindingResult = UrlNode.TryGetUri(bind);
-        if (uriBindingResult.IsSuccessful)
+        if (UrlNode?.TryGetUri(bind) is { } uriBindingResult)
         {
-            request.RequestUri = uriBindingResult.Value;
+            if (uriBindingResult.IsSuccessful)
+            {
+                request.RequestUri = uriBindingResult.Value;
+            }
+            else
+            {
+                diagnostics.AddRange(uriBindingResult.Diagnostics);
+            }
         }
         else
         {
-            diagnostics.AddRange(uriBindingResult.Diagnostics);
+            // FIX: (TryGetHttpRequestMessage) add diagnostic
         }
 
         var bodyResult = BodyNode?.TryGetBody(bind);
@@ -130,9 +136,22 @@ internal class HttpRequestNode : HttpSyntaxNode
         {
             foreach (var headerNode in headerNodes)
             {
+                if (headerNode.NameNode is null)
+                {
+                    // FIX: (TryGetHttpRequestMessage) add diagnostic
+                    continue;
+                }
+
+                if (headerNode.ValueNode is null)
+                {
+                    // FIX: (TryGetHttpRequestMessage) add diagnostic
+                    continue;
+                }
+
                 var headerName = headerNode.NameNode.Text.ToLowerInvariant();
                 var headerValue = headerNode.ValueNode.Text;
 
+                // FIX: (TryGetHttpRequestMessage) bind possible expressions in the value node
                 // FIX: (TryGetHttpRequestMessage) better testing
 
                 switch (headerName)
