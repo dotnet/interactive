@@ -7,7 +7,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Documents.Json;
 
 namespace Microsoft.DotNet.Interactive.Documents.Jupyter;
@@ -65,15 +64,6 @@ public static class Notebook
         return Parse(content, kernelInfos);
     }
 
-    public static async Task<InteractiveDocument> ReadAsync(
-        Stream stream,
-        KernelInfoCollection? kernelInfo = null)
-    {
-        using var reader = new StreamReader(stream, Encoding);
-        var content = await reader.ReadToEndAsync();
-        return Parse(content, kernelInfo);
-    }
-
     public static void Write(InteractiveDocument document, Stream stream)
     {
         using var writer = new StreamWriter(stream, Encoding, 1024, true);
@@ -91,7 +81,7 @@ public static class Notebook
         this InteractiveDocument document,
         string? defaultLanguage = null)
     {
-        if (defaultLanguage is {})
+        if (defaultLanguage is { })
         {
             document.WithJupyterMetadata(defaultLanguage);
         }

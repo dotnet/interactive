@@ -93,7 +93,7 @@ Microsoft.DotNet.Interactive.Journey
     public static System.Collections.Generic.List<System.String> AllDirectiveNames { get;}
     public static System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> LoadNotebookFromUrl(System.Uri uri, System.Net.Http.HttpClient httpClient = null, Microsoft.DotNet.Interactive.CompositeKernel kernel = null)
     public static System.Void Parse(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, ref LessonDefinition& lesson, ref System.Collections.Generic.List<ChallengeDefinition> challenges)
-    public static System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> ReadFileAsInteractiveDocument(System.IO.FileInfo file, Microsoft.DotNet.Interactive.CompositeKernel kernel = null)
+    public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument ReadFileAsInteractiveDocument(System.IO.FileInfo file, Microsoft.DotNet.Interactive.CompositeKernel kernel = null)
     .ctor()
   public enum Outcome : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
     Failure=0
