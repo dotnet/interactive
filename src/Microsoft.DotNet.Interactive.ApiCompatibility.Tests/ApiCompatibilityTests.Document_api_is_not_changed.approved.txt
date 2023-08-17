@@ -1,18 +1,10 @@
 Microsoft.DotNet.Interactive.Documents
   public static class CodeSubmission
-    public static System.Text.Encoding Encoding { get;}
     public static InteractiveDocument Parse(System.String content, KernelInfoCollection kernelInfos = null)
     public static InteractiveDocument Read(System.IO.Stream stream, KernelInfoCollection kernelInfos)
-    public static System.Threading.Tasks.Task<InteractiveDocument> ReadAsync(System.IO.Stream stream, KernelInfoCollection kernelInfos)
     public static System.String ToCodeSubmissionContent(System.String newline = 
 )
-    public static System.Void Write(InteractiveDocument document, System.IO.Stream stream, System.String newline = 
-)
-    public static System.Void Write(InteractiveDocument document, System.IO.TextWriter writer, System.String newline = 
-)
     public static System.Void Write(InteractiveDocument document, System.IO.Stream stream, KernelInfoCollection kernelInfos, System.String newline = 
-)
-    public static System.Void Write(InteractiveDocument document, System.IO.TextWriter writer, KernelInfoCollection kernelInfos, System.String newline = 
 )
   public class DisplayElement : InteractiveDocumentOutputElement, IDataElement
     .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
@@ -27,7 +19,6 @@ Microsoft.DotNet.Interactive.Documents
     .ctor(System.String valueName, System.String typeHint = text)
     public System.String TypeHint { get; set;}
     public System.String ValueName { get; set;}
-    protected System.Boolean Equals(InputField other)
     public System.Boolean Equals(System.Object obj)
     public System.Int32 GetHashCode()
   public class InteractiveDocument, System.Collections.IEnumerable
@@ -91,7 +82,6 @@ Microsoft.DotNet.Interactive.Documents.Jupyter
     public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
     public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Parse(System.String json, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos = null)
     public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Read(System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos)
-    public static System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> ReadAsync(System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfo = null)
     public static System.String ToJupyterJson(System.String defaultLanguage = null)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.Stream stream)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos)
