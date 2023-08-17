@@ -115,9 +115,7 @@ public partial class ParserTests
 
             var message = "Variable 'version' was not defined.";
 
-            HttpBindingDelegate bind = node => node.CreateBindingFailure(message);
-
-            var bindingResult = requestNode.TryGetHttpRequestMessage(bind);
+            var bindingResult = requestNode.TryGetHttpRequestMessage(node => node.CreateBindingFailure(message));
             bindingResult.IsSuccessful.Should().BeFalse();
             bindingResult.Diagnostics.Should().ContainSingle().Which.Message.Should().Be(message);
         }

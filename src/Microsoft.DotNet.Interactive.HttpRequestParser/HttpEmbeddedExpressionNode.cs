@@ -17,13 +17,13 @@ internal class HttpEmbeddedExpressionNode : HttpSyntaxNode
         HttpExpressionEndNode endNode) : base(sourceText, syntaxTree)
     {
         StartNode = startNode;
-        Add(StartNode);
+        AddInternal(StartNode);
 
         ExpressionNode = expressionNode;
-        Add(ExpressionNode);
+        AddInternal(ExpressionNode);
 
         EndNode = endNode;
-        Add(EndNode);
+        AddInternal(EndNode);
     }
 
     public HttpExpressionStartNode StartNode { get; }

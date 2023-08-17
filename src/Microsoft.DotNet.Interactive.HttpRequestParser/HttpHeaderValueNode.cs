@@ -12,4 +12,6 @@ internal class HttpHeaderValueNode : HttpSyntaxNode
     internal HttpHeaderValueNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
+
+    public void Add(HttpEmbeddedExpressionNode node) => AddInternal(node);
 }

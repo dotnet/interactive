@@ -31,7 +31,5 @@ public partial class ParserTests
             requestNode.HeadersNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>()
                        .Should().ContainSingle().Which.Text.Should().Be("token");
         }
-
-        //TODO Test all parsers for expression
     }
 }

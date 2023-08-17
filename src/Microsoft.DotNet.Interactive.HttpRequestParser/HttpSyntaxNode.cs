@@ -90,8 +90,17 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         }
     }
 
-    internal void Add(HttpSyntaxNodeOrToken child)
+    internal void Add(HttpSyntaxToken token) => AddInternal(token);
+
+    internal void Add(HttpCommentNode node) => AddInternal(node);
+
+    protected void AddInternal(HttpSyntaxNodeOrToken child)
     {
+        if (child is null)
+        {
+            throw new ArgumentNullException(nameof(child));
+        }
+
         if (child.Parent is not null)
         {
             throw new InvalidOperationException($"{child.GetType().Name} {child} is already parented to {child.Parent}");

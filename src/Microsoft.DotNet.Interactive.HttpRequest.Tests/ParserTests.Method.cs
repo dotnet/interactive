@@ -19,7 +19,7 @@ public partial class ParserTests
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .MethodNode.ChildTokens.First().Kind
+                  .ChildTokens.First().Kind
                   .Should().Be(HttpTokenKind.Whitespace);
         }
 
@@ -32,15 +32,14 @@ public partial class ParserTests
                 GET https://example.com
                 """);
 
-            var methodNode = result.SyntaxTree
+            var requestNode = result.SyntaxTree
                                    .RootNode
                                    .ChildNodes
                                    .Should()
-                                   .ContainSingle<HttpRequestNode>().Which
-                                   .MethodNode;
+                                   .ContainSingle<HttpRequestNode>().Which;
 
-            methodNode.ChildTokens.First().Kind.Should().Be(HttpTokenKind.NewLine);
-            methodNode.Text.Should().Be("GET");
+            requestNode.ChildTokens.First().Kind.Should().Be(HttpTokenKind.NewLine);
+            requestNode.MethodNode.Text.Should().Be("GET");
         }
 
         [Fact]
@@ -52,15 +51,14 @@ public partial class ParserTests
                 GET https://example.com
                 """);
 
-            var methodNode = result.SyntaxTree
+            var requestNode = result.SyntaxTree
                                    .RootNode
                                    .ChildNodes
                                    .Should()
-                                   .ContainSingle<HttpRequestNode>().Which
-                                   .MethodNode;
+                                   .ContainSingle<HttpRequestNode>().Which;
 
-            methodNode.ChildNodes.First().Should().BeOfType<HttpCommentNode>();
-            methodNode.Text.Should().Be("GET");
+            requestNode.ChildNodes.First().Should().BeOfType<HttpCommentNode>();
+            requestNode.MethodNode.Text.Should().Be("GET");
         }
 
         [Theory]

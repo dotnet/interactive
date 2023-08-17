@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
@@ -26,7 +26,7 @@ public partial class ParserTests
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .MethodNode.ChildTokens.First().Text.Should().Be(" \t ");
+                  .ChildTokens.First().Text.Should().Be(" \t ");
         }
 
         [Fact]
@@ -36,7 +36,7 @@ public partial class ParserTests
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .MethodNode.FullText.Should().Be("\r\n\n\r\n");
+                  .FullText.Should().Be("\r\n\n\r\n");
         }
     }
 }
