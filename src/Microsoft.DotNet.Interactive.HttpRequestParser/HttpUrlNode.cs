@@ -15,7 +15,9 @@ internal class HttpUrlNode : HttpSyntaxNode
     internal HttpUrlNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
-    
+
+    public void Add(HttpEmbeddedExpressionNode node) => AddInternal(node);
+
     internal HttpBindingResult<Uri> TryGetUri(HttpBindingDelegate bind)
     {
         var urlText = new StringBuilder();

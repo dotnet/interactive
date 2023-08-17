@@ -5,6 +5,7 @@
 
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -74,6 +75,7 @@ internal class HttpRequestParser
             }
         }
 
+        [DebuggerStepThrough]
         private bool MoreTokens() => _tokens!.Count > _currentTokenIndex;
 
         private void AdvanceToNextToken() => _currentTokenIndex++;
@@ -139,78 +141,102 @@ internal class HttpRequestParser
 
         private HttpRequestNode ParseRequest()
         {
-            var methodNode = ParseMethod();
-            var urlNode = ParseUrl();
-            var versionNode = ParseVersion();
-            var headersNode = ParseHeaders();
-            var bodySeparatorNode = ParseBodySeparator();
-            var bodyNode = ParseBody();
-
             var requestNode = new HttpRequestNode(
                 _sourceText,
-                _syntaxTree,
-                methodNode,
-                urlNode,
-                versionNode,
-                headersNode,
-                bodySeparatorNode,
-                bodyNode);
+                _syntaxTree);
+
+            ParseLeadingTrivia(requestNode);
+
+            var methodNode = ParseMethod();
+            if (methodNode is not null)
+            {
+                requestNode.Add(methodNode);
+            }
+
+            var urlNode = ParseUrl();
+            requestNode.Add(urlNode);
+
+            var versionNode = ParseVersion();
+            if (versionNode is not null)
+            {
+                requestNode.Add(versionNode);
+            }
+
+            var headersNode = ParseHeaders();
+            if (headersNode is not null)
+            {
+                requestNode.Add(headersNode);
+            }
+
+            var bodySeparatorNode = ParseBodySeparator();
+            if (bodySeparatorNode is not null)
+            {
+                requestNode.Add(bodySeparatorNode);
+            }
+
+            var bodyNode = ParseBody();
+            if (bodyNode is not null)
+            {
+                requestNode.Add(bodyNode);
+            }
+
             return requestNode;
         }
 
         private HttpRequestSeparatorNode? ParseRequestSeparator()
         {
-            if (!MoreTokens() || !IsRequestSeparator())
+            if (MoreTokens() && IsRequestSeparator())
             {
-                return null;
-            }
+                var node = new HttpRequestSeparatorNode(_sourceText, _syntaxTree);
+                ParseLeadingTrivia(node);
+                
+                ConsumeCurrentTokenInto(node);
+                ConsumeCurrentTokenInto(node);
+                ConsumeCurrentTokenInto(node);
 
-            var node = new HttpRequestSeparatorNode(_sourceText, _syntaxTree);
-            ParseLeadingTrivia(node);
-            if (IsRequestSeparator())
-            {
-                ConsumeCurrentTokenInto(node);
-                ConsumeCurrentTokenInto(node);
-                ConsumeCurrentTokenInto(node);
                 while (MoreTokens() && CurrentToken.Kind is not (HttpTokenKind.NewLine or HttpTokenKind.Whitespace))
                 {
                     ConsumeCurrentTokenInto(node);
                 }
+
+                ParseTrailingTrivia(node);
             }
 
-            return ParseTrailingTrivia(node);
+            return null;
         }
 
         private HttpMethodNode? ParseMethod()
         {
-            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word && (CurrentToken.Text.ToLower() is "https" || CurrentToken.Text.ToLower() is "http"))
+            HttpMethodNode? node = null;
+
+            if (MoreTokens())
             {
-                return null;
-            }
-
-            var node = new HttpMethodNode(_sourceText, _syntaxTree);
-
-            ParseLeadingTrivia(node);
-
-            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
-            {
-                if (CurrentToken.Text.ToLower() is "get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace")
+                if (CurrentToken.Text.ToLower() is "http" or "https")
                 {
-                    ConsumeCurrentTokenInto(node);
+                    return null;
                 }
-                else
+        
+                if (CurrentToken.Kind is HttpTokenKind.Word)
                 {
-                    var message = $"Unrecognized HTTP verb {CurrentToken.Text}";
-
-                    var diagnostic = CurrentToken.CreateDiagnostic(message);
-
-                    node.AddDiagnostic(diagnostic);
-                    
+                    node = new HttpMethodNode(_sourceText, _syntaxTree);
+        
+                    ParseLeadingTrivia(node);
+        
+                    if (CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
+                    {
+                        var message = $"Unrecognized HTTP verb {CurrentToken.Text}";
+        
+                        var diagnostic = CurrentToken.CreateDiagnostic(message);
+        
+                        node.AddDiagnostic(diagnostic);
+                    }
+        
                     ConsumeCurrentTokenInto(node);
+                    ParseTrailingTrivia(node);
                 }
             }
-
-            return ParseTrailingTrivia(node);
+        
+            return node;
         }
 
         private HttpUrlNode ParseUrl()
@@ -253,8 +279,8 @@ internal class HttpRequestParser
         {
             var node = new HttpExpressionStartNode(_sourceText, _syntaxTree);
 
-            ConsumeCurrentTokenInto(node);
-            ConsumeCurrentTokenInto(node);
+            ConsumeCurrentTokenInto(node); // parse the first {
+            ConsumeCurrentTokenInto(node); // parse the second {
 
             return ParseTrailingTrivia(node);
         }
@@ -269,6 +295,7 @@ internal class HttpRequestParser
             {
                 ConsumeCurrentTokenInto(node);
             }
+
             return ParseTrailingTrivia(node);
         }
 
@@ -276,96 +303,94 @@ internal class HttpRequestParser
         {
             var node = new HttpExpressionEndNode(_sourceText, _syntaxTree);
 
-            ConsumeCurrentTokenInto(node);
-            ConsumeCurrentTokenInto(node);
+            ConsumeCurrentTokenInto(node); // parse the first }
+            ConsumeCurrentTokenInto(node); // parse the second }
 
-            return ParseTrailingTrivia(node);
+            return node;
         }
 
         private HttpVersionNode? ParseVersion()
         {
-            if (!MoreTokens() || IsRequestSeparator())
+            if (MoreTokens() &&
+                CurrentToken.Kind is HttpTokenKind.Word &&
+                CurrentToken.Text.ToLowerInvariant() is "http" or "https")
             {
-                return null;
-            }
+                var node = new HttpVersionNode(_sourceText, _syntaxTree);
 
-            var node = new HttpVersionNode(_sourceText, _syntaxTree);
-
-            ParseLeadingTrivia(node);
-
-            if (MoreTokens() && 
-                CurrentToken.Kind is HttpTokenKind.Word && 
-                CurrentToken.Text.ToLowerInvariant() == "http")
-            {
+                ParseLeadingTrivia(node);
                 ConsumeCurrentTokenInto(node);
 
                 while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine &&
-                    !IsRequestSeparator())
+                       !IsRequestSeparator())
                 {
                     ConsumeCurrentTokenInto(node);
                 }
+
+                return ParseTrailingTrivia(node, stopAfterNewLine: true);
             }
 
-            return ParseTrailingTrivia(node, stopAfterNewLine: true);
+            return null;
         }
 
         private HttpHeadersNode? ParseHeaders()
         {
-            if (!MoreTokens() || IsRequestSeparator())
+            HttpHeadersNode? headersNode = null;
+
+            while (MoreTokens() &&
+                   CurrentToken.Kind is (HttpTokenKind.Word) &&
+                   !IsRequestSeparator())
             {
-                return null;
+                headersNode ??= new HttpHeadersNode(_sourceText, _syntaxTree);
+
+                headersNode.Add(ParseHeader());
             }
 
-            var headerNodes = new List<HttpHeaderNode>();
-            while (MoreTokens() && CurrentToken.Kind is not (HttpTokenKind.NewLine or HttpTokenKind.Whitespace) &&
-                !IsRequestSeparator())
-            {
-                headerNodes.Add(ParseHeader());
-            }
-
-            if (headerNodes.Count == 0)
-            {
-                return null;
-            }
-            return new HttpHeadersNode(_sourceText, _syntaxTree, headerNodes);
+            return headersNode;
         }
 
         private HttpHeaderNode ParseHeader()
         {
-            var nameNode = ParseHeaderName();
-            var separatorNode = ParserHeaderSeparator();
-            var valueNode = ParseHeaderValue();
+            var headerNode = new HttpHeaderNode(_sourceText, _syntaxTree);
 
-            return new HttpHeaderNode(_sourceText, _syntaxTree, nameNode, separatorNode, valueNode);
+            headerNode.Add(ParseHeaderName());
+            headerNode.Add(ParserHeaderSeparator());
+            headerNode.Add(ParseHeaderValue());
+
+            return headerNode;
         }
 
         private HttpHeaderNameNode ParseHeaderName()
         {
-            var node = new HttpHeaderNameNode(_sourceText, _syntaxTree);
-
-            ParseLeadingTrivia(node);
-
-            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
+            if (MoreTokens())
             {
-                ConsumeCurrentTokenInto(node);
+                var node = new HttpHeaderNameNode(_sourceText, _syntaxTree);
 
-                while (MoreTokens())
+                ParseLeadingTrivia(node);
+
+                if (MoreTokens())
                 {
-                    if (CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine)
-                    {
-                        break;
-                    }
-
-                    if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: ":" })
-                    {
-                        break;
-                    }
-
                     ConsumeCurrentTokenInto(node);
+
+                    while (MoreTokens())
+                    {
+                        if (CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine)
+                        {
+                            break;
+                        }
+
+                        if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: ":" })
+                        {
+                            break;
+                        }
+
+                        ConsumeCurrentTokenInto(node);
+                    }
                 }
+
+                return ParseTrailingTrivia(node);
             }
 
-            return ParseTrailingTrivia(node);
+            return null;
         }
 
         private HttpHeaderSeparatorNode ParserHeaderSeparator()
@@ -465,10 +490,24 @@ internal class HttpRequestParser
 
         private HttpCommentNode ParseComment()
         {
-            var commentStartNode = ParseCommentStart();
-            var commentBodyNode = ParseCommentBody();
+            var commentNode = new HttpCommentNode(_sourceText, _syntaxTree);
 
-            return new HttpCommentNode(_sourceText, _syntaxTree, commentStartNode, commentBodyNode);
+            var commentStartNode = ParseCommentStart();
+
+            if (commentStartNode is null)
+            {
+                return null;
+            }
+
+            commentNode.Add(commentStartNode);
+
+            var commentBodyNode = ParseCommentBody();
+            if (commentBodyNode is not null)
+            {
+                commentNode.Add(commentBodyNode);
+            }
+
+            return commentNode;
         }
 
         private HttpCommentBodyNode? ParseCommentBody()
@@ -489,29 +528,33 @@ internal class HttpRequestParser
             return node;
         }
 
-        private HttpCommentStartNode ParseCommentStart()
+        private HttpCommentStartNode? ParseCommentStart()
         {
-            var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
-
             if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })
             {
+                var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
                 ConsumeCurrentTokenInto(node);
-            }
-            else if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
-                NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
-            {
-                ConsumeCurrentTokenInto(node);
-                ConsumeCurrentTokenInto(node);
+                return ParseTrailingTrivia(node);
             }
 
-            return ParseTrailingTrivia(node);
+            if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
+                NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
+            {
+                var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
+
+                ConsumeCurrentTokenInto(node);
+                ConsumeCurrentTokenInto(node);
+                return ParseTrailingTrivia(node);
+            }
+
+            return null;
         }
 
         private bool IsRequestSeparator()
         {
             return CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-                (NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-                NextNextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" });
+                   (NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
+                    NextNextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" });
         }
 
     }

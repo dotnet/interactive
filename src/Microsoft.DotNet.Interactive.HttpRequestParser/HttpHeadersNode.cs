@@ -3,9 +3,9 @@
 
 #nullable enable
 
-using Microsoft.CodeAnalysis.Text;
-
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -13,15 +13,12 @@ internal class HttpHeadersNode : HttpSyntaxNode
 {
     internal HttpHeadersNode(
         SourceText sourceText,
-        HttpSyntaxTree? syntaxTree,
-        IReadOnlyList<HttpHeaderNode> headerNodes) : base(sourceText, syntaxTree)
+        HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
-        HeaderNodes = headerNodes;
-        foreach (var headerNode in HeaderNodes)
-        {
-            Add(headerNode);
-        }
     }
 
-    public IReadOnlyList<HttpHeaderNode> HeaderNodes { get; }
+    public IReadOnlyList<HttpHeaderNode> HeaderNodes => ChildNodes.OfType<HttpHeaderNode>().ToList();
+
+    public void Add(HttpHeaderNode headerNode) => AddInternal(headerNode);
+
 }

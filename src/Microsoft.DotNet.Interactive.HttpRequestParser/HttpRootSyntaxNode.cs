@@ -12,4 +12,14 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
     internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree? tree) : base(sourceText, tree)
     {
     }
+
+    public void Add(HttpRequestNode requestNode)
+    {
+        AddInternal(requestNode);
+    }
+
+    public void Add(HttpRequestSeparatorNode separatorNode)
+    {
+        AddInternal(separatorNode);
+    }
 }

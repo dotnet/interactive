@@ -15,6 +15,8 @@ internal class HttpBodyNode : HttpSyntaxNode
     {
     }
 
+    public void Add(HttpEmbeddedExpressionNode node) => AddInternal(node);
+
     public HttpBindingResult<string> TryGetBody(HttpBindingDelegate bind)
     {
         var bodyText = new StringBuilder();

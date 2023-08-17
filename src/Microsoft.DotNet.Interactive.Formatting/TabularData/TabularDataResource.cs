@@ -23,7 +23,7 @@ public class TabularDataResource
     public string Profile { get; }
 
     public TableSchema Schema { get; }
-
+    
     public IEnumerable<IEnumerable<KeyValuePair<string, object>>> Data { get; }
 
     public TabularDataResourceJsonString ToJsonString()
