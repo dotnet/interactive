@@ -148,7 +148,7 @@ public class ProjectAsset : PackageAsset,
         BuildDataResults results = null;
         await binLog.DoWhenFileAvailable(() =>
         {
-            results = GetResultsFromProjectFile(binLog.FullName);
+            results = ResultsFromCacheFileUsingProjectFilePath(binLog.FullName);
         });
         return results;
     }

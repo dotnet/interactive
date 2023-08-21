@@ -8,20 +8,20 @@ using static Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 
-public class BuildDataResults
+internal class BuildDataResults
 {
-    public BuildProjectData BuildProjectData { get; set; }
+    internal BuildProjectData BuildProjectData { get; init; }
 
-    public CodeAnalysis.Workspace Workspace { get; set; }
+    internal CodeAnalysis.Workspace Workspace { get; init; }
 
-    public bool Succeeded { get; set; }
+    internal bool Succeeded { get; init; }
 
-    public string CacheFilePath { get; set; }
+    internal string CacheFilePath { get; init; }
 
-    public CSharpParseOptions CSharpParseOptions { get; set; }
+    internal CSharpParseOptions CSharpParseOptions { get; init; }
 
     // TODO: Set this value
-    public string ProjectFilePath { get; set; }
+    internal string ProjectFilePath { get; init; }
 
-    internal Dictionary<string, BuildDataProjectItem[]> Items { get; set; } = new Dictionary<string, BuildDataProjectItem[]>();
+    internal Dictionary<string, BuildDataProjectItem[]> Items { get; } = new Dictionary<string, BuildDataProjectItem[]>();
 }

@@ -48,7 +48,7 @@ public class PackageInitializer : IPackageInitializer
     {
         var dotnet = new Dotnet(directory);
 
-        await dotnet.NewGlobalJson();
+        await dotnet.New("globaljson");
 
         var result = await dotnet
             .New(Template,

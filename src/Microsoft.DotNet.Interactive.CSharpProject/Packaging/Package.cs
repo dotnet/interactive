@@ -545,7 +545,7 @@ public abstract class Package :
         }
     }
 
-    protected BuildDataResults DesignTimeBuildResult { get; set; }
+    private protected BuildDataResults DesignTimeBuildResult { get; set; }
 
     protected virtual bool ShouldDoFullBuild()
     {
@@ -560,7 +560,7 @@ public abstract class Package :
                || DesignTimeBuildResult.Succeeded == false;
     }
 
-    protected async Task<BuildDataResults> DesignTimeBuild()
+    private protected async Task<BuildDataResults> DesignTimeBuild()
     {
         using (var operation = _log.OnEnterAndConfirmOnExit())
         {
@@ -571,7 +571,7 @@ public abstract class Package :
             using (await FileLock.TryCreateAsync(Directory))
             {
                 await BuildCacheFileUtilities.BuildAndCreateCacheFileAsync(csProj.FullName);
-                result = GetResultsFromProjectFile(csProj.FullName);
+                result = ResultsFromCacheFileUsingProjectFilePath(csProj.FullName);
                 var languageVersion = csProj.SuggestedLanguageVersion();
                 // TODO: analyzer.SetGlobalProperty("langVersion", languageVersion);
             }

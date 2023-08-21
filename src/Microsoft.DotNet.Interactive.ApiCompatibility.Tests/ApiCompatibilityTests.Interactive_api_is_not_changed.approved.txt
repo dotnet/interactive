@@ -791,7 +791,6 @@ Microsoft.DotNet.Interactive.Utility
     public System.Threading.Tasks.Task<CommandLineResult> Clean(System.Nullable<System.TimeSpan> timeout = null)
     public System.Threading.Tasks.Task<CommandLineResult> Execute(System.String args, System.Nullable<System.TimeSpan> timeout = null)
     public System.Threading.Tasks.Task<CommandLineResult> New(System.String templateName, System.String args = null)
-    public System.Threading.Tasks.Task<CommandLineResult> NewGlobalJson()
     public System.Threading.Tasks.Task<CommandLineResult> Pack(System.String args = null, System.Nullable<System.TimeSpan> timeout = null)
     public System.Threading.Tasks.Task<CommandLineResult> Publish(System.String args = null, System.Nullable<System.TimeSpan> timeout = null)
     public System.Diagnostics.Process StartProcess(System.String args, System.Action<System.String> output = null, System.Action<System.String> error = null)

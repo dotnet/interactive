@@ -33,11 +33,6 @@ public class Dotnet
         return await Execute($@"new ""{templateName}"" {args}");
     }
 
-    public Task<CommandLineResult> NewGlobalJson()
-    {
-        return Execute($"new globaljson");
-    }
-
     public async Task<AddPackageResult> AddPackage(string packageId, string version = null)
     {
         var versionArg = string.IsNullOrWhiteSpace(version)
