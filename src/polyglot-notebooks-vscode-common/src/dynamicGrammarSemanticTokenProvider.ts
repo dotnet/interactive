@@ -9,6 +9,7 @@ import * as vscodeLike from './interfaces/vscode-like';
 import * as vsctm from 'vscode-textmate';
 
 import { Logger } from './polyglot-notebooks/logger';
+import { t } from '@vscode/l10n';
 
 const customScopePrefix = 'polyglot-notebook';
 
@@ -69,8 +70,13 @@ export class DynamicGrammarSemanticTokenProvider {
     };
 
     constructor(packageJSON: any, extensionData: VSCodeExtensionLike[], private readonly fileExists: (path: string) => boolean, private readonly fileReader: (path: string) => string) {
-        this.buildInstalledLanguageInfosMap(extensionData);
-        this.buildSemanticTokensLegendAndCustomScopes(packageJSON);
+        try {
+            this.buildInstalledLanguageInfosMap(extensionData);
+            this.buildSemanticTokensLegendAndCustomScopes(packageJSON);
+        } catch (error) {
+            Logger.default.error(`Error building dynamic grammar semantic token provider: ${error}`);
+            throw error;
+        }
     }
 
     get semanticTokenTypes(): string[] {
@@ -93,11 +99,17 @@ export class DynamicGrammarSemanticTokenProvider {
     }
 
     async init(): Promise<void> {
-        // prepare grammar parser
-        const nodeModulesDir = path.join(__dirname, '..', '..', '..', 'node_modules');
-        const onigWasmPath = path.join(nodeModulesDir, 'vscode-oniguruma', 'release', 'onig.wasm');
-        const wasmBin = fs.readFileSync(onigWasmPath).buffer;
-        await oniguruma.loadWASM(wasmBin);
+        try {
+            // prepare grammar parser
+            const nodeModulesDir = path.join(__dirname, '..', '..', '..', 'node_modules');
+            const onigWasmPath = path.join(nodeModulesDir, 'vscode-oniguruma', 'release', 'onig.wasm');
+            const wasmBin = fs.readFileSync(onigWasmPath).buffer;
+            await oniguruma.loadWASM(wasmBin);
+        }
+        catch (error) {
+            Logger.default.error(`Error itnitialising the DynamicGrammarSemanticTokenProvider : ${error}`);
+            throw error;
+        }
     }
 
     getLanguageNameFromKernelNameOrAlias(notebookDocument: vscodeLike.NotebookDocument, kernelNameOrAlias: string): string | undefined {
@@ -123,14 +135,20 @@ export class DynamicGrammarSemanticTokenProvider {
     }
 
     getLanguageConfigurationFromKernelNameOrAlias(notebookDocument: vscodeLike.NotebookDocument, kernelNameOrAlias: string): any {
-        let languageConfiguration = this._emptyLanguageConfiguration;
-        const languageName = this.getLanguageNameFromKernelNameOrAlias(notebookDocument, kernelNameOrAlias);
-        if (languageName) {
-            const normalizedLanguageName = normalizeLanguageName(languageName);
-            languageConfiguration = this._languageNameConfigurationMap.get(normalizedLanguageName) ?? languageConfiguration;
-        }
+        try {
+            let languageConfiguration = this._emptyLanguageConfiguration;
+            const languageName = this.getLanguageNameFromKernelNameOrAlias(notebookDocument, kernelNameOrAlias);
+            if (languageName) {
+                const normalizedLanguageName = normalizeLanguageName(languageName);
+                languageConfiguration = this._languageNameConfigurationMap.get(normalizedLanguageName) ?? languageConfiguration;
+            }
 
-        return languageConfiguration;
+            return languageConfiguration;
+        }
+        catch (error) {
+            Logger.default.error(`Error getting language configuration for kernel ${kernelNameOrAlias}: ${error}`);
+            throw error;
+        }
     }
 
     async getTokens(notebookUri: vscodeLike.Uri, initialKernelName: string, code: string): Promise<SemanticToken[]> {
@@ -170,8 +188,9 @@ export class DynamicGrammarSemanticTokenProvider {
 
                 return semanticTokens;
             }
-        } catch (e) {
-            const x = e;
+        } catch (error) {
+            Logger.default.error(`Error getting tokens for notebook ${notebookUri.toString()}: ${error}`);
+            // not rethrowing, skipping
         }
 
         // if we got here we didn't recognize the given language
@@ -225,6 +244,7 @@ export class DynamicGrammarSemanticTokenProvider {
     }
 
     private buildInstalledLanguageInfosMap(extensionData: VSCodeExtensionLike[]) {
+        Logger.default.info(`Building installed language infos map...`);
         // crawl all extensions for languages and grammars
         this._languageNameInfoMap.clear();
         const seenLanguages: Set<string> = new Set();
@@ -242,15 +262,19 @@ export class DynamicGrammarSemanticTokenProvider {
 
             // set language configuration
             const languageConfigurationFilePath = path.join(grammarDir, `${wellKnown.languageName}.language-configuration.json`);
+            Logger.default.info(`Looking for language configuration file at ${languageConfigurationFilePath}`);
             if (this.fileExists(languageConfigurationFilePath)) {
                 try {
+                    Logger.default.info(`Found language configuration file at ${languageConfigurationFilePath}`);
                     const languageConfigurationContents = this.fileReader(languageConfigurationFilePath);
                     const languageConfiguration = parseLanguageConfiguration(languageConfigurationContents);
                     for (const languageNameOrAlias of allNames) {
                         this._languageNameConfigurationMap.set(languageNameOrAlias, languageConfiguration);
                     }
-                } catch {
-                    // don't care if it failed
+                    Logger.default.info(`Parsed language configuration file at ${languageConfigurationFilePath}`);
+                } catch (error) {
+                    Logger.default.error(`Error parsing language configuration file at ${languageConfigurationFilePath}: ${error}`);
+                    // not rethrowing
                 }
             }
         }
@@ -268,10 +292,19 @@ export class DynamicGrammarSemanticTokenProvider {
                         const languageName = normalizeLanguageName(typeof grammar.language === 'string' ? <string>grammar.language : <string>extension.packageJSON.name);
                         if (!seenLanguages.has(languageName)) {
                             const grammarPath = path.join(extension.extensionPath, grammar.path);
+                            Logger.default.info(`Looking for grammar file at ${grammarPath}`);
                             if (this.fileExists(grammarPath)) {
-                                const languageInfo = this.createLanguageInfoFromGrammar(languageName, grammar.scopeName, grammarPath);
-                                this._languageNameInfoMap.set(languageName, languageInfo);
-                                seenLanguages.add(languageName);
+                                try {
+                                    Logger.default.info(`Found grammar file at ${grammarPath}`);
+                                    const languageInfo = this.createLanguageInfoFromGrammar(languageName, grammar.scopeName, grammarPath);
+                                    this._languageNameInfoMap.set(languageName, languageInfo);
+                                    seenLanguages.add(languageName);
+                                    Logger.default.info(`Parsed grammar file at ${grammarPath}`);
+                                }
+                                catch (error) {
+                                    Logger.default.error(`Error parsing grammar file at ${grammarPath}: ${error}`);
+                                    throw error;
+                                }
                             }
                         }
                     }
@@ -289,13 +322,17 @@ export class DynamicGrammarSemanticTokenProvider {
                     if (typeof language.configuration === 'string') {
                         const languageConfiguration = <string>language.configuration;
                         const languageConfigurationPath = path.join(extension.extensionPath, languageConfiguration);
+                        Logger.default.info(`Looking for language configuration file at ${languageConfigurationPath}`);
                         if (this.fileExists(languageConfigurationPath)) {
+                            Logger.default.info(`Found language configuration file at ${languageConfigurationPath}`);
                             const languageConfigurationContents = this.fileReader(languageConfigurationPath);
                             try {
                                 languageConfigurationObject = parseLanguageConfiguration(languageConfigurationContents);
                                 this._languageNameConfigurationMap.set(languageId, languageConfigurationObject);
+                                Logger.default.info(`Parsed language configuration file at ${languageConfigurationPath}`);
                             } catch {
-                                // we don't care if we couldn't parse it
+                                Logger.default.error(`Error parsing language configuration for language ${languageId}`);
+                                // not rethrowing
                             }
                         }
                     }
@@ -484,11 +521,18 @@ export class DynamicGrammarSemanticTokenProvider {
                 createOnigString: (str) => new oniguruma.OnigString(str)
             }),
             loadGrammar: (scopeName) => {
-                return new Promise<vsctm.IRawGrammar | null>((resolve, _reject) => {
+                return new Promise<vsctm.IRawGrammar | null>((resolve, reject) => {
                     const grammarContentPair = scopeNameToGrammarMap.get(scopeName);
                     if (grammarContentPair) {
-                        const grammar = vsctm.parseRawGrammar(grammarContentPair.grammarContents, `${scopeName}.${grammarContentPair.extension}`);
-                        resolve(grammar);
+                        Logger.default.info(`Loading grammar for scope ${scopeName}`);
+                        try {
+                            const grammar = vsctm.parseRawGrammar(grammarContentPair.grammarContents, `${scopeName}.${grammarContentPair.extension}`);
+                            Logger.default.info(`Finished loading rammar for scope ${scopeName}`);
+                            resolve(grammar);
+                        } catch (error) {
+                            Logger.default.error(`Error loading grammar for scope ${scopeName}: ${error}`);
+                            reject(error);
+                        }
                     } else {
                         resolve(null);
                     }
