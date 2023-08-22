@@ -5,7 +5,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -18,45 +18,35 @@ internal class HttpUrlNode : HttpSyntaxNode
 
     public void Add(HttpEmbeddedExpressionNode node) => AddInternal(node);
 
-    internal HttpBindingResult<Uri> TryGetUri(HttpBindingDelegate bind)
+    public override IEnumerable<Diagnostic> GetDiagnostics()
     {
-        var urlText = new StringBuilder();
-        var diagnostics = new List<Diagnostic>();
-        var success = true;
-
-        foreach (var node in ChildNodesAndTokens)
+        foreach(var diagnostic in base.GetDiagnostics())
         {
-            if (node is HttpEmbeddedExpressionNode n)
-            {
-                var innerResult = bind(n.ExpressionNode);
-
-                if (innerResult.IsSuccessful)
-                {
-                    var nodeText = innerResult.Value?.ToString();
-                    urlText.Append(nodeText);
-                }
-                else
-                {
-                    success = false;
-                }
-
-                diagnostics.AddRange(innerResult.Diagnostics);
-            }
-            else
-            {
-                urlText.Append(node.Text);
-            }
+            yield return diagnostic;
         }
 
-        if (success)
+        if (!ChildNodes.OfType<HttpEmbeddedExpressionNode>().Any())
         {
-            var uri = new Uri(urlText.ToString(), UriKind.Absolute);
+            if (!Uri.TryCreate(Text, UriKind.Absolute, out _))
+            {
+                yield return CreateDiagnostic("Invalid URI");
+            }
+        }
+    }
+
+    internal HttpBindingResult<Uri> TryGetUri(HttpBindingDelegate bind)
+    {
+        var result = BindByInterpolation(bind);
+
+        if (result.IsSuccessful)
+        {
+            var uri = new Uri(result.Value!, UriKind.Absolute);
 
             return HttpBindingResult<Uri>.Success(uri);
         }
         else
         {
-            return HttpBindingResult<Uri>.Failure(diagnostics.ToArray());
+            return HttpBindingResult<Uri>.Failure(result.Diagnostics.ToArray());
         }
     }
 }

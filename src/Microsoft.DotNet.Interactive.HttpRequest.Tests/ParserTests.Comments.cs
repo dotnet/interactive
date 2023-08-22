@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
 using Xunit;
@@ -22,11 +21,10 @@ public partial class ParserTests
 
             var result = Parse(code);
 
-            var methodNode = result.SyntaxTree.RootNode
-                                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
-
-            methodNode.ChildNodes.Should().ContainSingle<HttpCommentNode>().Which.Text.Should().Be(
-                "# This is a comment");
+            result.SyntaxTree.RootNode.ChildNodes
+                  .Should().ContainSingle<HttpRequestNode>()
+                  .Which.ChildNodes.Should().ContainSingle<HttpCommentNode>()
+                  .Which.Text.Should().Be("# This is a comment");
         }
 
         [Fact]

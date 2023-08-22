@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -7,9 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
@@ -88,7 +88,7 @@ internal class HttpRequestNode : HttpSyntaxNode
             throw new InvalidOperationException($"{nameof(BodyNode)} was already added.");
         }
         BodyNode = node;
-        base.AddInternal(node);
+        AddInternal(node);
     }
 
     public HttpBindingResult<HttpRequestMessage> TryGetHttpRequestMessage(HttpBindingDelegate bind)
@@ -112,11 +112,7 @@ internal class HttpRequestNode : HttpSyntaxNode
                 diagnostics.AddRange(uriBindingResult.Diagnostics);
             }
         }
-        else
-        {
-            // FIX: (TryGetHttpRequestMessage) add diagnostic
-        }
-
+       
         var bodyResult = BodyNode?.TryGetBody(bind);
         string body = "";
 
@@ -138,38 +134,49 @@ internal class HttpRequestNode : HttpSyntaxNode
             {
                 if (headerNode.NameNode is null)
                 {
-                    // FIX: (TryGetHttpRequestMessage) add diagnostic
                     continue;
                 }
 
                 if (headerNode.ValueNode is null)
                 {
-                    // FIX: (TryGetHttpRequestMessage) add diagnostic
                     continue;
                 }
 
                 var headerName = headerNode.NameNode.Text.ToLowerInvariant();
-                var headerValue = headerNode.ValueNode.Text;
+                var headerValueResult = headerNode.ValueNode.TryGetValue(bind);
 
-                // FIX: (TryGetHttpRequestMessage) bind possible expressions in the value node
-                // FIX: (TryGetHttpRequestMessage) better testing
+                diagnostics.AddRange(headerValueResult.Diagnostics);
 
-                switch (headerName)
+                if (headerValueResult.IsSuccessful)
                 {
-                    case "accept":
-                        request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(headerValue));
-                        break;
-                    case "allow" or "content-disposition" or "content-encoding" or "content-language" or "content-length" or "content-location" or "content-md5" or "content-range"
-                        or "expires" or "last-modified"
-                        or "content-type":
-                        request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(headerValue);
-                        break;
-                    case "user-agent":
-                        request.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(headerValue));
-                        break;
-                    default:
-                        request.Headers.Add(headerNode.NameNode.Text, headerNode.ValueNode.Text);
-                        break;
+                    var headerValue = headerValueResult.Value!;
+
+                    try
+                    {
+                        switch (headerName.ToLowerInvariant())
+                        {
+                            case "content-encoding":
+                                request.Content.Headers.Add(headerName, headerValue);
+                                break;
+                            case "content-language":
+                                request.Content.Headers.Add(headerName, headerValue);
+                                break;
+                            case "content-length":
+                                request.Content.Headers.ContentLength = long.Parse(headerValue);
+                                break;
+                            case "content-type":
+                                request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(headerValue);
+                                break;
+
+                            default:
+                                request.Headers.Add(headerName, headerValue);
+                                break;
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        diagnostics.Add(headerNode.ValueNode.CreateDiagnostic(exception.Message));
+                    }
                 }
             }
         }

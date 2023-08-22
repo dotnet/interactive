@@ -14,4 +14,9 @@ internal class HttpHeaderValueNode : HttpSyntaxNode
     }
 
     public void Add(HttpEmbeddedExpressionNode node) => AddInternal(node);
+
+    public HttpBindingResult<string> TryGetValue(HttpBindingDelegate bind)
+    {
+        return BindByInterpolation(bind);
+    }
 }

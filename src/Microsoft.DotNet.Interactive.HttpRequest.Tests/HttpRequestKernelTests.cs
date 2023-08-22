@@ -353,7 +353,7 @@ public class HttpRequestKernelTests
 
         var code = """
             
-            GET {{missing_value_1}}/index.html
+            GET http://{{missing_value_1}}/index.html
             User-Agent: {{missing_value_2}}
             """;
 

@@ -44,8 +44,11 @@ public partial class ParserTests
         public void multiple_punctuations_are_parsed_into_different_tokens()
         {
             var result = Parse(".!?.:/");
-            result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .UrlNode.ChildTokens.Select(t => new { t.Text, t.Kind }).Should().BeEquivalentSequenceTo(
+            
+            var requestNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpBodyNode>().Which;
+            requestNode
+                  .ChildTokens.Select(t => new { t.Text, t.Kind })
+                  .Should().BeEquivalentSequenceTo(
                       new { Text = ".", Kind = HttpTokenKind.Punctuation },
                       new { Text = "!", Kind = HttpTokenKind.Punctuation },
                       new { Text = "?", Kind = HttpTokenKind.Punctuation },
