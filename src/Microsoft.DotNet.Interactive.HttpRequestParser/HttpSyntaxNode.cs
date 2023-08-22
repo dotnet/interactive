@@ -194,7 +194,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
         foreach (var node in ChildNodesAndTokens)
         {
-            if (node is HttpEmbeddedExpressionNode n)
+            if (node is HttpEmbeddedExpressionNode { ExpressionNode: not null } n)
             {
                 var innerResult = bind(n.ExpressionNode);
 
