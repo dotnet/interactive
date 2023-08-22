@@ -18,6 +18,11 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
         AddInternal(requestNode);
     }
 
+    public void Add(HttpVariableDeclarationAndAssignmentNode variableNode)
+    {
+        AddInternal(variableNode);
+    }
+
     public void Add(HttpRequestSeparatorNode separatorNode)
     {
         AddInternal(separatorNode);

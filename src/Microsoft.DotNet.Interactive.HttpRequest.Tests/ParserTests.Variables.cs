@@ -31,5 +31,59 @@ public partial class ParserTests
             requestNode.HeadersNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>()
                        .Should().ContainSingle().Which.Text.Should().Be("token");
         }
+
+        [Fact]
+        public void variable_in_document_is_parsed_correctly()
+        {
+            var result = Parse(
+                """
+                @host = https://httpbin.org/                
+
+                POST {{host}}/anything HTTP/1.1
+                content-type: application/json
+
+                {
+                    "name": "sample1",
+                }
+
+                
+                """
+                );
+
+            var variableNode = result.SyntaxTree.RootNode.ChildNodes
+                                      .Should().ContainSingle<HttpVariableDeclarationAndAssignmentNode>().Which;
+
+            variableNode.DeclarationNode.Text.Should().Be("@host");
+            variableNode.ExpressionNode.Text.Should().Be("https://httpbin.org/");
+        }
+
+        [Fact]
+        public void variable_using_another_variable_is_parsed_correctly()
+        {
+            var result = Parse(
+                """             
+                @hostname = httpbin.org
+                # variable using another variable
+                @host = https://{{hostname}}/
+                # variable using "dynamic variables"                              
+
+                POST {{host}}/anything HTTP/1.1
+                content-type: application/json
+
+                {
+                    "name": "sample1",
+                }
+
+                
+                """
+                );
+
+            var declarationNodes = result.SyntaxTree.RootNode.DescendantNodesAndTokens()
+                                       .OfType<HttpVariableDeclarationNode>();                                      
+
+            var variableDeclarationNode = declarationNodes.Select(v => v.VariableName)
+                .BeEquivalentSequenceTo(new[] { "hostname", "host" }).Which;
+         
+        }
     }
 }

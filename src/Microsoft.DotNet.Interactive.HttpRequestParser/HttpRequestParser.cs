@@ -3,7 +3,9 @@
 
 #nullable enable
 
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
@@ -41,7 +43,13 @@ internal class HttpRequestParser
 
             while (MoreTokens())
             {
-                // TODO ParseVariableDeclarations();
+                if(ParseVariableDeclarations() is { } variableNodes)
+                {
+                    foreach (var variableNode in variableNodes)
+                    {
+                        _syntaxTree.RootNode.Add(variableNode);
+                    }
+                }
 
                 if (ParseRequest() is { } requestNode)
                 {
@@ -55,6 +63,93 @@ internal class HttpRequestParser
             }
 
             return _syntaxTree;
+        }
+
+        private IEnumerable<HttpVariableDeclarationAndAssignmentNode>? ParseVariableDeclarations()
+        {
+
+            while (MoreTokens())
+            {
+                if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "@" })
+                {
+                    var variableNode = new HttpVariableDeclarationAndAssignmentNode(_sourceText, _syntaxTree);
+
+                    variableNode.Add(ParseVariableDeclaration());
+                    variableNode.Add(ParserVariableAssignment());
+                    variableNode.Add(ParseVariableExpression());
+
+                    yield return variableNode;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            
+        }
+
+        private HttpExpressionNode ParseVariableExpression()
+        {
+            var node = new HttpExpressionNode(_sourceText, _syntaxTree);
+
+            ParseLeadingTrivia(node);
+
+            while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine)
+            {
+                if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" } &&
+                    NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" })
+                {
+                    node.Add(ParseEmbeddedExpression());
+                }
+                else
+                {
+                    ConsumeCurrentTokenInto(node);
+                }
+            }
+
+            return ParseTrailingTrivia(node, stopAfterNewLine: true);
+        }
+
+        private HttpVariableAssignmentNode ParserVariableAssignment()
+        {
+            var node = new HttpVariableAssignmentNode(_sourceText, _syntaxTree);
+
+            ParseLeadingTrivia(node);
+
+            if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Word } and { Text: "=" })
+            {
+                ConsumeCurrentTokenInto(node);
+            }
+
+            return ParseTrailingTrivia(node);
+        }
+
+        private HttpVariableDeclarationNode ParseVariableDeclaration()
+        {
+            var node = new HttpVariableDeclarationNode(_sourceText, _syntaxTree);
+
+            if (MoreTokens())
+            {
+                ParseLeadingTrivia(node);
+
+                while (MoreTokens())
+                {
+                    if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "@" })
+                    {
+                        ConsumeCurrentTokenInto(node);
+                    }
+                    else if (CurrentToken is { Kind: HttpTokenKind.Word })
+                    {
+                        ConsumeCurrentTokenInto(node);
+                    } else
+                    {
+                        break;
+                    }
+                }
+                
+            }
+
+            return ParseTrailingTrivia(node);
         }
 
         private HttpSyntaxToken CurrentToken => _tokens![_currentTokenIndex];
