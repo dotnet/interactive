@@ -132,11 +132,21 @@ public partial class ParserTests
                 Accept: */*
                 Accept-Encoding: gzip, deflate, br
                 Accept-Language: en-US,en;q=0.9
-                Content-Length: 7060
+                Content-Length:  7060
                 Cookie: expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;
                 Origin: https://www.bing.com
                 Referer: https://www.bing.com/
                 """);
+            
+            yield return new("""
+                Authorization: Basic {{token}}
+                Cookie: {{cookie}}
+                """, node =>
+            {
+                node.DescendantNodesAndTokens().OfType<HttpEmbeddedExpressionNode>()
+                    .Select(n => n.ExpressionNode.Text)
+                    .Should().BeEquivalentTo("token", "cookie");
+            });
         }
     }
 }

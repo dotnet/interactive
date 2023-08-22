@@ -3,6 +3,7 @@
 
 #nullable enable
 
+using System;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -11,22 +12,46 @@ internal class HttpEmbeddedExpressionNode : HttpSyntaxNode
 {
     internal HttpEmbeddedExpressionNode(
         SourceText sourceText,
-        HttpSyntaxTree? syntaxTree,
-        HttpExpressionStartNode startNode,
-        HttpExpressionNode expressionNode,
-        HttpExpressionEndNode endNode) : base(sourceText, syntaxTree)
+        HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
+    }
+
+    public HttpExpressionStartNode? StartNode { get; private set; }
+
+    public HttpExpressionNode? ExpressionNode { get; private set; }
+
+    public HttpExpressionEndNode? EndNode { get; private set; }
+
+    public void Add(HttpExpressionStartNode startNode)
+    {
+        if (StartNode is not null)
+        {
+            throw new InvalidOperationException($"{nameof(StartNode)} was already added.");
+        }
+
         StartNode = startNode;
         AddInternal(StartNode);
+    }
+
+    public void Add(HttpExpressionNode expressionNode)
+    {
+        if (ExpressionNode is not null)
+        {
+            throw new InvalidOperationException($"{nameof(ExpressionNode)} was already added.");
+        }
 
         ExpressionNode = expressionNode;
         AddInternal(ExpressionNode);
+    }
+
+    public void Add(HttpExpressionEndNode endNode)
+    {
+        if (EndNode is not null)
+        {
+            throw new InvalidOperationException($"{nameof(EndNode)} was already added.");
+        }
 
         EndNode = endNode;
         AddInternal(EndNode);
     }
-
-    public HttpExpressionStartNode StartNode { get; }
-    public HttpExpressionNode ExpressionNode { get; }
-    public HttpExpressionEndNode EndNode { get; }
 }

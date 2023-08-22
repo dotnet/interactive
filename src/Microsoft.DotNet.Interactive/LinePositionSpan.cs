@@ -7,14 +7,15 @@ namespace Microsoft.DotNet.Interactive;
 
 public class LinePositionSpan : IEquatable<LinePositionSpan>
 {
-    public LinePosition Start { get; }
-    public LinePosition End { get; }
-
     public LinePositionSpan(LinePosition start, LinePosition end)
     {
         Start = start;
         End = end;
     }
+
+    public LinePosition Start { get; }
+
+    public LinePosition End { get; }
 
     public LinePositionSpan SubtractLineOffset(LinePosition offset)
     {
@@ -30,7 +31,7 @@ public class LinePositionSpan : IEquatable<LinePositionSpan>
 
     public bool Equals(LinePositionSpan other)
     {
-        return other is { } && this == other;
+        return other is not null && this == other;
     }
 
     public override int GetHashCode()

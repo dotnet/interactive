@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
@@ -102,6 +103,44 @@ public partial class ParserTests
             var bindingResult = urlNode.TryGetUri(bind);
             bindingResult.IsSuccessful.Should().BeFalse();
             bindingResult.Diagnostics.Should().ContainSingle().Which.Message.Should().Be(message);
+        }
+
+        [Fact]
+        public void Missing_url_produces_a_diagnostic()
+        {
+            var code = """
+                GET 
+                Accept: application/json
+                """;
+
+            var result = Parse(code);
+
+            var diagnostic = result.GetDiagnostics().Should().ContainSingle(n => n.Message == "Missing URL").Which;
+
+            diagnostic.LinePositionSpan.Start.Line.Should().Be(0);
+            diagnostic.LinePositionSpan.Start.Character.Should().Be(3);
+            diagnostic.LinePositionSpan.End.Line.Should().Be(0);
+            diagnostic.LinePositionSpan.End.Character.Should().Be(3);
+        }
+
+        [Fact]
+        public void Invalid_url_produces_a_diagnostic()
+        {
+            var code = """
+                GET https://
+                """;
+
+            var result = Parse(code);
+
+            var diagnostic = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpUrlNode>()
+                                   .Which.GetDiagnostics().Should().ContainSingle()
+                                   .Which;
+
+
+            diagnostic.LinePositionSpan.Start.Line.Should().Be(0);
+            diagnostic.LinePositionSpan.Start.Character.Should().Be(4);
+            diagnostic.LinePositionSpan.End.Line.Should().Be(0);
+            diagnostic.LinePositionSpan.End.Character.Should().Be(12);
         }
     }
 }

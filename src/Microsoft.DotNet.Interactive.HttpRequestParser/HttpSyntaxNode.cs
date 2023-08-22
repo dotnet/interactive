@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -182,6 +183,46 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
             }
 
             yield return current;
+        }
+    }
+
+    protected HttpBindingResult<string> BindByInterpolation(HttpBindingDelegate bind)
+    {
+        var text = new StringBuilder();
+        var diagnostics = new List<Diagnostic>();
+        var success = true;
+
+        foreach (var node in ChildNodesAndTokens)
+        {
+            if (node is HttpEmbeddedExpressionNode n)
+            {
+                var innerResult = bind(n.ExpressionNode);
+
+                if (innerResult.IsSuccessful)
+                {
+                    var nodeText = innerResult.Value?.ToString();
+                    text.Append(nodeText);
+                }
+                else
+                {
+                    success = false;
+                }
+
+                diagnostics.AddRange(innerResult.Diagnostics);
+            }
+            else
+            {
+                text.Append(node.Text);
+            }
+        }
+
+        if (success)
+        {
+            return HttpBindingResult<string>.Success(text.ToString().Trim());
+        }
+        else
+        {
+            return HttpBindingResult<string>.Failure(diagnostics.ToArray());
         }
     }
 }

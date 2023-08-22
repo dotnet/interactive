@@ -55,7 +55,7 @@ internal abstract class HttpSyntaxNodeOrToken
         var diagnostic = new Diagnostic(
             LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), 
             DiagnosticSeverity.Error, 
-            Text, 
+            "", 
             message);
 
         return diagnostic;

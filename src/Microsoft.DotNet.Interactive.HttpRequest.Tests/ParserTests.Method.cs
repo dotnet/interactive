@@ -90,12 +90,18 @@ public partial class ParserTests
         }
 
         [Fact]
-        public void diagnostic_object_is_reported_for_unrecognized_verb()
+        public void Unrecognized_verb_produces_a_diagnostic()
         {
-            var result = Parse("OOOOPS https://example.com");
+            var result = Parse("OOPS https://example.com");
 
-            result.GetDiagnostics()
-                  .Should().ContainSingle().Which.Message.Should().Be("Unrecognized HTTP verb OOOOPS");
+            var diagnostic = result.GetDiagnostics().Should().ContainSingle().Which;
+
+            diagnostic.Message.Should().Be("Unrecognized HTTP verb OOPS");
+
+            diagnostic.LinePositionSpan.Start.Line.Should().Be(0);
+            diagnostic.LinePositionSpan.Start.Character.Should().Be(0);
+            diagnostic.LinePositionSpan.End.Line.Should().Be(0);
+            diagnostic.LinePositionSpan.End.Character.Should().Be(4);
         }
     }
 }
