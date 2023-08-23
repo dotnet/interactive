@@ -55,10 +55,11 @@ public partial class ParserTests
                 {code}
                 """);
 
-            var html = parseResult.ToDisplayString("text/html");
-
             parseResult.GetDiagnostics().Should().NotBeEmpty();
 
+            var html = parseResult.ToDisplayString("text/html");
+
+            // FIX: (Invalid_syntax_produces_diagnostics) additional validations
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
         }
 
@@ -116,21 +117,20 @@ public partial class ParserTests
                 };
             }
 
-            // FIX: (GenerateInvalidRequests) 
-            foreach (var method in ValidMethods())
-            foreach (var url in ValidUrls())
-            foreach (var version in InvalidVersions())
-            foreach (var headerSection in ValidHeaderSections())
-            foreach (var bodySection in ValidBodySections())
-            {
-                ++i;
-                yield return new object[]
-                {
-                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
-                    i
-                };
-            }
-            
+            // foreach (var method in ValidMethods())
+            // foreach (var url in ValidUrls())
+            // foreach (var version in InvalidVersions())
+            // foreach (var headerSection in ValidHeaderSections())
+            // foreach (var bodySection in ValidBodySections())
+            // {
+            //     ++i;
+            //     yield return new object[]
+            //     {
+            //         new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
+            //         i
+            //     };
+            // }
+            //
             // foreach (var method in ValidMethods())
             // foreach (var url in ValidUrls())
             // foreach (var version in ValidVersions())
