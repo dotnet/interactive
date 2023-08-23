@@ -53,8 +53,34 @@ public partial class ParserTests
             var variableNode = result.SyntaxTree.RootNode.ChildNodes
                                       .Should().ContainSingle<HttpVariableDeclarationAndAssignmentNode>().Which;
 
-            variableNode.DeclarationNode.Text.Should().Be("@host");
+            variableNode.DeclarationNode.VariableName.Should().Be("host");
             variableNode.ExpressionNode.Text.Should().Be("https://httpbin.org/");
+        }
+
+        [Fact]
+        public void multiple_variables_in_document_are_parsed_correctly()
+        {
+            var result = Parse(
+                """
+                @host = https://httpbin.org/   
+                @version = HTTP/1.1
+
+                POST {{host}}/anything {{version}}
+                content-type: application/json
+
+                {
+                    "name": "sample1",
+                }
+
+                
+                """
+                );
+
+            var variableNodes = result.SyntaxTree.RootNode.DescendantNodesAndTokens()
+                .OfType<HttpVariableDeclarationAndAssignmentNode>();
+
+            variableNodes.Select(v => v.DeclarationNode.VariableName).Should().BeEquivalentSequenceTo(new[] { "host", "version" });
+            variableNodes.Select(e => e.ExpressionNode.Text).Should().BeEquivalentSequenceTo(new[] { "https://httpbin.org/", "HTTP/1.1" });                  
         }
 
         [Fact]
@@ -79,10 +105,10 @@ public partial class ParserTests
                 );
 
             var declarationNodes = result.SyntaxTree.RootNode.DescendantNodesAndTokens()
-                                       .OfType<HttpVariableDeclarationNode>();                                      
+                                       .OfType<HttpVariableDeclarationNode>();
 
-            var variableDeclarationNode = declarationNodes.Select(v => v.VariableName)
-                .BeEquivalentSequenceTo(new[] { "hostname", "host" }).Which;
+            var variableDeclarationNode = declarationNodes.Select(v => v.VariableName).Should()
+                .BeEquivalentSequenceTo(new[] { "hostname", "host" });
          
         }
     }
