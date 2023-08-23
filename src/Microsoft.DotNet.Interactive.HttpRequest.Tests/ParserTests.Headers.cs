@@ -183,5 +183,21 @@ public partial class ParserTests
                          .Which.Message.Should().Be("oops!");
         }
 
+
+        [Fact]
+        public void Missing_header_value_produces_a_diagnostic()
+        {
+            var result = Parse(
+                """
+                GET https://example.com 
+                Accept:
+                """);
+
+            result.SyntaxTree.RootNode.DescendantNodesAndTokens()
+                  .Should().ContainSingle<HttpHeaderNode>()
+                  .Which.GetDiagnostics()
+                  .Should().ContainSingle()
+                  .Which.Message.Should().Be("Missing header value");
+        }
     }
 }
