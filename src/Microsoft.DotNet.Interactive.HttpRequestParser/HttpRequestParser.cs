@@ -310,10 +310,14 @@ internal class HttpRequestParser
                 {
                     return token;
                 }
-                else
+                else if (_currentTokenIndex + i == _tokens!.Count)
                 {
                     i++;
                     token = _tokens![_currentTokenIndex + i];
+                }
+                else
+                {
+                    break;
                 }
             }
 
@@ -399,8 +403,7 @@ internal class HttpRequestParser
             HttpHeadersNode? headersNode = null;
 
             while (MoreTokens() &&
-                   CurrentToken.Kind is (HttpTokenKind.Word) &&
-                   !IsRequestSeparator())
+                   (CurrentToken is { Kind: HttpTokenKind.Word } || GetNextSignificantToken() is { Text: ":" }))
             {
                 headersNode ??= new HttpHeadersNode(_sourceText, _syntaxTree);
 
@@ -425,7 +428,7 @@ internal class HttpRequestParser
         {
             var node = new HttpHeaderNameNode(_sourceText, _syntaxTree);
 
-            if (MoreTokens())
+            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
             {
                 ParseLeadingTrivia(node);
 

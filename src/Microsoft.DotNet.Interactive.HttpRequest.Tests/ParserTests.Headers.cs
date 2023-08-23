@@ -1,7 +1,6 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
@@ -183,5 +182,34 @@ public partial class ParserTests
                          .Which.Message.Should().Be("oops!");
         }
 
+        [Fact]
+        public void Missing_header_name_produces_a_diagnostic()
+        {
+            var result = Parse(
+                """
+                GET https://example.com 
+                : {{accept}}
+                """);
+
+            var headerNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpHeaderNode>().Which;
+
+            headerNode.GetDiagnostics().Should().ContainSingle().Which.Message.Should().Be("Missing header name");
+        }
+
+        [Fact]
+        public void Missing_header_value_produces_a_diagnostic()
+        {
+            var result = Parse(
+                """
+                GET https://example.com 
+                Accept:
+                """);
+
+            result.SyntaxTree.RootNode.DescendantNodesAndTokens()
+                  .Should().ContainSingle<HttpHeaderNode>()
+                  .Which.GetDiagnostics()
+                  .Should().ContainSingle()
+                  .Which.Message.Should().Be("Missing header value");
+        }
     }
 }

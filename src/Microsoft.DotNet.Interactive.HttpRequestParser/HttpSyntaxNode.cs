@@ -67,6 +67,15 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         }
         else
         {
+            // if the child span is empty and uninitialized, then set it to the end of the current node's span.
+            if (child.FullSpan is { Start: 0, End: 0 })
+            {
+                if (child is HttpSyntaxNode childNode)
+                {
+                    childNode._fullSpan = new TextSpan(FullSpan.End, 0);
+                }
+            }
+
             var fullSpanStart = Math.Min(_fullSpan.Start, child.FullSpan.Start);
             var fullSpanEnd = Math.Max(_fullSpan.End, child.FullSpan.End);
             _fullSpan = new TextSpan(fullSpanStart, fullSpanEnd - _fullSpan.Start);
