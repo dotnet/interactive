@@ -89,6 +89,36 @@ public partial class ParserTests
             var result = Parse(
                 """             
                 @hostname = httpbin.org
+                @host = https://{{hostname}}/                             
+
+                POST {{host}}/anything HTTP/1.1
+                content-type: application/json
+
+                {
+                    "name": "sample1",
+                }
+
+                
+                """
+                );
+
+            var variableNodes = result.SyntaxTree.RootNode.DescendantNodesAndTokens()
+                                       .OfType<HttpVariableDeclarationAndAssignmentNode>();
+
+
+            var variableDeclarationNode = variableNodes.Select(v => v.DeclarationNode.VariableName).Should()
+                .BeEquivalentSequenceTo(new[] { "hostname", "host" });
+            
+            variableNodes.Select(e => e.ExpressionNode.Text).Should().BeEquivalentSequenceTo(new[] { "httpbin.org", "https://{{hostname}}/" });
+
+        }
+
+        [Fact]
+        public void multiple_variables_with_comments_are_parsed_correctly()
+        {
+            var result = Parse(
+                """             
+                @hostname = httpbin.org
                 # variable using another variable
                 @host = https://{{hostname}}/
                 # variable using "dynamic variables"                              

@@ -41,18 +41,35 @@ internal class HttpRequestParser
         {
             _tokens = new HttpLexer(_sourceText, _syntaxTree).Lex();
 
+            var unmatchedComments = new List<HttpCommentNode>();
+
             while (MoreTokens())
             {
-                if(ParseVariableDeclarations() is { } variableNodes)
+                if (ParseComment() is { } commentNode)
+                {
+                    unmatchedComments.Add(commentNode);
+                }
+
+                if (ParseVariableDeclarations() is { } variableNodes)
                 {
                     foreach (var variableNode in variableNodes)
                     {
+                        foreach (var comment in unmatchedComments)
+                        {
+                            variableNode.Add(comment);
+                        }
+                        unmatchedComments.Clear();
                         _syntaxTree.RootNode.Add(variableNode);
                     }
                 }
 
                 if (ParseRequest() is { } requestNode)
                 {
+                    foreach (var comment in unmatchedComments)
+                    {
+                        requestNode.Add(comment);
+                    }
+                    unmatchedComments.Clear();
                     _syntaxTree.RootNode.Add(requestNode);
                 }
 
@@ -60,6 +77,7 @@ internal class HttpRequestParser
                 {
                     _syntaxTree.RootNode.Add(separatorNode);
                 }
+
             }
 
             return _syntaxTree;
@@ -81,9 +99,6 @@ internal class HttpRequestParser
                         variableNode.Add(valueNode);
                         yield return variableNode;
                     }
-                    
-                } else if(IsComment())
-                {
                     
                 } else
                 {
@@ -261,8 +276,13 @@ internal class HttpRequestParser
             return node;
         }
 
-        private HttpRequestNode ParseRequest()
+        private HttpRequestNode? ParseRequest()
         {
+
+            if (IsComment())
+            {
+                return null;
+            }
             var requestNode = new HttpRequestNode(
                 _sourceText,
                 _syntaxTree);
@@ -427,6 +447,10 @@ internal class HttpRequestParser
                 else if (_currentTokenIndex + i == _tokens!.Count)
                 {
                     i++;
+                    if (_currentTokenIndex + i >= _tokens!.Count)
+                    {
+                        return null;
+                    }
                     token = _tokens![_currentTokenIndex + i];
                 }
                 else
