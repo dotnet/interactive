@@ -25,7 +25,7 @@ sequenceDiagram
     B-->>W: WASM runner
     alt Run code
     rect rgba(200, 150, 255,0.4)
-    U->>I: clicking Run button calls trydotnet.js which calls postMessage API
+    U->>I: 🧑‍💻 clicking Run button calls trydotnet.js which calls postMessage API
     I->>B: send kernel commands to trydotnet.microsoft.com/commands
     B->>B: compile user code
     B-->>I: .NET assembly
@@ -37,7 +37,7 @@ sequenceDiagram
     end
     else Diagnostics, completions, signature help
     rect rgba(128, 128, 255,0.4)
-    I->>I: typing code in Monaco editor triggers language services
+    I->>I: 🧑‍💻 typing code in Monaco editor triggers language services
     I->>B: send kernel commands to trydotnet.microsoft.com/commands
     B->>B: compile user code
     B-->>I: Kernel events
