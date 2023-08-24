@@ -147,7 +147,6 @@ x.Display(""text/plain"");");
               .ContainSingle<HoverTextProduced>();
     }
 
-    // FIX: (ProxyKernelConnectionTestsBase.CreateConnector) rename this 
     protected abstract Func<string, Task<ProxyKernel>> CreateConnector();
 
     protected abstract SubmitCode CreateConnectCommand(string localKernelName);

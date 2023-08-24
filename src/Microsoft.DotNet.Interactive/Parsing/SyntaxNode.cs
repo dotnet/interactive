@@ -94,7 +94,7 @@ public abstract class SyntaxNode : SyntaxNodeOrToken
 
     public IEnumerable<SyntaxNodeOrToken> DescendantNodesAndTokens() =>
         _childNodesAndTokens
-            .FlattenDepthFirst(n => n switch
+            .FlattenBreadthFirst(n => n switch
             {
                 SyntaxNode node => node.ChildNodesAndTokens,
                 _ => Array.Empty<SyntaxNodeOrToken>()

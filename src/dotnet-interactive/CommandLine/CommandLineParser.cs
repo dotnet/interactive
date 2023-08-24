@@ -214,7 +214,7 @@ public static class CommandLineParser
             {
                 var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                 var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
-                cancellationToken.Register(() => kernel.Dispose());
+                cancellationToken.Register(kernel.Dispose);
 
                 await new JupyterClientKernelExtension().OnLoadAsync(kernel);
 
@@ -229,7 +229,7 @@ public static class CommandLineParser
                         return new JupyterRequestContextScheduler(delivery => c.GetRequiredService<JupyterRequestContextHandler>()
                             .Handle(delivery));
                     })
-                    .AddSingleton(c => new JupyterRequestContextHandler(kernel))
+                    .AddSingleton(_ => new JupyterRequestContextHandler(kernel))
                     .AddSingleton<IHostedService, Shell>()
                     .AddSingleton<IHostedService, Heartbeat>();
 
