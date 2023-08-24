@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
@@ -20,14 +21,21 @@ internal class HttpUrlNode : HttpSyntaxNode
 
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
-        foreach(var diagnostic in base.GetDiagnostics())
+        foreach (var diagnostic in base.GetDiagnostics())
         {
             yield return diagnostic;
         }
 
         if (!ChildNodes.OfType<HttpEmbeddedExpressionNode>().Any())
         {
-            if (!Uri.TryCreate(Text, UriKind.Absolute, out _))
+            if (Uri.TryCreate(Text, UriKind.Absolute, out var uri))
+            {
+                if (uri.Scheme is not "http" and not "https")
+                {
+                    yield return CreateDiagnostic($"Unrecognized URI scheme: {uri.Scheme}", DiagnosticSeverity.Warning);
+                }
+            }
+            else
             {
                 yield return CreateDiagnostic("Invalid URI");
             }

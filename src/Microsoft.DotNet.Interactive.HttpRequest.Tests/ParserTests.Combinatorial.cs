@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -55,12 +56,37 @@ public partial class ParserTests
                 {code}
                 """);
 
-            parseResult.GetDiagnostics().Should().NotBeEmpty();
-
             var html = parseResult.ToDisplayString("text/html");
 
-            // FIX: (Invalid_syntax_produces_diagnostics) additional validations
+            parseResult.GetDiagnostics().Should().NotBeEmpty();
+
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
+        }
+
+        [Fact]
+        public void DEBUG_ME()
+        {
+            var code = """
+                                
+                 hptps://example.com 
+                Authorization: Basic {{token}}
+                Cookie: {{cookie}}
+
+
+                { 
+                    "number": {{numberValue}},
+                    "string": 
+                        {{stringValue}} 
+                }
+
+                
+                """;
+
+            var result = Parse(code);
+
+            result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>()
+                  .Which.ChildNodes.Should().ContainSingle<HttpUrlNode>()
+                  .Which.Text.Should().Be("hptps://example.com");
         }
 
         public static IEnumerable<object[]> GenerateValidRequests()
@@ -117,6 +143,7 @@ public partial class ParserTests
                 };
             }
 
+            // FIX: (GenerateInvalidRequests) 
             // foreach (var method in ValidMethods())
             // foreach (var url in ValidUrls())
             // foreach (var version in InvalidVersions())
