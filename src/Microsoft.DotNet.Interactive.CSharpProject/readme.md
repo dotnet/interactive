@@ -19,10 +19,12 @@ sequenceDiagram
     A->>U: page containing IFRAME, trydotnet.js links
     U->>A: request trydotnet.js
     A-->>U: trydotnet.js
+    U->>I: trydotnet.js configures iframes and messaging
     I->>B: request trydotnet.microsoft.com/editor
     B-->>I: Monaco editor
     I->>B: request trydotnet.microsoft.com/wasmrunner
     B-->>W: WASM runner
+    I-->>U: Try .NET is ready for user interaction
     alt Run code
     rect rgba(200, 150, 255,0.4)
     U->>I: 🧑‍💻 clicking Run button calls trydotnet.js which calls postMessage API
