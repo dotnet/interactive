@@ -50,7 +50,7 @@
   <ItemGroup>
     <PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.3.0" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.3.6" />
   </ItemGroup>
 
 </Project>
