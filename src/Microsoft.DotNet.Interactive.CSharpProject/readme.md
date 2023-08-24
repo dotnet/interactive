@@ -15,7 +15,7 @@ sequenceDiagram
     participant A as learn.microsoft.com
     participant B as trydotnet.microsoft.com
     end
-    U->>A: request host page
+    U->>A: 🧑‍💻 request host page
     A->>U: page containing IFRAME, trydotnet.js links
     U->>A: request trydotnet.js
     A-->>U: trydotnet.js
