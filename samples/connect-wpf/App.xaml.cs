@@ -25,7 +25,6 @@ namespace WpfConnect
         {
             base.OnStartup(e);
             _kernel = new CompositeKernel();
-            _kernel.UseLogMagicCommand();
 
             SetUpNamedPipeKernelConnection();
 
@@ -39,7 +38,7 @@ namespace WpfConnect
                 await csharpKernel.SendAsync(new SubmitCode(@$"#r ""{typeof(App).Assembly.Location}""
 using {nameof(WpfConnect)};"));
                 //Add the WPF app as a variable that can be accessed
-                await csharpKernel.SetValueAsync("App", this);
+                await csharpKernel.SetValueAsync("App", this, GetType());
 
                 //Start named pipe
                 _kernel.AddKernelConnector(new ConnectNamedPipeCommand());
