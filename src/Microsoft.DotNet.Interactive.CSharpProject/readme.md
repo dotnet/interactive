@@ -6,12 +6,12 @@ The following diagram shows the interaction between the Try .NET service (trydot
 
 ```mermaid
 sequenceDiagram
-    box Browser
+    box rgba(33,66,99, 0.5) Browser
     participant U as learn.microsoft.com
     participant I as trydotnet.microsoft.com (IFRAME)
     participant W as trydotnet.microsoft.com (WASM runner IFRAME)
     end
-    box Server
+    box rgba(33,66,99, 0.5) Server
     participant A as learn.microsoft.com
     participant B as trydotnet.microsoft.com
     end
