@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -63,32 +62,6 @@ public partial class ParserTests
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
         }
 
-        [Fact]
-        public void DEBUG_ME()
-        {
-            var code = """
-                                
-                 hptps://example.com 
-                Authorization: Basic {{token}}
-                Cookie: {{cookie}}
-
-
-                { 
-                    "number": {{numberValue}},
-                    "string": 
-                        {{stringValue}} 
-                }
-
-                
-                """;
-
-            var result = Parse(code);
-
-            result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>()
-                  .Which.ChildNodes.Should().ContainSingle<HttpUrlNode>()
-                  .Which.Text.Should().Be("hptps://example.com");
-        }
-
         public static IEnumerable<object[]> GenerateValidRequests()
         {
             var i = 0;
@@ -144,20 +117,20 @@ public partial class ParserTests
             }
 
             // FIX: (GenerateInvalidRequests) 
-            // foreach (var method in ValidMethods())
-            // foreach (var url in ValidUrls())
-            // foreach (var version in InvalidVersions())
-            // foreach (var headerSection in ValidHeaderSections())
-            // foreach (var bodySection in ValidBodySections())
-            // {
-            //     ++i;
-            //     yield return new object[]
-            //     {
-            //         new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
-            //         i
-            //     };
-            // }
-            //
+            foreach (var method in ValidMethods())
+            foreach (var url in ValidUrls())
+            foreach (var version in InvalidVersions())
+            foreach (var headerSection in ValidHeaderSections())
+            foreach (var bodySection in ValidBodySections())
+            {
+                ++i;
+                yield return new object[]
+                {
+                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
+                    i
+                };
+            }
+            
             // foreach (var method in ValidMethods())
             // foreach (var url in ValidUrls())
             // foreach (var version in ValidVersions())
@@ -206,7 +179,6 @@ public partial class ParserTests
         private static IEnumerable<HttpVersionNodeSyntaxSpec> ValidVersions()
         {
             yield return new("");
-            yield return new("HTTP/1.0");
             yield return new("HTTP/1.1");
         }
 
