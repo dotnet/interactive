@@ -115,6 +115,31 @@ public partial class ParserTests
         }
 
         [Fact]
+        public void no_variable_name_produces_diagnostic()
+        {
+            var result = Parse(
+                """             
+                @ = httpbin.org
+                @host = https://{{hostname}}/                             
+
+                POST {{host}}/anything HTTP/1.1
+                content-type: application/json
+
+                {
+                    "name": "sample1",
+                }
+
+                
+                """
+                );
+
+            var variableNodes = result.SyntaxTree.RootNode.DescendantNodesAndTokens()
+                                       .OfType<HttpVariableDeclarationNode>();
+
+            variableNodes.First().GetDiagnostics().Single().Message.Should().Be("Variable name expected.");
+        }
+
+        [Fact]
         public void multiple_variables_with_comments_are_parsed_correctly()
         {
             var result = Parse(
