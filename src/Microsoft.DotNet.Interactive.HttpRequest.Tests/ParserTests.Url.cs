@@ -34,7 +34,7 @@ public partial class ParserTests
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .UrlNode.ChildTokens.Last().Kind.Should().Be(HttpTokenKind.NewLine);
+                  .ChildTokens.Last().Kind.Should().Be(HttpTokenKind.NewLine);
         }
 
         [Theory]

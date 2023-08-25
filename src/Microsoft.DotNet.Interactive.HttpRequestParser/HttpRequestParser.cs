@@ -189,6 +189,10 @@ internal class HttpRequestParser
             {
                 requestNode.Add(versionNode);
             }
+            else 
+            {
+                ParseTrailingTrivia(requestNode, stopAfterNewLine: true);
+            }
 
             var headersNode = ParseHeaders();
             if (headersNode is not null)
@@ -298,7 +302,7 @@ internal class HttpRequestParser
             }
 
             return node is not null
-                       ? ParseTrailingTrivia(node, stopAfterNewLine: true)
+                       ? ParseTrailingTrivia(node, stopBeforeNewline: true)
                        : null;
         }
 
@@ -382,8 +386,7 @@ internal class HttpRequestParser
         private HttpVersionNode? ParseVersion()
         {
             if (MoreTokens() &&
-                CurrentToken.Kind is HttpTokenKind.Word &&
-                CurrentToken.Text.ToLowerInvariant() is "http" or "https")
+                CurrentToken.Kind is HttpTokenKind.Word)
             {
                 var node = new HttpVersionNode(_sourceText, _syntaxTree);
 
