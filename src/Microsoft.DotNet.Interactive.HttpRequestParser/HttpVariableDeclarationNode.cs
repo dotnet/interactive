@@ -25,6 +25,9 @@ internal class HttpVariableDeclarationNode : HttpSyntaxNode
             yield return diagnostic;
         }
 
-        yield return base.CreateDiagnostic("Variable name expected.");
+        if (string.IsNullOrWhiteSpace(VariableName))
+        {
+            yield return CreateDiagnostic("Variable name expected.");
+        }
     }
 }
