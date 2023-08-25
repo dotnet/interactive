@@ -56,7 +56,7 @@ internal class HttpRequestParser
                     {
                         foreach (var comment in unmatchedComments)
                         {
-                            variableNode.Add(comment);
+                            variableNode.Add(comment, addBefore: true);
                         }
                         unmatchedComments.Clear();
                         _syntaxTree.RootNode.Add(variableNode);
@@ -67,7 +67,7 @@ internal class HttpRequestParser
                 {
                     foreach (var comment in unmatchedComments)
                     {
-                        requestNode.Add(comment);
+                        requestNode.Add(comment, addBefore: true);
                     }
                     unmatchedComments.Clear();
                     _syntaxTree.RootNode.Add(requestNode);
@@ -117,7 +117,7 @@ internal class HttpRequestParser
             {
                 if (node is null)
                 {
-                    if (GetNextSignificantToken() is { Kind: HttpTokenKind.Word })
+                    if (CurrentToken is { Kind: HttpTokenKind.Word })
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
 
@@ -235,7 +235,7 @@ internal class HttpRequestParser
                 {
                     if (ParseComment() is { } commentNode)
                     {
-                        node.Add(commentNode);
+                        node.Add(commentNode, addBefore: true);
                     }
                 }
                 else if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
@@ -243,7 +243,7 @@ internal class HttpRequestParser
                 {
                     if (ParseComment() is { } commentNode)
                     {
-                        node.Add(commentNode);
+                        node.Add(commentNode, addBefore: true);
                     }
                 }
                 else
@@ -405,7 +405,7 @@ internal class HttpRequestParser
             {
                 if (node is null)
                 {
-                    if (GetNextSignificantToken() is { Kind: HttpTokenKind.Word } token &&
+                    if (CurrentToken is { Kind: HttpTokenKind.Word } token &&
                         token.Text.ToLowerInvariant() is "http" or "https")
                     {
                         node = new HttpUrlNode(_sourceText, _syntaxTree);
@@ -435,6 +435,21 @@ internal class HttpRequestParser
 
         private HttpSyntaxToken? GetNextSignificantToken()
         {
+            /*var token = CurrentToken;
+            int i = 0;
+
+            while (MoreTokens())
+            {
+                if (token.IsSignificant)
+                {
+                    return token;
+                }
+                else
+                {
+                    break;
+                }
+            }*/
+
             var token = CurrentToken;
             int i = 0;
 
@@ -444,10 +459,11 @@ internal class HttpRequestParser
                 {
                     return token;
                 }
-                else if (_currentTokenIndex + i == _tokens!.Count)
+
+                if (_currentTokenIndex + i < _tokens!.Count)
                 {
                     i++;
-                    if (_currentTokenIndex + i >= _tokens!.Count)
+                    if(_currentTokenIndex + i >= _tokens.Count)
                     {
                         return null;
                     }
@@ -462,7 +478,7 @@ internal class HttpRequestParser
             return null;
         }
 
-        private HttpSyntaxToken? GetNextSignificantTopLevelNodeType()
+        private HttpSyntaxToken? GetNextNodeType()
         {
             var token = CurrentToken;
             int i = 0;
@@ -473,10 +489,15 @@ internal class HttpRequestParser
                 {
                     return token;
                 }
-                else
+
+                if (_currentTokenIndex + i < _tokens!.Count)
                 {
                     i++;
                     token = _tokens![_currentTokenIndex + i];
+                }
+                else
+                {
+                    break;
                 }
             }
 
@@ -562,7 +583,7 @@ internal class HttpRequestParser
             HttpHeadersNode? headersNode = null;
 
             while (MoreTokens() &&
-                   (CurrentToken is { Kind: HttpTokenKind.Word } || GetNextSignificantToken() is { Text: ":" }))
+                   (CurrentToken is { Kind: HttpTokenKind.Word } || CurrentToken is { Text: ":" }))
             {
                 headersNode ??= new HttpHeadersNode(_sourceText, _syntaxTree);
 

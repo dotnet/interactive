@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
@@ -133,6 +134,8 @@ public partial class ParserTests
                 
                 """
                 );
+
+            var rootNode = result.SyntaxTree.RootNode;
 
             var declarationNodes = result.SyntaxTree.RootNode.DescendantNodesAndTokens()
                                        .OfType<HttpVariableDeclarationNode>();
