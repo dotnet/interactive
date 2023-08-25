@@ -1,11 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Security;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.PowerShell;
 
@@ -13,71 +10,16 @@ using System.Management.Automation;
 
 internal static class PowerShellExtensions
 {
-    private static PSInvocationSettings _settings = new() { AddToHistory = true };
+    private static readonly PSInvocationSettings _settings = new()
+    {
+        AddToHistory = true
+    };
 
     public static void InvokeAndClearCommands(this PowerShell pwsh)
     {
         try
         {
-            pwsh.Invoke(input: null, _settings);
-        }
-        finally
-        {
-            pwsh.Streams.ClearStreams();
-            pwsh.Commands.Clear();
-        }
-    }
-
-    public static async Task InvokeAndClearCommandsAsync(this PowerShell pwsh)
-    {
-        try
-        {
-            await pwsh.InvokeAsync<PSObject>(
-                input: null,
-                settings: _settings,
-                callback: null,
-                state: null).ConfigureAwait(false);
-        }
-        finally
-        {
-            pwsh.Streams.ClearStreams();
-            pwsh.Commands.Clear();
-        }
-    }
-
-    public static void InvokeAndClearCommands(this PowerShell pwsh, IEnumerable input)
-    {
-        try
-        {
-            pwsh.Invoke(input, _settings);
-        }
-        finally
-        {
-            pwsh.Streams.ClearStreams();
-            pwsh.Commands.Clear();
-        }
-    }
-
-    public static Collection<T> InvokeAndClearCommands<T>(this PowerShell pwsh)
-    {
-        try
-        {
-            var result = pwsh.Invoke<T>(input: null, settings: _settings);
-            return result;
-        }
-        finally
-        {
-            pwsh.Streams.ClearStreams();
-            pwsh.Commands.Clear();
-        }
-    }
-
-    public static Collection<T> InvokeAndClearCommands<T>(this PowerShell pwsh, IEnumerable input)
-    {
-        try
-        {
-            var result = pwsh.Invoke<T>(input, _settings);
-            return result;
+            pwsh.Invoke(input: null, settings: _settings);
         }
         finally
         {

@@ -284,6 +284,11 @@ public class PowerShellKernel :
         else
         {
             RunSubmitCodeLocally(code);
+
+            if (pwsh.HadErrors)
+            {
+                context.Fail(context.Command);
+            }
         }
     }
 
@@ -375,9 +380,9 @@ public class PowerShellKernel :
     {
         try
         {
-            pwsh.AddScript(code)
-                .AddCommand(_outDefaultCommand)
-                .Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
+            pwsh.AddScript(code).AddCommand(_outDefaultCommand);
+
+            pwsh.Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
 
             pwsh.InvokeAndClearCommands();
         }

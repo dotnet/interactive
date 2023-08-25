@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -255,14 +255,22 @@ internal class HttpRequestParser
             return node;
         }
 
-        private T ParseTrailingTrivia<T>(T node, bool stopAfterNewLine = false) where T : HttpSyntaxNode
+        private T ParseTrailingTrivia<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewline = false) where T : HttpSyntaxNode
         {
             while (MoreTokens())
             {
-                if (stopAfterNewLine && CurrentToken.Kind is HttpTokenKind.NewLine)
+                if (CurrentToken.Kind is HttpTokenKind.NewLine)
                 {
-                    ConsumeCurrentTokenInto(node);
-                    break;
+                    if (stopBeforeNewline)
+                    {
+                        break;
+                    }
+
+                    if (stopAfterNewLine)
+                    {
+                        ConsumeCurrentTokenInto(node);
+                        break;
+                    }
                 }
 
                 if (CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
@@ -367,12 +375,8 @@ internal class HttpRequestParser
 
             if (MoreTokens())
             {
-                if (CurrentToken.Text.ToLower() is "http" or "https")
-                {
-                    return null;
-                }
-        
-                if (CurrentToken.Kind is HttpTokenKind.Word)
+                if (CurrentToken.Kind is HttpTokenKind.Word && 
+                    NextToken?.Kind is HttpTokenKind.Whitespace)
                 {
                     node = new HttpMethodNode(_sourceText, _syntaxTree);
         
@@ -389,7 +393,7 @@ internal class HttpRequestParser
         
                     ConsumeCurrentTokenInto(node);
 
-                    ParseTrailingTrivia(node, true);
+                    ParseTrailingTrivia(node, stopBeforeNewline: true);
                 }
             }
         
@@ -401,12 +405,12 @@ internal class HttpRequestParser
             HttpUrlNode? node = null;
 
             while (MoreTokens() &&
-                   CurrentToken.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation)
+                   GetNextSignificantToken()?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation)
             {
                 if (node is null)
                 {
                     if (CurrentToken is { Kind: HttpTokenKind.Word } token &&
-                        token.Text.ToLowerInvariant() is "http" or "https")
+                        token.Text.ToLowerInvariant() is "http" or "https")            
                     {
                         node = new HttpUrlNode(_sourceText, _syntaxTree);
 
