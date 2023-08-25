@@ -92,7 +92,6 @@ public class ProjectAsset : PackageAsset,
         }
 
         var sourceCount = result.BuildProjectData.SourceFiles?.Length ?? 0;
-        // TODO: 
         var compilerInputs = result.BuildProjectData.CompileInputs?.Length ?? 0;
 
         return compilerInputs > 0 && sourceCount > 0;

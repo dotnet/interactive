@@ -47,7 +47,7 @@ internal static class RoslynWorkspaceUtilities
                 CSharpParseOptions = cSharpParseOptions
             };
         }
-        catch (Exception)
+        catch (ArgumentNullException)
         {
             return null;
         }
@@ -172,8 +172,7 @@ internal static class RoslynWorkspaceUtilities
         ProjectInfo projectInfo = GetProjectInfo(analyzerResult, workspace, projectId);
         if (projectInfo is null)
         {
-            // Error
-            return null;
+            throw new ArgumentNullException(nameof(projectInfo));
         }
         Solution solution = workspace.CurrentSolution.AddProject(projectInfo);
 
