@@ -46,16 +46,16 @@ internal abstract class HttpSyntaxNodeOrToken
         _diagnostics.Add(d);
     }
 
-    public Diagnostic CreateDiagnostic(string message)
+    public Diagnostic CreateDiagnostic(string message, DiagnosticSeverity severity = DiagnosticSeverity.Error)
     {
         var lines = SourceText.Lines;
 
         var tokenSpan = lines.GetLinePositionSpan(Span);
 
         var diagnostic = new Diagnostic(
-            LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan), 
-            DiagnosticSeverity.Error, 
-            "", 
+            LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan),
+            severity,
+            "",
             message);
 
         return diagnostic;
