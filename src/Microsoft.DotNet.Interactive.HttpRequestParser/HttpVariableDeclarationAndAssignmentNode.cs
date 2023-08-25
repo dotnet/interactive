@@ -12,7 +12,7 @@ internal class HttpVariableDeclarationAndAssignmentNode : HttpSyntaxNode
 {
     public HttpVariableDeclarationNode? DeclarationNode { get; private set; }
     public HttpVariableAssignmentNode? AssignmentNode { get; private set; }
-    public HttpVariableValueNode? ExpressionNode { get; private set; } 
+    public HttpVariableValueNode? ValueNode { get; private set; } 
 
     internal HttpVariableDeclarationAndAssignmentNode(
         SourceText sourceText,
@@ -45,12 +45,12 @@ internal class HttpVariableDeclarationAndAssignmentNode : HttpSyntaxNode
 
     public void Add(HttpVariableValueNode node)
     {
-        if (ExpressionNode is not null)
+        if (ValueNode is not null)
         {
-            throw new InvalidOperationException($"{nameof(ExpressionNode)} was already added.");
+            throw new InvalidOperationException($"{nameof(ValueNode)} was already added.");
         }
 
-        ExpressionNode = node;
+        ValueNode = node;
         AddInternal(node);
     }
 }

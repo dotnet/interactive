@@ -55,7 +55,7 @@ public partial class ParserTests
                                       .Should().ContainSingle<HttpVariableDeclarationAndAssignmentNode>().Which;
 
             variableNode.DeclarationNode.VariableName.Should().Be("host");
-            variableNode.ExpressionNode.Text.Should().Be("https://httpbin.org/");
+            variableNode.ValueNode.Text.Should().Be("https://httpbin.org/");
         }
 
         [Fact]
@@ -81,7 +81,7 @@ public partial class ParserTests
                 .OfType<HttpVariableDeclarationAndAssignmentNode>();
 
             variableNodes.Select(v => v.DeclarationNode.VariableName).Should().BeEquivalentSequenceTo(new[] { "host", "version" });
-            variableNodes.Select(e => e.ExpressionNode.Text).Should().BeEquivalentSequenceTo(new[] { "https://httpbin.org/", "HTTP/1.1" });                  
+            variableNodes.Select(e => e.ValueNode.Text).Should().BeEquivalentSequenceTo(new[] { "https://httpbin.org/", "HTTP/1.1" });                  
         }
 
         [Fact]
@@ -110,7 +110,7 @@ public partial class ParserTests
             var variableDeclarationNode = variableNodes.Select(v => v.DeclarationNode.VariableName).Should()
                 .BeEquivalentSequenceTo(new[] { "hostname", "host" });
             
-            variableNodes.Select(e => e.ExpressionNode.Text).Should().BeEquivalentSequenceTo(new[] { "httpbin.org", "https://{{hostname}}/" });
+            variableNodes.Select(e => e.ValueNode.Text).Should().BeEquivalentSequenceTo(new[] { "httpbin.org", "https://{{hostname}}/" });
 
         }
 

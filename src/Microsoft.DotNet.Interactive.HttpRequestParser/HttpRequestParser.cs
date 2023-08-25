@@ -41,35 +41,35 @@ internal class HttpRequestParser
         {
             _tokens = new HttpLexer(_sourceText, _syntaxTree).Lex();
 
-            var unmatchedComments = new List<HttpCommentNode>();
+            var commentsToPrepend = new List<HttpCommentNode>();
 
             while (MoreTokens())
             {
                 if (ParseComment() is { } commentNode)
                 {
-                    unmatchedComments.Add(commentNode);
+                    commentsToPrepend.Add(commentNode);
                 }
 
                 if (ParseVariableDeclarations() is { } variableNodes)
                 {
                     foreach (var variableNode in variableNodes)
                     {
-                        foreach (var comment in unmatchedComments)
+                        foreach (var comment in commentsToPrepend)
                         {
                             variableNode.Add(comment, addBefore: true);
                         }
-                        unmatchedComments.Clear();
+                        commentsToPrepend.Clear();
                         _syntaxTree.RootNode.Add(variableNode);
                     }
                 }
 
                 if (ParseRequest() is { } requestNode)
                 {
-                    foreach (var comment in unmatchedComments)
+                    foreach (var comment in commentsToPrepend)
                     {
                         requestNode.Add(comment, addBefore: true);
                     }
-                    unmatchedComments.Clear();
+                    commentsToPrepend.Clear();
                     _syntaxTree.RootNode.Add(requestNode);
                 }
 
@@ -94,7 +94,7 @@ internal class HttpRequestParser
 
                     variableNode.Add(ParseVariableDeclaration());
                     variableNode.Add(ParserVariableAssignment());
-                    if (ParseVariableExpression() is { } valueNode)
+                    if (ParseVariableValue() is { } valueNode)
                     {
                         variableNode.Add(valueNode);
                         yield return variableNode;
@@ -108,7 +108,7 @@ internal class HttpRequestParser
             
         }
 
-        private HttpVariableValueNode? ParseVariableExpression()
+        private HttpVariableValueNode? ParseVariableValue()
         {
             HttpVariableValueNode? node = null;
 
@@ -435,21 +435,6 @@ internal class HttpRequestParser
 
         private HttpSyntaxToken? GetNextSignificantToken()
         {
-            /*var token = CurrentToken;
-            int i = 0;
-
-            while (MoreTokens())
-            {
-                if (token.IsSignificant)
-                {
-                    return token;
-                }
-                else
-                {
-                    break;
-                }
-            }*/
-
             var token = CurrentToken;
             int i = 0;
 
@@ -467,32 +452,6 @@ internal class HttpRequestParser
                     {
                         return null;
                     }
-                    token = _tokens![_currentTokenIndex + i];
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return null;
-        }
-
-        private HttpSyntaxToken? GetNextNodeType()
-        {
-            var token = CurrentToken;
-            int i = 0;
-
-            while (MoreTokens())
-            {
-                if (token.IsSignificant)
-                {
-                    return token;
-                }
-
-                if (_currentTokenIndex + i < _tokens!.Count)
-                {
-                    i++;
                     token = _tokens![_currentTokenIndex + i];
                 }
                 else
@@ -795,34 +754,23 @@ internal class HttpRequestParser
 
         private bool IsComment()
         {
-            if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })
+            if (MoreTokens())
             {
-                return true;
-            } else if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
-                NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
-            {
-                return true;
-            } else
-            {
-                return false;
+                if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })
+                {
+                    return true;
+                }
+                else if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
+                    NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
-        }
-
-        private bool IsRequest()
-        {
-            if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })
-            {
-                return true;
-            }
-            else if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
-                NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         private bool IsRequestSeparator()
