@@ -15,6 +15,7 @@ using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
+using Language = Microsoft.DotNet.Interactive.Tests.Language;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Tests;
 
@@ -66,6 +67,26 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                                 .Value.Should().BeOfType<string>().Which
                                 .Should().Be(string.Empty),
                           e => e.Should().BeOfType<CommandSucceeded>());
+    }
+
+    [Fact(Skip = "Waiting for a fix for https://github.com/PowerShell/PowerShell/issues/20079")]
+    public async Task When_command_is_not_recognized_then_the_command_fails()
+    {
+        using var kernel = CreateKernel(Language.PowerShell);
+
+        var result = await kernel.SendAsync(new SubmitCode("oops"));
+
+        result.Events.Last().Should().BeOfType<CommandFailed>();
+    }
+
+    [Fact]
+    public async Task When_code_produces_errors_then_the_command_fails()
+    {
+        using var kernel = CreateKernel(Language.PowerShell);
+
+        var result = await kernel.SendAsync(new SubmitCode("Get-ChildItem oops"));
+
+        result.Events.Last().Should().BeOfType<CommandFailed>();
     }
 
     [Fact]

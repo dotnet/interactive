@@ -14,31 +14,28 @@ public class PSKernelHost : PSHost, IHostSupportsInteractiveSession
     private readonly PowerShellKernel _powerShell;
     private const string HostName = ".NET Interactive Host";
 
-    private readonly Version _hostVersion;
-    private readonly Guid _instanceId;
     private readonly PSKernelHostUserInterface _ui;
-    private readonly PSObject _consoleColorProxy;
 
     internal PSKernelHost(PowerShellKernel powerShell)
     {
         _powerShell = powerShell ?? throw new ArgumentNullException(nameof(powerShell));
-        _hostVersion = new Version("1.0.0");
-        _instanceId = Guid.NewGuid();
+        Version = new Version("1.0.0");
+        InstanceId = Guid.NewGuid();
         _ui = new PSKernelHostUserInterface(_powerShell);
-        _consoleColorProxy = PSObject.AsPSObject(new ConsoleColorProxy(_ui));
+        PrivateData = PSObject.AsPSObject(new ConsoleColorProxy(_ui));
     }
 
     #region "PSHost Implementation"
 
     public override string Name => HostName;
 
-    public override Guid InstanceId => this._instanceId;
+    public override Guid InstanceId { get; }
 
-    public override Version Version => _hostVersion;
+    public override Version Version { get; }
 
     public override PSHostUserInterface UI => _ui;
 
-    public override PSObject PrivateData => _consoleColorProxy;
+    public override PSObject PrivateData { get; }
 
     public override CultureInfo CurrentCulture => CultureInfo.CurrentCulture;
 
@@ -88,86 +85,4 @@ public class PSKernelHost : PSHost, IHostSupportsInteractiveSession
     }
 
     #endregion
-}
-
-internal class ConsoleColorProxy
-{
-    private readonly PSKernelHostUserInterface _ui;
-
-    public ConsoleColorProxy(PSKernelHostUserInterface ui)
-    {
-        _ui = ui ?? throw new ArgumentNullException(nameof(ui));
-    }
-
-    public ConsoleColor FormatAccentColor
-    {
-        get => _ui.FormatAccentColor;
-        set => _ui.FormatAccentColor = value;
-    }
-
-    public ConsoleColor ErrorAccentColor
-    {
-        get => _ui.ErrorAccentColor;
-        set => _ui.ErrorAccentColor = value;
-    }
-
-    public ConsoleColor ErrorForegroundColor
-    {
-        get => _ui.ErrorForegroundColor;
-        set => _ui.ErrorForegroundColor = value;
-    }
-
-    public ConsoleColor ErrorBackgroundColor
-    {
-        get => _ui.ErrorBackgroundColor;
-        set => _ui.ErrorBackgroundColor = value;
-    }
-
-    public ConsoleColor WarningForegroundColor
-    {
-        get => _ui.WarningForegroundColor;
-        set => _ui.WarningForegroundColor = value;
-    }
-
-    public ConsoleColor WarningBackgroundColor
-    {
-        get => _ui.WarningBackgroundColor;
-        set => _ui.WarningBackgroundColor = value;
-    }
-
-    public ConsoleColor DebugForegroundColor
-    {
-        get => _ui.DebugForegroundColor;
-        set => _ui.DebugForegroundColor = value;
-    }
-
-    public ConsoleColor DebugBackgroundColor
-    {
-        get => _ui.DebugBackgroundColor;
-        set => _ui.DebugBackgroundColor = value;
-    }
-
-    public ConsoleColor VerboseForegroundColor
-    {
-        get => _ui.VerboseForegroundColor;
-        set => _ui.VerboseForegroundColor = value;
-    }
-
-    public ConsoleColor VerboseBackgroundColor
-    {
-        get => _ui.VerboseBackgroundColor;
-        set => _ui.VerboseBackgroundColor = value;
-    }
-
-    public ConsoleColor ProgressForegroundColor
-    {
-        get => _ui.ProgressForegroundColor;
-        set => _ui.ProgressForegroundColor = value;
-    }
-
-    public ConsoleColor ProgressBackgroundColor
-    {
-        get => _ui.ProgressBackgroundColor;
-        set => _ui.ProgressBackgroundColor = value;
-    }
 }

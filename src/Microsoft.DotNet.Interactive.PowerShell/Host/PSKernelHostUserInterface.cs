@@ -69,7 +69,8 @@ public partial class PSKernelHostUserInterface : PSHostUserInterface, IHostUISup
             return _powerShellKernel.ReadInput(prompt);
         }
 
-        throw new InvalidOperationException($"'{nameof(ReadInput)}' should be called from PowerShell kernel.");
+        var result = Kernel.GetInputAsync(prompt).GetAwaiter().GetResult();
+        return result;
     }
 
     private PasswordString ReadPassword(string prompt)
@@ -79,7 +80,8 @@ public partial class PSKernelHostUserInterface : PSHostUserInterface, IHostUISup
             return _powerShellKernel.ReadPassword(prompt);
         }
 
-        throw new InvalidOperationException($"'{nameof(ReadPassword)}' should be called from PowerShell kernel.");
+        var result = Kernel.GetPasswordAsync(prompt).GetAwaiter().GetResult();
+        return new PasswordString(result);
     }
 
     public override string ReadLine()
