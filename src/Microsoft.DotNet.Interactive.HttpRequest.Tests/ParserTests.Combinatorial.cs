@@ -61,33 +61,7 @@ public partial class ParserTests
 
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
         }
-
-        [Fact]
-        public void DEBUG_ME()
-        {
-            var code = """
-                                
-                 hptps://example.com 
-                Authorization: Basic {{token}}
-                Cookie: {{cookie}}
-
-
-                { 
-                    "number": {{numberValue}},
-                    "string": 
-                        {{stringValue}} 
-                }
-
-                
-                """;
-
-            var result = Parse(code);
-
-            result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>()
-                  .Which.ChildNodes.Should().ContainSingle<HttpUrlNode>()
-                  .Which.Text.Should().Be("hptps://example.com");
-        }
-
+        
         public static IEnumerable<object[]> GenerateValidRequests()
         {
             var i = 0;
