@@ -25,5 +25,9 @@ internal class HttpHeaderNameNode : HttpSyntaxNode
         {
             yield return CreateDiagnostic("Missing header name");
         }
+        else if (TextContainsWhitespace())
+        {
+            yield return CreateDiagnostic("Invalid whitespace in header name");
+        }
     }
 }

@@ -29,7 +29,7 @@ internal class HttpVersionNode : HttpSyntaxNode
                 yield return CreateDiagnostic("Invalid HTTP version");
             }
 
-            if (ChildNodesAndTokens.OfType<HttpSyntaxToken>().Any(t => t.Kind is HttpTokenKind.Whitespace))
+            if (TextContainsWhitespace())
             {
                 yield return CreateDiagnostic("Invalid HTTP version");
             }

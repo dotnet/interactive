@@ -164,8 +164,6 @@ public partial class ParserTests
 
         }
 
-
-
         [Fact]
         public void Diagnostics_are_reported_for_missing_header_expression_values()
         {
@@ -187,13 +185,27 @@ public partial class ParserTests
         {
             var result = Parse(
                 """
-                GET https://example.com 
+                GET https://example.com     
                 : {{accept}}
                 """);
 
             var headerNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpHeaderNode>().Which;
 
             headerNode.GetDiagnostics().Should().ContainSingle().Which.Message.Should().Be("Missing header name");
+        }
+
+        [Fact]
+        public void Whitespace_in_a_header_name_produces_a_diagnostic()
+        {
+            var result = Parse(
+                """
+                GET https://example.com 
+                Content Type: text/html
+                """);
+
+            var headerNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpHeaderNode>().Which;
+
+            headerNode.GetDiagnostics().Should().ContainSingle().Which.Message.Should().Be("Invalid whitespace in header name");
         }
 
         [Fact]
