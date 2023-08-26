@@ -55,8 +55,6 @@ public partial class ParserTests
                 {code}
                 """);
 
-            var html = parseResult.ToDisplayString("text/html");
-
             parseResult.GetDiagnostics().Should().NotBeEmpty();
 
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
