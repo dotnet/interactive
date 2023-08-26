@@ -15,7 +15,7 @@ using Package = Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
-public static class PackageExtensions
+internal static class PackageExtensions
 {
     public static async Task<Compilation> Compile(
         this Package package, 

@@ -44,6 +44,18 @@ public class PipelineStep<T> : IPipelineStep
         return newStep;
     }
 
+    public PipelineStep<U> Then<U>(Func<T, U> nextStep)
+    {
+        var newStep = new PipelineStep<U>(async () =>
+        {
+            var previousStepValue = await GetLatestAsync();
+            return nextStep(previousStepValue);
+        });
+
+        _nextStep = newStep;
+        return newStep;
+    }
+
     public Task<T> GetLatestAsync()
     {
         lock (_lock)
