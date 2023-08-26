@@ -38,7 +38,16 @@ internal abstract class HttpSyntaxNodeOrToken
 
     public override string ToString() => $"{GetType().Name}: {Text}";
 
-    public abstract IEnumerable<Diagnostic> GetDiagnostics();
+    public virtual IEnumerable<Diagnostic> GetDiagnostics()
+    {
+        if (_diagnostics is not null)
+        {
+            foreach (var diagnostic in _diagnostics)
+            {
+                yield return diagnostic;
+            }
+        }
+    }
 
     public void AddDiagnostic(Diagnostic d)
     {

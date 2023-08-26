@@ -58,6 +58,21 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         };
     }
 
+    protected bool TextContainsWhitespace()
+    {
+        // ignore whitespace if it's the first or last token 
+        for (var i = 1; i < _childNodesAndTokens.Count - 1; i++)
+        {
+            var nodeOrToken = _childNodesAndTokens[i];
+            if (nodeOrToken is HttpSyntaxToken { Kind: HttpTokenKind.Whitespace })
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void GrowSpan(HttpSyntaxNodeOrToken child)
     {
         if (_fullSpan == default)
@@ -145,13 +160,11 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
             }
         }
 
-        if (_diagnostics is not null)
+        foreach (var diagnostic in base.GetDiagnostics())
         {
-            foreach (var diagnostic in _diagnostics)
-            {
-                yield return diagnostic;
-            }
+            yield return diagnostic;
         }
+
     }
 
     public IEnumerable<HttpSyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()

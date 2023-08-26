@@ -435,7 +435,8 @@ internal class HttpRequestParser
         {
             var node = new HttpHeaderNameNode(_sourceText, _syntaxTree);
 
-            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Word)
+            if (MoreTokens() && 
+                CurrentToken is not { Kind: HttpTokenKind.NewLine } and not { Kind: HttpTokenKind.Punctuation, Text: ":" })
             {
                 ParseLeadingTrivia(node);
 
@@ -445,11 +446,6 @@ internal class HttpRequestParser
 
                     while (MoreTokens())
                     {
-                        if (CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine)
-                        {
-                            break;
-                        }
-
                         if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: ":" })
                         {
                             break;
@@ -509,19 +505,7 @@ internal class HttpRequestParser
             var node = new HttpBodySeparatorNode(_sourceText, _syntaxTree);
 
             ParseLeadingTrivia(node);
-
-            if (MoreTokens() && CurrentToken.Kind is HttpTokenKind.Whitespace or HttpTokenKind.NewLine &&
-                !IsRequestSeparator())
-            {
-                ConsumeCurrentTokenInto(node);
-
-                while (MoreTokens() && CurrentToken.Kind is (HttpTokenKind.Whitespace or HttpTokenKind.NewLine) &&
-                    !IsRequestSeparator())
-                {
-                    ConsumeCurrentTokenInto(node);
-                }
-            }
-
+            
             return ParseTrailingTrivia(node);
         }
 

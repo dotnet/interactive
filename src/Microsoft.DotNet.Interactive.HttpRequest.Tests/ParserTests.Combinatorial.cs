@@ -125,9 +125,6 @@ public partial class ParserTests
                 };
             }
 
-
-            // FIX: (GenerateInvalidRequests) 
-            
             foreach (var method in ValidMethods())
             foreach (var url in InvalidUrls())
             foreach (var version in ValidVersions())
@@ -142,34 +139,33 @@ public partial class ParserTests
                 };
             }
 
-            // FIX: (GenerateInvalidRequests) 
-            // foreach (var method in ValidMethods())
-            // foreach (var url in ValidUrls())
-            // foreach (var version in InvalidVersions())
-            // foreach (var headerSection in ValidHeaderSections())
-            // foreach (var bodySection in ValidBodySections())
-            // {
-            //     ++i;
-            //     yield return new object[]
-            //     {
-            //         new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
-            //         i
-            //     };
-            // }
-            //
-            // foreach (var method in ValidMethods())
-            // foreach (var url in ValidUrls())
-            // foreach (var version in ValidVersions())
-            // foreach (var headerSection in InvalidHeaderSections())
-            // foreach (var bodySection in ValidBodySections())
-            // {
-            //     ++i;
-            //     yield return new object[]
-            //     {
-            //         new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
-            //         i
-            //     };
-            // }
+            foreach (var method in ValidMethods())
+            foreach (var url in ValidUrls())
+            foreach (var version in InvalidVersions())
+            foreach (var headerSection in ValidHeaderSections())
+            foreach (var bodySection in ValidBodySections())
+            {
+                ++i;
+                yield return new object[]
+                {
+                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
+                    i
+                };
+            }
+            
+            foreach (var method in ValidMethods())
+            foreach (var url in ValidUrls())
+            foreach (var version in ValidVersions())
+            foreach (var headerSection in InvalidHeaderSections())
+            foreach (var bodySection in ValidBodySections())
+            {
+                ++i;
+                yield return new object[]
+                {
+                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
+                    i
+                };
+            }
         }
 
         private static IEnumerable<HttpMethodNodeSyntaxSpec> ValidMethods()
@@ -198,8 +194,8 @@ public partial class ParserTests
 
         private static IEnumerable<HttpUrlNodeSyntaxSpec> InvalidUrls()
         {
-            yield return new("hptps://example.com"); 
-            // FIX: (InvalidUrls)  yield return new("http://example .com");
+            // Misspelled
+            yield return new("hptps://example.com");
         }
 
         private static IEnumerable<HttpVersionNodeSyntaxSpec> ValidVersions()
@@ -210,7 +206,10 @@ public partial class ParserTests
 
         private static IEnumerable<HttpVersionNodeSyntaxSpec> InvalidVersions()
         {
+            // Misspellled
             yield return new("HTPT");
+
+            // The space is invalid
             yield return new("HTTP 1.1");
         }
 
@@ -241,6 +240,7 @@ public partial class ParserTests
 
         private static IEnumerable<HttpHeadersNodeSyntaxSpec> InvalidHeaderSections()
         {
+            // The space in the header name is invalid
             yield return new("""
                 Accept: */*
                 Accept Encoding: gzip, deflate, br

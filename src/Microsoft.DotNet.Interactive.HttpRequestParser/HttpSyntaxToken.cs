@@ -29,15 +29,4 @@ internal sealed class HttpSyntaxToken : HttpSyntaxNodeOrToken
     public HttpTokenKind Kind { get; set; }
 
     public override string ToString() => $"{Kind}: {Text}";
-
-    public override IEnumerable<Diagnostic> GetDiagnostics()
-    {
-        if (_diagnostics is not null)
-        {
-            foreach (var diagnostic in _diagnostics)
-            {
-                yield return diagnostic;
-            }
-        }
-    }
 }
