@@ -39,37 +39,33 @@ class TestCoeCommHandler(unittest.TestCase):
              "destinationUri":None
         }
         if commandReceived is not None:
-            command.update(commandReceived)
-        msg = {
-             "content": { 
-                 "data": {
-                     'type': 'command', 
-                     'commandOrEvent': json.dumps({
-                         "token":"19",
-                         "id":"ccc7591568d943c9bbe7dd8254e89b0d",
-                         "commandType":commandType,
-                         "command": command,
-                         "routingSlip":["kernel://pid-17796/python"]
-                     })
-                 }
-             }
+            command |= commandReceived
+        return {
+            "content": {
+                "data": {
+                    'type': 'command',
+                    'commandOrEvent': json.dumps(
+                        {
+                            "token": "19",
+                            "id": "ccc7591568d943c9bbe7dd8254e89b0d",
+                            "commandType": commandType,
+                            "command": command,
+                            "routingSlip": ["kernel://pid-17796/python"],
+                        }
+                    ),
+                }
+            }
         }
-        
-        return msg
     
     @staticmethod
     def create_msg_sent(eventType, eventSent = {}, commandJsonString = None):
         command = None if commandJsonString is None else json.loads(commandJsonString)
-        msg = {
-            "commandOrEvent": json.dumps({
-                 "event": eventSent,
-                 "eventType": eventType,
-                 "command": command
-            }), 
-            "type": "event"
+        return {
+            "commandOrEvent": json.dumps(
+                {"event": eventSent, "eventType": eventType, "command": command}
+            ),
+            "type": "event",
         }
-        
-        return msg
         
     def setUp(self):
         self.comm = testComm()
