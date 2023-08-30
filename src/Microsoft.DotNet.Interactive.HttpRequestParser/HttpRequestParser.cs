@@ -254,14 +254,22 @@ internal class HttpRequestParser
             return node;
         }
 
-        private T ParseTrailingTrivia<T>(T node, bool stopAfterNewLine = false) where T : HttpSyntaxNode
+        private T ParseTrailingTrivia<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewline = false) where T : HttpSyntaxNode
         {
             while (MoreTokens())
             {
-                if (stopAfterNewLine && CurrentToken.Kind is HttpTokenKind.NewLine)
+                if (CurrentToken.Kind is HttpTokenKind.NewLine)
                 {
-                    ConsumeCurrentTokenInto(node);
-                    break;
+                    if (stopBeforeNewline)
+                    {
+                        break;
+                    }
+
+                    if (stopAfterNewLine)
+                    {
+                        ConsumeCurrentTokenInto(node);
+                        break;
+                    }
                 }
 
                 if (CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
@@ -366,32 +374,28 @@ internal class HttpRequestParser
 
             if (MoreTokens())
             {
-                if (CurrentToken.Text.ToLower() is "http" or "https")
-                {
-                    return null;
-                }
-        
-                if (CurrentToken.Kind is HttpTokenKind.Word)
+                if (CurrentToken.Kind is HttpTokenKind.Word &&
+                    NextToken?.Kind is HttpTokenKind.Whitespace)
                 {
                     node = new HttpMethodNode(_sourceText, _syntaxTree);
-        
+
                     ParseLeadingTrivia(node);
-        
+
                     if (CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
                     {
                         var message = $"Unrecognized HTTP verb {CurrentToken.Text}";
-        
+
                         var diagnostic = CurrentToken.CreateDiagnostic(message);
-        
+
                         node.AddDiagnostic(diagnostic);
                     }
-        
+
                     ConsumeCurrentTokenInto(node);
 
-                    ParseTrailingTrivia(node, true);
+                    ParseTrailingTrivia(node, stopBeforeNewline: true);
                 }
             }
-        
+
             return node;
         }
 
@@ -404,8 +408,7 @@ internal class HttpRequestParser
             {
                 if (node is null)
                 {
-                    if (CurrentToken is { Kind: HttpTokenKind.Word } token &&
-                        token.Text.ToLowerInvariant() is "http" or "https")
+                    if (CurrentToken is { Kind: HttpTokenKind.Word })
                     {
                         node = new HttpUrlNode(_sourceText, _syntaxTree);
 
