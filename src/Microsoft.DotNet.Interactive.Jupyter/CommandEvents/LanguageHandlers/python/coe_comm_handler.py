@@ -9,6 +9,7 @@ except NameError:
 import json
 def __get_dotnet_coe_comm_handler(): 
 
+
     class CommandEventCommTarget:
         __control_comm = None
         __coe_handler = None
@@ -16,7 +17,7 @@ def __get_dotnet_coe_comm_handler():
         def handle_control_comm_opened(self, comm, msg):
             if comm is None:
                 raise RuntimeError('Control comm required to open')
-                
+
             self.__control_comm = comm
             self.__control_comm.on_msg(self.handle_control_comm_msg)
 
@@ -31,25 +32,27 @@ def __get_dotnet_coe_comm_handler():
             data = msg['content']['data']
             response = self.__coe_handler.handle_command_or_event(data)
             self.__control_comm.send(response)
-            
-    
+
+
+
+
     class CommandEventHandler:
         __exclude_types = ["<class 'module'>"]
 
-        
+
         def handle_command_or_event(self, data):
             try:
                 msg_type = data['type']
                 commandOrEvent = json.loads(data['commandOrEvent'])
                 # self.__debugLog('handle_command_or_event.last_data_recv', commandOrEvent)
-                
+
                 if (msg_type == "command"):
                     return self.__handle_command(commandOrEvent)
-                    
+
             except Exception as e: 
                 self. __debugLog('handle_command_or_event.commandFailed', e)
                 return EventEnvelope(CommandFailed(f'failed to process comm data. {str(e)}')).payload()
-        
+
         def __handle_command(self, commandOrEvent):
             commandType = commandOrEvent['commandType']
 
@@ -74,15 +77,15 @@ def __get_dotnet_coe_comm_handler():
 
 
             return EventEnvelope(ValueInfosProduced(results), command)
-            
+
         def __handle_request_value(self, command):
             requestValue = RequestValue(command['command'])
             name = requestValue.name
             mimeType = requestValue.mimeType
-            
+
             if (name not in globals()):
                 return EventEnvelope(CommandFailed(f'Variable "{name}" not found.'))
-            
+
             rawValue = globals()[name]
             updatedValue = None
 
@@ -93,22 +96,20 @@ def __get_dotnet_coe_comm_handler():
                     updatedValue = rawValue.to_dict('records')
             except Exception as e: 
                 self. __debugLog('__handle_request_value.dataframe.error', e)
-                pass
-
             formattedValue = FormattedValue.fromValue(rawValue, mimeType) 
 
             return EventEnvelope(ValueProduced(name, rawValue if updatedValue is None else updatedValue, formattedValue), command)
-        
+
         def __handle_send_value(self, command):
             sendValue = SendValue(command['command'])
             mimeType = sendValue.formattedValue['mimeType']
             name = sendValue.name
             rawValue = sendValue.formattedValue['value']
             resultValue = None
-            
+
             if (not str.isidentifier(name)):
                 return EventEnvelope(CommandFailed(f'Invalid Identifier: "{name}"'))
-        
+
             if (mimeType == 'application/json'):
                 import json; resultValue = json.loads(rawValue)
             elif (mimeType == 'application/table-schema+json'):
@@ -118,25 +119,26 @@ def __get_dotnet_coe_comm_handler():
                 except Exception as e:
                     self.__debugLog('__handle_send_value.dataframe.error', e)
                     return EventEnvelope(CommandFailed(f'Cannot create pandas dataframe for: "{name}". {str(e)}'))
-                
+
             if (resultValue is not None): 
                 self.__setVariable(name, resultValue) 
                 return EventEnvelope(CommandSucceeded())
-            
+
             return EventEnvelope(CommandFailed(f'Failed to set value for "{name}". "{mimeType}" mimetype not supported.'))
-        
+
         def is_ready(self):
             return EventEnvelope(KernelReady()).payload()
-        
+
         @staticmethod
         def __setVariable(name, value):
             globals()[name] = value
-        
+
         @staticmethod
         def __debugLog(event, message):
             globals()[f'__log__coe_handler.{str(event)}'] = message
-    
-    
+
+
+
     class KernelCommand: 
         pass
 
@@ -151,12 +153,12 @@ def __get_dotnet_coe_comm_handler():
     class RequestValueInfos(KernelCommand):
         def __init__(self, entries):
             self.__dict__.update(**entries)
-            
+
     class FormattedValue:
         def __init__(self, mimeType = 'application/json', value = None):
             self.mimeType = mimeType
             self.value = value
-        
+
         @staticmethod
         def fromValue(value, mimeType = 'application/json'):
             formattedValue = None
@@ -179,7 +181,7 @@ def __get_dotnet_coe_comm_handler():
             self.name = name
             self.formattedValue = formattedValue
             self.typeName = typeName
-        
+
     class KernelEvent:
         pass
 
@@ -199,11 +201,11 @@ def __get_dotnet_coe_comm_handler():
             self.name = name
             self.value = value 
             self.formattedValue = formattedValue
-    
+
     class ValueInfosProduced(KernelEvent):
         def __init__(self, valueInfos):
             self.valueInfos = valueInfos
-            
+
     class Envelope:
         def payload(self):
             return { 'commandOrEvent': self.__to_json_string(self) }
@@ -222,7 +224,7 @@ def __get_dotnet_coe_comm_handler():
             ret = super().payload()
             ret['type'] = 'event'
             return ret
-    
+
     return CommandEventCommTarget()
 
 if hasattr(get_ipython(), 'kernel'):
