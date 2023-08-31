@@ -222,6 +222,20 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             HasProcessExited(process).Should().BeTrue();
         }
 
+        [Fact]
+        public async Task encoding_is_preserved()
+        {
+            var connector = CreateConnector();
+            using var rootProxyKernel = await connector.CreateRootProxyKernelAsync();
+            using var csharpProxyKernel = await connector.CreateProxyKernelAsync("csharp");
+
+            var result = await csharpProxyKernel.SendAsync(new SubmitCode("""var x = "abáéíőúűóüÁÉÍŐÚŰÓÜ"; x"""));
+
+            result.Events.OfType<ReturnValueProduced>().Should().ContainSingle()
+                .Which.FormattedValues.Should().ContainSingle()
+                .Which.Value.Should().Be("abáéíőúűóüÁÉÍŐÚŰÓÜ");
+        }
+
         private static bool HasProcessExited(Process process)
         {
             if (process.HasExited)

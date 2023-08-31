@@ -141,15 +141,17 @@ public class StdIoKernelConnector
                                        UpdateRemoteKernelInfoCache(e.KernelInfo);
                                    });
 
+            var writer = new StreamWriter(_process.StandardInput.BaseStream);
             _sender = KernelCommandAndEventSender.FromTextWriter(
-               _process.StandardInput,
+               writer,
                _kernelHostUri);
 
             _refCountDisposable = new RefCountDisposable(new CompositeDisposable
             {
                 SendQuitCommand,
                 KillRemoteKernelProcess,
-                _receiver.Dispose
+                _receiver.Dispose,
+                writer
             });
 
             rootProxyKernel = new ProxyKernel(
