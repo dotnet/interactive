@@ -141,9 +141,8 @@ public class StdIoKernelConnector
                                        UpdateRemoteKernelInfoCache(e.KernelInfo);
                                    });
 
-            _sender = KernelCommandAndEventSender.FromTextWriter(
-               _process.StandardInput,
-               _kernelHostUri);
+            var writer = new StreamWriter(_process.StandardInput.BaseStream);
+            _sender = KernelCommandAndEventSender.FromTextWriter(writer, _kernelHostUri);
 
             _refCountDisposable = new RefCountDisposable(new CompositeDisposable
             {
