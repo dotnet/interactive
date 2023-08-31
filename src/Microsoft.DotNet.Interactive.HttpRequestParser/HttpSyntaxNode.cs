@@ -93,7 +93,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
             var fullSpanStart = Math.Min(_fullSpan.Start, child.FullSpan.Start);
             var fullSpanEnd = Math.Max(_fullSpan.End, child.FullSpan.End);
-            _fullSpan = new TextSpan(fullSpanStart, fullSpanEnd - _fullSpan.Start);
+            _fullSpan = new TextSpan(fullSpanStart, fullSpanEnd - fullSpanStart);
 
             var firstSignificantNodeOrToken = ChildNodesAndTokens
                 .FirstOrDefault(n => n.IsSignificant);
@@ -117,9 +117,9 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
     internal void Add(HttpSyntaxToken token) => AddInternal(token);
 
-    internal void Add(HttpCommentNode node) => AddInternal(node);
+    internal void Add(HttpCommentNode node, bool addBefore) => AddInternal(node, addBefore);
 
-    protected void AddInternal(HttpSyntaxNodeOrToken child)
+    protected void AddInternal(HttpSyntaxNodeOrToken child, bool addBefore = false)
     {
         if (child is null)
         {
@@ -138,7 +138,14 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
             _isSignificant = true;
         }
 
-        _childNodesAndTokens.Add(child);
+        if (addBefore)
+        {
+            _childNodesAndTokens.Insert(0, child);
+        } else
+        {
+            _childNodesAndTokens.Add(child);
+        }
+        
 
         GrowSpan(child);
     }

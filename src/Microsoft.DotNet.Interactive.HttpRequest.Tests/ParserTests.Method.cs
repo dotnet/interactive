@@ -57,7 +57,7 @@ public partial class ParserTests
                                    .Should()
                                    .ContainSingle<HttpRequestNode>().Which;
 
-            requestNode.ChildNodes.First().Should().BeOfType<HttpCommentNode>();
+            requestNode.ChildNodes.Should().ContainSingle<HttpCommentNode>();
             requestNode.MethodNode.Text.Should().Be("GET");
         }
 
