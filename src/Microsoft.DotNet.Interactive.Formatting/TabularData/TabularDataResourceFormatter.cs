@@ -155,6 +155,7 @@ public static class TabularDataResourceFormatter
             { } t when t == typeof(decimal?) => TableSchemaFieldType.Number,
             { } t when t == typeof(string) => TableSchemaFieldType.String,
             { } t when t == typeof(ReadOnlyMemory<char>) => TableSchemaFieldType.String,
+            { IsArray: true } => TableSchemaFieldType.Array,
             _ => TableSchemaFieldType.Any
         };
 }
