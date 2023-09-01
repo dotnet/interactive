@@ -1,10 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -42,6 +42,25 @@ public partial class ParserTests
         }
 
         [Theory]
+        [MemberData(nameof(GenerateValidRequestsWithExtraTrivia))]
+        public void Valid_syntax_with_extra_trivia_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int index)
+        {
+            var code = syntaxSpec.ToString();
+
+            var parseResult = HttpRequestParser.Parse(code);
+
+            _output.WriteLine($"""
+                === Generation #{index} ===
+
+                {code}
+                """);
+
+            parseResult.GetDiagnostics().Should().BeEmpty();
+
+            syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
+        }
+
+        [Theory]
         [MemberData(nameof(GenerateInvalidRequests))]
         public void Invalid_syntax_produces_diagnostics(ISyntaxSpec syntaxSpec, int index)
         {
@@ -59,10 +78,30 @@ public partial class ParserTests
 
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
         }
-        
+
+        [Theory]
+        [MemberData(nameof(GenerateValidRequestsWithExtraTrivia))]
+        public void Code_that_a_user_has_not_finished_typing_round_trips_correctly_and_does_not_throw(ISyntaxSpec syntaxSpec, int index)
+        {
+            var code = syntaxSpec.ToString();
+
+            for (var truncateAfter = 0; truncateAfter < code.Length; truncateAfter++)
+            {
+                var truncatedCode = code[..truncateAfter];
+
+                _output.WriteLine($"""
+                === Generation #{index} truncated after {truncateAfter} characters ===
+
+                {truncatedCode}
+                """);
+
+                Parse(truncatedCode);
+            }
+        }
+
         public static IEnumerable<object[]> GenerateValidRequests()
         {
-            var i = 0;
+            var generationNumber = 0;
 
             foreach (var method in ValidMethods())
             foreach (var url in ValidUrls())
@@ -70,18 +109,40 @@ public partial class ParserTests
             foreach (var headerSection in ValidHeaderSections())
             foreach (var bodySection in ValidBodySections())
             {
-                ++i;
+                ++generationNumber;
                 yield return new object[]
                 {
                     new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
-                    i
+                    generationNumber
+                };
+            }
+        }
+
+        public static IEnumerable<object[]> GenerateValidRequestsWithExtraTrivia()
+        {
+            var generationNumber = 0;
+
+            foreach (var method in ValidMethods())
+            foreach (var url in ValidUrls())
+            foreach (var version in ValidVersions())
+            foreach (var headerSection in ValidHeaderSections())
+            foreach (var bodySection in ValidBodySections())
+            {
+                ++generationNumber;
+                yield return new object[]
+                {
+                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection)
+                    {
+                        ExtraTriviaRandomizer = new Random(1)
+                    },
+                    generationNumber
                 };
             }
         }
 
         public static IEnumerable<object[]> GenerateInvalidRequests()
         {
-            var i = 0;
+            var generationNumber = 0;
 
             foreach (var method in InvalidMethods())
             foreach (var url in ValidUrls())
@@ -89,11 +150,11 @@ public partial class ParserTests
             foreach (var headerSection in ValidHeaderSections())
             foreach (var bodySection in ValidBodySections())
             {
-                ++i;
+                ++generationNumber;
                 yield return new object[]
                 {
                     new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
-                    i
+                    generationNumber
                 };
             }
 
@@ -103,11 +164,11 @@ public partial class ParserTests
             foreach (var headerSection in ValidHeaderSections())
             foreach (var bodySection in ValidBodySections())
             {
-                ++i;
+                ++generationNumber;
                 yield return new object[]
                 {
                     new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
-                    i
+                    generationNumber
                 };
             }
 
@@ -117,11 +178,11 @@ public partial class ParserTests
             foreach (var headerSection in ValidHeaderSections())
             foreach (var bodySection in ValidBodySections())
             {
-                ++i;
+                ++generationNumber;
                 yield return new object[]
                 {
                     new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
-                    i
+                    generationNumber
                 };
             }
             
@@ -131,11 +192,11 @@ public partial class ParserTests
             foreach (var headerSection in InvalidHeaderSections())
             foreach (var bodySection in ValidBodySections())
             {
-                ++i;
+                ++generationNumber;
                 yield return new object[]
                 {
                     new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
-                    i
+                    generationNumber
                 };
             }
         }

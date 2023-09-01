@@ -60,13 +60,16 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
     protected bool TextContainsWhitespace()
     {
-        // ignore whitespace if it's the first or last token 
+        // We ignore whitespace if it's the first or last token, OR ignore the first or last token if it's not whitespace.  For this reason, the first and last tokens aren't interesting.
         for (var i = 1; i < _childNodesAndTokens.Count - 1; i++)
         {
             var nodeOrToken = _childNodesAndTokens[i];
             if (nodeOrToken is HttpSyntaxToken { Kind: HttpTokenKind.Whitespace })
             {
-                return true;
+                if (nodeOrToken.Span.OverlapsWith(_span))
+                {
+                    return true;
+                }
             }
         }
 

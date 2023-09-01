@@ -187,21 +187,17 @@ internal class HttpRequestParser
 
         private HttpSyntaxToken CurrentToken => _tokens![_currentTokenIndex];
 
-        private HttpSyntaxToken? NextToken
+        private HttpSyntaxToken? CurrentTokenPlus(int offset)
         {
-            get
-            {
-                var nextTokenIndex = _currentTokenIndex + 1;
-                return nextTokenIndex >= _tokens!.Count ? null : _tokens![nextTokenIndex];
-            }
-        }
+            var nextTokenIndex = _currentTokenIndex + offset;
 
-        private HttpSyntaxToken? NextNextToken
-        {
-            get
+            if (nextTokenIndex >= _tokens!.Count)
             {
-                var nextNextTokenIndex = _currentTokenIndex + 2;
-                return nextNextTokenIndex >= _tokens!.Count ? null : _tokens![nextNextTokenIndex];
+                return null;
+            }
+            else
+            {
+                return _tokens![nextTokenIndex];
             }
         }
 
@@ -229,8 +225,8 @@ internal class HttpRequestParser
                     ConsumeCurrentTokenInto(node);
                 }
                 else if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-                         !(NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-                           NextNextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" }))
+                         !(CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
+                           CurrentTokenPlus(2) is { Kind: HttpTokenKind.Punctuation } and { Text: "#" }))
                 {
                     if (ParseComment() is { } commentNode)
                     {
@@ -238,7 +234,7 @@ internal class HttpRequestParser
                     }
                 }
                 else if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
-                         NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
+                         CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
                 {
                     if (ParseComment() is { } commentNode)
                     {
@@ -379,7 +375,7 @@ internal class HttpRequestParser
             if (MoreTokens())
             {
                 if (CurrentToken.Kind is HttpTokenKind.Word &&
-                    NextToken?.Kind is HttpTokenKind.Whitespace)
+                    CurrentTokenPlus(1)?.Kind is HttpTokenKind.Whitespace)
                 {
                     node = new HttpMethodNode(_sourceText, _syntaxTree);
 
@@ -472,7 +468,7 @@ internal class HttpRequestParser
         private bool IsAtStartOfEmbeddedExpression()
         {
             return CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" } &&
-                   NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" };
+                   CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "{" };
         }
 
         private HttpEmbeddedExpressionNode ParseEmbeddedExpression()
@@ -481,7 +477,11 @@ internal class HttpRequestParser
 
             node.Add(ParseExpressionStart());
             node.Add(ParseExpression());
-            node.Add(ParseExpressionEnd());
+            var expressionEnd = ParseExpressionEnd();
+            if (expressionEnd is not null)
+            {
+                node.Add(expressionEnd);
+            }
 
             return node;
         }
@@ -502,7 +502,8 @@ internal class HttpRequestParser
             ParseLeadingTrivia(node);
 
             while (MoreTokens() && 
-                   !(CurrentToken is { Text: "}" } && NextToken is { Text: "}" }))
+                   !(CurrentToken is { Text: "}" } && 
+                     CurrentTokenPlus(1) is { Text: "}" }))
             {
                 ConsumeCurrentTokenInto(node);
             }
@@ -510,14 +511,23 @@ internal class HttpRequestParser
             return ParseTrailingTrivia(node);
         }
 
-        private HttpExpressionEndNode ParseExpressionEnd()
+        private HttpExpressionEndNode? ParseExpressionEnd()
         {
-            var node = new HttpExpressionEndNode(_sourceText, _syntaxTree);
+            if (MoreTokens() && 
+                CurrentToken.Text is "}" && 
+                CurrentTokenPlus(1)?.Text == "}")
+            {
+                var node = new HttpExpressionEndNode(_sourceText, _syntaxTree);
 
-            ConsumeCurrentTokenInto(node); // parse the first }
-            ConsumeCurrentTokenInto(node); // parse the second }
+                ConsumeCurrentTokenInto(node); // parse the first }
+                ConsumeCurrentTokenInto(node); // parse the second }
 
-            return node;
+                return node;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private HttpVersionNode? ParseVersion()
@@ -619,7 +629,7 @@ internal class HttpRequestParser
             while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine)
             {
                 if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" } &&
-                    NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" })
+                    CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "{" })
                 {
                     node.Add(ParseEmbeddedExpression());
                 }
@@ -729,7 +739,7 @@ internal class HttpRequestParser
             }
 
             if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
-                NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
+                CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
             {
                 var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
 
@@ -750,7 +760,7 @@ internal class HttpRequestParser
                     return true;
                 }
                 else if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
-                    NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
+                    CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
                 {
                     return true;
                 }
@@ -765,8 +775,8 @@ internal class HttpRequestParser
         private bool IsRequestSeparator()
         {
             return CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-                   (NextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
-                    NextNextToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" });
+                   (CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "#" } &&
+                    CurrentTokenPlus(2) is { Kind: HttpTokenKind.Punctuation } and { Text: "#" });
         }
 
         private static LinePosition GetLinePositionFromCursorOffset(SourceText code, int cursorOffset)

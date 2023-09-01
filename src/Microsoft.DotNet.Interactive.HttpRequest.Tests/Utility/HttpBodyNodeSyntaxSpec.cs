@@ -87,6 +87,8 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
     public HttpHeadersNodeSyntaxSpec HeadersSection { get; }
 
     public HttpBodyNodeSyntaxSpec BodySection { get; }
+    
+    public Random ExtraTriviaRandomizer { get; set; }
 
     public override void Validate(HttpRequestNode requestNode)
     {
@@ -163,6 +165,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         var sb = new StringBuilder();
 
         sb.Append(MaybeNewLines());
+        sb.Append(MaybeLineComment());
         sb.Append(MaybeWhitespace());
 
         sb.Append(Method);
@@ -180,6 +183,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
 
         sb.Append(MaybeWhitespace());
         sb.AppendLine();
+        sb.Append(MaybeLineComment()); 
         sb.Append(MaybeNewLines());
 
         if (HeadersSection is not null)
@@ -197,18 +201,36 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
             sb.Append(MaybeNewLines());
         }
 
+        sb.Append(MaybeLineComment());
+
         return sb.ToString();
     }
 
-    private string MaybeWhitespace()
-    {
-        return "";
-    }
+    private string MaybeWhitespace() =>
+        ExtraTriviaRandomizer?.NextDouble() switch
+        {
+            < .2  => " ",
+            > .2 and < .4 => "  ",
+            > .4 and < .6 => "\t",
+            > .6 and < .8 => "\t ",
+            _ => ""
+        };
 
-    private string MaybeNewLines()
-    {
-        return "";
-    }
+    private string MaybeNewLines() =>
+        ExtraTriviaRandomizer?.NextDouble() switch
+        {
+            < .2 => "\n",
+            > .2 and < .4 => "\r\n",
+            _ => ""
+        };
+    
+    private string MaybeLineComment() =>
+        ExtraTriviaRandomizer?.NextDouble() switch
+        {
+            // FIX: (MaybeLineComment) 
+            < 0 => "# random line comment",
+            _ => ""
+        };
 }
 
 internal class HttpMethodNodeSyntaxSpec : SyntaxSpecBase<HttpMethodNode>
