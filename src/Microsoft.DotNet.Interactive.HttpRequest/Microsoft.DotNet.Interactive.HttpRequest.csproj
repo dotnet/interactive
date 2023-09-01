@@ -17,11 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequestParser\*.cs" LinkBase="Parser" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="..\Microsoft.DotNet.Interactive.HttpRequestParser\BindingResult.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.HttpRequestParser\Parser\*.cs" LinkBase="Parser" />
   </ItemGroup>
   
   <ItemGroup>
