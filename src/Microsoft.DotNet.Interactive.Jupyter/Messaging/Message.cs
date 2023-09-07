@@ -45,8 +45,8 @@ public class Message
         string signature = null,
         IReadOnlyDictionary<string, object> metaData = null,
         IReadOnlyList<IReadOnlyList<byte>> identifiers = null,
-        IReadOnlyList<IReadOnlyList<byte>> buffers = null, 
-        string channel = MessageChannel.shell)
+        IReadOnlyList<IReadOnlyList<byte>> buffers = null,
+        string channel = MessageChannelValues.shell)
     {
         Header = header;
         ParentHeader = parentHeader;
@@ -63,7 +63,7 @@ public class Message
         IReadOnlyList<IReadOnlyList<byte>> identifiers = null,
         IReadOnlyDictionary<string, object> metaData = null,
         string signature = null,
-        string channel = null)
+        string channel = MessageChannelValues.shell)
         where T : Protocol.Message
     {
         if (content is null)
@@ -82,7 +82,7 @@ public class Message
     public static Message CreateReply<T>(
         T content,
         Message request,
-        string channel = null)
+        string channel = MessageChannelValues.shell)
         where T : ReplyMessage
     {
         if (content is null)
@@ -115,10 +115,9 @@ public class Message
         {
             throw new ArgumentNullException(nameof(request));
         }
-
         var topic = Topic(content, kernelIdentity);
         var identifiers = topic is null ? null : new[] { Topic(content, kernelIdentity) };
-        var replyMessage = Create(content, request.Header, identifiers: identifiers, metaData: request.MetaData, signature: request.Signature, channel: MessageChannel.iopub);
+        var replyMessage = Create(content, request.Header, identifiers: identifiers, metaData: request.MetaData, signature: request.Signature, channel: MessageChannelValues.iopub);
 
         return replyMessage;
     }
@@ -132,17 +131,17 @@ public class Message
         {
 
             case nameof(Status):
-            {
-                var fullTopic = GenerateFullTopic("status");
-                encodedTopic = Encoding.Unicode.GetBytes(fullTopic);
-            }
+                {
+                    var fullTopic = GenerateFullTopic("status");
+                    encodedTopic = Encoding.Unicode.GetBytes(fullTopic);
+                }
                 break;
 
             case nameof(ExecuteInput):
-            {
-                var fullTopic = GenerateFullTopic("execute_input");
-                encodedTopic = Encoding.Unicode.GetBytes(fullTopic);
-            }
+                {
+                    var fullTopic = GenerateFullTopic("execute_input");
+                    encodedTopic = Encoding.Unicode.GetBytes(fullTopic);
+                }
                 break;
 
             case nameof(DisplayData):
@@ -158,14 +157,14 @@ public class Message
                 encodedTopic = null;
                 break;
 
-            case nameof(Stream):
-            {
-                if (!(content is Stream stream))
+            case nameof(Protocol.Stream):
                 {
-                    throw new ArgumentNullException(nameof(stream));
+                    if (!(content is Protocol.Stream stream))
+                    {
+                        throw new ArgumentNullException(nameof(stream));
+                    }
+                    encodedTopic = Encoding.Unicode.GetBytes($"stream.{stream.Name}");
                 }
-                encodedTopic = Encoding.Unicode.GetBytes($"stream.{stream.Name}");
-            }
                 break;
 
             default:

@@ -13,14 +13,14 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 public class LanguageNode : SyntaxNode
 {
     internal LanguageNode(
-        string kernelName,
+        string name,
         SourceText sourceText,
         PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
-        KernelName = kernelName;
+        Name = name;
     }
 
-    public string KernelName { get; }
+    public string Name { get; }
 
     internal SchedulingScope? CommandScope { get; set; }
 

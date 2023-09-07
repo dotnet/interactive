@@ -81,15 +81,15 @@ internal class InteractiveLoggerProvider : ILoggerProvider
 
                 Pocket.Logger.Log.Post(new Pocket.LogEntry(
                     logLevel: ToPocketLogLevel(logMessage.LogLevel),
-                    message: logMessage.Message,
+                    messageTemplate: logMessage.Message,
                     exception: logMessage.Exception,
                     category: logMessage.Category,
                     operationName: logMessage.EventId.ToString()));
             }
 
-            if (_loggerProvider._pocketLoggerEC is {} currentEc)
+            if (_loggerProvider._pocketLoggerEC is { } currentEc)
             {
-                ExecutionContext.Run(currentEc, PocketLogCallback, logMessage);
+                ExecutionContext.Run(currentEc.CreateCopy(), PocketLogCallback, logMessage);
             }
             else
             {

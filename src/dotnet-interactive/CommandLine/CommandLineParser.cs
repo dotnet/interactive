@@ -13,19 +13,18 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.App.Connection;
-using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.App.ParserServer;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
+using Microsoft.DotNet.Interactive.HttpRequest;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.Mermaid;
@@ -59,7 +58,8 @@ public static class CommandLineParser
         IConsole console);
 
     public delegate Task StartNotebookParser(
-        NotebookParserServer notebookParserServer);
+        NotebookParserServer notebookParserServer,
+        DirectoryInfo logPath = null);
 
     public delegate Task StartHttp(
         StartupOptions options,
@@ -99,9 +99,9 @@ public static class CommandLineParser
 
         jupyter ??= JupyterCommand.Do;
 
-        startKernelHost ??= KernelHostLauncher.Do;
+        startKernelHost ??= StdIoMode.Do;
 
-        startNotebookParser ??= ParseNotebookCommand.Do;
+        startNotebookParser ??=  ParseNotebookCommand.RunParserServer;
 
         startHttp ??= HttpCommand.Do;
 
@@ -115,20 +115,20 @@ public static class CommandLineParser
 
         var verboseOption = new Option<bool>(
             "--verbose",
-            "Enable verbose logging to the console");
+            LocalizationResources.Cli_dotnet_interactive_verbose_Description());
 
         var logPathOption = new Option<DirectoryInfo>(
             "--log-path",
-            "Enable file logging to the specified directory");
+            LocalizationResources.Cli_dotnet_interactive_log_path_Description());
 
         var pathOption = new Option<DirectoryInfo>(
                 "--path",
-                "Installs the kernelspecs to the specified directory")
+                LocalizationResources.Cli_dotnet_interactive_jupyter_install_path_Description())
             .ExistingOnly();
 
         var defaultKernelOption = new Option<string>(
             "--default-kernel",
-            description: "The default language for the kernel",
+            description: LocalizationResources.Cli_dotnet_interactive_jupyter_default_kernel_Description(),
             getDefaultValue: () => "csharp").AddCompletions("fsharp", "csharp", "pwsh");
 
         var rootCommand = DotnetInteractive();
@@ -168,7 +168,7 @@ public static class CommandLineParser
             var command = new RootCommand
             {
                 Name = "dotnet-interactive",
-                Description = "Interactive programming for .NET."
+                Description = LocalizationResources.Cli_dotnet_interactive_Description()
             };
 
             command.AddGlobalOption(logPathOption);
@@ -182,23 +182,23 @@ public static class CommandLineParser
             var httpPortRangeOption = new Option<HttpPortRange>(
                 "--http-port-range",
                 parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                description: "Specifies the range of ports to use to enable HTTP services",
+                description: LocalizationResources.Cli_dotnet_interactive_jupyter_install_http_port_range_Description(),
                 isDefault: true);
 
-            var jupyterCommand = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
+            var jupyterCommand = new Command("jupyter", LocalizationResources.Cli_dotnet_interactive_jupyter_Description())
             {
                 defaultKernelOption,
                 httpPortRangeOption,
                 new Argument<FileInfo>
                 {
                     Name = "connection-file",
-                    Description = "The path to a connection file provided by Jupyter"
+                    Description = LocalizationResources.Cli_dotnet_interactive_jupyter_connection_file_Description()
                 }.ExistingOnly()
             };
 
             jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
 
-            var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
+            var installCommand = new Command("install", LocalizationResources.Cli_dotnet_interactive_jupyter_install_Description())
             {
                 httpPortRangeOption,
                 pathOption
@@ -214,8 +214,8 @@ public static class CommandLineParser
             {
                 var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                 var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
-                cancellationToken.Register(() => kernel.Dispose());
-                
+                cancellationToken.Register(kernel.Dispose);
+
                 await new JupyterClientKernelExtension().OnLoadAsync(kernel);
 
                 services.AddKernel(kernel);
@@ -229,12 +229,12 @@ public static class CommandLineParser
                         return new JupyterRequestContextScheduler(delivery => c.GetRequiredService<JupyterRequestContextHandler>()
                             .Handle(delivery));
                     })
-                    .AddSingleton(c => new JupyterRequestContextHandler(kernel))
+                    .AddSingleton(_ => new JupyterRequestContextHandler(kernel))
                     .AddSingleton<IHostedService, Shell>()
                     .AddSingleton<IHostedService, Heartbeat>();
 
                 var result = await jupyter(startupOptions, console, startServer, context);
-                
+
                 return result;
             }
 
@@ -250,17 +250,18 @@ public static class CommandLineParser
             var httpPortRangeOption = new Option<HttpPortRange>(
                 "--http-port-range",
                 parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                description: "Specifies the range of ports to use to enable HTTP services");
+                description: LocalizationResources.Cli_dotnet_interactive_stdio_http_port_range_Description());
 
             var httpPortOption = new Option<HttpPort>(
                 "--http-port",
-                description: "Specifies the port on which to enable HTTP services",
+                description: LocalizationResources.Cli_dotnet_interactive_stdio_http_port_Description(),
                 parseArgument: result =>
                 {
                     if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
                     {
                         var parsed = result.Parent as OptionResult;
-                        result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
+                        result.ErrorMessage =
+                            LocalizationResources.Cli_dotnet_interactive_stdio_http_port_ErrorMessageCannotSpecifyBoth(conflictingOption.Token.Value, parsed.Token.Value);
                         return null;
                     }
 
@@ -278,7 +279,7 @@ public static class CommandLineParser
 
                     if (!int.TryParse(source, out var portNumber))
                     {
-                        result.ErrorMessage = "Must specify a port number or *.";
+                        result.ErrorMessage = LocalizationResources.Cli_dotnet_interactive_stdio_http_port_ErrorMessageMustSpecifyPortNumber();
                         return null;
                     }
 
@@ -289,18 +290,18 @@ public static class CommandLineParser
                 "--kernel-host",
                 parseArgument: x => x.Tokens.Count == 0 ? KernelHost.CreateHostUriForCurrentProcessId() : KernelHost.CreateHostUri(x.Tokens[0].Value),
                 isDefault: true,
-                description: "Name of the kernel host.");
+                description: LocalizationResources.Cli_dotnet_interactive_stdio_kernel_host_Description());
 
-            var previewOption = new Option<bool>("--preview", description: "Enable preview kernel features.");
+            var previewOption = new Option<bool>("--preview", description: LocalizationResources.Cli_dotnet_interactive_stdio_preview_Description());
 
             var workingDirOption = new Option<DirectoryInfo>(
                 "--working-dir",
                 () => new DirectoryInfo(Environment.CurrentDirectory),
-                "Working directory to which to change after launching the kernel.");
+                LocalizationResources.Cli_dotnet_interactive_stdio_working_directory_Description());
 
             var stdIOCommand = new Command(
                 "stdio",
-                "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
+                LocalizationResources.Cli_dotnet_interactive_stdio_Description())
             {
                 defaultKernelOption,
                 httpPortRangeOption,
@@ -310,16 +311,25 @@ public static class CommandLineParser
                 workingDirOption
             };
 
-            stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext,CancellationToken>(
+            stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                 async (startupOptions, options, console, context, cancellationToken) =>
                 {
+                    using var _ =
+                        console is TestConsole
+                            ? Disposable.Empty
+                            : Program.StartToolLogging(startupOptions.LogPath);
+
+                    using var operation = Log.OnEnterAndExit();
+                    operation.Trace("Command line: {0}", Environment.CommandLine);
+                    operation.Trace("Process ID: {0}", Environment.ProcessId);
+
                     Console.InputEncoding = Encoding.UTF8;
                     Console.OutputEncoding = Encoding.UTF8;
                     Environment.CurrentDirectory = startupOptions.WorkingDir.FullName;
 
                     FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi
-                        ? new HtmlNotebookFrontendEnvironment()
-                        : new BrowserFrontendEnvironment();
+                                                                  ? new HtmlNotebookFrontendEnvironment()
+                                                                  : new BrowserFrontendEnvironment();
 
                     var kernel = CreateKernel(
                         options.DefaultKernel,
@@ -357,7 +367,7 @@ public static class CommandLineParser
                         var vscodeSetup = new VSCodeClientKernelExtension();
                         await vscodeSetup.OnLoadAsync(kernel);
                     }
-                       
+
                     if (startupOptions.EnableHttpApi)
                     {
                         var clientSideKernelClient = new SignalRBackchannelKernelClient();
@@ -383,12 +393,6 @@ public static class CommandLineParser
                     }
                     else
                     {
-                        if (!isVSCode)
-                        {
-                            var proxy = await host.ConnectProxyKernelOnDefaultConnectorAsync("javascript", new Uri("kernel://webview/javascript"));
-
-                            proxy.KernelInfo.SupportedKernelCommands.Add(new(nameof(SubmitCode)));
-                        }
                         await startKernelHost(startupOptions, host, console);
                     }
 
@@ -402,13 +406,14 @@ public static class CommandLineParser
         {
             var notebookParserCommand = new Command(
                 "notebook-parser",
-                "Starts a process to parse and serialize notebooks.");
-            notebookParserCommand.Handler = CommandHandler.Create(async () =>
+                LocalizationResources.Cli_dotnet_interactive_notebook_parserDescription());
+            notebookParserCommand.Handler = CommandHandler.Create(async (InvocationContext context) =>
             {
                 Console.InputEncoding = Encoding.UTF8;
                 Console.OutputEncoding = Encoding.UTF8;
                 var notebookParserServer = new NotebookParserServer(Console.In, Console.Out);
-                await startNotebookParser(notebookParserServer);
+                context.GetCancellationToken().Register(() => notebookParserServer.Dispose());
+                await startNotebookParser(notebookParserServer, context.ParseResult.GetValueForOption(logPathOption));
             });
             return notebookParserCommand;
         }
@@ -419,7 +424,7 @@ public static class CommandLineParser
 
             if (string.IsNullOrWhiteSpace(source))
             {
-                result.ErrorMessage = "Must specify a port range";
+                result.ErrorMessage = LocalizationResources.Cli_ErrorMessageMustSpecifyPortRange();
                 return null;
             }
 
@@ -427,19 +432,19 @@ public static class CommandLineParser
 
             if (parts.Length != 2)
             {
-                result.ErrorMessage = "Must specify a port range";
+                result.ErrorMessage = LocalizationResources.Cli_ErrorMessageMustSpecifyPortRange();
                 return null;
             }
 
             if (!int.TryParse(parts[0], out var start) || !int.TryParse(parts[1], out var end))
             {
-                result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
+                result.ErrorMessage = LocalizationResources.CliErrorMessageMustSpecifyPortRangeAsStartPortEndPort();
                 return null;
             }
 
             if (start > end)
             {
-                result.ErrorMessage = "Start port must be lower then end port";
+                result.ErrorMessage = LocalizationResources.CliErrorMessageStartPortMustBeLower();
                 return null;
             }
 
@@ -448,7 +453,11 @@ public static class CommandLineParser
         }
     }
 
-    private static CompositeKernel CreateKernel(string defaultKernelName, FrontendEnvironment frontendEnvironment, StartupOptions startupOptions, TelemetrySender telemetrySender)
+    private static CompositeKernel CreateKernel(
+        string defaultKernelName,
+        FrontendEnvironment frontendEnvironment,
+        StartupOptions startupOptions,
+        TelemetrySender telemetrySender)
     {
         using var _ = Log.OnEnterAndExit("Creating Kernels");
 
@@ -496,7 +505,6 @@ public static class CommandLineParser
 
         var kernel = compositeKernel
             .UseDefaultMagicCommands()
-            .UseLogMagicCommand()
             .UseAboutMagicCommand()
             .UseImportMagicCommand()
             .UseNuGetExtensions();
@@ -505,10 +513,10 @@ public static class CommandLineParser
         kernel.AddKernelConnector(new ConnectSignalRCommand());
         kernel.AddKernelConnector(new ConnectStdIoCommand(startupOptions.KernelHost));
 
-        if (startupOptions.Verbose)
-        {
-            kernel.LogEventsToPocketLogger();
-        }
+        kernel.AddKernelConnector(
+            new ConnectJupyterKernelCommand()
+            .AddConnectionOptions(new JupyterHttpKernelConnectionOptions())
+            .AddConnectionOptions(new JupyterLocalKernelConnectionOptions()));
 
         SetUpFormatters(frontendEnvironment);
 
@@ -543,12 +551,12 @@ public static class CommandLineParser
                     content.WriteTo(writer, HtmlEncoder.Default);
                 }, HtmlFormatter.MimeType);
 
+                HttpResponseMessageFormattingExtensions.RegisterFormatters();
+
                 break;
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
         }
-
-      
     }
 }

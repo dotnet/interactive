@@ -2,26 +2,28 @@
 
 ## What is .NET Interactive?
 
-.NET Interactive is an engine that can run multiple languages and share variables between them. Languages currently supported include: 
+.NET Interactive is an engine and API for running and editing code interactively, including:
 
-- C# 
-- F#
-- PowerShell
-- JavaScript
-- SQL 
-- KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))
-- HTML*
-- [Mermaid](https://mermaid.js.org/intro/)*
+* Running code and getting its results.
+* Evaluating code to provide language services such as completions and diagnostics.
+* Sharing data and variables between multiple languages and across remote machines.
 
-*Variable sharing not available
+While typically associated with notebook technologies such as Jupyter and the [Polyglot Notebooks extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode), .NET Interactive has other uses as well, such as building REPLs and embedded script engines.
 
-## What can .NET Interactive be used for? 
+The following languages are supported by Polyglot Notebooks and .NET Interactive:
 
-As a powerful and versatile engine, .NET Interactive can be used to create and power a number of tools and experiences such as: 
-
-- Polyglot Notebooks
-- REPLs
-- Embeddable script engines
+| Language                      | Variable sharing |
+|-------------------------------|------------------|
+| C#                            |        ✅       |
+| F#                            |        ✅       |   
+| PowerShell                    |        ✅       |          
+| JavaScript                    |        ✅       |          
+| SQL                           |        ✅       |   
+| KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))    |        ✅       |  
+| [Python](docs/jupyter-in-polyglot-notebooks.md)  |        ✅       |
+| [R](docs/jupyter-in-polyglot-notebooks.md)       |        ✅       |      
+| HTML                         |        ⛔         |     
+| [Mermaid](https://mermaid.js.org/intro/)         |        ⛔       |        
 
 ### Polyglot Notebooks
 
@@ -29,20 +31,17 @@ Since .NET Interactive is capable of running as a kernel for notebooks, it enabl
 
 For the best experience when working with multi-language notebooks, we recommend installing the [Polyglot Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code. While the full .NET Interactive feature set is available in Jupyter, many features are only usable via code, whereas the Polyglot Notebooks extension provides additional features including a language/kernel picker for each cell, enhanced language services, a multi-kernel variable viewer, and more.
 
-### Jupyter and nteract
+### Jupyter
 
-There are several ways to get started using .NET Interactive with Jupyter, including Jupyter Notebook, JupyterLab, and nteract.
-
-* [Create and run notebooks on your machine](docs/NotebookswithJupyter.md).
-
+The most popular notebook platform is Jupyter, and .NET Interactive is a fully supported Jupyter kernel that you can use with Jupyter Notebook, JupyterLab, nteract, and other Jupyter frontends. You can read more about using .NET Interactive as a Jupyter kernel [here](docs/NotebookswithJupyter.md).
 
 ### REPLs
 
-.NET Interactive can be used as the execution engine for REPLs as well. The experimental [.NET REPL](https://github.com/jonsequitur/dotnet-repl) is one example of a command line REPL built on .NET Interactive. In addition, .NET REPL can actually be used to set up automation for your Polyglot Notebooks. 
+.NET Interactive can be used as the execution engine for REPLs as well. The experimental [.NET REPL](https://github.com/jonsequitur/dotnet-repl) is one example of a command line REPL built on .NET Interactive. In addition, .NET REPL can be used for automated command line execution of notebooks.
 
 ### Small factor devices
 
-We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](small-factor-devices.md).
+We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](docs/small-factor-devices.md).
 
 ## FAQ
 
@@ -50,19 +49,19 @@ For more information, please refer to our [FAQ](./docs/FAQ.md).
 
 ## Acknowledgements 
 
-The multi-language experience of .NET Interactive is truly a collaborative effort amongst other groups at Microsoft. We'd like to thank the following teams for contributing their time and expertise to helping light up functionality for other languages. 
+The multi-language experience of .NET Interactive is truly a collaborative effort among different teams at Microsoft and in the community. We'd like to thank the following teams for contributing their time and expertise to helping bring support for other languages:
 
 - **PowerShell Team:** PowerShell support
 - **Azure Data Team:** SQL and KQL support
+- **Azure Notebooks Team**: Python, R, and Jupyter subkernel support
 
 ## Telemetry
 
-Telemetry is collected when .NET Interactive is started. Once .NET Interactive is running, we collect hashed versions of packages imported into the notebook and the languages used to run individual cells. We do not collect any additional code or clear text from cells. The telemetry is anonymous and reports only the values for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
+Telemetry is collected when the `dotnet-interactive` tool is started. (If you are using the .NET Interactive libraries directly, they do not emit telemetry.) Once `dotnet-interactive` is running, it emits the names of packages imported into the notebook and the languages used to run individual cells. This data is hashed, allowing us to count unique values, but the pre-hashed values cannot be obtained from the telemetry. We do not collect any additional code or clear text from cells. All telemetry is anonymous. In addition, `dotnet-interactive` reports the usage for a specific subset of the verbs in the .NET Interactive CLI. Those verbs are:
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`
-* `dotnet interactive http`
-* `dotnet interactive stdio`
+* `dotnet interactive stdio` 
 
 ### How to opt out
 
@@ -78,7 +77,7 @@ Telemetry
 The .NET Core tools collect usage data in order to help us improve your experience.The data is anonymous and doesn't include command-line arguments. The data is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 ```
 
-To disable this message and the .NET Core welcome message, set the `DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT` environment variable to `true`. Note that this variable has no effect on telemetry opt out.
+To disable this message and the .NET Core welcome message, set the `DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE` environment variable to `true`. Note that this variable has no effect on telemetry opt out.
 
 ## Contribution Guidelines
 

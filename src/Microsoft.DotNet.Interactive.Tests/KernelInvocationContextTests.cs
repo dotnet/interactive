@@ -1,8 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using FluentAssertions;
 using System.Linq;
 using System.Threading;
@@ -12,6 +11,8 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using System;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -28,7 +29,7 @@ public class KernelInvocationContextTests
 
         await Task.Run(() =>
         {
-            using (var x = KernelInvocationContext.Establish(new SubmitCode("")))
+            using (KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("")))
             {
                 barrier.SignalAndWait(1000);
                 commandInTask1 = KernelInvocationContext.Current.Command;
@@ -37,7 +38,7 @@ public class KernelInvocationContextTests
 
         await Task.Run(() =>
         {
-            using (KernelInvocationContext.Establish(new SubmitCode("")))
+            using (KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("")))
             {
                 barrier.SignalAndWait(1000);
                 commandInTask2 = KernelInvocationContext.Current.Command;
@@ -48,6 +49,74 @@ public class KernelInvocationContextTests
             .NotBe(commandInTask2)
             .And
             .NotBeNull();
+    }
+
+    [Fact]
+    public async Task Parented_commands_reuse_same_context()
+    {
+        var barrier = new Barrier(2);
+        var contextsByRootToken = new ConcurrentDictionary<string, KernelInvocationContext>(StringComparer.OrdinalIgnoreCase);
+
+        var kernelCommand1 = new SubmitCode("");
+        var kernelCommand2 = new SubmitCode("");
+
+        KernelInvocationContext context1 = null;
+        KernelInvocationContext context2 = null;
+
+        kernelCommand2.SetToken($"{kernelCommand1.GetOrCreateToken()}.1");
+
+        await Task.Run(() =>
+        {
+            context1 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1, contextsByRootToken);
+            
+            barrier.SignalAndWait(1000);
+        });
+
+        await Task.Run(() =>
+        {
+            context2 = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2, contextsByRootToken);
+            
+            barrier.SignalAndWait(1000);
+        });
+
+        context1.Should().BeSameAs(context2);
+    }
+
+    [Fact]
+    public async Task Console_capture_works_when_context_is_shared_by_parented_commands()
+    {
+        var barrier = new Barrier(2);
+        var contextsByRootToken = new ConcurrentDictionary<string, KernelInvocationContext>(StringComparer.OrdinalIgnoreCase);
+
+        var kernelCommand1 = new SubmitCode("");
+        var kernelCommand2 = new SubmitCode("");
+
+        var events = new List<KernelEvent>();
+
+        kernelCommand2.SetToken($"{kernelCommand1.GetOrCreateToken()}.1");
+
+        await Task.Run(() =>
+        {
+            var context = KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand1, contextsByRootToken);
+            context.KernelEvents.Subscribe(events.Add);
+
+            Console.WriteLine("context1");
+
+            barrier.SignalAndWait(1000);
+        });
+
+        await Task.Run(() =>
+        {
+            ExecutionContext.SuppressFlow();
+            KernelInvocationContext.GetOrCreateAmbientContext(kernelCommand2, contextsByRootToken);
+            Console.WriteLine("context2");
+            barrier.SignalAndWait(1000);
+        });
+
+        var lines = events.OfType<StandardOutputValueProduced>()
+                          .Select(e => e.FormattedValues.First().Value.Trim());
+
+        lines.Should().BeEquivalentSequenceTo("context1", "context2");
     }
 
     [Fact]
@@ -70,11 +139,8 @@ public class KernelInvocationContextTests
         });
 
         var result = await kernel.SendAsync(new SubmitCode("2"));
-        var events = new List<KernelEvent>();
 
-        result.KernelEvents.Subscribe(e => events.Add(e));
-
-        var values = events.OfType<DisplayEvent>()
+        var values = result.Events.OfType<DisplayEvent>()
             .Where(x => x is ReturnValueProduced || x is DisplayedValueProduced)
             .Select(v => v.Value);
 
@@ -134,7 +200,7 @@ error
     {
         var command = new SubmitCode("123");
 
-        using var context = KernelInvocationContext.Establish(command);
+        using var context = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
         var events = context.KernelEvents.ToSubscribedList();
 
@@ -149,7 +215,7 @@ error
     {
         var command = new SubmitCode("123");
 
-        using var context = KernelInvocationContext.Establish(command);
+        using var context = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
         var events = context.KernelEvents.ToSubscribedList();
 
@@ -164,7 +230,7 @@ error
     {
         var command = new SubmitCode("123");
 
-        using var context = KernelInvocationContext.Establish(command);
+        using var context = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
         var events = context.KernelEvents.ToSubscribedList();
 
@@ -179,7 +245,7 @@ error
     {
         var command = new SubmitCode("123");
 
-        using var context = KernelInvocationContext.Establish(command);
+        using var context = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
         var events = context.KernelEvents.ToSubscribedList();
 
@@ -194,7 +260,7 @@ error
     {
         var command = new SubmitCode("123");
 
-        using var context = KernelInvocationContext.Establish(command);
+        using var context = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
         var events = context.KernelEvents.ToSubscribedList();
 
@@ -210,7 +276,7 @@ error
     {
         var command = new SubmitCode("123");
 
-        using var context = KernelInvocationContext.Establish(command);
+        using var context = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
         var events = context.KernelEvents.ToSubscribedList();
 
@@ -225,12 +291,12 @@ error
     public void When_multiple_commands_are_active_then_context_does_not_publish_CommandHandled_until_all_are_complete()
     {
         var outerSubmitCode = new SubmitCode("abc");
-        using var outer = KernelInvocationContext.Establish(outerSubmitCode);
+        using var outer = KernelInvocationContext.GetOrCreateAmbientContext(outerSubmitCode);
 
         var events = outer.KernelEvents.ToSubscribedList();
 
         var innerSubmitCode = new SubmitCode("def");
-        using var inner = KernelInvocationContext.Establish(innerSubmitCode);
+        using var inner = KernelInvocationContext.GetOrCreateAmbientContext(innerSubmitCode);
 
         inner.Complete(innerSubmitCode);
 
@@ -240,11 +306,11 @@ error
     [Fact]
     public void When_outer_context_is_completed_then_inner_commands_can_no_longer_be_used_to_publish_events()
     {
-        using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
+        using var outer = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("abc"));
 
         var events = outer.KernelEvents.ToSubscribedList();
 
-        using var inner = KernelInvocationContext.Establish(new SubmitCode("def"));
+        using var inner = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("def"));
 
         outer.Complete(outer.Command);
         inner.Publish(new ErrorProduced("oops!", inner.Command));
@@ -255,12 +321,12 @@ error
     [Fact]
     public void When_inner_context_is_completed_then_no_further_events_can_be_published_for_it()
     {
-        using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
+        using var outer = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("abc"));
 
         var events = outer.KernelEvents.ToSubscribedList();
 
         var innerSubmitCode = new SubmitCode("def");
-        using var inner = KernelInvocationContext.Establish(innerSubmitCode);
+        using var inner = KernelInvocationContext.GetOrCreateAmbientContext(innerSubmitCode);
 
         inner.Complete(innerSubmitCode);
 
@@ -272,7 +338,7 @@ error
     [Fact]
     public void After_disposal_Current_is_null()
     {
-        var context = KernelInvocationContext.Establish(new SubmitCode("123"));
+        var context = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("123"));
             
         context.Dispose();
 
@@ -282,12 +348,12 @@ error
     [Fact]
     public void When_inner_context_fails_then_CommandFailed_is_published_for_outer_command()
     {
-        using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
+        using var outer = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("abc"));
 
         var events = outer.KernelEvents.ToSubscribedList();
 
         var innerCommand = new SubmitCode("def");
-        using var inner = KernelInvocationContext.Establish(innerCommand);
+        using var inner = KernelInvocationContext.GetOrCreateAmbientContext(innerCommand);
 
         inner.Fail(innerCommand);
 
@@ -303,12 +369,12 @@ error
     public void When_inner_context_fails_then_no_further_events_can_be_published()
     {
         var command = new SubmitCode("abc");
-        using var outer = KernelInvocationContext.Establish(command);
+        using var outer = KernelInvocationContext.GetOrCreateAmbientContext(command);
 
         var events = outer.KernelEvents.ToSubscribedList();
 
         var innerCommand = new SubmitCode("def");
-        using var inner = KernelInvocationContext.Establish(innerCommand);
+        using var inner = KernelInvocationContext.GetOrCreateAmbientContext(innerCommand);
 
         inner.Fail(innerCommand);
         inner.Publish(new DisplayedValueProduced("oops!", command));

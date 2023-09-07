@@ -27,7 +27,7 @@ public class RuntimeTelemetryTests : IDisposable
         _telemetrySender = new FakeTelemetrySender();
         _kernel = new CompositeKernel
             {
-                new CSharpKernel().UseNugetDirective()
+                new CSharpKernel().UseNugetDirective(false)
             }
             .UseTelemetrySender(_telemetrySender);
     }
@@ -150,7 +150,9 @@ telemetry
     [Fact]
     public async Task Package_and_version_number_are_sent_on_successful_package_load()
     {
-        await _kernel.SendAsync(new SubmitCode("#r \"nuget:NodaTime,3.1.0\"", "csharp"));
+        var results = await _kernel.SendAsync(new SubmitCode("#r \"nuget:NodaTime,3.1.9\"", "csharp"));
+
+        results.Events.Should().NotContainErrors();
 
         _telemetrySender.TelemetryEvents
                         .Should()
@@ -160,6 +162,6 @@ telemetry
                         .Should()
                         .Contain(
                             new KeyValuePair<string, string>("PackageName", "nodatime".ToSha256HashWithNormalizedCasing()),
-                            new KeyValuePair<string, string>("PackageVersion", "3.1.0".ToSha256Hash()));
+                            new KeyValuePair<string, string>("PackageVersion", "3.1.9".ToSha256Hash()));
     }
 }

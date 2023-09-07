@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../Resources.resx">
+    <body>
+      <trans-unit id="Magics_lsmagic_Description">
+        <source>List the available magic commands / directives</source>
+        <target state="translated">Kullanılabilir sihirli komutları /yönergeleri listele</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_markdown_Description">
+        <source>Convert the code that follows from Markdown into HTML</source>
+        <target state="translated">Markdown'dan sonra gelen kodu HTML'ye dönüştür</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_time_Description">
+        <source>Time the execution of the following code in the submission.</source>
+        <target state="translated">Gönderimde aşağıdaki kodun yürütüleceği zaman.</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

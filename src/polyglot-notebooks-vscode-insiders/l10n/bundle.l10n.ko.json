@@ -1,0 +1,8 @@
+{
+  "VariableGridColumnActions": "작업",
+  "VariableGridColumnName": "이름",
+  "VariableGridColumnValue": "값",
+  "VariableGridColumnType": "유형",
+  "VariableGridColumnKernel": "커널",
+  "VariableGridshareTemplate": "{kernel-name} 커널에서 {value-name} 값을 공유합니다."
+}

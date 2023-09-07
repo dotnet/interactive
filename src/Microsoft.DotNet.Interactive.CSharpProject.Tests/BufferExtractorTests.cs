@@ -3,7 +3,6 @@
 
 using System.Linq;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;

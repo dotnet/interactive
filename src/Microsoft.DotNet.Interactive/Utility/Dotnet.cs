@@ -1,12 +1,14 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions.Execution;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Utility;
@@ -21,14 +23,14 @@ public class Dotnet
                             new DirectoryInfo(Directory.GetCurrentDirectory());
     }
 
-    public Task<CommandLineResult> New(string templateName, string args = null)
+    public async Task<CommandLineResult> New(string templateName, string args = null)
     {
         if (string.IsNullOrWhiteSpace(templateName))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(templateName));
         }
 
-        return Execute($@"new ""{templateName}"" {args}");
+        return await Execute($@"new ""{templateName}"" {args}");
     }
 
     public async Task<AddPackageResult> AddPackage(string packageId, string version = null)
@@ -50,7 +52,6 @@ public class Dotnet
 
     public Task<CommandLineResult> Clean(TimeSpan? timeout = null) =>
         Execute("clean", timeout);
-
 
     public Task<CommandLineResult> Execute(string args, TimeSpan? timeout = null) =>
         CommandLine.Execute(

@@ -1,7 +1,7 @@
 #!csharp
 
 #r "nuget: Microsoft.DotNet.Interactive.Journey, *-*"
-#r "nuget: Interactive.Extension.ImageSharp, *-*"
+#r "nuget: Image-Sharp.InteractiveExtension, *-*"
 
 #!csharp
 

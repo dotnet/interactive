@@ -23,15 +23,15 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
     {
     }
 
-    protected override Task<IKernelConnector> CreateConnectorAsync()
+    protected override Func<string, Task<ProxyKernel>> CreateConnector()
     {
         CreateRemoteKernelTopology(_pipeName);
 
         var connector = new NamedPipeKernelConnector(_pipeName);
-        
+
         RegisterForDisposal(connector);
 
-        return Task.FromResult<IKernelConnector>(connector);
+        return connector.CreateKernelAsync;
     }
 
     protected override SubmitCode CreateConnectCommand(string localKernelName)

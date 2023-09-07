@@ -1,6 +1,90 @@
 # Using JavaScript in Polyglot Notebooks
 
-JavaScript is one of the languages that's supported by default in Polyglot Notebooks. JavaScript is widely used for visualizations in notebooks since the most popular notebook technologies have long been browser-based. While wrapper libraries for plotting and visualization libraries have become very popular, inclusion of JavaScript and the ability to share data easily from other languages makes it an appealing option to write visualization code directly in the original language these libraries.
+JavaScript is one of the languages supported by default in Polyglot Notebooks. JavaScript is widely used for visualization in notebooks since the most popular notebook technologies are browser-based. While many libraries are available in languages such as Python for plotting and visualization, these are usually wrappers around JavaScript libraries. For this reason, inclusion of JavaScript and the ability to share data easily from other languages makes it an appealing option to write visualization code in JavaScript directly.
+
+## Declaring variables
+
+The recommended way to declare JavaScript variables in a notebook differs from the way it's usually done elsewhere.
+
+_**TL;DR**_ Declare your JavaScript variables without using a keyword such as `let`, `const`, or `var`, like this:
+
+```javascript
+x = 123;
+```
+
+So why is this recommended?
+
+As with other languages that weren't designed for interactive programming, using JavaScript in a notebook has a few special quirks. The difference that people most frequently encounter has to do with how to declare variables.
+
+In JavaScript, variables can be declared in a number of ways, including `let`, `var`, and `const`, as well as without a keyword.
+
+```javascript
+let declaredWithLet = 1;
+var declaredWithVar = 2;
+const declaredWithConst = 3;
+declaredWithoutKeyword = 4;
+```
+
+Since JavaScript variables are function-scoped, the three keyword-based approaches above will declare variables that can't be referenced outside of the function where they were declared. But the fourth example, declared without a keyword, will work. The following code shows this behavior:
+
+```javascript
+const doSomething = async () => {
+    let declaredWithLet = 1;
+    var declaredWithVar = 2;
+    const declaredWithConst = 3;
+    declaredWithoutKeyword = 4;
+}
+
+await doSomething();
+
+try { console.log(declaredWithLet); }          catch (e) { console.log(e.toString()); }
+try { console.log(declaredWithVar); }          catch (e) { console.log(e.toString()); }
+try { console.log(declaredWithConst); }        catch (e) { console.log(e.toString()); }
+try { console.log(declaredWithoutKeyword); }   catch (e) { console.log(e.toString()); }
+```
+
+This code produces the following output: 
+
+```console
+ReferenceError: declaredWithLet is not defined
+ReferenceError: declaredWithVar is not defined
+ReferenceError: declaredWithConst is not defined
+4
+```
+
+So why does the fourth example work? By not using the `let`, `const`, or `var` keywords with your variable declaration, you're enabling JavaScript variable hoisting to add the variable to the top-level scope. When running in a browser (including the notebook webview), this means the variable will be added to `window`. For this reason, the final line of the above example is equivalent to the following:
+
+```javascript
+console.log(window.declaredWithoutKeyword);
+```
+
+What does this have to do with Polyglot Notebooks?
+
+The Polyglot Notebooks JavaScript kernel executes your code submissions within an async arrow function, just like the above example:
+
+```javascript
+const doSomething = async () => {
+    // Your code here
+}
+
+await doSomething();
+```
+
+This means that the JavaScript code in each cell is isolated from the others by the same function scoping mechanism. The only way to make variables declared in one cell visible in others is to allow them to be hoisted to the `window` scope, by avoiding the use of the `let`, `var`, and `const` keywords.
+
+## Return values
+
+In C# Script, F#, Python, and a number of other languages, the following is equivalent to a `return` statement:
+
+```csharp
+123
+```
+
+This is sometimes called a trailing expression and is a feature of many languages. However, it is not supported in JavaScript. If you would like to return a value from a JavaScript cell, you need to write this:
+
+```javascript
+return 123;
+```
 
 ## Loading dependencies
 
@@ -61,7 +145,6 @@ configuredRequire = (require.config({
 
 If you'd like to try it out, there's a notebook with a working example using [here](../samples/notebooks/javascript/Plotly%20with%20RequireJS.ipynb).
 
-
 ## Sharing data
 
 Many polyglot notebook workflows use languages such as C#, F#, and SQL to gather and prepare data. Like other .NET Interactive subkernels, the JavaScript kernel allows you to share variables, so you can use JavaScript to plot and visualize your data. Variable sharing in JavaScript works similarly to other languages, using the `#!share` magic command. Here's a simple example, declaring an array variable in C# and then accessing it from JavaScript:
@@ -70,15 +153,15 @@ Many polyglot notebook workflows use languages such as C#, F#, and SQL to gather
 var array = new[] { 1, 2, 3 };
 ```
 
-```javascript
-#!share --from csharp array
+```csharp
+#!set --value @javascript:array --name array
 
-return array;
+array
 ```
 
 When you run this code in Polyglot Notebooks, you can see that the `array` variable has been copied to the JavaScript kernel.
 
-<img width="509" alt="image" src="https://user-images.githubusercontent.com/547415/211658845-ac8563ec-accc-462d-bf24-23bef205a0c7.png">
+<img width="509" alt="image" src="https://github.com/dotnet/interactive/assets/547415/acecdcf8-5597-4258-a1d3-5cf10c3e54d8">
 
 You can also share back in the other direction. Let's modify the JavaScript array and share it back to C#.
 
@@ -96,7 +179,7 @@ When you run this code, you can see that the original C# variable gets overwritt
 
 <img width="503" alt="image" src="https://user-images.githubusercontent.com/547415/211661641-057e29fc-8048-4910-983f-14d8380dca8b.png">
 
-One notable detail is that the type of the new C# variable has changed from the original declaration. It was originally declared as `int[]`, but after sharing the array back from JavaScript, the C# kernel has a variable called `array` which is of type `JsonDocument`. Because the JavaScript kernel runs in a different process from the .NET subkernels, sharing happens via JSON serialization. Complex types shared from JavaScript to .NET are sent as JSON and deserialized using `System.Text.Json`. There are a few simple types that will be shared as their intuitive .NET counterparts. 
+One notable detail here is that the type of the new C# variable has changed from the original declaration. It was originally declared as `int[]`, but after sharing the array back from JavaScript, the C# kernel has a variable called `array` which is of type `JsonDocument`. Because the JavaScript kernel runs in a different process from the .NET subkernels, sharing happens via JSON serialization. Complex types shared from JavaScript to .NET are sent as JSON and deserialized using `System.Text.Json`. There are a few simple types that will be shared as their intuitive .NET counterparts. 
 
 * JavaScript numbers are shared as `System.Decimal`
 * JavaScript strings are shared as `System.String`

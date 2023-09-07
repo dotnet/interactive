@@ -12,12 +12,12 @@ $ErrorActionPreference = "Stop"
 try {
     $repoRoot = Resolve-Path "$PSScriptRoot\.."
     $symlinkDirectories = @(
-        "$repoRoot\src\microsoft-dotnet-interactive-browser\src\dotnet-interactive",
-        "$repoRoot\src\dotnet-interactive-vscode-common\src\dotnet-interactive",
-        "$repoRoot\src\dotnet-interactive-vscode\src\vscode-common",
-        "$repoRoot\src\dotnet-interactive-vscode\tests\vscode-common-tests",
-        "$repoRoot\src\dotnet-interactive-vscode-insiders\src\vscode-common",
-        "$repoRoot\src\dotnet-interactive-vscode-insiders\tests\vscode-common-tests"
+        "$repoRoot\src\polyglot-notebooks-browser\src\polyglot-notebooks",
+        "$repoRoot\src\polyglot-notebooks-vscode-common\src\polyglot-notebooks",
+        "$repoRoot\src\polyglot-notebooks-vscode\src\vscode-common",
+        "$repoRoot\src\polyglot-notebooks-vscode\tests\vscode-common-tests",
+        "$repoRoot\src\polyglot-notebooks-vscode-insiders\src\vscode-common",
+        "$repoRoot\src\polyglot-notebooks-vscode-insiders\tests\vscode-common-tests"
     )
 
     foreach ($symlinkDir in $symlinkDirectories) {
@@ -29,11 +29,11 @@ try {
 
     # build and test NPM
     $npmDirs = @(
-        "src\microsoft-dotnet-interactive",
-        "src\microsoft-dotnet-interactive-browser",
+        "src\polyglot-notebooks",
+        "src\polyglot-notebooks-browser",
         "src\polyglot-notebooks-ui-components",
-        "src\dotnet-interactive-vscode",
-        "src\dotnet-interactive-vscode-insiders"
+        "src\polyglot-notebooks-vscode",
+        "src\polyglot-notebooks-vscode-insiders"
         
     )
     foreach ($npmDir in $npmDirs) {

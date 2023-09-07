@@ -6,11 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
+
 using static Microsoft.DotNet.Interactive.ChooseKeyValueStoreKernelDirective;
 
 namespace Microsoft.DotNet.Interactive;
@@ -30,7 +32,7 @@ public class KeyValueStoreKernel :
 
     public KeyValueStoreKernel(string name = DefaultKernelName) : base(name)
     {
-        KernelInfo.DisplayName = "Raw Value Storage";
+        KernelInfo.DisplayName = $"{KernelInfo.LocalName} - Raw Value Storage";
     }
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
@@ -45,7 +47,7 @@ public class KeyValueStoreKernel :
         if (_values.TryGetValue(command.Name, out var value))
         {
             context.Publish(new ValueProduced(
-                value.Value,
+                null,
                 command.Name,
                 value,
                 command));
@@ -70,7 +72,7 @@ public class KeyValueStoreKernel :
 
     public IReadOnlyDictionary<string, FormattedValue> Values => _values;
 
-    Task IKernelCommandHandler<SubmitCode>.HandleAsync(
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(
         SubmitCode command,
         KernelInvocationContext context)
     {
@@ -80,9 +82,7 @@ public class KeyValueStoreKernel :
 
         var options = ValueDirectiveOptions.Create(parseResult, _chooseKernelDirective);
 
-        StoreValue(command, context, options, value);
-
-        return Task.CompletedTask;
+        await StoreValueAsync(command, context, options, value);
     }
 
     internal override bool AcceptsUnknownDirectives => true;
@@ -91,6 +91,7 @@ public class KeyValueStoreKernel :
         KernelInvocationContext context,
         ValueDirectiveOptions options)
     {
+        var mimeType = options.MimeType;
         string newValue = null;
         var loadedFromOptions = false;
 
@@ -104,6 +105,7 @@ public class KeyValueStoreKernel :
             var client = new HttpClient();
             var response = await client.GetAsync(uri, context.CancellationToken);
             newValue = await response.Content.ReadAsStringAsync();
+            mimeType ??= response.Content.Headers?.ContentType?.MediaType;
             loadedFromOptions = true;
         }
         else if (options.FromValue is { } value)
@@ -118,7 +120,7 @@ public class KeyValueStoreKernel :
 
             _lastOperation = (hadValue, previousValue, newValue);
 
-            StoreValue(newValue, options, context);
+            await StoreValueAsync(newValue, options, context, mimeType: mimeType);
         }
         else
         {
@@ -126,11 +128,12 @@ public class KeyValueStoreKernel :
         }
     }
 
-    private void StoreValue(
-        KernelCommand command, 
-        KernelInvocationContext context, 
+    private async Task StoreValueAsync(
+        KernelCommand command,
+        KernelInvocationContext context,
         ValueDirectiveOptions options,
-        string value = null)
+        string value = null,
+        string mimeType = null)
     {
         if (options.FromFile is { })
         {
@@ -140,7 +143,7 @@ public class KeyValueStoreKernel :
                 context.Fail(command,
                     message: "The --from-file option cannot be used in combination with a content submission.");
             }
-                
+
         }
         else if (options.FromUrl is { })
         {
@@ -153,14 +156,14 @@ public class KeyValueStoreKernel :
         }
         else
         {
-            StoreValue(value, options, context);
+            await StoreValueAsync(value, options, context, mimeType: mimeType);
         }
 
         _lastOperation = default;
 
         void UndoSetValue()
         {
-            if (_lastOperation is {})
+            if (_lastOperation is not null)
             {
                 if (_lastOperation?.hadValue == true)
                 {
@@ -178,16 +181,32 @@ public class KeyValueStoreKernel :
         }
     }
 
-    private void StoreValue(
+    private async Task StoreValueAsync(
         string value,
         ValueDirectiveOptions options,
-        KernelInvocationContext context)
+        KernelInvocationContext context,
+        string mimeType = null)
     {
-        _values[options.Name] = new FormattedValue(options.MimeType ?? PlainTextFormatter.MimeType, value);
+        mimeType ??= (options.MimeType ?? PlainTextFormatter.MimeType);
+        var shouldDisplayValue = !string.IsNullOrWhiteSpace(options.MimeType);
+        await StoreValueAsync(options.Name, value, mimeType, shouldDisplayValue, context);
+    }
 
-        if (options.MimeType is { } mimeType)
+    protected virtual Task StoreValueAsync(
+        string key,
+        string value,
+        string mimeType,
+        bool shouldDisplayValue,
+        KernelInvocationContext context)
+
+    {
+        _values[key] = new FormattedValue(mimeType, value);
+
+        if (shouldDisplayValue)
         {
             context.DisplayAs(value, mimeType);
         }
+
+        return Task.CompletedTask;
     }
 }

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
@@ -16,7 +17,7 @@ internal class JupyterKernelSpecModuleSimulator : IJupyterKernelSpecModule
     private readonly DirectoryInfo _defaultKernelSpecDirectory;
     private readonly Exception _withException;
 
-    public JupyterKernelSpecModuleSimulator(bool success, DirectoryInfo defaultKernelSpecDirectory= null, Exception withException = null)
+    public JupyterKernelSpecModuleSimulator(bool success, DirectoryInfo defaultKernelSpecDirectory = null, Exception withException = null)
     {
         _success = success;
         _defaultKernelSpecDirectory = defaultKernelSpecDirectory;
@@ -43,6 +44,11 @@ internal class JupyterKernelSpecModuleSimulator : IJupyterKernelSpecModule
     {
         return _success
             ? _defaultKernelSpecDirectory ?? new JupyterKernelSpecModule().GetDefaultKernelSpecDirectory()
-            : _defaultKernelSpecDirectory?? new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetTempFileName()));
+            : _defaultKernelSpecDirectory ?? new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetTempFileName()));
+    }
+
+    public Task<IReadOnlyDictionary<string, KernelSpec>> ListKernels()
+    {
+        throw new NotImplementedException();
     }
 }

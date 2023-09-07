@@ -32,15 +32,43 @@ try {
 
         # publish nuget
         if ($vscodeTarget -eq "stable") {
+            $packagestoPublish = @(
+                "Microsoft.dotnet-interactive",
+                "Microsoft.DotNet.Interactive",
+                "Microsoft.DotNet.Interactive.AspNetCore",
+                "Microsoft.DotNet.Interactive.Browser",
+                "Microsoft.DotNet.Interactive.CSharp",
+                "Microsoft.DotNet.Interactive.Documents",
+                "Microsoft.DotNet.Interactive.ExtensionLab",
+                "Microsoft.DotNet.Interactive.Formatting",
+                "Microsoft.DotNet.Interactive.FSharp",
+                "Microsoft.DotNet.Interactive.Http,",
+                "Microsoft.DotNet.Interactive.HttpRequest",
+                "Microsoft.DotNet.Interactive.Journey",
+                "Microsoft.DotNet.Interactive.Kql",
+                "Microsoft.DotNet.Interactive.Mermaid",
+                "Microsoft.DotNet.Interactive.PackageManagement",
+                "Microsoft.DotNet.Interactive.PowerShell",
+                "Microsoft.DotNet.Interactive.SQLite",
+                "Microsoft.DotNet.Interactive.SqlServer"
+            )
+
             Get-ChildItem "$artifactsPath\packages\Shipping\Microsoft.DotNet*.nupkg" | ForEach-Object {
                 $nugetPackagePath = $_.ToString()
-                # don't publish asp or netstandard packages
-                if (-Not ($nugetPackagePath -match "(CSharpProject|Netstandard20)")) {
-                    Write-Host "Publishing $nugetPackagePath"
-                    if (-Not $simulate) {
-                        dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols
-                        if ($LASTEXITCODE -ne 0) {
-                            exit $LASTEXITCODE
+                $nugetPacakgeName = $_.Name
+                if ($nugetPacakgeName -match '(?<=(?<id>.+))\.(?<version>((\d+\.\d+(\.\d+)?))(?<suffix>(-.*)?))\.nupkg')
+                {
+                    $packageId = $Matches.id
+                    $packageVersion = $Matches.version
+
+                    # publish only listed packages
+                    if ($packagestoPublish.Contains($packageId)) {
+                        Write-Host "Publishing $nugetPackagePath"
+                        if (-Not $simulate) {
+                            dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols
+                            if ($LASTEXITCODE -ne 0) {
+                                exit $LASTEXITCODE
+                            }
                         }
                     }
                 }
@@ -50,7 +78,13 @@ try {
         # publish vs code marketplace
         Write-Host "Publishing $extension"
         if (-Not $simulate) {
-            vsce publish --packagePath $extension --pat $vscodeToken --noVerify
+            if ($vscodeTarget -eq "insiders") {
+                vsce publish --pre-release --packagePath $extension --pat $vscodeToken --noVerify
+            }
+            else{
+                vsce publish --packagePath $extension --pat $vscodeToken --noVerify
+            }
+           
         }
     }
 }

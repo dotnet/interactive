@@ -17,12 +17,15 @@ changelog:
     - title: Bug fixes🛠️
       labels:
         - bug
-    - title: Area-Automation 
+    - title: Area-Automation
       labels:
         - Area-Automation
     - title: Area-Auth
       labels:
         - Area-Auth
+    - title: Area-API
+      labels:
+        - Area-API
     - title: Area-C#
       labels:
         - Area-C#
@@ -47,9 +50,10 @@ changelog:
     - title: Area-Language Services
       labels:
         - Area-Language Services
-    - title: Area-Messaging and Comms
+    - title: Area-Messaging, Comms, and Scheduling
       labels:
         - Area-Messaging and Comms
+        - Area-Messaging / scheduling / comms
     - title: Area-Packages and Extensions
       labels:
         - Area-Packages and Extensions
@@ -77,6 +81,9 @@ changelog:
     - title: Area-VS Code Extension
       labels:
         - Area-VS Code Extension
+    - title: Area-Polyglot Notebooks Extension
+      labels:
+        - Area-Polyglot Notebooks Extension
     - title: Area-VS Code Jupyter Extension Interop
       labels:
         - Area-VS Code Jupyter Extension Interop
@@ -89,6 +96,9 @@ changelog:
     - title: Area-Jupyter sub-kernels
       labels:
         - Area-Jupyter sub-kernels
+    - title: Area-Localization and Globalization
+      labels:
+        - Area-Localization and Globalization
     - title: Other Changes
       labels:
         - "*"

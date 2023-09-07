@@ -1,17 +1,23 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
-using FluentAssertions;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+
+#if !NETFRAMEWORK
+using Microsoft.DotNet.Interactive.CSharp;
+#endif
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -159,5 +165,114 @@ public partial class KernelTests
 
         var lastEvent = await events;
         lastEvent.Should().BeNull();
+    }
+
+#if !NETFRAMEWORK
+    [Fact]
+    public async Task Awaiting_a_disposed_task_does_not_deadlock()
+    {
+        using var kernel = new CompositeKernel
+        {
+            new CSharpKernel()
+        };
+
+        await kernel.SendAsync(new SubmitCode("""
+            using Microsoft.DotNet.Interactive;
+            using Microsoft.DotNet.Interactive.Commands;
+            using Microsoft.DotNet.Interactive.Events;
+            using Microsoft.DotNet.Interactive.CSharp;
+
+            var csharp2 = new CSharpKernel();
+            """));
+
+        await kernel.SendAsync(new SubmitCode("""
+            var result = csharp2.SendAsync(new SubmitCode("123"));
+            """));
+
+        var result = await kernel.SendAsync(new SubmitCode("""
+            (await result).Events
+            """));
+
+        result.Events.Should().ContainSingle<CommandFailed>()
+              .Which.Exception.Should().BeOfType<ObjectDisposedException>();
+    }
+
+    [Fact(Skip = "later")]
+    public async Task Invocation_context_does_not_cause_entanglement_between_kernels_that_do_not_share_a_scheduler()
+    {
+        using var kernel = new CompositeKernel
+        {
+            new CSharpKernel()
+        };
+
+        await kernel.SendAsync(new SubmitCode("""
+            using Microsoft.DotNet.Interactive;
+            using Microsoft.DotNet.Interactive.Commands;
+            using Microsoft.DotNet.Interactive.Events;
+            using Microsoft.DotNet.Interactive.CSharp;
+
+            var csharp2 = new CSharpKernel();
+            var csharp2Events = new List<KernelEvent>();
+            csharp2.KernelEvents.Subscribe(e => csharp2Events.Add(e));
+            """));
+
+        await kernel.SendAsync(new SubmitCode("""
+            var result = csharp2.SendAsync(new SubmitCode("123"));
+            """));
+
+        var result = await kernel.SendAsync(new SubmitCode("""
+            csharp2Events.Count
+        """));
+
+        result.Events.Should().ContainSingle<ReturnValueProduced>()
+              .Which.Value.As<int>().Should().BeGreaterThan(0);
+    }
+#endif
+
+    [Fact]
+    public async Task it_can_handle_commands_that_submit_commands_that_are_split()
+    {
+        var subkernel = new FakeKernel();
+        var magicCommand = new Command("#!magic");
+        bool magicWasCalled = false;
+        magicCommand.SetHandler(_ =>
+        {
+            magicWasCalled = true;
+        });
+        subkernel.AddDirective(magicCommand);
+
+        subkernel.Handle = async (command, context) =>
+        {
+            if (command is SubmitCode submitCode)
+            {
+                switch (submitCode.Code)
+                {
+                    case "outer submission":
+                        await context.HandlingKernel.RootKernel.SendAsync(new SubmitCode("""
+                                #!magic
+                                inner submission
+                                """));
+
+                        break;
+
+                    case "inner submission":
+                        context.Display("inner submission event", mimeTypes: "text/plain");
+                        break;
+                }
+            }
+        };
+
+        using var kernel = new CompositeKernel
+        {
+            subkernel
+        };
+
+        using var events = kernel.KernelEvents.ToSubscribedList();
+
+        await kernel.SubmitCodeAsync("outer submission");
+
+        magicWasCalled.Should().BeTrue();
+
+        events.Should().ContainSingle<DisplayedValueProduced>(v => v.Value.Equals("inner submission event"));
     }
 }

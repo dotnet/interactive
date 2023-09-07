@@ -3,6 +3,7 @@
 
 using System;
 using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
@@ -25,7 +26,19 @@ public static class StringExtensions
 
     public static string IndentHtml(this string html)
     {
-        return XElement.Parse(html).ToString();
+        try
+        {
+            return XElement.Parse(html).ToString();
+        }
+        catch (XmlException ex) when (ex.Message.Contains("multiple root elements"))
+        {
+            var DELETE_ME = "DELETE_ME";
+            html = $"<{DELETE_ME}>{html}</{DELETE_ME}>";
+            var parsed = XElement.Parse(html).ToString();
+            return parsed
+                   .Replace($"<{DELETE_ME}>", "")
+                   .Replace($"</{DELETE_ME}>", "");
+        }
     }
 
     public static string RemoveStyleElement(this string html) => 

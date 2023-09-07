@@ -12,8 +12,8 @@ namespace Microsoft.DotNet.Interactive.Mermaid;
 
 internal class MermaidMarkdownFormatter : ITypeFormatterSource
 {
-    private const string DefaultLibraryVersion = "9.1.7";
-    private static readonly Uri DefaultLibraryUri = new($@"https://cdn.jsdelivr.net/npm/mermaid@{DefaultLibraryVersion}/dist/mermaid.min.js", UriKind.Absolute);
+    private const string DefaultLibraryVersion = "10.1.0";
+    private static readonly Uri DefaultLibraryUri = new($@"https://cdn.jsdelivr.net/npm/mermaid@{DefaultLibraryVersion}/dist/mermaid.esm.min.mjs", UriKind.Absolute);
     private static readonly Uri RequireUri = new("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
     
     
@@ -58,10 +58,7 @@ internal class MermaidMarkdownFormatter : ITypeFormatterSource
         code.AppendLine($"<div class=\"mermaidMarkdownContainer\" style=\"background-color:{markdown.Background}\">");
         code.AppendLine(@"<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"">");
             
-                                             code.AppendLine(@"<script type=""text/javascript"">");
-        AppendJsCode(code, divId, functionName, libraryUri, libraryVersion, markdown.ToString());
-        code.AppendLine(JavascriptUtilities.GetCodeForEnsureRequireJs(RequireUri, functionName));
-        code.AppendLine("</script>");
+       
         var style = string.Empty;
         if (!string.IsNullOrWhiteSpace(markdown.Width) || !string.IsNullOrWhiteSpace(markdown.Width))
         {
@@ -80,36 +77,33 @@ internal class MermaidMarkdownFormatter : ITypeFormatterSource
             style += "\" ";
         }
         code.AppendLine($"<div id=\"{divId}\"{style}></div>");
+
+        code.AppendLine(@"<script type=""module"">");
+        AppendJsCode(code, divId, libraryUri, libraryVersion, markdown.ToString());
+        code.AppendLine("</script>");
+
         code.AppendLine("</div>");
 
         var html = new HtmlString(code.ToString());
         return html;
     }
 
-    private static void AppendJsCode(StringBuilder stringBuilder, string divId, string functionName, Uri libraryUri, string libraryVersion, string markdown)
+    private static void AppendJsCode(StringBuilder stringBuilder, string divId,  Uri libraryUri, string libraryVersion, string markdown)
     {
         var escapedMarkdown = Regex.Replace(markdown, @"(?<pre>[^\\])(?<newLine>\\n)", @"${pre}\\n");
-        stringBuilder.AppendLine($@"
-{functionName} = () => {{");
-
-        var libraryAbsoluteUri = Regex.Replace(libraryUri.AbsoluteUri, @"(\.js)$", string.Empty);
-
-        stringBuilder.AppendLine($@" 
-        (require.config({{ 'paths': {{ 'context': '{libraryVersion}', 'mermaidUri' : '{libraryAbsoluteUri}', 'urlArgs': 'cacheBuster={CacheBuster}' }}}}) || require)(['mermaidUri'], (mermaid) => {{");
-
 
         stringBuilder.AppendLine($@"
+            import mermaid from '{libraryUri.AbsoluteUri}';
             let renderTarget = document.getElementById('{divId}');
-            mermaid.mermaidAPI.render( 
-                'mermaid_{divId}', 
-                `{escapedMarkdown}`, 
-                g => {{
-                    renderTarget.innerHTML = g 
-                }});
-        }},
-        (error) => {{
-            console.log(error);
-        }});
-}}");
+            try {{
+                const {{svg, bindFunctions}} = await mermaid.mermaidAPI.render( 
+                    'mermaid_{divId}', 
+                    `{escapedMarkdown}`);
+                renderTarget.innerHTML = svg;
+                bindFunctions?.(renderTarget);
+            }}
+            catch (error) {{
+                console.log(error);
+            }}");
     }
 }

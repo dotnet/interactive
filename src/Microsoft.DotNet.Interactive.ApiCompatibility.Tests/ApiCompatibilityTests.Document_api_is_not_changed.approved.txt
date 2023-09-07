@@ -1,18 +1,10 @@
 Microsoft.DotNet.Interactive.Documents
   public static class CodeSubmission
-    public static System.Text.Encoding Encoding { get;}
     public static InteractiveDocument Parse(System.String content, KernelInfoCollection kernelInfos = null)
     public static InteractiveDocument Read(System.IO.Stream stream, KernelInfoCollection kernelInfos)
-    public static System.Threading.Tasks.Task<InteractiveDocument> ReadAsync(System.IO.Stream stream, KernelInfoCollection kernelInfos)
     public static System.String ToCodeSubmissionContent(System.String newline = 
 )
-    public static System.Void Write(InteractiveDocument document, System.IO.Stream stream, System.String newline = 
-)
-    public static System.Void Write(InteractiveDocument document, System.IO.TextWriter writer, System.String newline = 
-)
     public static System.Void Write(InteractiveDocument document, System.IO.Stream stream, KernelInfoCollection kernelInfos, System.String newline = 
-)
-    public static System.Void Write(InteractiveDocument document, System.IO.TextWriter writer, KernelInfoCollection kernelInfos, System.String newline = 
 )
   public class DisplayElement : InteractiveDocumentOutputElement, IDataElement
     .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
@@ -27,7 +19,6 @@ Microsoft.DotNet.Interactive.Documents
     .ctor(System.String valueName, System.String typeHint = text)
     public System.String TypeHint { get; set;}
     public System.String ValueName { get; set;}
-    protected System.Boolean Equals(InputField other)
     public System.Boolean Equals(System.Object obj)
     public System.Int32 GetHashCode()
   public class InteractiveDocument, System.Collections.IEnumerable
@@ -37,7 +28,6 @@ Microsoft.DotNet.Interactive.Documents
     public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get;}
     public System.Void Add(InteractiveDocumentElement element)
     public System.String GetDefaultKernelName()
-    public System.Collections.IEnumerator GetEnumerator()
     public System.Collections.Generic.IAsyncEnumerable<InteractiveDocument> GetImportsAsync(System.Boolean recursive = False)
     public System.Collections.Generic.IEnumerable<InputField> GetInputFields()
     public System.Collections.Generic.IEnumerable<System.String> GetMagicCommandLines()
@@ -92,55 +82,8 @@ Microsoft.DotNet.Interactive.Documents.Jupyter
     public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
     public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Parse(System.String json, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos = null)
     public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Read(System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos)
-    public static System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Documents.InteractiveDocument> ReadAsync(System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfo = null)
     public static System.String ToJupyterJson(System.String defaultLanguage = null)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.Stream stream)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.TextWriter writer)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.TextWriter writer, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos)
-Microsoft.DotNet.Interactive.Documents.ParserServer
-  public enum DocumentSerializationType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
-    Dib=0
-    Ipynb=1
-  public class NotebookErrorResponse : NotebookParserServerResponse
-    .ctor(System.String id, System.String errorMessage)
-    public System.String ErrorMessage { get;}
-  public abstract class NotebookParseOrSerializeRequest
-    public static NotebookParseOrSerializeRequest FromJson(System.String json)
-    public System.String DefaultLanguage { get;}
-    public System.String Id { get;}
-    public DocumentSerializationType SerializationType { get;}
-    public RequestType Type { get;}
-  public class NotebookParseRequest : NotebookParseOrSerializeRequest
-    .ctor(System.String id, DocumentSerializationType serializationType, System.String defaultLanguage, System.Byte[] rawData)
-    public System.Byte[] RawData { get;}
-    public RequestType Type { get;}
-  public class NotebookParseResponse : NotebookParserServerResponse
-    .ctor(System.String id, Microsoft.DotNet.Interactive.Documents.InteractiveDocument document)
-    public Microsoft.DotNet.Interactive.Documents.InteractiveDocument Document { get;}
-  public class NotebookParserServer, System.IDisposable
-    public static NotebookParserServerResponse HandleRequest(NotebookParseOrSerializeRequest request)
-    .ctor(System.IO.TextReader input, System.IO.TextWriter output)
-    public System.IO.TextReader Input { get;}
-    public System.IO.TextWriter Output { get;}
-    public System.Void Dispose()
-    public System.Threading.Tasks.Task RunAsync()
-  public static class NotebookParserServerExtensions
-    public static System.String ToJson()
-    public static System.String ToJson()
-  public abstract class NotebookParserServerResponse
-    public static NotebookParserServerResponse FromJson(System.String json)
-    public System.String Id { get;}
-  public class NotebookSerializeRequest : NotebookParseOrSerializeRequest
-    .ctor(System.String id, DocumentSerializationType serializationType, System.String defaultLanguage, System.String newLine, Microsoft.DotNet.Interactive.Documents.InteractiveDocument document)
-    public Microsoft.DotNet.Interactive.Documents.InteractiveDocument Document { get;}
-    public System.String NewLine { get;}
-    public RequestType Type { get;}
-  public class NotebookSerializeResponse : NotebookParserServerResponse
-    .ctor(System.String id, System.Byte[] rawData)
-    public System.Byte[] RawData { get;}
-  public static class ParserServerSerializer
-    public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
-  public enum RequestType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
-    Parse=0
-    Serialize=1

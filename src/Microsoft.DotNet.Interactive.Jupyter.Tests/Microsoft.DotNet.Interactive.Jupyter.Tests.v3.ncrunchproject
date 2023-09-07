@@ -6,8 +6,53 @@
       <Value>CopyReferencedAssembliesToWorkspaceIsOn</Value>
     </HiddenComponentWarnings>
     <IgnoredTests>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelVariableSharingTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelCommandTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.CustomMetadataParsingTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.HistorySerializationTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.InterruptRequestHandlerTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.IsCompleteRequestHandlerTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterMessageContractTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterMessageSerializationTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.LaTeXFormatterTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.MagicCommandTests+Markdown</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.MagicCommandTests+Time</FixtureName>
+      </FixtureTestSelector>
       <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Jupyter.Tests.ExecuteRequestHandlerTests.sends_InputRequest_message_when_submission_requests_user_input_in_powershell("Read-Host", "", "input-value")</TestName>
+        <TestName>Microsoft.DotNet.Interactive.Jupyter.Tests.MagicCommandTests+who_and_whos.who_lists_the_names_of_variables_in_scope("CSharp")</TestName>
+      </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.MathFormatterTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.ZMQProtocolTests</FixtureName>
+      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Jupyter.Tests.MagicCommandTests+who_and_whos.who_lists_the_names_of_variables_in_scope("FSharp")</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>

@@ -3,6 +3,8 @@
 
 using System;
 using System.CommandLine.Parsing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -11,13 +13,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
 using Serilog.Sinks.RollingFileAlternate;
-using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Program>;
+using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 
 namespace Microsoft.DotNet.Interactive.App;
 
@@ -28,7 +31,25 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         Console.OutputEncoding = Encoding.UTF8;
+        SetCultureFromEnvironmentVariables();
+
         return await CommandLineParser.Create(_serviceCollection).InvokeAsync(args);
+    }
+
+    public static void SetCultureFromEnvironmentVariables()
+    {
+        var culture = Environment.GetEnvironmentVariable("DOTNET_CLI_CULTURE");
+        var uiLanguage = Environment.GetEnvironmentVariable("DOTNET_CLI_UI_LANGUAGE");
+
+        if (!string.IsNullOrWhiteSpace(culture))
+        {
+            CultureInfo.CurrentCulture = new CultureInfo(culture);
+        }
+
+        if (!string.IsNullOrWhiteSpace(uiLanguage))
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo(uiLanguage);
+        }
     }
 
     private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
@@ -36,17 +57,18 @@ public class Program
         typeof(Startup).Assembly, // dotnet-interactive.dll
         typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
         typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
+        typeof(InteractiveDocument).Assembly, // Microsoft.DotNet.Interactive.Documents.dll
     };
 
-    internal static IDisposable StartToolLogging(StartupOptions options)
+    internal static IDisposable StartToolLogging(DirectoryInfo logPath = null)
     {
         var disposables = new CompositeDisposable();
 
-        if (options.LogPath is not null)
+        if (logPath is not null)
         {
             var log = new SerilogLoggerConfiguration()
                 .WriteTo
-                .RollingFileAlternate(options.LogPath.FullName, outputTemplate: "{Message}{NewLine}")
+                .RollingFileAlternate(logPath.FullName, outputTemplate: "{Message}{NewLine}")
                 .CreateLogger();
 
             var subscription = LogEvents.Subscribe(
@@ -67,17 +89,17 @@ public class Program
     }
 
     public static IWebHostBuilder ConstructWebHostBuilder(
-        StartupOptions options, 
+        StartupOptions options,
         IServiceCollection serviceCollection)
     {
-        using var _ = Log.OnEnterAndExit();
-
         // TODO: (ConstructWebHostBuilder) dispose me
         var disposables = new CompositeDisposable
         {
-            StartToolLogging(options)
+            StartToolLogging(options.LogPath)
         };
-            
+
+        using var _ = Log.OnEnterAndExit();
+
         HttpProbingSettings probingSettings = null;
 
         if (options.EnableHttpApi)
@@ -138,9 +160,9 @@ public class Program
 
     public static IWebHost ConstructWebHost(StartupOptions options)
     {
-        var webHost = ConstructWebHostBuilder(options,_serviceCollection)
+        var webHost = ConstructWebHostBuilder(options, _serviceCollection)
             .Build();
-           
+
         return webHost;
     }
 }

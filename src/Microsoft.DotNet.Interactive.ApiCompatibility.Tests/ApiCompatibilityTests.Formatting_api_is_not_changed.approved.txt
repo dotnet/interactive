@@ -26,7 +26,7 @@ Microsoft.DotNet.Interactive.Formatting
     public static System.String NullString { get; set;}
     public static System.Int32 RecursionLimit { get; set;}
     public static System.Void Format(System.Object instance, System.IO.TextWriter writer)
-    public static System.Void FormatTo<T>(FormatContext context, System.String mimeType = text/plain)
+    public static System.Void FormatTo<T>(FormatContext context, System.String mimeType)
     public static ITypeFormatter GetPreferredFormatterFor(System.Type actualType, System.String mimeType)
     public static System.Collections.Generic.IReadOnlyCollection<System.String> GetPreferredMimeTypesFor(System.Type type)
     public static System.Void Register(ITypeFormatter formatter)
@@ -105,6 +105,7 @@ Microsoft.DotNet.Interactive.Formatting
   public class HtmlTag, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String name)
     .ctor(System.String name, System.String text)
+    .ctor(System.String name, Microsoft.AspNetCore.Html.IHtmlContent content)
     .ctor(System.String name, System.Action<FormatContext> content)
     public System.Action<FormatContext> Content { get; set;}
     public HtmlAttributes HtmlAttributes { get; set;}
@@ -151,7 +152,6 @@ Microsoft.DotNet.Interactive.Formatting
   public class JsonString : Microsoft.AspNetCore.Html.HtmlString, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String json)
   public static class PlainTextFormatter
-    public static System.Int32 MaxProperties { get; set;}
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
     public static System.Void WriteStartProperty(FormatContext context)
@@ -273,6 +273,7 @@ Microsoft.DotNet.Interactive.Formatting
   public class TypeFormatterSourceAttribute : System.Attribute
     .ctor(System.Type formatterSourceType)
     public System.Type FormatterSourceType { get;}
+    public System.String[] PreferredMimeTypes { get; set;}
 Microsoft.DotNet.Interactive.Formatting.Csv
   public static class CsvFormatter
     public static Microsoft.DotNet.Interactive.Formatting.ITypeFormatter GetPreferredFormatterFor(System.Type type)

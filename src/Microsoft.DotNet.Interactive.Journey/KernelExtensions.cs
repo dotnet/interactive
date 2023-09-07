@@ -37,24 +37,24 @@ public static class KernelExtensions
 
         var fromUrlOption = new Option<Uri>(
             "--from-url",
-            "Specify lesson source URL");
+            LocalizationResources.Magics_model_answer_from_url_Description());
 
         var fromFileOption = new Option<FileInfo>(
             "--from-file",
-            description: "Specify lesson source file",
+            description: LocalizationResources.Magics_model_answer_from_file_Description(),
             parseArgument: result =>
             {
                 var filePath = result.Tokens.Single().Value;
                 var fromUrlResult = result.FindResultFor(fromUrlOption);
                 if (fromUrlResult is not null)
                 {
-                    result.ErrorMessage = $"The {fromUrlResult.Token.Value} and {(result.Parent as OptionResult).Token.Value} options cannot be used together";
+                    result.ErrorMessage = LocalizationResources.Magics_model_answer_from_file_ErrorMessage(fromUrlResult.Token.Value, (result.Parent as OptionResult).Token.Value);
                     return null;
                 }
 
                 if (!File.Exists(filePath))
                 {
-                    result.ErrorMessage = LocalizationResources.Instance.FileDoesNotExist(filePath);
+                    result.ErrorMessage = LocalizationResources.FileDoesNotExist(filePath);
                     return null;
                 }
 
@@ -80,7 +80,7 @@ public static class KernelExtensions
 
             var document = fromFile switch
             {
-                { } => await NotebookLessonParser.ReadFileAsInteractiveDocument(fromFile, kernel),
+                { } => NotebookLessonParser.ReadFileAsInteractiveDocument(fromFile, kernel),
                 _ => await NotebookLessonParser.LoadNotebookFromUrl(fromUrl, httpClient)
             };
 

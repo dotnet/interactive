@@ -15,6 +15,12 @@ Microsoft.DotNet.Interactive.Jupyter
     public System.String SignatureScheme { get; set;}
     public System.Int32 StdinPort { get; set;}
     public System.String Transport { get; set;}
+  public class ConnectJupyterKernelCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+    .ctor()
+    public System.CommandLine.Option<System.String> InitScript { get;}
+    public System.CommandLine.Option<System.String> KernelSpecName { get;}
+    public ConnectJupyterKernelCommand AddConnectionOptions(Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions connectionOptions)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
   public static class Constants
   public class ExecuteRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.ExecuteRequest>, System.IDisposable
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
@@ -24,7 +30,11 @@ Microsoft.DotNet.Interactive.Jupyter
     .ctor(ConnectionInformation connectionInformation)
     public System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellationToken)
     public System.Threading.Tasks.Task StopAsync(System.Threading.CancellationToken cancellationToken)
-  public abstract class IJupyterMessageSender
+  public abstract class IJupyterKernelSpecModule
+    public System.IO.DirectoryInfo GetDefaultKernelSpecDirectory()
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> InstallKernel(System.IO.DirectoryInfo sourceDirectory)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernels()
+  public abstract class IJupyterMessageResponseSender
     public System.Void Send(Microsoft.DotNet.Interactive.Jupyter.Protocol.PubSubMessage message)
     public System.Void Send(Microsoft.DotNet.Interactive.Jupyter.Protocol.ReplyMessage message)
     public System.String Send(Microsoft.DotNet.Interactive.Jupyter.Protocol.InputRequest message)
@@ -39,9 +49,24 @@ Microsoft.DotNet.Interactive.Jupyter
   public class JupyterClientKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
     .ctor()
     public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
+  public class JupyterHttpKernelConnectionOptions, Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions
+    .ctor()
+    public System.CommandLine.Option<System.String> TargetUrl { get;}
+    public System.CommandLine.Option<System.String> Token { get;}
+    public Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
+    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
+  public class JupyterKernelSpecModule, IJupyterKernelSpecModule
+    .ctor()
+    public System.IO.DirectoryInfo GetDefaultKernelSpecDirectory()
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> InstallKernel(System.IO.DirectoryInfo sourceDirectory)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernels()
+  public class JupyterLocalKernelConnectionOptions, Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions
+    .ctor()
+    public Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
+    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
   public class JupyterRequestContext
-    .ctor(IJupyterMessageSender jupyterMessageSender, Microsoft.DotNet.Interactive.Jupyter.Messaging.Message request)
-    public IJupyterMessageSender JupyterMessageSender { get;}
+    .ctor(IJupyterMessageResponseSender jupyterMessageSender, Microsoft.DotNet.Interactive.Jupyter.Messaging.Message request)
+    public IJupyterMessageResponseSender JupyterMessageSender { get;}
     public Microsoft.DotNet.Interactive.Jupyter.Messaging.Message JupyterRequestMessageEnvelope { get;}
     public System.String Token { get;}
     public System.Void Complete()
@@ -62,12 +87,21 @@ Microsoft.DotNet.Interactive.Jupyter
   public static class KernelFormattingExtensions
     public static Microsoft.DotNet.Interactive.CSharp.CSharpKernel UseMathAndLaTeX()
     public static Microsoft.DotNet.Interactive.FSharp.FSharpKernel UseMathAndLaTeX()
+  public class KernelSpec
+    .ctor()
+    public System.Collections.Generic.IReadOnlyList<System.String> CommandArguments { get; set;}
+    public System.String DisplayName { get; set;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.String> EnvironmentVariables { get; set;}
+    public System.String InterruptMode { get; set;}
+    public System.String Language { get; set;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Metadata { get; set;}
+    public System.String Name { get; set;}
   public abstract class RequestHandlerBase<T>, System.IDisposable
     public System.Void Dispose()
     protected Microsoft.DotNet.Interactive.Kernel get_Kernel()
     protected System.IObservable<Microsoft.DotNet.Interactive.Events.KernelEvent> get_KernelEvents()
     protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
-    protected System.Threading.Tasks.Task SendAsync(JupyterRequestContext context, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
+    protected System.Threading.Tasks.Task SendAsync(JupyterRequestContext jupyterContext, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
   public class Shell, Microsoft.Extensions.Hosting.IHostedService
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel, JupyterRequestContextScheduler scheduler, ConnectionInformation connectionInformation, Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime)
     public System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellationToken)
@@ -83,6 +117,18 @@ Microsoft.DotNet.Interactive.Jupyter
   public static class TopLevelMethods
     public static System.String input(System.String prompt = )
     public static Microsoft.DotNet.Interactive.PasswordString password(System.String prompt = )
+Microsoft.DotNet.Interactive.Jupyter.Connection
+  public abstract class IJupyterConnection
+    public System.Threading.Tasks.Task<IJupyterKernelConnection> CreateKernelConnectionAsync(System.String kernelSpecName)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Jupyter.KernelSpec>> GetKernelSpecsAsync()
+  public abstract class IJupyterKernelConnection, System.IDisposable
+    public Microsoft.DotNet.Interactive.Jupyter.Messaging.IMessageReceiver Receiver { get;}
+    public Microsoft.DotNet.Interactive.Jupyter.Messaging.IMessageSender Sender { get;}
+    public System.Uri Uri { get;}
+    public System.Threading.Tasks.Task StartAsync()
+  public abstract class IJupyterKernelConnectionOptions
+    public IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
+    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
 Microsoft.DotNet.Interactive.Jupyter.Formatting
   public class LaTeXString
     public static LaTeXString op_Implicit(System.String source)
@@ -103,15 +149,19 @@ Microsoft.DotNet.Interactive.Jupyter.Messaging
     public System.String Session { get;}
     public System.String Username { get;}
     public System.String Version { get;}
+  public abstract class IMessageReceiver
+    public System.IObservable<Message> Messages { get;}
+  public abstract class IMessageSender
+    public System.Threading.Tasks.Task SendAsync(Message message)
   public static class JsonElementExtensions
     public static System.Object[] ToArray()
     public static System.Collections.Generic.IDictionary<System.String,System.Object> ToDictionary()
     public static System.Object ToObject()
     public static System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> ToReadOnlyDictionary()
   public class Message
-    public static Message Create<T>(T content, Header parentHeader = null, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> identifiers = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.String signature = null, System.String channel = null)
+    public static Message Create<T>(T content, Header parentHeader = null, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> identifiers = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.String signature = null, System.String channel = shell)
     public static Message CreatePubSub<T>(T content, Message request, System.String kernelIdentity = null)
-    public static Message CreateReply<T>(T content, Message request, System.String channel = null)
+    public static Message CreateReply<T>(T content, Message request, System.String channel = shell)
     .ctor(Header header, Microsoft.DotNet.Interactive.Jupyter.Protocol.Message content = null, Header parentHeader = null, System.String signature = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> identifiers = null, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> buffers = null, System.String channel = shell)
     public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> Buffers { get;}
     public System.String Channel { get;}
@@ -125,6 +175,12 @@ Microsoft.DotNet.Interactive.Jupyter.Messaging
     public static T DeserializeFromJsonString<T>(System.String source)
     public static Message DeserializeMessage(System.String signature, System.String headerJson, System.String parentHeaderJson, System.String metadataJson, System.String contentJson, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.Byte>> identifiers, System.Text.Json.JsonSerializerOptions options = null)
     public static System.Boolean IsEmptyJson(System.String source)
+  public static class MessageFormatter
+    public static System.Text.Json.JsonSerializerOptions SerializerOptions { get;}
+  public static class MessageObservableExtensions
+    public static System.IObservable<Microsoft.DotNet.Interactive.Jupyter.Protocol.Message> Content()
+    public static System.IObservable<Message> ResponseOf(Message parentMessage)
+    public static System.IObservable<Microsoft.DotNet.Interactive.Jupyter.Protocol.Message> TakeUntilMessageType(System.String[] messageTypes)
   public static class MetadataExtensions
     public static System.Collections.Generic.Dictionary<System.String,System.Object> DeserializeMetadataFromJsonString(System.String metadataJson)
 Microsoft.DotNet.Interactive.Jupyter.Protocol
@@ -143,31 +199,38 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     .ctor(System.Collections.Generic.IReadOnlyDictionary<System.String,CommTarget> comms)
     public System.Collections.Generic.IReadOnlyDictionary<System.String,CommTarget> Comms { get;}
   public class CommInfoRequest : RequestMessage
-    .ctor(System.String targetName)
+    .ctor(System.String targetName = null)
     public System.String TargetName { get;}
   public class CommMsg : Message
     .ctor(System.String commId, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null)
     public System.String CommId { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
   public class CommOpen : Message
-    .ctor(System.String commId, System.String targetName, System.Object data)
+    .ctor(System.String commId, System.String targetName, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data)
     public System.String CommId { get;}
-    public System.Object Data { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
     public System.String TargetName { get;}
   public class CommTarget
     .ctor(System.String targetName)
     public System.String TargetName { get; set;}
   public class CompleteReply : ReplyMessage
-    .ctor(System.Int32 cursorStart = 0, System.Int32 cursorEnd = 0, System.Collections.Generic.IReadOnlyList<System.String> matches = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.String status = null)
+    .ctor(System.Int32 cursorStart = 0, System.Int32 cursorEnd = 0, System.Collections.Generic.IReadOnlyList<System.String> matches = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Collections.Generic.IReadOnlyList<CompletionResultMetadata>> metaData = null, System.String status = null)
     public System.Int32 CursorEnd { get;}
     public System.Int32 CursorStart { get;}
     public System.Collections.Generic.IReadOnlyList<System.String> Matches { get;}
-    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> MetaData { get;}
+    public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Collections.Generic.IReadOnlyList<CompletionResultMetadata>> MetaData { get;}
     public System.String Status { get;}
   public class CompleteRequest : RequestMessage
     .ctor(System.String code, System.Int32 cursorPosition = 0)
     public System.String Code { get; set;}
     public System.Int32 CursorPosition { get; set;}
+  public class CompletionResultMetadata
+    .ctor(System.Int32 start = 0, System.Int32 end = 0, System.String text = null, System.String type = null, System.String displayText = null)
+    public System.String DisplayText { get;}
+    public System.Int32 End { get;}
+    public System.Int32 Start { get;}
+    public System.String Text { get;}
+    public System.String Type { get;}
   public class CSharpLanguageInfo : LanguageInfo
     .ctor(System.String version = 11.0)
   public class DisplayData : PubSubMessage

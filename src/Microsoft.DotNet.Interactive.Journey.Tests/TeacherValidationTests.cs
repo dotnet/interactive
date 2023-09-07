@@ -1,13 +1,13 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -17,9 +17,9 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
 {
     private async Task RunAllCells(FileInfo file, CompositeKernel kernel)
     {
-        var notebook = await NotebookLessonParser.ReadFileAsInteractiveDocument(file, kernel);
-            
-        foreach (var cell in notebook.Elements.Where(e=> e.KernelName != "markdown"))
+        var notebook = NotebookLessonParser.ReadFileAsInteractiveDocument(file, kernel);
+
+        foreach (var cell in notebook.Elements.Where(e => e.KernelName != "markdown"))
         {
             await kernel.SendAsync(new SubmitCode(cell.Contents, cell.KernelName));
         }
@@ -30,7 +30,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
     {
         var filename = "teacherValidation.dib";
         var file = new FileInfo(GetPatchedNotebookPath(filename));
-            
+
         var kernel = await CreateKernel(LessonMode.TeacherMode);
         using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -69,9 +69,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
 
         var result = await kernel.SubmitCodeAsync("1");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<DisplayedValueProduced>(
+        result.Events.Should().ContainSingle<DisplayedValueProduced>(
             e => e.FormattedValues.Single(v => v.MimeType == "text/html")
                 .Value.ContainsAll(
                     "Challenge func rule",
@@ -86,9 +84,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
 
         var result = await kernel.SubmitCodeAsync("1");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<DisplayedValueProduced>(
+        result.Events.Should().ContainSingle<DisplayedValueProduced>(
             e => e.FormattedValues.Single(v => v.MimeType == "text/html")
                 .Value.ContainsAll(
                     "Challenge func not done"));
@@ -102,9 +98,8 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
         await kernel.SubmitCodeAsync("CalculateTriangleArea = (double x, double y) => 0.5 * x * y;");
 
         var result = await kernel.SubmitCodeAsync("Math.Sqrt(pi)");
-        using var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<DisplayedValueProduced>(
+        result.Events.Should().ContainSingle<DisplayedValueProduced>(
             e => e.FormattedValues.Single(v => v.MimeType == "text/html")
                 .Value.ContainsAll(
                     "Challenge math rule",
@@ -120,8 +115,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
 
         var result = await kernel.SubmitCodeAsync("Math.Sqrt(pi)");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-        events.Should().ContainSingle<DisplayedValueProduced>(
+        result.Events.Should().ContainSingle<DisplayedValueProduced>(
             e => e.FormattedValues.Single(v => v.MimeType == "text/html")
                 .Value.ContainsAll(
                     "Challenge math message"));

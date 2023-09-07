@@ -7,11 +7,15 @@ using System.Reflection;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
 
-internal class MemberAccessor<T>
+internal class MemberAccessor<T> 
 {
+    private readonly MemberInfo _member;
+
+    private readonly Func<T, object> _getter;
+
     public MemberAccessor(MemberInfo member)
     {
-        Member = member;
+        _member = member;
 
         try
         {
@@ -19,7 +23,7 @@ internal class MemberAccessor<T>
 
             var propertyOrField = Expression.PropertyOrField(
                 targetParam,
-                Member.Name);
+                _member.Name);
 
             var unaryExpression = Expression.TypeAs(
                 propertyOrField,
@@ -29,11 +33,11 @@ internal class MemberAccessor<T>
                 unaryExpression,
                 targetParam);
 
-            Getter = lambdaExpression.Compile();
+            _getter = lambdaExpression.Compile();
         }
         catch (Exception)
         {
-            Getter = obj =>
+            _getter = obj =>
             {
                 if (obj is null)
                 {
@@ -45,15 +49,13 @@ internal class MemberAccessor<T>
         }
     }
 
-    public MemberInfo Member { get; }
-
-    public Func<T, object> Getter { get; set; }
+    public string MemberName => _member.Name;
 
     public object GetValueOrException(T instance)
     {
         try
         {
-            return Getter(instance);
+            return _getter(instance);
         }
         catch (Exception exception)
         {

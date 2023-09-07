@@ -37,7 +37,7 @@ type FSharpKernel () as this =
 
     do this.KernelInfo.LanguageName <- "F#"
     do this.KernelInfo.LanguageVersion <- "7.0"
-    do this.KernelInfo.DisplayName <- "F# Script"
+    do this.KernelInfo.DisplayName <- $"{this.KernelInfo.LocalName} - F# Script"
 
     static let lockObj = Object();
 
@@ -203,24 +203,25 @@ type FSharpKernel () as this =
                 with
                 | ex -> Error(ex), [||]
 
-            let diagnostics = fsiDiagnostics |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
-            
             // script.Eval can succeed with error diagnostics, see https://github.com/dotnet/interactive/issues/691
             let isError = fsiDiagnostics |> Array.exists (fun d -> d.Severity = FSharpDiagnosticSeverity.Error)
 
-            let formattedDiagnostics =
-                fsiDiagnostics
-                |> Array.map (fun d -> d.ToString())
-                |> Array.map (fun text -> new FormattedValue(PlainTextFormatter.MimeType, text))
+            if fsiDiagnostics.Length > 0 then
+                let diagnostics = fsiDiagnostics |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
 
-            context.Publish(DiagnosticsProduced(diagnostics, codeSubmission, formattedDiagnostics))
+                let formattedDiagnostics =
+                    fsiDiagnostics
+                    |> Array.map (fun d -> d.ToString())
+                    |> Array.map (fun text -> new FormattedValue(PlainTextFormatter.MimeType, text))
+
+                context.Publish(DiagnosticsProduced(diagnostics, codeSubmission, formattedDiagnostics))
 
             match result with
             | Ok(result) when not isError ->
                 match result with
                 | Some(value) when value.ReflectionType <> typeof<unit> ->
                     let value = value.ReflectionValue
-                    let formattedValues = FormattedValue.FromObject(value)
+                    let formattedValues = FormattedValue.CreateManyFromObject(value)
                     context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
                 | Some _
                 | None -> ()
@@ -368,8 +369,10 @@ type FSharpKernel () as this =
         task {
             let _parseResults, checkFileResults, _checkProjectResults = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
             let errors = checkFileResults.Diagnostics
-            let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
-            context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
+
+            if errors.Length > 0 then
+                let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
+                context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
         }
 
     let handleRequestValueValueInfos (requestValueInfos: RequestValueInfos) (context: KernelInvocationContext) =
@@ -377,7 +380,7 @@ type FSharpKernel () as this =
             let valueInfos =
                 script.Value.Fsi.GetBoundValues()
                 |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
-                |> List.map (fun x -> new KernelValueInfo(x.Name, FormattedValue.FromObject(x.Value.ReflectionValue, requestValueInfos.MimeType)[0], this.getValueType(x.Name)))
+                |> List.map (fun x -> new KernelValueInfo(x.Name, FormattedValue.CreateSingleFromObject(x.Value.ReflectionValue, requestValueInfos.MimeType), this.getValueType(x.Name)))
                 :> IReadOnlyCollection<KernelValueInfo>
             context.Publish(new ValueInfosProduced(valueInfos, requestValueInfos))
         }
@@ -391,12 +394,12 @@ type FSharpKernel () as this =
                 context.Fail(requestValue, message=(sprintf "Value '%s' not found in kernel %s" requestValue.Name this.Name))
         }
 
-    let createPackageRestoreContext registerForDisposal =
-        let packageRestoreContext = new PackageRestoreContext()
+    let createPackageRestoreContext (useResultsCache:bool) (registerForDisposal) =
+        let packageRestoreContext = new PackageRestoreContext(useResultsCache)
         do registerForDisposal(fun () -> packageRestoreContext.Dispose())
         packageRestoreContext
 
-    let _packageRestoreContext = lazy createPackageRestoreContext this.RegisterForDisposal
+    let mutable _packageRestoreContext = lazy createPackageRestoreContext true this.RegisterForDisposal
 
     member this.GetValues() =
         script.Value.Fsi.GetBoundValues()
@@ -418,13 +421,13 @@ type FSharpKernel () as this =
         | _ ->
             false
 
-    member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
+    member _.RestoreSources with get () = _packageRestoreContext.Value.RestoreSources
 
-    member _.RequestedPackageReferences = _packageRestoreContext.Value.RequestedPackageReferences;
+    member _.RequestedPackageReferences with get () = _packageRestoreContext.Value.RequestedPackageReferences;
 
-    member _.ResolvedPackageReferences = _packageRestoreContext.Value.ResolvedPackageReferences;
+    member _.ResolvedPackageReferences with get () = _packageRestoreContext.Value.ResolvedPackageReferences;
 
-    member _.PackageRestoreContext = _packageRestoreContext.Value
+    member _.PackageRestoreContext with get () = _packageRestoreContext.Value
 
     interface IKernelCommandHandler<RequestCompletions> with
         member this.HandleAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context
@@ -460,6 +463,9 @@ type FSharpKernel () as this =
 
         member _.GetOrAddPackageReference(packageName: string, packageVersion: string) =
             this.PackageRestoreContext.GetOrAddPackageReference (packageName, packageVersion)
+
+        member _.Configure(useResultsCache:bool) =
+             _packageRestoreContext <- lazy createPackageRestoreContext useResultsCache this.RegisterForDisposal
 
         member _.RestoreAsync() = 
             this.PackageRestoreContext.RestoreAsync()

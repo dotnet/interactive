@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
+    <body>
+      <trans-unit id="Cli_ErrorMessageMustSpecifyPortRange">
+        <source>Must specify a port range</source>
+        <target state="translated">Es muss ein Portbereich angegeben werden</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_ErrorMessage_MustSpecifyPortRangeAsStartPortEndPort">
+        <source>Must specify a port range as StartPort-EndPort</source>
+        <target state="translated">Es muss ein Portbereich als StartPort-EndPort angegeben werden</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_ErrorMessage_StartPortMustBeLower">
+        <source>Start port must be lower then end port</source>
+        <target state="translated">Der Startport muss niedriger als der Endport sein</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_Description">
+        <source>Interactive programming for .NET.</source>
+        <target state="translated">Interaktive Programmierung für .NET.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_Description">
+        <source>Starts dotnet-interactive as a Jupyter kernel</source>
+        <target state="translated">Startet dotnet-interactive als Jupyter-Kernel</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_connection_file_Description">
+        <source>The path to a connection file provided by Jupyter</source>
+        <target state="translated">Der Pfad zu einer von Jupyter bereitgestellten Verbindungsdatei</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_default_kernel_Description">
+        <source>The default language for the kernel</source>
+        <target state="translated">Die Standardsprache für den Kernel</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_Description">
+        <source>Install the .NET kernel for Jupyter</source>
+        <target state="translated">.NET-Kernel für Jupyter installieren</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_http_port_range_Description">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="translated">Gibt den Portbereich an, der zum Aktivieren von HTTP-Diensten verwendet werden soll</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_path_Description">
+        <source>Installs the kernel specs to the specified directory</source>
+        <target state="translated">Installiert die Kernelspezifikationen im angegebenen Verzeichnis</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_log_path_Description">
+        <source>Enable file logging to the specified directory</source>
+        <target state="translated">Dateiprotokollierung im angegebenen Verzeichnis aktivieren</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_notebook_parser_Description">
+        <source>Starts a process to parse and serialize notebooks.</source>
+        <target state="translated">Startet einen Prozess zum Analysieren und Serialisieren von Notebooks.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_Description">
+        <source>Starts dotnet-interactive with kernel functionality exposed over standard I/O</source>
+        <target state="translated">Startet "dotnet-interactive" mit Kernelfunktionalität, die über Standard-E/A verfügbar gemacht wird</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_Description">
+        <source>Specifies the port on which to enable HTTP services</source>
+        <target state="translated">Gibt den Port an, an dem HTTP-Dienste aktiviert werden sollen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_ErrorMessageCannotSpecifyBoth">
+        <source>Cannot specify both {0} and {1} together</source>
+        <target state="translated">Sowohl {0} als auch {1} können nicht gemeinsam angegeben werden</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_ErrorMessageMustSpecifyPortNumber">
+        <source>Must specify a port number or *.</source>
+        <target state="translated">Es muss eine Portnummer oder * angegeben werden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_range_Description">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="translated">Gibt den Portbereich an, der zum Aktivieren von HTTP-Diensten verwendet werden soll</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_kernel_host_Description">
+        <source>Name of the kernel host.</source>
+        <target state="translated">Name des Kernelhosts.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_preview_Description">
+        <source>Enable preview kernel features.</source>
+        <target state="translated">Vorschaukernelfeatures aktivieren.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_working_directory_Description">
+        <source>Working directory to which to change after launching the kernel.</source>
+        <target state="translated">Arbeitsverzeichnis, in das nach dem Starten des Kernels geändert werden soll.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_verbose_Description">
+        <source>Enable verbose logging to the console</source>
+        <target state="translated">Ausführliche Protokollierung in der Konsole aktivieren</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_about_Description">
+        <source>Show version and build information</source>
+        <target state="translated">Versions- und Buildinformationen anzeigen</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

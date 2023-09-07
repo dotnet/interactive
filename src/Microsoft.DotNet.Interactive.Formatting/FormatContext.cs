@@ -22,8 +22,6 @@ public class FormatContext : IDisposable
 
     public int Depth { get; private set; }
 
-    internal int Indent { get; set; }
-
     internal int TableDepth { get; private set; }
 
     public TextWriter Writer { get; }

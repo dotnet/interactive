@@ -62,7 +62,7 @@ using static {typeof(TopLevelMethods).FullName};
             .UseAdvancedExtensions()
             .Build();
 
-        kernel.AddDirective(new Command("#!markdown", "Convert the code that follows from Markdown into HTML")
+        kernel.AddDirective(new Command("#!markdown", LocalizationResources.Magics_markdown_Description())
         {
             Handler = CommandHandler.Create((InvocationContext cmdLineContext) =>
             {
@@ -117,7 +117,7 @@ using static {typeof(TopLevelMethods).FullName};
 
         static Command time()
         {
-            return new Command("#!time", "Time the execution of the following code in the submission.")
+            return new Command("#!time", LocalizationResources.Magics_time_Description())
             {
                 Handler = CommandHandler.Create((InvocationContext cmdLineContext) =>
                 {
@@ -203,28 +203,30 @@ using static {typeof(TopLevelMethods).FullName};
 
     private static Command lsmagic(Kernel kernel)
     {
-        return new Command("#!lsmagic", "List the available magic commands / directives")
+        return new Command("#!lsmagic", LocalizationResources.Magics_lsmagic_Description())
         {
             Handler = CommandHandler.Create(async (InvocationContext cmdLineContext) =>
             {
                 var context = cmdLineContext.GetService<KernelInvocationContext>();
 
-                var commands =  kernel.Directives
-                                      .Where(d => !d.IsHidden)
-                                      .OrderBy(d => d.Name)
-                                      .ToArray();
+                var commands = kernel.Directives
+                                     .Where(d => !d.IsHidden)
+                                     .OrderBy(d => d.Name)
+                                     .ToArray();
 
                 var supportedDirectives = new SupportedDirectives(kernel.Name, commands);
 
                 context.Display(supportedDirectives);
 
-                await kernel.VisitSubkernelsAsync(async k =>
+                var subkernels = kernel.Subkernels()
+                                       .Where(k => k.Directives.Any(d => d.Name == "#!lsmagic"));
+
+                foreach (var subkernel in subkernels)
                 {
-                    if (k.Directives.Any(d => d.Name == "#!lsmagic"))
-                    {
-                        await k.SendAsync(new SubmitCode(((SubmitCode)context.Command).Code));
-                    }
-                });
+                    var command = new SubmitCode(((SubmitCode)context.Command).Code);
+
+                    await subkernel.SendAsync(command);
+                }
             })
         };
     }

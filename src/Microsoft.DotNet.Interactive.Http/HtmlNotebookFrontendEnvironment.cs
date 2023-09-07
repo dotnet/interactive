@@ -86,7 +86,7 @@ await Object.getPrototypeOf(async function() {{}}).constructor(
         var executionCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _tokenToInvocationContext[commandToken] = (context, executionCompletionSource);
         IHtmlContent content = PocketViewTags.script[type: "text/javascript"](wrappedCode.ToHtmlContent());
-        var formattedValues = FormattedValue.FromObject(content);
+        var formattedValues = FormattedValue.CreateManyFromObject(content);
         context.Publish(new DisplayedValueProduced(content, context.Command, formattedValues));
         await executionCompletionSource.Task;
     }

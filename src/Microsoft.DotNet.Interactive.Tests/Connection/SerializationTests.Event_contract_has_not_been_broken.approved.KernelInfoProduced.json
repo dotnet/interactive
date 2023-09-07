@@ -6,7 +6,9 @@
       ],
       "languageName": "JavaScript",
       "languageVersion": null,
-      "displayName": "JavaScript",
+      "isProxy": false,
+      "isComposite": false,
+      "displayName": "javascript - JavaScript",
       "localName": "javascript",
       "uri": "kernel://vscode/javascript",
       "remoteUri": null,
@@ -15,11 +17,7 @@
           "name": "SubmitCode"
         }
       ],
-      "supportedDirectives": [
-        {
-          "name": "#r"
-        }
-      ]
+      "supportedDirectives": []
     }
   },
   "eventType": "KernelInfoProduced",

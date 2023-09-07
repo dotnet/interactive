@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="fr" original="../Resources.resx">
+    <body>
+      <trans-unit id="FileDoesNotExist">
+        <source>File does not exist: '{0}'.</source>
+        <target state="translated">Le fichier n’existe pas : '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_ErrorMessage_CannotBeUsedTogether">
+        <source>The {0} and {1} options cannot be used together.</source>
+        <target state="translated">Les options {0} et {1} ne peuvent pas être utilisées ensemble.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_import_Description">
+        <source>Runs another notebook or source code file inline.</source>
+        <target state="translated">Exécute un autre bloc-notes ou fichier de code source inline.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_log_Description">
+        <source>Enables session logging.</source>
+        <target state="translated">Active la journalisation de session.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_Description">
+        <source>Sets a value in the current kernel</source>
+        <target state="translated">Définit une valeur dans le noyau actuel</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_ErrorMessage_SharingByReference">
+        <source>Sharing by reference is not allowed when kernels are remote.</source>
+        <target state="translated">Le partage par référence n’est pas autorisé lorsque les noyaux sont distants.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_byref_Description">
+        <source>Shares the specified value by reference if kernels are in the same process.</source>
+        <target state="translated">Partage la valeur spécifiée par référence si les noyaux sont dans le même processus.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_mime_type_Description">
+        <source>The MIME type by which the value should be represented. This will often determine how an object will be formatted into a string.</source>
+        <target state="translated">Type MIME par lequel la valeur doit être représentée. Cette opération détermine souvent comment un objet est formaté en chaîne.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_mime_type_ErrorMessage_CannotBeUsed">
+        <source>The --mime-type and --byref options cannot be used together.</source>
+        <target state="translated">Les options --mime-type et --byref ne peuvent pas être utilisées ensemble.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_name_Description">
+        <source>The name of the value to be created in the current kernel.</source>
+        <target state="translated">Nom de la valeur à créer dans le noyau actuel.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_value_Description">
+        <source>The value to be set. @input:user_prompt allows you to prompt the user for this value. Values can be requested from other kernels by name, for example @csharp:variableName.</source>
+        <target state="translated">Valeur à définir. @input:user_prompt vous permet de demander cette valeur à l’utilisateur. Les valeurs peuvent être demandées à partir d’autres noyaux par nom, par exemple @csharp:variableName.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_Description">
+        <source>Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.</source>
+        <target state="translated">Obtenez une valeur d’un noyau et créez une copie (ou une référence si les noyaux sont dans le même processus) dans un autre.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_as_Description">
+        <source>The name to give the the value in the importing kernel.</source>
+        <target state="translated">Nom auquel attribuer la valeur dans le noyau d’importation.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_from_Description">
+        <source>The name of the kernel to get the value from.</source>
+        <target state="translated">Nom du noyau à partir duquel obtenir la valeur.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_mime_type_Description">
+        <source>Share the value as a string formatted to the specified MIME type.</source>
+        <target state="translated">Permet de partager la valeur sous la forme d’une chaîne au format du type MIME spécifié.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_name_Description">
+        <source>The name of the value to share. (This is also the default name of the value created in the destination kernel, unless --as is used to specify a different one.)</source>
+        <target state="translated">Nom de la valeur à partager. (Il s’agit également du nom par défaut de la valeur créée dans le noyau de destination, sauf si --as est utilisé pour en spécifier un autre.)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_file_Description">
+        <source>Specifies a file whose contents will be stored.</source>
+        <target state="translated">Spécifie un fichier dont le contenu sera stocké.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_url_Description">
+        <source>Specifies a URL whose content will be stored.</source>
+        <target state="translated">Spécifie une URL dont le contenu sera stocké.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_value_Description">
+        <source>Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.</source>
+        <target state="translated">Spécifie une valeur à stocker directement. La spécification de @input:value vous permet de demander cette valeur à l’utilisateur.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_mime_type_Description">
+        <source>A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.</source>
+        <target state="translated">Type MIME pour la valeur. Si ce paramètre est spécifié, affiche immédiatement la valeur sous forme de sortie à l’aide du type MIME spécifié.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_name_Description">
+        <source>The name of the value to create. You can use #!share to retrieve this value from another subkernel.</source>
+        <target state="translated">Nom de la valeur à créer. Vous pouvez utiliser #!share pour récupérer cette valeur à partir d’un autre sous-serveur.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_who_Description">
+        <source>Display the names of the current top-level variables.</source>
+        <target state="translated">Permet d’afficher les noms des variables de niveau supérieur actuelles.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_whos_Description">
+        <source>Display the names of the current top-level variables and their values.</source>
+        <target state="translated">Permet d’afficher les noms des variables de niveau supérieur actuelles et leurs valeurs.</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

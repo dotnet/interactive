@@ -72,22 +72,21 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
 
         var result = await kernel.SubmitCodeAsync("1");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
-            .Which
-            .Value
-            .Should()
-            .ContainAll(
-                "failrule",
-                "fail reasons",
-                "passrule",
-                "pass reasons");
+        result.Events
+              .Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+              .Which
+              .Value
+              .Should()
+              .ContainAll(
+                  "failrule",
+                  "fail reasons",
+                  "passrule",
+                  "pass reasons");
     }
 
     [Fact]
@@ -98,18 +97,17 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
 
         var result = await kernel.SubmitCodeAsync("1");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
-            .Which
-            .Value
-            .Should()
-            .Contain("Good job");
+        result.Events
+              .Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+              .Which
+              .Value
+              .Should()
+              .Contain("Good job");
     }
 
     [Fact]
@@ -190,22 +188,21 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         await kernel.SubmitCodeAsync("Console.WriteLine(1 + 1);");
 
         var result = await kernel.SubmitCodeAsync("1 + 1");
-        using var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
-            .Which
-            .Value
-            .Should()
-            .ContainAll(
-                "dfsrule1",
-                "dfsfailreasons",
-                "dfsrule2",
-                "dfspassreasons");
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+              .Which
+              .Value
+              .Should()
+              .ContainAll(
+                  "dfsrule1",
+                  "dfsfailreasons",
+                  "dfsrule2",
+                  "dfspassreasons");
     }
 
     [Fact]
@@ -216,19 +213,18 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         await kernel.SubmitCodeAsync("Console.WriteLine(1 + 1);");
 
         var result = await kernel.SubmitCodeAsync("1 + 1");
-        using var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
-            .Which
-            .Value
-            .Should()
-            .Contain(
-                "Good job for DFS");
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+              .Which
+              .Value
+              .Should()
+              .Contain(
+                  "Good job for DFS");
     }
 
     [Fact]
@@ -239,9 +235,8 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         await kernel.SubmitCodeAsync("Console.WriteLine(1 + 1);");
 
         var result = await kernel.SubmitCodeAsync("anotherChallengeSetupVar");
-        using var events = result.KernelEvents.ToSubscribedList();
 
-        events.Should().ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(10);
+        result.Events.Should().ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(10);
     }
 
     [Fact]
@@ -257,9 +252,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         });
         await kernel.SubmitCodeAsync($"#!start-lesson --from-file {GetPatchedNotebookPath("twoChallenges.dib")}");
 
-        var result = await kernel.SubmitCodeAsync("Console.WriteLine(1 + 1);");
-
-        using var events = result.KernelEvents.ToSubscribedList();
+        await kernel.SubmitCodeAsync("Console.WriteLine(1 + 1);");
 
         capturedCommands.GetRange(2, 2).Should().SatisfyRespectively(
             e => e.Code.Should().Contain("// write your answer to DFS below"),
@@ -279,8 +272,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         });
         await kernel.SubmitCodeAsync($"#!start-lesson --from-file {GetPatchedNotebookPath("twoChallenges.dib")}");
 
-        var result = await kernel.SubmitCodeAsync("Console.WriteLine(1 + 1);");
-        using var events = result.KernelEvents.ToSubscribedList();
+        await kernel.SubmitCodeAsync("Console.WriteLine(1 + 1);");
 
         capturedCommands.Select(c => c.Code).Join("\r\n")
             .Should()
@@ -301,9 +293,8 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         });
         await kernel.SubmitCodeAsync($"#!start-lesson --from-file {GetPatchedNotebookPath("singleChallenge.dib")}");
 
-        var result = await kernel.SubmitCodeAsync("Console.WriteLine(1 + 1);");
+        await kernel.SubmitCodeAsync("Console.WriteLine(1 + 1);");
 
-        using var events = result.KernelEvents.ToSubscribedList();
         capturedCommands.Select(c => c.Code).Join("\r\n")
             .Should()
             .NotContainAny("// random scratchpad stuff");
@@ -319,14 +310,11 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
 CalcTrigArea = (double x, double y) => 0.5 * x * y;
 ");
 
-        using var events = result.KernelEvents.ToSubscribedList();
-
-
-        events
-            .Should()
-            .ContainSingle<DisplayedValueProduced>(
-                e => e.FormattedValues.Single(v => v.MimeType == "text/html")
-                    .Value.Contains("You passed"));
+        result.Events
+              .Should()
+              .ContainSingle<DisplayedValueProduced>(
+                  e => e.FormattedValues.Single(v => v.MimeType == "text/html")
+                        .Value.Contains("You passed"));
     }
 
     [Fact]
@@ -336,8 +324,7 @@ CalcTrigArea = (double x, double y) => 0.5 * x * y;
             
         var result = await kernel.SubmitCodeAsync($"#!start-lesson --from-file {GetPatchedNotebookPath("twoChallenges.dib")} --from-url http://bing.com");
             
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which

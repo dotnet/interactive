@@ -77,7 +77,7 @@ internal class PolyglotSyntaxParser
 
                         currentKernelName = directiveToken.DirectiveName;
 
-                        if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty, out currentKernelInfo))
+                        if (_subkernelInfoByKernelName.TryGetValue(currentKernelName, out currentKernelInfo))
                         {
                             directiveNode.CommandScope = currentKernelInfo.commandScope;
                         }
@@ -89,11 +89,8 @@ internal class PolyglotSyntaxParser
                             _sourceText,
                             currentKernelName ?? DefaultLanguage,
                             rootNode.SyntaxTree);
-                        if (_subkernelInfoByKernelName.TryGetValue(directiveNode.KernelName ?? string.Empty,
-                                out currentKernelInfo))
-                        {
-                            directiveNode.CommandScope = currentKernelInfo.commandScope;
-                        }
+
+                        directiveNode.AllowValueSharingByInterpolation = AllowsValueSharingByInterpolation(directiveToken);
                     }
 
                     if (_tokens.Count > i + 1 && _tokens[i + 1] is TriviaToken triviaNode)
@@ -138,6 +135,7 @@ internal class PolyglotSyntaxParser
                     rootNode.Add(directiveNode);
 
                     break;
+
                 case LanguageToken languageToken:
                     AppendAsLanguageNode(languageToken);
                     break;
@@ -157,7 +155,7 @@ internal class PolyglotSyntaxParser
             var previousLanguageNode = previousSyntaxNode as LanguageNode;
             if (previousLanguageNode is { } &&
                 previousLanguageNode is not KernelNameDirectiveNode &&
-                previousLanguageNode.KernelName == currentKernelName)
+                previousLanguageNode.Name == currentKernelName)
             {
                 previousLanguageNode.Add(nodeOrToken);
                 rootNode.GrowSpan(previousLanguageNode);
@@ -221,4 +219,7 @@ internal class PolyglotSyntaxParser
 
         return _mapOfKernelNamesByAlias.Contains(directiveToken.Text);
     }
+
+    private bool AllowsValueSharingByInterpolation(DirectiveToken directiveToken) => 
+        directiveToken.DirectiveName != "set";
 }

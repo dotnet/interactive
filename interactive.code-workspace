@@ -1,0 +1,24 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "(root)"
+    },
+    {
+      "path": "src/polyglot-notebooks"
+    },
+    {
+      "path": "src/polyglot-notebooks-browser"
+    },
+    {
+      "path": "src/polyglot-notebooks-ui-components"
+    },
+    {
+      "path": "src/polyglot-notebooks-vscode"
+    },
+    {
+      "path": "src/polyglot-notebooks-vscode-insiders"
+    }
+  ],
+  "settings": {}
+}

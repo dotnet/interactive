@@ -8,12 +8,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.DotNet.Interactive.App.ParserServer;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject;
 using Microsoft.DotNet.Interactive.CSharpProject.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject.Events;
 using Microsoft.DotNet.Interactive.Documents;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.VSCode;
 
@@ -60,7 +60,6 @@ public class InterfaceGenerator
         // responses
         typeof(NotebookParseResponse),
         typeof(NotebookSerializeResponse),
-        typeof(NotebookErrorResponse),
     };
 
     private static readonly HashSet<string> OptionalFields = new()
@@ -71,11 +70,10 @@ public class InterfaceGenerator
         $"{nameof(HoverTextProduced)}.{nameof(HoverTextProduced.LinePositionSpan)}",
         $"{nameof(OpenDocument)}.{nameof(OpenDocument.RegionName)}",
         $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}",
-            
+
         $"{nameof(KernelCommand)}.{nameof(KernelCommand.TargetKernelName)}",
         $"{nameof(KernelCommand)}.{nameof(KernelCommand.DestinationUri)}",
-        $"{nameof(KernelCommand)}.{nameof(KernelCommand.OriginUri)}",
-
+        $"{nameof(KernelCommand)}.{nameof(KernelCommand.OriginUri)}"
     };
 
     private static readonly IEnumerable<Type> CoreAssemblyTypes = GetTypesFromClosure(typeof(KernelCommand).Assembly);

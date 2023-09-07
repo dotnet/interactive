@@ -4,7 +4,6 @@
 using System;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.CSharpProject.Commands;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Events;

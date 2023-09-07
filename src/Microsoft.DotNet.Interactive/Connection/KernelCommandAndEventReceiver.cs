@@ -69,7 +69,7 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
                 {
                     Log.Error(exception);
 
-                    return new CommandOrEvent(new DiagnosticLogEntryProduced(exception.Message, KernelCommand.None), true);
+                    return new CommandOrEvent(new ErrorProduced(exception.Message, KernelCommand.None), isParseError: true);
                 }
             });
 
@@ -128,9 +128,14 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
             {
                 var json = reader.ReadLine();
 
-                var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
+                if (!string.IsNullOrWhiteSpace(json))
+                {
 
-                return commandOrEvent;
+                    var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
+                    return commandOrEvent;
+                }
+
+                return null;
             }
             catch (ObjectDisposedException)
             {

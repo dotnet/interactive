@@ -24,10 +24,7 @@ public class FileTextLoader : TextLoader
         _absolutePath = absolutePath;
     }
 
-    public override async Task<TextAndVersion> LoadTextAndVersionAsync(
-        CodeAnalysis.Workspace workspace,
-        DocumentId documentId,
-        CancellationToken cancellationToken)
+    public override async Task<TextAndVersion> LoadTextAndVersionAsync(LoadTextOptions options, CancellationToken cancellationToken)
     {
         var sourceFile = new FileInfo(_absolutePath);
 

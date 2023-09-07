@@ -3,7 +3,8 @@
     "formattedValues": [
       {
         "mimeType": "text/plain",
-        "value": "123"
+        "value": "123",
+        "suppressDisplay": false
       }
     ],
     "valueId": null

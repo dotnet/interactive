@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <!-- 
+        See following link for some more guidance around building source packages using arcade SDK
+        https://github.com/dotnet/arcade/blob/8ac0e1280f04bc897998a1f33bf6f27fe2146561/Documentation/ArcadeSdk.md?plain=1#L526
+    -->
+    <IsSourcePackage>true</IsSourcePackage>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <PackageDescription>A parser for parsing HTTP request syntax.</PackageDescription>
+    <PackageTags>polyglot notebook dotnet interactive http request parser</PackageTags>
+    <!-- Remove once https://github.com/NuGet/Home/issues/8583 is fixed -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.VisualStudio\Microsoft.DotNet.Interactive.VisualStudio.csproj" />
+  </ItemGroup>
+
+</Project>

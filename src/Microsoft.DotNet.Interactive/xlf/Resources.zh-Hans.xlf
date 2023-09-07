@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hans" original="../Resources.resx">
+    <body>
+      <trans-unit id="FileDoesNotExist">
+        <source>File does not exist: '{0}'.</source>
+        <target state="translated">文件不存在: '{0}'。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_ErrorMessage_CannotBeUsedTogether">
+        <source>The {0} and {1} options cannot be used together.</source>
+        <target state="translated">{0} 和 {1} 选项不能一起使用。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_import_Description">
+        <source>Runs another notebook or source code file inline.</source>
+        <target state="translated">以内联方式运行另一个笔记本或源代码文件。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_log_Description">
+        <source>Enables session logging.</source>
+        <target state="translated">启用会话日志记录。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_Description">
+        <source>Sets a value in the current kernel</source>
+        <target state="translated">在当前内核中设置值</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_ErrorMessage_SharingByReference">
+        <source>Sharing by reference is not allowed when kernels are remote.</source>
+        <target state="translated">内核为远程时，不允许通过引用共享。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_byref_Description">
+        <source>Shares the specified value by reference if kernels are in the same process.</source>
+        <target state="translated">如果内核位于同一进程中，则通过引用共享指定的值。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_mime_type_Description">
+        <source>The MIME type by which the value should be represented. This will often determine how an object will be formatted into a string.</source>
+        <target state="translated">应通过其表示值的 MIME 类型。这通常会确定如何将对象格式化为字符串。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_mime_type_ErrorMessage_CannotBeUsed">
+        <source>The --mime-type and --byref options cannot be used together.</source>
+        <target state="translated">--mime-type 和 --byref 选项不能一起使用。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_name_Description">
+        <source>The name of the value to be created in the current kernel.</source>
+        <target state="translated">要在当前内核中创建的值名称。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_value_Description">
+        <source>The value to be set. @input:user_prompt allows you to prompt the user for this value. Values can be requested from other kernels by name, for example @csharp:variableName.</source>
+        <target state="translated">要设置的值。@input:user_prompt 允许提示用户输入此值。可以按名称从其他内核请求值，例如 @csharp:variableName。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_Description">
+        <source>Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.</source>
+        <target state="translated">从一个内核获取一个值，并在另一个内核中创建一个副本(如果内核位于同一进程中，则创建一个引用)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_as_Description">
+        <source>The name to give the the value in the importing kernel.</source>
+        <target state="translated">用于在导入内核中提供值的名称。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_from_Description">
+        <source>The name of the kernel to get the value from.</source>
+        <target state="translated">要从中获取值的内核名称。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_mime_type_Description">
+        <source>Share the value as a string formatted to the specified MIME type.</source>
+        <target state="translated">将值共享为格式化为指定 MIME 类型的字符串。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_name_Description">
+        <source>The name of the value to share. (This is also the default name of the value created in the destination kernel, unless --as is used to specify a different one.)</source>
+        <target state="translated">要共享的值的名称。(这也是在目标内核中创建的值的默认名称，除非 --as 用于指定其他名称。)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_file_Description">
+        <source>Specifies a file whose contents will be stored.</source>
+        <target state="translated">指定将存储其内容的文件。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_url_Description">
+        <source>Specifies a URL whose content will be stored.</source>
+        <target state="translated">指定将存储其内容的 URL。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_value_Description">
+        <source>Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.</source>
+        <target state="translated">指定要直接存储的值。指定 @input:value 可提示用户输入此值。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_mime_type_Description">
+        <source>A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.</source>
+        <target state="translated">值的 MIME 类型。如指定，则使用指定的 MIME 类型立即将值显示为输出。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_name_Description">
+        <source>The name of the value to create. You can use #!share to retrieve this value from another subkernel.</source>
+        <target state="translated">要创建值的名称。可以使用 #!share 从另一个子存储库中检索此值。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_who_Description">
+        <source>Display the names of the current top-level variables.</source>
+        <target state="translated">显示当前顶级变量的名称。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_whos_Description">
+        <source>Display the names of the current top-level variables and their values.</source>
+        <target state="translated">显示当前顶级变量的名称及其值。</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

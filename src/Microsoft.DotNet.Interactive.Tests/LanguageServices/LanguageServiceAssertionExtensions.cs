@@ -48,12 +48,10 @@ public static class LanguageServiceAssertionExtensions
                     position.MarkedUpCode.Code,
                     position.LinePosition));
 
-            using var events = result.KernelEvents.ToSubscribedList();
-
-            var requestCompleted = events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which;
+            var requestCompleted = result.Events
+                                         .Should()
+                                         .ContainSingle<CompletionsProduced>()
+                                         .Which;
 
             items.Add(requestCompleted);
         }

@@ -1,6 +1,6 @@
 #!meta
 
-{"kernelInfo":{"defaultKernelName":null,"items":[{"name":"csharp","languageName":"C#","aliases":["c#","cs"]},{"name":"fsharp","languageName":"F#","aliases":["f#","fs"]},{"name":"pwsh","languageName":"PowerShell","aliases":["powershell"]},{"name":"javascript","languageName":"JavaScript","aliases":["js"]},{"name":"html","languageName":"HTML"},{"name":"sql","languageName":"SQL"},{"name":"kql","languageName":"KQL"},{"name":"mermaid","languageName":"Mermaid"},{"name":"http","languageName":"HTTP"},{"name":"value"}]}}
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":["C#","c#"],"languageName":"C#","name":"csharp"},{"aliases":["F#","f#"],"languageName":"F#","name":"fsharp"},{"aliases":[],"languageName":"HTML","name":"html"},{"aliases":["js"],"languageName":"JavaScript","name":"javascript"},{"aliases":[],"languageName":"KQL","name":"kql"},{"aliases":[],"languageName":"KQL","name":"kql-telemetry"},{"aliases":[],"languageName":"Mermaid","name":"mermaid"},{"aliases":["powershell"],"languageName":"PowerShell","name":"pwsh"},{"aliases":[],"name":"value"}]}}
 
 #!csharp
 
@@ -254,6 +254,11 @@ delay = (delayAmount) => new Promise(resolve => setTimeout(resolve, delayAmount)
 await delay(500);
 
 loadd3(["d3"], (d3) => {   
+
+    const width = 2048;
+    const height = 2048;
+    const maxR = 50;
+
     const maxStrength = d3.max(graph.edges, (e) => e.temperature);
     const minStrength = d3.min(graph.edges, (e) => e.temperature);
     const maxPopularity = d3.max(graph.nodes, (n) => n.popularity);
@@ -265,12 +270,22 @@ loadd3(["d3"], (d3) => {
     const tempScale = d3.scaleLog()
     .domain([minStrength, maxStrength])
     .range([0, 1]);
+
     const nodes = d3.map(graph.nodes, (n, i) => ({id: i, language: n.language, popularity: n.popularity/maxPopularity}));
-    const links = d3.map(graph.edges, (e, i) => ({source: e.source, target: e.destination, strength: e.temperature/maxStrength}));
+    const links = d3.map(graph.edges, (e, i) => ({source: e.source, target: e.destination, strength: e.temperature/maxStrength, weight: e.weight, id: i}));
     const color = d3.scaleOrdinal(d3.map(graph.nodes, (n, i) => n.language), d3.schemeTableau10);
-    const width = 2048;
-    const height = 2048;
-    const maxR = 50;
+
+    nodes.forEach((n,i)=>{
+      if(n.language.includes(`single`)){
+        n.x = 0;
+       
+      }else{
+        n.x = width;
+      }
+
+      n.y = i + (height / nodes.lenght);
+    });
+
     const collisionScale = 2.5;
     const svg = d3.select("#forceLayout")
     .attr("width", width)
@@ -340,9 +355,10 @@ loadd3(["d3"], (d3) => {
     .selectAll(".link")
     .data(links)
     .join("path")
+    .attr("id", d => d.id)
     .attr("fill", "none")
     .attr("stroke",  d => color(nodes[d.source].language))
-    .attr("stroke-width", (d) => 3 + tempScale(d.strength) * 10)
+    .attr("stroke-width", (d) => 3 + tempScale(d.strength) * 5)
     .classed("link", true);
 
     node = svg
@@ -351,10 +367,27 @@ loadd3(["d3"], (d3) => {
     .join("g")
     .classed("node_group", true);
 
+    linkLabels = svg
+    .selectAll(".linkLabel")
+    .data(links)
+    .join("text")
+      .append("textPath")
+      .attr("font-family", "Arial, Helvetica, sans-serif")    
+      .attr("dominant-baseline","Hanging")  
+      .style("font", "normal 16px Arial")
+      .text(d => "")
+      .classed("linkLabel",true);
+
+
 
     function tick() {
           link.attr("d", linkArc);
           node.attr("transform", d => `translate(${d.x},${d.y})`);
+          linkLabels.attr("xlink:href", d => `#${d.id}`) //place the ID of the path here
+          .style("text-anchor","middle") //place the text halfway on the arc
+          .attr("startOffset", "50%")
+          .attr("fill", "white");
+          
           quadtree.addAll(nodes);
       }
 
@@ -374,6 +407,7 @@ loadd3(["d3"], (d3) => {
       //node.y = Math.max(-x, Math.min(x, node.y));
       }
     }
+
     function truncateText(text, length) {
       var l = text.split(" ");
       if(notToTruncate.has(l[0])) {
@@ -385,13 +419,14 @@ loadd3(["d3"], (d3) => {
         return text;
       }
     }
+
     simulation = d3
     .forceSimulation()
     .nodes(nodes)
     .force('collision', d3.forceCollide().radius(d => scale( d.popularity ) * maxR * collisionScale))
     .force("charge", d3.forceManyBody().strength(d => scale( d.popularity ) * -200))
     .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("link", d3.forceLink(links).strength ( (d) => tempScale(d.strength)  * 1.2))
+    .force("link", d3.forceLink(links).strength ( (d) => tempScale(d.strength)  * 0.01))
     .force("bounds", boxingForce)
     .on("tick", tick);
 
@@ -406,7 +441,7 @@ loadd3(["d3"], (d3) => {
     node.append("text")
     .attr("x", d=>  8 +scale( d.popularity )  * maxR)
     .attr("y", "0.31em")
-    .text(d => truncateText( d.language,10 ))
+    .text(d => truncateText( d.language, 10 ))
     .attr("fill", d => color(d.language))
     .classed("nodeText", true)
     .raise ()
@@ -417,9 +452,8 @@ loadd3(["d3"], (d3) => {
       .clone(true).lower()
       .attr("fill", "none")
       .attr("stroke", "rgba(255, 255, 255, 0.2)")
-      .attr("stroke-width", 4);
+      .attr("stroke-width", 4);    
 
-    
 
     svg.on('mousemove', (e) => handleMousemove(e, quadtree));
 
@@ -481,6 +515,8 @@ loadd3(["d3"], (d3) => {
           return  c;
         });
 
+        
+
         svg
         .selectAll(".link")
         .each(function (d)  {  
@@ -516,6 +552,8 @@ loadd3(["d3"], (d3) => {
         .each(function (d)  {         
           if(network.has(d.id)) {
             d3.select(this).raise();
+          }else{
+            d3.select(this).lower();
           }
         });
 
@@ -524,7 +562,27 @@ loadd3(["d3"], (d3) => {
         .each(function (d)  {         
           if(network.has(d.id)) {
             d3.select(this).raise();
+          }else{
+            d3.select(this);
           }
         });
+
+        svg
+    .selectAll(".linkLabel")
+    .data(links)
+    .each(function (d) {
+      let node = d.source;        
+      let c = color(node.language);
+      if(selectedNode){
+        const found = d.source.id === selectedNode.id || d.target.id === selectedNode.id;            
+        if(found){
+          d3.select(this).text(d => d.weight);
+        }else{
+          d3.select(this).text("");
+        }
+      }else{
+        d3.select(this).text("");
+      }   
+    });
       }     
 });

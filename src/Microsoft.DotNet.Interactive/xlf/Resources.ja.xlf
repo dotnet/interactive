@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ja" original="../Resources.resx">
+    <body>
+      <trans-unit id="FileDoesNotExist">
+        <source>File does not exist: '{0}'.</source>
+        <target state="translated">ファイルが存在しません: '{0}'。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_ErrorMessage_CannotBeUsedTogether">
+        <source>The {0} and {1} options cannot be used together.</source>
+        <target state="translated">{0} オプションと {1} オプションは同時に使用できません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_import_Description">
+        <source>Runs another notebook or source code file inline.</source>
+        <target state="translated">別のノートブックまたはソース コード ファイルをインラインで実行します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_log_Description">
+        <source>Enables session logging.</source>
+        <target state="translated">セッション ログの記録を有効にします。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_Description">
+        <source>Sets a value in the current kernel</source>
+        <target state="translated">現在のカーネルに値を設定します</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_ErrorMessage_SharingByReference">
+        <source>Sharing by reference is not allowed when kernels are remote.</source>
+        <target state="translated">カーネルがリモートの場合、参照による共有は許可されません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_byref_Description">
+        <source>Shares the specified value by reference if kernels are in the same process.</source>
+        <target state="translated">カーネルが同じプロセスにある場合に、指定した値を参照で共有します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_mime_type_Description">
+        <source>The MIME type by which the value should be represented. This will often determine how an object will be formatted into a string.</source>
+        <target state="translated">値の表現形式として使用する MIME の種類。多くの場合、オブジェクトを文字列で表現する際の形式がこれで決定されます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_mime_type_ErrorMessage_CannotBeUsed">
+        <source>The --mime-type and --byref options cannot be used together.</source>
+        <target state="translated">--mime-type オプションと --byref オプションは同時に使用できません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_name_Description">
+        <source>The name of the value to be created in the current kernel.</source>
+        <target state="translated">現在のカーネル内に作成する値の名前。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_value_Description">
+        <source>The value to be set. @input:user_prompt allows you to prompt the user for this value. Values can be requested from other kernels by name, for example @csharp:variableName.</source>
+        <target state="translated">設定する値。@input:user_prompt を使用すると、ユーザーにこの値の入力を求めるメッセージを表示できます。他のカーネルから名前を指定して値を要求することもできます (例: @csharp:variableName)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_Description">
+        <source>Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.</source>
+        <target state="translated">1 つのカーネルから値を取得し、別のカーネルにコピーを作成 (両方のカーネルが同じプロセス内にある場合は参照を作成) します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_as_Description">
+        <source>The name to give the the value in the importing kernel.</source>
+        <target state="translated">インポート先カーネル内でその値に付ける名前。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_from_Description">
+        <source>The name of the kernel to get the value from.</source>
+        <target state="translated">値の取得元カーネルの名前。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_mime_type_Description">
+        <source>Share the value as a string formatted to the specified MIME type.</source>
+        <target state="translated">指定した MIME の種類に適合する形式の文字列として値を共有します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_name_Description">
+        <source>The name of the value to share. (This is also the default name of the value created in the destination kernel, unless --as is used to specify a different one.)</source>
+        <target state="translated">共有する値の名前 (宛先カーネルに作成される値にも、--as で別の名前を指定しない限り既定でこの名前が付けられます)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_file_Description">
+        <source>Specifies a file whose contents will be stored.</source>
+        <target state="translated">格納するコンテンツの取得元ファイルを指定します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_url_Description">
+        <source>Specifies a URL whose content will be stored.</source>
+        <target state="translated">保存するコンテンツの URL を指定します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_value_Description">
+        <source>Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.</source>
+        <target state="translated">格納する値を直接指定します。@input:value を指定すると、この値の入力をユーザーに求めるプロンプトを表示できます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_mime_type_Description">
+        <source>A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.</source>
+        <target state="translated">値の MIME の種類。これを指定すると、指定した MIME の種類に適合する出力形式ですぐに値を表示します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_name_Description">
+        <source>The name of the value to create. You can use #!share to retrieve this value from another subkernel.</source>
+        <target state="translated">作成する値の名前。#!share を使用すると、この値を別のサブカーネルから取得できます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_who_Description">
+        <source>Display the names of the current top-level variables.</source>
+        <target state="translated">現在最上位レベルにある変数の名前を表示します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_whos_Description">
+        <source>Display the names of the current top-level variables and their values.</source>
+        <target state="translated">現在最上位レベルにある変数の名前とその値を表示します。</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

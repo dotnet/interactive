@@ -19,18 +19,16 @@ public static class KernelInvocationContextExtensions
         object value,
         params string[] mimeTypes)
     {
-        var displayId = Guid.NewGuid().ToString();
+        var formattedValues = FormattedValue.CreateManyFromObject(value, mimeTypes).ToArray();
 
-        var formattedValues = FormattedValue.FromObject(value, mimeTypes);
+        var displayedValue = new DisplayedValue(formattedValues, context);
 
         context.Publish(
             new DisplayedValueProduced(
                 value,
                 context?.Command,
                 formattedValues,
-                displayId));
-
-        var displayedValue = new DisplayedValue(displayId, formattedValues.Select(fv => fv.MimeType).ToArray(), context);
+                displayedValue.DisplayId));
 
         return displayedValue;
     }
@@ -38,32 +36,32 @@ public static class KernelInvocationContextExtensions
     public static DisplayedValue DisplayAs(
         this KernelInvocationContext context,
         string value,
-        string mimeType, params string[]additionalMimeTypes)
+        string mimeType)
     {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
         if (string.IsNullOrWhiteSpace(mimeType))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
         }
 
-        var displayId = Guid.NewGuid().ToString();
+        var formattedValue = new FormattedValue(
+            mimeType,
+            value);
 
-        var mimeTypes = new HashSet<string>(additionalMimeTypes ?? Array.Empty<string>())
-        {
-            mimeType
-        };
+        var formattedValues = new[] { formattedValue };
 
-        var formattedValues = mimeTypes.Select(mime =>  new FormattedValue(
-            mime,
-            value));
+        var displayedValue = new DisplayedValue(formattedValues, context);
 
         context.Publish(
             new DisplayedValueProduced(
                 value,
-                context?.Command,
-                formattedValues.ToArray(),
-                displayId));
-
-        var displayedValue = new DisplayedValue(displayId, mimeType, context);
+                context.Command,
+                formattedValues,
+                displayedValue.DisplayId));
 
         return displayedValue;
     }
@@ -101,8 +99,8 @@ public static class KernelInvocationContextExtensions
     }
 
     public static void PublishValueProduced(
-        this KernelInvocationContext context, 
-        RequestValue requestValue, 
+        this KernelInvocationContext context,
+        RequestValue requestValue,
         object value)
     {
         var valueType = value?.GetType();
@@ -115,13 +113,13 @@ public static class KernelInvocationContextExtensions
         formatter.Format(value, writer);
 
         var formatted = new FormattedValue(
-            requestedMimeType, 
+            requestedMimeType,
             writer.ToString());
 
         context.Publish(new ValueProduced(
             value,
             requestValue.Name,
-            formatted, 
+            formatted,
             requestValue));
     }
 }

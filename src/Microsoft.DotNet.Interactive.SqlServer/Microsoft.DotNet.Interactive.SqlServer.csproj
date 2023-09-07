@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -15,8 +15,11 @@
 
  <ItemGroup>
    <Compile Remove="bin\**" />
+   <Compile Remove="Utility\**" />
    <EmbeddedResource Remove="bin\**" />
+   <EmbeddedResource Remove="Utility\**" />
    <None Remove="bin\**" />
+   <None Remove="Utility\**" />
  </ItemGroup>
 
  <ItemGroup>
@@ -38,19 +41,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive.ExtensionLab\SqlKernelUtils.cs" Link="Utility\SqlKernelUtils.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="bin\Debug\net8.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
+    <None Remove="bin\Debug\net7.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.SqlServer.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Utility\" />
   </ItemGroup>
 
 </Project>

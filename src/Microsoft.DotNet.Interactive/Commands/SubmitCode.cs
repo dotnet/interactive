@@ -20,9 +20,8 @@ public class SubmitCode : KernelCommand
     internal SubmitCode(
         LanguageNode languageNode,
         SubmissionType submissionType = SubmissionType.Run,
-        KernelCommand parent = null,
         KernelNameDirectiveNode kernelNameDirectiveNode = null)
-        : base(languageNode.KernelName, parent)
+        : base(languageNode.Name)
     {
         Code = languageNode.Text;
         LanguageNode = languageNode;
@@ -40,7 +39,7 @@ public class SubmitCode : KernelCommand
 
     public SubmissionType SubmissionType { get; }
 
-    public override string ToString() => $"{nameof(SubmitCode)}: {Code.TruncateForDisplay()}";
+    public override string ToString() => $"{nameof(SubmitCode)}: {Code?.TruncateForDisplay()}";
 
     internal LanguageNode LanguageNode { get; }
 

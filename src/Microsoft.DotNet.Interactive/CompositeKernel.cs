@@ -9,9 +9,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
-using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
@@ -25,7 +23,6 @@ public sealed class CompositeKernel :
     Kernel,
     IEnumerable<Kernel>
 {
-    private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new();
     private readonly KernelCollection _childKernels;
     private string _defaultKernelName;
     private Command _connectDirective;
@@ -34,9 +31,9 @@ public sealed class CompositeKernel :
 
     public CompositeKernel(string name = null) : base(name ?? ".NET")
     {
+        KernelInfo.IsComposite = true;
         _childKernels = new(this);
     }
-
 
     public string DefaultKernelName
     {
@@ -141,13 +138,9 @@ public sealed class CompositeKernel :
             {
                 return this;
             }
-            else if (_defaultKernelNamesByCommandType.TryGetValue(command.GetType(), out targetKernelName))
-            {
 
-            }
-            else
+            if (!_defaultKernelNamesByCommandType.TryGetValue(command.GetType(), out targetKernelName))
             {
-
                 targetKernelName = DefaultKernelName;
             }
         }
@@ -202,6 +195,7 @@ public sealed class CompositeKernel :
             if (childKernel.SupportsCommand(command))
             {
                 var childCommand = new RequestKernelInfo(childKernel.Name);
+                childCommand.Parent = command;
                 childCommand.RoutingSlip.ContinueWith(command.RoutingSlip);
                 await childKernel.HandleAsync(childCommand, context);
             }
@@ -227,13 +221,8 @@ public sealed class CompositeKernel :
 
             var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
 
-            var kernel = this.FindKernelByName(actionDirectiveNode.ParentKernelName);
-
-            if (kernel is null)
-            {
-                yield break;
-            }
-
+            var kernel = this.FindKernelByName(actionDirectiveNode.ParentKernelName) ?? this;
+            
             var languageKernelDirectiveParser = kernel.SubmissionParser.GetDirectiveParser();
 
             if (IsDirectiveDefinedIn(languageKernelDirectiveParser))
@@ -279,24 +268,27 @@ public sealed class CompositeKernel :
         connectionCommand.Handler = CommandHandler.Create<KernelInvocationContext, InvocationContext>(
             async (context, commandLineContext) =>
             {
-                var connectedKernel = await connectionCommand.ConnectKernelAsync(context, commandLineContext);
-
-                Add(connectedKernel);
-
-                // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
-
-                var chooseKernelDirective =
-                    Directives.OfType<ChooseKernelDirective>()
-                        .Single(d => d.Kernel == connectedKernel);
-
-                if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
+                var connectedKernels = await connectionCommand.ConnectKernelsAsync(context, commandLineContext);
+                foreach (var connectedKernel in connectedKernels)
                 {
-                    chooseKernelDirective.Description = connectionCommand.ConnectedKernelDescription;
+
+                    Add(connectedKernel);
+
+                    // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
+
+                    var chooseKernelDirective =
+                        Directives.OfType<ChooseKernelDirective>()
+                            .Single(d => d.Kernel == connectedKernel);
+
+                    if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
+                    {
+                        chooseKernelDirective.Description = connectionCommand.ConnectedKernelDescription;
+                    }
+
+                    chooseKernelDirective.Description += " (Connected kernel)";
+
+                    context.Display($"Kernel added: #!{connectedKernel.Name}");
                 }
-
-                chooseKernelDirective.Description += " (Connected kernel)";
-
-                context.Display($"Kernel added: #!{connectedKernel.Name}");
             });
 
         _connectDirective.Add(connectionCommand);

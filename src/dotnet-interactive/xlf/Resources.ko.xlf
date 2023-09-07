@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ko" original="../Resources.resx">
+    <body>
+      <trans-unit id="Cli_ErrorMessageMustSpecifyPortRange">
+        <source>Must specify a port range</source>
+        <target state="translated">포트 범위를 지정해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_ErrorMessage_MustSpecifyPortRangeAsStartPortEndPort">
+        <source>Must specify a port range as StartPort-EndPort</source>
+        <target state="translated">포트 범위를 StartPort-EndPort로 지정해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_ErrorMessage_StartPortMustBeLower">
+        <source>Start port must be lower then end port</source>
+        <target state="translated">시작 포트는 끝 포트보다 낮아야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_Description">
+        <source>Interactive programming for .NET.</source>
+        <target state="translated">.NET에 대한 대화형 프로그래밍입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_Description">
+        <source>Starts dotnet-interactive as a Jupyter kernel</source>
+        <target state="translated">dotnet-interactive을 Jupyter 커널로 시작합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_connection_file_Description">
+        <source>The path to a connection file provided by Jupyter</source>
+        <target state="translated">Jupyter에서 제공하는 연결 파일의 경로입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_default_kernel_Description">
+        <source>The default language for the kernel</source>
+        <target state="translated">커널의 기본 언어</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_Description">
+        <source>Install the .NET kernel for Jupyter</source>
+        <target state="translated">Jupyter용 .NET 커널 설치</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_http_port_range_Description">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="translated">HTTP 서비스를 지원하는 데 사용할 포트 범위를 지정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_path_Description">
+        <source>Installs the kernel specs to the specified directory</source>
+        <target state="translated">지정한 디렉터리에 커널 사양을 설치합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_log_path_Description">
+        <source>Enable file logging to the specified directory</source>
+        <target state="translated">지정한 디렉터리에 파일 로깅 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_notebook_parser_Description">
+        <source>Starts a process to parse and serialize notebooks.</source>
+        <target state="translated">Notebook을 구문 분석하고 직렬화하는 프로세스를 시작합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_Description">
+        <source>Starts dotnet-interactive with kernel functionality exposed over standard I/O</source>
+        <target state="translated">표준 I/O를 통해 노출되는 커널 함수로 dotnet-interactive를 시작합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_Description">
+        <source>Specifies the port on which to enable HTTP services</source>
+        <target state="translated">HTTP 서비스를 지원할 포트를 지정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_ErrorMessageCannotSpecifyBoth">
+        <source>Cannot specify both {0} and {1} together</source>
+        <target state="translated">{0} 및 {1}은(는) 함께 지정할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_ErrorMessageMustSpecifyPortNumber">
+        <source>Must specify a port number or *.</source>
+        <target state="translated">포트 번호 또는 *를 지정해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_range_Description">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="translated">HTTP 서비스를 지원하는 데 사용할 포트 범위를 지정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_kernel_host_Description">
+        <source>Name of the kernel host.</source>
+        <target state="translated">커널 호스트의 이름입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_preview_Description">
+        <source>Enable preview kernel features.</source>
+        <target state="translated">미리 보기 커널 기능을 사용합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_working_directory_Description">
+        <source>Working directory to which to change after launching the kernel.</source>
+        <target state="translated">커널을 시작한 후 변경할 작업 디렉터리입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_verbose_Description">
+        <source>Enable verbose logging to the console</source>
+        <target state="translated">콘솔에 자세한 정보 로깅 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_about_Description">
+        <source>Show version and build information</source>
+        <target state="translated">버전 및 빌드 정보 표시</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

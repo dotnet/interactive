@@ -6,19 +6,13 @@ Microsoft.DotNet.Interactive.Kql
     .ctor(System.String resolvedToolsServicePath)
     public System.CommandLine.Option<System.String> ClusterOption { get;}
     public System.CommandLine.Option<System.String> DatabaseOption { get;}
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> ConnectKernelAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
   public class KqlConnectionDetails
     .ctor()
     public System.String AuthenticationType { get; set;}
     public System.String Cluster { get; set;}
     public System.String Database { get; set;}
     public System.String Token { get; set;}
-  public class KqlKernelConnector, Microsoft.DotNet.Interactive.Connection.IKernelConnector
-    .ctor(System.String cluster, System.String database)
-    public System.String Cluster { get;}
-    public System.String Database { get;}
-    public System.String PathToService { get; set;}
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Kernel> CreateKernelAsync(System.String kernelName)
   public class KqlKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
     .ctor()
     public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
@@ -268,13 +262,8 @@ Microsoft.DotNet.Interactive.SqlServer
     protected System.Boolean CanDeclareVariable(System.String name, System.Object value, ref System.String& msg)
     public System.Threading.Tasks.Task ConnectAsync()
     protected System.String CreateVariableDeclaration(System.String name, System.Object value)
-    protected System.Collections.Generic.Dictionary<System.String,System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource>> get_QueryResults()
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestCompletions command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValue command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValueInfos command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
     protected System.Void StoreQueryResults(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> results, System.CommandLine.Parsing.ParseResult commandKernelChooserParseResult)
+    protected System.Void StoreQueryResultSet(System.String name, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> queryResultSet)
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
   public class VersionedTextDocumentIdentifier : TextDocumentIdentifier
     .ctor()

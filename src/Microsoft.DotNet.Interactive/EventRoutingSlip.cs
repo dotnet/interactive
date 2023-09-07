@@ -8,7 +8,6 @@ namespace Microsoft.DotNet.Interactive;
 
 public class EventRoutingSlip : RoutingSlip
 {
-
     public override void Stamp(Uri uri)
     {
         var absoluteUri = GetAbsoluteUriWithoutQuery(uri);

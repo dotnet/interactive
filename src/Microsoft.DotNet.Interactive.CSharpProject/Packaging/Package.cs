@@ -13,8 +13,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Buildalyzer;
-using Buildalyzer.Workspaces;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -26,6 +24,8 @@ using Pocket;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package>;
 using Disposable = System.Reactive.Disposables.Disposable;
+using static Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities.RoslynWorkspaceUtilities;
+using Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
@@ -107,61 +107,54 @@ public abstract class Package :
 
         SetupWorkspaceCreationFromBuildChannel();
         SetupWorkspaceCreationFromDesignTimeBuildChannel();
-        TryLoadDesignTimeBuildFromBuildLog();
+        TryLoadDesignTimeBuildFromCacheFile();
 
         _buildSemaphore = _packageBuildSemaphores.GetOrAdd(Name, _ => new SemaphoreSlim(1, 1));
         _publishSemaphore = _packagePublishSemaphores.GetOrAdd(Name, _ => new SemaphoreSlim(1, 1));
         RoslynWorkspace = null;
     }
 
-    private void TryLoadDesignTimeBuildFromBuildLog()
+    private void TryLoadDesignTimeBuildFromCacheFile()
     {
         if (Directory.Exists)
         {
-            var binLog = this.FindLatestBinLog();
-            if (binLog != null)
+            var cacheFile = BuildCacheFileUtilities.FindCacheFile(Directory);
+            if (cacheFile != null)
             {
-                LoadDesignTimeBuildFromBuildLogFile(this, binLog).Wait();
+                LoadDesignTimeBuildDataFromBuildCacheFile(this, cacheFile).Wait();
             }
         }
     }
-    private static async Task LoadDesignTimeBuildFromBuildLogFile(Package package, FileSystemInfo binLog)
+    private static async Task LoadDesignTimeBuildDataFromBuildCacheFile(Package package, FileSystemInfo cacheFile)
     {
         var projectFile = package.GetProjectFile();
         if (projectFile != null &&
-            binLog.LastWriteTimeUtc >= projectFile.LastWriteTimeUtc)
+            cacheFile.LastWriteTimeUtc >= projectFile.LastWriteTimeUtc)
         {
-            IAnalyzerResults results;
+            BuildDataResults result;
             using (await FileLock.TryCreateAsync(package.Directory))
             {
-                var manager = new AnalyzerManager();
-                results = manager.Analyze(binLog.FullName);
+                result = GetResultsFromCacheFile(cacheFile.FullName);
             }
 
-            if (results.Count == 0)
+            if (result is null)
             {
-                throw new InvalidOperationException("The build log seems to contain no solutions or projects");
+                throw new InvalidOperationException("The cache file seems to contain no solutions or projects");
             }
 
-            var result = results.FirstOrDefault(p => p.ProjectFilePath == projectFile.FullName);
             if (result != null)
             {
                 package.RoslynWorkspace = null;
                 package.DesignTimeBuildResult = result;
-                package.LastDesignTimeBuild = binLog.LastWriteTimeUtc;
-                if (result.Succeeded && !binLog.Name.EndsWith(DesignTimeBuildBinlogFileName))
+                package.LastDesignTimeBuild = cacheFile.LastWriteTimeUtc;
+                if (result.Succeeded && !cacheFile.Name.EndsWith(BuildCacheFileUtilities.cacheFilenameSuffix))
                 {
-                    package.LastSuccessfulBuildTime = binLog.LastWriteTimeUtc;
-                    if (package.DesignTimeBuildResult.TryGetWorkspace(out var ws))
-                    {
-                        package.RoslynWorkspace = ws;
-                    }
+                    package.LastSuccessfulBuildTime = cacheFile.LastWriteTimeUtc;
+                    package.RoslynWorkspace = package.DesignTimeBuildResult.Workspace;
                 }
             }
         }
     }
-
-      
 
     private DateTimeOffset? LastDesignTimeBuild { get; set; }
 
@@ -362,7 +355,7 @@ public abstract class Package :
             throw new InvalidOperationException("No design time or full build available");
         }
 
-        var ws = build.GetWorkspace();
+        var ws = build.Workspace;
 
         if (!ws.CanBeUsedToGenerateCompilation())
         {
@@ -373,7 +366,7 @@ public abstract class Package :
         }
 
         var projectId = ws.CurrentSolution.ProjectIds.FirstOrDefault();
-        var references = build.References;
+        var references = build.BuildProjectData.References;
         var metadataReferences = references.GetMetadataReferences();
         var solution = ws.CurrentSolution;
         solution = solution.WithProjectMetadataReferences(projectId, metadataReferences);
@@ -485,9 +478,9 @@ public abstract class Package :
                 operation.Error("Exception building workspace", exception);
             }
 
-            var binLog = this.FindLatestBinLog();
-            await binLog.WaitForFileAvailable();
-            await LoadDesignTimeBuildFromBuildLogFile(this, binLog);
+            var cacheFile = BuildCacheFileUtilities.FindCacheFile(Directory);
+            await cacheFile.WaitForFileAvailable();
+            await LoadDesignTimeBuildDataFromBuildCacheFile(this, cacheFile);
 
             Interlocked.Exchange(ref buildCount, 0);
         }
@@ -545,14 +538,14 @@ public abstract class Package :
         {
             var source = reader.ReadToEnd();
 
-            var parseOptions = DesignTimeBuildResult.GetCSharpParseOptions();
+            var parseOptions = DesignTimeBuildResult.CSharpParseOptions;
             var syntaxTree = CSharpSyntaxTree.ParseText(SourceText.From(source), parseOptions);
 
             return syntaxTree;
         }
     }
 
-    protected IAnalyzerResult DesignTimeBuildResult { get; set; }
+    private protected BuildDataResults DesignTimeBuildResult { get; set; }
 
     protected virtual bool ShouldDoFullBuild()
     {
@@ -567,25 +560,20 @@ public abstract class Package :
                || DesignTimeBuildResult.Succeeded == false;
     }
 
-    protected async Task<IAnalyzerResult> DesignTimeBuild()
+    private protected async Task<BuildDataResults> DesignTimeBuild()
     {
         using (var operation = _log.OnEnterAndConfirmOnExit())
         {
-            IAnalyzerResult result;
+            BuildDataResults result;
             var csProj = this.GetProjectFile();
             var logWriter = new StringWriter();
 
             using (await FileLock.TryCreateAsync(Directory))
             {
-                var manager = new AnalyzerManager(new AnalyzerManagerOptions
-                {
-                    LogWriter = logWriter
-                });
-                var analyzer = manager.GetProject(csProj.FullName);
-                analyzer.AddBinaryLogger(Path.Combine(Directory.FullName, DesignTimeBuildBinlogFileName));
+                await BuildCacheFileUtilities.BuildAndCreateCacheFileAsync(csProj.FullName);
+                result = ResultsFromCacheFileUsingProjectFilePath(csProj.FullName);
                 var languageVersion = csProj.SuggestedLanguageVersion();
-                analyzer.SetGlobalProperty("langVersion", languageVersion);
-                result = analyzer.Build().Results.First();
+                // TODO: analyzer.SetGlobalProperty("langVersion", languageVersion);
             }
 
             DesignTimeBuildResult = result;

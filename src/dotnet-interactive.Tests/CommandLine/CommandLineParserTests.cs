@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -19,8 +19,8 @@ using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.App.Tests.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
@@ -106,7 +106,7 @@ public class CommandLineParserTests : IDisposable
             .Be(logPath.FullName);
     }
 
-    [Fact] 
+    [Fact]
     public async Task stdio_mode_honors_log_path()
     {
         using var logPath = DisposableDirectory.Create();
@@ -136,25 +136,25 @@ public class CommandLineParserTests : IDisposable
              predicate: file => file.Length > 0))
             .Should()
             .BeTrue($"expected non-empty log file within {waitTime.TotalSeconds}s");
-        
+
         var logFileContents = new StringBuilder();
 
         await using var fileStream = new FileStream(logFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var fileReader = new StreamReader(fileStream);
-        
+
         while (!fileReader.EndOfStream)
         {
             var line = await fileReader.ReadLineAsync();
             logFileContents.Append(line);
         }
 
-        logFileContents.ToString().Should().Contain("[KernelInvocationContext] [SubmitCode: 1+1] ");
+        logFileContents.ToString().Should().Contain("[KernelInvocationContext]  ▶  +[ ⁞Ϲ⁞ SubmitCode 1+1");
     }
 
     [Fact]
     public async Task It_parses_verbose_option()
     {
-       await _parser.InvokeAsync($"jupyter --verbose {_connectionFile}", _console);
+        await _parser.InvokeAsync($"jupyter --verbose {_connectionFile}", _console);
 
         _startOptions
             .Verbose
@@ -348,8 +348,6 @@ public class CommandLineParserTests : IDisposable
             .Should()
             .Be(new Uri("kernel://some-kernel-name"));
     }
-
- 
 
     [Fact]
     public void stdio_command_working_dir_defaults_to_process_current()

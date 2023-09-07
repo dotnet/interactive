@@ -16,14 +16,14 @@ function EnsureSymlink([string]$sourceDirectory, [string] $linkName, [string] $d
     }
 }
 
-EnsureSymlink -sourceDirectory "$PSScriptRoot\microsoft-dotnet-interactive-browser\src" -linkName "dotnet-interactive" -destinationLocation "..\..\microsoft-dotnet-interactive\src"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\polyglot-notebooks-browser\src" -linkName "polyglot-notebooks" -destinationLocation "..\..\polyglot-notebooks\src"
 
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-common\src" -linkName "dotnet-interactive" -destinationLocation "..\..\microsoft-dotnet-interactive\src"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\polyglot-notebooks-vscode-common\src" -linkName "polyglot-notebooks" -destinationLocation "..\..\polyglot-notebooks\src"
 
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\src" -linkName "ui" -destinationLocation "..\..\polyglot-notebooks-ui-components\src\contracts"
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\src" -linkName "vscode-common" -destinationLocation "..\..\dotnet-interactive-vscode-common\src"
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\dotnet-interactive-vscode-common\tests"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\polyglot-notebooks-vscode\src" -linkName "ui" -destinationLocation "..\..\polyglot-notebooks-ui-components\src\contracts"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\polyglot-notebooks-vscode\src" -linkName "vscode-common" -destinationLocation "..\..\polyglot-notebooks-vscode-common\src"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\polyglot-notebooks-vscode\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\polyglot-notebooks-vscode-common\tests"
 
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\src" -linkName "ui" -destinationLocation "..\..\polyglot-notebooks-ui-components\src\contracts"
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\src" -linkName "vscode-common" -destinationLocation "..\..\dotnet-interactive-vscode-common\src"
-EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode-insiders\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\dotnet-interactive-vscode-common\tests"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\polyglot-notebooks-vscode-insiders\src" -linkName "ui" -destinationLocation "..\..\polyglot-notebooks-ui-components\src\contracts"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\polyglot-notebooks-vscode-insiders\src" -linkName "vscode-common" -destinationLocation "..\..\polyglot-notebooks-vscode-common\src"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\polyglot-notebooks-vscode-insiders\tests" -linkName "vscode-common-tests" -destinationLocation "..\..\polyglot-notebooks-vscode-common\tests"

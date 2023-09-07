@@ -3,111 +3,98 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.CommandLine;
+using System.Diagnostics;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Net.Http;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
 public class HttpRequestKernel :
-       Kernel,
-       IKernelCommandHandler<RequestValue>,
-       IKernelCommandHandler<SendValue>,
-       IKernelCommandHandler<SubmitCode>,
-       IKernelCommandHandler<RequestDiagnostics>
+    Kernel,
+    IKernelCommandHandler<RequestValue>,
+    IKernelCommandHandler<SendValue>,
+    IKernelCommandHandler<SubmitCode>,
+    IKernelCommandHandler<RequestDiagnostics>,
+    IKernelCommandHandler<RequestValueInfos>
 {
+    internal const int DefaultResponseDelayThresholdInMilliseconds = 1000;
+    internal const int DefaultContentByteLengthThreshold = 500_000;
+
     private readonly HttpClient _client;
-    private readonly Argument<Uri> _hostArgument = new();
+    private readonly int _responseDelayThresholdInMilliseconds;
+    private readonly long _contentByteLengthThreshold;
 
-    private readonly Dictionary<string, string> _variables = new(StringComparer.InvariantCultureIgnoreCase);
-    private Uri _baseAddress;
-    private static readonly Regex IsRequest;
-    private static readonly Regex IsHeader;
+    private readonly Dictionary<string, object> _variables = new(StringComparer.InvariantCultureIgnoreCase);
 
-    private const string InterpolationStartMarker = "{{";
-    private const string InterpolationEndMarker = "}}";
-
-    static HttpRequestKernel()
-    {
-        var verbs = string.Join("|",
-            typeof(HttpMethod).GetProperties(BindingFlags.Static | BindingFlags.Public).Select(p => p.GetValue(null).ToString()));
-
-        IsRequest = new Regex(@"^\s*(" + verbs + ")", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        IsHeader = new Regex(@"^\s*(?<key>[\w-]+):\s*(?<value>.*)", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    }
-
-  
-
-    public HttpRequestKernel(string name = null, HttpClient client = null)
-        : base(name ?? "http")
+    public HttpRequestKernel(
+        string? name = null,
+        HttpClient? client = null,
+        int responseDelayThresholdInMilliseconds = DefaultResponseDelayThresholdInMilliseconds,
+        int contentByteLengthThreshold = DefaultContentByteLengthThreshold) : base(name ?? "http")
     {
         KernelInfo.LanguageName = "HTTP";
-        KernelInfo.DisplayName = "HTTP Request";
+        KernelInfo.DisplayName = $"{KernelInfo.LocalName} - HTTP Request";
 
         _client = client ?? new HttpClient();
-        var setHost = new Command("#!set-host", "Sets the host name to be used when sending requests using relative URLs");
-        setHost.AddArgument(_hostArgument);
-        setHost.SetHandler(context =>
-        {
-            var host = context.ParseResult.GetValueForArgument(_hostArgument);
-            BaseAddress = host;
-        });
-        AddDirective(setHost);
+        _responseDelayThresholdInMilliseconds = responseDelayThresholdInMilliseconds;
+        _contentByteLengthThreshold = contentByteLengthThreshold;
 
         RegisterForDisposal(_client);
     }
 
-    public Uri BaseAddress
-    {
-        get => _baseAddress;
-        set
-        {
-            _baseAddress = value;
-            SetValue("host", value?.Host);
-        }
-    }
-
-    public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (_variables.TryGetValue(command.Name, out var value))
         {
             var valueProduced = new ValueProduced(
                 value,
                 command.Name,
-                FormattedValue.FromObject(value).FirstOrDefault(),
+                FormattedValue.CreateSingleFromObject(value, JsonFormatter.MimeType),
                 command);
             context.Publish(valueProduced);
+        }
+        else
+        {
+            context.Fail(command, message: $"Value not found: {command.Name}");
         }
 
         return Task.CompletedTask;
     }
 
-    public Task HandleAsync(SendValue command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        SetValue(command.Name, command.FormattedValue.Value);
+        var valueInfos = _variables.Select(v => new KernelValueInfo(v.Key, FormattedValue.CreateSingleFromObject(v.Value, PlainTextSummaryFormatter.MimeType))).ToArray();
+
+        context.Publish(new ValueInfosProduced(valueInfos, command));
+
         return Task.CompletedTask;
     }
 
-    public void SetValue(string valueName, string value)
+    async Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
     {
-        _variables[valueName] = value;
+        await SetValueAsync(command, context, SetValueAsync);
     }
 
-    public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+    private Task SetValueAsync(string valueName, object value, Type? declaredType = null)
     {
-        var requests = ParseRequests(command.Code).ToArray();
-        var diagnostics = requests.SelectMany(r => r.Diagnostics).ToArray();
+        _variables[valueName] = value;
+        return Task.CompletedTask;
+    }
+
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
+    {
+        var parseResult = HttpRequestParser.Parse(command.Code);
+
+        var httpRequestResults = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>().Select(n => n.TryGetHttpRequestMessage(BindExpressionValues)).ToArray();
+
+        var diagnostics = httpRequestResults.SelectMany(r => r.Diagnostics).ToArray();
 
         PublishDiagnostics(context, command, diagnostics);
 
@@ -117,217 +104,190 @@ public class HttpRequestKernel :
             return;
         }
 
-        foreach (var httpRequest in requests)
+        var requestMessages = httpRequestResults
+                              .Where(r => r is { IsSuccessful: true, Value: not null })
+                              .Select(r => r.Value!).ToArray();
+
+        try
         {
-            var message = new HttpRequestMessage(new HttpMethod(httpRequest.Verb), httpRequest.Address);
-            if (!string.IsNullOrWhiteSpace(httpRequest.Body))
+            foreach (var requestMessage in requestMessages)
             {
-                message.Content = new StringContent(httpRequest.Body);
+                await SendRequestAsync(requestMessage, command, context);
             }
-
-            foreach (var kvp in httpRequest.Headers)
-            {
-                switch (kvp.Key.ToLowerInvariant())
-                {
-                    case "content-type":
-                        message.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(kvp.Value);
-                        break;
-                    case "accept":
-                        message.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(kvp.Value));
-                        break;
-                    case "user-agent":
-                        message.Headers.UserAgent.Add(ProductInfoHeaderValue.Parse(kvp.Value));
-                        break;
-                    default:
-                        message.Headers.Add(kvp.Key, kvp.Value);
-                        break;
-                }
-            }
-
-            var response = await _client.SendAsync(message);
-            context.Display(response, HtmlFormatter.MimeType, PlainTextFormatter.MimeType);
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException)
+        {
+            context.Fail(command, message: ex.Message);
         }
     }
 
-    private void PublishDiagnostics(KernelInvocationContext context, KernelCommand command, IEnumerable<Diagnostic> diagnostics)
+    private async Task SendRequestAsync(HttpRequestMessage requestMessage, KernelCommand command, KernelInvocationContext context)
     {
-        var formattedDiagnostics =
-            diagnostics
-                .Select(d => d.ToString())
-                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                .ToImmutableArray();
-        context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
+        var cancellationToken = context.CancellationToken;
+        var isResponseAvailable = false;
+        var semaphore = new SemaphoreSlim(1);
+        string? valueId = null;
+
+        try
+        {
+            await Task.WhenAll(SendRequestAndHandleResponseAsync(), HandleDelayedResponseAsync());
+        }
+        catch
+        {
+            ClearDisplayedValue();
+            throw;
+        }
+
+        async Task HandleDelayedResponseAsync()
+        {
+            await Task.Delay(_responseDelayThresholdInMilliseconds);
+
+            await semaphore.WaitAsync(cancellationToken);
+            try
+            {
+                if (!isResponseAvailable)
+                {
+                    var emptyResponse = new EmptyHttpResponse();
+                    UpdateDisplayedValue(emptyResponse);
+                }
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        async Task SendRequestAndHandleResponseAsync()
+        {
+            var response = await GetResponseWithTimingAsync(requestMessage, cancellationToken);
+
+            await semaphore.WaitAsync(cancellationToken);
+            isResponseAvailable = true;
+            semaphore.Release();
+
+            var contentLength = response.Content?.ByteLength ?? 0;
+            if (contentLength >= _contentByteLengthThreshold)
+            {
+                var partialResponse = response.ToPartialHttpResponse();
+                UpdateDisplayedValue(partialResponse);
+            }
+
+            UpdateDisplayedValue(response);
+
+            var jsonFormattedResponse =
+                FormattedValue.CreateSingleFromObject(response, JsonFormatter.MimeType);
+
+            jsonFormattedResponse.SuppressDisplay = true;
+
+            context.Publish(
+                new ReturnValueProduced(
+                    response,
+                    command,
+                    formattedValues: new[] { jsonFormattedResponse }));
+        }
+
+        void UpdateDisplayedValue(object response)
+        {
+            var formattedValues = FormattedValue.CreateManyFromObject(response);
+
+            if (string.IsNullOrEmpty(valueId))
+            {
+                valueId = Guid.NewGuid().ToString();
+                context.Publish(new DisplayedValueProduced(response, command, formattedValues, valueId));
+            }
+            else
+            {
+                context.Publish(new DisplayedValueUpdated(response, valueId, command, formattedValues));
+            }
+        }
+
+        void ClearDisplayedValue()
+        {
+            if (!string.IsNullOrEmpty(valueId))
+            {
+                var htmlFormattedValue = new FormattedValue(HtmlFormatter.MimeType, "<span/>");
+                var plainTextFormattedValue = new FormattedValue(PlainTextFormatter.MimeType, string.Empty);
+                var formattedValues = new[] { htmlFormattedValue, plainTextFormattedValue };
+                context.Publish(new DisplayedValueUpdated(value: null, valueId, command, formattedValues));
+            }
+        }
     }
 
-    public Task HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
+    private async Task<HttpResponse> GetResponseWithTimingAsync(
+        HttpRequestMessage requestMessage,
+        CancellationToken cancellationToken)
     {
-        var requestsAndDiagnostics = InterpolateAndGetDiagnostics(command.Code);
-        var diagnostics = requestsAndDiagnostics.SelectMany(r => r.Diagnostics);
+        HttpResponse response;
+        var stopWatch = Stopwatch.StartNew();
+
+        try
+        {
+            var responseMessage = await _client.SendAsync(requestMessage, cancellationToken);
+            response = (await responseMessage.ToHttpResponseAsync(cancellationToken))!;
+        }
+        finally
+        {
+            stopWatch.Stop();
+        }
+
+        response.ElapsedMilliseconds = stopWatch.Elapsed.TotalMilliseconds;
+        return response;
+    }
+
+    private void PublishDiagnostics(KernelInvocationContext context, KernelCommand command, IReadOnlyCollection<Diagnostic> diagnostics)
+    {
+        if (diagnostics.Any())
+        {
+            var formattedDiagnostics =
+                diagnostics
+                    .Select(d => d.ToString())
+                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                    .ToArray();
+
+            context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
+        }
+    }
+
+    Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
+    {
+        var parseResult = HttpRequestParser.Parse(command.Code);
+        var diagnostics = GetAllDiagnostics(parseResult);
         PublishDiagnostics(context, command, diagnostics);
         return Task.CompletedTask;
     }
 
-    private IEnumerable<(string Request, List<Diagnostic> Diagnostics)> InterpolateAndGetDiagnostics(string code)
+    private List<Diagnostic> GetAllDiagnostics(HttpRequestParseResult parseResult)
     {
-        var canResolveHost = BaseAddress is { };
-        var lines = code.Split('\n');
+        var diagnostics = new List<Diagnostic>();
 
-        var result = new List<(string Request, List<Diagnostic>)>();
-        var currentLines = new List<string>();
-        var currentDiagnostics = new List<Diagnostic>();
-
-        for (var line = 0; line < lines.Length; line++)
+        foreach (var diagnostic in parseResult.GetDiagnostics())
         {
-            var lineText = lines[line];
-            if (IsRequest.IsMatch(lineText))
-            {
-                if (MightContainRequest(currentLines))
-                {
-                    var requestCode = string.Join('\n', currentLines);
-                    result.Add((requestCode, currentDiagnostics));
-                }
-
-                currentLines = new List<string>();
-                currentDiagnostics = new List<Diagnostic>();
-            }
-
-            var rebuiltLine = new StringBuilder();
-            var lastStart = 0;
-            var interpolationStart = lineText.IndexOf(InterpolationStartMarker);
-            while (interpolationStart >= 0)
-            {
-                rebuiltLine.Append(lineText[lastStart..interpolationStart]);
-                var interpolationEnd = lineText.IndexOf(InterpolationEndMarker, interpolationStart + InterpolationStartMarker.Length);
-                if (interpolationEnd < 0)
-                {
-                    // no end marker
-                    // TODO: error?
-                }
-
-                var variableName = lineText[(interpolationStart + InterpolationStartMarker.Length)..interpolationEnd];
-                if (_variables.TryGetValue(variableName, out var value))
-                {
-                    rebuiltLine.Append(value);
-                }
-                else
-                {
-                    // no variable found; keep old code and report diagnostic
-                    rebuiltLine.Append(InterpolationStartMarker);
-                    rebuiltLine.Append(variableName);
-                    rebuiltLine.Append(InterpolationEndMarker);
-                    var position = new LinePositionSpan(
-                        new LinePosition(line, interpolationStart + InterpolationStartMarker.Length),
-                        new LinePosition(line, interpolationEnd));
-                    currentDiagnostics.Add(new Diagnostic(position, DiagnosticSeverity.Error, "HTTP404", $"Cannot resolve symbol '{variableName}'"));
-                }
-
-                lastStart = interpolationEnd + InterpolationEndMarker.Length;
-                interpolationStart = lineText.IndexOf(InterpolationStartMarker, lastStart);
-            }
-
-            rebuiltLine.Append(lineText[lastStart..]);
-            currentLines.Add(rebuiltLine.ToString());
+            diagnostics.Add(diagnostic);
         }
 
-        if (MightContainRequest(currentLines))
+        foreach (var expressionNode in parseResult.SyntaxTree.RootNode.DescendantNodesAndTokensAndSelf().OfType<HttpExpressionNode>())
         {
-            var requestCode = string.Join('\n', currentLines);
-            result.Add((requestCode, currentDiagnostics));
+            if (BindExpressionValues(expressionNode) is { IsSuccessful: false } bindResult)
+            {
+                diagnostics.AddRange(bindResult.Diagnostics);
+            }
         }
 
-        return result;
+        return diagnostics;
     }
 
-    private static bool MightContainRequest(IEnumerable<string> lines)
+    private HttpBindingResult<object?> BindExpressionValues(HttpExpressionNode node)
     {
-        return lines.Any(line => IsRequest.IsMatch(line));
-        //return lines.Any() && lines.Any(line => !string.IsNullOrWhiteSpace(line));
-    }
-    
-    private IEnumerable<HttpRequest> ParseRequests(string requests)
-    {
-        var parsedRequests = new List<HttpRequest>();
+        var variableName = node.Text;
+        var expression = variableName;
 
-        /*
-         * A request as first verb and endpoint (optional version), this command could be multiline
-         * optional headers
-         * optional body
-         */
-
-        foreach (var (request, diagnostics) in InterpolateAndGetDiagnostics(requests))
+        if (_variables.TryGetValue(expression, out var value))
         {
-            var body = new StringBuilder();
-            string verb = null;
-            string address = null;
-            var headerValues = new Dictionary<string, string>();
-            var lines = request.Split(new[] {'\n'});
-            for (var index = 0; index < lines.Length; index++)
-            {
-                var line = lines[index];
-                if (verb == null)
-                {
-                    if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//"))
-                    {
-                        continue;
-                    }
-
-                    var parts = line.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
-                    verb = parts[0].Trim();
-                    address = parts[1].Trim();
-                }
-                else if (!string.IsNullOrWhiteSpace(line) && IsHeader.Matches(line) is { } matches)
-                {
-                    foreach (Match match in matches)
-                    {
-                        var key = match.Groups["key"].Value;
-                        var value = match.Groups["value"].Value.Trim();
-                        headerValues[key] = value;
-                    }
-                }
-                else
-                {
-                    for (; index < lines.Length; index++)
-                    {
-                        body.AppendLine(lines[index]);
-                    }
-                }
-            }
-
-            var bodyText = body.ToString().Trim();
-
-            if (string.IsNullOrWhiteSpace(address) && BaseAddress is null)
-            {
-                throw new InvalidOperationException("Cannot perform HttpRequest without a valid uri.");
-            }
-
-            var uri = new Uri(address, UriKind.RelativeOrAbsolute);
-            if (!uri.IsAbsoluteUri && BaseAddress is null)
-            {
-                throw new InvalidOperationException($"Cannot use relative path {uri} without a base address.");
-            }
-
-            uri = uri.IsAbsoluteUri ? uri : new Uri(BaseAddress, uri);
-            parsedRequests.Add(new HttpRequest(verb, uri.AbsoluteUri, bodyText, headerValues, diagnostics));
+            return HttpBindingResult<object?>.Success(value);
         }
 
-        return parsedRequests;
-    }
+        var diagnostic = node.CreateDiagnostic($"Cannot resolve symbol '{variableName}'");
 
-    private class HttpRequest
-    {
-        public HttpRequest(string verb, string address, string body, IEnumerable<KeyValuePair<string, string>> headers, IEnumerable<Diagnostic> diagnostics)
-        {
-            Verb = verb;
-            Address = address;
-            Body = body;
-            Headers = headers;
-            Diagnostics = diagnostics;
-        }
-
-        public string Verb { get; }
-        public string Address { get; }
-        public string Body { get; }
-        public IEnumerable<KeyValuePair<string, string>> Headers { get; }
-        public IEnumerable<Diagnostic> Diagnostics { get; }
+        return HttpBindingResult<object?>.Failure(diagnostic);
     }
 }

@@ -1,0 +1,63 @@
+{
+  "Projects": [
+    {
+      "LocItems": [
+        {
+          "SourceFile": "src\\dotnet-interactive\\xlf\\Resources.xlf",
+          "OutputPath": "src\\dotnet-interactive\\xlf",
+          "Languages": "",
+          "CopyOption": "LangIDOnName"
+        }
+      ],
+      "LanguageSet": "VS_Main_Languages"
+    },
+    {
+      "LocItems": [
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive\\xlf\\Resources.xlf",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive\\xlf",
+          "Languages": "",
+          "CopyOption": "LangIDOnName"
+        }
+      ],
+      "LanguageSet": "VS_Main_Languages"
+    },
+    {
+      "LocItems": [
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.Journey\\xlf\\Resources.xlf",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.Journey\\xlf",
+          "Languages": "",
+          "CopyOption": "LangIDOnName"
+        }
+      ],
+      "LanguageSet": "VS_Main_Languages"
+    },
+    {
+      "LocItems": [
+        {
+          "SourceFile": "src\\Microsoft.DotNet.Interactive.Jupyter\\xlf\\Resources.xlf",
+          "OutputPath": "src\\Microsoft.DotNet.Interactive.Jupyter\\xlf",
+          "Languages": "",
+          "CopyOption": "LangIDOnName"
+        }
+      ],
+      "LanguageSet": "VS_Main_Languages"
+    },
+    {
+      "LocItems": [
+        {
+          "SourceFile": "src\\polyglot-notebooks-vscode-insiders\\package.nls.json",
+          "OutputPath": "src\\polyglot-notebooks-vscode-insiders",
+          "CopyOption": "LangIDOnName"
+        },
+        {
+          "SourceFile": "src\\polyglot-notebooks-vscode-insiders\\l10n\\bundle.l10n.json",
+          "OutputPath": "src\\polyglot-notebooks-vscode-insiders\\l10n",
+          "CopyOption": "LangIDOnName"
+        }
+      ],
+      "LanguageSet": "VS_Main_Languages"
+    }
+  ]
+}

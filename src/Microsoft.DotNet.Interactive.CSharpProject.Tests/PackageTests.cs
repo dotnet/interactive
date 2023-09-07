@@ -111,28 +111,6 @@ public partial class PackageTests : IDisposable
                 "empty.dll"));
     }
 
-
-    [Fact]
-    public async Task When_package_contains_aspnet_project_then_entry_point_dll_is_in_the_publish_directory()
-    {
-        var package = Create.EmptyWorkspace(initializer: new PackageInitializer("webapi", "aspnet.webapi"));
-
-        await package.CreateWorkspaceForRunAsync();
-
-        package.EntryPointAssemblyPath.Exists.Should().BeTrue();
-
-        package.EntryPointAssemblyPath
-            .FullName
-            .Should()
-            .Be(Path.Combine(
-                package.Directory.FullName,
-                "bin",
-                "Debug",
-                package.TargetFramework,
-                "publish",
-                "aspnet.webapi.dll"));
-    }
-
     [Fact]
     public async Task If_a_build_is_in_fly_the_second_one_will_wait_and_do_not_continue()
     {
@@ -148,7 +126,9 @@ public partial class PackageTests : IDisposable
                    {
                        barrier.SignalAndWait(30.Seconds());
                    }
-               }))
+               }, searchInAssemblies: 
+               new[] {typeof(LogEvents).Assembly,
+                   typeof(ICodeRunner).Assembly}))
         {
             await Task.WhenAll(
                 Task.Run(() => package.FullBuildAsync()),

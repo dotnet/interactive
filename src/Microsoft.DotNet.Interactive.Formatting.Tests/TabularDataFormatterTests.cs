@@ -186,7 +186,7 @@ public class TabularDataResourceFormatterTests : IDisposable
     }
 
     [Fact]
-    public void Tabular_data_resource_with_is_formatted_as_a_table()
+    public void Tabular_data_resource_is_formatted_as_a_table()
     {
         var tabularDataResource = CreateTabularDataResource();
 
@@ -195,6 +195,20 @@ public class TabularDataResourceFormatterTests : IDisposable
             .RemoveStyleElement()
             .Should()
             .Be($"<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td>{PlainTextBegin}12{PlainTextEnd}</td><td>green</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr><tr><td>Rainier cherry</td><td>{PlainTextBegin}9000{PlainTextEnd}</td><td>yellow</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr></tbody></table>");
+    }
+
+    [Fact]
+    public void Tabular_data_resource_is_formatted_as_a_table_with_list_expansion_limit()
+    {
+        var tabularDataResource = CreateTabularDataResource();
+        Formatter.ListExpansionLimit = 1;
+        var formatted = tabularDataResource
+            .ToDisplayString("text/html")
+            .RemoveStyleElement();
+        Formatter.ListExpansionLimit = 0;
+
+        formatted.Should()
+            .Be($"<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td>{PlainTextBegin}12{PlainTextEnd}</td><td>green</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr><tr><td colspan=\"4\"><i>(1 more)</i></td></tr></tbody></table>");
     }
 
     [Fact]

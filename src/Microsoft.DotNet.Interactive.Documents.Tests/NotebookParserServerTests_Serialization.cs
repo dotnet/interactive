@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
+using Microsoft.DotNet.Interactive.App.ParserServer;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
@@ -71,16 +71,6 @@ public class NotebookParserServerTests_Serialization
     public void NotebookSerializeResponse_serialization_contract()
     {
         var response = new NotebookSerializeResponse("the-id", new byte[] { 0x01, 0x02, 0x03 });
-
-        var json = response.ToJson();
-
-        this.Assent(json, _configuration);
-    }
-
-    [Fact]
-    public void NotebookErrorResponse_serialization_contract()
-    {
-        var response = new NotebookErrorResponse("the-id", "some error message");
 
         var json = response.ToJson();
 

@@ -1,9 +1,11 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.SqlServer;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Kql;
 
@@ -14,10 +16,11 @@ public class KqlKernelExtension : IKernelExtension
         if (kernel is CompositeKernel compositeKernel)
         {
             var kqlToolName = "MicrosoftKustoServiceLayer";
-            await Utils.CheckAndInstallGlobalToolAsync(kqlToolName, "1.1.0", "Microsoft.SqlServer.KustoServiceLayer.Tool");
+            await Utils.CheckAndInstallGlobalToolAsync(kqlToolName, "1.2.0", "Microsoft.SqlServer.KustoServiceLayer.Tool");
 
+            var kqlToolPath = Path.Combine(Paths.DotnetToolsPath, kqlToolName);
             compositeKernel
-                .AddKernelConnector(new ConnectKqlCommand(kqlToolName));
+                .AddKernelConnector(new ConnectKqlCommand(kqlToolPath));
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString(@"<details><summary>Query Microsoft Kusto Server databases.</summary>

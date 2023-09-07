@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,15 +19,13 @@ using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
-using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using Pocket;
+
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
-using Microsoft.DotNet.Interactive.Formatting;
-using System.Text.Json;
-using Microsoft.CodeAnalysis;
-
 namespace Microsoft.DotNet.Interactive;
 
 public abstract partial class Kernel :
@@ -39,10 +38,10 @@ public abstract partial class Kernel :
     private readonly Subject<KernelEvent> _kernelEvents = new();
     private readonly CompositeDisposable _disposables = new();
     private readonly ConcurrentDictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
+    private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
     private readonly ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler = new();
     private FrontendEnvironment _frontendEnvironment;
     private ChooseKernelDirective _chooseKernelDirective;
-    private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
     private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
     private KernelInvocationContext _inFlightContext;
     private int _countOfLanguageServiceCommandsInFlight = 0;
@@ -178,7 +177,7 @@ public abstract partial class Kernel :
 
             if (handlingKernel is null)
             {
-                context.Fail(command, new NoSuitableKernelException(command));
+                context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
                 return false;
             }
 
@@ -194,7 +193,7 @@ public abstract partial class Kernel :
             command.TargetKernelName ??= handlingKernel.Name;
 
             if (command.Parent is null &&
-                !CommandEqualityComparer.Instance.Equals(command, originalCommand))
+                !command.Equals(originalCommand))
             {
                 command.Parent = originalCommand;
             }
@@ -254,7 +253,7 @@ public abstract partial class Kernel :
             offsetLanguageServiceCommand.TargetKernelName = node switch
             {
                 DirectiveNode => Name,
-                _ => node.KernelName,
+                _ => node.Name,
             };
 
             adjustedCommand = offsetLanguageServiceCommand;
@@ -314,7 +313,9 @@ public abstract partial class Kernel :
 
     protected virtual Func<TCommand, KernelInvocationContext, Task> CreateDefaultHandlerForCommandType<TCommand>() where TCommand : KernelCommand
     {
-        return (_, _) => Task.CompletedTask;
+        return EmptyHandler;
+
+        Task EmptyHandler(TCommand _, KernelInvocationContext __) => Task.CompletedTask;
     }
 
     internal virtual async Task HandleAsync(
@@ -339,17 +340,24 @@ public abstract partial class Kernel :
         KernelInvocationContext context = null;
         command.ShouldPublishCompletionEvent ??= true;
 
-        context = KernelInvocationContext.Establish(command);
+        context = KernelInvocationContext.GetOrCreateAmbientContext(command, GetKernelHost()?.ContextsByRootToken);
+
+        if (command.Parent is null)
+        {
+            if (!ReferenceEquals(command, context.Command))
+            {
+                command.Parent = context.Command;
+            }
+        }
 
         // only subscribe for the root command 
-        var currentCommandOwnsContext = CommandEqualityComparer.Instance.Equals(context.Command, command);
+        var currentCommandOwnsContext = context.Command.Equals(command);
 
         if (currentCommandOwnsContext)
         {
             disposable.Disposable = context.KernelEvents.Subscribe(PublishEvent);
 
-            if (cancellationToken != CancellationToken.None &&
-                cancellationToken != default)
+            if (cancellationToken.CanBeCanceled)
             {
                 cancellationToken.Register(context.Cancel);
             }
@@ -366,55 +374,53 @@ public abstract partial class Kernel :
                     case Quit quit:
                         quit.SchedulingScope = SchedulingScope;
                         quit.TargetKernelName = Name;
+                        Scheduler.CancelCurrentOperation();
                         await InvokePipelineAndCommandHandler(quit);
                         break;
 
                     case Cancel cancel:
                         cancel.SchedulingScope = SchedulingScope;
                         cancel.TargetKernelName = Name;
-                        Scheduler.CancelCurrentOperation(inflight =>
-                        {
-                            context.Publish(new CommandCancelled(cancel, inflight));
-                        });
+                        Scheduler.CancelCurrentOperation();
                         await InvokePipelineAndCommandHandler(cancel);
                         break;
 
                     case RequestDiagnostics _:
-                    {
-                        if (_countOfLanguageServiceCommandsInFlight > 0)
                         {
-                            context.CancelWithSuccess();
-                            return context.Result;
+                            if (_countOfLanguageServiceCommandsInFlight > 0)
+                            {
+                                context.CancelWithSuccess();
+                                return context.Result;
+                            }
+
+                            if (_inFlightContext is { } inflight)
+                            {
+                                inflight.Complete(inflight.Command);
+                            }
+
+                            _inFlightContext = context;
+
+                            await RunOnFastPath(context, c, cancellationToken);
+
+                            _inFlightContext = null;
                         }
-
-                        if (_inFlightContext is { } inflight)
-                        {
-                            inflight.Complete(inflight.Command);
-                        }
-
-                        _inFlightContext = context;
-
-                        await RunOnFastPath(context, c, cancellationToken);
-
-                        _inFlightContext = null;
-                    }
                         break;
 
                     case RequestHoverText _:
                     case RequestCompletions _:
                     case RequestSignatureHelp _:
-                    {
-                        if (_inFlightContext is { } inflight)
                         {
-                            inflight.CancelWithSuccess();
+                            if (_inFlightContext is { } inflight)
+                            {
+                                inflight.CancelWithSuccess();
+                            }
+
+                            Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
+
+                            await RunOnFastPath(context, c, cancellationToken);
+
+                            Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
                         }
-
-                        Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
-
-                        await RunOnFastPath(context, c, cancellationToken);
-
-                        Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
-                    }
                         break;
 
                     case DisplayError _:
@@ -450,6 +456,7 @@ public abstract partial class Kernel :
 
         if (currentCommandOwnsContext)
         {
+            await Scheduler.IdleAsync();
             context.Dispose();
         }
 
@@ -496,10 +503,13 @@ public abstract partial class Kernel :
     {
         try
         {
+            var undeferScheduledCommands = new UndeferScheduledCommands(
+                context.HandlingKernel.Name,
+                context.Command);
+            
             await SendAsync(
-                new UndeferScheduledCommands(
-                    context.HandlingKernel.Name,
-                    context.Command), context.CancellationToken);
+                undeferScheduledCommands, 
+                context.CancellationToken);
         }
         catch (TaskCanceledException)
         {
@@ -512,18 +522,23 @@ public abstract partial class Kernel :
             string targetKernelName,
             KernelCommand parent) : base((_, _) =>
         {
-            Log.Info("Undeferring commands ahead of {command}", parent);
+            Log.Info("Undeferring commands ahead of '{command}'", parent);
             return Task.CompletedTask;
-        }, targetKernelName: targetKernelName, parent: parent)
+        }, targetKernelName: targetKernelName)
         {
+            Parent = parent;
         }
 
         public override string ToString() => $"Undefer commands ahead of {Parent}";
     }
+    private KernelHost GetKernelHost()
+    {
+        return RootKernel is CompositeKernel { Host: { } kernelHost } ? kernelHost : null;
+    }
 
     internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
     {
-        var context = KernelInvocationContext.Establish(command);
+        var context = KernelInvocationContext.GetOrCreateAmbientContext(command, GetKernelHost()?.ContextsByRootToken);
 
         try
         {
@@ -531,7 +546,7 @@ public abstract partial class Kernel :
 
             await Pipeline.SendAsync(command, context);
 
-            if (!CommandEqualityComparer.Instance.Equals(command, context.Command))
+            if (!command.Equals(context.Command))
             {
                 context.Complete(command);
             }
@@ -555,26 +570,7 @@ public abstract partial class Kernel :
         {
             if (_commandScheduler is null)
             {
-                var scheduler = new KernelScheduler<KernelCommand, KernelCommandResult>(
-                    (outer, inner) =>
-                    {
-                        if (outer is null)
-                        {
-                            return false;
-                        }
-
-                        if (inner.Parent == outer)
-                        {
-                            return true;
-                        }
-
-                        if (inner.GetOrCreateToken() == outer.GetOrCreateToken())
-                        {
-                            return true;
-                        }
-
-                        return inner.RoutingSlip.StartsWith(outer.RoutingSlip);
-                    });
+                var scheduler = new KernelCommandScheduler();
                 RegisterForDisposal(scheduler);
                 SetScheduler(scheduler);
             }
@@ -594,7 +590,8 @@ public abstract partial class Kernel :
 
     private IReadOnlyList<KernelCommand> GetDeferredCommands(KernelCommand command, string scope)
     {
-        if (!command.SchedulingScope.Contains(SchedulingScope))
+        if (command.SchedulingScope is null || 
+            !command.SchedulingScope.Contains(SchedulingScope))
         {
             return Array.Empty<KernelCommand>();
         }
@@ -617,7 +614,7 @@ public abstract partial class Kernel :
         return deferredCommands;
     }
 
-    public Task HandleAsync(
+    Task IKernelCommandHandler<RequestKernelInfo>.HandleAsync(
         RequestKernelInfo command,
         KernelInvocationContext context) =>
         HandleRequestKernelInfoAsync(command, context);
@@ -630,7 +627,8 @@ public abstract partial class Kernel :
 
     private protected bool CanHandle(KernelCommand command)
     {
-        if (command.TargetKernelName is not null &&
+        if (!KernelInfo.IsProxy &&
+            command.TargetKernelName is not null &&
             command.TargetKernelName != Name)
         {
             return false;
@@ -638,7 +636,8 @@ public abstract partial class Kernel :
 
         if (command.DestinationUri is not null)
         {
-            if (KernelInfo.RemoteUri != command.DestinationUri)
+            if (KernelInfo.Uri != command.DestinationUri &&
+                KernelInfo.RemoteUri != command.DestinationUri)
             {
                 return false;
             }
@@ -661,8 +660,6 @@ public abstract partial class Kernel :
             return this;
         }
 
-        context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
-
         return null;
     }
 
@@ -675,7 +672,7 @@ public abstract partial class Kernel :
 
         if (!kernelEvent.RoutingSlip.Contains(KernelInfo.Uri))
         {
-            kernelEvent.RoutingSlip.Stamp(KernelInfo.Uri);
+            kernelEvent.StampRoutingSlipAndLog(KernelInfo.Uri);
         }
 
         _kernelEvents.OnNext(kernelEvent);

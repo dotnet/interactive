@@ -3,7 +3,6 @@
 
 using System.CommandLine.Parsing;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Markdown;
 

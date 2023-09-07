@@ -1,0 +1,3645 @@
+[
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_10",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.602347Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "7107dd84-5b6d-4ca7-a136-f982b4973404",
+      "username": "dotnet_kernel",
+      "session": "31b0360d-4b3d-4d71-bb01-4e290e0d735f",
+      "date": "2023-03-21T23:56:57.5862234Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_12",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.603347Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "7107dd84-5b6d-4ca7-a136-f982b4973404",
+      "username": "dotnet_kernel",
+      "session": "31b0360d-4b3d-4d71-bb01-4e290e0d735f",
+      "date": "2023-03-21T23:56:57.5862234Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_11",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.602347Z",
+      "msg_type": "kernel_info_reply",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "7107dd84-5b6d-4ca7-a136-f982b4973404",
+      "username": "dotnet_kernel",
+      "session": "31b0360d-4b3d-4d71-bb01-4e290e0d735f",
+      "date": "2023-03-21T23:56:57.5862234Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "protocol_version": "5.3",
+      "implementation": "ipython",
+      "implementation_version": "7.31.1",
+      "language_info": {
+        "name": "python",
+        "version": "3.9.13",
+        "mimetype": "text/x-python",
+        "file_extension": ".py",
+        "pygments_lexer": "ipython3",
+        "codemirror_mode": {
+          "name": "ipython",
+          "version": 3
+        },
+        "nbconvert_exporter": "python"
+      },
+      "banner": "Python 3.9.13 (main, Aug 25 2022, 23:51:50) [MSC v.1916 64 bit (AMD64)]\nType 'copyright', 'credits' or 'license' for more information\nIPython 7.31.1 -- An enhanced Interactive Python. Type '?' for help.\n",
+      "status": "ok",
+      "help_links": [
+        {
+          "text": "Python Reference",
+          "url": "https://docs.python.org/3.9"
+        },
+        {
+          "text": "IPython Reference",
+          "url": "https://ipython.org/documentation.html"
+        },
+        {
+          "text": "NumPy Reference",
+          "url": "https://docs.scipy.org/doc/numpy/reference/"
+        },
+        {
+          "text": "SciPy Reference",
+          "url": "https://docs.scipy.org/doc/scipy/reference/"
+        },
+        {
+          "text": "Matplotlib Reference",
+          "url": "https://matplotlib.org/contents.html"
+        },
+        {
+          "text": "SymPy Reference",
+          "url": "http://docs.sympy.org/latest/index.html"
+        },
+        {
+          "text": "pandas Reference",
+          "url": "https://pandas.pydata.org/pandas-docs/stable/"
+        }
+      ]
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_13",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.608349Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9abd81fb-9dc1-4acf-a948-9c2bcf3e5fa8",
+      "username": "dotnet_kernel",
+      "session": "9ed32ff0-d18f-4078-bb04-73cf6cf80155",
+      "date": "2023-03-21T23:56:57.6062685Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_14",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.608349Z",
+      "msg_type": "execute_input",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9abd81fb-9dc1-4acf-a948-9c2bcf3e5fa8",
+      "username": "dotnet_kernel",
+      "session": "9ed32ff0-d18f-4078-bb04-73cf6cf80155",
+      "date": "2023-03-21T23:56:57.6062685Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "code": "# Copyright (c) .NET Foundation and contributors. All rights reserved.\n# Licensed under the MIT license. See LICENSE file in the project root for full license information.\n\ntry:\n    get_ipython().__class__.__name__\nexcept NameError:\n    raise Exception(\"This script needs to be run in ipython\")\n    \nimport json\ndef __get_dotnet_coe_comm_handler(): \n\n    class CommandEventCommTarget:\n        __control_comm = None\n        __coe_handler = None\n\n        def handle_control_comm_opened(self, comm, msg):\n            if comm is None:\n                raise RuntimeError('Control comm required to open')\n                \n            self.__control_comm = comm\n            self.__control_comm.on_msg(self.handle_control_comm_msg)\n\n            self.__coe_handler = CommandEventHandler()\n            self.__control_comm.send(self.__coe_handler.is_ready())\n\n        def handle_control_comm_msg(self, msg):\n            # This shouldn't happen unless someone calls this method manually\n            if self.__control_comm is None and not self._is_debug:\n                raise RuntimeError('Control comm has not been properly opened')\n\n            data = msg['content']['data']\n            response = self.__coe_handler.handle_command_or_event(data)\n            self.__control_comm.send(response)\n            \n    \n    class CommandEventHandler:\n        __exclude_types = [\"<class 'module'>\"]\n\n        \n        def handle_command_or_event(self, data):\n            try:\n                msg_type = data['type']\n                commandOrEvent = json.loads(data['commandOrEvent'])\n                # self.__debugLog('handle_command_or_event.last_data_recv', commandOrEvent)\n                \n                if (msg_type == \"command\"):\n                    return self.__handle_command(commandOrEvent)\n                    \n            except Exception as e: \n                self. __debugLog('handle_command_or_event.commandFailed', e)\n                return EventEnvelope(CommandFailed(f'failed to process comm data. {str(e)}')).payload()\n        \n        def __handle_command(self, commandOrEvent):\n            commandType = commandOrEvent['commandType']\n\n            envelop = None\n            if (commandType == SendValue.__name__):\n                envelop = self.__handle_send_value(commandOrEvent)\n            elif (commandType == RequestValue.__name__):\n                envelop = self.__handle_request_value(commandOrEvent)\n            elif (commandType == RequestValueInfos.__name__):\n                envelop = self.__handle_request_value_infos(commandOrEvent)\n            else: \n                envelop = EventEnvelope(CommandFailed(f'command \"{commandType}\" not supported'))\n\n            return envelop.payload()\n\n        def __handle_request_value_infos(self, command):\n            results_who_ls = get_ipython().magic('who_ls')\n            variables = globals()\n            results = [KernelValueInfo(x, FormattedValue.fromValue(variables[x]), str(type(variables[x]))) \n                                    for x in results_who_ls \n                                    if x in variables and str(type(variables[x])) not in self.__exclude_types]\n\n\n            return EventEnvelope(ValueInfosProduced(results), command)\n            \n        def __handle_request_value(self, command):\n            requestValue = RequestValue(command['command'])\n            name = requestValue.name\n            mimeType = requestValue.mimeType\n            \n            if (name not in globals()):\n                return EventEnvelope(CommandFailed(f'Variable \"{name}\" not found.'))\n            \n            rawValue = globals()[name]\n            updatedValue = None\n\n            try: \n                import pandas as pd; \n                if (isinstance(rawValue, pd.DataFrame)):\n                    mimeType = 'application/table-schema+json'\n                    updatedValue = rawValue.to_dict('records')\n            except Exception as e: \n                self. __debugLog('__handle_request_value.dataframe.error', e)\n                pass\n\n            formattedValue = FormattedValue.fromValue(rawValue, mimeType) \n\n            return EventEnvelope(ValueProduced(name, rawValue if updatedValue is None else updatedValue, formattedValue), command)\n        \n        def __handle_send_value(self, command):\n            sendValue = SendValue(command['command'])\n            mimeType = sendValue.formattedValue['mimeType']\n            name = sendValue.name\n            rawValue = sendValue.formattedValue['value']\n            resultValue = None\n            \n            if (not str.isidentifier(name)):\n                return EventEnvelope(CommandFailed(f'Invalid Identifier: \"{name}\"'))\n        \n            if (mimeType == 'application/json'):\n                import json; resultValue = json.loads(rawValue)\n            elif (mimeType == 'application/table-schema+json'):\n                import json; resultValue = json.loads(rawValue)\n                try:\n                    import pandas as pd; resultValue = pd.DataFrame(data=resultValue['data'])\n                except Exception as e:\n                    self.__debugLog('__handle_send_value.dataframe.error', e)\n                    return EventEnvelope(CommandFailed(f'Cannot create pandas dataframe for: \"{name}\". {str(e)}'))\n                \n            if (resultValue is not None): \n                self.__setVariable(name, resultValue) \n                return EventEnvelope(CommandSucceeded())\n            \n            return EventEnvelope(CommandFailed(f'Failed to set value for \"{name}\". \"{mimeType}\" mimetype not supported.'))\n        \n        def is_ready(self):\n            return EventEnvelope(KernelReady()).payload()\n        \n        @staticmethod\n        def __setVariable(name, value):\n            globals()[name] = value\n        \n        @staticmethod\n        def __debugLog(event, message):\n            globals()[f'__log__coe_handler.{str(event)}'] = message\n    \n    \n    class KernelCommand: \n        pass\n\n    class SendValue(KernelCommand): \n        def __init__(self, entries):\n            self.__dict__.update(**entries)\n\n    class RequestValue(KernelCommand):\n        def __init__(self, entries):\n            self.__dict__.update(**entries)\n\n    class RequestValueInfos(KernelCommand):\n        def __init__(self, entries):\n            self.__dict__.update(**entries)\n            \n    class FormattedValue:\n        def __init__(self, mimeType = 'application/json', value = None):\n            self.mimeType = mimeType\n            self.value = value\n        \n        @staticmethod\n        def fromValue(value, mimeType = 'application/json'):\n            formattedValue = None\n            try: \n                import pandas as pd; \n                if (isinstance(value, pd.DataFrame)):\n                    mimeType = 'application/table-schema+json'\n            except Exception: \n                pass\n\n            if (mimeType == 'application/json'):\n                import json; formattedValue = json.dumps(value)\n            elif (mimeType == 'application/table-schema+json'):\n                formattedValue = value.to_string(index=False, max_rows=5)\n\n            return FormattedValue(mimeType, formattedValue)\n\n    class KernelValueInfo:\n        def __init__(self, name, formattedValue: FormattedValue, typeName = None):\n            self.name = name\n            self.formattedValue = formattedValue\n            self.typeName = typeName\n        \n    class KernelEvent:\n        pass\n\n    class KernelReady(KernelEvent):\n        def __init__(self, kernelInfos = []):\n            self.kernelInfos = kernelInfos\n\n    class CommandSucceeded(KernelEvent):\n        pass\n\n    class CommandFailed(KernelEvent):\n        def __init__(self, message = None):\n            self.message = message\n\n    class ValueProduced(KernelEvent):\n        def __init__(self, name, value, formattedValue: FormattedValue):\n            self.name = name\n            self.value = value \n            self.formattedValue = formattedValue\n    \n    class ValueInfosProduced(KernelEvent):\n        def __init__(self, valueInfos: list[KernelValueInfo]):\n            self.valueInfos = valueInfos\n            \n    class Envelope:\n        def payload(self):\n            return { 'commandOrEvent': self.__to_json_string(self) }\n\n        @staticmethod\n        def __to_json_string(obj):\n            return json.dumps(obj, default=lambda o: o.__dict__)\n\n    class EventEnvelope(Envelope):\n        def __init__(self, event: KernelEvent = None, command = None):\n            self.event = event\n            self.eventType = type(event).__name__\n            self.command = command\n\n        def payload(self):\n            ret = super().payload()\n            ret['type'] = 'event'\n            return ret\n    \n    return CommandEventCommTarget()\n\nif hasattr(get_ipython(), 'kernel'):\n    get_ipython().kernel.comm_manager.register_target('dotnet_coe_handler_comm', __get_dotnet_coe_comm_handler().handle_control_comm_opened)\n",
+      "execution_count": 1
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_16",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.643862Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9abd81fb-9dc1-4acf-a948-9c2bcf3e5fa8",
+      "username": "dotnet_kernel",
+      "session": "9ed32ff0-d18f-4078-bb04-73cf6cf80155",
+      "date": "2023-03-21T23:56:57.6062685Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_15",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.643862Z",
+      "msg_type": "execute_reply",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9abd81fb-9dc1-4acf-a948-9c2bcf3e5fa8",
+      "username": "dotnet_kernel",
+      "session": "9ed32ff0-d18f-4078-bb04-73cf6cf80155",
+      "date": "2023-03-21T23:56:57.6062685Z",
+      "msg_type": "execute_request",
+      "version": "5.3"
+    },
+    "metadata": {
+      "started": "2023-03-21T23:56:57.608349Z",
+      "dependencies_met": true,
+      "engine": "b0eb72ff-f1dd-4d3d-b2a5-967c0d86122d",
+      "status": "ok"
+    },
+    "content": {
+      "payload": [],
+      "user_expressions": {},
+      "status": "ok",
+      "execution_count": 0
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_17",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.647862Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "95588b64-4845-4ac9-886e-5c19f758d5cf",
+      "username": "dotnet_kernel",
+      "session": "bf519b79-1591-436f-acfd-877d1a93409d",
+      "date": "2023-03-21T23:56:57.6469686Z",
+      "msg_type": "comm_open",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_18",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.648868Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "95588b64-4845-4ac9-886e-5c19f758d5cf",
+      "username": "dotnet_kernel",
+      "session": "bf519b79-1591-436f-acfd-877d1a93409d",
+      "date": "2023-03-21T23:56:57.6469686Z",
+      "msg_type": "comm_open",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"kernelInfos\": []}, \"eventType\": \"KernelReady\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_19",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:57.649867Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "95588b64-4845-4ac9-886e-5c19f758d5cf",
+      "username": "dotnet_kernel",
+      "session": "bf519b79-1591-436f-acfd-877d1a93409d",
+      "date": "2023-03-21T23:56:57.6469686Z",
+      "msg_type": "comm_open",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_20",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.122305Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "5124ed9f-9ce5-47f9-b100-bd680a059641",
+      "username": "dotnet_kernel",
+      "session": "85d25ada-77db-4229-a3e9-fdd018b5e9a8",
+      "date": "2023-03-21T23:56:58.1199018Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_21",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.122305Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "5124ed9f-9ce5-47f9-b100-bd680a059641",
+      "username": "dotnet_kernel",
+      "session": "85d25ada-77db-4229-a3e9-fdd018b5e9a8",
+      "date": "2023-03-21T23:56:58.1199018Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_22",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.123305Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "5124ed9f-9ce5-47f9-b100-bd680a059641",
+      "username": "dotnet_kernel",
+      "session": "85d25ada-77db-4229-a3e9-fdd018b5e9a8",
+      "date": "2023-03-21T23:56:58.1199018Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_23",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.128307Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2e70bbea-7366-44ec-96ac-d814d745504c",
+      "username": "dotnet_kernel",
+      "session": "ef111457-45d4-484d-bdbd-c3e233099593",
+      "date": "2023-03-21T23:56:58.1272646Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_24",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.591392Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2e70bbea-7366-44ec-96ac-d814d745504c",
+      "username": "dotnet_kernel",
+      "session": "ef111457-45d4-484d-bdbd-c3e233099593",
+      "date": "2023-03-21T23:56:58.1272646Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 2, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"2\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"S2uhEm4J8dDfFxhjzIlI+1qZTrEU5ordzL1dFUT6iDY=\", \"id\": \"9e2a21db61ca485bb8a2c30d9ffea9f8\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_25",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.591392Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2e70bbea-7366-44ec-96ac-d814d745504c",
+      "username": "dotnet_kernel",
+      "session": "ef111457-45d4-484d-bdbd-c3e233099593",
+      "date": "2023-03-21T23:56:58.1272646Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_26",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.666950Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9b67b628-1110-42d9-8eda-37ec5bc35f0c",
+      "username": "dotnet_kernel",
+      "session": "52360324-eb7f-4e19-a1e4-8bb2609b9535",
+      "date": "2023-03-21T23:56:58.6657428Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_27",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.667949Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9b67b628-1110-42d9-8eda-37ec5bc35f0c",
+      "username": "dotnet_kernel",
+      "session": "52360324-eb7f-4e19-a1e4-8bb2609b9535",
+      "date": "2023-03-21T23:56:58.6657428Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_28",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.668955Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9b67b628-1110-42d9-8eda-37ec5bc35f0c",
+      "username": "dotnet_kernel",
+      "session": "52360324-eb7f-4e19-a1e4-8bb2609b9535",
+      "date": "2023-03-21T23:56:58.6657428Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_29",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.671952Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "17145650-2e9b-45cb-8b5c-0e9f551b3f49",
+      "username": "dotnet_kernel",
+      "session": "314f2f9d-e054-493d-a1bf-65662d4b079b",
+      "date": "2023-03-21T23:56:58.6715124Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_30",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.671952Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "17145650-2e9b-45cb-8b5c-0e9f551b3f49",
+      "username": "dotnet_kernel",
+      "session": "314f2f9d-e054-493d-a1bf-65662d4b079b",
+      "date": "2023-03-21T23:56:58.6715124Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": -2147483648, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"-2147483648\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"xeRXhgUA0Ga6Rm6PCrDesEzqPoI977dTeJoeEP59os0=\", \"id\": \"64dc992f6446484a87bb80f89c2a8e36\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_31",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.673949Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "17145650-2e9b-45cb-8b5c-0e9f551b3f49",
+      "username": "dotnet_kernel",
+      "session": "314f2f9d-e054-493d-a1bf-65662d4b079b",
+      "date": "2023-03-21T23:56:58.6715124Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_32",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.759017Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "dfacd497-5cd4-4bde-9ef0-5f45a12afc44",
+      "username": "dotnet_kernel",
+      "session": "97695a94-8bcd-4023-9fdb-51ca42fe113f",
+      "date": "2023-03-21T23:56:58.7564064Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_33",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.760017Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "dfacd497-5cd4-4bde-9ef0-5f45a12afc44",
+      "username": "dotnet_kernel",
+      "session": "97695a94-8bcd-4023-9fdb-51ca42fe113f",
+      "date": "2023-03-21T23:56:58.7564064Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_34",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.761022Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "dfacd497-5cd4-4bde-9ef0-5f45a12afc44",
+      "username": "dotnet_kernel",
+      "session": "97695a94-8bcd-4023-9fdb-51ca42fe113f",
+      "date": "2023-03-21T23:56:58.7564064Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_35",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.764021Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "f85c7f5f-e409-484c-87b4-1b82dc7f0c56",
+      "username": "dotnet_kernel",
+      "session": "a8bfeec2-8b58-405e-bf4c-8d457ac50c96",
+      "date": "2023-03-21T23:56:58.7630014Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_36",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.764021Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "f85c7f5f-e409-484c-87b4-1b82dc7f0c56",
+      "username": "dotnet_kernel",
+      "session": "a8bfeec2-8b58-405e-bf4c-8d457ac50c96",
+      "date": "2023-03-21T23:56:58.7630014Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 2147483647, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"2147483647\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"afEH75FZlWTLmAOZMQ208yxoxL6vmN42wBhlLQ+2ExA=\", \"id\": \"2f9e779b61c14652aab3bf9cf9c7765a\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_37",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.765017Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "f85c7f5f-e409-484c-87b4-1b82dc7f0c56",
+      "username": "dotnet_kernel",
+      "session": "a8bfeec2-8b58-405e-bf4c-8d457ac50c96",
+      "date": "2023-03-21T23:56:58.7630014Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_38",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.830073Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "8eda2983-21e8-4bc0-a68d-ecf84802bd64",
+      "username": "dotnet_kernel",
+      "session": "723e31c7-69c3-47ce-aeed-3c2e61600153",
+      "date": "2023-03-21T23:56:58.8286893Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_39",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.831072Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "8eda2983-21e8-4bc0-a68d-ecf84802bd64",
+      "username": "dotnet_kernel",
+      "session": "723e31c7-69c3-47ce-aeed-3c2e61600153",
+      "date": "2023-03-21T23:56:58.8286893Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_40",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.832072Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "8eda2983-21e8-4bc0-a68d-ecf84802bd64",
+      "username": "dotnet_kernel",
+      "session": "723e31c7-69c3-47ce-aeed-3c2e61600153",
+      "date": "2023-03-21T23:56:58.8286893Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_41",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.835076Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "fb6e02e8-59c5-4864-b8b7-608f4942e443",
+      "username": "dotnet_kernel",
+      "session": "bc5b8cd7-4973-41d2-84b0-c25ff61596dc",
+      "date": "2023-03-21T23:56:58.8342760Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_42",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.835076Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "fb6e02e8-59c5-4864-b8b7-608f4942e443",
+      "username": "dotnet_kernel",
+      "session": "bc5b8cd7-4973-41d2-84b0-c25ff61596dc",
+      "date": "2023-03-21T23:56:58.8342760Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": -123456789012345, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"-123456789012345\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"A7++/FiwcVa/uhEtWbtJui5P4Y3QAysQ2kbMyvvlUS0=\", \"id\": \"f69292e53446441e90049f011097ab89\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_43",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.836082Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "fb6e02e8-59c5-4864-b8b7-608f4942e443",
+      "username": "dotnet_kernel",
+      "session": "bc5b8cd7-4973-41d2-84b0-c25ff61596dc",
+      "date": "2023-03-21T23:56:58.8342760Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_44",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.890130Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "69ecddf9-e182-406f-8750-77190c82a135",
+      "username": "dotnet_kernel",
+      "session": "5683554f-5308-4557-82bb-d16672823524",
+      "date": "2023-03-21T23:56:58.8883746Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_45",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.890130Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "69ecddf9-e182-406f-8750-77190c82a135",
+      "username": "dotnet_kernel",
+      "session": "5683554f-5308-4557-82bb-d16672823524",
+      "date": "2023-03-21T23:56:58.8883746Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_46",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.891130Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "69ecddf9-e182-406f-8750-77190c82a135",
+      "username": "dotnet_kernel",
+      "session": "5683554f-5308-4557-82bb-d16672823524",
+      "date": "2023-03-21T23:56:58.8883746Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_47",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.895131Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "30cbbcbc-9969-43e7-adc6-d1a448082b34",
+      "username": "dotnet_kernel",
+      "session": "de4cd0c7-2bc2-40ba-b2b2-4043ede3e0ed",
+      "date": "2023-03-21T23:56:58.8943661Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_48",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.896130Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "30cbbcbc-9969-43e7-adc6-d1a448082b34",
+      "username": "dotnet_kernel",
+      "session": "de4cd0c7-2bc2-40ba-b2b2-4043ede3e0ed",
+      "date": "2023-03-21T23:56:58.8943661Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123456789012345, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123456789012345\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"yqZW2Frpf7kjFOJOUSBRhdXhOya6Y9gkiZCs8utnr3A=\", \"id\": \"834777e350c54be6962f94e87b8bda15\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_49",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.896130Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "30cbbcbc-9969-43e7-adc6-d1a448082b34",
+      "username": "dotnet_kernel",
+      "session": "de4cd0c7-2bc2-40ba-b2b2-4043ede3e0ed",
+      "date": "2023-03-21T23:56:58.8943661Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_50",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.957224Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "c96b5ebe-7cc2-4ffc-8e50-29e65f4f265a",
+      "username": "dotnet_kernel",
+      "session": "bac6ff33-a8a1-410b-93a8-a86edfe67a39",
+      "date": "2023-03-21T23:56:58.9554635Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_51",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.957224Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "c96b5ebe-7cc2-4ffc-8e50-29e65f4f265a",
+      "username": "dotnet_kernel",
+      "session": "bac6ff33-a8a1-410b-93a8-a86edfe67a39",
+      "date": "2023-03-21T23:56:58.9554635Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_52",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.958223Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "c96b5ebe-7cc2-4ffc-8e50-29e65f4f265a",
+      "username": "dotnet_kernel",
+      "session": "bac6ff33-a8a1-410b-93a8-a86edfe67a39",
+      "date": "2023-03-21T23:56:58.9554635Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_53",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.961230Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "3a50fe86-230c-4cbc-986d-9bd1dc15b947",
+      "username": "dotnet_kernel",
+      "session": "f9a60c17-1799-4172-be6e-9e029114873e",
+      "date": "2023-03-21T23:56:58.9609336Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_54",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.962229Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "3a50fe86-230c-4cbc-986d-9bd1dc15b947",
+      "username": "dotnet_kernel",
+      "session": "f9a60c17-1799-4172-be6e-9e029114873e",
+      "date": "2023-03-21T23:56:58.9609336Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": true, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"true\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"4MVMFGGB2IWQ7Thf3AjQLDeBKmhy4KcKtK7ReaiB6uE=\", \"id\": \"7874fb0fdee14231b486fd60886e611a\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_55",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:58.963231Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "3a50fe86-230c-4cbc-986d-9bd1dc15b947",
+      "username": "dotnet_kernel",
+      "session": "f9a60c17-1799-4172-be6e-9e029114873e",
+      "date": "2023-03-21T23:56:58.9609336Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_56",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.032807Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "3328bed8-82cf-474f-834f-8569a5fc492c",
+      "username": "dotnet_kernel",
+      "session": "16d260ee-0f27-4537-87b0-dbe39c4537be",
+      "date": "2023-03-21T23:56:59.0307562Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_57",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.032807Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "3328bed8-82cf-474f-834f-8569a5fc492c",
+      "username": "dotnet_kernel",
+      "session": "16d260ee-0f27-4537-87b0-dbe39c4537be",
+      "date": "2023-03-21T23:56:59.0307562Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_58",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.033806Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "3328bed8-82cf-474f-834f-8569a5fc492c",
+      "username": "dotnet_kernel",
+      "session": "16d260ee-0f27-4537-87b0-dbe39c4537be",
+      "date": "2023-03-21T23:56:59.0307562Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_59",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.037805Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "63669cb7-dc2e-4a9c-a861-a6f4e3fcf027",
+      "username": "dotnet_kernel",
+      "session": "be304433-4880-45ab-8cbc-925713e911f8",
+      "date": "2023-03-21T23:56:59.0366472Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_60",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.037805Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "63669cb7-dc2e-4a9c-a861-a6f4e3fcf027",
+      "username": "dotnet_kernel",
+      "session": "be304433-4880-45ab-8cbc-925713e911f8",
+      "date": "2023-03-21T23:56:59.0366472Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": \"hi!\", \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"\\\"hi!\\\"\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"JCAX+ZZwlMqK2isGTJNC/4qRbARagDF+AsgAJBojcPs=\", \"id\": \"94f8c5ef6861481db40a3ce7cf1ad199\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_61",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.039074Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "63669cb7-dc2e-4a9c-a861-a6f4e3fcf027",
+      "username": "dotnet_kernel",
+      "session": "be304433-4880-45ab-8cbc-925713e911f8",
+      "date": "2023-03-21T23:56:59.0366472Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_62",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.111637Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "1bce5d8b-0e68-4f8d-b545-110501d41497",
+      "username": "dotnet_kernel",
+      "session": "add4c18b-2e85-4a3b-975c-ac5172554c4c",
+      "date": "2023-03-21T23:56:59.1092283Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_63",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.111637Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "1bce5d8b-0e68-4f8d-b545-110501d41497",
+      "username": "dotnet_kernel",
+      "session": "add4c18b-2e85-4a3b-975c-ac5172554c4c",
+      "date": "2023-03-21T23:56:59.1092283Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_64",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.112639Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "1bce5d8b-0e68-4f8d-b545-110501d41497",
+      "username": "dotnet_kernel",
+      "session": "add4c18b-2e85-4a3b-975c-ac5172554c4c",
+      "date": "2023-03-21T23:56:59.1092283Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_65",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.115639Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "f98a5cc0-ed0c-41c8-9ff5-90cdec5966d8",
+      "username": "dotnet_kernel",
+      "session": "6b7b068e-2d46-459c-a286-50b89164a653",
+      "date": "2023-03-21T23:56:59.1153287Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_66",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.116639Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "f98a5cc0-ed0c-41c8-9ff5-90cdec5966d8",
+      "username": "dotnet_kernel",
+      "session": "6b7b068e-2d46-459c-a286-50b89164a653",
+      "date": "2023-03-21T23:56:59.1153287Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": \"hi!\", \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"\\\"hi!\\\"\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"LAVnfMiHp4u6uu07+dPqQEA1rB6QtwDcKlK+tj+0hCI=\", \"id\": \"8265147b8215435b98a8b2a4e78d44b5\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_67",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.117645Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "f98a5cc0-ed0c-41c8-9ff5-90cdec5966d8",
+      "username": "dotnet_kernel",
+      "session": "6b7b068e-2d46-459c-a286-50b89164a653",
+      "date": "2023-03-21T23:56:59.1153287Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_68",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.176203Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "099727b9-b856-4bd9-8ed1-cac150a8a9e7",
+      "username": "dotnet_kernel",
+      "session": "379e22f6-a8a5-4733-8ac5-3f941d3e049f",
+      "date": "2023-03-21T23:56:59.1747323Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_69",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.177201Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "099727b9-b856-4bd9-8ed1-cac150a8a9e7",
+      "username": "dotnet_kernel",
+      "session": "379e22f6-a8a5-4733-8ac5-3f941d3e049f",
+      "date": "2023-03-21T23:56:59.1747323Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_70",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.178201Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "099727b9-b856-4bd9-8ed1-cac150a8a9e7",
+      "username": "dotnet_kernel",
+      "session": "379e22f6-a8a5-4733-8ac5-3f941d3e049f",
+      "date": "2023-03-21T23:56:59.1747323Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_71",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.182215Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9881448f-1b29-4aa5-8cdc-36f33e887d0e",
+      "username": "dotnet_kernel",
+      "session": "732148cd-f14f-4c58-b01d-c5660e83f186",
+      "date": "2023-03-21T23:56:59.1812361Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_72",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.182215Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9881448f-1b29-4aa5-8cdc-36f33e887d0e",
+      "username": "dotnet_kernel",
+      "session": "732148cd-f14f-4c58-b01d-c5660e83f186",
+      "date": "2023-03-21T23:56:59.1812361Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": \"\", \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"\\\"\\\"\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"nttQT+PKyFwNdbHCQRC+ZID0H7XqLTjkgwsJlOgKkts=\", \"id\": \"dbf3abe21b93463da9a0ce1de0b7d5aa\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_73",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.183211Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "9881448f-1b29-4aa5-8cdc-36f33e887d0e",
+      "username": "dotnet_kernel",
+      "session": "732148cd-f14f-4c58-b01d-c5660e83f186",
+      "date": "2023-03-21T23:56:59.1812361Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_74",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.236263Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b4439fb0-0995-471f-b04e-77bf1f6f0038",
+      "username": "dotnet_kernel",
+      "session": "74d92336-17bb-44f9-bc98-fa6501f1f405",
+      "date": "2023-03-21T23:56:59.2342380Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_75",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.236263Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b4439fb0-0995-471f-b04e-77bf1f6f0038",
+      "username": "dotnet_kernel",
+      "session": "74d92336-17bb-44f9-bc98-fa6501f1f405",
+      "date": "2023-03-21T23:56:59.2342380Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_76",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.237261Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b4439fb0-0995-471f-b04e-77bf1f6f0038",
+      "username": "dotnet_kernel",
+      "session": "74d92336-17bb-44f9-bc98-fa6501f1f405",
+      "date": "2023-03-21T23:56:59.2342380Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_77",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.241260Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "eac5a822-bc01-4fd8-b12b-e63430695480",
+      "username": "dotnet_kernel",
+      "session": "1eca45ae-8ade-415a-81e8-f6374fa9abc2",
+      "date": "2023-03-21T23:56:59.2401468Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_78",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.241260Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "eac5a822-bc01-4fd8-b12b-e63430695480",
+      "username": "dotnet_kernel",
+      "session": "1eca45ae-8ade-415a-81e8-f6374fa9abc2",
+      "date": "2023-03-21T23:56:59.2401468Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": \"\\u00ab\\u03c4\\u03b1\\u0411\\u042c\\u2113\\u03c3\\u00bb\", \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"\\\"\\\\u00ab\\\\u03c4\\\\u03b1\\\\u0411\\\\u042c\\\\u2113\\\\u03c3\\\\u00bb\\\"\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"01Yn4+myeN7agWEAAIha12qiQzNa2iYTrXHl/EBMHD0=\", \"id\": \"15fcf3698fe24072a873469fd7a59f25\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_79",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.242267Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "eac5a822-bc01-4fd8-b12b-e63430695480",
+      "username": "dotnet_kernel",
+      "session": "1eca45ae-8ade-415a-81e8-f6374fa9abc2",
+      "date": "2023-03-21T23:56:59.2401468Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_80",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.732436Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "4b4dfe7e-d5f8-4926-b7bd-e0d8a3f180a1",
+      "username": "dotnet_kernel",
+      "session": "7e58bdec-c11f-480f-a361-6d3673a72c80",
+      "date": "2023-03-21T23:56:59.7312922Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_81",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.733436Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "4b4dfe7e-d5f8-4926-b7bd-e0d8a3f180a1",
+      "username": "dotnet_kernel",
+      "session": "7e58bdec-c11f-480f-a361-6d3673a72c80",
+      "date": "2023-03-21T23:56:59.7312922Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_82",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.734437Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "4b4dfe7e-d5f8-4926-b7bd-e0d8a3f180a1",
+      "username": "dotnet_kernel",
+      "session": "7e58bdec-c11f-480f-a361-6d3673a72c80",
+      "date": "2023-03-21T23:56:59.7312922Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_83",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.737438Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2a6d1998-752f-4caf-b748-e7286723c97e",
+      "username": "dotnet_kernel",
+      "session": "5ade9ef1-c083-46cc-ad85-c09d231c277a",
+      "date": "2023-03-21T23:56:59.7371471Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_84",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.738436Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2a6d1998-752f-4caf-b748-e7286723c97e",
+      "username": "dotnet_kernel",
+      "session": "5ade9ef1-c083-46cc-ad85-c09d231c277a",
+      "date": "2023-03-21T23:56:59.7371471Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": -123456.789, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"-123456.789\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"RnDAgUipB+JB2L0vH3euN5XrvITSGSzm3BcnURYNKAI=\", \"id\": \"4b954c6927c44ea3a4aabc37c4ce0b20\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_85",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:56:59.739437Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2a6d1998-752f-4caf-b748-e7286723c97e",
+      "username": "dotnet_kernel",
+      "session": "5ade9ef1-c083-46cc-ad85-c09d231c277a",
+      "date": "2023-03-21T23:56:59.7371471Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_86",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.160873Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "a2cedf94-9ecc-46d3-a7ca-8376e5aba6a7",
+      "username": "dotnet_kernel",
+      "session": "ace767dc-0268-4efe-8eb0-d77bbda3a22a",
+      "date": "2023-03-21T23:57:00.1597601Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_87",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.161872Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "a2cedf94-9ecc-46d3-a7ca-8376e5aba6a7",
+      "username": "dotnet_kernel",
+      "session": "ace767dc-0268-4efe-8eb0-d77bbda3a22a",
+      "date": "2023-03-21T23:57:00.1597601Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_88",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.162872Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "a2cedf94-9ecc-46d3-a7ca-8376e5aba6a7",
+      "username": "dotnet_kernel",
+      "session": "ace767dc-0268-4efe-8eb0-d77bbda3a22a",
+      "date": "2023-03-21T23:57:00.1597601Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_89",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.165904Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "5b5bcb30-42c9-4a77-9800-9ab1c3184990",
+      "username": "dotnet_kernel",
+      "session": "7abe959d-62fb-4e8f-92b2-7588d18a98fa",
+      "date": "2023-03-21T23:57:00.1653282Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_90",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.165904Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "5b5bcb30-42c9-4a77-9800-9ab1c3184990",
+      "username": "dotnet_kernel",
+      "session": "7abe959d-62fb-4e8f-92b2-7588d18a98fa",
+      "date": "2023-03-21T23:57:00.1653282Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123456.789, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123456.789\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"KGBJEugwhuHpfGzRv9lSoMinaFOvdddldkd78mlGyt4=\", \"id\": \"326ca38f71d14298b7398858173a9cea\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_91",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.166901Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "5b5bcb30-42c9-4a77-9800-9ab1c3184990",
+      "username": "dotnet_kernel",
+      "session": "7abe959d-62fb-4e8f-92b2-7588d18a98fa",
+      "date": "2023-03-21T23:57:00.1653282Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_92",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.222422Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "bab3368f-e0dc-4e23-ac7e-4592777ea3dd",
+      "username": "dotnet_kernel",
+      "session": "740cb38d-8992-49cd-a0e0-0582509058f9",
+      "date": "2023-03-21T23:57:00.2207487Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_93",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.222422Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "bab3368f-e0dc-4e23-ac7e-4592777ea3dd",
+      "username": "dotnet_kernel",
+      "session": "740cb38d-8992-49cd-a0e0-0582509058f9",
+      "date": "2023-03-21T23:57:00.2207487Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_94",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.223421Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "bab3368f-e0dc-4e23-ac7e-4592777ea3dd",
+      "username": "dotnet_kernel",
+      "session": "740cb38d-8992-49cd-a0e0-0582509058f9",
+      "date": "2023-03-21T23:57:00.2207487Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_95",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.226879Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "51c8965c-cf6a-47ac-9024-f3f3304fa72b",
+      "username": "dotnet_kernel",
+      "session": "0095a3ac-172f-416d-8f92-906518dc769b",
+      "date": "2023-03-21T23:57:00.2261116Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_96",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.226879Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "51c8965c-cf6a-47ac-9024-f3f3304fa72b",
+      "username": "dotnet_kernel",
+      "session": "0095a3ac-172f-416d-8f92-906518dc769b",
+      "date": "2023-03-21T23:57:00.2261116Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123.789, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123.789\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"3R5k6N2Oj5fR62ydmF9eO0Gs2ZkSgeguOGj7apbLKB8=\", \"id\": \"4b65e29a59ca44edbdfd50fd1c227677\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_97",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.227875Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "51c8965c-cf6a-47ac-9024-f3f3304fa72b",
+      "username": "dotnet_kernel",
+      "session": "0095a3ac-172f-416d-8f92-906518dc769b",
+      "date": "2023-03-21T23:57:00.2261116Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_98",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.305972Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b65e571e-69a3-4b85-8d0b-f9b68995f98e",
+      "username": "dotnet_kernel",
+      "session": "9dc2e0cf-576c-4a6a-9243-37060499f316",
+      "date": "2023-03-21T23:57:00.3029328Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_99",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.305972Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b65e571e-69a3-4b85-8d0b-f9b68995f98e",
+      "username": "dotnet_kernel",
+      "session": "9dc2e0cf-576c-4a6a-9243-37060499f316",
+      "date": "2023-03-21T23:57:00.3029328Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_100",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.306973Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b65e571e-69a3-4b85-8d0b-f9b68995f98e",
+      "username": "dotnet_kernel",
+      "session": "9dc2e0cf-576c-4a6a-9243-37060499f316",
+      "date": "2023-03-21T23:57:00.3029328Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_101",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.309974Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "a6281b00-3544-445e-9894-8f7c5b2841b4",
+      "username": "dotnet_kernel",
+      "session": "39adf1f5-65cd-448d-a748-46f62649cd5f",
+      "date": "2023-03-21T23:57:00.3095258Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_102",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.310972Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "a6281b00-3544-445e-9894-8f7c5b2841b4",
+      "username": "dotnet_kernel",
+      "session": "39adf1f5-65cd-448d-a748-46f62649cd5f",
+      "date": "2023-03-21T23:57:00.3095258Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123456.789, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123456.789\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"SQPlBK+fMEo/28ETtjhJPV7vAgpEV5jjs+2mVjXljJQ=\", \"id\": \"898dc829ca3049daaf9f86db5fcec9e7\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_103",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.310972Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "a6281b00-3544-445e-9894-8f7c5b2841b4",
+      "username": "dotnet_kernel",
+      "session": "39adf1f5-65cd-448d-a748-46f62649cd5f",
+      "date": "2023-03-21T23:57:00.3095258Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_104",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.366552Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b0dbfcda-a330-4195-bcf2-a5704f615489",
+      "username": "dotnet_kernel",
+      "session": "fd4b212b-cc4b-4098-8e34-4049ec886c0b",
+      "date": "2023-03-21T23:57:00.3651557Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_105",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.366552Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b0dbfcda-a330-4195-bcf2-a5704f615489",
+      "username": "dotnet_kernel",
+      "session": "fd4b212b-cc4b-4098-8e34-4049ec886c0b",
+      "date": "2023-03-21T23:57:00.3651557Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_106",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.367558Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b0dbfcda-a330-4195-bcf2-a5704f615489",
+      "username": "dotnet_kernel",
+      "session": "fd4b212b-cc4b-4098-8e34-4049ec886c0b",
+      "date": "2023-03-21T23:57:00.3651557Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_107",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.372558Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "be45f866-b1ca-479e-9e2d-8983c2485b6a",
+      "username": "dotnet_kernel",
+      "session": "6ff4f234-64d8-4cd5-abf4-66425ed0890d",
+      "date": "2023-03-21T23:57:00.3713073Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_108",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.372558Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "be45f866-b1ca-479e-9e2d-8983c2485b6a",
+      "username": "dotnet_kernel",
+      "session": "6ff4f234-64d8-4cd5-abf4-66425ed0890d",
+      "date": "2023-03-21T23:57:00.3713073Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": \"a\", \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"\\\"a\\\"\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"8lqS5+VOuV7C5P+5r7evam7Y1bnulUrRWPl+6UZgxSY=\", \"id\": \"f043def8013f49ca9db7f3fc8e5dd175\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_109",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.373559Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "be45f866-b1ca-479e-9e2d-8983c2485b6a",
+      "username": "dotnet_kernel",
+      "session": "6ff4f234-64d8-4cd5-abf4-66425ed0890d",
+      "date": "2023-03-21T23:57:00.3713073Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_110",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.428112Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "d3334556-8150-4715-a821-9aa8325a37d1",
+      "username": "dotnet_kernel",
+      "session": "541fc088-1fc2-4502-9073-f10d5756ce4a",
+      "date": "2023-03-21T23:57:00.4260694Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_111",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.428112Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "d3334556-8150-4715-a821-9aa8325a37d1",
+      "username": "dotnet_kernel",
+      "session": "541fc088-1fc2-4502-9073-f10d5756ce4a",
+      "date": "2023-03-21T23:57:00.4260694Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_112",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.429110Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "d3334556-8150-4715-a821-9aa8325a37d1",
+      "username": "dotnet_kernel",
+      "session": "541fc088-1fc2-4502-9073-f10d5756ce4a",
+      "date": "2023-03-21T23:57:00.4260694Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_113",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.432116Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "6e363638-1041-40cc-af18-7e1e97fb8d25",
+      "username": "dotnet_kernel",
+      "session": "7432b074-d190-4b5f-be6c-1a5144ee20ab",
+      "date": "2023-03-21T23:57:00.4318745Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_114",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.433116Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "6e363638-1041-40cc-af18-7e1e97fb8d25",
+      "username": "dotnet_kernel",
+      "session": "7432b074-d190-4b5f-be6c-1a5144ee20ab",
+      "date": "2023-03-21T23:57:00.4318745Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": \"'\", \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"\\\"'\\\"\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"ly9eTiHqrO8MCETt77H22bYI9SqF1XjD33upMTKD7OU=\", \"id\": \"e1c9bff4bdba49028f9d7643e57b4aed\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_115",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.434116Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "6e363638-1041-40cc-af18-7e1e97fb8d25",
+      "username": "dotnet_kernel",
+      "session": "7432b074-d190-4b5f-be6c-1a5144ee20ab",
+      "date": "2023-03-21T23:57:00.4318745Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_116",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.490668Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2f411d3f-e897-4dc7-b7b9-767299907c77",
+      "username": "dotnet_kernel",
+      "session": "852e304b-a9a1-4ed6-a7da-16e5c5571c3d",
+      "date": "2023-03-21T23:57:00.4899660Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_117",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.491667Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2f411d3f-e897-4dc7-b7b9-767299907c77",
+      "username": "dotnet_kernel",
+      "session": "852e304b-a9a1-4ed6-a7da-16e5c5571c3d",
+      "date": "2023-03-21T23:57:00.4899660Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_118",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.492674Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2f411d3f-e897-4dc7-b7b9-767299907c77",
+      "username": "dotnet_kernel",
+      "session": "852e304b-a9a1-4ed6-a7da-16e5c5571c3d",
+      "date": "2023-03-21T23:57:00.4899660Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_119",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.495674Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "32225c21-bd7a-4dcc-8cf9-3662a8c87d85",
+      "username": "dotnet_kernel",
+      "session": "a9114a25-5bae-4372-a88d-fdf6c9232631",
+      "date": "2023-03-21T23:57:00.4948164Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_120",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.495674Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "32225c21-bd7a-4dcc-8cf9-3662a8c87d85",
+      "username": "dotnet_kernel",
+      "session": "a9114a25-5bae-4372-a88d-fdf6c9232631",
+      "date": "2023-03-21T23:57:00.4948164Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"HRXCRz/MmNNTTkCF9J5yuSwluyprABbMHWViOXRG5+k=\", \"id\": \"feb8c48ef449470296b4bd33c316bf8d\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_121",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.496674Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "32225c21-bd7a-4dcc-8cf9-3662a8c87d85",
+      "username": "dotnet_kernel",
+      "session": "a9114a25-5bae-4372-a88d-fdf6c9232631",
+      "date": "2023-03-21T23:57:00.4948164Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_122",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.550748Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "fc9adb66-e559-4b6b-9851-c72ab20aa55d",
+      "username": "dotnet_kernel",
+      "session": "8a9b231f-9042-41c2-8dcc-f87e3333772a",
+      "date": "2023-03-21T23:57:00.5494757Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_123",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.551750Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "fc9adb66-e559-4b6b-9851-c72ab20aa55d",
+      "username": "dotnet_kernel",
+      "session": "8a9b231f-9042-41c2-8dcc-f87e3333772a",
+      "date": "2023-03-21T23:57:00.5494757Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_124",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.552750Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "fc9adb66-e559-4b6b-9851-c72ab20aa55d",
+      "username": "dotnet_kernel",
+      "session": "8a9b231f-9042-41c2-8dcc-f87e3333772a",
+      "date": "2023-03-21T23:57:00.5494757Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_125",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.556756Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "fb84e847-78d6-42a1-ac45-bd3d8ba3fecb",
+      "username": "dotnet_kernel",
+      "session": "0d74041d-19d3-459b-96c2-677e47e76f7e",
+      "date": "2023-03-21T23:57:00.5554537Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_126",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.556756Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "fb84e847-78d6-42a1-ac45-bd3d8ba3fecb",
+      "username": "dotnet_kernel",
+      "session": "0d74041d-19d3-459b-96c2-677e47e76f7e",
+      "date": "2023-03-21T23:57:00.5554537Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"2tWWBGRjhGmOKQ6p30s1F+Y36Ao8ekHfTNPZwh6IRv4=\", \"id\": \"bc50960dc7ec449da84de01d226ecc68\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_127",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.557757Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "fb84e847-78d6-42a1-ac45-bd3d8ba3fecb",
+      "username": "dotnet_kernel",
+      "session": "0d74041d-19d3-459b-96c2-677e47e76f7e",
+      "date": "2023-03-21T23:57:00.5554537Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_128",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.616316Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b1135178-0168-4038-9319-3283de511f49",
+      "username": "dotnet_kernel",
+      "session": "0d411966-4469-4122-b086-4d4dd3018fa3",
+      "date": "2023-03-21T23:57:00.6143772Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_129",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.616316Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b1135178-0168-4038-9319-3283de511f49",
+      "username": "dotnet_kernel",
+      "session": "0d411966-4469-4122-b086-4d4dd3018fa3",
+      "date": "2023-03-21T23:57:00.6143772Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_130",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.617321Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "b1135178-0168-4038-9319-3283de511f49",
+      "username": "dotnet_kernel",
+      "session": "0d411966-4469-4122-b086-4d4dd3018fa3",
+      "date": "2023-03-21T23:57:00.6143772Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_131",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.620325Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "a47fef3c-4f7c-4e4e-a834-e51b8e4e13f2",
+      "username": "dotnet_kernel",
+      "session": "bf52b4d9-0f7e-47bb-9b91-ecf25bc6bc8f",
+      "date": "2023-03-21T23:57:00.6199452Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_132",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.621322Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "a47fef3c-4f7c-4e4e-a834-e51b8e4e13f2",
+      "username": "dotnet_kernel",
+      "session": "bf52b4d9-0f7e-47bb-9b91-ecf25bc6bc8f",
+      "date": "2023-03-21T23:57:00.6199452Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"P4oAlFo4bQEFWjyFiSO2SDkZzGfCURJUZnzuzkgqxlQ=\", \"id\": \"9c0a8b8b1d1749619387ce1f104c3cc6\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_133",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.622323Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "a47fef3c-4f7c-4e4e-a834-e51b8e4e13f2",
+      "username": "dotnet_kernel",
+      "session": "bf52b4d9-0f7e-47bb-9b91-ecf25bc6bc8f",
+      "date": "2023-03-21T23:57:00.6199452Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_134",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.680374Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "c1f1ce28-85ec-4cbd-b66b-9495ab4ebf9e",
+      "username": "dotnet_kernel",
+      "session": "f39ca0bd-0feb-44cc-83c5-dd6c5b198ffa",
+      "date": "2023-03-21T23:57:00.6795194Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_135",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.681371Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "c1f1ce28-85ec-4cbd-b66b-9495ab4ebf9e",
+      "username": "dotnet_kernel",
+      "session": "f39ca0bd-0feb-44cc-83c5-dd6c5b198ffa",
+      "date": "2023-03-21T23:57:00.6795194Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_136",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.682372Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "c1f1ce28-85ec-4cbd-b66b-9495ab4ebf9e",
+      "username": "dotnet_kernel",
+      "session": "f39ca0bd-0feb-44cc-83c5-dd6c5b198ffa",
+      "date": "2023-03-21T23:57:00.6795194Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_137",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.685372Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "81e63986-b6df-4459-afca-6c8e39867bcb",
+      "username": "dotnet_kernel",
+      "session": "39f5629c-ce4e-4996-9290-10176072d75d",
+      "date": "2023-03-21T23:57:00.6845350Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_138",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.685372Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "81e63986-b6df-4459-afca-6c8e39867bcb",
+      "username": "dotnet_kernel",
+      "session": "39f5629c-ce4e-4996-9290-10176072d75d",
+      "date": "2023-03-21T23:57:00.6845350Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"o33zxFIbF4c/l9YDxOoChjUQW1WRBrX1OHtJmV8QDwQ=\", \"id\": \"00a814d12d2b49b4a44d70c737ab1f9c\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_139",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.686371Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "81e63986-b6df-4459-afca-6c8e39867bcb",
+      "username": "dotnet_kernel",
+      "session": "39f5629c-ce4e-4996-9290-10176072d75d",
+      "date": "2023-03-21T23:57:00.6845350Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_140",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.738428Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "40aaef75-8787-4289-b27b-aebfa72920cb",
+      "username": "dotnet_kernel",
+      "session": "3a9828bf-9d9f-4ffb-b421-360fc52c22a7",
+      "date": "2023-03-21T23:57:00.7370024Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_141",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.738428Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "40aaef75-8787-4289-b27b-aebfa72920cb",
+      "username": "dotnet_kernel",
+      "session": "3a9828bf-9d9f-4ffb-b421-360fc52c22a7",
+      "date": "2023-03-21T23:57:00.7370024Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_142",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.739427Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "40aaef75-8787-4289-b27b-aebfa72920cb",
+      "username": "dotnet_kernel",
+      "session": "3a9828bf-9d9f-4ffb-b421-360fc52c22a7",
+      "date": "2023-03-21T23:57:00.7370024Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_143",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.743442Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "ff634216-ca2d-490c-b54a-b63aa95b55d1",
+      "username": "dotnet_kernel",
+      "session": "92cabae1-67bb-4f2d-84d0-430fb5e86b35",
+      "date": "2023-03-21T23:57:00.7424323Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_144",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.743442Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "ff634216-ca2d-490c-b54a-b63aa95b55d1",
+      "username": "dotnet_kernel",
+      "session": "92cabae1-67bb-4f2d-84d0-430fb5e86b35",
+      "date": "2023-03-21T23:57:00.7424323Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123456, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123456\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"RSuLvlOlNtfwK7H6cxs2Nu1qgEm4fI5Uv1GouG29TCg=\", \"id\": \"ef06f1f4631b497b882b4422df5afb09\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_145",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.744447Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "ff634216-ca2d-490c-b54a-b63aa95b55d1",
+      "username": "dotnet_kernel",
+      "session": "92cabae1-67bb-4f2d-84d0-430fb5e86b35",
+      "date": "2023-03-21T23:57:00.7424323Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_146",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.798998Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "96f60247-901f-4af2-bae2-0dfe2a791689",
+      "username": "dotnet_kernel",
+      "session": "1b888bef-fc49-46d8-b67a-7aec645d96fc",
+      "date": "2023-03-21T23:57:00.7981320Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_147",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.799994Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "96f60247-901f-4af2-bae2-0dfe2a791689",
+      "username": "dotnet_kernel",
+      "session": "1b888bef-fc49-46d8-b67a-7aec645d96fc",
+      "date": "2023-03-21T23:57:00.7981320Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {}, \"eventType\": \"CommandSucceeded\", \"command\": null}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_148",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.800995Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "96f60247-901f-4af2-bae2-0dfe2a791689",
+      "username": "dotnet_kernel",
+      "session": "1b888bef-fc49-46d8-b67a-7aec645d96fc",
+      "date": "2023-03-21T23:57:00.7981320Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_149",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.806000Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2e9275d9-6064-4ec7-9020-6dbf5249a729",
+      "username": "dotnet_kernel",
+      "session": "25cf53e0-5337-4e7d-a5a4-5d59b3afe2ff",
+      "date": "2023-03-21T23:57:00.8047989Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "busy"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_150",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.806000Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2e9275d9-6064-4ec7-9020-6dbf5249a729",
+      "username": "dotnet_kernel",
+      "session": "25cf53e0-5337-4e7d-a5a4-5d59b3afe2ff",
+      "date": "2023-03-21T23:57:00.8047989Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "comm_id": "4fcb6a5d-8e7c-4aee-b655-291c5997a3f4",
+      "data": {
+        "commandOrEvent": "{\"event\": {\"name\": \"x\", \"value\": 123456789012345, \"formattedValue\": {\"mimeType\": \"application/json\", \"value\": \"123456789012345\"}}, \"eventType\": \"ValueProduced\", \"command\": {\"token\": \"Q6lkeLMOzEfAK2TbwBhLmJsdHJiWvYZCZCP3Suy4L9o=\", \"id\": \"b3a1f51e5b3e447d941d6786948f4d1a\", \"commandType\": \"RequestValue\", \"command\": {\"name\": \"x\", \"mimeType\": \"application/json\", \"targetKernelName\": \"testKernel\", \"originUri\": null, \"destinationUri\": null}, \"routingSlip\": [\"kernel://local/testKernel?tag=arrived\"]}}",
+        "type": "event"
+      }
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "9e2daf5a-89cc8447774ddd337d5d5c87_17556_151",
+      "username": "username",
+      "session": "9e2daf5a-89cc8447774ddd337d5d5c87",
+      "date": "2023-03-21T23:57:00.807002Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "2e9275d9-6064-4ec7-9020-6dbf5249a729",
+      "username": "dotnet_kernel",
+      "session": "25cf53e0-5337-4e7d-a5a4-5d59b3afe2ff",
+      "date": "2023-03-21T23:57:00.8047989Z",
+      "msg_type": "comm_msg",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  }
+]

@@ -10,10 +10,12 @@ using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Documents.Json;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Documents.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 
@@ -21,6 +23,24 @@ namespace Microsoft.DotNet.Interactive.Documents;
 
 public class InteractiveDocument : IEnumerable
 {
+    static InteractiveDocument()
+    {
+        JsonSerializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = false,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters =
+            {
+                new ByteArrayConverter(),
+                new DataDictionaryConverter(),
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+                new InteractiveDocumentConverter(),
+            }
+        };
+    }
+
     private static Parser? _importFieldsParser;
     private static Argument<FileInfo>? _importedFileArgument;
 
@@ -96,7 +116,6 @@ public class InteractiveDocument : IEnumerable
 
         return inputFields.Distinct().ToArray();
 
-
         static IReadOnlyCollection<InputField> ParseInputFields(string line)
         {
             var inputFields = new List<InputField>();
@@ -121,8 +140,8 @@ public class InteractiveDocument : IEnumerable
             return inputFields;
         }
     }
-    
-    public IEnumerator GetEnumerator() => Elements.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => Elements.GetEnumerator();
 
     public void Add(InteractiveDocumentElement element) => Elements.Add(element);
 
@@ -170,6 +189,7 @@ public class InteractiveDocument : IEnumerable
             ".fsx" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "fsharp") },
             ".ps1" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "pwsh") },
             ".html" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "html") },
+            ".http" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "http") },
             ".js" => new InteractiveDocument { new InteractiveDocumentElement(fileContents, "javascript") },
 
             _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}")
@@ -235,13 +255,13 @@ public class InteractiveDocument : IEnumerable
 
     internal static void MergeKernelInfos(KernelInfoCollection destination, KernelInfoCollection source)
     {
-            var added = new HashSet<string>();
-            foreach (var kernelInfo in destination)
-            {
-                added.Add(kernelInfo.Name);
-            }
-            
-            destination.AddRange(source.Where(ki => added.Add(ki.Name)));
+        var added = new HashSet<string>();
+        foreach (var kernelInfo in destination)
+        {
+            added.Add(kernelInfo.Name);
+        }
+
+        destination.AddRange(source.Where(ki => added.Add(ki.Name)));
     }
 
     internal static bool TryGetKernelInfoFromMetadata(
@@ -250,10 +270,10 @@ public class InteractiveDocument : IEnumerable
     {
         if (metadata is not null)
         {
-            if (metadata.TryGetValue("kernelInfo", out var kernelInfoObj) )
+            if (metadata.TryGetValue("kernelInfo", out var kernelInfoObj))
             {
                 if (kernelInfoObj is JsonElement kernelInfoJson &&
-                    kernelInfoJson.Deserialize<KernelInfoCollection>(ParserServerSerializer.JsonSerializerOptions) is
+                    JsonSerializer.Deserialize<KernelInfoCollection>(kernelInfoJson, JsonSerializerOptions) is
                         { } kernelInfoDeserialized)
                 {
                     kernelInfo = kernelInfoDeserialized;
@@ -261,9 +281,9 @@ public class InteractiveDocument : IEnumerable
                 }
 
                 // todo: the kernelInfo should not deserialize as a dictionary
-                if (kernelInfoObj is Dictionary<string,object> kernelInfoAsDictionary)
+                if (kernelInfoObj is Dictionary<string, object> kernelInfoAsDictionary)
                 {
-                    var deserializedKernelInfo  = new KernelInfoCollection();
+                    var deserializedKernelInfo = new KernelInfoCollection();
                     if (kernelInfoAsDictionary.TryGetValue("defaultKernelName", out var defaultKernelNameObj) &&
                        defaultKernelNameObj is string defaultKernelName)
                     {
@@ -271,11 +291,11 @@ public class InteractiveDocument : IEnumerable
                     }
 
                     if (kernelInfoAsDictionary.TryGetValue("items",
-                            out var items))
+                                                           out var items))
                     {
                         if (items is IEnumerable<object> itemList)
                         {
-                            foreach (var item in itemList.Cast<IDictionary<string,object>>())
+                            foreach (var item in itemList.Cast<IDictionary<string, object>>())
                             {
                                 if (item.TryGetValue("name", out var nameObj) &&
                                     nameObj is string name)
@@ -311,7 +331,6 @@ public class InteractiveDocument : IEnumerable
                     return true;
                 }
             }
-        
 
             if (metadata.TryGetValue("dotnet_interactive", out var dotnetInteractiveObj))
             {
@@ -323,17 +342,17 @@ public class InteractiveDocument : IEnumerable
                         return true;
 
                     case IDictionary<string, object> dotnetInteractiveDict:
-                    {
-                        kernelInfo = new();
-
-                        if (dotnetInteractiveDict.TryGetValue("defaultKernelName", out var nameObj) &&
-                            nameObj is string name)
                         {
-                            kernelInfo.DefaultKernelName = name;
-                        }
+                            kernelInfo = new();
 
-                        return true;
-                    }
+                            if (dotnetInteractiveDict.TryGetValue("defaultKernelName", out var nameObj) &&
+                                nameObj is string name)
+                            {
+                                kernelInfo.DefaultKernelName = name;
+                            }
+
+                            return true;
+                        }
                 }
             }
 
@@ -436,4 +455,5 @@ public class InteractiveDocument : IEnumerable
                              .Build();
     }
 
+    internal static JsonSerializerOptions JsonSerializerOptions { get; }
 }

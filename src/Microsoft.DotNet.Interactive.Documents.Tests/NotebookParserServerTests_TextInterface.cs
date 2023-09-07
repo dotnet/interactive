@@ -7,7 +7,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
+using Microsoft.DotNet.Interactive.App.ParserServer;
 using Nerdbank.Streams;
 using Pocket;
 using Xunit;

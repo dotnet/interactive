@@ -26,14 +26,14 @@ internal class StdInChannel
             throw new ArgumentNullException(nameof(message));
         }
 
-        _sender.Send(
+        Send(
             Message.Create(
                 message,
                 request.Header,
                 request.Identifiers,
                 request.MetaData,
                 request.Signature,
-                MessageChannel.stdin));
+                MessageChannelValues.stdin));
 
         var msgReceived = _receiver.Receive();
         var msgType = msgReceived.Header.MessageType;
@@ -50,5 +50,10 @@ internal class StdInChannel
         }
 
         throw new ArgumentOutOfRangeException($"Expecting an 'input_reply' message, but received '{msgType}'.");
+    }
+
+    public void Send(Message message)
+    {
+        _sender.Send(message);
     }
 }

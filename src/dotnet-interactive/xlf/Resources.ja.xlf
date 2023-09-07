@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ja" original="../Resources.resx">
+    <body>
+      <trans-unit id="Cli_ErrorMessageMustSpecifyPortRange">
+        <source>Must specify a port range</source>
+        <target state="translated">ポート範囲を指定する必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_ErrorMessage_MustSpecifyPortRangeAsStartPortEndPort">
+        <source>Must specify a port range as StartPort-EndPort</source>
+        <target state="translated">ポート範囲を StartPort-EndPort の形式で指定してください</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_ErrorMessage_StartPortMustBeLower">
+        <source>Start port must be lower then end port</source>
+        <target state="translated">開始ポートは終了ポートより小さい番号にする必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_Description">
+        <source>Interactive programming for .NET.</source>
+        <target state="translated">.NET の対話型プログラミング。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_Description">
+        <source>Starts dotnet-interactive as a Jupyter kernel</source>
+        <target state="translated">Jupyter カーネルとして dotnet-interactive を起動します</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_connection_file_Description">
+        <source>The path to a connection file provided by Jupyter</source>
+        <target state="translated">Jupyter から提供された接続ファイルへのパス</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_default_kernel_Description">
+        <source>The default language for the kernel</source>
+        <target state="translated">カーネルの既定の言語</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_Description">
+        <source>Install the .NET kernel for Jupyter</source>
+        <target state="translated">Jupyter 用の .NET カーネルをインストールします</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_http_port_range_Description">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="translated">HTTP サービスを有効にするために使用するポート範囲を指定します</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_path_Description">
+        <source>Installs the kernel specs to the specified directory</source>
+        <target state="translated">指定したディレクトリにカーネル仕様をインストールします</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_log_path_Description">
+        <source>Enable file logging to the specified directory</source>
+        <target state="translated">指定されたディレクトリのファイルへのログ記録を有効にする</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_notebook_parser_Description">
+        <source>Starts a process to parse and serialize notebooks.</source>
+        <target state="translated">ノートブックを解析およびシリアル化するプロセスを起動します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_Description">
+        <source>Starts dotnet-interactive with kernel functionality exposed over standard I/O</source>
+        <target state="translated">dotnet-interactive を起動し、標準入出力を使用してカーネル機能を提供します</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_Description">
+        <source>Specifies the port on which to enable HTTP services</source>
+        <target state="translated">HTTP サービスを有効にするポートを指定します</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_ErrorMessageCannotSpecifyBoth">
+        <source>Cannot specify both {0} and {1} together</source>
+        <target state="translated">{0} と {1} の両方を同時に指定することはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_ErrorMessageMustSpecifyPortNumber">
+        <source>Must specify a port number or *.</source>
+        <target state="translated">ポート番号または * を指定する必要があります。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_range_Description">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="translated">HTTP サービスを有効にするために使用するポート範囲を指定します</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_kernel_host_Description">
+        <source>Name of the kernel host.</source>
+        <target state="translated">カーネル ホストの名前。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_preview_Description">
+        <source>Enable preview kernel features.</source>
+        <target state="translated">プレビュー カーネル機能を有効にします。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_working_directory_Description">
+        <source>Working directory to which to change after launching the kernel.</source>
+        <target state="translated">カーネルの起動後に使用する移動先の作業ディレクトリ。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_verbose_Description">
+        <source>Enable verbose logging to the console</source>
+        <target state="translated">コンソールへの詳細なログ記録を有効にする</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_about_Description">
+        <source>Show version and build information</source>
+        <target state="translated">バージョンとビルドの情報を表示する</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

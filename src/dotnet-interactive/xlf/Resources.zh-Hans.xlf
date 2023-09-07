@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hans" original="../Resources.resx">
+    <body>
+      <trans-unit id="Cli_ErrorMessageMustSpecifyPortRange">
+        <source>Must specify a port range</source>
+        <target state="translated">必须指定端口范围</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_ErrorMessage_MustSpecifyPortRangeAsStartPortEndPort">
+        <source>Must specify a port range as StartPort-EndPort</source>
+        <target state="translated">必须将端口范围指定为 StartPort-EndPort</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_ErrorMessage_StartPortMustBeLower">
+        <source>Start port must be lower then end port</source>
+        <target state="translated">起始端口必须小于结束端口</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_Description">
+        <source>Interactive programming for .NET.</source>
+        <target state="translated">.NET 的交互式编程。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_Description">
+        <source>Starts dotnet-interactive as a Jupyter kernel</source>
+        <target state="translated">启动 dotnet-interactive 作为 Jupyter 内核</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_connection_file_Description">
+        <source>The path to a connection file provided by Jupyter</source>
+        <target state="translated">Jupyter 提供的连接文件路径</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_default_kernel_Description">
+        <source>The default language for the kernel</source>
+        <target state="translated">内核默认语言</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_Description">
+        <source>Install the .NET kernel for Jupyter</source>
+        <target state="translated">安装适用于 Jupyter 的 .NET 内核</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_http_port_range_Description">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="translated">指定用于启用 HTTP 服务的端口范围</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_install_path_Description">
+        <source>Installs the kernel specs to the specified directory</source>
+        <target state="translated">将内核规格安装到指定目录</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_log_path_Description">
+        <source>Enable file logging to the specified directory</source>
+        <target state="translated">启用文档日志到指定目录</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_notebook_parser_Description">
+        <source>Starts a process to parse and serialize notebooks.</source>
+        <target state="translated">启动分析和序列化笔记本的进程。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_Description">
+        <source>Starts dotnet-interactive with kernel functionality exposed over standard I/O</source>
+        <target state="translated">使用通过标准 I/O 公开的内核功能启动 dotnet 交互</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_Description">
+        <source>Specifies the port on which to enable HTTP services</source>
+        <target state="translated">指定要在其中启用 HTTP 服务的端口</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_ErrorMessageCannotSpecifyBoth">
+        <source>Cannot specify both {0} and {1} together</source>
+        <target state="translated">无法同时指定 {0} 和 {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_ErrorMessageMustSpecifyPortNumber">
+        <source>Must specify a port number or *.</source>
+        <target state="translated">必须指定端口号或 *。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_http_port_range_Description">
+        <source>Specifies the range of ports to use to enable HTTP services</source>
+        <target state="translated">指定用于启用 HTTP 服务的端口范围</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_kernel_host_Description">
+        <source>Name of the kernel host.</source>
+        <target state="translated">内核主机的名称。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_preview_Description">
+        <source>Enable preview kernel features.</source>
+        <target state="translated">启用预览内核功能。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_stdio_working_directory_Description">
+        <source>Working directory to which to change after launching the kernel.</source>
+        <target state="translated">启动内核后要更改的工作目录。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_verbose_Description">
+        <source>Enable verbose logging to the console</source>
+        <target state="translated">启用详细记录至控制台</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_about_Description">
+        <source>Show version and build information</source>
+        <target state="translated">显示版本并生成信息</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

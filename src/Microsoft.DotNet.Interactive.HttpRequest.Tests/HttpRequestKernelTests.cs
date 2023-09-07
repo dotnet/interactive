@@ -6,10 +6,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -17,13 +21,18 @@ namespace Microsoft.DotNet.Interactive.HttpRequest.Tests;
 
 public class HttpRequestKernelTests
 {
+    public HttpRequestKernelTests()
+    {
+        Formatter.ResetToDefault();
+    }
+
     [Theory]
     [InlineData("GET")]
     [InlineData("PUT")]
     [InlineData("POST")]
     [InlineData("DELETE")]
     [InlineData("HEAD")]
-    public async Task supports_verbs(string verb)
+    public async Task supports_sending_requests_with_common_verbs(string verb)
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -38,30 +47,15 @@ public class HttpRequestKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode($"{verb} http://testuri.ninja"));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        using var _ = new AssertionScope();
 
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         request.Method.Method.Should().Be(verb);
-
     }
 
     [Fact]
-    public async Task requires_base_address_when_using_relative_uris()
-    {
-        using var kernel = new HttpRequestKernel();
-
-        var result = await kernel.SendAsync(new SubmitCode("get  /relativePath"));
-
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var error =  events.Should().ContainSingle<CommandFailed>().Which;
-
-        error.Message.Should().Contain("Cannot use relative path /relativePath without a base address.");
-    }
-
-    [Fact]
-    public async Task ignores_base_address_when_using_absolute_paths()
+    public async Task it_can_interpolate_variable_for_URL_host()
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -72,68 +66,22 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
-        kernel.BaseAddress = new Uri("http://example.com");
-        
-        var result = await kernel.SendAsync(new SubmitCode("get  https://anotherlocation.com/endpoint"));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        using var _ = new AssertionScope();
 
-        events.Should().NotContainErrors();
+        var result = await kernel.SendAsync(new SendValue("my_host", "my.host.com"));
+        result.Events.Should().NotContainErrors();
 
-        request.RequestUri.Should().Be("https://anotherlocation.com/endpoint");
-    }
-
-    [Fact]
-    public async Task can_replace_symbols()
-    {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            request = message;
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            return Task.FromResult(response);
-        });
-        var client = new HttpClient(handler);
-        using var kernel = new HttpRequestKernel(client: client);
-     
-        kernel.SetValue("my_host", "my.host.com");
-
-        var result = await kernel.SendAsync(new SubmitCode("get  https://{{my_host}}:1200/endpoint"));
-
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result = await kernel.SendAsync(new SubmitCode("get  https://{{my_host}}:1200/endpoint"));
+        result.Events.Should().NotContainErrors();
 
         request.RequestUri.Should().Be("https://my.host.com:1200/endpoint");
     }
 
     [Fact]
-    public async Task can_use_base_address_to_resolve_host_symbol()
-    {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            request = message;
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            return Task.FromResult(response);
-        });
-        var client = new HttpClient(handler);
-        using var kernel = new HttpRequestKernel(client: client);
-        kernel.BaseAddress = new Uri("http://example.com");
-
-        var result = await kernel.SendAsync(new SubmitCode("get  https://{{host}}:1200/endpoint"));
-
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
-
-        request.RequestUri.Should().Be("https://example.com:1200/endpoint");
-    }
-
-    [Fact]
     public async Task can_handle_multiple_request_in_a_single_submission()
     {
-        List<HttpRequestMessage> requests = new ();
+        List<HttpRequestMessage> requests = new();
         var handler = new InterceptingHttpMessageHandler((message, _) =>
         {
             requests.Add(message);
@@ -143,16 +91,18 @@ public class HttpRequestKernelTests
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
 
-        var result = await kernel.SendAsync(new SubmitCode(@"
-get  https://location1.com:1200/endpoint
+        var result = await kernel.SendAsync(new SubmitCode("""
+            
+            get  https://location1.com:1200/endpoint
+            ###
+            put  https://location2.com:1200/endpoint
+            """));
 
-put  https://location2.com:1200/endpoint"));
+        using var _ = new AssertionScope();
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        requests.Select(r => r.RequestUri.AbsoluteUri).ToArray().Should().BeEquivalentTo(new []{ "https://location1.com:1200/endpoint", "https://location2.com:1200/endpoint" });
+        requests.Select(r => r.RequestUri.AbsoluteUri).ToArray().Should().BeEquivalentTo(new[] { "https://location1.com:1200/endpoint", "https://location2.com:1200/endpoint" });
     }
 
     [Fact]
@@ -168,19 +118,21 @@ put  https://location2.com:1200/endpoint"));
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
 
-        var result = await kernel.SendAsync(new SubmitCode(@"
-get  https://location1.com:1200/endpoint
-Authorization: Basic username password"));
+        var result = await kernel.SendAsync(new SubmitCode("""
+            
+            get  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            """));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        using var _ = new AssertionScope();
 
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         request.Headers.Authorization.ToString().Should().Be("Basic username password");
     }
 
     [Fact]
-    public async Task can_set_body()
+    public async Task can_set_body_from_single_line()
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -192,20 +144,85 @@ Authorization: Basic username password"));
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
 
-        var result = await kernel.SendAsync(new SubmitCode(@"
-post  https://location1.com:1200/endpoint
-Authorization: Basic username password
-Content-Type: application/json
+        var result = await kernel.SendAsync(new SubmitCode("""
+            
+            post  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            Content-Type: application/json
+            
+            { "key" : "value", "list": [1, 2, 3] }
+            """));
 
-{ ""key"" : ""value"", ""list"": [1, 2, 3] }
-"));
+        using var _ = new AssertionScope();
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        bodyAsString.Should().Be("{ \"key\" : \"value\", \"list\": [1, 2, 3] }");
+        bodyAsString.Should().Be("""{ "key" : "value", "list": [1, 2, 3] }""");
+    }
+
+    [Fact]
+    public async Task can_set_body_from_multiline_text()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpRequestKernel(client: client);
+
+        var result = await kernel.SendAsync(new SubmitCode("""
+            post  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            Content-Type: application/json
+
+            {
+                "key" : "value",
+                "list": [1, 2, 3]
+            }
+
+            """));
+
+        using var _ = new AssertionScope();
+
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        bodyAsString.Should().BeExceptingWhitespace("""
+            {
+                "key" : "value",
+                "list": [1, 2, 3]
+            }
+            """);
+    }
+
+    [Fact]
+    public async Task can_set_contenttype_without_a_body()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpRequestKernel(client: client);
+
+        var result = await kernel.SendAsync(new SubmitCode("""
+            
+            Get  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            Content-Type: application/json
+
+            """));
+
+        using var _ = new AssertionScope();
+        result.Events.Should().NotContainErrors();
+        request.Content.Headers.ContentType.ToString().Should().Be("application/json");
     }
 
     [Fact]
@@ -220,21 +237,24 @@ Content-Type: application/json
         });
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
-        kernel.SetValue("one","1");
-        var result = await kernel.SendAsync(new SubmitCode(@"
-post  https://location1.com:1200/endpoint
-Authorization: Basic username password
-Content-Type: application/json
 
-{ ""key"" : ""value"", ""list"": [{{one}}, 2, 3] }
-"));
+        using var _ = new AssertionScope();
 
-        var events = result.KernelEvents.ToSubscribedList();
+        var result = await kernel.SendAsync(new SendValue("one", 1));
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
+        result = await kernel.SendAsync(new SubmitCode("""
+            
+            post  https://location1.com:1200/endpoint
+            Authorization: Basic username password
+            Content-Type: application/json
+            
+            { "key" : "value", "list": [{{one}}, 2, 3] }
+            """));
+        result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        bodyAsString.Should().Be("{ \"key\" : \"value\", \"list\": [1, 2, 3] }");
+        bodyAsString.Should().Be("""{ "key" : "value", "list": [1, 2, 3] }""");
     }
 
     [Fact]
@@ -249,114 +269,576 @@ Content-Type: application/json
         });
         var client = new HttpClient(handler);
         using var kernel = new HttpRequestKernel(client: client);
-        kernel.SetValue("theHost", "example.com");
 
-        var code = @"
-// something to ensure we're not on the first line
-GET https://{{theHost}}";
+        using var _ = new AssertionScope();
 
-        var result = await kernel.SendAsync(new SubmitCode(code));
+        var result = await kernel.SendAsync(new SendValue("theHost", "example.com"));
+        result.Events.Should().NotContainErrors();
 
-        var events = result.KernelEvents.ToSubscribedList();
+        var code = """
+            # something to ensure we're not on the first line
+            GET https://{{theHost}}
+            """;
 
-        events.Should().NotContainErrors();
+        result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
 
         request.RequestUri.AbsoluteUri.Should().Be("https://example.com/");
     }
 
     [Fact]
-    public async Task diagnostic_messages_are_produced_for_unresolved_symbols()
+    public async Task diagnostic_positions_are_correct_for_unresolved_symbols_in_URL()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
 
         var result = await kernel.SendAsync(new RequestDiagnostics("get https://anotherlocation.com/{{api_endpoint}}"));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        using var _ = new AssertionScope();
 
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
-        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be(@"Cannot resolve symbol 'api_endpoint'");
+        diagnostics.Diagnostics.First().Message.Should().Be("Cannot resolve symbol 'api_endpoint'");
     }
 
     [Fact]
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
 
-        var code = @"
-// something to ensure we're not on the first line
-GET https://example.com/{{unresolved_symbol}}";
+        var code = """
+            
+            // something to ensure we're not on the first line
+            GET https://example.com/{{unresolved_symbol}}
+            """;
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        using var _ = new AssertionScope();
 
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
-        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 26), new LinePosition(2, 43)));
-    }
-
-    [Fact]
-    public async Task Setting_BaseAddress_sets_host_variable()
-    {
-        using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
-
-        var result = await kernel.SendAsync(new RequestValue("host"));
-
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
-
-        events.Should().ContainSingle<ValueProduced>()
-              .Which.Value.Should().Be("example.com");
     }
 
     [Fact]
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols_after_other_symbols_were_successfully_resolved()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
 
-        var code = @"
-GET {{host}}/index.html
-User-Agent: {{user_agent}}";
+        var code = """
+            
+            GET https://example.com/
+            User-Agent: {{unresolved_symbol}}
+            """;
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        using var _ = new AssertionScope();
 
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
-        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 14), new LinePosition(2, 24)));
+        diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 14), new LinePosition(2, 31)));
     }
 
     [Fact]
     public async Task multiple_diagnostics_are_returned_from_the_same_submission()
     {
         using var kernel = new HttpRequestKernel();
-        kernel.BaseAddress = new Uri("http://example.com");
 
-        var code = @"
-GET {{missing_value_1}}/index.html
-User-Agent: {{missing_value_2}}";
+        var code = """
+            
+            GET http://{{missing_value_1}}/index.html
+            User-Agent: {{missing_value_2}}
+            """;
 
         var result = await kernel.SendAsync(new RequestDiagnostics(code));
 
-        var events = result.KernelEvents.ToSubscribedList();
+        using var _ = new AssertionScope();
 
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
-        var diagnostics = events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task when_error_diagnostics_are_present_then_request_is_not_sent()
+    {
+        var messageWasSent = false;
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
+        {
+            messageWasSent = true;
+            throw new Exception();
+        });
+        var client = new HttpClient(handler);
+
+        using var kernel = new HttpRequestKernel(client:client);
+
+        await kernel.SendAsync(new SubmitCode("OOPS http://testuri.ninja"));
+
+        messageWasSent.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task produces_html_formatted_display_value()
+    {
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+
+        using var kernel = new HttpRequestKernel(client: client);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<DisplayedValueProduced>().Which
+            .FormattedValues.Should().ContainSingle().Which
+            .MimeType.Should().Be(HtmlFormatter.MimeType);
+    }
+
+    [Fact]
+    public async Task produces_json_formatted_return_value()
+    {
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+
+        using var kernel = new HttpRequestKernel("http", client);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<ReturnValueProduced>().Which
+            .FormattedValues.Should().ContainSingle().Which
+            .MimeType.Should().Be(JsonFormatter.MimeType);
+    }
+
+    [Fact]
+    public async Task display_should_be_suppressed_for_return_value()
+    {
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+
+        using var kernel = new HttpRequestKernel("http", client);
+
+        var result = await kernel.SendAsync(new SubmitCode("GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<ReturnValueProduced>().Which
+            .FormattedValues.Should().ContainSingle().Which
+            .SuppressDisplay.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task produces_initial_displayed_value_that_is_updated_when_response_is_slow()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        var slowResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            return response;
+        });
+        var client = new HttpClient(slowResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        using var _ = new AssertionScope();
+
+        result.Events.Should().NotContainErrors();
+
+        var displayEvents = result.Events.OfType<DisplayEvent>().ToArray();
+        displayEvents.Length.Should().Be(3);
+        displayEvents[0].Should().BeOfType<DisplayedValueProduced>();
+        displayEvents[1].Should().BeOfType<DisplayedValueUpdated>();
+        displayEvents[2].Should().BeOfType<ReturnValueProduced>();
+    }
+
+    [Fact]
+    public async Task when_response_is_slow_initial_displayed_value_conveys_that_it_is_awaiting_response()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        var slowResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            return response;
+        });
+        var client = new HttpClient(slowResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.OfType<DisplayEvent>().First()
+            .FormattedValues.Single().Value.Should().Contain("Awaiting response");
+    }
+
+    [Fact]
+    public async Task when_response_is_slow_final_displayed_value_includes_response_details()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        HttpRequestMessage request = null;
+        var slowResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            return response;
+        });
+        var client = new HttpClient(slowResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.OfType<DisplayEvent>().Skip(1).First()
+            .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
+    }
+
+    [Fact]
+    public async Task when_response_is_slow_and_an_error_happens_the_awaiting_response_displayed_value_is_cleared()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        var throwingResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            throw new HttpRequestException();
+        });
+        var client = new HttpClient(throwingResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds);
+
+        var result = await kernel.SendAsync(new SubmitCode("GET http://testuri.ninja"));
+        var displayedValueUpdated = result.Events.OfType<DisplayedValueUpdated>().First();
+
+        using var _ = new AssertionScope();
+
+        displayedValueUpdated.Value.Should().Be(null);
+        displayedValueUpdated.FormattedValues.Single(f => f.MimeType is HtmlFormatter.MimeType).Value.Should().Be("<span/>");
+    }
+
+    [Fact]
+    public async Task produces_initial_displayed_value_that_is_updated_when_response_is_large()
+    {
+        const int ContentByteLengthThreshold = 100;
+
+        var largeResponseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var builder = new StringBuilder();
+            for (int i = 0; i < ContentByteLengthThreshold + 1; ++i)
+            {
+                builder.Append('a');
+            }
+            response.Content = new StringContent(builder.ToString());
+            return Task.FromResult(response);
+        });
+
+        var client = new HttpClient(largeResponseHandler);
+        using var kernel = new HttpRequestKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        using var _ = new AssertionScope();
+
+        result.Events.Should().NotContainErrors();
+
+        var displayEvents = result.Events.OfType<DisplayEvent>().ToArray();
+        displayEvents.Length.Should().Be(3);
+        displayEvents[0].Should().BeOfType<DisplayedValueProduced>();
+        displayEvents[1].Should().BeOfType<DisplayedValueUpdated>();
+        displayEvents[2].Should().BeOfType<ReturnValueProduced>();
+    }
+
+    [Fact]
+    public async Task when_response_is_large_initial_displayed_value_conveys_that_it_is_loading_response()
+    {
+        const int ContentByteLengthThreshold = 100;
+
+        var largeResponseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var builder = new StringBuilder();
+            for (int i = 0; i < ContentByteLengthThreshold + 1; ++i)
+            {
+                builder.Append('a');
+            }
+            response.Content = new StringContent(builder.ToString());
+            return Task.FromResult(response);
+        });
+
+        var client = new HttpClient(largeResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.OfType<DisplayEvent>().First()
+            .FormattedValues.Single().Value.Should().Contain("Loading content");
+    }
+
+    [Fact]
+    public async Task when_response_is_large_final_displayed_value_includes_response_details()
+    {
+        const int ContentByteLengthThreshold = 100;
+
+        var largeResponseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var builder = new StringBuilder();
+            for (int i = 0; i < ContentByteLengthThreshold + 1; ++i)
+            {
+                builder.Append('a');
+            }
+            response.Content = new StringContent(builder.ToString());
+            return Task.FromResult(response);
+        });
+
+        var client = new HttpClient(largeResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.OfType<DisplayEvent>().Skip(1).First()
+            .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
+    }
+
+    [Fact]
+    public async Task produces_initial_displayed_value_that_is_updated_twice_when_response_is_slow_and_large()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        const int ContentByteLengthThreshold = 100;
+
+        var slowAndLargeResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var builder = new StringBuilder();
+            for (int i = 0; i < ContentByteLengthThreshold + 1; ++i)
+            {
+                builder.Append('a');
+            }
+            response.Content = new StringContent(builder.ToString());
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            return response;
+        });
+
+        var client = new HttpClient(slowAndLargeResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        using var _ = new AssertionScope();
+
+        result.Events.Should().NotContainErrors();
+
+        var displayEvents = result.Events.OfType<DisplayEvent>().ToArray();
+        displayEvents.Length.Should().Be(4);
+        displayEvents[0].Should().BeOfType<DisplayedValueProduced>();
+        displayEvents[1].Should().BeOfType<DisplayedValueUpdated>();
+        displayEvents[2].Should().BeOfType<DisplayedValueUpdated>();
+        displayEvents[3].Should().BeOfType<ReturnValueProduced>();
+    }
+
+    [Fact]
+    public async Task when_response_is_slow_and_large_first_displayed_value_conveys_that_it_is_awaiting_response()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        const int ContentByteLengthThreshold = 100;
+
+        var slowAndLargeResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var builder = new StringBuilder();
+            for (int i = 0; i < ContentByteLengthThreshold + 1; ++i)
+            {
+                builder.Append('a');
+            }
+            response.Content = new StringContent(builder.ToString());
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            return response;
+        });
+
+        var client = new HttpClient(slowAndLargeResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.OfType<DisplayEvent>().First()
+            .FormattedValues.Single().Value.Should().Contain("Awaiting response");
+    }
+
+    [Fact]
+    public async Task when_response_is_slow_and_large_second_displayed_value_conveys_that_it_is_loading_response()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        const int ContentByteLengthThreshold = 100;
+
+        var slowAndLargeResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var builder = new StringBuilder();
+            for (int i = 0; i < ContentByteLengthThreshold + 1; ++i)
+            {
+                builder.Append('a');
+            }
+            response.Content = new StringContent(builder.ToString());
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            return response;
+        });
+
+        var client = new HttpClient(slowAndLargeResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.OfType<DisplayEvent>().Skip(1).First()
+            .FormattedValues.Single().Value.Should().Contain("Loading content");
+    }
+
+    [Fact]
+    public async Task when_response_is_slow_and_large_final_displayed_value_includes_response_details()
+    {
+        const int ResponseDelayThresholdInMilliseconds = 5;
+        const int ContentByteLengthThreshold = 100;
+
+        var slowAndLargeResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var builder = new StringBuilder();
+            for (int i = 0; i < ContentByteLengthThreshold + 1; ++i)
+            {
+                builder.Append('a');
+            }
+            response.Content = new StringContent(builder.ToString());
+            await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
+            return response;
+        });
+
+        var client = new HttpClient(slowAndLargeResponseHandler);
+
+        using var kernel = new HttpRequestKernel("http", client, ResponseDelayThresholdInMilliseconds, ContentByteLengthThreshold);
+
+        var result = await kernel.SendAsync(new SubmitCode("GET http://testuri.ninja"));
+
+        result.Events.OfType<DisplayEvent>().Skip(2).First()
+            .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
+    }
+
+    [Fact(Skip = "Requires updates to HTTP parser")]
+    public void responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+
+        // TODO (responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact(Skip = "Requires updates to HTTP parser")]
+    public void prompt_symbol_sends_input_request_to_user()
+    {
+        /*
+###
+# @prompt username
+# @prompt refCode Your reference code display on webpage
+# @prompt otp Your one-time password in your mailbox
+POST https://{{host}}/verify-otp/{{refCode}} HTTP/1.1
+Content-Type: {{contentType}}
+{
+    "username": "{{username}}",
+    "otp": "{{otp}}"
+}
+         */
+
+        // TODO (prompt_symbol_sends_input_request_to_user) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact(Skip = "Requires updates to HTTP parser")]
+    public void JSONPath_can_be_used_to_access_response_properties()
+    {
+        // example:
+        // @authToken = {{login.response.headers.X-AuthToken}}
+
+        // TODO (dot_notation_can_be_used_to_access_response_properties) write test
+        throw new NotImplementedException();
+    }
+
+    [Fact]
+    public async Task It_supports_RequestValueInfos()
+    {
+        using var kernel = new HttpRequestKernel();
+
+        var sendValueResult = await kernel.SendAsync(new SendValue("theValue", 123, FormattedValue.CreateSingleFromObject(123, JsonFormatter.MimeType)));
+
+        sendValueResult.Events.Should().NotContainErrors();
+
+        var result = await kernel.SendAsync(new RequestValueInfos());
+
+        using var _ = new AssertionScope();
+        result.Events.Should().NotContainErrors();
+        var valueInfo = result.Events.Should().ContainSingle<ValueInfosProduced>()
+                              .Which
+                              .ValueInfos.Should().ContainSingle()
+                              .Which;
+        valueInfo.Name.Should().Be("theValue");
+        valueInfo.FormattedValue.Should().BeEquivalentTo(new FormattedValue(PlainTextSummaryFormatter.MimeType, "123"));
+    }
+
+    [Fact]
+    public async Task It_supports_RequestValue()
+    {
+        using var kernel = new HttpRequestKernel();
+
+        var sendValueResult = await kernel.SendAsync(new SendValue("theValue", 123, FormattedValue.CreateSingleFromObject(123, JsonFormatter.MimeType)));
+
+        sendValueResult.Events.Should().NotContainErrors();
+
+        var result = await kernel.SendAsync(new RequestValue("theValue", JsonFormatter.MimeType));
+
+        using var _ = new AssertionScope();
+        var valueProduced = result.Events.Should().ContainSingle<ValueProduced>()
+                                  .Which;
+        valueProduced.Name.Should().Be("theValue");
+        valueProduced
+            .FormattedValue.Should()
+            .BeEquivalentTo(new FormattedValue(JsonFormatter.MimeType, "123"));
     }
 }

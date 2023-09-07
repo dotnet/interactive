@@ -3,7 +3,6 @@
 
 using System.IO;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.Tools;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
 

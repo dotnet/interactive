@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../Resources.resx">
+    <body>
+      <trans-unit id="FileDoesNotExist">
+        <source>File does not exist: '{0}'.</source>
+        <target state="translated">Dosya yok: '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_ErrorMessage_CannotBeUsedTogether">
+        <source>The {0} and {1} options cannot be used together.</source>
+        <target state="translated">{0} ve {1} seçenekleri birlikte kullanılamaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_import_Description">
+        <source>Runs another notebook or source code file inline.</source>
+        <target state="translated">Satır içi başka bir not defteri veya kaynak kodu dosyası çalıştırır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_log_Description">
+        <source>Enables session logging.</source>
+        <target state="translated">Oturum günlüğünü etkinleştirir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_Description">
+        <source>Sets a value in the current kernel</source>
+        <target state="translated">Geçerli çekirdekte bir değer ayarlar</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_ErrorMessage_SharingByReference">
+        <source>Sharing by reference is not allowed when kernels are remote.</source>
+        <target state="translated">Çekirdekler uzak olduğunda başvuruyla paylaşıma izin verilmez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_byref_Description">
+        <source>Shares the specified value by reference if kernels are in the same process.</source>
+        <target state="translated">Çekirdekler aynı işlemde ise belirtilen değeri başvuruya göre paylaşır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_mime_type_Description">
+        <source>The MIME type by which the value should be represented. This will often determine how an object will be formatted into a string.</source>
+        <target state="translated">Değerin temsil edileceği MIME türü. Bu, genellikle bir nesnenin dize olarak nasıl biçimlendirileceğini belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_mime_type_ErrorMessage_CannotBeUsed">
+        <source>The --mime-type and --byref options cannot be used together.</source>
+        <target state="translated">--mime-type ve --byref seçenekleri birlikte kullanılamaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_name_Description">
+        <source>The name of the value to be created in the current kernel.</source>
+        <target state="translated">Geçerli çekirdekte oluşturulacak değerin adı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_set_value_Description">
+        <source>The value to be set. @input:user_prompt allows you to prompt the user for this value. Values can be requested from other kernels by name, for example @csharp:variableName.</source>
+        <target state="translated">Ayarlanacak değer. @input:user_prompt, kullanıcıya bu değeri sormanıza olanak sağlar. Diğer çekirdeklerden ada göre değer istenebilir, örneğin @csharp:variableName.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_Description">
+        <source>Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.</source>
+        <target state="translated">Bir çekirdekten değer alın ve başka bir çekirdekte kopya (veya çekirdekler aynı işlemde ise başvuru) oluşturun.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_as_Description">
+        <source>The name to give the the value in the importing kernel.</source>
+        <target state="translated">İçeri aktaran çekirdekteki değere verilecek ad.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_from_Description">
+        <source>The name of the kernel to get the value from.</source>
+        <target state="translated">Değerin alınacağı çekirdeğin adı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_mime_type_Description">
+        <source>Share the value as a string formatted to the specified MIME type.</source>
+        <target state="translated">Değeri, belirtilen MIME türüne biçimlendirilmiş bir dize olarak paylaşın.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_share_name_Description">
+        <source>The name of the value to share. (This is also the default name of the value created in the destination kernel, unless --as is used to specify a different one.)</source>
+        <target state="translated">Paylaşılacak değerin adı. (Bu, farklı bir değer belirtmek için --as kullanılmıyorsa, hedef çekirdekte oluşturulan değerin varsayılan adıdır.)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_file_Description">
+        <source>Specifies a file whose contents will be stored.</source>
+        <target state="translated">İçeriği depolanacak bir dosya belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_url_Description">
+        <source>Specifies a URL whose content will be stored.</source>
+        <target state="translated">İçeriği depolanacak bir URL belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_from_value_Description">
+        <source>Specifies a value to be stored directly. Specifying @input:value allows you to prompt the user for this value.</source>
+        <target state="translated">Doğrudan depolanacak bir değer belirtir. @input:value belirtmek, kullanıcıya bu değeri sormanıza olanak sağlar.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_mime_type_Description">
+        <source>A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.</source>
+        <target state="translated">Değer için mime türü. Belirtilmişse değeri, belirtilen mime türünü kullanan bir çıktı olarak hemen görüntüler.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_value_name_Description">
+        <source>The name of the value to create. You can use #!share to retrieve this value from another subkernel.</source>
+        <target state="translated">Oluşturulacak değerin adı. Bu değeri başka bir alt çekirdekten almak için #!share kullanın.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_who_Description">
+        <source>Display the names of the current top-level variables.</source>
+        <target state="translated">Geçerli üst düzey değişkenlerin adlarını görüntüleyin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_whos_Description">
+        <source>Display the names of the current top-level variables and their values.</source>
+        <target state="translated">Geçerli üst düzey değişkenlerin adlarını ve değerlerini görüntüleyin.</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

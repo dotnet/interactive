@@ -49,7 +49,7 @@ public class PowerShellKernel :
 
     private readonly PSKernelHost _psHost;
     private readonly Lazy<PowerShell> _lazyPwsh;
-        
+
     private PowerShell pwsh => _lazyPwsh.Value;
 
     public Func<string, string> ReadInput { get; set; }
@@ -81,10 +81,15 @@ public class PowerShellKernel :
         _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
     }
 
-    public PowerShellKernel() : base(DefaultKernelName)
+    public PowerShellKernel() : this(DefaultKernelName)
+    {
+    }
+
+    public PowerShellKernel(string name) : base(name)
     {
         KernelInfo.LanguageName = LanguageName;
-        KernelInfo.DisplayName = LanguageName;
+        KernelInfo.LanguageVersion = "7";
+
         _psHost = new PSKernelHost(this);
         _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
 
@@ -177,9 +182,9 @@ public class PowerShellKernel :
                          .Where(v => !_suppressedValueInfoNames.Contains(v.Name))
                          .Select(v =>
                          {
-                             var formattedValue = FormattedValue.FromObject(
+                             var formattedValue = FormattedValue.CreateSingleFromObject(
                                  v.Value,
-                                 command.MimeType)[0];
+                                 command.MimeType);
 
                              return new KernelValueInfo(
                                  v.Name,
@@ -243,19 +248,18 @@ public class PowerShellKernel :
             context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
         }
 
-        var formattedDiagnostics =
-            parseErrors
-                .Select(d => d.ToString())
-                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                .ToImmutableArray();
-
-        var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
-
-        context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
-
         // If there were parse errors, display them and return early.
         if (parseErrors.Length > 0)
         {
+            var formattedDiagnostics =
+                parseErrors
+                    .Select(d => d.ToString())
+                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                    .ToImmutableArray();
+
+            var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
+            context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
+
             var parseException = new ParseException(parseErrors);
             ReportError(parseException.ErrorRecord);
             return;
@@ -280,6 +284,11 @@ public class PowerShellKernel :
         else
         {
             RunSubmitCodeLocally(code);
+
+            if (pwsh.HadErrors)
+            {
+                context.Fail(context.Command);
+            }
         }
     }
 
@@ -328,8 +337,11 @@ public class PowerShellKernel :
 
         IsCompleteSubmission(code, out var parseErrors);
 
-        var diagnostics = parseErrors.Select(ToDiagnostic);
-        context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
+        if (parseErrors.Length > 0)
+        {
+            var diagnostics = parseErrors.Select(ToDiagnostic);
+            context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
+        }
 
         return Task.CompletedTask;
     }
@@ -368,9 +380,9 @@ public class PowerShellKernel :
     {
         try
         {
-            pwsh.AddScript(code)
-                .AddCommand(_outDefaultCommand)
-                .Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
+            pwsh.AddScript(code).AddCommand(_outDefaultCommand);
+
+            pwsh.Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
 
             pwsh.InvokeAndClearCommands();
         }

@@ -9,7 +9,6 @@ using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
@@ -53,7 +52,7 @@ public class SubmissionParser
             {
                 if (!string.IsNullOrWhiteSpace(languageNode.Text))
                 {
-                    return new SubmitCode(languageNode, submitCode.SubmissionType, parent, kernelNameNode);
+                    return new SubmitCode(languageNode, submitCode.SubmissionType, kernelNameNode);
                 }
                 else
                 {
@@ -66,9 +65,9 @@ public class SubmissionParser
         var commands = SplitSubmission(
             requestDiagnostics,
             requestDiagnostics.Code,
-            (languageNode, parent, _) => new RequestDiagnostics(languageNode, parent));
-            
-        return commands.Where(c => c is RequestDiagnostics ).ToList();
+            (languageNode, parent, _) => new RequestDiagnostics(languageNode));
+
+        return commands.Where(c => c is RequestDiagnostics).ToList();
     }
 
     private delegate KernelCommand CreateChildCommand(
@@ -89,7 +88,7 @@ public class SubmissionParser
         var nodes = tree.GetRoot().ChildNodes.ToArray();
 
         var targetKernelName = originalCommand.TargetKernelName ?? DefaultKernelName();
-            
+
         var lastCommandScope = originalCommand.SchedulingScope;
         KernelNameDirectiveNode lastKernelNameNode = null;
 
@@ -98,11 +97,11 @@ public class SubmissionParser
             switch (node)
             {
                 case DirectiveNode directiveNode:
-                    if (KernelInvocationContext.Current is {} context)
+                    if (KernelInvocationContext.Current is { } context)
                     {
                         context.CurrentlyParsingDirectiveNode = directiveNode;
                     }
-                       
+
                     var parseResult = directiveNode.GetDirectiveParseResult();
 
                     if (parseResult.Errors.Any())
@@ -118,14 +117,14 @@ public class SubmissionParser
                             }
                             else
                             {
-                                sendExtraDiagnostics = new((c, context) =>
+                                sendExtraDiagnostics = new((_, context) =>
                                 {
-                                    var diagnostic = new Interactive.Diagnostic(
+                                    var diagnostic = new Diagnostic(
                                         adn.GetLinePositionSpan(),
                                         CodeAnalysis.DiagnosticSeverity.Error,
                                         "NI0001", // QUESTION: (SplitSubmission) what code should this be?
                                         "Unrecognized magic command");
-                                    var diagnosticsProduced = new DiagnosticsProduced(new[] { diagnostic }, c);
+                                    var diagnosticsProduced = new DiagnosticsProduced(new[] { diagnostic }, originalCommand);
                                     context.Publish(diagnosticsProduced);
                                     return Task.CompletedTask;
                                 });
@@ -142,7 +141,7 @@ public class SubmissionParser
                         {
                             commands.Clear();
 
-                            if (sendExtraDiagnostics is {})
+                            if (sendExtraDiagnostics is { })
                             {
                                 commands.Add(sendExtraDiagnostics);
                             }
@@ -157,7 +156,7 @@ public class SubmissionParser
 
                                     context.Fail(originalCommand, message: message);
                                     return Task.CompletedTask;
-                                }, parent: originalCommand));
+                                }));
                         }
 
                         break;
@@ -165,13 +164,12 @@ public class SubmissionParser
 
                     if (directiveNode is KernelNameDirectiveNode kernelNameNode)
                     {
-                        targetKernelName = kernelNameNode.KernelName;
+                        targetKernelName = kernelNameNode.Name;
                         lastKernelNameNode = kernelNameNode;
                     }
 
                     var directiveCommand = new DirectiveCommand(
                         parseResult,
-                        originalCommand,
                         directiveNode)
                     {
                         TargetKernelName = targetKernelName,
@@ -215,7 +213,6 @@ public class SubmissionParser
                     break;
 
                 case LanguageNode languageNode:
-                {
                     if (commands.Count > 0 &&
                         commands[^1] is SubmitCode previous)
                     {
@@ -231,7 +228,6 @@ public class SubmissionParser
                             commands.Add(command);
                         }
                     }
-                }
                     break;
 
                 default:
@@ -246,8 +242,7 @@ public class SubmissionParser
             if (kernel?.SubmissionParser.GetDirectiveParser() is { } parser)
             {
                 var restore = new DirectiveCommand(
-                    parser.Parse("#!nuget-restore"),
-                    originalCommand)
+                    parser.Parse("#!nuget-restore"))
                 {
                     SchedulingScope = kernel.SchedulingScope,
                     TargetKernelName = kernelName
@@ -259,7 +254,7 @@ public class SubmissionParser
         if (NoSplitWasNeeded())
         {
             originalCommand.TargetKernelName ??= targetKernelName;
-            return new []{originalCommand};
+            return new[] { originalCommand };
         }
 
         foreach (var command in commands)
@@ -292,8 +287,8 @@ public class SubmissionParser
                 }
             }
 
-            if (commands.All(c => c.GetType() == originalCommand.GetType() && 
-                                  (c.TargetKernelName == originalCommand.TargetKernelName 
+            if (commands.All(c => c.GetType() == originalCommand.GetType() &&
+                                  (c.TargetKernelName == originalCommand.TargetKernelName
                                    || c.TargetKernelName == commands[0].TargetKernelName)))
             {
                 return true;
@@ -310,7 +305,7 @@ public class SubmissionParser
             var kernel = _kernel switch
             {
                 // The parent kernel is the one where a directive would be defined, and therefore the one that should decide whether to accept this submission. 
-                CompositeKernel composite => composite.FindKernelByName(node.ParentKernelName),
+                CompositeKernel composite => composite.FindKernelByName(node.ParentKernelName) ?? _kernel,
                 _ => _kernel
             };
 
@@ -325,7 +320,7 @@ public class SubmissionParser
             CompositeKernel c => c.DefaultKernelName,
             _ => _kernel.Name
         };
-            
+
         return kernelName;
     }
 
@@ -336,7 +331,7 @@ public class SubmissionParser
             return null;
         }
 
-        var dict = new Dictionary<string, (SchedulingScope , Func<Parser>)>();
+        var dict = new Dictionary<string, (SchedulingScope, Func<Parser>)>();
 
         foreach (var childKernel in compositeKernel.ChildKernels)
         {
@@ -348,7 +343,7 @@ public class SubmissionParser
                 }
             }
 
-            (SchedulingScope, Func<Parser>) GetParser() => (childKernel.SchedulingScope,() => childKernel.SubmissionParser.GetDirectiveParser());
+            (SchedulingScope, Func<Parser>) GetParser() => (childKernel.SchedulingScope, () => childKernel.SubmissionParser.GetDirectiveParser());
         }
 
         return dict;
@@ -375,11 +370,23 @@ public class SubmissionParser
                                     typeof(KernelInvocationContext),
                                     _ => KernelInvocationContext.Current);
                         });
-                
+
             _directiveParser = commandLineBuilder.Build();
         }
 
         return _directiveParser;
+    }
+
+    internal static (string targetKernelName, string valueName) SplitKernelDesignatorToken(string tokenToReplace, string kernelNameIfNotSpecified)
+    {
+        var parts = tokenToReplace.Split(':');
+
+        var (targetKernelName, valueName) =
+            parts.Length == 1
+                ? (kernelNameIfNotSpecified, parts[0])
+                : (parts[0], parts[1]);
+
+        return (targetKernelName, valueName);
     }
 
     private bool InterpolateValueFromKernel(
@@ -403,14 +410,72 @@ public class SubmissionParser
             return false;
         }
 
-        var parts = tokenToReplace.Split(':');
-
-        var (targetKernelName, valueName) =
-            parts.Length == 1
-                ? (_kernel.Name, parts[0])
-                : (parts[0], parts[1]);
+        var (targetKernelName, valueName) = SplitKernelDesignatorToken(tokenToReplace, _kernel.Name);
 
         if (targetKernelName is "input" or "password")
+        {
+            InterpolateUserInput(out replacementTokens);
+            return true;
+        }
+
+        if (context is { CurrentlyParsingDirectiveNode: ActionDirectiveNode { AllowValueSharingByInterpolation: true } })
+        {
+            var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, mimeType: "application/json", targetKernelName: targetKernelName)).GetAwaiter().GetResult();
+
+            var valueProduced = result.Events.OfType<ValueProduced>().SingleOrDefault();
+
+            if (valueProduced is { })
+            {
+                string interpolatedValue = null;
+
+                if (valueProduced.Value is { } value)
+                {
+                    interpolatedValue = value.ToString();
+                }
+                else switch (valueProduced.FormattedValue.MimeType)
+                {
+                    case "application/json":
+                    {
+                        var stringValue = valueProduced.FormattedValue.Value;
+
+                        var jsonDoc = JsonDocument.Parse(stringValue);
+
+                        object jsonValue = jsonDoc.RootElement.ValueKind switch
+                        {
+                            JsonValueKind.True => true,
+                            JsonValueKind.False => false,
+                            JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                            JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+                            JsonValueKind.Object => stringValue,
+                            _ => null
+                        };
+
+                        interpolatedValue = jsonValue?.ToString();
+                        break;
+                    }
+
+                    case "text/plain":
+                        interpolatedValue = valueProduced.FormattedValue.Value;
+                        break;
+
+                    default:
+                        errorMessage = result.Events.OfType<CommandFailed>().LastOrDefault()?.Message ?? $"Unsupported MIME type: {valueProduced.FormattedValue.MimeType}";
+                        return false;
+                }
+
+                replacementTokens = new[] { $"{interpolatedValue}" };
+                return true;
+            }
+            else
+            {
+                errorMessage = $"Value '{tokenToReplace}' not found in kernel {targetKernelName}";
+                return false;
+            }
+        }
+
+        return false;
+
+        void InterpolateUserInput(out IReadOnlyList<string> replacementTokens)
         {
             string typeHint = null;
 
@@ -424,15 +489,15 @@ public class SubmissionParser
                 var replaceMe = "{2AB89A6C-88D9-4C53-8392-A3A4F902A1CA}";
 
                 var fixedUpText = currentDirectiveNode
-                    .Text
-                    .Replace($"@{tokenToReplace}", replaceMe)
-                    .Replace(" @", "");
+                                  .Text
+                                  .Replace($"@{tokenToReplace}", replaceMe)
+                                  .Replace(" @", "");
 
                 var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
 
                 var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe));
 
-                if (c is { Symbol: {} symbol })
+                if (c is { Symbol: { } symbol })
                 {
                     typeHint = GetTypeHint(symbol);
                 }
@@ -440,76 +505,18 @@ public class SubmissionParser
 
             var inputRequest = new RequestInput(
                 valueName: valueName,
-                prompt: $"Please enter a value for field \"{valueName}\".",
+                prompt: !valueName.Contains(" ") ? $"Please enter a value for field \"{valueName}\"." : valueName,
                 inputTypeHint: typeHint);
 
             var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 
-            var events = result.KernelEvents.ToEnumerable().ToArray();
-            var valueProduced = events.OfType<InputProduced>().SingleOrDefault();
-
-            if (valueProduced is { })
+            if (result.Events.OfType<InputProduced>().SingleOrDefault() is { } valueProduced)
             {
                 replacementTokens = new[] { valueProduced.Value };
             }
-
-            return true;
-        }
-        else
-        {
-            var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, mimeType: "application/json" , targetKernelName: targetKernelName)).GetAwaiter().GetResult();
-
-            var events = result.KernelEvents.ToEnumerable().ToArray();
-            var valueProduced = events.OfType<ValueProduced>().SingleOrDefault();
-
-            if (valueProduced is { })
-            {
-                string interpolatedValue = null;
-
-                if (valueProduced.Value is { } value)
-                {
-                    interpolatedValue = value.ToString();
-                }
-                else if (valueProduced.FormattedValue.MimeType == "application/json")
-                {
-                    var stringValue = valueProduced.FormattedValue.Value;
-
-                    var jsonDoc = JsonDocument.Parse(stringValue);
-
-                    object jsonValue = jsonDoc.RootElement.ValueKind switch
-                    {
-                        JsonValueKind.True => true,
-                        JsonValueKind.False => false,
-                        JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                        JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-
-                        _ => null
-                    };
-
-                    interpolatedValue = jsonValue?.ToString();
-                }
-                else
-                {
-                    errorMessage = events.OfType<CommandFailed>().Last().Message;
-
-                    return false;
-                }
-
-                if (interpolatedValue is { })
-                {
-                    replacementTokens = new[] { $"{interpolatedValue}" };
-                    return true;
-                }
-                else
-                {
-                    errorMessage = $"Value @{tokenToReplace} cannot be interpolated into magic command:\n{valueProduced.Value ?? valueProduced.FormattedValue.Value}";
-                    return false;
-                }
-            }
             else
             {
-                errorMessage = events.OfType<CommandFailed>().Last().Message;
-                return false;
+                replacementTokens = null;
             }
         }
 

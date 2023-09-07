@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -74,7 +73,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
     }
 
     [Fact]
-    public async Task Commands_sent_within_the_code_of_another_command_publish_error_events_for_failures()
+    public async Task Commands_sent_within_the_code_of_another_command_publish_error_events_on_CompositeKernel_for_failures()
     {
         using var kernel = new CompositeKernel
         {
@@ -90,14 +89,12 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
 ");
         var result = await kernel.SendAsync(command);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should()
-            .ContainSingle<ErrorProduced>()
-            .Which
-            .Message
-            .Should()
-            .Be("(1,1): error CS0103: The name 'error' does not exist in the current context");
+        result.Events.Should()
+              .ContainSingle<ErrorProduced>()
+              .Which
+              .Message
+              .Should()
+              .Be("(1,1): error CS0103: The name 'error' does not exist in the current context");
     }
 
     [Fact]
@@ -118,16 +115,14 @@ using Microsoft.DotNet.Interactive.Commands;
 
 var result = await Kernel.Root.SendAsync(new SubmitCode(""123"", ""fsharp""));
 
-await result.KernelEvents.LastAsync()
+result.Events.Last()
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        events
-            .Should()
-            .ContainSingle<ReturnValueProduced>(e => e.Value is CommandSucceeded);
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>(e => e.Value is CommandSucceeded);
     }
 
     [Fact]
@@ -147,13 +142,11 @@ using Microsoft.DotNet.Interactive.Commands;
 
 var result = await Kernel.Root.SendAsync(new SubmitCode(""nope"", ""cs2""));
 
-await result.KernelEvents.LastAsync()
+result.Events.Last()
 ", "cs1"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<ReturnValueProduced>(e => e.Value is CommandFailed);
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>(e => e.Value is CommandFailed);
     }
 }

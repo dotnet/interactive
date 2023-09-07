@@ -13,9 +13,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
@@ -79,7 +79,6 @@ public class SerializationTests
             $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
             $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}",
             $"{nameof(KernelValueInfo)}.{nameof(KernelValueInfo.Type)}",
-            $"{nameof(CommandCancelled)}.{nameof(CommandCancelled.CancelledCommand)}"
         };
 
         deserializedEnvelope
@@ -98,6 +97,7 @@ public class SerializationTests
             .UsingExtension($"{command.GetType().Name}.json")
             .SetInteractive(Debugger.IsAttached);
 
+        command.SetId("command-id");
         command.SetToken("the-token");
 
         var json = KernelCommandEnvelope.Serialize(command);
@@ -113,7 +113,8 @@ public class SerializationTests
             .UsingExtension($"{@event.GetType().Name}.json")
             .SetInteractive(Debugger.IsAttached);
 
-        @event.Command?.SetToken("the-token");
+        @event.Command.SetId("command-id");
+        @event.Command.SetToken("the-token");
 
         var json = KernelEventEnvelope.Serialize(@event);
 
@@ -156,7 +157,6 @@ public class SerializationTests
     {
         foreach (var command in commands().Select(c =>
                  {
-                     c.Properties["id"] = "command-id";
                      c.RoutingSlip.StampAsArrived(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
                      c.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName", UriKind.Absolute));
                      return c;
@@ -218,13 +218,12 @@ public class SerializationTests
     {
         foreach (var @event in events().Select(e =>
                  {
-                     e.Command.Properties["id"] = "command-id";
                      if (e is not KernelReady)
                      {
                          e.Command.RoutingSlip.StampAsArrived(new Uri("kernel://somelocation/kernelName"));
                          e.Command.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName"));
                      }
-               
+
                      e.RoutingSlip.Stamp(new Uri("kernel://somelocation/kernelName"));
                      return e;
                  }))
@@ -268,8 +267,6 @@ public class SerializationTests
                         documentation: "Writes the line")
                 },
                 requestCompletion);
-
-            yield return new DiagnosticLogEntryProduced("oops!", new SubmitCode("123"));
 
             yield return new DiagnosticsProduced(
                 new[]
@@ -316,12 +313,7 @@ public class SerializationTests
                 new KernelInfo("javascript", aliases: new[] { "js" })
                 {
                     LanguageName = "JavaScript",
-                    DisplayName = "JavaScript",
                     Uri = new Uri("kernel://vscode/javascript"),
-                    SupportedDirectives = new[]
-                    {
-                        new KernelDirectiveInfo("#r")
-                    },
                     SupportedKernelCommands = new[]
                     {
                         new KernelCommandInfo(nameof(SubmitCode))
@@ -332,7 +324,31 @@ public class SerializationTests
                     OriginUri = new("kernel://pid-1234/csharp")
                 });
 
-            yield return new KernelReady();
+            yield return new KernelReady(new[]
+            {
+                new KernelInfo("javascript", aliases: new[] { "js" })
+                {
+                    LanguageName = "JavaScript",
+                    Uri = new Uri("kernel://vscode/javascript"),
+                    SupportedKernelCommands = new[]
+                    {
+                        new KernelCommandInfo(nameof(SubmitCode))
+                    }
+                },
+                new KernelInfo("csharp", aliases: new[] { "cs" })
+                {
+                    LanguageName = "CSharp",
+                    Uri = new Uri("kernel://pid/csharp"),
+                    SupportedDirectives = new[]
+                    {
+                        new KernelDirectiveInfo("#r"),
+                    },
+                    SupportedKernelCommands = new[]
+                    {
+                        new KernelCommandInfo(nameof(SubmitCode))
+                    }
+                }
+            });
 
             yield return new PackageAdded(
                 new ResolvedPackageReference(
@@ -342,7 +358,7 @@ public class SerializationTests
                     packageRoot: "/the/package/root",
                     probingPaths: new[] { "/probing/path/1", "/probing/path/2" }),
                 new SubmitCode("#r \"nuget:ThePackage,1.2.3\""));
-                
+
             yield return new ReturnValueProduced(
                 new HtmlString("<b>hi!</b>"),
                 new SubmitCode("b(\"hi!\")", "csharp", SubmissionType.Run),
@@ -400,8 +416,6 @@ public class SerializationTests
                     HtmlFormatter.MimeType,
                     "<span>raw value</span>"),
                 new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp"));
-
-            yield return new CommandCancelled(new Cancel(), new SubmitCode("var value = 1;", "csharp"));
 
             yield return new InputProduced("user input", new RequestInput(valueName: "logfile", prompt: "What is the path to the log file?", inputTypeHint: "file", targetKernelName: "vscode"));
         }

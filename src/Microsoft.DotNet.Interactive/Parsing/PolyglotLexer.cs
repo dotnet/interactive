@@ -13,7 +13,7 @@ internal class PolyglotLexer
     private TextWindow _textWindow;
     private readonly SourceText _sourceText;
     private readonly PolyglotSyntaxTree _syntaxTree;
-    private readonly List<SyntaxToken> _tokens = new List<SyntaxToken>();
+    private readonly List<SyntaxToken> _tokens = new();
 
     public PolyglotLexer(SourceText sourceText, PolyglotSyntaxTree syntaxTree)
     {
@@ -130,7 +130,6 @@ internal class PolyglotLexer
 
     private void LexDirective()
     {
-
         if (!_textWindow.IsEmpty)
         {
             FlushToken(TokenKind.Language);
@@ -159,7 +158,6 @@ internal class PolyglotLexer
         }
 
         FlushToken(TokenKind.Directive);
-
     }
 
     private void LexDirectiveArgs()

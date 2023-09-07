@@ -3,16 +3,19 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Threading.Tasks;
 using FluentAssertions;
-using System.Linq;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
+using Language = Microsoft.DotNet.Interactive.Tests.Language;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Tests;
 
@@ -51,25 +54,41 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 ");
         var result = await kernel.SendAsync(command);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        Assert.Collection(events,
-            e => e.Should().BeOfType<CodeSubmissionReceived>(),
-            e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-            e => e.Should().BeOfType<DiagnosticsProduced>()
-                .Which.Diagnostics.Count.Should().Be(0),
-            e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                .Value.Should().BeOfType<string>().Which
-                .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
-            e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                .Value.Should().BeOfType<string>().Which
-                .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
-            e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                .Value.Should().BeOfType<string>().Which
-                .Should().Be(string.Empty),
-            e => e.Should().BeOfType<CommandSucceeded>());
+        Assert.Collection(result.Events,
+                          e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                          e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                          e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                                .Value.Should().BeOfType<string>().Which
+                                .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
+                          e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                                .Value.Should().BeOfType<string>().Which
+                                .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
+                          e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                                .Value.Should().BeOfType<string>().Which
+                                .Should().Be(string.Empty),
+                          e => e.Should().BeOfType<CommandSucceeded>());
     }
-        
+
+    [Fact(Skip = "Waiting for a fix for https://github.com/PowerShell/PowerShell/issues/20079")]
+    public async Task When_command_is_not_recognized_then_the_command_fails()
+    {
+        using var kernel = CreateKernel(Language.PowerShell);
+
+        var result = await kernel.SendAsync(new SubmitCode("oops"));
+
+        result.Events.Last().Should().BeOfType<CommandFailed>();
+    }
+
+    [Fact]
+    public async Task When_code_produces_errors_then_the_command_fails()
+    {
+        using var kernel = CreateKernel(Language.PowerShell);
+
+        var result = await kernel.SendAsync(new SubmitCode("Get-ChildItem oops"));
+
+        result.Events.Last().Should().BeOfType<CommandFailed>();
+    }
+
     [Fact]
     public async Task PowerShell_token_variables_work()
     {
@@ -87,8 +106,6 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 .BeOfType<CompleteCodeSubmissionReceived>()
                 .Which.Code
                 .Should().Be("echo /this/is/a/path"),
-            e => e.Should().BeOfType<DiagnosticsProduced>()
-                .Which.Diagnostics.Count.Should().Be(0),
             e => e.Should()
                 .BeOfType<StandardOutputValueProduced>()
                 .Which
@@ -104,8 +121,6 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 .BeOfType<CompleteCodeSubmissionReceived>()
                 .Which.Code
                 .Should().Be("$$; $^"),
-            e => e.Should().BeOfType<DiagnosticsProduced>()
-                .Which.Diagnostics.Count.Should().Be(0),
             e => e.Should()
                 .BeOfType<StandardOutputValueProduced>()
                 .Which
@@ -130,8 +145,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         await kernel.SendAsync(new SubmitCode("echo bar > $null"));
         var result = await kernel.SendAsync(new SubmitCode("Get-History | % CommandLine"));
 
-        var outputs = result.KernelEvents
-            .ToSubscribedList()
+        var outputs = result.Events
             .OfType<StandardOutputValueProduced>();
 
         outputs.Should().SatisfyRespectively(
@@ -155,8 +169,8 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
 
         outputs.Should().HaveCountGreaterThan(1);
-            
-        string.Join("", 
+
+        string.Join("",
                 outputs
                     .SelectMany(e => e.FormattedValues.Select(v => v.Value))
             ).ToLowerInvariant()
@@ -173,14 +187,12 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         await kernel.SubmitCodeAsync("$currentUserCurrentHost = $PROFILE.CurrentUserCurrentHost");
         await kernel.SubmitCodeAsync("$allUsersCurrentHost = $PROFILE.AllUsersCurrentHost");
 
-        var (success, valueProduced) = await kernel.TryRequestValueAsync("currentUserCurrentHost");
-        success.Should().BeTrue();
+        var valueProduced = await kernel.RequestValueAsync("currentUserCurrentHost");
         valueProduced.Value.Should().BeOfType<string>();
         string currentUserCurrentHost = valueProduced.Value.As<string>();
 
         // Get $PROFILE default.
-        (success, valueProduced) = await kernel.TryRequestValueAsync("PROFILE");
-        success.Should().BeTrue();
+        valueProduced = await kernel.RequestValueAsync("PROFILE");
         valueProduced.Value.Should().BeOfType<string>();
         string profileDefault = valueProduced.Value.As<string>();
 
@@ -189,8 +201,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         profileDefault.Should().NotBeNullOrEmpty();
         profileDefault.Should().Be(currentUserCurrentHost);
 
-        (success, valueProduced) = await kernel.TryRequestValueAsync("allUsersCurrentHost");
-        success.Should().BeTrue();
+        valueProduced = await kernel.RequestValueAsync("allUsersCurrentHost");
         valueProduced.Value.Should().BeOfType<string>();
         string allUsersCurrentHost = valueProduced.Value.As<string>();
 
@@ -212,8 +223,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             // trigger first time setup.
             await kernel.SubmitCodeAsync("Get-Date");
 
-            var (success, valueProduced) = await kernel.TryRequestValueAsync(randomVariableName);
-            success.Should().BeTrue();
+            var valueProduced = await kernel.RequestValueAsync(randomVariableName);
 
             valueProduced.Value.Should().BeOfType<bool>();
             valueProduced.Value.As<bool>().Should().BeTrue();
@@ -230,51 +240,69 @@ for ($j = 0; $j -le 4; $j += 4 ) {
     {
         var kernel = CreateKernel(Language.PowerShell);
         var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
-        var outputs = result.KernelEvents.ToSubscribedList();
 
-        var mimeType = "text/html";
         var formattedHtml =
-            @"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>prop1</td><td>value1</td></tr><tr><td>prop2</td><td>value2</td></tr><tr><td>prop3</td><td>value3</td></tr></tbody></table><style>
-.dni-code-hint {
-    font-style: italic;
-    overflow: hidden;
-    white-space: nowrap;
-}
-.dni-treeview {
-    white-space: nowrap;
-}
-.dni-treeview td {
-    vertical-align: top;
-    text-align: start;
-}
-details.dni-treeview {
-    padding-left: 1em;
-}
-table td {
-    text-align: start;
-}
-table tr { 
-    vertical-align: top; 
-    margin: 0em 0px;
-}
-table tr td pre 
-{ 
-    vertical-align: top !important; 
-    margin: 0em 0px !important;
-} 
-table th {
-    text-align: start;
-}
-</style>";
-        var fv = new FormattedValue(mimeType, formattedHtml);
+            """
+                <table>
+                  <thead>
+                    <tr>
+                      <th>
+                        <i>key</i>
+                      </th>
+                      <th>value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>prop1</pre>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>value1</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>prop2</pre>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>value2</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>prop3</pre>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="dni-plaintext">
+                          <pre>value3</pre>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                """;
 
-        outputs.Should().SatisfyRespectively(
-            e => e.Should().BeOfType<CodeSubmissionReceived>(),
-            e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-            e => e.Should().BeOfType<DiagnosticsProduced>().Which.Diagnostics.Count.Should().Be(0),
-            e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.ElementAt(0).Should().BeEquivalentToRespectingRuntimeTypes(fv),
-            e => e.Should().BeOfType<CommandSucceeded>()
-        );
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+              .Which
+              .Value.RemoveStyleElement()
+              .Should()
+              .BeEquivalentHtmlTo(formattedHtml);
     }
 
     [Fact]
@@ -284,17 +312,17 @@ table th {
         await kernel.SendAsync(new SubmitCode("$theAnswer = 42"));
 
         var result = await kernel.SendAsync(new RequestValueInfos());
-        var events = result.KernelEvents.ToSubscribedList();
-        events
-            .Should()
-            .ContainSingle<ValueInfosProduced>()
-            .Which
-            .ValueInfos
-            .Should()
-            .ContainSingle()
-            .Which
-            .Name
-            .Should()
-            .Be("theAnswer");
+
+        result.Events
+              .Should()
+              .ContainSingle<ValueInfosProduced>()
+              .Which
+              .ValueInfos
+              .Should()
+              .ContainSingle()
+              .Which
+              .Name
+              .Should()
+              .Be("theAnswer");
     }
 }

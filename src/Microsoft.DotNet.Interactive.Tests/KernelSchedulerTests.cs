@@ -8,12 +8,15 @@ using FluentAssertions;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests>;
+#pragma warning disable CS1998
+#pragma warning disable CS0162
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -44,7 +47,7 @@ public class KernelSchedulerTests : IDisposable
     }
 
     [Fact]
-    public async Task scheduled_work_is_completed_in_order()
+    public async Task top_level_scheduled_work_is_completed_in_order()
     {
         using var scheduler = new KernelScheduler<int, int>();
 
@@ -64,7 +67,7 @@ public class KernelSchedulerTests : IDisposable
     }
 
     [Fact]
-    public async Task scheduled_work_does_not_execute_in_parallel()
+    public async Task top_level_scheduled_work_does_not_execute_in_parallel()
     {
         using var scheduler = new KernelScheduler<int, int>();
         var concurrencyCounter = 0;
@@ -87,6 +90,18 @@ public class KernelSchedulerTests : IDisposable
         await Task.WhenAll(tasks);
 
         maxObservedParallelism.Should().Be(1);
+    }
+    
+    public class TestKernelScheduler<T> : KernelScheduler<T, T>
+    {
+        private readonly Func<T, T, bool> _isChildOperation;
+
+        public TestKernelScheduler(Func<T, T, bool> isChildOperation)
+        {
+            _isChildOperation = isChildOperation;
+        }
+
+        protected override bool IsChildOperation(T current, T incoming) => _isChildOperation(current, incoming);
     }
 
     [Fact]
@@ -121,7 +136,7 @@ public class KernelSchedulerTests : IDisposable
         var deferredOperations = new[] { 1, 2, 3 };
         var completedDeferredOperations = new List<int>();
 
-        var deferredOperationsTaskCompletionSource = new TaskCompletionSource();
+        var deferredOperationsTaskCompletionSource = new TaskCompletionSource<bool>();
         scheduler.RegisterDeferredOperationSource(
             (_, _) => deferredOperations,
             async i =>
@@ -136,7 +151,7 @@ public class KernelSchedulerTests : IDisposable
                 completedDeferredOperations.Add(i);
                 if (completedDeferredOperations.Count == deferredOperations.Length)
                 {
-                    deferredOperationsTaskCompletionSource.SetResult();
+                    deferredOperationsTaskCompletionSource.SetResult(true);
                 }
 
                 return i;
@@ -183,7 +198,11 @@ public class KernelSchedulerTests : IDisposable
         laterWorkWasExecuted.Should().BeFalse();
     }
 
+#if NETFRAMEWORK
+    [FactSkipNetFramework]
+#else
     [FactSkipLinux]
+#endif
     public void cancelling_work_in_progress_prevents_subsequent_work_scheduled_before_cancellation_from_executing()
     {
         using var scheduler = new KernelScheduler<int, int>();
@@ -254,6 +273,65 @@ public class KernelSchedulerTests : IDisposable
         work.Invoking(async w => await w)
             .Should()
             .ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact(Skip = "requires System.Runtime.ControlledExecution")]
+    public void Infinite_loops_can_be_cancelled()
+    {
+        using var scheduler = new KernelScheduler<int, int>();
+        var cts = new CancellationTokenSource();
+
+        var barrier = new Barrier(2);
+
+        var work = scheduler.RunAsync(1, async v =>
+        {
+            barrier.SignalAndWait();
+
+            while (true)
+            {
+            }
+
+            return v;
+        }, cancellationToken: cts.Token);
+
+        barrier.SignalAndWait();
+        cts.Cancel();
+
+        work.Invoking(async w => await w)
+            .Should()
+            .ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact(Skip = "requires System.Runtime.ControlledExecution")]
+    public async Task After_an_infinite_loop_is_cancelled_the_scheduler_can_still_be_used()
+    {
+        using var scheduler = new KernelScheduler<int, int>();
+        var cts = new CancellationTokenSource();
+
+        var barrier = new Barrier(2);
+
+        var _ = scheduler.RunAsync(1, async v =>
+        {
+            barrier.SignalAndWait();
+
+            while (true)
+            {
+            }
+
+            return v;
+        }, cancellationToken: cts.Token);
+
+        barrier.SignalAndWait();
+        cts.Cancel();
+
+        var nextResult = await scheduler.RunAsync(2, PerformWork);
+
+        nextResult.Should().Be(2);
+
+        Task<int> PerformWork(int v)
+        {
+            return Task.FromResult(v);
+        }
     }
 
     [Fact]
@@ -392,7 +470,7 @@ public class KernelSchedulerTests : IDisposable
     {
         var executionList = new List<string>();
 
-        using var scheduler = new KernelScheduler<string, string>( (o,i) => o == "outer" && i == "inner");
+        using var scheduler = new TestKernelScheduler<string>((o, i) => o == "outer" && i == "inner");
 
         await scheduler.RunAsync("outer", async _ =>
         {
@@ -412,11 +490,11 @@ public class KernelSchedulerTests : IDisposable
         });
 
         executionList.Should()
-            .BeEquivalentSequenceTo(
-                "outer 1",
-                "inner 1",
-                "inner 2",
-                "outer 2");
+                     .BeEquivalentSequenceTo(
+                         "outer 1",
+                         "inner 1",
+                         "inner 2",
+                         "outer 2");
     }
 
     [Fact]
@@ -547,45 +625,5 @@ public class KernelSchedulerTests : IDisposable
             .HaveCount(3)
             .And
             .AllBeEquivalentTo(asyncIdForScheduledWork);
-    }
-
-    [Fact]
-    public async Task AsyncContext_does_not_leak_between_scheduled_work_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await AsyncContext_does_not_leak_between_scheduled_work();
-    }
-
-    [Fact]
-    public async Task work_can_be_scheduled_from_within_scheduled_work_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await work_can_be_scheduled_from_within_scheduled_work();
-    }
-
-    [Fact]
-    public async Task concurrent_schedulers_do_not_interfere_with_one_another_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await concurrent_schedulers_do_not_interfere_with_one_another();
-    }
-
-    [Fact]
-    public async Task AsyncContext_is_maintained_across_async_operations_within_scheduled_work_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await AsyncContext_is_maintained_across_async_operations_within_scheduled_work();
-    }
-
-    [Fact]
-    public async Task AsyncContext_does_not_leak_from_inner_context_when_ExecutionContext_is_suppressed()
-    {
-        ExecutionContext.SuppressFlow();
-
-        await AsyncContext_does_not_leak_from_inner_context();
     }
 }

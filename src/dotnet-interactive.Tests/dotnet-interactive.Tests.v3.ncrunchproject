@@ -1,7 +1,7 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <AdditionalFilesToIncludeForProject>
-      <Value>..\microsoft-dotnet-interactive\src\contracts.ts</Value>
+      <Value>..\polyglot-notebooks\src\contracts.ts</Value>
     </AdditionalFilesToIncludeForProject>
     <DefaultTestTimeout>10000</DefaultTestTimeout>
     <HiddenComponentWarnings>
@@ -71,6 +71,48 @@
       <NamedTestSelector>
         <TestName>StdIoBehaviorTests.Quit_command_causes_stdio_process_to_end</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests</FixtureName>
+      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests.when_all_created_proxies_including_the_root_proxy_have_been_disposed_then_the_remote_process_is_killed</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests.it_can_return_a_proxy_to_a_specific_remote_composite</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests.when_all_created_proxies_have_been_disposed_then_the_remote_process_is_killed</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests.it_can_create_a_proxy_kernel_with_a_different_name_than_the_remote</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests.it_can_create_a_proxy_to_a_specific_remote_subkernel</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests.it_throws_if_there_is_no_remote_subkernel_with_the_specified_name</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests.it_can_return_a_proxy_to_a_remote_composite</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests.it_can_create_a_proxy_kernel_to_more_than_one_remote_subkernel</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests.when_only_root_proxy_is_created_and_disposed_then_the_remote_process_is_killed</TestName>
+      </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.FileProviderTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.FrontendEnvironmentHandlingTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.TypeScriptInterfacesContractTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

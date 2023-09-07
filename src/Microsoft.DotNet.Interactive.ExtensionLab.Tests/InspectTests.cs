@@ -33,8 +33,7 @@ public class A
 
         var result = await kernel.SendAsync(new SubmitCode(submission, "csharp"));
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which
@@ -63,13 +62,11 @@ public class A
 
         var result = await kernel.SendAsync(new SubmitCode(submission, "csharp"));
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which
@@ -121,13 +118,11 @@ public static class A {
 
         var result = await kernel.SendAsync(new SubmitCode(submission, "csharp"));
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
-        var formattedValues = result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which
@@ -165,13 +160,11 @@ public class A
 
         var result = await kernel.SendAsync(new SubmitCode(submission, "csharp"));
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
-        var formattedValues = result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which
@@ -214,13 +207,11 @@ public class A
 
         var result = await kernel.SendAsync(new SubmitCode(submission, "csharp"));
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
-        var formattedValues = result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which
@@ -257,13 +248,11 @@ public class A
 
         var result = await kernel.SendAsync(new SubmitCode(submission, "csharp"));
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
-        var formattedValues = result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which

@@ -3,15 +3,26 @@
 
 using Microsoft.DotNet.Interactive.Formatting;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Messaging;
 
-internal static class MessageFormatter
+public static class MessageFormatter
 {
     static MessageFormatter()
     {
-        SerializerOptions = JsonFormatter.SerializerOptions;
-        SerializerOptions.Converters.Add(new MessageConverter());
+        SerializerOptions = new JsonSerializerOptions(JsonFormatter.SerializerOptions)
+        {
+            WriteIndented = true,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            ReferenceHandler = null,
+            Converters =
+            {
+                new MessageConverter()
+            }
+        };
     }
 
     public static JsonSerializerOptions SerializerOptions { get; }

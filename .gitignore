@@ -11,6 +11,7 @@
 *.sln.docstates
 .trydotnet-*
 .dotnet/
+.NCrunch_dotnet-interactive
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -51,8 +52,11 @@ TestResult.xml
 
 # Assent / ApprovalTests
 *.received.json
+*.received.*.json
 *.received.dib
+*.received.*.dib
 *.received.txt
+*.received.*.txt
 
 # Build Results of an ATL Project
 [Dd]ebugPS/

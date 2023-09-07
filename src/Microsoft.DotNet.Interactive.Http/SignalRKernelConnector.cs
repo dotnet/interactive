@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Connection;
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class SignalRKernelConnector : IKernelConnector
+public class SignalRKernelConnector
 {
     public SignalRKernelConnector(Uri hubUrl)
     {
@@ -20,7 +20,7 @@ public class SignalRKernelConnector : IKernelConnector
 
     public Uri HubUrl { get; }
 
-    public async Task<Kernel> CreateKernelAsync(string kernelName)
+    public async Task<ProxyKernel> CreateKernelAsync(string kernelName)
     {
         // QUESTION: (ConnectKernelAsync) tests?
         var hubConnection = new HubConnectionBuilder()

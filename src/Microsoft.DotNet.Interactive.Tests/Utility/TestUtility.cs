@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 
 using FluentAssertions;
 using FluentAssertions.Collections;
@@ -250,35 +249,6 @@ public static class AssertionExtensions
             .NotContain(e => e is ErrorProduced)
             .And
             .NotContain(e => e is CommandFailed);
-
-    public static AndWhichConstraint<ObjectAssertions, T> EventuallyContainSingle<T>(
-        this GenericCollectionAssertions<KernelEvent> should,
-        Func<T, bool> where = null,
-        int timeout = 3000)
-        where T : KernelEvent
-    {
-        return Task.Run(async () =>
-        {
-            if (where is null)
-            {
-                where = _ => true;
-            }
-
-            var startTime = DateTime.UtcNow;
-            var endTime = startTime + TimeSpan.FromMilliseconds(timeout);
-            while (DateTime.UtcNow < endTime)
-            {
-                if (should.Subject.OfType<T>().Any(where))
-                {
-                    break;
-                }
-
-                await Task.Delay(200);
-            }
-
-            return should.ContainSingle(where);
-        }).Result;
-    }
 }
 
 public static class ObservableExtensions
@@ -296,7 +266,7 @@ public class SubscribedList<T> : IReadOnlyList<T>, IDisposable
 
     public SubscribedList(IObservable<T> source)
     {
-        _subscription = source.Subscribe(x => { _list = _list.Add(x); });
+        _subscription = source.Subscribe(x => _list = _list.Add(x));
     }
 
     public IEnumerator<T> GetEnumerator()
@@ -316,7 +286,7 @@ public class SubscribedList<T> : IReadOnlyList<T>, IDisposable
 internal static class TestUtility
 {
     internal static TabularDataResource ShouldDisplayTabularDataResourceWhich(
-        this SubscribedList<KernelEvent> events)
+        this IReadOnlyList<KernelEvent> events)
     {
         events.Should().NotContainErrors();
 

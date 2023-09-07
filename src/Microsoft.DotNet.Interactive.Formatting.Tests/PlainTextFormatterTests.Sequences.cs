@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Dummy;
 using FluentAssertions;
 using Xunit;
 
@@ -209,10 +210,12 @@ TheWidgets: Widget[]
 
             formatter.Format(new object[] { 1, null, 3 }, writer);
 
-            writer.ToString().Should().Be(@"Object[]
-  - 1
-  - <null>
-  - 3".ReplaceLineEndings());
+            writer.ToString().Should().Be("""
+                Object[]
+                  - 1
+                  - <null>
+                  - 3
+                """.ReplaceLineEndings());
         }
 
         [Fact]
@@ -264,6 +267,43 @@ TheWidgets: Widget[]
                       - Id: 1.3
                         Nodes: <null>
                 """.ReplaceLineEndings());
+        }
+
+        [Fact]
+        public void When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements()
+        {
+            var instance = new ClassWithPropertiesThatIsAlsoIEnumerable(new object[] { "apple", "banana" })
+            {
+                Property = "cherry"
+            };
+
+            var formatted  = instance.ToDisplayString(PlainTextFormatter.MimeType);
+
+            formatted.Should().Match("""
+                ClassWithPropertiesThatIsAlsoIEnumerable
+                      Property: cherry
+                      (values): *
+                        - apple
+                        - banana
+                """);
+        }
+
+        [Fact]
+        public void When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements()
+        {
+            var instance = new ClassWithPropertiesThatIsAlsoIEnumerable<string>(new[] { "durian", "elderberry" })
+            {
+                Property = "fig"
+            };
+
+            var formatted  = instance.ToDisplayString(PlainTextFormatter.MimeType);
+
+
+            formatted.Should().Be("""
+                ClassWithPropertiesThatIsAlsoIEnumerable<String>
+                      Property: fig
+                      (values): [ durian, elderberry ]
+                """);
         }
     }
 }

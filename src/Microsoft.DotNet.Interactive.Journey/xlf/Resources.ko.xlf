@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ko" original="../Resources.resx">
+    <body>
+      <trans-unit id="FileDoesNotExist">
+        <source>File does not exist: '{0}'.</source>
+        <target state="translated">'{0}' 파일이 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_model_answer_from_file_Description">
+        <source>Specify lesson source file</source>
+        <target state="translated">학습 원본 파일 지정</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_model_answer_from_file_ErrorMessage">
+        <source>The {0} and {1} options cannot be used together</source>
+        <target state="translated">{0} 및 {1} 옵션은 함께 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_model_answer_from_url_Description">
+        <source>Specify lesson source URL</source>
+        <target state="translated">학습 원본 URL 지정</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

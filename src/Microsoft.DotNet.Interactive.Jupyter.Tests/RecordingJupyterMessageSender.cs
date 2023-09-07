@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-public class RecordingJupyterMessageSender : IJupyterMessageSender
+public class RecordingJupyterMessageSender : IJupyterMessageResponseSender
 {
     private readonly List<Message> _messages;
     private readonly List<PubSubMessage> _pubSubMessages;

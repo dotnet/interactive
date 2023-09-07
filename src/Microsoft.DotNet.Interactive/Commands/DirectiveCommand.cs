@@ -13,8 +13,7 @@ internal class DirectiveCommand : KernelCommand
 {
     internal DirectiveCommand(
         ParseResult parseResult,
-        KernelCommand parent,
-        DirectiveNode directiveNode = null) : base(null, parent)
+        DirectiveNode directiveNode = null) 
     {
         ParseResult = parseResult;
         DirectiveNode = directiveNode;

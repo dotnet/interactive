@@ -1,0 +1,8 @@
+{
+  "VariableGridColumnActions": "Akcje",
+  "VariableGridColumnName": "Nazwa",
+  "VariableGridColumnValue": "Wartość",
+  "VariableGridColumnType": "Typ",
+  "VariableGridColumnKernel": "Jądro",
+  "VariableGridshareTemplate": "Udostępnij wartość {value-name} z jądra {kernel-name}"
+}

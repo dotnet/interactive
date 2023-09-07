@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
@@ -50,7 +51,7 @@ public class ConnectStdIoCommand : ConnectKernelCommand
         isDefault: true,
         description: "Name of the kernel host.");
 
-    public override Task<Kernel> ConnectKernelAsync(
+    public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
@@ -58,11 +59,13 @@ public class ConnectStdIoCommand : ConnectKernelCommand
         var workingDir = commandLineContext.ParseResult.GetValueForOption(WorkingDirectoryOption);
         var kernelHostAuthority = commandLineContext.ParseResult.GetValueForOption(KernelHostUriOption) ?? CreateKernelHostAuthority();
         var kernelHostUri = KernelHost.CreateHostUri(kernelHostAuthority);
-            
-        var connector = new StdIoKernelConnector(command, kernelHostUri, workingDir);
-            
+
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
-        return connector.CreateKernelAsync(localName);
+        var connector = new StdIoKernelConnector(command, rootProxyKernelLocalName: localName, kernelHostUri, workingDir);
+
+        var kernel = await connector.CreateRootProxyKernelAsync();
+        
+        return new  []{ kernel };
     }
 }

@@ -20,16 +20,17 @@ public class CompleteReply : ReplyMessage
 
     [JsonPropertyName("metadata")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public IReadOnlyDictionary<string, object> MetaData { get; }
+    public IReadOnlyDictionary<string, IReadOnlyList<CompletionResultMetadata>> MetaData { get; }
 
-    [JsonPropertyName("status")] public string Status { get; }
+    [JsonPropertyName("status")] 
+    public string Status { get; }
 
-    public CompleteReply(int cursorStart = 0, int cursorEnd = 0, IReadOnlyList<string> matches = null, IReadOnlyDictionary<string, object> metaData = null, string status = null)
+    public CompleteReply(int cursorStart = 0, int cursorEnd = 0, IReadOnlyList<string> matches = null, IReadOnlyDictionary<string, IReadOnlyList<CompletionResultMetadata>> metaData = null, string status = null)
     {
         CursorStart = cursorStart;
         CursorEnd = cursorEnd;
         Matches = matches ?? new List<string>();
-        MetaData = metaData ?? new Dictionary<string, object>();
+        MetaData = metaData ?? new Dictionary<string, IReadOnlyList<CompletionResultMetadata>>();
         Status = status ?? "ok";
     }
 }

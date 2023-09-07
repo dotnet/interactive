@@ -34,9 +34,7 @@ public class JavaScriptKernelTests : IDisposable
 
         var result = await kernel.SendAsync(new SubmitCode("x = [ 1, 2, 3 ]"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
     }
 
     [FactSkipLinux("Requires Playwright installed")]
@@ -46,9 +44,7 @@ public class JavaScriptKernelTests : IDisposable
 
         var result = await kernel.SendAsync(new SubmitCode("x = 123;\nreturn x;"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<ReturnValueProduced>()
+        result.Events.Should().ContainSingle<ReturnValueProduced>()
               .Which
               .FormattedValues
               .Should()
@@ -63,9 +59,7 @@ public class JavaScriptKernelTests : IDisposable
 
         var result = await kernel.SendAsync(new SubmitCode("console.log(123);"));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<DisplayedValueProduced>()
+        result.Events.Should().ContainSingle<DisplayedValueProduced>()
               .Which
               .FormattedValues
               .Should()
@@ -92,9 +86,7 @@ public class JavaScriptKernelTests : IDisposable
         var result = await compositeKernel.SendAsync(new SubmitCode(@"#!share x --from csharp
 console.log(x);", targetKernelName: kernel.Name));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<DisplayedValueProduced>()
+        result.Events.Should().ContainSingle<DisplayedValueProduced>()
             .Which
             .FormattedValues
             .Should()
@@ -121,9 +113,7 @@ console.log(x);", targetKernelName: kernel.Name));
         var result = await compositeKernel.SendAsync(new SubmitCode(@$"#!share x --from {kernel.Name}
 Console.Write(x);", targetKernelName: csharp.Name));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events.Should().ContainSingle<StandardOutputValueProduced>()
+        result.Events.Should().ContainSingle<StandardOutputValueProduced>()
             .Which
             .FormattedValues
             .Should()

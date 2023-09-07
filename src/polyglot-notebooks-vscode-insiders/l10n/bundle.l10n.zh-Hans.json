@@ -1,0 +1,8 @@
+{
+  "VariableGridColumnActions": "操作",
+  "VariableGridColumnName": "名称",
+  "VariableGridColumnValue": "值",
+  "VariableGridColumnType": "类型",
+  "VariableGridColumnKernel": "内核",
+  "VariableGridshareTemplate": "从 {kernel-name} 内核共享值 {value-name}"
+}

@@ -1,0 +1,8 @@
+{
+  "VariableGridColumnActions": "動作",
+  "VariableGridColumnName": "名稱",
+  "VariableGridColumnValue": "值",
+  "VariableGridColumnType": "類型",
+  "VariableGridColumnKernel": "核心",
+  "VariableGridshareTemplate": "從 {kernel-name} 核心共用值 {value-name}"
+}

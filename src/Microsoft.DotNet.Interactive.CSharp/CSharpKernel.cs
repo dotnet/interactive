@@ -52,18 +52,18 @@ public class CSharpKernel :
     private Lazy<PackageRestoreContext> _lazyPackageRestoreContext;
 
     private ScriptOptions _scriptOptions;
-        
+
     private string _workingDirectory;
 
     public CSharpKernel() : this(DefaultKernelName)
     {
-
     }
+
     public CSharpKernel(string name) : base(name)
     {
         KernelInfo.LanguageName = "C#";
         KernelInfo.LanguageVersion = "11.0";
-        KernelInfo.DisplayName = "C# Script";
+        KernelInfo.DisplayName = $"{KernelInfo.LocalName} - C# Script";
         _workspace = new InteractiveWorkspace();
 
         //For the VSCode-Add-In Directory.GetCurrentDirectory() would here return something like: c:\Users\<username>\AppData\Roaming\Code\User\globalStorage\ms-dotnettools.dotnet-interactive-vscode
@@ -108,10 +108,22 @@ public class CSharpKernel :
 
     public ScriptState ScriptState { get; private set; }
 
-    public Task<bool> IsCompleteSubmissionAsync(string code)
+    private Task<bool> IsCompleteSubmissionAsync(string code)
     {
         var syntaxTree = SyntaxFactory.ParseSyntaxTree(code, _csharpParseOptions);
         return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
+    }
+
+    void ISupportNuget.Configure(bool useResultsCache)
+    {
+        _lazyPackageRestoreContext = new Lazy<PackageRestoreContext>(() =>
+        {
+            var packageRestoreContext = new PackageRestoreContext(useResultsCache);
+
+            RegisterForDisposal(packageRestoreContext);
+
+            return packageRestoreContext;
+        });
     }
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
@@ -121,13 +133,13 @@ public class CSharpKernel :
                        .GroupBy(v => v.Name)
                        .Select(g =>
                        {
-                           var formattedValues = FormattedValue.FromObject(
+                           var formattedValues = FormattedValue.CreateSingleFromObject(
                                g.LastOrDefault()?.Value,
                                command.MimeType);
-                           
+
                            return new KernelValueInfo(
                                g.Key,
-                               formattedValues[0],
+                               formattedValues,
                                g.Last().Type);
                        })
                        .ToArray() ??
@@ -210,25 +222,28 @@ public class CSharpKernel :
         var text = await document.GetTextAsync(context.CancellationToken);
         var cursorPosition = text.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
         var service = QuickInfoService.GetService(document);
-        var info = await service.GetQuickInfoAsync(document, cursorPosition, context.CancellationToken);
-            
-        if (info is null)
+        if (service != null)
         {
-            return;
+            var info = await service.GetQuickInfoAsync(document, cursorPosition, context.CancellationToken);
+
+            if (info is null)
+            {
+                return;
+            }
+
+            var scriptSpanStart = LinePosition.FromCodeAnalysisLinePosition(text.Lines.GetLinePosition(0));
+            var linePosSpan = LinePositionSpan.FromCodeAnalysisLinePositionSpan(text.Lines.GetLinePositionSpan(info.Span));
+            var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
+
+            context.Publish(
+                new HoverTextProduced(
+                    command,
+                    new[]
+                    {
+                        new FormattedValue("text/markdown", info.ToMarkdownString())
+                    },
+                    correctedLinePosSpan));
         }
-
-        var scriptSpanStart = LinePosition.FromCodeAnalysisLinePosition(text.Lines.GetLinePosition(0));
-        var linePosSpan = LinePositionSpan.FromCodeAnalysisLinePositionSpan(text.Lines.GetLinePositionSpan(info.Span));
-        var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
-
-        context.Publish(
-            new HoverTextProduced(
-                command,
-                new[]
-                {
-                    new FormattedValue("text/markdown", info.ToMarkdownString())
-                },
-                correctedLinePosSpan));
     }
 
     async Task IKernelCommandHandler<RequestSignatureHelp>.HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
@@ -348,7 +363,7 @@ public class CSharpKernel :
             {
                 if (ScriptState is not null && HasReturnValue)
                 {
-                    var formattedValues = FormattedValue.FromObject(ScriptState.ReturnValue);
+                    var formattedValues = FormattedValue.CreateManyFromObject(ScriptState.ReturnValue);
                     context.Publish(
                         new ReturnValueProduced(
                             ScriptState.ReturnValue,
@@ -383,19 +398,19 @@ public class CSharpKernel :
         if (ScriptState is null)
         {
             ScriptState = await CSharpScript.RunAsync(
-                    code,
-                    _scriptOptions,
-                    cancellationToken: cancellationToken)
-                .UntilCancelled(cancellationToken) ?? ScriptState;
+                              code,
+                              _scriptOptions,
+                              cancellationToken: cancellationToken)
+                          ?? ScriptState;
         }
         else
         {
             ScriptState = await ScriptState.ContinueWithAsync(
-                    code,
-                    _scriptOptions,
-                    catchException: catchException,
-                    cancellationToken: cancellationToken)
-                .UntilCancelled(cancellationToken) ?? ScriptState;
+                              code,
+                              _scriptOptions,
+                              catchException: catchException,
+                              cancellationToken: cancellationToken)
+                          ?? ScriptState;
         }
 
         if (ScriptState is not null && ScriptState.Exception is null)
@@ -410,7 +425,7 @@ public class CSharpKernel :
             if (!currentDir.Equals(_workingDirectory, StringComparison.Ordinal))
             {
                 _workingDirectory = currentDir;
-                    
+
                 _scriptOptions = _scriptOptions
                     .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
                     .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
@@ -452,7 +467,7 @@ public class CSharpKernel :
         foreach (CodeAnalysis.Completion.CompletionItem item in completionList.ItemsList)
         {
             // TODO: Getting a description for each item significantly slows this overall operation. We should look into caching approaches but shouldn't block completions here.
-           // var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
+            // var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
             var completionItem = item.ToModel(CompletionDescription.Empty);
             items.Add(completionItem);
         }
@@ -482,8 +497,11 @@ public class CSharpKernel :
 
         var document = _workspace.ForkDocumentForLanguageServices(command.Code);
         var semanticModel = await document.GetSemanticModelAsync(context.CancellationToken);
-        var diagnostics = semanticModel.GetDiagnostics(cancellationToken:context.CancellationToken);
-        context.Publish(GetDiagnosticsProduced(command, diagnostics));
+        var diagnostics = semanticModel.GetDiagnostics(cancellationToken: context.CancellationToken);
+        if (diagnostics.Length > 0)
+        {
+            context.Publish(GetDiagnosticsProduced(command, diagnostics));
+        }
     }
 
     public PackageRestoreContext PackageRestoreContext => _lazyPackageRestoreContext.Value;

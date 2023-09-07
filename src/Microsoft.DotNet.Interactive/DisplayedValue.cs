@@ -6,51 +6,36 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive;
 
 public class DisplayedValue
 {
-    private readonly string _displayId;
-    private readonly HashSet<string> _mimeTypes;
     private KernelInvocationContext _context;
-        
-    public DisplayedValue(string displayId, string mimeType, KernelInvocationContext context): this(displayId, new []{mimeType}, context)
+
+    public DisplayedValue(IReadOnlyList<FormattedValue> formattedValues, KernelInvocationContext context)
     {
-           
-    }
-
-    public DisplayedValue(string displayId, string[] mimeTypes, KernelInvocationContext context)
-    {
-        if (string.IsNullOrWhiteSpace(displayId))
-        {
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(displayId));
-        }
-
-        if (mimeTypes is null || mimeTypes.Count(mimetype => !string.IsNullOrWhiteSpace(mimetype)) == 0)
-        {
-            throw new ArgumentException("Value cannot be null or empty.", nameof(mimeTypes));
-        }
-
-        _displayId = displayId;
-        _mimeTypes = new HashSet<string>(mimeTypes.Where(mimetype => !string.IsNullOrWhiteSpace(mimetype)));
+        FormattedValues = formattedValues ?? throw new ArgumentNullException(nameof(formattedValues));
         _context = context ?? throw new ArgumentNullException(nameof(context));
+
+        DisplayId = Guid.NewGuid().ToString();
     }
 
-    public IReadOnlyCollection<string> MimeTypes => _mimeTypes;
+    public string DisplayId { get; }
 
+    public IReadOnlyList<FormattedValue> FormattedValues { get; private set; }
+    
     public void Update(object updatedValue)
     {
-        var formattedValues = MimeTypes.Select(mimeType => new FormattedValue(
-            mimeType,
-            updatedValue.ToDisplayString(mimeType))).ToArray();
+        var mimeTypes = FormattedValues.Select(x => x.MimeType).ToArray();
+
+        FormattedValues = FormattedValue.CreateManyFromObject(updatedValue, mimeTypes);
 
         if (KernelInvocationContext.Current?.Command is SubmitCode)
         {
             _context = KernelInvocationContext.Current;
         }
 
-        _context.Publish(new DisplayedValueUpdated(updatedValue, _displayId, _context.Command, formattedValues));
+        _context.Publish(new DisplayedValueUpdated(updatedValue, DisplayId, _context.Command, FormattedValues));
     }
 }

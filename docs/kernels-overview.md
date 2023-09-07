@@ -1,38 +1,44 @@
 # .NET Interactive Architectural Overview 
 
-The kernel concept in .NET Interactive is a component that accepts commands and produces outputs. The commands are  typically blocks of arbitrary code, and the outputs are events that describe the results and effects of that code. The `Kernel` class represents this core abstraction.
+The kernel concept in .NET Interactive is a component that accepts commands and produces outputs. The commands are typically blocks of code, and the outputs are events that describe the results and effects of that code, including executing code and providing language services such as completions and diagnostics. The `Kernel` class represents this core abstraction.
 
-A kernel doesn't have to run in its own process. The default `dotnet-interactive` configuration runs several kernels in one process, enabling scenarios such as language-switching and .NET variable sharing. But one or more kernels can also run out-of-process, which will be transparent from the point of view of someone using it.
+A kernel doesn't have to run in its own process. The default `dotnet-interactive` configuration runs several kernels in one process, enabling scenarios such as language-switching and .NET variable sharing by reference between C#, F#, and PowerShell. But one or more kernels can also run out-of-process, which will be transparent from the point of view of someone using it. The `Kernel` APIs are message-based and provide the same API for all kernels whether they are in-process, out-of-process, or running on remote machines.
 
-The `dotnet-interactive` tool also provides a number of protocols, including the [Jupyter message protocol](https://jupyter-client.readthedocs.io/en/stable/messaging.html) and a JSON protocol that can be accessed over either standard I/O or HTTP. These multiple protocols allow the core set of capabilities to be fairly portable.
+The `dotnet-interactive` tool also provides a number of protocols, including the [Jupyter message protocol](https://jupyter-client.readthedocs.io/en/stable/messaging.html) and a JSON-based message protocol that can be accessed over standard I/O, named pipes, or HTTP. These multiple protocols allow the core set of capabilities to be fairly portable.
 
-<img width="1897" alt="image" src="https://user-images.githubusercontent.com/547415/152615917-1202674c-725b-4f8a-88e0-fd38d20f6807.png">
-
+<img width="1230" alt="image" src="https://github.com/dotnet/interactive/assets/547415/f4468f10-288f-47e1-810c-83ef0caf9c25">
 
 ## Commands and events
 
-All communication with a kernel takes place through a sequence of commands and events. The typical sequence starts with a command being sent to the kernel, which will reply with one or more events. The terminating event will always be either `CommandSucceeded` (if everything completed successfully) or `CommandFailed` (if there was a compilation error or runtime exception), but this will usually be preceded by one or more other events describing the results of the command. 
+All communication with a kernel as well as between out-of-process kernels takes place through a sequence of messages. There are two kinds of messages: commands and events. The typical sequence starts with a command being sent to a kernel, which will reply with one or more events. The terminating event will always be either `CommandSucceeded` (if everything completed successfully) or `CommandFailed` (if there was a compilation error or runtime exception). This terminating event will often be preceded by one or more other events describing the results of the command as it's being processed. 
 
-The most common command is `SubmitCode`, which is used when a block of code is sent to the kernel for execution. A code submission is created each time you run a notebook cell. But a single submission may in fact generate multiple commands.
+The most common command is `SubmitCode`, which is used when a block of code is sent to the kernel for execution. A code submission is created each time you run a notebook cell. 
 
-Consider the following submission to a C# kernel:
-
-```csharp
-#!time
-Console.WriteLine("Hi!");
+```mermaid
+sequenceDiagram
+    client->>kernel: SubmitCode
+    note over client,kernel: "Hi!"
+    kernel-->>client: ReturnValueProduced
+    note over kernel,client: "Hi!"
+    kernel-->>client: CommandSucceeded
 ```
 
-This submission will actually be broken into two commands, a `SubmitCode` for the `Console.WriteLine` call as well as an internal `DirectiveCommand` for the `#!time` magic command. 
+It's also possible for a single submission to generate multiple commands.
 
-When this splitting occurs, the API still only returns a single terminating `CommandSucceeded` or `CommandFailed` event. Programmatically, you don't need to be concerned with whether a submission is going be split, but understanding this mechanism can be helpful, for example when implementing your own middleware behaviors.
-
-You can see some additional examples of command and event interactions in the following diagram, illustrating different kinds of output as well as the behavior of a middleware component (for the `#!time` magic command) augmenting the behavior of a code submission by emitting an additional `DisplayedValueProduced` event.
-
-![image](https://user-images.githubusercontent.com/547415/85328568-ce1eda80-b485-11ea-8d6e-a821dfe5db62.png)
+```mermaid
+sequenceDiagram
+    client->>kernel: SubmitCode
+    note over client,kernel: var message = "Starting...".Display()#59;<br/>// do some work<br/>message.Update("Done.")#59;
+    kernel-->>client: DisplayedValueProduced
+    note over kernel,client: "Starting..."
+    kernel-->>client: DisplayedValueUpdated
+    note over kernel,client: "Done."
+    kernel-->>client: CommandSucceeded
+```
 
 ## Nested Kernels
 
-In the standard configuration, .NET Interactive uses multiple, nested kernels. These kernels share a common set of interfaces which allow them to be composed into different kinds of pipelines. This is the basis for supporting multiple languages, among other features. A user of a .NET Interactive notebook can specify the language for a code submission by prefixing a block of code with a [magic command](magic-commands.md) such as `#!csharp`, `#!fsharp`, or `#!pwsh`, or by using the language selector in the lower right corner of a Visual Studio Code notebook cell.
+In the standard configuration, .NET Interactive uses multiple, nested kernels. These kernels share a common set of interfaces which allow them to be composed into different kinds of pipelines. This is the basis for supporting multiple languages, among other features. A user of a .NET Interactive-backed notebook can specify the language for a code submission by prefixing a block of code with a [magic command](magic-commands.md) such as `#!csharp`, `#!fsharp`, or `#!pwsh`, or by using the cell kernel selector in the lower right corner of a Polyglot Notebooks notebook cell.
 
 <img src="https://user-images.githubusercontent.com/547415/111684048-737f9880-87e3-11eb-9b02-67b4bf926bca.png" width="40%">
 
@@ -51,9 +57,4 @@ The work of routing these commands is done by the `CompositeKernel` class, which
 
 ![image](https://user-images.githubusercontent.com/547415/85328679-ff97a600-b485-11ea-839c-ebc65b0f6472.png)
 
-Note that while the composite configuration is the default when using the `dotnet-interactive` tool via Visual Studio Code or Jupyter, the .NET Interactive [NuGet packages](../README.md#Packages) let you create other configurations. For example, you might provide a single-language embedded scripting experience using the C# kernel by itself, or you might provide multiple F# kernels each preconfigured to run code on a different processor.
-
-## Middleware
-
-The submission splitting behavior is implemented using .NET Interactive middleware. Each kernel has its own configurable middleware pipeline. You can think of the middleware pipeline as a chain of functions concatenated together. Each function in the chain can choose to perform operations before and/or after calling the continuation that will invoke the next function, or can opt to short-circuit the whole pipeline by not calling the continuation at all. This structure allows custom middleware to be added that can perform arbitrary tasks. Examples include executing additional commands (such as in the command-splitting examples), catching exceptions thrown by the inner operations, outputting timing and diagnostics, checking credentials, and more.
-
+Note that while the composite configuration is the default when using the `dotnet-interactive` tool via Polyglot Notebooks or Jupyter, the .NET Interactive [NuGet packages](https://www.nuget.org/packages?q=microsoft.dotnet.interactive) let you create other configurations. For example, you might provide a single-language embedded scripting experience using the C# kernel by itself, or you might provide multiple F# kernels each preconfigured to run code on a different processor.

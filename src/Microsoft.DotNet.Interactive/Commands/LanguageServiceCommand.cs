@@ -10,9 +10,8 @@ public abstract class LanguageServiceCommand : KernelCommand
     protected LanguageServiceCommand(
         string code,
         LinePosition linePosition,
-        string targetKernelName = null,
-        KernelCommand parent = null)
-        : base(targetKernelName, parent)
+        string targetKernelName = null)
+        : base(targetKernelName)
     {
         Code = code;
         LinePosition = linePosition;
@@ -20,9 +19,8 @@ public abstract class LanguageServiceCommand : KernelCommand
         
     protected LanguageServiceCommand(
         LanguageNode languageNode,
-        LinePosition linePosition,
-        KernelCommand parent = null)
-        : base(languageNode.KernelName, parent)
+        LinePosition linePosition)
+        : base(languageNode.Name)
     {
         Code = languageNode.Text;
         LanguageNode = languageNode;

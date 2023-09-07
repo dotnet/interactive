@@ -218,15 +218,13 @@ public partial class CompletionTests
 
             var result = await compositeKernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Should()
-                .ContainSingle(e => e.DisplayText == commandName);
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Should()
+                  .ContainSingle(e => e.DisplayText == commandName);
         }
 
         [Theory]
@@ -281,16 +279,14 @@ public partial class CompletionTests
 
             var result = await kernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Select(i => i.Documentation)
-                .Should()
-                .NotContain(i => i.Contains(exeName));
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Select(i => i.Documentation)
+                  .Should()
+                  .NotContain(i => i.Contains(exeName));
         }
 
         [Fact]
@@ -302,16 +298,36 @@ public partial class CompletionTests
 
             var result = await kernel.SendAsync(new RequestCompletions(shareFrom, new LinePosition(0, shareFrom.Length)));
 
-            var events = result.KernelEvents.ToSubscribedList();
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Select(i => i.DisplayText)
+                  .Should()
+                  .Contain(new[] { "fsharp", "pwsh" });
+        }
 
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Select(i => i.DisplayText)
-                .Should()
-                .Contain(new[] { "fsharp", "pwsh" });
+        [Fact]
+        public async Task Set_suggests_kernel_qualified_variable_name()
+        {
+            var kernel = CreateCompositeKernel();
+            await kernel.SubmitCodeAsync("var x = 123;");
+
+            var shareFrom = "#!set --name y --value ";
+
+            var result = await kernel
+                               .FindKernelByName("fsharp")
+                               .SendAsync(new RequestCompletions(shareFrom, new LinePosition(0, shareFrom.Length)));
+
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Select(i => i.DisplayText)
+                  .Should()
+                  .Contain(new[] { "@csharp:x" });
         }
 
         [Fact]
@@ -332,16 +348,14 @@ public partial class CompletionTests
                     new LinePosition(0, shareFrom.Length),
                     targetKernelName: "fsharp"));
 
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Select(i => i.DisplayText)
-                .Should()
-                .Contain(variableName);
+            result.Events
+                  .Should()
+                  .ContainSingle<CompletionsProduced>()
+                  .Which
+                  .Completions
+                  .Select(i => i.DisplayText)
+                  .Should()
+                  .Contain(variableName);
         }
     }
 }

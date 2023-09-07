@@ -8,11 +8,10 @@ namespace Microsoft.DotNet.Interactive;
 
 public class CommandRoutingSlip : RoutingSlip
 {
-
     public void StampAs(Uri uri, string tag)
     {
         var absoluteUri = GetAbsoluteUriWithoutQuery(uri);
-        var entry = new Entry( absoluteUri,  tag );
+        var entry = new Entry(absoluteUri, tag);
         if (Entries.SingleOrDefault(e => entry.AbsoluteUriWithQuery == e.AbsoluteUriWithQuery) is null)
         {
             Entries.Add(entry);

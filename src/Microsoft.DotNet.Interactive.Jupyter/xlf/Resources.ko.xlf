@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ko" original="../Resources.resx">
+    <body>
+      <trans-unit id="Magics_lsmagic_Description">
+        <source>List the available magic commands / directives</source>
+        <target state="translated">사용 가능한 매직 명령/지시문을 나열합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_markdown_Description">
+        <source>Convert the code that follows from Markdown into HTML</source>
+        <target state="translated">다음 코드를 Markdown에서 HTML로 변환</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Magics_time_Description">
+        <source>Time the execution of the following code in the submission.</source>
+        <target state="translated">제출에서 다음 코드의 실행 시간입니다.</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

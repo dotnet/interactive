@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Threading.Tasks;
@@ -28,7 +30,7 @@ public class ConnectKqlCommand : ConnectKernelCommand
         new("--database",
             "The database to query");
 
-    public override async Task<Kernel> ConnectKernelAsync(
+    public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
         KernelInvocationContext context,
         InvocationContext commandLineContext)
     {
@@ -40,8 +42,16 @@ public class ConnectKqlCommand : ConnectKernelCommand
 
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
+        var found = context?.HandlingKernel?.RootKernel.FindKernelByName($"kql-{localName}") is not null;
+
+        if (found)
+        {
+            throw new InvalidOperationException(
+                $"A kernel with name {localName} is already present. Use a different value for the --{KernelNameOption.Name} option.");
+        }
+
         var kernel = await connector.CreateKernelAsync(localName);
 
-        return kernel;
+        return new [] {kernel};
     }
 }

@@ -1,10 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Documents;
-using Microsoft.DotNet.Interactive.Documents.Jupyter;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +8,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 #nullable enable
 
@@ -36,18 +36,18 @@ public class NotebookLessonParser
     public static List<string> AllDirectiveNames =>
         _allDirectiveNames ??= _stringToLessonDirectiveMap.Keys.Concat(_stringToChallengeDirectiveMap.Keys).ToList();
 
-    public static async Task<InteractiveDocument> ReadFileAsInteractiveDocument(
+    public static InteractiveDocument ReadFileAsInteractiveDocument(
         FileInfo file,
         CompositeKernel? kernel = null)
     {
-        await using var stream = file.OpenRead();
+        using var stream = file.OpenRead();
 
         var kernelInfo = GetKernelInfoFromKernel(kernel);
 
         var notebook = file.Extension.ToLowerInvariant() switch
         {
-            ".ipynb" => await Notebook.ReadAsync(stream, kernelInfo),
-            ".dib" => await CodeSubmission.ReadAsync(stream, kernelInfo),
+            ".ipynb" => Notebook.Read(stream, kernelInfo),
+            ".dib" => CodeSubmission.Read(stream, kernelInfo),
             _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {file.Extension}")
         };
 
@@ -63,7 +63,7 @@ public class NotebookLessonParser
         var response = await client.GetAsync(uri);
         var content = await response.Content.ReadAsStringAsync();
 
-        // FIX: (LoadNotebookFromUrl) differentiate file formats
+        // TODO: (LoadNotebookFromUrl) differentiate file formats
 
         return CodeSubmission.Parse(content, GetKernelInfoFromKernel(kernel));
     }

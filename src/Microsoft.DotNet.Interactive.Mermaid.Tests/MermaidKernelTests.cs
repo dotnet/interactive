@@ -10,7 +10,6 @@ using FluentAssertions.Execution;
 using HtmlAgilityPack;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Mermaid.Tests;
@@ -47,7 +46,7 @@ public class MermaidKernelTests
         scriptNode.InnerText.Should()
             .Contain(markdown);
         scriptNode.InnerText.Should()
-            .Contain("(['mermaidUri'], (mermaid) => {");
+            .Contain("import mermaid from ");
 
         renderTarget.Should().NotBeNull();
     }
@@ -66,12 +65,10 @@ public class MermaidKernelTests
     B --> D[Server2]
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var returnValue = events
-            .OfType<DisplayedValueProduced>()
-            .Single()
-            .Value as MermaidMarkdown;
+        var returnValue = result.Events
+                                .OfType<DisplayedValueProduced>()
+                                .Single()
+                                .Value as MermaidMarkdown;
 
         returnValue.ToString().Should().Be(@"graph TD
     A[Client] --> B[Load Balancer]
@@ -95,12 +92,10 @@ public class MermaidKernelTests
     R -- ""pandas.DataFrame"" --> Py[py fa:fa-gear \nPredictive Modeling\n w/ pandas, scikit-learn]
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var formattedValue = events
-            .OfType<DisplayedValueProduced>()
-            .Single()
-            .FormattedValues.First(fm => fm.MimeType == HtmlFormatter.MimeType);
+        var formattedValue = result.Events
+                                   .OfType<DisplayedValueProduced>()
+                                   .Single()
+                                   .FormattedValues.First(fm => fm.MimeType == HtmlFormatter.MimeType);
 
         formattedValue.Value.Should().Contain(@"flowchart LR
     data[(SQL\\nQuery Titanic data)] 
@@ -125,14 +120,12 @@ public class MermaidKernelTests
     B --> D[Server2]
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var formattedData = events
-            .OfType<DisplayedValueProduced>()
-            .Single()
-            .FormattedValues
-            .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
-            .Value;
+        var formattedData = result.Events
+                                  .OfType<DisplayedValueProduced>()
+                                  .Single()
+                                  .FormattedValues
+                                  .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                                  .Value;
 
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(formattedData.FixedGuid());
@@ -160,14 +153,12 @@ public class MermaidKernelTests
     B --> D[Server2]
 ");
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        var formattedData = events
-            .OfType<DisplayedValueProduced>()
-            .Single()
-            .FormattedValues
-            .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
-            .Value;
+        var formattedData = result.Events
+                                  .OfType<DisplayedValueProduced>()
+                                  .Single()
+                                  .FormattedValues
+                                  .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                                  .Value;
 
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(formattedData.FixedGuid());

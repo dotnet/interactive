@@ -7,6 +7,11 @@
   {
     "kind": 2,
     "language": "github-issues",
+    "value": "// suggestions and enhancements\r\nrepo:dotnet/interactive is:issue is:open label:enhancement -label:question -label:impact-medium -label:impact-low -label:impact-high -label:\"Needs more discussion\""
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
     "value": "// open questions\r\nrepo:dotnet/interactive is:issue is:open label:question -label:waiting-on-feedback"
   },
   {

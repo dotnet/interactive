@@ -1,6 +1,6 @@
 #!meta
 
-{"kernelInfo":{"defaultKernelName":null,"items":[{"name":"csharp","languageName":"C#","aliases":["c#","cs"]},{"name":"fsharp","languageName":"F#","aliases":["f#","fs"]},{"name":"pwsh","languageName":"PowerShell","aliases":["powershell"]},{"name":"javascript","languageName":"JavaScript","aliases":["js"]},{"name":"html","languageName":"HTML"},{"name":"sql","languageName":"SQL"},{"name":"kql","languageName":"KQL"},{"name":"mermaid","languageName":"Mermaid"},{"name":"http","languageName":"HTTP"},{"name":"value"}]}}
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
 
 #!markdown
 
@@ -11,6 +11,15 @@ The next code cell should have empty square brackets on the left, e.g., "`[ ]`".
 #!csharp
 
 1+1
+
+#!markdown
+
+# Verify Completions.
+The next code cell contains the code `Console`. At the end type, `.`. The completions list with properties and methods should be displayed.
+
+#!csharp
+
+Console
 
 #!markdown
 
@@ -52,7 +61,7 @@ var x = 123;
 
 #!markdown
 
-# Execute the next cell.  After execution, the output immediately above this should read:
+# Execute the next two cells.  After execution, the output immediately above each should read:
 
 ```
 The value is 123.
@@ -66,9 +75,16 @@ And the output below the next cell should display the same value.
 document.getElementById("output").innerText = `The value is ${x}.`;
 console.log(`The value is ${x}.`);
 
+#!javascript
+
+#!set --value @csharp:x --name y
+y++;
+document.getElementById("output").innerText = `The value is ${y}.`;
+console.log(`The value is ${y}.`);
+
 #!markdown
 
-# Execude the next cell. After execution, the output immediately below should be:
+# Execute the next cell. After execution, the output immediately below should be:
 
 ```
 javascript
@@ -81,7 +97,7 @@ console.log(jsKernel.name);
 
 #!markdown
 
-# Execude the next cell. After execution, the output immediately below should be:
+# Execute the next cell. After execution, the output immediately below should be:
 
 ```
 [".NET","csharp","fsharp","html","javascript","kql","mermaid","pwsh","sql","value","vscode","webview"]
@@ -94,17 +110,31 @@ return kernels;
 
 #!markdown
 
-# Execude the next cell. After execution, the output immediately below should be:
+# Execute the next cell. After execution, the output immediately below should be:
 
 ```
 1234
 ```
 
-And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with name `asdf`, value `1234` and kernel Name `csharp`
+And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with name `csharpVarFromJs`, value `1234` and kernel Name `csharp`
 
 #!javascript
 
-await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var asdf = 1234; Console.WriteLine(asdf);', targetKernelName: 'csharp' } });
+await kernel.root.send({ commandType: 'SubmitCode', command: { code: 'var csharpVarFromJs = 1234; Console.WriteLine(csharpVarFromJs);', targetKernelName: 'csharp' } });
+
+#!markdown
+
+# Execute the next cell. After execution, the output immediately below should be:
+
+```
+2345
+```
+And the `POLYGLOT NOTEBOOK: VARIABLES` window should contain a variable with name `csharpVarFromJsUsingApi`, value `1234` and kernel Name `csharp`
+
+#!javascript
+
+let command = new polyglotNotebooks.KernelCommandEnvelope(polyglotNotebooks.SubmitCodeType, { code: 'var csharpVarFromJsUsingApi = 2345; Console.WriteLine(csharpVarFromJsUsingApi);', targetKernelName: 'csharp' });
+await kernel.root.send(command);
 
 #!markdown
 
@@ -188,7 +218,7 @@ Console.Error.Write("\x1b[0m");
 #!markdown
 
 # vscode kernel and user input prompts
-This cell should prompt the user for input
+This cell should prompt the user for input. Type something into the input field. Whatever you typed should be displayed in the output.
 
 #!csharp
 
@@ -197,10 +227,10 @@ input
 
 #!fsharp
 
-let input = task  {
+let input = (task  {
                     return! Microsoft.DotNet.Interactive.Kernel.GetInputAsync ("give me data")
-                  } 
-input.Result
+                  }).Result
+input
 
 #!markdown
 
@@ -221,7 +251,43 @@ value_from_input
 
 #!markdown
 
-Now check the variable explorer. Is the value there in the `#!value` kernel?
+Now check the variable explorer. Is the value there in the `value` kernel?
+
+#!markdown
+
+This should prompt you for input. Type something into the input field. Whatever you typed should be displayed in the output.
+
+#!csharp
+
+#!set --name csharpVarFromInput --value @input:"Please enter a value"
+csharpVarFromInput
+
+#!markdown
+
+# Run mermaid markdown:
+Execute the markadown in the cell, this should produce a graphic visualization.
+
+#!mermaid
+
+mindmap
+  root((.NET Interactive))
+    Commands
+        SubmitCode
+        Cancel
+        SendValue
+    Events
+        CommandSucceeded
+        CommandFailed
+        ValueProduced
+    Kernels
+        Kernel
+        CompositeKernel
+        ProxyKernel
+    Directives
+        Connect
+            SQL
+            KQL
+            Jupyter
 
 #!markdown
 
@@ -238,6 +304,9 @@ Now check the variable explorer. Is the value there in the `#!value` kernel?
 9. The contents should look like this:
 
    ```
+   #!meta
+      {"kernelInfo":{"defaultKernelName":"fsharp","items":[{"name":"fsharp","languageName":"F#","aliases":["f#","F#"]},{"name":"vscode","aliases":["frontend"]}]}}
+
    #!fsharp
 
    1+1
@@ -261,20 +330,53 @@ Now check the variable explorer. Is the value there in the `#!value` kernel?
    "cell_type": "code",
    "execution_count": 1,
    "metadata": {
-    "polyglot_notebook": {
+    "dotnet_interactive": {
      "language": "fsharp"
     },
-    "vscode": {
-     "languageId": "dotnet-interactive.fsharp"
+    "polyglot_notebook": {
+     "kernelName": "fsharp"
     }
    },
    "outputs": [
     {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "2\r\n"
-     ]
+     "data": {
+      "text/html": [
+       "<div class=\"dni-plaintext\"><pre>2</pre></div><style>\r\n",
+       ".dni-code-hint {\r\n",
+       "    font-style: italic;\r\n",
+       "    overflow: hidden;\r\n",
+       "    white-space: nowrap;\r\n",
+       "}\r\n",
+       ".dni-treeview {\r\n",
+       "    white-space: nowrap;\r\n",
+       "}\r\n",
+       ".dni-treeview td {\r\n",
+       "    vertical-align: top;\r\n",
+       "    text-align: start;\r\n",
+       "}\r\n",
+       "details.dni-treeview {\r\n",
+       "    padding-left: 1em;\r\n",
+       "}\r\n",
+       "table td {\r\n",
+       "    text-align: start;\r\n",
+       "}\r\n",
+       "table tr { \r\n",
+       "    vertical-align: top; \r\n",
+       "    margin: 0em 0px;\r\n",
+       "}\r\n",
+       "table tr td pre \r\n",
+       "{ \r\n",
+       "    vertical-align: top !important; \r\n",
+       "    margin: 0em 0px !important;\r\n",
+       "} \r\n",
+       "table th {\r\n",
+       "    text-align: start;\r\n",
+       "}\r\n",
+       "</style>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
     }
    ],
    "source": [
@@ -288,8 +390,27 @@ Now check the variable explorer. Is the value there in the `#!value` kernel?
    "language": "F#",
    "name": ".net-fsharp"
   },
-  "language_info": {
-   "name": "F#"
+  "polyglot_notebook": {
+   "kernelInfo": {
+    "defaultKernelName": "fsharp",
+    "items": [
+     {
+      "aliases": [
+       "f#",
+       "F#"
+      ],
+      "languageName": "F#",
+      "name": "fsharp"
+     },
+     {
+      "aliases": [
+       "frontend"
+      ],
+      "languageName": null,
+      "name": "vscode"
+     }
+    ]
+   }
   }
  },
  "nbformat": 4,
@@ -316,9 +437,15 @@ using Microsoft.DotNet.Interactive.Commands;
 
 var _ = Kernel.Root.SendAsync(new SendEditableCode("fsharp","#!share --from csharp x\nx"));
 
+#!markdown
+
+The code below will add 2 markdown cells
+
 #!csharp
 
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 
-var _ = Kernel.Root.SendAsync(new SendEditableCode("markdown","# markdown cell"));
+for(var i = 0; i<2;i++){
+    var _ = await Kernel.Root.SendAsync(new SendEditableCode("markdown",$"# markdown cell {i}"));
+}   

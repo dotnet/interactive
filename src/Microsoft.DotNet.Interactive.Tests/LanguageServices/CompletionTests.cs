@@ -35,9 +35,9 @@ public partial class CompletionTests : LanguageKernelTestBase
 
         await kernel.SubmitCodeAsync(declarationSubmission);
 
-        await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 3)));
+        var result = await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 3)));
 
-        KernelEvents
+        result.Events
             .Should()
             .ContainSingle<CompletionsProduced>()
             .Which
@@ -74,9 +74,9 @@ public partial class CompletionTests : LanguageKernelTestBase
             await kernel.SubmitCodeAsync(submission);
         }
 
-        await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 2)));
+        var result = await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 2)));
 
-        KernelEvents
+        result.Events
             .Should()
             .ContainSingle<CompletionsProduced>()
             .Which
@@ -100,9 +100,9 @@ public partial class CompletionTests : LanguageKernelTestBase
         await kernel.SendAsync(declaration);
 
         MarkupTestFile.GetLineAndColumn("fileInfo.$$", out var useInput, out var line, out var column);
-        await kernel.SendAsync(new RequestCompletions(useInput, new LinePosition(line, column)));
+        var result = await kernel.SendAsync(new RequestCompletions(useInput, new LinePosition(line, column)));
 
-        KernelEvents
+        result.Events
             .Should()
             .ContainSingle<CompletionsProduced>()
             .Which
@@ -128,9 +128,9 @@ public partial class CompletionTests : LanguageKernelTestBase
 
         await kernel.SubmitCodeAsync(submission);
 
-        await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 3)));
+        var result = await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 3)));
 
-        KernelEvents
+        result.Events
             .Should()
             .ContainSingle<CompletionsProduced>()
             .Which
@@ -159,15 +159,15 @@ public partial class CompletionTests : LanguageKernelTestBase
             await kernel.SubmitCodeAsync(submission);
         }
 
-        await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 3)));
+        var result = await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 3)));
 
-        KernelEvents
-            .Should()
-            .ContainSingle<CompletionsProduced>()
-            .Which
-            .Completions
-            .Should()
-            .Contain(item => item.DisplayText == variableName);
+        result.Events
+              .Should()
+              .ContainSingle<CompletionsProduced>()
+              .Which
+              .Completions
+              .Should()
+              .Contain(item => item.DisplayText == variableName);
     }
 
     [Fact]
@@ -190,15 +190,13 @@ public partial class CompletionTests : LanguageKernelTestBase
 
         var result = await kernel.SendAsync(secondCompletionRequest);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<CompletionsProduced>()
-            .Which
-            .Completions
-            .Should()
-            .Contain(item => item.DisplayText == "diego");
+        result.Events
+              .Should()
+              .ContainSingle<CompletionsProduced>()
+              .Which
+              .Completions
+              .Should()
+              .Contain(item => item.DisplayText == "diego");
     }
 
     [Theory]
@@ -225,15 +223,15 @@ public partial class CompletionTests : LanguageKernelTestBase
             "aaa$$"
         });
         MarkupTestFile.GetLineAndColumn(completionCode, out var output, out var line, out var column);
-        await kernel.SendAsync(new RequestCompletions(output, new LinePosition(line, column)));
+        var result = await kernel.SendAsync(new RequestCompletions(output, new LinePosition(line, column)));
 
-        KernelEvents
-            .Should()
-            .ContainSingle<CompletionsProduced>()
-            .Which
-            .Completions
-            .Should()
-            .Contain(item => item.DisplayText == variableName);
+        result.Events
+              .Should()
+              .ContainSingle<CompletionsProduced>()
+              .Which
+              .Completions
+              .Should()
+              .Contain(item => item.DisplayText == variableName);
     }
 
     [Theory]

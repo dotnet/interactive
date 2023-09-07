@@ -2,6 +2,7 @@
 
 * [Definitions and concepts](#definitions-and-concepts)
 * [Using Polyglot Notebooks](#using-polyglot-notebooks)
+* [Troubleshooting](#troubleshooting)
 
 ## _Definitions and concepts_
 
@@ -357,3 +358,38 @@ When you send this command, a new cell will be appended to the notebook with the
 <img  alt="image" src="https://user-images.githubusercontent.com/547415/210672882-9825764b-f2dc-4f57-9d9e-21cefc86bed5.png" width="60%">
 
 This command is not currently supported in other notebook frontends such as JupyterLab.
+
+## Troubleshooting
+
+### A cell runs forever
+
+It is common for a notebook's kernel to get into a stuck state. Maybe you tried to load too much data or accidentally ran code containing an infinite loop. This happens often enough that a way to restart the kernel is a feature of most notebook providers.
+
+In Polyglot Notebooks, you can restart the kernel by running the `Polyglot Notebook: Restart the current notebook's kernel` command from the Command Palette. Note that after you do this, you'll need to rerun the notebook's cells, including reloading packages using `#r`.
+
+### Nothing happens when running a cell
+
+Sometimes VS Code updates have been applied or are pending and the Polyglot Notebooks extension needs to be updated. If things aren't working, here are a few things to check.
+
+If you see the following badge on the settings icon in the lower left corner of VS Code, it means there might be an update pending:
+
+<img width="48" alt="image" src="https://user-images.githubusercontent.com/547415/224158533-c01456c5-0759-46ac-a8c1-317586974a16.png">
+
+When you click it and see a `Restart to Update` message in the menu, then VS Code needs an update.
+
+<img width="299" alt="image" src="https://user-images.githubusercontent.com/547415/224158995-0d5864cc-57b3-416a-95bb-3d18ea42c7bb.png">
+
+You might also see, including after a VS Code update has been applied, that the Polyglot Notebooks extension requires a reload.
+
+<img width="360" alt="image" src="https://user-images.githubusercontent.com/547415/224161370-1c628967-ae0e-42b2-9c64-e3c1d7756f0b.png">
+
+If you're still seeing issues running code after checking for updates, please [open an issue](https://github.com/dotnet/interactive/issues/new/choose). 
+
+### `No formatter is registered for MIME type [____]`
+
+This error indicates that a call to a .NET Interactive formatting API such as `Display`, or in some cases `#!share` or `#!set`, failed because formatting the specified object using the requested MIME type isn't available. You can add formatters for additional MIME types using the formatter registration APIs. More details about these APIs can be found [here](formatting.md).
+
+### `No renderer could be found for mimetype "[____]", but one might be available on the Marketplace`
+
+The error is shown because a formatted value from the .NET Interactive kernel has been formatted using a MIME type that VS Code doesn't know how to render. VS Code can only render notebook outputs in MIME types for which there's an installed [notebook renderer](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer). Notebook renderers are independent of the kernel and can be [installed from the Visual Studio Marketplace](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer).  
+

@@ -3,7 +3,8 @@
     "name": "a",
     "formattedValue": {
       "mimeType": "text/html",
-      "value": "<span>raw value</span>"
+      "value": "<span>raw value</span>",
+      "suppressDisplay": false
     }
   },
   "eventType": "ValueProduced",

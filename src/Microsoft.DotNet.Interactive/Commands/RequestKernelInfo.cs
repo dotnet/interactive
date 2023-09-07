@@ -7,7 +7,6 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
-[DebuggerStepThrough]
 public class RequestKernelInfo : KernelCommand
 {
     [JsonConstructor]

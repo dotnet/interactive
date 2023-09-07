@@ -4,13 +4,13 @@
 #nullable enable
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Pocket;
@@ -25,8 +25,11 @@ public class KernelHost : IDisposable
     private readonly IKernelCommandAndEventSender _defaultSender;
     private readonly IKernelCommandAndEventReceiver _receiver;
     private IDisposable? _kernelEventSubscription;
-    private readonly IKernelConnector _defaultConnector;
+    private readonly Func<string, Task<ProxyKernel>> _defaultConnector;
     private EventLoopScheduler? _eventLoop;
+
+    internal ConcurrentDictionary<string, KernelInvocationContext> ContextsByRootToken { get; } =
+        new(StringComparer.OrdinalIgnoreCase);
 
     internal KernelHost(
         CompositeKernel kernel,
@@ -38,13 +41,17 @@ public class KernelHost : IDisposable
         _kernel = kernel;
         _defaultSender = sender;
         _receiver = receiver;
-        _defaultConnector = new DefaultKernelConnector(
-            _defaultSender,
-            _receiver);
+        _defaultConnector = async (name) =>
+        {
+            var connector = new DefaultKernelConnector(
+                _defaultSender,
+                _receiver);
+            return await connector.CreateKernelAsync(name);
+        };
         _kernel.SetHost(this);
     }
 
-    private class DefaultKernelConnector : IKernelConnector
+    private class DefaultKernelConnector
     {
         private readonly IKernelCommandAndEventSender _sender;
         private readonly IKernelCommandAndEventReceiver? _receiver;
@@ -57,7 +64,7 @@ public class KernelHost : IDisposable
             _receiver = receiver;
         }
 
-        public Task<Kernel> CreateKernelAsync(string kernelName)
+        public Task<ProxyKernel> CreateKernelAsync(string kernelName)
         {
             var proxy = new ProxyKernel(
                 kernelName,
@@ -65,7 +72,7 @@ public class KernelHost : IDisposable
                 _receiver,
                 new Uri(_sender.RemoteHostUri, kernelName));
 
-            return Task.FromResult<Kernel>(proxy);
+            return Task.FromResult(proxy);
         }
     }
 
@@ -89,12 +96,12 @@ public class KernelHost : IDisposable
                 if (e.Command.DestinationUri is { } destinationUri &&
                     _kernel.ChildKernels.TryGetByUri(destinationUri, out var kernelByUri))
                 {
-                    kernelByUri.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
+                    kernelByUri.KernelInfo.UpdateSupportedKernelCommandsFrom(kernelInfoProduced.KernelInfo);
                 }
                 else if (e.Command.TargetKernelName is { } targetKernelName &&
                          _kernel.ChildKernels.TryGetByAlias(targetKernelName, out var kernelByName))
                 {
-                    kernelByName.KernelInfo.UpdateFrom(kernelInfoProduced.KernelInfo);
+                    kernelByName.KernelInfo.UpdateSupportedKernelCommandsFrom(kernelInfoProduced.KernelInfo);
                 }
             }
 
@@ -124,25 +131,19 @@ public class KernelHost : IDisposable
             }
         });
 
-        await _defaultSender.SendAsync(
-            new KernelReady(),
-            _cancellationTokenSource.Token);
+        var kernelInfos = new List<KernelInfo>();
 
-        var infoProduced = new KernelInfoProduced(_kernel.KernelInfo, KernelCommand.None);
-        infoProduced.RoutingSlip.Stamp(_kernel.KernelInfo.Uri);
-
-        await _defaultSender.SendAsync(
-            infoProduced,
-            _cancellationTokenSource.Token);
-
-        foreach (var kernel in _kernel.ChildKernels.Where(k => k is not ProxyKernel))
+        _kernel.VisitSubkernelsAndSelf(k =>
         {
-            infoProduced = new KernelInfoProduced(kernel.KernelInfo, KernelCommand.None);
-            infoProduced.RoutingSlip.Stamp(kernel.KernelInfo.Uri);
-            await _defaultSender.SendAsync(
-                infoProduced,
-                _cancellationTokenSource.Token);
-        }
+            if (k.KernelInfo.IsProxy == false)
+            {
+                kernelInfos.Add(k.KernelInfo);
+            }
+        }, true);
+
+        await _defaultSender.SendAsync(
+            new KernelReady(kernelInfos.ToArray()),
+            _cancellationTokenSource.Token);
     }
 
     public async Task ConnectAndWaitAsync()
@@ -170,16 +171,16 @@ public class KernelHost : IDisposable
 
     public async Task<ProxyKernel> ConnectProxyKernelAsync(
         string localName,
-        IKernelConnector kernelConnector,
+        Func<string, Task<ProxyKernel>> createKernelAsync,
         Uri remoteKernelUri,
         string[]? aliases = null)
     {
-        if (kernelConnector is null)
+        if (createKernelAsync is null)
         {
-            throw new ArgumentNullException(nameof(kernelConnector));
+            throw new ArgumentNullException(nameof(createKernelAsync));
         }
 
-        var proxyKernel = (ProxyKernel)await kernelConnector.CreateKernelAsync(localName);
+        var proxyKernel = await createKernelAsync(localName);
 
         proxyKernel.KernelInfo.RemoteUri = remoteKernelUri;
 

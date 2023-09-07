@@ -44,7 +44,7 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
 
         var kernel = CreateCompositeKernel(language);
 
-        using var context = KernelInvocationContext.Establish(new SubmitCode(""));
+        using var context = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode(""));
 
         using var events = context.KernelEvents.ToSubscribedList();
 
@@ -73,7 +73,7 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
             dllDir);
 
         var kernel = CreateCompositeKernel(language);
-        using var context = KernelInvocationContext.Establish(new SubmitCode(""));
+        using var context = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode(""));
 
         using var events = context.KernelEvents.ToSubscribedList();
 

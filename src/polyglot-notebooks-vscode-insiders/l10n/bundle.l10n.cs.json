@@ -1,0 +1,8 @@
+{
+  "VariableGridColumnActions": "Akce",
+  "VariableGridColumnName": "Název",
+  "VariableGridColumnValue": "Hodnota",
+  "VariableGridColumnType": "Typ",
+  "VariableGridColumnKernel": "Jádro",
+  "VariableGridshareTemplate": "Hodnota sdílené složky {value-name} z jádra {kernel-name}"
+}

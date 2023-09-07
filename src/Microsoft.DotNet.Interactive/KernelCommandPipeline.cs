@@ -32,10 +32,10 @@ internal class KernelCommandPipeline
         KernelCommand command,
         KernelInvocationContext context)
     {
-        command.RoutingSlip.StampAsArrived(_kernel.KernelInfo.Uri);
-        
+        command.StampRoutingSlipAsArrivedAndLog(_kernel.KernelInfo.Uri);
+
         EnsureMiddlewarePipelineIsInitialized();
-            
+
         try
         {
             await _pipeline(command, context, (_, _) => Task.CompletedTask);
@@ -46,7 +46,7 @@ internal class KernelCommandPipeline
         }
         finally
         {
-            command.RoutingSlip.Stamp(_kernel.KernelInfo.Uri);
+            command.StampRoutingSlipAndLog(_kernel.KernelInfo.Uri);
         }
     }
 

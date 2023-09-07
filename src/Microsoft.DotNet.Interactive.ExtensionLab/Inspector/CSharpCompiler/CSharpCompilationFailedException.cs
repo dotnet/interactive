@@ -4,7 +4,6 @@
 using System.Linq;
 using System;
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis;
 using System.Runtime.Serialization;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.CSharpCompiler;

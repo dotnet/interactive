@@ -6,7 +6,8 @@
         "name": "a",
         "formattedValue": {
           "mimeType": "text/plain+summary",
-          "value": "a"
+          "value": "a",
+          "suppressDisplay": false
         },
         "preferredMimeTypes": [
           "text/plain"
@@ -17,7 +18,8 @@
         "name": "b",
         "formattedValue": {
           "mimeType": "text/plain+summary",
-          "value": "b"
+          "value": "b",
+          "suppressDisplay": false
         },
         "preferredMimeTypes": [
           "text/html"
@@ -28,7 +30,8 @@
         "name": "c",
         "formattedValue": {
           "mimeType": "text/plain+summary",
-          "value": "c"
+          "value": "c",
+          "suppressDisplay": false
         },
         "preferredMimeTypes": [
           "text/html"

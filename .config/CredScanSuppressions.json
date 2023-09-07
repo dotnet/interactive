@@ -4,6 +4,51 @@
     {
       "file": "/src/Microsoft.DotNet.Interactive.ApiCompatibility.Tests/ApiCompatibilityTests.jupyter_api_is_not_changed.approved.txt",
       "_justification": "False positive on constructor for `InputRequest`: System.Boolean password = False"
+    },
+    {
+      "file": [
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_connect_to_and_setup_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_connect_to_and_setup_kernel.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_request_completions_and_get_value_produced.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_request_completions_and_get_value_produced.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_request_hover_text_and_get_value_produced.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_request_hover_text_and_get_value_produced.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_request_signature_help_and_get_value_produced.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_request_signature_help_and_get_value_produced.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_display_value_produced.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_display_value_produced.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_error_produced.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_error_produced.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_return_value_produced.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_stderr_produced.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_stderr_produced.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_stream_stdout_produced.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_stream_stdout_produced.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelCommandTests.can_submit_code_and_get_update_display_produced.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_errors_for_request_value_from_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_errors_for_request_value_from_kernel.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_errors_for_send_value_from_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_errors_for_send_value_from_kernel.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_multiple_df_on_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_multiple_df_on_kernel.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_single_df_in_enumerable_on_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_single_df_in_enumerable_on_kernel.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_single_df_on_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_single_df_on_kernel.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_request_value_infos_for_shared_and_kernel_variables.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_request_value_infos_for_shared_and_kernel_variables.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_single_df_in_enumerable_on_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_single_df_in_enumerable_on_kernel.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_single_df_on_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_handle_setting_single_df_on_kernel.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_request_value_infos_for_shared_and_kernel_variables.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_request_value_infos_for_shared_and_kernel_variables.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_share_dataframe_to_from_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_share_dataframe_to_from_kernel.python3.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_share_primitives_to_and_from_kernel.ir.json",
+        "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_share_primitives_to_and_from_kernel.python3.json"
+      ],
+      "_justification": "False positive on serialized commands, tokens and ids are idempotency tokens"
     }
   ]
 }

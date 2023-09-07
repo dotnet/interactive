@@ -138,7 +138,7 @@ f();"));
 
     [Theory]
     [InlineData(Language.CSharp, "(1,4): error CS1733:")]
-    [InlineData(Language.FSharp, "input.fsx (1,4)-(1,4) parse error")]
+    [InlineData(Language.FSharp, "input.fsx (1,2)-(1,4) parse error Unexpected token '+!' or incomplete expression")]
     public async Task shows_diagnostics_on_erroneous_input(Language language, string expected)
     {
         var scheduler = CreateScheduler();
@@ -149,12 +149,9 @@ f();"));
 
         await context.Done().Timeout(5.Seconds());
 
-        JupyterMessageSender.PubSubMessages.Should()
-            .ContainSingle<Protocol.Stream>()
-            .Which
-            .Text
+        JupyterMessageSender.PubSubMessages.OfType<Protocol.Stream>()
             .Should()
-            .Contain(expected);
+            .ContainSingle(error => error.Text.Contains(expected));
     }
 
     [Fact]
@@ -210,9 +207,7 @@ f();"));
         SetKernelLanguage(language);
         var command = new SubmitCode(@"#!html
 <p>hello!</p>", Kernel.Name);
-            
-        command.Properties["publish-internal-events"] = true;
-
+        
         DeferCommand(command);
         var request = ZeroMQMessage.Create(new ExecuteRequest("display(2+2)"));
         var context = new JupyterRequestContext(JupyterMessageSender, request);

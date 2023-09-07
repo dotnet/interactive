@@ -55,8 +55,7 @@ public class DataFrameTypeGeneratorTests
         var events = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(0, position.Value)));
 
         events
-            .KernelEvents
-            .ToSubscribedList()
+            .Events
             .Should()
             .ContainSingle<CompletionsProduced>()
             .Which
@@ -90,17 +89,17 @@ public class DataFrameTypeGeneratorTests
 #r ""{typeof(DataFrame).Assembly.Location}""
 using Microsoft.Data.Analysis;
 ");
-        await kernel.SendAsync(new SendValue("frame", CreateDataFrame()));
+        var dataFrame = CreateDataFrame();
+
+        await kernel.SendAsync(new SendValue("frame", dataFrame, FormattedValue.CreateSingleFromObject(dataFrame)));
 
         var result = await kernel.SubmitCodeAsync("#!linqify frame --show-code");
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .NotContainErrors();
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<DisplayedValueProduced>()
             .Which
@@ -128,12 +127,14 @@ using Microsoft.Data.Analysis;
 using Microsoft.Data.Analysis;
 ");
         var dataFrameVariableName = "myDataFrame";
-        await kernel.SendAsync(new SendValue(dataFrameVariableName, CreateDataFrame()));
+        var dataFrame = CreateDataFrame();
+
+        await kernel.SendAsync(new SendValue(dataFrameVariableName, dataFrame, FormattedValue.CreateSingleFromObject(dataFrame)));
 
         var code = "#!linqify ";
         var result = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(0, code.Length)));
 
-        result.KernelEvents.ToSubscribedList().Should().ContainSingle<CompletionsProduced>()
+        result.Events.Should().ContainSingle<CompletionsProduced>()
             .Which
             .Completions
             .Select(c => c.DisplayText)
@@ -153,7 +154,9 @@ using Microsoft.Data.Analysis;
 #r ""{typeof(DataFrame).Assembly.Location}""
 using Microsoft.Data.Analysis;
 ");
-        await kernel.SendAsync(new SendValue("frame", CreateDataFrame()));
+        var dataFrame = CreateDataFrame();
+
+        await kernel.SendAsync(new SendValue("frame", dataFrame, FormattedValue.CreateSingleFromObject(dataFrame)));
 
         await kernel.SubmitCodeAsync(magicCommand);
 

@@ -34,7 +34,10 @@ internal static class CompletionExtensions
         WellKnownTags.RangeVariable,
         WellKnownTags.Reference,
         WellKnownTags.Structure,
-        WellKnownTags.TypeParameter);
+        WellKnownTags.TypeParameter,
+        WellKnownTags.Snippet,
+        WellKnownTags. Error,
+        WellKnownTags.Warning);
 
     public static string GetKind(this RoslynCompletionItem completionItem)
     {

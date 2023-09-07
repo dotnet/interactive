@@ -42,11 +42,11 @@ while [[ $# > 0 ]]; do
 done
 
 # build and test NPM
-npmDirs='src/microsoft-dotnet-interactive
-         src/microsoft-dotnet-interactive-browser
+npmDirs='src/polyglot-notebooks
+         src/polyglot-notebooks-browser
          src/polyglot-notebooks-ui-components
-         src/dotnet-interactive-vscode
-         src/dotnet-interactive-vscode-insiders'
+         src/polyglot-notebooks-vscode
+         src/polyglot-notebooks-vscode-insiders'
 for npmDir in $npmDirs;
 do
   echo "Building NPM in directory $npmDir"

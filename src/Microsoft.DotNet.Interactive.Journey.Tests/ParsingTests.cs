@@ -1,13 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
-using FluentAssertions;
-using Microsoft.DotNet.Interactive.Documents;
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests;
@@ -15,9 +14,9 @@ namespace Microsoft.DotNet.Interactive.Journey.Tests;
 public class ParsingTests : ProgressiveLearningTestBase
 {
     [Fact]
-    public async Task parser_can_parse_teacher_notebook_with_two_challenges_with_all_components_defined()
+    public void parser_can_parse_teacher_notebook_with_two_challenges_with_all_components_defined()
     {
-        InteractiveDocument document = await ReadDibAsync("forParsing1.dib");
+        InteractiveDocument document = ReadDib("forParsing1.dib");
 
         NotebookLessonParser.Parse(document, out var lesson, out var challenges);
 
@@ -47,9 +46,9 @@ public class ParsingTests : ProgressiveLearningTestBase
     }
 
     [Fact]
-    public async Task duplicate_challenge_name_causes_parser_to_throw_exception()
+    public void duplicate_challenge_name_causes_parser_to_throw_exception()
     {
-        InteractiveDocument document = await ReadDibAsync("forParsing2DuplicateChallengeName.dib");
+        InteractiveDocument document = ReadDib("forParsing2DuplicateChallengeName.dib");
 
         Action parsingDuplicateChallengeName = () => NotebookLessonParser.Parse(document, out var _, out var _);
 
@@ -59,9 +58,9 @@ public class ParsingTests : ProgressiveLearningTestBase
     }
 
     [Fact]
-    public async Task notebook_with_no_challenge_causes_parser_to_throw_exception()
+    public void notebook_with_no_challenge_causes_parser_to_throw_exception()
     {
-        InteractiveDocument document = await ReadDibAsync("noChallenge.dib");
+        InteractiveDocument document = ReadDib("noChallenge.dib");
 
         Action parsingDuplicateChallengeName = () => NotebookLessonParser.Parse(document, out var _, out var _);
 
@@ -71,9 +70,9 @@ public class ParsingTests : ProgressiveLearningTestBase
     }
 
     [Fact]
-    public async Task a_challenge_with_no_question_causes_parser_to_throw_exception()
+    public void a_challenge_with_no_question_causes_parser_to_throw_exception()
     {
-        InteractiveDocument document = await ReadDibAsync("challengeWithNoQuestion.dib");
+        InteractiveDocument document = ReadDib("challengeWithNoQuestion.dib");
 
         Action parsingDuplicateChallengeName = () => NotebookLessonParser.Parse(document, out var _, out var _);
 
@@ -81,9 +80,9 @@ public class ParsingTests : ProgressiveLearningTestBase
             .Should().Throw<ArgumentException>()
             .Which.Message.Should().Contain("empty question");
     }
-     
-    private async Task<InteractiveDocument> ReadDibAsync(string notebookName)
+
+    private InteractiveDocument ReadDib(string notebookName)
     {
-        return await NotebookLessonParser.ReadFileAsInteractiveDocument(new FileInfo(GetPatchedNotebookPath(notebookName)));
+        return NotebookLessonParser.ReadFileAsInteractiveDocument(new FileInfo(GetPatchedNotebookPath(notebookName)));
     }
 }

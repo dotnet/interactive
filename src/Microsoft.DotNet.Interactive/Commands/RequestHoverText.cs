@@ -17,9 +17,8 @@ public class RequestHoverText : LanguageServiceCommand
 
     internal RequestHoverText(
         LanguageNode languageNode,
-        LinePosition linePosition,
-        KernelCommand parent = null)
-        : base(languageNode, linePosition, parent)
+        LinePosition linePosition)
+        : base(languageNode, linePosition)
     {
     }
 
@@ -27,6 +26,6 @@ public class RequestHoverText : LanguageServiceCommand
         LanguageNode languageNode,
         LinePosition position)
     {
-        return new RequestHoverText(languageNode, position, Parent);
+        return new RequestHoverText(languageNode, position);
     }
 }

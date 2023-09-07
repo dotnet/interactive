@@ -9,14 +9,14 @@ namespace Microsoft.DotNet.Interactive;
 
 internal static class KernelDiagnostics
 {
-
     [DebuggerStepThrough]
     public static T LogCommandsToPocketLogger<T>(this T kernel)
         where T : Kernel
     {
         kernel.AddMiddleware(async (command, context, next) =>
         {
-            using var _ = Logger.Log.OnEnterAndExit($"Command: {command.ToString().Replace(Environment.NewLine, " ")}");
+            using var _ = Logger.Log.OnEnterAndExit();
+            Logger.Log.Info(command);
 
             await next(command, context);
         });
@@ -30,25 +30,22 @@ internal static class KernelDiagnostics
         var disposables = new CompositeDisposable();
 
         disposables.Add(
-            kernel.KernelEvents
-                  .Subscribe(
-                      e =>
-                      {
-                          Logger.Log.Info("{kernel}: {event}",
-                                          kernel.Name,
-                                          e);
-                      }));
+            kernel.KernelEvents.Subscribe(e =>
+            {
+                Logger.Log.Info("{kernel}: {event}",
+                                kernel.Name,
+                                e);
+            }));
 
         kernel.VisitSubkernels(k =>
         {
             disposables.Add(
-                k.KernelEvents.Subscribe(
-                    e =>
-                    {
-                        Logger.Log.Info("{kernel}: {event}",
-                                        k.Name,
-                                        e);
-                    }));
+                k.KernelEvents.Subscribe(e =>
+                {
+                    Logger.Log.Info("{kernel}: {event}",
+                                    k.Name,
+                                    e);
+                }));
         });
 
         kernel.RegisterForDisposal(disposables);

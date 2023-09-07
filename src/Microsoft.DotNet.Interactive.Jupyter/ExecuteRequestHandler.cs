@@ -1,11 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Microsoft.DotNet.Interactive.Formatting;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,9 +8,13 @@ using System.Reactive.Concurrency;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
-using Recipes;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Recipes;
+using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
@@ -44,16 +43,13 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
     }
 
     protected override void OnKernelEventReceived(
-        KernelEvent @event, 
+        KernelEvent @event,
         JupyterRequestContext context)
     {
         switch (@event)
         {
             case DisplayEvent displayEvent:
                 OnDisplayEvent(displayEvent, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
-                break;
-            case DiagnosticLogEntryProduced logEvent:
-                OnLogEvent(logEvent, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                 break;
             case CommandSucceeded _:
                 OnCommandHandled(context.JupyterMessageSender);
@@ -73,7 +69,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
         return transient;
     }
 
-    private void OnDiagnosticsProduced(JupyterRequestContext context, 
+    private void OnDiagnosticsProduced(JupyterRequestContext context,
         ZeroMQMessage request,
         DiagnosticsProduced diagnosticsProduced)
     {
@@ -98,7 +94,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
 
     private void OnCommandFailed(
         CommandFailed commandFailed,
-        IJupyterMessageSender jupyterMessageSender)
+        IJupyterMessageResponseSender jupyterMessageSender)
     {
         var traceBack = new List<string>();
         var emsg = commandFailed.Message;
@@ -140,7 +136,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
 
     private void OnDisplayEvent(DisplayEvent displayEvent,
         ZeroMQMessage request,
-        IJupyterMessageSender jupyterMessageSender)
+        IJupyterMessageResponseSender jupyterMessageSender)
     {
         if (displayEvent is ReturnValueProduced && displayEvent.Value is DisplayedValue)
         {
@@ -155,9 +151,9 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
         // 
         // In the case of DiagnosticsProduced however there are multiple entries, one
         // for each diagnsotic, all with the same type
-        Dictionary<string,object> GetFormattedValuesByMimeType()
+        Dictionary<string, object> GetFormattedValuesByMimeType()
         {
-            return 
+            return
                 displayEvent
                     .FormattedValues
                     .ToDictionary(k => k.MimeType, v => PreserveJson(v.MimeType, v.Value));
@@ -209,26 +205,6 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
         }
     }
 
-    private void OnLogEvent(
-        DiagnosticLogEntryProduced logEvent,
-        ZeroMQMessage request,
-        IJupyterMessageSender jupyterMessageSender)
-    {
-        var transient = CreateTransient();
-
-        var dataMessage = new DisplayData(
-            transient: transient,
-            data: new Dictionary<string, object> { [PlainTextFormatter.MimeType] = logEvent.Message });
-
-        var isSilent = ((ExecuteRequest) request.Content).Silent;
-
-        if (!isSilent)
-        {
-            // send on io
-            jupyterMessageSender.Send(dataMessage);
-        }
-    }
-
     private object PreserveJson(string mimeType, string formattedValue)
     {
         var value = mimeType switch
@@ -249,7 +225,7 @@ public class ExecuteRequestHandler : RequestHandlerBase<ExecuteRequest>
         return defaultText;
     }
 
-    private void OnCommandHandled(IJupyterMessageSender jupyterMessageSender)
+    private void OnCommandHandled(IJupyterMessageResponseSender jupyterMessageSender)
     {
         // reply ok
         var executeReplyPayload = new ExecuteReplyOk(executionCount: _executionCount);

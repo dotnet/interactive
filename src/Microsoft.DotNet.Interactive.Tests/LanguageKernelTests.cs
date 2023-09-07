@@ -13,7 +13,6 @@ using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -59,19 +58,18 @@ public sealed class LanguageKernelTests : LanguageKernelTestBase
         await SubmitCode(kernel, source);
 
         var result = await kernel.SendAsync(new RequestValue(valueName, mimeType: mimeType, targetKernelName: language.LanguageName()));
-        var kernelEvents = result.KernelEvents.ToSubscribedList();
 
-        kernelEvents
-            .Should()
-            .ContainSingle<CommandFailed>()
-            .Which
-            .Exception
-            .Should()
-            .BeOfType<ArgumentException>()
-            .Which
-            .Message
-            .Should()
-            .Be($"No formatter is registered for MIME type {mimeType}.");
+        result.Events
+              .Should()
+              .ContainSingle<CommandFailed>()
+              .Which
+              .Exception
+              .Should()
+              .BeOfType<ArgumentException>()
+              .Which
+              .Message
+              .Should()
+              .Be($"No formatter is registered for MIME type {mimeType}.");
     }
 
     [Theory]
@@ -672,13 +670,12 @@ $${languageSpecificCode}
 
         var requestCompletionsCommand = new RequestCompletions(output, new LinePosition(line, column));
 
-        // var results = await Task.WhenAll(
         var diagnosticsResultTask = kernel.SendAsync(requestDiagnosticsCommand);
-        var completionResult = await kernel.SendAsync(requestCompletionsCommand);
+        await kernel.SendAsync(requestCompletionsCommand);
 
         var diagnosticsResult = await diagnosticsResultTask;
 
-        diagnosticsResult.KernelEvents.ToSubscribedList().Should().NotContain(e => e is DiagnosticsProduced);
+        diagnosticsResult.Events.Should().NotContain(e => e is DiagnosticsProduced);
     }
 
     [Theory]
@@ -936,16 +933,14 @@ Console.Write(""value three"");"
 
         var result = await kernel.SendAsync(new SubmitCode(source));
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .OfType<StandardOutputValueProduced>()
-            .Select(e => e.FormattedValues.ToArray())
-            .Should()
-            .BeEquivalentSequenceTo(
-                new[] { new FormattedValue("text/plain", "value one") },
-                new[] { new FormattedValue("text/plain", "value two") },
-                new[] { new FormattedValue("text/plain", "value three") });
+        result.Events
+              .OfType<StandardOutputValueProduced>()
+              .Select(e => e.FormattedValues.ToArray())
+              .Should()
+              .BeEquivalentSequenceTo(
+                  new[] { new FormattedValue("text/plain", "value one") },
+                  new[] { new FormattedValue("text/plain", "value two") },
+                  new[] { new FormattedValue("text/plain", "value three") });
     }
 
     [Theory]
@@ -958,15 +953,13 @@ Console.Write(""value three"");"
 
         var result = await SubmitCode(kernel, source);
 
-        var events = result.KernelEvents.ToSubscribedList();
-
-        events
-            .OfType<StandardOutputValueProduced>()
-            .Last()
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType &&
-                                v.Value == "hello from F#");
+        result.Events
+              .OfType<StandardOutputValueProduced>()
+              .Last()
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType &&
+                                  v.Value == "hello from F#");
     }
 
     [Theory]
@@ -1040,17 +1033,15 @@ open System
 
         var result = await SubmitCode(kernel, source);
 
-        var events = result.KernelEvents.ToSubscribedList();
+        result.Events
+              .OfType<DisplayedValueProduced>()
+              .Should()
+              .HaveCount(3);
 
-        events
-            .OfType<DisplayedValueProduced>()
-            .Should()
-            .HaveCount(3);
-
-        events
-            .OfType<ReturnValueProduced>()
-            .Last()
-            .Value.Should().Be(5);
+        result.Events
+              .OfType<ReturnValueProduced>()
+              .Last()
+              .Value.Should().Be(5);
 
     }
 

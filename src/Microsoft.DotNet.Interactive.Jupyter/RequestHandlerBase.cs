@@ -28,23 +28,25 @@ public abstract class RequestHandlerBase<T> : IDisposable
     protected IObservable<KernelEvent> KernelEvents { get; }
 
     protected async Task SendAsync(
-        JupyterRequestContext context,
+        JupyterRequestContext jupyterContext,
         KernelCommand command)
     {
-        command.SetToken(context.Token);
+        command.SetToken(jupyterContext.Token);
 
         using var sub = Kernel
             .KernelEvents
-            .Where(ShouldForward)
             .Subscribe(e =>
             {
-                try
+                if (ShouldForward(e))
                 {
-                    OnKernelEventReceived(e, context);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log.Error(ex);
+                    try
+                    {
+                        OnKernelEventReceived(e, jupyterContext);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log.Error(ex);
+                    }
                 }
             });
 
@@ -54,7 +56,7 @@ public abstract class RequestHandlerBase<T> : IDisposable
 
         bool ShouldForward(KernelEvent e)
         {
-            return e.Command?.GetOrCreateToken() == context.Token || e.Command.ShouldPublishInternalEvents();
+            return e.Command.GetOrCreateToken().StartsWith(jupyterContext.Token);
         }
     }
 

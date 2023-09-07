@@ -21,10 +21,11 @@ namespace Microsoft.DotNet.Interactive;
 public class KernelInvocationContext : IDisposable
 {
     private static readonly AsyncLocal<KernelInvocationContext> _current = new();
+    private static readonly ConcurrentDictionary<string, CancellationTokenSource> _cancellationTokenSources = new();
 
     private readonly ReplaySubject<KernelEvent> _events = new();
 
-    private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new(new CommandEqualityComparer());
+    private readonly ConcurrentDictionary<KernelCommand, ReplaySubject<KernelEvent>> _childCommands = new();
 
     private readonly CompositeDisposable _disposables = new();
 
@@ -32,28 +33,33 @@ public class KernelInvocationContext : IDisposable
 
     private readonly CancellationTokenSource _cancellationTokenSource;
 
+    private bool _ownsCancellationTokenSource;
+
+    private readonly int _consoleAsyncContextId;
+
     private KernelInvocationContext(KernelCommand command)
     {
         var operation = new OperationLogger(
-            operationName: command.ToString(),
-            args: new object[]
-            {
-                ("KernelCommand", command)
-            },
-            exitArgs: () => new[]
-            {
-                ("KernelCommand", (object)command)
-            },
+            operationName: nameof(KernelInvocationContext),
+            args: new object[] { command },
             category: nameof(KernelInvocationContext),
             logOnStart: true);
 
-        _cancellationTokenSource = new CancellationTokenSource();
+        _cancellationTokenSource =
+            _cancellationTokenSources.GetOrAdd(
+                command.GetOrCreateToken(),
+                s =>
+                {
+                    _ownsCancellationTokenSource = true;
+                    return new CancellationTokenSource();
+                }
+        );
 
         Command = command;
 
-        Result = new KernelCommandResult(_events);
+        Result = new KernelCommandResult(command);
 
-        _disposables.Add(_cancellationTokenSource);
+        _disposables.Add(_events.Subscribe(Result.AddEvent));
 
         _disposables.Add(ConsoleOutput.Subscribe(c =>
         {
@@ -64,16 +70,22 @@ public class KernelInvocationContext : IDisposable
             };
         }));
 
+        if (AsyncContext.Id is not null)
+        {
+            _consoleAsyncContextId = AsyncContext.Id.Value;
+        }
+
         _disposables.Add(operation);
     }
+
     internal bool IsFailed { get; private set; }
 
     public KernelCommand Command { get; }
 
     public bool IsComplete { get; private set; }
-        
+
     public CancellationToken CancellationToken => _cancellationTokenSource.IsCancellationRequested
-        ? new CancellationToken(true) 
+        ? new CancellationToken(true)
         : _cancellationTokenSource.Token;
 
     public void Complete(KernelCommand command)
@@ -96,7 +108,7 @@ public class KernelInvocationContext : IDisposable
             TryCancel();
             Fail(
                 Command,
-                new OperationCanceledException($"Command :{Command} cancelled."));
+                message: "Command cancelled.");
         }
     }
 
@@ -115,8 +127,8 @@ public class KernelInvocationContext : IDisposable
                 return;
             }
 
-            var completingMainCommand = CommandEqualityComparer.Instance.Equals(command, Command);
-                
+            var completingMainCommand = command.Equals(Command);
+
             if (succeed && !IsFailed)
             {
                 if (completingMainCommand)
@@ -145,12 +157,20 @@ public class KernelInvocationContext : IDisposable
                     TryCancel();
 
                     IsFailed = true;
+                   
                 }
                 else
                 {
-                    if (command.Parent is null)
+                    if (message is not null)
                     {
-                        Publish(new ErrorProduced(message, command), publishOnAmbientContextOnly: true);
+                        if (command.Parent is null)
+                        {
+                            Publish(new ErrorProduced(message, command), publishOnAmbientContextOnly: true);
+                        }
+                        else if (command.IsSelfOrDescendantOf(Command))
+                        {
+                            Publish(new ErrorProduced(message, command), publishOnAmbientContextOnly: true);
+                        }
                     }
 
                     Publish(new CommandFailed(exception, command, message));
@@ -219,21 +239,27 @@ public class KernelInvocationContext : IDisposable
 
         if (HandlingKernel is { })
         {
-            @event.RoutingSlip.Stamp(HandlingKernel.KernelInfo.Uri);
+            @event.StampRoutingSlipAndLog(HandlingKernel.KernelInfo.Uri);
         }
 
         if (!publishOnAmbientContextOnly && _childCommands.TryGetValue(command, out var events))
         {
             events.OnNext(@event);
         }
-        else if (CommandEqualityComparer.Instance.Equals(Command, command))
+        else if (Command.Equals(command))
         {
             _events.OnNext(@event);
         }
-        else if (string.Equals(Command.GetOrCreateToken(), command.GetOrCreateToken(), StringComparison.Ordinal))
+        else
         {
-            // event from a sub-command that was remotely split
-            _events.OnNext(@event);
+            if (command.IsSelfOrDescendantOf(Command))
+            {
+                _events.OnNext(@event);
+            }
+            else if (command.HasSameRootCommandAs(Command))
+            {
+                _events.OnNext(@event);
+            }
         }
     }
 
@@ -243,56 +269,94 @@ public class KernelInvocationContext : IDisposable
 
     internal KernelCommandResult ResultFor(KernelCommand command)
     {
-        if (CommandEqualityComparer.Instance.Equals(command, Command))
+        if (command.Equals(Command))
         {
             return Result;
         }
         else
         {
             var events = _childCommands[command];
-            return new KernelCommandResult(events);
+            var result = new KernelCommandResult(command);
+            using var _ = events.Subscribe(result.AddEvent);
+            return result;
         }
     }
 
-    public static KernelInvocationContext Establish(KernelCommand command)
+    public static KernelInvocationContext GetOrCreateAmbientContext(KernelCommand command, ConcurrentDictionary<string, KernelInvocationContext> contextsByRootToken = null)
     {
-        if (_current.Value is null || _current.Value.IsComplete)
+        if (_current.Value is null)
         {
-            var context = new KernelInvocationContext(command);
+            if (contextsByRootToken is null)
+            {
+                _current.Value = new KernelInvocationContext(command);
+            }
+            else
+            {
+                var rootToken = KernelCommand.GetRootToken(command.GetOrCreateToken());
 
-            _current.Value = context;
+                if (contextsByRootToken.TryGetValue(rootToken, out var rootContext))
+                {
+                    _current.Value = rootContext;
+                    AddChildCommandToContext(command, rootContext);
+                    var consoleSubscription = ConsoleOutput.InitializeFromAsyncContext(rootContext._consoleAsyncContextId);
+                    rootContext._disposables.Add(consoleSubscription);
+                }
+                else
+                {
+                    _current.Value = new KernelInvocationContext(command);
+                    contextsByRootToken.TryAdd(rootToken, _current.Value);
+                    _current.Value.OnComplete(c =>
+                    {
+                        contextsByRootToken.TryRemove(rootToken, out _);
+                    });
+                }
+            }
+        }
+        else if (_current.Value.IsComplete)
+        {
+            _current.Value = new KernelInvocationContext(command);
         }
         else
         {
-            if (!CommandEqualityComparer.Instance.Equals(_current.Value.Command, command))
+            if (!_current.Value.Command.Equals(command))
             {
-                var capturedEventStream = _current.Value._events;
-                _current.Value._childCommands.GetOrAdd(command, innerCommand =>
-                {
-                    var replaySubject = new ReplaySubject<KernelEvent>();
+                var currentContext = _current.Value;
 
-                    var subscription = replaySubject
-                        .Where(e =>
-                        {
-                            if (innerCommand.OriginUri is { })
-                            {
-                                // if executing on behalf of a proxy, don't swallow anything
-                                return true;
-                            }
-
-                            return e is not CommandSucceeded and not CommandFailed;
-                        })
-                        .Subscribe(e => capturedEventStream.OnNext(e));
-
-                    _current.Value._disposables.Add(subscription);
-                    _current.Value._disposables.Add(replaySubject);
-
-                    return replaySubject;
-                });
+                AddChildCommandToContext(command, currentContext);
+            }
+            else
+            {
+                // FIX: (Establish) when does this happen?
             }
         }
 
         return _current.Value;
+
+        static void AddChildCommandToContext(KernelCommand kernelCommand, KernelInvocationContext currentContext)
+        {
+            currentContext._childCommands.GetOrAdd(kernelCommand, innerCommand =>
+            {
+                var replaySubject = new ReplaySubject<KernelEvent>();
+
+                var subscription = replaySubject
+                    .Where(e =>
+                    {
+                        if (innerCommand.OriginUri is { })
+                        {
+                            // if executing on behalf of a proxy, don't swallow anything
+                            return true;
+                        }
+
+                        return e is not CommandSucceeded and not CommandFailed;
+                    })
+                    .Subscribe(e => currentContext._events.OnNext(e));
+
+                currentContext._disposables.Add(subscription);
+                currentContext._disposables.Add(replaySubject);
+
+                return replaySubject;
+            });
+        }
     }
 
     public static KernelInvocationContext Current => _current.Value;
@@ -318,6 +382,11 @@ public class KernelInvocationContext : IDisposable
 
         Complete(Command);
 
+        if (_ownsCancellationTokenSource)
+        {
+            _cancellationTokenSources.TryRemove(Command.GetOrCreateToken(), out _);
+            _cancellationTokenSource.Dispose();
+        }
         _disposables.Dispose();
     }
 
@@ -330,6 +399,7 @@ public class KernelInvocationContext : IDisposable
     internal DirectiveNode CurrentlyParsingDirectiveNode { get; set; }
 
     public Task ScheduleAsync(Func<KernelInvocationContext, Task> func) =>
+        // FIX: (ScheduleAsync) inline this
         HandlingKernel.SendAsync(new AnonymousKernelCommand((_, invocationContext) =>
             func(invocationContext)));
 }

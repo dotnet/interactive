@@ -1,0 +1,8 @@
+{
+  "VariableGridColumnActions": "Действия",
+  "VariableGridColumnName": "Имя",
+  "VariableGridColumnValue": "Значение",
+  "VariableGridColumnType": "Тип",
+  "VariableGridColumnKernel": "Ядро",
+  "VariableGridshareTemplate": "Отправить значение {value-name} из ядра {kernel-name}"
+}

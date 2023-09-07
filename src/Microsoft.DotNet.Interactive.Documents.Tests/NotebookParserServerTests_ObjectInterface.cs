@@ -6,10 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FluentAssertions;
-using FSharp.Compiler.Text;
-
-using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
+using Microsoft.DotNet.Interactive.App.ParserServer;
 using Newtonsoft.Json;
 
 using Xunit;
@@ -503,19 +500,20 @@ let x = 1 (* this is F# *)
     }
 
     [Fact]
-    public void Notebook_parser_server_returns_an_error_on_unsupported_document_type()
+    public void Notebook_parser_server_throws_on_unsupported_document_type()
     {
         var request = new NotebookParseRequest(
             "the-id",
             serializationType: (DocumentSerializationType)42,
             defaultLanguage: "csharp",
             rawData: Array.Empty<byte>());
-        var response = NotebookParserServer.HandleRequest(request);
-        response
+        var handle = () => NotebookParserServer.HandleRequest(request);
+        
+        handle.Invoking(h => h())
             .Should()
-            .BeOfType<NotebookErrorResponse>()
+            .Throw<NotSupportedException>()
             .Which
-            .ErrorMessage
+            .Message
             .Should()
             .Contain($"Unable to parse an interactive document with type '{(int)request.SerializationType}'");
     }

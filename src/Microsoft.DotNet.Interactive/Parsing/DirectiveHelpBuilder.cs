@@ -14,7 +14,7 @@ public class DirectiveHelpBuilder : HelpBuilder
     private readonly string _rootCommandName;
     private readonly Dictionary<Symbol, string> _directiveHelp = new();
 
-    public DirectiveHelpBuilder(string rootCommandName) : base(LocalizationResources.Instance)
+    public DirectiveHelpBuilder(string rootCommandName) : base(System.CommandLine.LocalizationResources.Instance)
     {
         _rootCommandName = rootCommandName;
     }
@@ -22,7 +22,7 @@ public class DirectiveHelpBuilder : HelpBuilder
     public override void Write(HelpContext context)
     {
         using var writer = new StringWriter();
-        new HelpBuilder(LocalizationResources.Instance).Write(context.Command, writer);
+        new HelpBuilder(System.CommandLine.LocalizationResources.Instance).Write(context.Command, writer);
         var cleanedUp = CleanUp(writer.ToString());
         context.Output.Write(cleanedUp);
     }

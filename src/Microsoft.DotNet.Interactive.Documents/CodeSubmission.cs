@@ -7,8 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Documents.ParserServer;
 using Microsoft.DotNet.Interactive.Documents.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 
@@ -16,9 +14,9 @@ namespace Microsoft.DotNet.Interactive.Documents;
 
 public static class CodeSubmission
 {
-    internal const string MagicCommandPrefix = "#!";
+    private const string MagicCommandPrefix = "#!";
 
-    public static Encoding Encoding => new UTF8Encoding(false);
+    private static readonly Encoding _encoding = new UTF8Encoding(false);
 
     public static InteractiveDocument Parse(
         string content,
@@ -53,7 +51,7 @@ public static class CodeSubmission
 
                 var metadataString = sb.ToString();
 
-                metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataString, ParserServerSerializer.JsonSerializerOptions);
+                metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataString, InteractiveDocument.JsonSerializerOptions);
 
                 if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
                 {
@@ -146,17 +144,8 @@ public static class CodeSubmission
         Stream stream,
         KernelInfoCollection kernelInfos)
     {
-        using var reader = new StreamReader(stream, Encoding);
+        using var reader = new StreamReader(stream, _encoding);
         var content = reader.ReadToEnd();
-        return Parse(content, kernelInfos);
-    }
-
-    public static async Task<InteractiveDocument> ReadAsync(
-        Stream stream,
-        KernelInfoCollection kernelInfos)
-    {
-        using var reader = new StreamReader(stream, Encoding);
-        var content = await reader.ReadToEndAsync();
         return Parse(content, kernelInfos);
     }
 
@@ -170,7 +159,7 @@ public static class CodeSubmission
         {
             lines.Add($"{MagicCommandPrefix}meta");
             lines.Add("");
-            lines.Add(JsonSerializer.Serialize(document.Metadata, ParserServerSerializer.JsonSerializerOptions));
+            lines.Add(JsonSerializer.Serialize(document.Metadata, InteractiveDocument.JsonSerializerOptions));
             lines.Add("");
         }
 
@@ -200,30 +189,12 @@ public static class CodeSubmission
         return content;
     }
 
-    public static void Write(InteractiveDocument document, Stream stream, string newline = "\n")
-    {
-        using var writer = new StreamWriter(stream, Encoding, 1024, true);
-        Write(document, writer, newline);
-        writer.Flush();
-    }
-
-    public static void Write(InteractiveDocument document, TextWriter writer, string newline = "\n")
-    {
-        var content = document.ToCodeSubmissionContent(newline);
-        writer.Write(content);
-    }
-
     public static void Write(InteractiveDocument document, Stream stream, KernelInfoCollection kernelInfos, string newline = "\n")
     {
         InteractiveDocument.MergeKernelInfos(document, kernelInfos);
-        Write(document, stream, newline);
-    }
-
-   
-
-    public static void Write(InteractiveDocument document, TextWriter writer, KernelInfoCollection kernelInfos, string newline = "\n")
-    {
-        InteractiveDocument.MergeKernelInfos(document, kernelInfos);
-        Write(document, writer, newline);
+        using var writer = new StreamWriter(stream, _encoding, 1024, true);
+        var content = document.ToCodeSubmissionContent(newline);
+        writer.Write(content);
+        writer.Flush();
     }
 }

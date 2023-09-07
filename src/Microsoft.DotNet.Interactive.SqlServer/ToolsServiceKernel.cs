@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -25,7 +24,6 @@ public abstract class ToolsServiceKernel :
     IKernelCommandHandler<RequestValue>,
     IKernelCommandHandler<SendValue>
 {
-
     protected readonly Uri TempFileUri;
     protected readonly TaskCompletionSource<ConnectionCompleteParams> ConnectionCompleted = new();
     private Func<QueryCompleteParams, Task> _queryCompletionHandler;
@@ -33,17 +31,8 @@ public abstract class ToolsServiceKernel :
     private bool _intellisenseReady;
     protected bool Connected;
     protected readonly ToolsServiceClient ServiceClient;
-
-    /// <summary>
-    /// The set of query result lists to save for sharing later.
-    /// The key will be the name of the value.
-    /// The value is a list of result sets (multiple if multiple queries are ran as a batch)
-    /// </summary>
-    protected Dictionary<string, IReadOnlyCollection<TabularDataResource>> QueryResults { get; } = new();
-    /// <summary>
-    /// Used to store incoming variables passed in via #!share
-    /// </summary>
-    private readonly Dictionary<string, object> _variables = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, object> _variables  = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, object> _resultSets = new(StringComparer.Ordinal);
 
 
     protected ToolsServiceKernel(string name, ToolsServiceClient client, string languageName) : base(name)
@@ -111,7 +100,7 @@ public abstract class ToolsServiceKernel :
 
     public abstract Task ConnectAsync();
 
-    public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         if (!Connected)
         {
@@ -251,7 +240,7 @@ public abstract class ToolsServiceKernel :
         var dataRows = new List<List<KeyValuePair<string, object>>>();
         var columnNames = columnInfos.Select(c => c.ColumnName).ToArray();
 
-        SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
+        ResolveColumnNameClashes(columnNames);
 
         for (var i = 0; i <  columnInfos.Length; i++)
         {
@@ -314,9 +303,27 @@ public abstract class ToolsServiceKernel :
         }
 
         yield return new TabularDataResource(schema, dataRows);
+
+        void ResolveColumnNameClashes(string[] names)
+        {
+            var nameCounts = new Dictionary<string, int>(capacity: names.Length);
+            for (var i1 = 0; i1 < names.Length; i1++)
+            {
+                var columnName = names[i1];
+                if (nameCounts.TryGetValue(columnName, out var count))
+                {
+                    nameCounts[columnName] = ++count;
+                    names[i1] = columnName + $" ({count})";
+                }
+                else
+                {
+                    nameCounts[columnName] = 1;
+                }
+            }
+        }
     }
 
-    public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
+    async Task IKernelCommandHandler<RequestCompletions>.HandleAsync(RequestCompletions command, KernelInvocationContext context)
     {
         if (!_intellisenseReady)
         {
@@ -329,17 +336,25 @@ public abstract class ToolsServiceKernel :
 
     public bool TryGetValue<T>(string name, out T value)
     {
-        if (QueryResults.TryGetValue(name, out var resultSet) &&
+        if (_variables.TryGetValue(name, out var variable) &&
+            variable is T variableValue)
+        {
+            value = variableValue;
+            return true;
+        }
+
+        if (_resultSets.TryGetValue(name, out var resultSet) &&
             resultSet is T resultSetT)
         {
             value = resultSetT;
             return true;
         }
+
         value = default;
         return false;
     }
 
-    public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (TryGetValue<object>(command.Name, out var value))
         {
@@ -353,22 +368,28 @@ public abstract class ToolsServiceKernel :
         return Task.CompletedTask;
     }
 
-    public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var valueInfos = QueryResults.Keys.Select(key =>
-        {
-            var formattedValues = FormattedValue.FromObject(
-                _variables[key],
-                command.MimeType);
-
-            return new KernelValueInfo(
-                key, formattedValues[0],
-                type: typeof(IEnumerable<TabularDataResource>));
-        }).ToArray();
+        var valueInfos = CreateKernelValueInfos(_variables, command.MimeType).Concat(CreateKernelValueInfos(_resultSets, command.MimeType)).ToArray();
 
         context.Publish(new ValueInfosProduced(valueInfos, command));
 
         return Task.CompletedTask;
+
+        static IEnumerable<KernelValueInfo> CreateKernelValueInfos(IReadOnlyDictionary<string, object> source, string mimeType)
+        {
+            return source.Keys.Select(key =>
+            {
+                var formattedValues = FormattedValue.CreateSingleFromObject(
+                    source[key],
+                    mimeType);
+
+                return new KernelValueInfo(
+                    key,
+                    formattedValues,
+                    type: typeof(IEnumerable<TabularDataResource>));
+            });
+        }
     }
 
     private string PrependVariableDeclarationsToCode(SubmitCode command, KernelInvocationContext context)
@@ -401,7 +422,7 @@ public abstract class ToolsServiceKernel :
     /// <returns></returns>
     protected abstract bool CanDeclareVariable(string name, object value, out string msg);
 
-    public async Task HandleAsync(
+    async Task IKernelCommandHandler<SendValue>.HandleAsync(
         SendValue command,
         KernelInvocationContext context)
     {
@@ -420,5 +441,10 @@ public abstract class ToolsServiceKernel :
             _variables[name] = value;
             return Task.CompletedTask;
         });
+    }
+
+    protected void StoreQueryResultSet(string name, IReadOnlyCollection<TabularDataResource> queryResultSet)
+    {
+        _resultSets[name] = queryResultSet;
     }
 }

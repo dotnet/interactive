@@ -16,14 +16,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.DotNet.Interactive.AspNetCore;
 
 public static class AspNetCoreCSharpKernelExtensions
 {
-    private static readonly Assembly[] _references = 
+    private static readonly Assembly[] _references =
     {
         typeof(Host).Assembly, // Microsoft.Extensions.Hosting
         typeof(WebHost).Assembly, // Microsoft.AspNetCore
@@ -38,7 +37,7 @@ public static class AspNetCoreCSharpKernelExtensions
         typeof(IEndpointRouteBuilder).Namespace, // Microsoft.AspNetCore.Routing
         typeof(EndpointRouteBuilderExtensions).Namespace, // Microsoft.AspNetCore.Builder
         typeof(InteractiveEndpointRouteBuilderExtensions).Namespace, // Microsoft.DotNet.Interactive.AspNetCore
-        typeof(HttpClient).Namespace, // System.Net.Htttp
+        typeof(HttpClient).Namespace, // System.Net.Http
     };
 
     public static CSharpKernel UseAspNetCore(this CSharpKernel kernel)
@@ -49,7 +48,7 @@ public static class AspNetCoreCSharpKernelExtensions
         {
             Handler = CommandHandler.Create(async () =>
             {
-                if (interactiveHost is {})
+                if (interactiveHost is { })
                 {
                     return;
                 }

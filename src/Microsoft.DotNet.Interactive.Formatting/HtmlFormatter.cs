@@ -2,15 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Net.Http;
 using System.Numerics;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Threading;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -44,20 +41,28 @@ public static class HtmlFormatter
         FormattersForAnyEnumerable.GetOrCreateFormatterForType(type);
 
     internal static void FormatAndStyleAsPlainText(
-        object value, 
-        FormatContext context)
+        object value,
+        FormatContext context,
+        string mimeType = PlainTextFormatter.MimeType)
     {
         context.RequireDefaultStyles();
-
-        PocketView tag = div(pre(value.ToDisplayString(PlainTextFormatter.MimeType)));
-        tag.HtmlAttributes["class"] = "dni-plaintext";
+        var tag = TagWithPlainTextStyling(value, mimeType);
         tag.WriteTo(context);
+    }
+
+    internal static PocketView TagWithPlainTextStyling(
+        object value, 
+        string mimeType = PlainTextFormatter.MimeType)
+    {
+        PocketView tag = div(pre(value.ToDisplayString(mimeType)));
+        tag.HtmlAttributes["class"] = "dni-plaintext";
+        return tag;
     }
 
     internal static FormatterMapByType FormattersForAnyObject;
 
     internal static FormatterMapByType FormattersForAnyEnumerable =
-        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTableFormatterForAnyEnumerable));
+        new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateTreeViewFormatterForAnyEnumerable));
 
     internal static readonly ITypeFormatter[] DefaultFormatters =
     {
@@ -123,8 +128,6 @@ public static class HtmlFormatter
 
         new HtmlFormatter<string>((s, context) =>
         {
-            // If PlainTextPreformat is true, then strings
-            // will have line breaks and white-space preserved
             FormatAndStyleAsPlainText(s, context);
             return true;
         }),
@@ -139,15 +142,17 @@ public static class HtmlFormatter
         new HtmlFormatter<Type>((type, context) =>
         {
             var text = type.ToDisplayString(PlainTextFormatter.MimeType);
-                    
+
             // This is approximate
             var isKnownDocType =
                 type.Namespace is not null &&
+                type.FullName is not null &&
                 (type.Namespace == "System" ||
                  type.Namespace.StartsWith("System.") ||
-                 type.Namespace.StartsWith("Microsoft."));
+                 type.Namespace.StartsWith("Microsoft.")) &&
+                !type.IsAnonymous();
 
-            if (!isKnownDocType || type.IsAnonymous())
+            if (!isKnownDocType)
             {
                 context.Writer.Write(text.HtmlEncode());
             }
@@ -155,12 +160,20 @@ public static class HtmlFormatter
             {
                 //system.collections.generic.list-1
                 //system.collections.generic.list-1.enumerator
-                var genericTypeDefinition = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+                Type genericTypeDefinition;
+                if (type.IsGenericType)
+                {
+                    genericTypeDefinition = type.GetGenericTypeDefinition();
+                }
+                else
+                {
+                    genericTypeDefinition = type;
+                }
 
                 var typeLookupName =
-                    genericTypeDefinition.FullName.ToLower().Replace("+",".").Replace("`","-");
+                    genericTypeDefinition.FullName.ToLower().Replace("+", ".").Replace("`", "-");
 
-                PocketView view = 
+                PocketView view =
                     span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-7.0"](
                         text));
                 view.WriteTo(context);
@@ -191,15 +204,7 @@ public static class HtmlFormatter
             view.WriteTo(context);
             return true;
         }),
-
-        // Try to display enumerable results as tables. This will return false for nested tables.
-        new HtmlFormatter<IEnumerable>((value, context) =>
-        {
-            var type = value.GetType();
-            var formatter = GetDefaultFormatterForAnyEnumerable(type);
-            return formatter.Format(value, context);
-        }),
-
+        
         // BigInteger should be displayed as plain text
         new HtmlFormatter<BigInteger>((value, context) =>
         {
@@ -207,14 +212,12 @@ public static class HtmlFormatter
             return true;
         }),
 
-         // decimal should be displayed as plain text
-         new HtmlFormatter<decimal>((value, context) =>
-         {
-             FormatAndStyleAsPlainText(value, context);
-             return true;
-         }),
+        new HtmlFormatter<decimal>((value, context) =>
+        {
+            FormatAndStyleAsPlainText(value, context);
+            return true;
+        }),
 
-        // Try to display object results as tables. This will return false for nested tables.
         new HtmlFormatter<object>((value, context) =>
         {
             context.RequireDefaultStyles();
@@ -223,22 +226,7 @@ public static class HtmlFormatter
             var formatter = GetDefaultFormatterForAnyObject(type);
             return formatter.Format(value, context);
         }),
-
-        // Final last resort is to convert to plain text
-        new HtmlFormatter<object>((value, context) =>
-        {
-            if (value is null)
-            {
-                FormatAndStyleAsPlainText(Formatter.NullString, context);
-            }
-            else
-            {
-                FormatAndStyleAsPlainText(value, context);
-            }
-
-            return true;
-        }),
-
+        
         new HtmlFormatter<JsonDocument>((doc, context) =>
         {
             doc.RootElement.FormatTo(context, MimeType);
@@ -284,7 +272,6 @@ public static class HtmlFormatter
                     break;
 
                 case JsonValueKind.String:
-
                     var value = element.GetString();
                     view = span($"\"{value}\"");
 
@@ -313,22 +300,6 @@ public static class HtmlFormatter
             context.RequireDefaultStyles();
 
             view.WriteTo(context);
-
-            return true;
-        }),
-
-        new HtmlFormatter<HttpResponseMessage>((value, context) =>
-        {
-            // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
-            ExecutionContext.SuppressFlow();
-            try
-            {
-                value.FormatAsHtml(context).Wait();
-            }
-            finally
-            {
-                ExecutionContext.RestoreFlow();
-            }
 
             return true;
         })

@@ -38,7 +38,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
     public string Token => _command.GetOrCreateToken();
 
     public string CommandId => _command.GetOrCreateId();
-        
+
     KernelCommand IKernelCommandEnvelope.Command => _command;
 
     public static void RegisterCommand<T>() where T : KernelCommand
@@ -73,7 +73,9 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>),
             [nameof(RequestInput)] = typeof(KernelCommandEnvelope<RequestInput>),
             [nameof(RequestValue)] = typeof(KernelCommandEnvelope<RequestValue>),
-            [nameof(RequestValueInfos)] = typeof(KernelCommandEnvelope<RequestValueInfos>)
+            [nameof(RequestValueInfos)] = typeof(KernelCommandEnvelope<RequestValueInfos>),
+            [nameof(RequestKernelInfo)] = typeof(KernelCommandEnvelope<RequestKernelInfo>),
+            [nameof(SendValue)] = typeof(KernelCommandEnvelope<SendValue>)
         };
 
         _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName
@@ -164,6 +166,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         }
 
         var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
+
         if (commandId is not null)
         {
             command.SetId(commandId);
@@ -174,7 +177,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         {
             commandToken = tokenProperty.GetString();
         }
-            
+
         if (commandToken is not null)
         {
             command.SetToken(commandToken);
@@ -189,10 +192,11 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
                 if (string.IsNullOrWhiteSpace(uri.Query))
                 {
                     command.RoutingSlip.Stamp(uri);
-                }else
+                }
+                else
                 {
                     var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                    command.RoutingSlip.StampAs(uri, query["tag"] );
+                    command.RoutingSlip.StampAs(uri, query["tag"]);
                 }
             }
         }
@@ -210,7 +214,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             serializationModel,
             Serializer.JsonSerializerOptions);
     }
-    
+
     private static SerializationModel CreateSerializationModel(IKernelCommandEnvelope envelope)
     {
         var serializationModel = new SerializationModel

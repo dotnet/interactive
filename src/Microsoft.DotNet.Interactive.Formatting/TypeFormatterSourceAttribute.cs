@@ -14,4 +14,6 @@ public class TypeFormatterSourceAttribute : Attribute
     }
 
     public Type FormatterSourceType { get; }
+
+    public string[] PreferredMimeTypes { get; set; }
 }

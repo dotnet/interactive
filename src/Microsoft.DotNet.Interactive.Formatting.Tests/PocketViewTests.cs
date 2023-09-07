@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using System.Linq;
@@ -55,7 +54,7 @@ public class PocketViewTests : FormatterTestBase
     }
 
     [Fact]
-    public void A_simple_tag()
+    public void Tag_content_can_be_specified_using_a_string()
     {
         string output = div("foo").ToString();
 

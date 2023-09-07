@@ -6,12 +6,11 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
-using static System.Environment;
-using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 #pragma warning disable 8509 // don't warn on incomplete pattern matches
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
@@ -63,21 +62,55 @@ public partial class MagicCommandTests
 
             await kernel.SendAsync(new SubmitCode("#!whos"));
 
-            events.Should()
-                .ContainSingle(e => e is DisplayedValueProduced)
-                .Which
-                .As<DisplayedValueProduced>()
-                .FormattedValues
-                .Should()
-                .ContainSingle(v => v.MimeType == "text/html")
-                .Which
-                .Value
-                .As<string>()
-                .Should()
-                .ContainAll(
-                    $"<td>x</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0\">System.Int32</a></span></td><td>{PlainTextBegin}2{PlainTextEnd}</td>",
-                    $"<td>y</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0\">System.String</a></span></td><td>{PlainTextBegin}hi&gt;!{PlainTextEnd}</td>",
-                    $"<td>z</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.object[]?view=net-7.0\">System.Object[]</a></span></td><td>{PlainTextBegin}Object[]{NewLine}  - 2{NewLine}  - hi&gt;!{PlainTextEnd}</td>");
+            var html = events.Should()
+                                           .ContainSingle(e => e is DisplayedValueProduced)
+                                           .Which
+                                           .As<DisplayedValueProduced>()
+                                           .FormattedValues
+                                           .Should()
+                                           .ContainSingle(v => v.MimeType == "text/html")
+                                           .Which
+                                           .Value
+                                           .As<string>()
+                                           .RemoveStyleElement();
+
+            html.Should()
+                .ContainEquivalentHtmlFragments(
+                    """
+                        <td>x</td>
+                        <td><span><a href="https://docs.microsoft.com/dotnet/api/system.int32?view=net-7.0">System.Int32</a></span>
+                        </td>
+                        <td>
+                            <div class="dni-plaintext">
+                                <pre>2</pre>
+                            </div>
+                        </td>
+                        """,
+                    """
+                        <td>y</td>
+                        <td><span><a
+                                    href="https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0">System.String</a></span>
+                        </td>
+                        <td>
+                            <div class="dni-plaintext">
+                                <pre>hi&gt;!</pre>
+                            </div>
+                        </td>
+                        """,
+                    """
+                        <td>z</td>
+                            <td><span><a
+                                        href="https://docs.microsoft.com/dotnet/api/system.object[]?view=net-7.0">System.Object[]</a></span>
+                            </td>
+                            <td>
+                                <div class="dni-plaintext">
+                                    <pre>Object[]
+                        - 2
+                        - hi&gt;!</pre>
+                                    </div>
+                        </td>
+                    """
+                    );
         }
 
         [Theory]

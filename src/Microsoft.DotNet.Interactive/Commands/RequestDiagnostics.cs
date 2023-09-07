@@ -17,9 +17,8 @@ public class RequestDiagnostics : KernelCommand
     }
 
     internal RequestDiagnostics(
-        LanguageNode languageNode,
-        KernelCommand parent = null)
-        : base(languageNode.KernelName, parent)
+        LanguageNode languageNode)
+        : base(languageNode.Name)
     {
         Code = languageNode.Text;
         LanguageNode = languageNode;

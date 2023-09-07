@@ -43,7 +43,7 @@ public class LinePosition : IEquatable<LinePosition>
 
     public override string ToString()
     {
-        return $"{nameof(LinePosition)}: {{{Line}, {Character}}})";
+        return $"({Line}, {Character})";
     }
 
     public static bool operator ==(LinePosition a, LinePosition b)

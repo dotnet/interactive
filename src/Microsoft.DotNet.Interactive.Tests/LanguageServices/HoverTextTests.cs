@@ -27,14 +27,13 @@ public class HoverTextTests : LanguageKernelTestBase
     }
 
     [Fact]
-    public async Task hover_on_unsupported_language_service_fails_with_informative_error()
+    public async Task hover_in_unsupported_language_fails_with_informative_error()
     {
         using var kernel = new FakeKernel();
 
         var result = await SendHoverRequest(kernel, "code", 0, 0);
 
-        result.KernelEvents
-            .ToSubscribedList()
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which
@@ -56,15 +55,14 @@ public class HoverTextTests : LanguageKernelTestBase
 
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
-        var events = commandResult.KernelEvents.ToSubscribedList();
 
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
     }
 
     [Theory]
@@ -77,11 +75,8 @@ public class HoverTextTests : LanguageKernelTestBase
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-        var events = commandResult
-            .KernelEvents
-            .ToSubscribedList();
-
-        events
+        commandResult
+            .Events
             .Should()
             .ContainSingle<CommandSucceeded>();
     }
@@ -97,16 +92,15 @@ public class HoverTextTests : LanguageKernelTestBase
 
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-        var events = commandResult
-            .KernelEvents
-            .ToSubscribedList();
-
         using var _ = new AssertionScope();
 
-        events.Should()
+        commandResult
+            .Events
+            .Should()
             .NotContain(kv => kv is HoverTextProduced);
 
-        events
+        commandResult
+            .Events
             .Should()
             .ContainSingle<CommandFailed>();
     }
@@ -125,17 +119,15 @@ public class HoverTextTests : LanguageKernelTestBase
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-        var events = commandResult.KernelEvents.ToSubscribedList();
+        commandResult.Events.Should().NotContainErrors();
 
-        events.Should().NotContainErrors();
-
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .Contain(f => f.MimeType == expectedMimeType && f.Value.EndsWith(expectedContentEnd));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .Contain(f => f.MimeType == expectedMimeType && f.Value.EndsWith(expectedContentEnd));
     }
 
     [Theory]
@@ -173,15 +165,13 @@ public class HoverTextTests : LanguageKernelTestBase
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-        var events = commandResult.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .ContainSingle(fv => fv.Value.Contains(expectedHoverTextSubString));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle(fv => fv.Value.Contains(expectedHoverTextSubString));
     }
 
     [Theory]
@@ -211,15 +201,13 @@ public class SampleClass
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-        var events = commandResult.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .ContainSingle(fv => fv.Value.Contains("A sample class constructor."));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle(fv => fv.Value.Contains("A sample class constructor."));
     }
 
     [Fact]
@@ -237,15 +225,13 @@ public class SampleClass
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-        var events = commandResult.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's null as a string. This field is read-only."));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's null as a string. This field is read-only."));
     }
 
     [Fact(Skip = "https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
@@ -260,15 +246,13 @@ public class SampleClass
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-        var events = commandResult.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's null as a string. This field is read-only."));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's null as a string. This field is read-only."));
     }
 
     [Fact]
@@ -283,15 +267,13 @@ public class SampleClass
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-        var events = commandResult.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's `null` as a string. This field is read-only."));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's `null` as a string. This field is read-only."));
     }
 
     [Theory]
@@ -310,15 +292,14 @@ public class SampleClass
 
         MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
-        var events = commandResult.KernelEvents.ToSubscribedList();
 
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
     }
 
     [Theory]
@@ -337,15 +318,14 @@ public class SampleClass
 
         MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
-        var events = commandResult.KernelEvents.ToSubscribedList();
 
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
     }
 
     [Fact]
@@ -364,8 +344,7 @@ public class SampleClass
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
         commandResult
-            .KernelEvents
-            .ToSubscribedList()
+            .Events
             .Should()
             .ContainSingle<HoverTextProduced>()
             .Which
@@ -403,14 +382,12 @@ public class SampleClass
 
         var commandResult = await SendHoverRequest(kernel, code, line, column);
 
-        var events = commandResult.KernelEvents.ToSubscribedList();
-
-        events
-            .Should()
-            .ContainSingle<HoverTextProduced>()
-            .Which
-            .Content
-            .Should()
-            .ContainSingle(fv => fv.Value.EndsWith(expectedEnd));
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle(fv => fv.Value.EndsWith(expectedEnd));
     }
 }

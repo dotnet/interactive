@@ -22,7 +22,7 @@ public class FrontendEnvironmentHandlingTests
     {
         var testCommand = new TestCommand();
         testCommand.SetToken("token-abcd");
-        var context = KernelInvocationContext.Establish(testCommand);
+        var context = KernelInvocationContext.GetOrCreateAmbientContext(testCommand);
         var httpFrontend = new HtmlNotebookFrontendEnvironment(new Uri("http://12.12.12.12:4242"));
         return (context, httpFrontend);
     }
@@ -76,7 +76,7 @@ await Object.getPrototypeOf(async function() {}).constructor(
     {
         var testCommand = new TestCommand();
         testCommand.SetToken("token-abcd");
-        var context = KernelInvocationContext.Establish(testCommand);
+        var context = KernelInvocationContext.GetOrCreateAmbientContext(testCommand);
         var httpFrontend = new HtmlNotebookFrontendEnvironment(TimeSpan.FromSeconds(2));
 
         Func<Task> executeTask = () => httpFrontend.ExecuteClientScript("console.log('test');", context);
@@ -91,7 +91,7 @@ await Object.getPrototypeOf(async function() {}).constructor(
     {
         var testCommand = new TestCommand();
         testCommand.SetToken("token-abcd");
-        var context = KernelInvocationContext.Establish(testCommand);
+        var context = KernelInvocationContext.GetOrCreateAmbientContext(testCommand);
         var events = context.KernelEvents.ToSubscribedList();
         var httpFrontend = new HtmlNotebookFrontendEnvironment(TimeSpan.FromSeconds(2));
 
