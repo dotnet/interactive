@@ -27,8 +27,6 @@ internal class HttpRequestNode : HttpSyntaxNode
 
     public HttpHeadersNode? HeadersNode { get; private set; }
 
-    public HttpBodySeparatorNode? BodySeparatorNode { get; private set; }
-
     public HttpBodyNode? BodyNode { get; private set; }
 
     public void Add(HttpMethodNode node)
@@ -68,16 +66,6 @@ internal class HttpRequestNode : HttpSyntaxNode
             throw new InvalidOperationException($"{nameof(HeadersNode)} was already added.");
         }
         HeadersNode = node;
-        AddInternal(node);
-    }
-
-    public void Add(HttpBodySeparatorNode node)
-    {
-        if (BodySeparatorNode is not null)
-        {
-            throw new InvalidOperationException($"{nameof(BodySeparatorNode)} was already added.");
-        }
-        BodySeparatorNode = node;
         AddInternal(node);
     }
 

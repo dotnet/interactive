@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -13,6 +14,8 @@ namespace Microsoft.DotNet.Interactive.HttpRequest.Tests;
 
 public partial class ParserTests
 {
+    private readonly ITestOutputHelper _output;
+
     public class Combinatorial
     {
         private readonly ITestOutputHelper _output;

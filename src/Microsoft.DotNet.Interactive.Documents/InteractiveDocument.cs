@@ -65,7 +65,7 @@ public class InteractiveDocument : IEnumerable
     {
         EnsureImportFieldParserIsInitialized();
 
-        if (!TryGetKernelInfosFromMetadata(out var kernelInfos))
+        if (!TryGetKernelInfosFromMetadata(Metadata, out var kernelInfos))
         {
             kernelInfos = new();
         }
@@ -198,6 +198,7 @@ public class InteractiveDocument : IEnumerable
 
     public string? GetDefaultKernelName()
     {
+        // FIX: (GetDefaultKernelName) remove from public API
         if (TryGetKernelInfosFromMetadata(Metadata, out var kernelInfo))
         {
             return kernelInfo.DefaultKernelName;
@@ -258,10 +259,6 @@ public class InteractiveDocument : IEnumerable
 
         destination.AddRange(source.Where(ki => added.Add(ki.Name)));
     }
-
-    public bool TryGetKernelInfosFromMetadata(
-        [NotNullWhen(true)] out KernelInfoCollection? kernelInfos) =>
-        TryGetKernelInfosFromMetadata(Metadata, out kernelInfos);
 
     internal static bool TryGetKernelInfosFromMetadata(
         IDictionary<string, object>? metadata,

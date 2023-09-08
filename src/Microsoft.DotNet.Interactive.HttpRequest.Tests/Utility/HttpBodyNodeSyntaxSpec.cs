@@ -184,7 +184,6 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         sb.Append(MaybeWhitespace());
         sb.AppendLine();
         sb.Append(MaybeLineComment()); 
-        sb.Append(MaybeNewLines());
 
         if (HeadersSection is not null)
         {
@@ -200,8 +199,6 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
             sb.AppendLine(BodySection.ToString());
             sb.Append(MaybeNewLines());
         }
-
-        sb.Append(MaybeLineComment());
 
         return sb.ToString();
     }
@@ -227,8 +224,8 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
     private string MaybeLineComment() =>
         ExtraTriviaRandomizer?.NextDouble() switch
         {
-            // FIX: (MaybeLineComment) 
-            < 0 => "# random line comment",
+            < .2 => "# random line comment followed by a LF\n",
+            > .2 and < .4 => "# random line comment followed by a CRLF\r\n",
             _ => ""
         };
 }
