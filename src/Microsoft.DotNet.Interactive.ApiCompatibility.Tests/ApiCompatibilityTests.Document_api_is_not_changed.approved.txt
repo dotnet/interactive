@@ -31,6 +31,7 @@ Microsoft.DotNet.Interactive.Documents
     public System.Collections.Generic.IAsyncEnumerable<InteractiveDocument> GetImportsAsync(System.Boolean recursive = False)
     public System.Collections.Generic.IEnumerable<InputField> GetInputFields()
     public System.Collections.Generic.IEnumerable<System.String> GetMagicCommandLines()
+    public System.Boolean TryGetKernelInfosFromMetadata(ref KernelInfoCollection& kernelInfos)
   public class InteractiveDocumentElement
     .ctor()
     .ctor(System.String contents = null, System.String kernelName = null, System.Collections.Generic.IEnumerable<InteractiveDocumentOutputElement> outputs = null)
@@ -60,14 +61,13 @@ Microsoft.DotNet.Interactive.Documents
     public System.Boolean Contains(System.String nameOrAlias)
     public System.Void CopyTo(KernelInfo[] array, System.Int32 arrayIndex)
     public System.Boolean Remove(KernelInfo item)
-    public System.Boolean TryGetByAlias(System.String alias, ref KernelInfo& info)
   public class ReturnValueElement : InteractiveDocumentOutputElement, IDataElement
-    .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
+    .ctor()
     public System.Collections.Generic.IDictionary<System.String,System.Object> Data { get;}
     public System.Int32 ExecutionOrder { get; set;}
     public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get;}
   public class TextElement : InteractiveDocumentOutputElement
-    .ctor(System.String text, System.String name)
+    .ctor(System.String text, System.String name = stdout)
     public System.String Name { get;}
     public System.String Text { get;}
 Microsoft.DotNet.Interactive.Documents.Jupyter
@@ -75,15 +75,8 @@ Microsoft.DotNet.Interactive.Documents.Jupyter
     .ctor(System.String kernelName = null, System.String language = null)
     public System.String KernelName { get;}
     public System.String Language { get;}
-  public static class InteractiveDocumentExtensions
-    public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument WithJupyterMetadata(System.String language = C#)
   public static class Notebook
-    public static System.Text.Encoding Encoding { get;}
-    public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
     public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Parse(System.String json, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos = null)
     public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument Read(System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos)
     public static System.String ToJupyterJson(System.String defaultLanguage = null)
-    public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.Stream stream)
     public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.Stream stream, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos)
-    public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.TextWriter writer)
-    public static System.Void Write(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, System.IO.TextWriter writer, Microsoft.DotNet.Interactive.Documents.KernelInfoCollection kernelInfos)

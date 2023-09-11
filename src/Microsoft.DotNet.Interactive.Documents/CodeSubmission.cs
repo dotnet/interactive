@@ -53,7 +53,7 @@ public static class CodeSubmission
 
                 metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataString, InteractiveDocument.JsonSerializerOptions);
 
-                if (InteractiveDocument.TryGetKernelInfoFromMetadata(metadata, out var kernelInfoFromMetadata))
+                if (InteractiveDocument.TryGetKernelInfosFromMetadata(metadata, out var kernelInfoFromMetadata))
                 {
                     InteractiveDocument.MergeKernelInfos(kernelInfos, kernelInfoFromMetadata);
                     document.Metadata["kernelInfo"] = kernelInfoFromMetadata;

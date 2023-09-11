@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Documents.Jupyter;
 
-public static class InteractiveDocumentExtensions
+internal static class InteractiveDocumentExtensions
 {
     public static InteractiveDocument WithJupyterMetadata(
         this InteractiveDocument document,

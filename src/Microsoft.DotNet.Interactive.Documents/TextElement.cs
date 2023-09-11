@@ -5,7 +5,7 @@ namespace Microsoft.DotNet.Interactive.Documents;
 
 public class TextElement : InteractiveDocumentOutputElement
 {
-    public TextElement(string? text, string? name)
+    public TextElement(string? text, string? name = "stdout")
     {
         Text = text ?? "";
         Name = name ?? "stdout";

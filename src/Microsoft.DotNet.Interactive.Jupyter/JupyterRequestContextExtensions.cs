@@ -10,13 +10,17 @@ public static class JupyterRequestContextExtensions
     public static string GetKernelName(this JupyterRequestContext context)
     {
         string kernelName = null;
-        if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(Notebook.MetadataNamespace, out var candidateDotnetMetadata) &&
+        if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(
+                "dotnet_interactive", 
+                out var candidateDotnetMetadata) &&
             candidateDotnetMetadata is InputCellMetadata dotnetMetadata)
         {
             kernelName = dotnetMetadata.Language;
         }
 
-        if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(Notebook.PolyglotMetadataNamespace, out var candidatePolyglotMetadata) &&
+        if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(
+                "polyglot_notebook", 
+                out var candidatePolyglotMetadata) &&
             candidatePolyglotMetadata is InputCellMetadata polyglotMetadata)
         {
             kernelName = polyglotMetadata.KernelName;
