@@ -670,7 +670,7 @@ Microsoft.DotNet.Interactive.Http
 Microsoft.DotNet.Interactive.Parsing
   public class ActionDirectiveNode : DirectiveNode
     public System.String ParentKernelName { get;}
-  public enum DiagnosticSeverity : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum DiagnosticSeverity : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Hidden=0
     Info=1
     Warning=2
