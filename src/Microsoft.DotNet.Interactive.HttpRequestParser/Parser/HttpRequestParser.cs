@@ -73,7 +73,6 @@ internal class HttpRequestParser
 
                 if (ParseRequestSeparator() is { } separatorNode)
                 {
-                    // FIX: (Parse) uncovered
                     _syntaxTree.RootNode.Add(separatorNode);
                 }
             }
@@ -81,21 +80,11 @@ internal class HttpRequestParser
             return _syntaxTree;
         }
 
-        private static void AppendCommentsIfAny(List<HttpCommentNode> commentsToAppend, HttpSyntaxNode prependToNode)
-        {
-            foreach (var comment in commentsToAppend)
-            {
-                prependToNode.Add(comment, addBefore: false);
-            }
-
-            commentsToAppend.Clear();
-        }
-
-        private static void PrependCommentsIfAny(List<HttpCommentNode> commentsToPrepend, HttpSyntaxNode prependToNode)
+        private static void PrependCommentsIfAny(List<HttpCommentNode> commentsToPrepend, HttpSyntaxNode toNode)
         {
             foreach (var comment in commentsToPrepend)
             {
-                prependToNode.Add(comment, addBefore: true);
+                toNode.Add(comment, addBefore: true);
             }
 
             commentsToPrepend.Clear();
