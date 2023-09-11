@@ -7,12 +7,15 @@ namespace Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 public class InputCellMetadata
 {
-    public InputCellMetadata(string? kernelName = null, string ? language = null)
+    public InputCellMetadata(string? kernelName = null, string? language = null)
     {
         KernelName = kernelName;
         Language = language;
     }
 
-    [JsonPropertyName("kernelName")] public string? KernelName { get; }
-    [JsonPropertyName("language")] public string? Language { get; }
+    [JsonPropertyName("kernelName")] 
+    public string? KernelName { get; }
+
+    [JsonPropertyName("language")] 
+    public string? Language { get; }
 }

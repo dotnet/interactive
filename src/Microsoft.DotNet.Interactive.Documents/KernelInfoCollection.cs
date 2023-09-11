@@ -99,7 +99,7 @@ public class KernelInfoCollection : ICollection<KernelInfo>
         return clone;
     }
 
-    public bool TryGetByAlias(string alias, out KernelInfo info)
+    internal bool TryGetByAlias(string alias, out KernelInfo info)
     {
         return _kernelInfoByNameOrAlias!.TryGetValue(alias, out info);
     }
