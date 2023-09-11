@@ -92,7 +92,8 @@ internal class HttpRequestParser
 
         private IEnumerable<HttpVariableDeclarationAndAssignmentNode>? ParseVariableDeclarations()
         {
-            while (MoreTokens())
+            while (MoreTokens() &&  
+                   !IsRequestSeparator())
             {
                 if (GetNextSignificantToken() is { Kind: HttpTokenKind.Punctuation } and { Text: "@" })
                 {
@@ -105,8 +106,8 @@ internal class HttpRequestParser
                         variableNode.Add(valueNode);
                         yield return variableNode;
                     }
-                    
-                } else
+                }
+                else
                 {
                     break;
                 }
@@ -117,8 +118,8 @@ internal class HttpRequestParser
         {
             HttpVariableValueNode? node = null;
 
-            while (MoreTokens() &&
-                   CurrentToken.Kind is not HttpTokenKind.NewLine)
+            while (MoreTokens() && 
+                CurrentToken is not { Kind: HttpTokenKind.NewLine })
             {
                 if (node is null)
                 {
@@ -191,7 +192,10 @@ internal class HttpRequestParser
             return ParseTrailingWhitespace(node);
         }
 
-        private HttpSyntaxToken CurrentToken => _tokens![_currentTokenIndex];
+        private HttpSyntaxToken? CurrentToken =>
+            MoreTokens()
+                ? _tokens![_currentTokenIndex]
+                : null;
 
         private HttpSyntaxToken? CurrentTokenPlus(int offset)
         {
@@ -216,19 +220,22 @@ internal class HttpRequestParser
         [DebuggerStepThrough]
         private void ConsumeCurrentTokenInto(HttpSyntaxNode node)
         {
-            node.Add(CurrentToken);
-            AdvanceToNextToken();
+            if (CurrentToken is { } token)
+            {
+                node.Add(token);
+                AdvanceToNextToken();
+            }
         }
 
         private T ParseLeadingWhitespaceAndComments<T>(T node) where T : HttpSyntaxNode
         {
             while (MoreTokens())
             {
-                if (CurrentToken.Kind is HttpTokenKind.Whitespace)
+                if (CurrentToken?.Kind is HttpTokenKind.Whitespace)
                 {
                     ConsumeCurrentTokenInto(node);
                 }
-                else if (CurrentToken.Kind is HttpTokenKind.NewLine)
+                else if (CurrentToken?.Kind is HttpTokenKind.NewLine)
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -249,7 +256,7 @@ internal class HttpRequestParser
         {
             while (MoreTokens())
             {
-                if (CurrentToken.Kind is HttpTokenKind.NewLine)
+                if (CurrentToken?.Kind is HttpTokenKind.NewLine)
                 {
                     if (stopBeforeNewLine)
                     {
@@ -263,7 +270,7 @@ internal class HttpRequestParser
                     }
                 }
 
-                if (CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine))
+                if (CurrentToken is not { Kind: HttpTokenKind.Whitespace } and not { Kind: HttpTokenKind.NewLine })
                 {
                     break;
                 }
@@ -278,7 +285,11 @@ internal class HttpRequestParser
         {
             if (IsComment())
             {
-                // FIX: (ParseRequest) this looks suspect... test with a comment at the start of the request node?
+                return null;
+            }
+            
+            if (IsRequestSeparator())
+            {
                 return null;
             }
 
@@ -351,7 +362,7 @@ internal class HttpRequestParser
 
         private HttpRequestSeparatorNode? ParseRequestSeparator()
         {
-            if (MoreTokens() && IsRequestSeparator())
+            if (IsRequestSeparator())
             {
                 var node = new HttpRequestSeparatorNode(_sourceText, _syntaxTree);
                 ParseLeadingWhitespaceAndComments(node);
@@ -360,7 +371,7 @@ internal class HttpRequestParser
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
                 
-                ParseTrailingWhitespace(node);
+                return ParseTrailingWhitespace(node);
             }
 
             return null;
@@ -370,28 +381,25 @@ internal class HttpRequestParser
         {
             HttpMethodNode? node = null;
 
-            if (MoreTokens())
+            while (CurrentToken?.Kind is HttpTokenKind.Word &&
+                   CurrentTokenPlus(1)?.Kind is HttpTokenKind.Whitespace)
             {
-                if (CurrentToken.Kind is HttpTokenKind.Word &&
-                    CurrentTokenPlus(1)?.Kind is HttpTokenKind.Whitespace)
+                node = new HttpMethodNode(_sourceText, _syntaxTree);
+
+                ParseLeadingWhitespaceAndComments(node);
+
+                if (CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
                 {
-                    node = new HttpMethodNode(_sourceText, _syntaxTree);
+                    var message = $"Unrecognized HTTP verb {CurrentToken.Text}";
 
-                    ParseLeadingWhitespaceAndComments(node);
+                    var diagnostic = CurrentToken.CreateDiagnostic(message);
 
-                    if (CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
-                    {
-                        var message = $"Unrecognized HTTP verb {CurrentToken.Text}";
-
-                        var diagnostic = CurrentToken.CreateDiagnostic(message);
-
-                        node.AddDiagnostic(diagnostic);
-                    }
-
-                    ConsumeCurrentTokenInto(node);
-
-                    ParseTrailingWhitespace(node, stopBeforeNewLine: true);
+                    node.AddDiagnostic(diagnostic);
                 }
+
+                ConsumeCurrentTokenInto(node);
+
+                ParseTrailingWhitespace(node, stopBeforeNewLine: true);
             }
 
             return node;
@@ -401,8 +409,7 @@ internal class HttpRequestParser
         {
             HttpUrlNode? node = null;
 
-            while (MoreTokens() &&
-                   CurrentToken.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation)
+            while (CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation)
             {
                 if (node is null)
                 {
@@ -440,7 +447,7 @@ internal class HttpRequestParser
 
             while (MoreTokens())
             {
-                if (token.IsSignificant)
+                if (token?.IsSignificant == true)
                 {
                     return token;
                 }
@@ -509,9 +516,8 @@ internal class HttpRequestParser
 
         private HttpExpressionEndNode? ParseExpressionEnd()
         {
-            if (MoreTokens() && 
-                CurrentToken.Text is "}" && 
-                CurrentTokenPlus(1)?.Text == "}")
+            if (CurrentToken?.Text is "}" && 
+                CurrentTokenPlus(1)?.Text is "}")
             {
                 var node = new HttpExpressionEndNode(_sourceText, _syntaxTree);
 
@@ -528,8 +534,7 @@ internal class HttpRequestParser
 
         private HttpVersionNode? ParseVersion()
         {
-            if (MoreTokens() &&
-                CurrentToken.Kind is HttpTokenKind.Word)
+            if (CurrentToken?.Kind is HttpTokenKind.Word)
             {
                 var node = new HttpVersionNode(_sourceText, _syntaxTree);
 
@@ -552,8 +557,7 @@ internal class HttpRequestParser
         {
             HttpHeadersNode? headersNode = null;
 
-            while (MoreTokens() &&
-                   CurrentToken is { Kind: HttpTokenKind.Word } or { Text: ":" })
+            while (CurrentToken is { Kind: HttpTokenKind.Word } or { Text: ":" })
             {
                 headersNode ??= new HttpHeadersNode(_sourceText, _syntaxTree);
 
@@ -578,7 +582,7 @@ internal class HttpRequestParser
         {
             var node = new HttpHeaderNameNode(_sourceText, _syntaxTree);
 
-            if (MoreTokens() && 
+            if (MoreTokens() &&
                 CurrentToken is not { Kind: HttpTokenKind.NewLine } and not { Kind: HttpTokenKind.Punctuation, Text: ":" })
             {
                 ParseLeadingWhitespaceAndComments(node);
@@ -608,7 +612,7 @@ internal class HttpRequestParser
 
             ParseLeadingWhitespaceAndComments(node);
 
-            if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: ":" })
+            if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: ":" })
             {
                 ConsumeCurrentTokenInto(node);
             }
@@ -622,7 +626,7 @@ internal class HttpRequestParser
 
             ParseLeadingWhitespaceAndComments(node);
 
-            while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine)
+            while (MoreTokens() && CurrentToken is not { Kind: HttpTokenKind.NewLine })
             {
                 if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" } &&
                     CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "{" })
@@ -652,8 +656,8 @@ internal class HttpRequestParser
 
             var node = new HttpBodyNode(_sourceText, _syntaxTree);
 
-            if (MoreTokens() &&
-                CurrentToken.Kind is not (HttpTokenKind.Whitespace or HttpTokenKind.NewLine) &&
+            if (MoreTokens() && 
+                CurrentToken is not { Kind: HttpTokenKind.Whitespace } and not { Kind: HttpTokenKind.NewLine } &&
                 !IsRequestSeparator())
             {
                 ConsumeCurrentTokenInto(node);
@@ -678,7 +682,7 @@ internal class HttpRequestParser
 
         private HttpCommentNode? ParseComment()
         {
-            if (MoreTokens() && IsComment())
+            if (IsComment())
             {
                 var commentNode = new HttpCommentNode(_sourceText, _syntaxTree);
 
@@ -711,7 +715,8 @@ internal class HttpRequestParser
             var node = new HttpCommentBodyNode(_sourceText, _syntaxTree);
             ParseLeadingWhitespaceAndComments(node);
 
-            while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine)
+            while (MoreTokens() && 
+                   CurrentToken is not { Kind: HttpTokenKind.NewLine })
             {
                 ConsumeCurrentTokenInto(node);
             }
@@ -723,14 +728,14 @@ internal class HttpRequestParser
 
         private HttpCommentStartNode? ParseCommentStart()
         {
-            if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })
+            if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })
             {
                 var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
                 ConsumeCurrentTokenInto(node);
                 return ParseTrailingWhitespace(node);
             }
 
-            if (MoreTokens() && CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
+            if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
                 CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
             {
                 var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
