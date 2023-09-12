@@ -3,13 +3,16 @@
 
 #nullable enable
 
-using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
-using System;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
+
+using LinePosition = CodeAnalysis.Text.LinePosition;
+using LinePositionSpan = CodeAnalysis.Text.LinePositionSpan;
 
 internal class HttpRequestParser
 {
@@ -92,7 +95,7 @@ internal class HttpRequestParser
 
         private IEnumerable<HttpVariableDeclarationAndAssignmentNode>? ParseVariableDeclarations()
         {
-            while (MoreTokens() &&  
+            while (MoreTokens() &&
                    !IsRequestSeparator())
             {
                 if (GetNextSignificantToken() is { Kind: HttpTokenKind.Punctuation } and { Text: "@" })
@@ -118,7 +121,7 @@ internal class HttpRequestParser
         {
             HttpVariableValueNode? node = null;
 
-            while (MoreTokens() && 
+            while (MoreTokens() &&
                 CurrentToken is not { Kind: HttpTokenKind.NewLine })
             {
                 if (node is null)
@@ -181,12 +184,12 @@ internal class HttpRequestParser
                     else if (CurrentToken is { Kind: HttpTokenKind.Word })
                     {
                         ConsumeCurrentTokenInto(node);
-                    } else
+                    }
+                    else
                     {
                         break;
                     }
                 }
-                
             }
 
             return ParseTrailingWhitespace(node);
@@ -287,7 +290,7 @@ internal class HttpRequestParser
             {
                 return null;
             }
-            
+
             if (IsRequestSeparator())
             {
                 return null;
@@ -312,11 +315,14 @@ internal class HttpRequestParser
             }
             else
             {
+                var span = new TextSpan(start: requestNode.Span.End, length: 0);
                 var linePositionSpan = GetLinePositionSpanFromStartAndEndIndices(
-                    requestNode.SourceText, 
-                    requestNode.Span.End, 
+                    requestNode.SourceText,
+                    requestNode.Span.End,
                     requestNode.Span.End);
-                var diagnostic = new Diagnostic(linePositionSpan, DiagnosticSeverity.Error, "", "Missing URL");
+                var location = Location.Create(filePath: string.Empty, span, linePositionSpan);
+
+                var diagnostic = requestNode.CreateDiagnostic(WellKnownHttpDiagnostics.MissingUrl, location);
                 requestNode.AddDiagnostic(diagnostic);
             }
 
@@ -370,7 +376,7 @@ internal class HttpRequestParser
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
-                
+
                 return ParseTrailingWhitespace(node);
             }
 
@@ -388,11 +394,10 @@ internal class HttpRequestParser
 
                 ParseLeadingWhitespaceAndComments(node);
 
-                if (CurrentToken.Text.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
+                var verb = CurrentToken.Text;
+                if (verb.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
                 {
-                    var message = $"Unrecognized HTTP verb {CurrentToken.Text}";
-
-                    var diagnostic = CurrentToken.CreateDiagnostic(message);
+                    var diagnostic = CurrentToken.CreateDiagnostic(WellKnownHttpDiagnostics.UnrecognizedVerb, verb);
 
                     node.AddDiagnostic(diagnostic);
                 }
@@ -455,7 +460,7 @@ internal class HttpRequestParser
                 if (_currentTokenIndex + i < _tokens!.Count)
                 {
                     i++;
-                    if(_currentTokenIndex + i >= _tokens.Count)
+                    if (_currentTokenIndex + i >= _tokens.Count)
                     {
                         return null;
                     }
@@ -504,8 +509,8 @@ internal class HttpRequestParser
             var node = new HttpExpressionNode(_sourceText, _syntaxTree);
             ParseLeadingWhitespaceAndComments(node);
 
-            while (MoreTokens() && 
-                   !(CurrentToken is { Text: "}" } && 
+            while (MoreTokens() &&
+                   !(CurrentToken is { Text: "}" } &&
                      CurrentTokenPlus(1) is { Text: "}" }))
             {
                 ConsumeCurrentTokenInto(node);
@@ -516,7 +521,7 @@ internal class HttpRequestParser
 
         private HttpExpressionEndNode? ParseExpressionEnd()
         {
-            if (CurrentToken?.Text is "}" && 
+            if (CurrentToken?.Text is "}" &&
                 CurrentTokenPlus(1)?.Text is "}")
             {
                 var node = new HttpExpressionEndNode(_sourceText, _syntaxTree);
@@ -656,7 +661,7 @@ internal class HttpRequestParser
 
             var node = new HttpBodyNode(_sourceText, _syntaxTree);
 
-            if (MoreTokens() && 
+            if (MoreTokens() &&
                 CurrentToken is not { Kind: HttpTokenKind.Whitespace } and not { Kind: HttpTokenKind.NewLine } &&
                 !IsRequestSeparator())
             {
@@ -715,7 +720,7 @@ internal class HttpRequestParser
             var node = new HttpCommentBodyNode(_sourceText, _syntaxTree);
             ParseLeadingWhitespaceAndComments(node);
 
-            while (MoreTokens() && 
+            while (MoreTokens() &&
                    CurrentToken is not { Kind: HttpTokenKind.NewLine })
             {
                 ConsumeCurrentTokenInto(node);

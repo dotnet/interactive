@@ -7,6 +7,8 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal class HttpBindingResult<T>
 {
     private HttpBindingResult()

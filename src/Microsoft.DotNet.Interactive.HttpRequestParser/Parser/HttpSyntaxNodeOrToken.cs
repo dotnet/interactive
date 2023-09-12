@@ -9,6 +9,8 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal abstract class HttpSyntaxNodeOrToken
 {
     protected List<Diagnostic>? _diagnostics = null;
@@ -55,18 +57,35 @@ internal abstract class HttpSyntaxNodeOrToken
         _diagnostics.Add(d);
     }
 
-    public Diagnostic CreateDiagnostic(string message, DiagnosticSeverity severity = DiagnosticSeverity.Error)
+    public Diagnostic CreateDiagnostic(WellKnownHttpDiagnostics diagnosticCode, params object[] messageArguments)
     {
-        var lines = SourceText.Lines;
+        var diagnosticInfo = diagnosticCode.GetDiagnosticInfo(messageArguments);
+        return CreateDiagnostic(diagnosticInfo);
+    }
 
-        var tokenSpan = lines.GetLinePositionSpan(Span);
+    public Diagnostic CreateDiagnostic(WellKnownHttpDiagnostics diagnosticCode, Location location, params object[] messageArguments)
+    {
+        var diagnosticInfo = diagnosticCode.GetDiagnosticInfo(messageArguments);
+        return CreateDiagnostic(diagnosticInfo, location);
+    }
 
-        var diagnostic = new Diagnostic(
-            LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan),
-            severity,
-            "",
-            message);
+    public Diagnostic CreateDiagnostic(HttpDiagnosticInfo diagnosticInfo, Location? location = null)
+    {
+        if (location is null)
+        {
+            var lineSpan = SourceText.Lines.GetLinePositionSpan(Span);
+            location = Location.Create(filePath: string.Empty, Span, lineSpan);
+        }
 
-        return diagnostic;
+        var descriptor =
+            new DiagnosticDescriptor(
+                diagnosticInfo.Id,
+                title: string.Empty,
+                diagnosticInfo.MessageFormat,
+                category: "HTTP",
+                diagnosticInfo.Severity,
+                isEnabledByDefault: true);
+
+        return Diagnostic.Create(descriptor, location, diagnosticInfo.MessageArguments);
     }
 }

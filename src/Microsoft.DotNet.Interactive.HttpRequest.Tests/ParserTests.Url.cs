@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
@@ -98,11 +97,11 @@ public partial class ParserTests
 
             var message = "Variable 'version' was not defined.";
 
-            HttpBindingDelegate bind = node => node.CreateBindingFailure(message);
+            HttpBindingDelegate bind = node => node.CreateBindingFailure(CreateDiagnosticInfo(message));
 
             var bindingResult = urlNode.TryGetUri(bind);
             bindingResult.IsSuccessful.Should().BeFalse();
-            bindingResult.Diagnostics.Should().ContainSingle().Which.Message.Should().Be(message);
+            bindingResult.Diagnostics.Should().ContainSingle().Which.GetMessage().Should().Be(message);
         }
 
         [Fact]
@@ -115,12 +114,15 @@ public partial class ParserTests
 
             var result = Parse(code);
 
-            var diagnostic = result.GetDiagnostics().Should().ContainSingle(n => n.Message == "Missing URL").Which;
+            var diagnostic =
+                result.GetDiagnostics().Where(n => n.GetMessage() is "Missing URL.")
+                    .Should().ContainSingle().Which;
 
-            diagnostic.LinePositionSpan.Start.Line.Should().Be(0);
-            diagnostic.LinePositionSpan.Start.Character.Should().Be(3);
-            diagnostic.LinePositionSpan.End.Line.Should().Be(0);
-            diagnostic.LinePositionSpan.End.Character.Should().Be(3);
+            var lineSpan = diagnostic.Location.GetLineSpan();
+            lineSpan.StartLinePosition.Line.Should().Be(0);
+            lineSpan.StartLinePosition.Character.Should().Be(3);
+            lineSpan.EndLinePosition.Line.Should().Be(0);
+            lineSpan.EndLinePosition.Character.Should().Be(3);
         }
 
         [Fact]
@@ -136,11 +138,11 @@ public partial class ParserTests
                                    .Which.GetDiagnostics().Should().ContainSingle()
                                    .Which;
 
-
-            diagnostic.LinePositionSpan.Start.Line.Should().Be(0);
-            diagnostic.LinePositionSpan.Start.Character.Should().Be(4);
-            diagnostic.LinePositionSpan.End.Line.Should().Be(0);
-            diagnostic.LinePositionSpan.End.Character.Should().Be(12);
+            var lineSpan = diagnostic.Location.GetLineSpan();
+            lineSpan.StartLinePosition.Line.Should().Be(0);
+            lineSpan.StartLinePosition.Character.Should().Be(4);
+            lineSpan.EndLinePosition.Line.Should().Be(0);
+            lineSpan.EndLinePosition.Character.Should().Be(12);
         }
     }
 }

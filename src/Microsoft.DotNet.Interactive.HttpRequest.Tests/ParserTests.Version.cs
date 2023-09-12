@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
 using Xunit;
@@ -40,7 +39,7 @@ public partial class ParserTests
 
             versionNode.Text.Should().Be(version);
             versionNode.GetDiagnostics().Should().ContainSingle()
-                       .Which.Message.Should().Be("Invalid HTTP version");
+                       .Which.GetMessage().Should().Be("Invalid HTTP version.");
         }
 
         [Fact]

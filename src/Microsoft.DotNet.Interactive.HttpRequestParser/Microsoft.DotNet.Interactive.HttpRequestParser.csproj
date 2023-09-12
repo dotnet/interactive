@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.VisualStudio\Microsoft.DotNet.Interactive.VisualStudio.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
   </ItemGroup>
 
 </Project>
