@@ -31,7 +31,6 @@ Microsoft.DotNet.Interactive.Documents
     public System.Collections.Generic.IAsyncEnumerable<InteractiveDocument> GetImportsAsync(System.Boolean recursive = False)
     public System.Collections.Generic.IEnumerable<InputField> GetInputFields()
     public System.Collections.Generic.IEnumerable<System.String> GetMagicCommandLines()
-    public System.Boolean TryGetKernelInfosFromMetadata(ref KernelInfoCollection& kernelInfos)
   public class InteractiveDocumentElement
     .ctor()
     .ctor(System.String contents = null, System.String kernelName = null, System.Collections.Generic.IEnumerable<InteractiveDocumentOutputElement> outputs = null)
