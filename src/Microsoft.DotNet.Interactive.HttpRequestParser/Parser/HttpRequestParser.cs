@@ -83,14 +83,17 @@ internal class HttpRequestParser
             return _syntaxTree;
         }
 
-        private static void PrependCommentsIfAny(List<HttpCommentNode> commentsToPrepend, HttpSyntaxNode toNode)
+        private static void AddCommentsIfAny(
+            List<HttpCommentNode> comments, 
+            HttpSyntaxNode toNode,
+            bool addBefore = true)
         {
-            foreach (var comment in commentsToPrepend)
+            foreach (var comment in comments)
             {
-                toNode.Add(comment, addBefore: true);
+                toNode.Add(comment, addBefore: addBefore);
             }
 
-            commentsToPrepend.Clear();
+            comments.Clear();
         }
 
         private IEnumerable<HttpVariableDeclarationAndAssignmentNode>? ParseVariableDeclarations()
@@ -336,17 +339,26 @@ internal class HttpRequestParser
                 ParseTrailingWhitespace(requestNode, stopAfterNewLine: true);
             }
 
-            var commentsToPrepend = new List<HttpCommentNode>();
+            var comments = new List<HttpCommentNode>();
             if (ParseComment() is { } comment)
             {
-                commentsToPrepend.Add(comment);
+                comments.Add(comment);
             }
 
             var headersNode = ParseHeaders();
             if (headersNode is not null)
             {
-                PrependCommentsIfAny(commentsToPrepend, headersNode);
+                AddCommentsIfAny(comments, headersNode);
                 requestNode.Add(headersNode);
+            }
+            else
+            {
+                AddCommentsIfAny(comments, requestNode, addBefore: false);
+            }
+
+            if (ParseComment() is { } commentAfterHeaders)
+            {
+                requestNode.Add(commentAfterHeaders);
             }
 
             ParseTrailingWhitespace(requestNode);
@@ -358,7 +370,7 @@ internal class HttpRequestParser
             }
             else
             {
-                PrependCommentsIfAny(commentsToPrepend, requestNode);
+                AddCommentsIfAny(comments, requestNode, addBefore: false);
             }
 
             ParseTrailingWhitespace(requestNode);
