@@ -81,6 +81,11 @@ internal class HttpRequestNode : HttpSyntaxNode
         AddInternal(node);
     }
 
+    public void Add(HttpCommentNode node)
+    {
+        AddInternal(node);
+    }
+
     public HttpBindingResult<HttpRequestMessage> TryGetHttpRequestMessage(HttpBindingDelegate bind)
     {
         var request = new HttpRequestMessage();

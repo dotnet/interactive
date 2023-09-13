@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
 using Xunit;
@@ -40,6 +42,26 @@ public partial class ParserTests
             result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should()
                   .ContainSingle<HttpCommentNode>()
                   .Which.Text.Should().Be("#");
+        }
+
+        [Fact]
+        public void Comment_node_can_immediately_follow_headers()
+        {
+             var code = """
+                GET https://example.com
+                Accept: text/plain
+                # This is a comment
+
+                this is the body
+                """;
+
+            var result = Parse(code);
+
+            result.GetDiagnostics().Should().BeEmpty();
+
+            result.SyntaxTree.RootNode.DescendantNodesAndTokens()
+                  .Should().ContainSingle<HttpCommentNode>()
+                  .Which.Text.Should().Be("# This is a comment");
         }
     }
 }
