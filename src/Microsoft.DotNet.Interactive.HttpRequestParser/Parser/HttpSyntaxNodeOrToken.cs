@@ -9,6 +9,8 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal abstract class HttpSyntaxNodeOrToken
 {
     protected List<Diagnostic>? _diagnostics = null;
@@ -55,18 +57,23 @@ internal abstract class HttpSyntaxNodeOrToken
         _diagnostics.Add(d);
     }
 
-    public Diagnostic CreateDiagnostic(string message, DiagnosticSeverity severity = DiagnosticSeverity.Error)
+    public Diagnostic CreateDiagnostic(HttpDiagnosticInfo diagnosticInfo, Location? location = null)
     {
-        var lines = SourceText.Lines;
+        if (location is null)
+        {
+            var lineSpan = SourceText.Lines.GetLinePositionSpan(Span);
+            location = Location.Create(filePath: string.Empty, Span, lineSpan);
+        }
 
-        var tokenSpan = lines.GetLinePositionSpan(Span);
+        var descriptor =
+            new DiagnosticDescriptor(
+                diagnosticInfo.Id,
+                title: string.Empty,
+                diagnosticInfo.MessageFormat,
+                category: "HTTP",
+                diagnosticInfo.Severity,
+                isEnabledByDefault: true);
 
-        var diagnostic = new Diagnostic(
-            LinePositionSpan.FromCodeAnalysisLinePositionSpan(tokenSpan),
-            severity,
-            "",
-            message);
-
-        return diagnostic;
+        return Diagnostic.Create(descriptor, location, diagnosticInfo.MessageArguments);
     }
 }

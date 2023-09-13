@@ -9,6 +9,8 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal class HttpRequestParseResult
 {
     public HttpRequestParseResult(HttpSyntaxTree syntaxTree)
@@ -17,7 +19,5 @@ internal class HttpRequestParseResult
     public HttpSyntaxTree SyntaxTree { get; }
 
     public IEnumerable<Diagnostic> GetDiagnostics()
-    {
-        return SyntaxTree.RootNode?.GetDiagnostics() ?? Enumerable.Empty<Diagnostic>();
-    }
+        => SyntaxTree.RootNode?.GetDiagnostics() ?? Enumerable.Empty<Diagnostic>();
 }

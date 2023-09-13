@@ -193,11 +193,12 @@ public partial class ParserTests
                 Accept: {{accept}}
                 """);
 
-            var bindingResult = result.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>().Single()
-                                      .TryGetHttpRequestMessage(node => HttpBindingResult<object>.Failure(node.CreateDiagnostic("oops!")));
+            var bindingResult =
+                result.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>().Single().TryGetHttpRequestMessage(
+                    node => HttpBindingResult<object>.Failure(node.CreateDiagnostic(CreateDiagnosticInfo("oops!"))));
 
             bindingResult.Diagnostics.Should().ContainSingle()
-                         .Which.Message.Should().Be("oops!");
+                         .Which.GetMessage().Should().Be("oops!");
         }
 
         [Fact]
@@ -211,7 +212,7 @@ public partial class ParserTests
 
             var headerNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpHeaderNode>().Which;
 
-            headerNode.GetDiagnostics().Should().ContainSingle().Which.Message.Should().Be("Missing header name");
+            headerNode.GetDiagnostics().Should().ContainSingle().Which.GetMessage().Should().Be("Missing header name.");
         }
 
         [Fact]
@@ -225,7 +226,7 @@ public partial class ParserTests
 
             var headerNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpHeaderNode>().Which;
 
-            headerNode.GetDiagnostics().Should().ContainSingle().Which.Message.Should().Be("Invalid whitespace in header name");
+            headerNode.GetDiagnostics().Should().ContainSingle().Which.GetMessage().Should().Be("Invalid whitespace in header name.");
         }
 
         [Fact]
@@ -241,7 +242,7 @@ public partial class ParserTests
                   .Should().ContainSingle<HttpHeaderNode>()
                   .Which.GetDiagnostics()
                   .Should().ContainSingle()
-                  .Which.Message.Should().Be("Missing header value");
+                  .Which.GetMessage().Should().Be("Missing header value.");
         }
     }
 }

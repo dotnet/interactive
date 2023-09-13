@@ -11,6 +11,8 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 {
     private TextSpan _fullSpan;
@@ -113,7 +115,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
                 FullSpan.End;
 
             _span = TextSpan.FromBounds(
-                startOfSignificantText, 
+                startOfSignificantText,
                 endOfSignificantText);
         }
     }
@@ -144,11 +146,11 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         if (addBefore)
         {
             _childNodesAndTokens.Insert(0, child);
-        } else
+        }
+        else
         {
             _childNodesAndTokens.Add(child);
         }
-        
 
         GrowSpan(child);
     }

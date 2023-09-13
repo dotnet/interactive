@@ -9,16 +9,18 @@ using System.Linq;
 using System.Net.Http;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
+
+using Diagnostic = CodeAnalysis.Diagnostic;
+using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
 internal class HttpRequestNode : HttpSyntaxNode
 {
     internal HttpRequestNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
-    
+
     public HttpMethodNode? MethodNode { get; private set; }
 
     public HttpUrlNode? UrlNode { get; private set; }
@@ -100,7 +102,7 @@ internal class HttpRequestNode : HttpSyntaxNode
                 diagnostics.AddRange(uriBindingResult.Diagnostics);
             }
         }
-       
+
         var bodyResult = BodyNode?.TryGetBody(bind);
         string body = "";
 
@@ -163,7 +165,9 @@ internal class HttpRequestNode : HttpSyntaxNode
                     }
                     catch (Exception exception)
                     {
-                        diagnostics.Add(headerNode.ValueNode.CreateDiagnostic(exception.Message));
+                        var diagnosticInfo = HttpDiagnostics.InvalidHeaderValue(exception.Message);
+                        var diagnostic = headerNode.ValueNode.CreateDiagnostic(diagnosticInfo);
+                        diagnostics.Add(diagnostic);
                     }
                 }
             }

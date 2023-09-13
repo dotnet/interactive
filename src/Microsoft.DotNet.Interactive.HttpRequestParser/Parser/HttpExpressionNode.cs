@@ -13,8 +13,8 @@ internal class HttpExpressionNode : HttpSyntaxNode
     {
     }
 
-    public HttpBindingResult<object?> CreateBindingFailure(string message) =>
-        HttpBindingResult<object?>.Failure(CreateDiagnostic(message));
+    public HttpBindingResult<object?> CreateBindingFailure(HttpDiagnosticInfo diagnosticInfo) =>
+        HttpBindingResult<object?>.Failure(CreateDiagnostic(diagnosticInfo));
 
     public HttpBindingResult<object?> CreateBindingSuccess(object? value) =>
         HttpBindingResult<object?>.Success(value);

@@ -96,12 +96,13 @@ public partial class ParserTests
 
             var diagnostic = result.GetDiagnostics().Should().ContainSingle().Which;
 
-            diagnostic.Message.Should().Be("Unrecognized HTTP verb OOPS");
+            diagnostic.GetMessage().Should().Be("Unrecognized HTTP verb 'OOPS'.");
 
-            diagnostic.LinePositionSpan.Start.Line.Should().Be(0);
-            diagnostic.LinePositionSpan.Start.Character.Should().Be(0);
-            diagnostic.LinePositionSpan.End.Line.Should().Be(0);
-            diagnostic.LinePositionSpan.End.Character.Should().Be(4);
+            var lineSpan = diagnostic.Location.GetLineSpan();
+            lineSpan.StartLinePosition.Line.Should().Be(0);
+            lineSpan.StartLinePosition.Character.Should().Be(0);
+            lineSpan.EndLinePosition.Line.Should().Be(0);
+            lineSpan.EndLinePosition.Character.Should().Be(4);
         }
     }
 }

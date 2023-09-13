@@ -4,6 +4,7 @@
 using System;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.CodeAnalysis;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest.Tests;
@@ -19,9 +20,7 @@ public partial class ParserTests : IDisposable
     }
 
     public void Dispose()
-    {
-        _assertionScope.Dispose();
-    }
+        => _assertionScope.Dispose();
 
     private static HttpRequestParseResult Parse(string code)
     {
@@ -31,4 +30,7 @@ public partial class ParserTests : IDisposable
 
         return result;
     }
+
+    private static HttpDiagnosticInfo CreateDiagnosticInfo(string message)
+        => new HttpDiagnosticInfo(id: "HTTP0000", message, DiagnosticSeverity.Error);
 }
