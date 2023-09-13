@@ -165,10 +165,9 @@ internal class HttpRequestNode : HttpSyntaxNode
                     }
                     catch (Exception exception)
                     {
-                        diagnostics.Add(
-                            headerNode.ValueNode.CreateDiagnostic(
-                                WellKnownHttpDiagnostics.InvalidHeaderValue,
-                                exception.Message));
+                        var diagnosticInfo = HttpDiagnostics.InvalidHeaderValue(exception.Message);
+                        var diagnostic = headerNode.ValueNode.CreateDiagnostic(diagnosticInfo);
+                        diagnostics.Add(diagnostic);
                     }
                 }
             }

@@ -322,7 +322,7 @@ internal class HttpRequestParser
                     requestNode.Span.End);
                 var location = Location.Create(filePath: string.Empty, span, linePositionSpan);
 
-                var diagnostic = requestNode.CreateDiagnostic(WellKnownHttpDiagnostics.MissingUrl, location);
+                var diagnostic = requestNode.CreateDiagnostic(HttpDiagnostics.MissingUrl(), location);
                 requestNode.AddDiagnostic(diagnostic);
             }
 
@@ -397,7 +397,7 @@ internal class HttpRequestParser
                 var verb = CurrentToken.Text;
                 if (verb.ToLower() is not ("get" or "post" or "patch" or "put" or "delete" or "head" or "options" or "trace"))
                 {
-                    var diagnostic = CurrentToken.CreateDiagnostic(WellKnownHttpDiagnostics.UnrecognizedVerb, verb);
+                    var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.UnrecognizedVerb(verb));
 
                     node.AddDiagnostic(diagnostic);
                 }

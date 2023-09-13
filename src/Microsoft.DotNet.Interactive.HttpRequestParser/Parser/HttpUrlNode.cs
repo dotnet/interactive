@@ -34,12 +34,12 @@ internal class HttpUrlNode : HttpSyntaxNode
             {
                 if (uri.Scheme is not "http" and not "https")
                 {
-                    yield return CreateDiagnostic(WellKnownHttpDiagnostics.UnrecognizedUriScheme, uri.Scheme);
+                    yield return CreateDiagnostic(HttpDiagnostics.UnrecognizedUriScheme(uri.Scheme));
                 }
             }
             else
             {
-                yield return CreateDiagnostic(WellKnownHttpDiagnostics.InvalidUri);
+                yield return CreateDiagnostic(HttpDiagnostics.InvalidUri());
             }
         }
     }

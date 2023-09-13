@@ -32,7 +32,7 @@ internal class HttpHeaderValueNode : HttpSyntaxNode
 
         if (Span.Length == 0)
         {
-            yield return CreateDiagnostic(WellKnownHttpDiagnostics.MissingHeaderValue);
+            yield return CreateDiagnostic(HttpDiagnostics.MissingHeaderValue());
         }
     }
 }

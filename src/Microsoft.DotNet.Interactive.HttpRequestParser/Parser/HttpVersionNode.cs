@@ -28,7 +28,7 @@ internal class HttpVersionNode : HttpSyntaxNode
         {
             if ((word.Text.ToLowerInvariant() is not "http" and not "https") || TextContainsWhitespace())
             {
-                yield return CreateDiagnostic(WellKnownHttpDiagnostics.InvalidHttpVersion);
+                yield return CreateDiagnostic(HttpDiagnostics.InvalidHttpVersion());
             }
         }
     }

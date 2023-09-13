@@ -305,7 +305,7 @@ public class HttpRequestKernel :
             return HttpBindingResult<object?>.Success(value);
         }
 
-        var diagnostic = node.CreateDiagnostic(WellKnownHttpDiagnostics.CannotResolveSymbol, variableName);
+        var diagnostic = node.CreateDiagnostic(HttpDiagnostics.CannotResolveSymbol(variableName));
 
         return HttpBindingResult<object?>.Failure(diagnostic);
     }

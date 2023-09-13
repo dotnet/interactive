@@ -57,18 +57,6 @@ internal abstract class HttpSyntaxNodeOrToken
         _diagnostics.Add(d);
     }
 
-    public Diagnostic CreateDiagnostic(WellKnownHttpDiagnostics diagnosticCode, params object[] messageArguments)
-    {
-        var diagnosticInfo = diagnosticCode.GetDiagnosticInfo(messageArguments);
-        return CreateDiagnostic(diagnosticInfo);
-    }
-
-    public Diagnostic CreateDiagnostic(WellKnownHttpDiagnostics diagnosticCode, Location location, params object[] messageArguments)
-    {
-        var diagnosticInfo = diagnosticCode.GetDiagnosticInfo(messageArguments);
-        return CreateDiagnostic(diagnosticInfo, location);
-    }
-
     public Diagnostic CreateDiagnostic(HttpDiagnosticInfo diagnosticInfo, Location? location = null)
     {
         if (location is null)

@@ -28,7 +28,7 @@ internal class HttpVariableDeclarationNode : HttpSyntaxNode
 
         if (string.IsNullOrWhiteSpace(VariableName))
         {
-            yield return CreateDiagnostic(WellKnownHttpDiagnostics.VariableNameExpected);
+            yield return CreateDiagnostic(HttpDiagnostics.VariableNameExpected());
         }
     }
 }

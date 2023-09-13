@@ -25,11 +25,11 @@ internal class HttpHeaderNameNode : HttpSyntaxNode
 
         if (Span.Length == 0)
         {
-            yield return CreateDiagnostic(WellKnownHttpDiagnostics.MissingHeaderName);
+            yield return CreateDiagnostic(HttpDiagnostics.MissingHeaderName());
         }
         else if (TextContainsWhitespace())
         {
-            yield return CreateDiagnostic(WellKnownHttpDiagnostics.InvalidWhitespaceInHeaderName);
+            yield return CreateDiagnostic(HttpDiagnostics.InvalidWhitespaceInHeaderName());
         }
     }
 }
