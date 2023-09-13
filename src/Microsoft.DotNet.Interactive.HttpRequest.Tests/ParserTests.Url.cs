@@ -32,9 +32,9 @@ public partial class ParserTests
 
                 """);
 
-            result.SyntaxTree.RootNode
-                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .ChildTokens.Last().Kind.Should().Be(HttpTokenKind.NewLine);
+            result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>();
+
+            result.GetDiagnostics().Should().BeEmpty();
         }
 
         [Theory]

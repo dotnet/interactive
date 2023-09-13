@@ -8,7 +8,6 @@ namespace Microsoft.DotNet.Interactive.Formatting;
 
 public static class PlainTextSummaryFormatter
 {
-    // FIX: (PlainTextSummaryFormatter) rename this
     public const string MimeType = "text/plain+summary";
 
     public static ITypeFormatter GetPreferredFormatterFor(Type type)

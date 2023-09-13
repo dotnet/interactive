@@ -65,7 +65,7 @@ public class InteractiveDocument : IEnumerable
     {
         EnsureImportFieldParserIsInitialized();
 
-        if (!TryGetKernelInfosFromMetadata(out var kernelInfos))
+        if (!TryGetKernelInfosFromMetadata(Metadata, out var kernelInfos))
         {
             kernelInfos = new();
         }
@@ -198,9 +198,9 @@ public class InteractiveDocument : IEnumerable
 
     public string? GetDefaultKernelName()
     {
-        if (TryGetKernelInfosFromMetadata(Metadata, out var kernelInfo))
+        if (TryGetKernelInfosFromMetadata(Metadata, out var kernelInfos))
         {
-            return kernelInfo.DefaultKernelName;
+            return kernelInfos.DefaultKernelName;
         }
 
         return null;
@@ -212,28 +212,8 @@ public class InteractiveDocument : IEnumerable
         {
             return kernelInfoCollection.DefaultKernelName;
         }
-
-        if (Metadata.TryGetValue("kernelspec", out var kernelspecObj))
-        {
-            if (kernelspecObj is IDictionary<string, object> kernelspecDict)
-            {
-                if (kernelspecDict.TryGetValue("language", out var languageObj) &&
-                    languageObj is string defaultLanguage)
-                {
-                    return defaultLanguage;
-                }
-            }
-        }
-
-        if (kernelInfos.DefaultKernelName is { } defaultFromKernelInfos)
-        {
-            if (kernelInfos.TryGetByAlias(defaultFromKernelInfos, out var info))
-            {
-                return info.Name;
-            }
-        }
-
-        return null;
+        
+        return kernelInfos.DefaultKernelName;
     }
 
     internal static void MergeKernelInfos(InteractiveDocument document, KernelInfoCollection kernelInfos)
@@ -258,10 +238,6 @@ public class InteractiveDocument : IEnumerable
 
         destination.AddRange(source.Where(ki => added.Add(ki.Name)));
     }
-
-    public bool TryGetKernelInfosFromMetadata(
-        [NotNullWhen(true)] out KernelInfoCollection? kernelInfos) =>
-        TryGetKernelInfosFromMetadata(Metadata, out kernelInfos);
 
     internal static bool TryGetKernelInfosFromMetadata(
         IDictionary<string, object>? metadata,
