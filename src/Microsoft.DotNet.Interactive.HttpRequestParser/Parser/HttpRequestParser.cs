@@ -46,10 +46,7 @@ internal class HttpRequestParser
 
             while (MoreTokens())
             {
-                if (ParseComment() is { } commentNode)
-                {
-                    commentsToPrepend.Add(commentNode);
-                }
+                commentsToPrepend.AddRange(ParseComments());
 
                 if (ParseVariableDeclarations() is { } variableNodes)
                 {
@@ -245,9 +242,12 @@ internal class HttpRequestParser
                 {
                     ConsumeCurrentTokenInto(node);
                 }
-                else if (ParseComment() is { } commentNode)
+                else if (IsComment())
                 {
-                    node.Add(commentNode, addBefore: true);
+                    foreach (var commentNode in ParseComments())
+                    {
+                        node.Add(commentNode, addBefore: true);
+                    }
                 }
                 else
                 {
@@ -340,10 +340,7 @@ internal class HttpRequestParser
             }
 
             var comments = new List<HttpCommentNode>();
-            if (ParseComment() is { } comment)
-            {
-                comments.Add(comment);
-            }
+            comments.AddRange(ParseComments());
 
             var headersNode = ParseHeaders();
             if (headersNode is not null)
@@ -356,9 +353,9 @@ internal class HttpRequestParser
                 AddCommentsIfAny(comments, requestNode, addBefore: false);
             }
 
-            if (ParseComment() is { } commentAfterHeaders)
+            foreach (var comment in ParseComments())
             {
-                requestNode.Add(commentAfterHeaders);
+                requestNode.Add(comment);
             }
 
             ParseTrailingWhitespace(requestNode);
@@ -697,9 +694,9 @@ internal class HttpRequestParser
             return node;
         }
 
-        private HttpCommentNode? ParseComment()
+        private IEnumerable<HttpCommentNode> ParseComments()
         {
-            if (IsComment())
+            while (IsComment())
             {
                 var commentNode = new HttpCommentNode(_sourceText, _syntaxTree);
 
@@ -716,10 +713,8 @@ internal class HttpRequestParser
                     commentNode.Add(commentBodyNode);
                 }
 
-                return commentNode;
+                yield return commentNode;
             }
-
-            return null;
         }
 
         private HttpCommentBodyNode? ParseCommentBody()

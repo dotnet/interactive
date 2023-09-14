@@ -220,14 +220,36 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
             > .2 and < .4 => "\r\n",
             _ => ""
         };
-    
-    private string MaybeLineComment() =>
-        ExtraTriviaRandomizer?.NextDouble() switch
+
+    private string MaybeLineComment()
+    {
+        var numberOfCommentLines = ExtraTriviaRandomizer?.NextDouble() switch
         {
-            < .2 => "# random line comment followed by a LF\n",
-            > .2 and < .4 => "# random line comment followed by a CRLF\r\n",
-            _ => ""
+            < .4 => 1,
+            > .4 and < .7 => 2,
+            _ => 0
         };
+
+        var commentText = "";
+
+        for (int i = 0; i < numberOfCommentLines; i++)
+        {
+            commentText += CommentLine();
+        }
+
+        return commentText;
+
+        string CommentLine()
+        {
+            return ExtraTriviaRandomizer?.NextDouble() switch
+            {
+                < .25 => "# random line comment followed by a LF\n",
+                > .25 and < .5 => "# random line comment followed by a CRLF\r\n",
+                > .5 and < .75 => "// random line comment followed by a LF\n",
+                > .75  => "// random line comment followed by a CRLF\r\n",
+            };
+        }
+    }
 }
 
 internal class HttpMethodNodeSyntaxSpec : SyntaxSpecBase<HttpMethodNode>
