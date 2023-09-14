@@ -46,7 +46,6 @@ import {
     ValueInfosProducedType,
     ValueProduced,
     ValueProducedType,
-    SubmissionType,
     SubmitCode,
     SubmitCodeType,
     CancelType,
@@ -155,7 +154,6 @@ export class InteractiveClient {
                 SubmitCodeType,
                 <SubmitCode>{
                     code: source,
-                    submissionType: SubmissionType.Run,
                     targetKernelName: language
                 }
             );

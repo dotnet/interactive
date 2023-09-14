@@ -16,7 +16,6 @@
     "commandType": "SubmitCode",
     "command": {
       "code": "b(\"hi!\")",
-      "submissionType": "run",
       "targetKernelName": "csharp",
       "originUri": null,
       "destinationUri": null

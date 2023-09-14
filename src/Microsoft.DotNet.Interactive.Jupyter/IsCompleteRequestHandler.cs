@@ -1,8 +1,10 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
 using System.Reactive.Concurrency;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
@@ -21,7 +23,7 @@ public class IsCompleteRequestHandler : RequestHandlerBase<IsCompleteRequest>
     {
         var isCompleteRequest = GetJupyterRequest(context);
         var targetKernelName = context.GetKernelName();
-        var command = new SubmitCode(isCompleteRequest.Code, targetKernelName, submissionType: SubmissionType.Diagnose);
+        var command = new RequestDiagnostics(isCompleteRequest.Code, targetKernelName);
 
         await SendAsync(context, command);
     }
@@ -32,11 +34,15 @@ public class IsCompleteRequestHandler : RequestHandlerBase<IsCompleteRequest>
     {
         switch (@event)
         {
-            case CompleteCodeSubmissionReceived _:
-                Reply(true, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
+            case DiagnosticsProduced diagnosticsProduced:
+                if (diagnosticsProduced.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
+                {
+                    Reply(false, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
+                }
                 break;
-            case IncompleteCodeSubmissionReceived _:
-                Reply(false, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
+
+            case CommandSucceeded _:
+                Reply(true, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                 break;
         }
     }

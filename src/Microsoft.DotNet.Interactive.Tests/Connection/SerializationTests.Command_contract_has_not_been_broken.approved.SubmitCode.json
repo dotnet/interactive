@@ -4,7 +4,6 @@
   "commandType": "SubmitCode",
   "command": {
     "code": "123",
-    "submissionType": "run",
     "targetKernelName": "csharp",
     "originUri": null,
     "destinationUri": null

@@ -10,22 +10,18 @@ public class SubmitCode : KernelCommand
 {
     public SubmitCode(
         string code,
-        string targetKernelName = null,
-        SubmissionType submissionType = SubmissionType.Run) : base(targetKernelName)
+        string targetKernelName = null) : base(targetKernelName)
     {
         Code = code ?? throw new ArgumentNullException(nameof(code));
-        SubmissionType = submissionType;
     }
       
     internal SubmitCode(
         LanguageNode languageNode,
-        SubmissionType submissionType = SubmissionType.Run,
         KernelNameDirectiveNode kernelNameDirectiveNode = null)
         : base(languageNode.Name)
     {
         Code = languageNode.Text;
         LanguageNode = languageNode;
-        SubmissionType = submissionType;
         KernelNameDirectiveNode = kernelNameDirectiveNode;
         SchedulingScope = languageNode.CommandScope;
 
@@ -36,8 +32,6 @@ public class SubmitCode : KernelCommand
     }
 
     public string Code { get; internal set; }
-
-    public SubmissionType SubmissionType { get; }
 
     public override string ToString() => $"{nameof(SubmitCode)}: {Code?.TruncateForDisplay()}";
 

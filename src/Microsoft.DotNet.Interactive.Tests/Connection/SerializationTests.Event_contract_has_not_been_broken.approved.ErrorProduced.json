@@ -11,7 +11,6 @@
     "commandType": "SubmitCode",
     "command": {
       "code": "123",
-      "submissionType": "run",
       "targetKernelName": null,
       "originUri": null,
       "destinationUri": null

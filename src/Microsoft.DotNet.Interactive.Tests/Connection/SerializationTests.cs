@@ -185,7 +185,7 @@ public class SerializationTests
 
             yield return new SendEditableCode("someKernelName", "code");
 
-            yield return new SubmitCode("123", "csharp", SubmissionType.Run);
+            yield return new SubmitCode("123", "csharp");
 
             yield return new UpdateDisplayedValue(
                 new FormattedValue("text/html", "<b>hi!</b>"),
@@ -283,7 +283,7 @@ public class SerializationTests
 
             yield return new DisplayedValueProduced(
                 new HtmlString("<b>hi!</b>"),
-                new SubmitCode("b(\"hi!\")", "csharp", SubmissionType.Run),
+                new SubmitCode("b(\"hi!\")", "csharp"),
                 new[]
                 {
                     new FormattedValue("text/html", "<b>hi!</b>"),
@@ -292,7 +292,7 @@ public class SerializationTests
             yield return new DisplayedValueUpdated(
                 new HtmlString("<b>hi!</b>"),
                 "the-value-id",
-                new SubmitCode("b(\"hi!\")", "csharp", SubmissionType.Run),
+                new SubmitCode("b(\"hi!\")", "csharp"),
                 new[]
                 {
                     new FormattedValue("text/html", "<b>hi!</b>"),
@@ -361,7 +361,7 @@ public class SerializationTests
 
             yield return new ReturnValueProduced(
                 new HtmlString("<b>hi!</b>"),
-                new SubmitCode("b(\"hi!\")", "csharp", SubmissionType.Run),
+                new SubmitCode("b(\"hi!\")", "csharp"),
                 new[]
                 {
                     new FormattedValue("text/html", "<b>hi!</b>"),
@@ -390,7 +390,7 @@ public class SerializationTests
                 });
 
             yield return new StandardOutputValueProduced(
-                new SubmitCode("Console.Write(123);", "csharp", SubmissionType.Run),
+                new SubmitCode("Console.Write(123);", "csharp"),
                 new[]
                 {
                     new FormattedValue("text/plain", "123")

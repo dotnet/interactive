@@ -713,7 +713,7 @@ $${languageSpecificCode}
     [InlineData(Language.CSharp)]
     [InlineData(Language.PowerShell)]
     // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
-    public async Task it_can_analyze_incomplete_submissions(Language language)
+    public async Task it_acknowledges_receipt_of_incomplete_submissions(Language language)
     {
         var kernel = CreateKernel(language);
 
@@ -723,7 +723,7 @@ $${languageSpecificCode}
             Language.PowerShell => "$a ="
         };
 
-        await SubmitCode(kernel, source, submissionType: SubmissionType.Diagnose);
+        await SubmitCode(kernel, source);
 
         KernelEvents
             .Single(e => e is IncompleteCodeSubmissionReceived);
@@ -737,7 +737,7 @@ $${languageSpecificCode}
     [InlineData(Language.CSharp)]
     [InlineData(Language.PowerShell)]
     // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
-    public async Task it_can_analyze_complete_submissions(Language language)
+    public async Task it_acknowledged_receipt_of_complete_submissions_having_return_value(Language language)
     {
         var kernel = CreateKernel(language);
 
@@ -747,12 +747,8 @@ $${languageSpecificCode}
             Language.PowerShell => "25",
         };
 
-        await SubmitCode(kernel, source, submissionType: SubmissionType.Diagnose);
-
-        KernelEvents
-            .Should()
-            .NotContain(e => e is ReturnValueProduced);
-
+        await SubmitCode(kernel, source);
+        
         KernelEvents
             .Should()
             .Contain(e => e is CompleteCodeSubmissionReceived);
@@ -761,20 +757,16 @@ $${languageSpecificCode}
     [Theory]
     [InlineData(Language.CSharp)]
     // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
-    public async Task it_can_analyze_complete_stdio_submissions(Language language)
+    public async Task it_acknowledged_receipt_of_complete_stdio_submissions(Language language)
     {
         var kernel = CreateKernel(language);
 
         var source = language switch
         {
-            Language.CSharp => "Console.WriteLine(\"Hello\")"
+            Language.CSharp => "Console.WriteLine(\"Hello\");"
         };
 
-        await SubmitCode(kernel, source, submissionType: SubmissionType.Diagnose);
-
-        KernelEvents
-            .Should()
-            .NotContain(e => e is StandardOutputValueProduced);
+        await SubmitCode(kernel, source);
 
         KernelEvents
             .Should()
@@ -819,7 +811,7 @@ $${languageSpecificCode}
             Language.CSharp => "if (true) { }"
         };
 
-        await SubmitCode(kernel, source, submissionType: SubmissionType.Run);
+        await SubmitCode(kernel, source);
 
         KernelEvents
             .Should()

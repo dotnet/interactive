@@ -290,11 +290,6 @@ public class CSharpKernel :
             context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
         }
 
-        if (submitCode.SubmissionType == SubmissionType.Diagnose)
-        {
-            return;
-        }
-
         Exception exception = null;
         string message = null;
 
