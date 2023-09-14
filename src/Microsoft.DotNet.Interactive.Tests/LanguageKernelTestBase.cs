@@ -162,18 +162,18 @@ public abstract class LanguageKernelTestBase : IDisposable
             });
     }
 
-    public async Task SubmitCode(Kernel kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)
+    public async Task SubmitCode(Kernel kernel, string[] submissions)
     {
         foreach (var submission in submissions)
         {
-            var cmd = new SubmitCode(submission, submissionType: submissionType);
+            var cmd = new SubmitCode(submission);
             await kernel.SendAsync(cmd);
         }
     }
 
-    public async Task<KernelCommandResult> SubmitCode(Kernel kernel, string submission, SubmissionType submissionType = SubmissionType.Run)
+    public async Task<KernelCommandResult> SubmitCode(Kernel kernel, string submission)
     {
-        var command = new SubmitCode(submission, submissionType: submissionType);
+        var command = new SubmitCode(submission);
         return await kernel.SendAsync(command);
     }
 

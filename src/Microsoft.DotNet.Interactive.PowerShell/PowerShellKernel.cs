@@ -265,12 +265,6 @@ public class PowerShellKernel :
             return;
         }
 
-        // Do nothing if we get a Diagnose type.
-        if (submitCode.SubmissionType == SubmissionType.Diagnose)
-        {
-            return;
-        }
-
         if (context.CancellationToken.IsCancellationRequested)
         {
             context.Fail(submitCode, null, "Command cancelled");

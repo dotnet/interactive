@@ -22,9 +22,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.InterruptRequestHandlerTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.IsCompleteRequestHandlerTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>

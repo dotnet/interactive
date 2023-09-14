@@ -52,7 +52,7 @@ public class SubmissionParser
             {
                 if (!string.IsNullOrWhiteSpace(languageNode.Text))
                 {
-                    return new SubmitCode(languageNode, submitCode.SubmissionType, kernelNameNode);
+                    return new SubmitCode(languageNode, kernelNameNode);
                 }
                 else
                 {
