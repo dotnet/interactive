@@ -157,10 +157,8 @@ export class InteractiveClient {
                     targetKernelName: language
                 }
             );
-            if (configuration !== undefined && configuration.id !== undefined) {
-                command.setId(configuration.id);
-            }
-            const commandId = command.id;
+
+            const commandToken = command.token;
             try {
                 return this.submitCode(command, language, eventEnvelope => {
                     if (this.deferredOutput.length > 0) {
@@ -173,7 +171,7 @@ export class InteractiveClient {
                     switch (eventEnvelope.eventType) {
                         // if kernel languages were added, handle those events here
                         case CommandSucceededType:
-                            if (eventEnvelope.command?.id === commandId) {
+                            if (eventEnvelope.command?.token === commandToken) {
                                 // only complete this promise if it's the root command
                                 resolve(!failureReported);
                             }
@@ -184,7 +182,7 @@ export class InteractiveClient {
                                 const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
                                 outputReporter(errorOutput);
                                 failureReported = true;
-                                if (eventEnvelope.command?.id === commandId) {
+                                if (eventEnvelope.command?.token === commandToken) {
                                     // only complete this promise if it's the root command
                                     reject(err);
                                 }
@@ -404,20 +402,19 @@ export class InteractiveClient {
         return new Promise<void>((resolve, reject) => {
             let failureReported = false;
             const token = command.getOrCreateToken();
-            const id = command.id;
             const commandType = command.commandType;
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case CommandFailedType:
                         let err = <CommandFailed>eventEnvelope.event;
                         failureReported = true;
-                        if (eventEnvelope.command?.id === id) {
+                        if (eventEnvelope.command?.token === token) {
                             disposable.dispose();
                             reject(err);
                         }
                         break;
                     case CommandSucceededType:
-                        if (eventEnvelope.command?.id === id) {
+                        if (eventEnvelope.command?.token === token) {
                             disposable.dispose();
                             resolve();
                         }

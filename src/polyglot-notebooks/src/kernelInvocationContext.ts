@@ -162,10 +162,7 @@ export function areCommandsTheSame(envelope1: commandsAndEvents.KernelCommandEnv
     if (!sameCommandType) {
         return false;
     }
-    const sameCommandId = envelope1?.id === envelope2?.id; //?
-    if (!sameCommandId) {
-        return false;
-    }
+
     const sameToken = envelope1?.getOrCreateToken() === envelope2?.getOrCreateToken(); //?
     if (!sameToken) {
         return false;

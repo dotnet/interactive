@@ -20,7 +20,6 @@ export interface KernelEventEnvelopeModel {
 
 export interface KernelCommandEnvelopeModel {
     token?: string;
-    id?: string;
     commandType: contracts.KernelCommandType;
     command: contracts.KernelCommand;
     routingSlip?: string[];
@@ -46,7 +45,6 @@ export class KernelCommandEnvelope {
 
     private _childCommandCounter: number = 0;
     private _routingSlip: CommandRoutingSlip = new CommandRoutingSlip();
-    private _id: string;
     private _token?: string;
     private _parentCommand?: KernelCommandEnvelope;
 
@@ -56,11 +54,10 @@ export class KernelCommandEnvelope {
 
         const guidBytes = uuid.parse(uuid.v4());
         const data = new Uint8Array(guidBytes);
-        this._id = toBase64String(data);
     }
 
-    public get id(): string {
-        return this._id;
+    public get token(): string | undefined {
+        return this._token;
     }
 
     public get routingSlip(): CommandRoutingSlip {
@@ -76,10 +73,6 @@ export class KernelCommandEnvelope {
             throw new Error("Parent cannot be changed.");
         }
         this._parentCommand = parentCommand;
-    }
-
-    public setId(id: string) {
-        this._id = id;
     }
 
     public getOrCreateToken(): string {
@@ -129,7 +122,6 @@ export class KernelCommandEnvelope {
             commandType: this.commandType,
             command: this.command,
             routingSlip: this._routingSlip.toArray(),
-            id: this._id,
             token: this.getOrCreateToken()
         };
 
@@ -139,9 +131,6 @@ export class KernelCommandEnvelope {
     public static fromJson(model: KernelCommandEnvelopeModel): KernelCommandEnvelope {
         const command = new KernelCommandEnvelope(model.commandType, model.command);
         command._routingSlip = CommandRoutingSlip.fromUris(model.routingSlip || []);
-        if (model.id) {
-            command._id = model.id;
-        }
         command._token = model.token;
         return command;
     }

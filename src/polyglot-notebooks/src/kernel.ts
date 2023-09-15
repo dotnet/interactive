@@ -306,7 +306,7 @@ export async function submitCommandAndGetResult<TEvent extends commandsAndEvents
                     break;
                 case commandsAndEvents.CommandSucceededType:
                     if (areCommandsTheSame(eventEnvelope.command!, commandEnvelope)
-                        && (eventEnvelope.command?.id === commandEnvelope.id)) {
+                        && (eventEnvelope.command?.token === commandEnvelope.token)) {
                         if (!handled) {//? ($ ? eventEnvelope : {})
                             handled = true;
                             completionSource.reject('Command was handled before reporting expected result.');

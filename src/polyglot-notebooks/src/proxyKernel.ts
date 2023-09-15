@@ -56,7 +56,6 @@ export class ProxyKernel extends Kernel {
 
     private async _commandHandler(commandInvocation: IKernelCommandInvocation): Promise<void> {
         const commandToken = commandInvocation.commandEnvelope.getOrCreateToken();
-        const commandId = commandInvocation.commandEnvelope.id;
         const completionSource = new PromiseCompletionSource<commandsAndEvents.KernelEventEnvelope>();
         const command = commandInvocation.commandEnvelope;
         // fix : is this the right way? We are trying to avoid forwarding events we just did forward
@@ -78,7 +77,7 @@ export class ProxyKernel extends Kernel {
                     }
                     else if (envelope.command!.getOrCreateToken() === commandToken) {
 
-                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
+                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, envelopeToken=${envelope.command!.token}, commandToken=${commandToken}`);
                         Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, ${JSON.stringify(envelope)}`);
 
                         try {
@@ -113,12 +112,12 @@ export class ProxyKernel extends Kernel {
                                 break;
                             case commandsAndEvents.CommandFailedType:
                             case commandsAndEvents.CommandSucceededType:
-                                Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] finished, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
-                                if (envelope.command!.id === commandId) {
-                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] resolving promise, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
+                                Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] finished, token=${envelope.command!.token}, commandToken=${commandToken}`);
+                                if (envelope.command!.token === commandToken) {
+                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] resolving promise, envelopeToken=${envelope.command!.token}, commandToken=${commandToken}`);
                                     completionSource.resolve(envelope);
                                 } else {
-                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] not resolving promise, envelopeid=${envelope.command!.id}, commandid=${commandId}`);
+                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] not resolving promise, envelopeToken=${envelope.command!.token}, commandToken=${commandToken}`);
                                     this.delegatePublication(envelope, commandInvocation.context);
                                 }
                                 break;
@@ -147,12 +146,12 @@ export class ProxyKernel extends Kernel {
             }
             Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] forwarding command ${commandInvocation.commandEnvelope.commandType} to ${commandInvocation.commandEnvelope.command.destinationUri}`);
             this._sender.send(commandInvocation.commandEnvelope);
-            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken} and  commandid ${commandId}`);
+            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] about to await with token ${commandToken}`);
             const enventEnvelope = await completionSource.promise;
             if (enventEnvelope.eventType === commandsAndEvents.CommandFailedType) {
                 commandInvocation.context.fail((<commandsAndEvents.CommandFailed>enventEnvelope.event).message);
             }
-            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] done awaiting with token ${commandToken}} and  commandid ${commandId}`);
+            Logger.default.info(`proxy ${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] done awaiting with token ${commandToken}}`);
         }
         catch (e) {
             commandInvocation.context.fail((<any>e).message);
