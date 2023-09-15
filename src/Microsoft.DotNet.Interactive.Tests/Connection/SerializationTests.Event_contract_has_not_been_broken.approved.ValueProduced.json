@@ -10,7 +10,6 @@
   "eventType": "ValueProduced",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "RequestValue",
     "command": {
       "name": "a",

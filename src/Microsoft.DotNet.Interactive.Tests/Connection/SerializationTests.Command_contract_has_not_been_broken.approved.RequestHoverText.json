@@ -1,6 +1,5 @@
 {
   "token": "the-token",
-  "id": "command-id",
   "commandType": "RequestHoverText",
   "command": {
     "code": "document-contents",

@@ -394,10 +394,9 @@ Microsoft.DotNet.Interactive.Commands
     public Microsoft.DotNet.Interactive.CommandRoutingSlip RoutingSlip { get;}
     public System.String TargetKernelName { get;}
     public System.Boolean Equals(KernelCommand other)
-    public System.Int32 GetHashCode()
     public System.String GetOrCreateToken()
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Void SetId(System.String id)
+    public System.Void SetParent(KernelCommand parent)
     public System.Void SetToken(System.String token)
   public abstract class LanguageServiceCommand : KernelCommand, System.IEquatable<KernelCommand>
     public System.String Code { get;}
@@ -478,7 +477,6 @@ Microsoft.DotNet.Interactive.Connection
     public System.Threading.Tasks.Task SendAsync(Microsoft.DotNet.Interactive.Events.KernelEvent kernelEvent, System.Threading.CancellationToken cancellationToken)
   public abstract class IKernelCommandEnvelope
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
-    public System.String CommandId { get;}
     public System.String CommandType { get;}
     public System.String Token { get;}
   public abstract class IKernelEventEnvelope
@@ -512,7 +510,6 @@ Microsoft.DotNet.Interactive.Connection
     public static System.Void RegisterDefaults()
     public static System.String Serialize(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public static System.String Serialize(IKernelCommandEnvelope envelope)
-    public System.String CommandId { get;}
     public System.String CommandType { get;}
     public System.String Token { get;}
   public class KernelCommandEnvelope<T> : KernelCommandEnvelope, IKernelCommandEnvelope

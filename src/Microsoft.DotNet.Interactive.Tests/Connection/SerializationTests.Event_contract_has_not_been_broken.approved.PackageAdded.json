@@ -17,7 +17,6 @@
   "eventType": "PackageAdded",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "SubmitCode",
     "command": {
       "code": "#r \"nuget:ThePackage,1.2.3\"",

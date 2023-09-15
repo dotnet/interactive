@@ -5,7 +5,6 @@
   "eventType": "CodeSubmissionReceived",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "SubmitCode",
     "command": {
       "code": "123",

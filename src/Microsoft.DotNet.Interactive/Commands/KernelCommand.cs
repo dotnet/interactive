@@ -14,7 +14,6 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 {
     private KernelCommand _parent;
     private string _token;
-    private string _id;
 
     protected KernelCommand(
         string targetKernelName = null)
@@ -135,63 +134,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         return Handler(this, context);
     }
-
-    public void SetId(string id)
-    {
-        if (_id is not null)
-        {
-        }
-        else
-        {
-            // FIX: (SetId)  remove this method
-            _id = id;
-        }
-    }
-
-    internal string GetOrCreateId()
-    {
-        if (_token is not null)
-        {
-            // FIX: (GetOrCreateId) 
-            if (_id is null)
-            {
-                _id = _token;
-                return _token;
-            }
-            else if (_id == _token)
-            {
-                return _token;
-            }
-        }
-      
-        if (_id is not null)
-        {
-            return _id;
-        }
-
-        if (_token is not null)
-        {
-            SetId(_token);
-        }
-        else if (Parent is not null)
-        {
-            SetId(GetOrCreateToken());
-        }
-        else
-        {
-            SetId(GetOrCreateToken());
-        }
-
-        if (_id == _token)
-        {
-        }
-        else
-        {
-        }
-
-        return _id;
-    }
-
+    
     public bool Equals(KernelCommand other)
     {
         if (ReferenceEquals(this, other))
