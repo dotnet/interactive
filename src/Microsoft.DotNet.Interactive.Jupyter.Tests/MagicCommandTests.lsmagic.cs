@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,20 +12,37 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
+using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 public partial class MagicCommandTests
 {
-    public class LSMmagic
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+    public class LSMmagic : IDisposable
     {
+        private readonly CompositeDisposable _disposables = new();
+
+        public LSMmagic(ITestOutputHelper output)
+        {
+            _disposables.Add(output.SubscribeToPocketLogger());
+        }
+
+        public void Dispose()
+        {
+            _disposables.Dispose();
+        }
+
         [Fact]
         public async Task lsmagic_lists_registered_magic_commands()
         {
             using var kernel = new CompositeKernel()
-                .UseDefaultMagicCommands()
-                .LogEventsToPocketLogger();
+                               .UseDefaultMagicCommands()
+                               .LogEventsToPocketLogger();
 
             kernel.AddDirective(new Command("#!one"));
             kernel.AddDirective(new Command("#!two"));

@@ -11,6 +11,9 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.ExtensionLab.Tests.SQLiteConnectionTests.It_can_connect_and_query_data</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.ExtensionLab.Tests.InspectTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

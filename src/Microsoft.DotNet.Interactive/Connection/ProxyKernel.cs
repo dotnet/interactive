@@ -17,7 +17,6 @@ public sealed class ProxyKernel : Kernel
     private readonly IKernelCommandAndEventSender _sender;
     private readonly IKernelCommandAndEventReceiver _receiver;
     private ExecutionContext _executionContext;
-    private string _suppressCompletionsForCommandId;
 
     private readonly Dictionary<string, (KernelCommand command, ExecutionContext executionContext, TaskCompletionSource<KernelEvent> completionSource, KernelInvocationContext
         invocationContext)> _inflight = new();
@@ -212,10 +211,6 @@ public sealed class ProxyKernel : Kernel
                 case CommandSucceeded cs when areSameCommand:
                     _inflight.Remove(rootToken);
                     pending.completionSource.TrySetResult(cs);
-                    break;
-                case CommandFailed _ when kernelEvent.Command.GetOrCreateId() == _suppressCompletionsForCommandId:
-                case CommandSucceeded _ when kernelEvent.Command.GetOrCreateId() == _suppressCompletionsForCommandId:
-                    _suppressCompletionsForCommandId = null;
                     break;
                 case KernelInfoProduced kip when kip.KernelInfo.Uri == KernelInfo.RemoteUri:
                     {

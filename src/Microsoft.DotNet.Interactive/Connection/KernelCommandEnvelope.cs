@@ -144,12 +144,6 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             commandTypeJson = commandTypeProperty.GetString();
         }
 
-        // restore the command id
-        if (json.TryGetProperty(nameof(SerializationModel.id), out var commandIdProperty))
-        {
-            commandId = commandIdProperty.GetString();
-        }
-
         if (string.IsNullOrWhiteSpace(commandTypeJson))
         {
             return null;
@@ -167,9 +161,10 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 
         var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
 
-        if (commandId is not null)
+        // restore the command id
+        if (json.TryGetProperty(nameof(SerializationModel.id), out var commandIdProperty))
         {
-            command.SetId(commandId);
+            commandId = commandIdProperty.GetString();
         }
 
         // restore the command token
@@ -181,6 +176,14 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         if (commandToken is not null)
         {
             command.SetToken(commandToken);
+        }
+        else
+        {
+        }
+
+        if (commandId is not null)
+        {
+            command.SetId(commandId);
         }
 
         if (json.TryGetProperty(nameof(SerializationModel.routingSlip), out var routingSlipProperty))

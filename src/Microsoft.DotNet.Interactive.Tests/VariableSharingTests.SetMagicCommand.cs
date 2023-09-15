@@ -499,11 +499,11 @@ public partial class VariableSharingTests
         {
             using var localCompositeKernel = new CompositeKernel
             {
-                (new CSharpKernel()).UseValueSharing()
+                new CSharpKernel().UseValueSharing()
             };
             using var remoteCompositeKernel = new CompositeKernel
             {
-                (new FSharpKernel()).UseValueSharing()
+                new FSharpKernel().UseValueSharing()
             };
 
             ConnectHost.ConnectInProcessHost(

@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
@@ -11,17 +11,11 @@ namespace Microsoft.DotNet.Interactive;
 [TypeFormatterSource(typeof(MessageDiagnosticsFormatterSource))]
 public class KernelCommandResult
 {
-    private readonly List<KernelEvent> _events;
+    private readonly List<KernelEvent> _events = new();
 
-    public KernelCommandResult(KernelCommand command, IEnumerable<KernelEvent> events = null)
+    public KernelCommandResult(KernelCommand command)
     {
         Command = command;
-
-        _events = new();
-        if (events is not null)
-        {
-            _events.AddRange(events);
-        }
     }
 
     public KernelCommand Command { get; }
