@@ -56,9 +56,6 @@ export class KernelCommandEnvelope {
         const data = new Uint8Array(guidBytes);
     }
 
-    public get token(): string | undefined {
-        return this._token;
-    }
 
     public get routingSlip(): CommandRoutingSlip {
         return this._routingSlip;
@@ -93,6 +90,7 @@ export class KernelCommandEnvelope {
             this._token = `${this._parentCommand.getOrCreateToken()}.${this._parentCommand.getNextChildToken()}`;
             return this._token;
         }
+
         const guidBytes = uuid.parse(uuid.v4());
         const data = new Uint8Array(guidBytes);
         this._token = toBase64String(data);

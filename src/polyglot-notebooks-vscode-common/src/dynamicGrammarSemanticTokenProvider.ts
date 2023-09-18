@@ -630,7 +630,7 @@ function fixAutoClosingPairs(value: any) {
                     open: pair[0],
                     close: pair[1]
                 }
-                )
+                );
             } else if (typeof pair === 'object' && pair.open && pair.close) {
                 newAutoClosingPairs.push(pair);
             }
