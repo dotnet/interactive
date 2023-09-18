@@ -68,11 +68,20 @@ export class KernelCommandEnvelope {
         return this._parentCommand;
     }
 
-    public set parent(parentCommand: KernelCommandEnvelope | undefined) {
+    public setParent(parentCommand: KernelCommandEnvelope | undefined) {
         if (this._parentCommand && this._parentCommand !== parentCommand) {
             throw new Error("Parent cannot be changed.");
         }
-        this._parentCommand = parentCommand;
+        if (this._parentCommand === null || this._parentCommand === undefined) {
+            {
+                if (this._token) {
+                    this._token = undefined;
+                }
+                this._parentCommand = parentCommand;
+                this.getOrCreateToken();
+            }
+        }
+
     }
 
     public getOrCreateToken(): string {

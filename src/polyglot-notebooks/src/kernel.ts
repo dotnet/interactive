@@ -111,8 +111,8 @@ export class Kernel {
 
         const context = KernelInvocationContext.getOrCreateAmbientContext(commandEnvelope);
         if (context.commandEnvelope) {
-            if (context.commandEnvelope !== commandEnvelope) {
-                commandEnvelope.parent = context.commandEnvelope;
+            if (!areCommandsTheSame(context.commandEnvelope, commandEnvelope)) {
+                commandEnvelope.setParent(context.commandEnvelope);
             }
         }
         const kernelUri = getKernelUri(this);

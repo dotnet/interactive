@@ -40,7 +40,7 @@ describe("proxyKernel", () => {
 
     });
 
-    it("procudes commandFailed", async () => {
+    it("produces commandFailed", async () => {
         let localToRemote = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
         let remoteToLocal = new rxjs.Subject<connection.KernelCommandOrEventEnvelope>();
 
