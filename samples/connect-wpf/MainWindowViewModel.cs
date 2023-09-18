@@ -6,7 +6,7 @@ namespace WpfConnect
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private string _text = "Init Value";
+        private string _text = "Initial Value";
         public string Text
         {
             get => _text;
