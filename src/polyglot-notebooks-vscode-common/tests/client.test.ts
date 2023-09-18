@@ -16,7 +16,7 @@ import { createChannelConfig, decodeNotebookCellOutputs } from './utilities';
 
 describe('InteractiveClient tests', () => {
 
-    it.only('command execution returns deferred events', async () => {
+    it('command execution returns deferred events', async () => {
         const code = '1 + 1';
         const config = createChannelConfig(async (notebookPath) => new TestDotnetInteractiveChannel({
             'SubmitCode': [

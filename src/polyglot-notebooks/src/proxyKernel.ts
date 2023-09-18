@@ -75,9 +75,9 @@ export class ProxyKernel extends Kernel {
                             this.publishEvent(event);
                         }
                     }
-                    else if (envelope.command!.getOrCreateToken() === commandToken) {
+                    else if (envelope.command!.getToken() === commandToken) {
 
-                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, envelopeToken=${envelope.command!.getOrCreateToken()}, commandToken=${commandToken}`);
+                        Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, envelopeToken=${envelope.command!.getToken()}, commandToken=${commandToken}`);
                         Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] processing event, ${JSON.stringify(envelope)}`);
 
                         try {
@@ -112,12 +112,12 @@ export class ProxyKernel extends Kernel {
                                 break;
                             case commandsAndEvents.CommandFailedType:
                             case commandsAndEvents.CommandSucceededType:
-                                Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] finished, token=${envelope.command!.getOrCreateToken()}, commandToken=${commandToken}`);
-                                if (envelope.command!.getOrCreateToken() === commandToken) {
-                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] resolving promise, envelopeToken=${envelope.command!.getOrCreateToken()}, commandToken=${commandToken}`);
+                                Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] finished, token=${envelope.command!.getToken()}, commandToken=${commandToken}`);
+                                if (envelope.command!.getToken() === commandToken) {
+                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] resolving promise, envelopeToken=${envelope.command!.getToken()}, commandToken=${commandToken}`);
                                     completionSource.resolve(envelope);
                                 } else {
-                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] not resolving promise, envelopeToken=${envelope.command!.getOrCreateToken()}, commandToken=${commandToken}`);
+                                    Logger.default.info(`proxy name=${this.name}[local uri:${this.kernelInfo.uri}, remote uri:${this.kernelInfo.remoteUri}] not resolving promise, envelopeToken=${envelope.command!.getToken()}, commandToken=${commandToken}`);
                                     this.delegatePublication(envelope, commandInvocation.context);
                                 }
                                 break;

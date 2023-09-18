@@ -173,7 +173,7 @@ export class InteractiveClient {
                     switch (eventEnvelope.eventType) {
                         // if kernel languages were added, handle those events here
                         case CommandSucceededType:
-                            if (eventEnvelope.command?.getOrCreateToken() === commandToken) {
+                            if (eventEnvelope.command?.getToken() === commandToken) {
                                 // only complete this promise if it's the root command
                                 resolve(!failureReported);
                             }
@@ -184,7 +184,7 @@ export class InteractiveClient {
                                 const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
                                 outputReporter(errorOutput);
                                 failureReported = true;
-                                if (eventEnvelope.command?.getOrCreateToken() === commandToken) {
+                                if (eventEnvelope.command?.getToken() === commandToken) {
                                     // only complete this promise if it's the root command
                                     reject(err);
                                 }
@@ -410,13 +410,13 @@ export class InteractiveClient {
                     case CommandFailedType:
                         let err = <CommandFailed>eventEnvelope.event;
                         failureReported = true;
-                        if (eventEnvelope.command?.getOrCreateToken() === token) {
+                        if (eventEnvelope.command?.getToken() === token) {
                             disposable.dispose();
                             reject(err);
                         }
                         break;
                     case CommandSucceededType:
-                        if (eventEnvelope.command?.getOrCreateToken() === token) {
+                        if (eventEnvelope.command?.getToken() === token) {
                             disposable.dispose();
                             resolve();
                         }
@@ -464,7 +464,7 @@ export class InteractiveClient {
     }
 
     private eventListener(eventEnvelope: KernelEventEnvelope) {
-        let token = eventEnvelope.command?.getOrCreateToken();
+        let token = eventEnvelope.command?.getToken();
         if (token) {
             if (token.startsWith("deferredCommand::")) {
                 switch (eventEnvelope.eventType) {

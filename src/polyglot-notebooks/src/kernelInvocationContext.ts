@@ -2,12 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as rxjs from "rxjs";
-import * as routingslip from "./routingslip";
 import * as commandsAndEvents from "./commandsAndEvents";
 import { Disposable } from "./disposables";
 import { getKernelUri, Kernel } from "./kernel";
 import { PromiseCompletionSource } from "./promiseCompletionSource";
-import { hasSameRootCommandAs, isSelforDescendantOf } from "./tokenGenerator";
 
 
 export class KernelInvocationContext implements Disposable {
@@ -38,11 +36,13 @@ export class KernelInvocationContext implements Disposable {
     static getOrCreateAmbientContext(kernelCommandInvocation: commandsAndEvents.KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
         if (!current || current._isComplete) {
+            kernelCommandInvocation.getOrCreateToken();
             KernelInvocationContext._current = new KernelInvocationContext(kernelCommandInvocation);
         } else {
-            if (!areCommandsTheSame(kernelCommandInvocation, current._commandEnvelope)) {
+            if (!commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(kernelCommandInvocation, current._commandEnvelope)) {
                 const found = current._childCommands.includes(kernelCommandInvocation);
                 if (!found) {
+                    kernelCommandInvocation.setParent(current._commandEnvelope);
                     current._childCommands.push(kernelCommandInvocation);
                 }
             }
@@ -59,7 +59,7 @@ export class KernelInvocationContext implements Disposable {
     }
 
     complete(command: commandsAndEvents.KernelCommandEnvelope) {
-        if (areCommandsTheSame(command, this._commandEnvelope)) {
+        if (commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(command, this._commandEnvelope)) {
             this._isComplete = true;
             let succeeded: commandsAndEvents.CommandSucceeded = {};
             let eventEnvelope: commandsAndEvents.KernelEventEnvelope = new commandsAndEvents.KernelEventEnvelope(
@@ -127,12 +127,12 @@ export class KernelInvocationContext implements Disposable {
         this._commandEnvelope;//?
         if (command === null ||
             command === undefined ||
-            areCommandsTheSame(command!, this._commandEnvelope) ||
+            commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(command!, this._commandEnvelope) ||
             this._childCommands.includes(command!)) {
             this._eventSubject.next(kernelEvent);
-        } else if (isSelforDescendantOf(command, this._commandEnvelope)) {
+        } else if (command.isSelforDescendantOf(this._commandEnvelope)) {
             this._eventSubject.next(kernelEvent);
-        } else if (hasSameRootCommandAs(command, this._commandEnvelope)) {
+        } else if (command.hasSameRootCommandAs(this._commandEnvelope)) {
             this._eventSubject.next(kernelEvent);
         }
     }
@@ -148,24 +148,4 @@ export class KernelInvocationContext implements Disposable {
         }
         KernelInvocationContext._current = null;
     }
-}
-
-export function areCommandsTheSame(envelope1: commandsAndEvents.KernelCommandEnvelope, envelope2: commandsAndEvents.KernelCommandEnvelope): boolean {
-    envelope1;//?
-    envelope2;//?
-    envelope1 === envelope2;//?
-    if (envelope1 === envelope2) {
-        return true;
-    }
-
-    const sameCommandType = envelope1?.commandType === envelope2?.commandType; //?
-    if (!sameCommandType) {
-        return false;
-    }
-
-    const sameToken = envelope1?.getOrCreateToken() === envelope2?.getOrCreateToken(); //?
-    if (!sameToken) {
-        return false;
-    }
-    return true;
 }
