@@ -233,14 +233,10 @@ jupyter notebook --no-browser --NotebookApp.token=<your_token> --port=8888
     conda install -c r r-irkernel
     ```
 
-3. Start Anaconda Bash prompt and create an environment variable `TEST_DOTNET_JUPYTER_ZMQ_CONN` and set to `true` and reactivate your conda environment
-
-    ```bash
-    conda env config vars set TEST_DOTNET_JUPYTER_ZMQ_CONN=true 
-    conda activate base
-    ```
-
-3. Restart `dotnet-interactive.sln` from the Anaconda Bash prompt.
+3. Set an environment variable `TEST_DOTNET_JUPYTER_ZMQ_CONN` pointing to conda installation and environment that has jupyter installed
+```
+--conda-env base
+```
 
 4. The tests will now use the environment variable to connect to your server. 
 
