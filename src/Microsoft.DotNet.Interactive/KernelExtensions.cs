@@ -361,7 +361,12 @@ public static class KernelExtensions
                 requestValue = new RequestValue(sourceValueName, JsonFormatter.MimeType, sourceKernelName);
                 isByref = false;
             }
-            
+
+            if (KernelInvocationContext.Current is {} context)
+            {
+                requestValue.SetParent(context.Command);
+            }
+
             var result = destinationKernel.RootKernel.SendAsync(requestValue).GetAwaiter().GetResult();
 
             if (result.Events.LastOrDefault() is CommandFailed failed)

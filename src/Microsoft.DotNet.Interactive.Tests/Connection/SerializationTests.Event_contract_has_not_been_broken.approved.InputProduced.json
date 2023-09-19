@@ -5,7 +5,6 @@
   "eventType": "InputProduced",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "RequestInput",
     "command": {
       "prompt": "What is the path to the log file?",

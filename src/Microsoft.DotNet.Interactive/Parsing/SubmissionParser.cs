@@ -259,7 +259,7 @@ public class SubmissionParser
 
         foreach (var command in commands)
         {
-            command.Parent = originalCommand;
+            command.SetParent(originalCommand);
         }
 
         return commands;

@@ -73,11 +73,9 @@ export function createInMemoryChannels(): {
 
 export function clearTokenAndId(envelope: connection.KernelCommandOrEventEnvelopeModel) {
     if (connection.isKernelEventEnvelopeModel(envelope)) {
-        delete envelope.command?.id;
         delete envelope.command?.token;
 
     } else if (connection.isKernelCommandEnvelopeModel(envelope)) {
-        delete envelope.id;
         delete envelope.token;
     }
 

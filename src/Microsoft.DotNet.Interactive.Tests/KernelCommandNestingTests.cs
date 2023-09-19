@@ -20,95 +20,122 @@ public class KernelCommandNestingTests : LanguageKernelTestBase
     {
     }
 
-    [Fact]
-    public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_CommandSucceeded_to_the_outer_result()
+    public class Kernel_KernelEvents
     {
-        using var kernel = new CompositeKernel
+        [Fact]
+        public async Task Commands_sent_within_the_code_of_another_command_publish_error_events_on_CompositeKernel_for_failures()
         {
-            new CSharpKernel ( "cs1" ),
-            new CSharpKernel ( "cs2" )
-        };
-        var kernelEvents = kernel.KernelEvents.ToSubscribedList();
-        var command = new SubmitCode(@$"
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel("cs1"),
+                new CSharpKernel("cs2")
+            };
+            var kernelEvents = kernel.KernelEvents.ToSubscribedList();
+            var command = new SubmitCode($@"
+#!cs1
+using {typeof(Kernel).Namespace};
+using {typeof(KernelCommand).Namespace};
+await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
+");
+
+            await kernel.SendAsync(command);
+
+            kernelEvents.Should()
+                        .ContainSingle<ErrorProduced>()
+                        .Which
+                        .Message
+                        .Should()
+                        .Be("(1,1): error CS0103: The name 'error' does not exist in the current context");
+        }
+    }
+
+    public class KernelCommandResult_Events
+    {
+        [Fact]
+        public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_CommandSucceeded_to_the_outer_result()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel("cs1"),
+                new CSharpKernel("cs2")
+            };
+            var command = new SubmitCode(@$"
 #!cs1
 using {typeof(Kernel).Namespace};
 using {typeof(KernelCommand).Namespace};
 await Kernel.Root.SendAsync(new SubmitCode(""1+1"", ""cs2""));
 ");
-        await kernel.SendAsync(command);
+            var result = await kernel.SendAsync(command);
 
-        using var _ = new AssertionScope();
-        kernelEvents.Should()
-            .ContainSingle<CommandSucceeded>(e => e.Command == command);
+            using var _ = new AssertionScope();
 
-        kernelEvents.Should()
-            .NotContain(e =>
-                e is CommandSucceeded &&
-                e.Command.TargetKernelName == "cs2");
-    }
+            result.Events.Should().ContainSingle<CommandSucceeded>(e => e.Command == command);
 
-    [Fact]
-    public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_CommandFailed_to_the_outer_result()
-    {
-        using var kernel = new CompositeKernel
+            result.Events.Should()
+                  .NotContain(e =>
+                                  e is CommandSucceeded &&
+                                  e.Command.TargetKernelName == "cs2");
+        }
+
+        [Fact]
+        public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_CommandFailed_to_the_outer_result()
         {
-            new CSharpKernel ( "cs1" ),
-            new CSharpKernel ( "cs2" )
-        };
-        var kernelEvents = kernel.KernelEvents.ToSubscribedList();
-        var command = new SubmitCode($@"
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel("cs1"),
+                new CSharpKernel("cs2")
+            };
+            var command = new SubmitCode($@"
 #!cs1
 using {typeof(Kernel).Namespace};
 using {typeof(KernelCommand).Namespace};
 await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
 ");
-        await kernel.SendAsync(command);
+            var result = await kernel.SendAsync(command);
 
-        kernelEvents.Should()
-            .ContainSingle<CommandSucceeded>(e => e.Command == command);
+            result.Events.Should()
+                  .ContainSingle<CommandSucceeded>(e => e.Command == command);
 
-        kernelEvents
-            .Should()
-            .NotContain(e => e is CommandFailed);
-    }
+            result.Events
+                  .Should()
+                  .NotContain(e => e is CommandFailed);
+        }
 
-    [Fact]
-    public async Task Commands_sent_within_the_code_of_another_command_publish_error_events_on_CompositeKernel_for_failures()
-    {
-        using var kernel = new CompositeKernel
+        [Fact(Skip = "Need to remove command id first")] // FIX: (Commands_sent_within_the_code_of_another_command_do_not_publish_events_to_the_outer_result) 
+        public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_events_to_the_outer_result()
         {
-            new CSharpKernel ( "cs1" ),
-            new CSharpKernel ( "cs2" )
-        };
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel("cs1"),
+                new CSharpKernel("cs2")
+            };
 
-        var command = new SubmitCode($@"
-#!cs1
-using {typeof(Kernel).Namespace};
-using {typeof(KernelCommand).Namespace};
-await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
-");
-        var result = await kernel.SendAsync(command);
+            var command = new SubmitCode($"""
+                using {typeof(Kernel).Namespace};
+                using {typeof(KernelCommand).Namespace};
+                var result = await Kernel.Root.SendAsync(new SubmitCode("123.Display();\n456", "cs2"));
+                """, "cs1");
 
-        result.Events.Should()
-              .ContainSingle<ErrorProduced>()
-              .Which
-              .Message
-              .Should()
-              .Be("(1,1): error CS0103: The name 'error' does not exist in the current context");
-    }
+            var result = await kernel.SendAsync(command);
 
-    [Fact]
-    public async Task Commands_sent_within_the_code_of_another_command_publish_CommandSucceeded_to_the_inner_result()
-    {
-        using var kernel = new CompositeKernel
+            using var _ = new AssertionScope();
+            result.Events.Should().NotContainErrors();
+            result.Events.Should().NotContain(e => e is DisplayedValueProduced);
+            result.Events.Should().NotContain(e => e is ReturnValueProduced);
+        }
+
+        [Fact]
+        public async Task Commands_sent_within_the_code_of_another_command_publish_CommandSucceeded_to_the_inner_result()
         {
-            new CSharpKernel(),
-            new FSharpKernel()
-        };
-        kernel.DefaultKernelName = "csharp";
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel(),
+                new FSharpKernel()
+            };
+            kernel.DefaultKernelName = "csharp";
 
-        var result = await kernel.SubmitCodeAsync(
-            @"
+            var result = await kernel.SubmitCodeAsync(
+                             @"
 using System.Reactive.Linq;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
@@ -118,24 +145,24 @@ var result = await Kernel.Root.SendAsync(new SubmitCode(""123"", ""fsharp""));
 result.Events.Last()
 ");
 
-        result.Events.Should().NotContainErrors();
+            result.Events.Should().NotContainErrors();
 
-        result.Events
-              .Should()
-              .ContainSingle<ReturnValueProduced>(e => e.Value is CommandSucceeded);
-    }
+            result.Events
+                  .Should()
+                  .ContainSingle<ReturnValueProduced>(e => e.Value is CommandSucceeded);
+        }
 
-    [Fact]
-    public async Task Commands_sent_within_the_code_of_another_command_publish_CommandFailed_to_the_inner_result()
-    {
-        using var kernel = new CompositeKernel
+        [Fact]
+        public async Task Commands_sent_within_the_code_of_another_command_publish_CommandFailed_to_the_inner_result()
         {
-            new CSharpKernel ( "cs1" ),
-            new CSharpKernel ( "cs2" )
-        };
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel("cs1"),
+                new CSharpKernel("cs2")
+            };
 
-        var result = await kernel.SendAsync(new SubmitCode(
-            @"
+            var result = await kernel.SendAsync(new SubmitCode(
+                                                    @"
 using System.Reactive.Linq;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
@@ -145,8 +172,9 @@ var result = await Kernel.Root.SendAsync(new SubmitCode(""nope"", ""cs2""));
 result.Events.Last()
 ", "cs1"));
 
-        result.Events
-              .Should()
-              .ContainSingle<ReturnValueProduced>(e => e.Value is CommandFailed);
+            result.Events
+                  .Should()
+                  .ContainSingle<ReturnValueProduced>(e => e.Value is CommandFailed);
+        }
     }
 }

@@ -42,7 +42,6 @@
   "eventType": "ValueInfosProduced",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "RequestValueInfos",
     "command": {
       "mimeType": "text/plain+summary",

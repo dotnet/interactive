@@ -12,7 +12,6 @@
   "eventType": "DisplayedValueUpdated",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "SubmitCode",
     "command": {
       "code": "b(\"hi!\")",
