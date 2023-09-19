@@ -20,7 +20,7 @@ public class KernelCommandNestingTests : LanguageKernelTestBase
     {
     }
 
-    public class KernelEvents
+    public class Kernel_KernelEvents
     {
         [Fact]
         public async Task Commands_sent_within_the_code_of_another_command_publish_error_events_on_CompositeKernel_for_failures()
@@ -49,7 +49,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
         }
     }
 
-    public class KernelCommandResultEvents
+    public class KernelCommandResult_Events
     {
         [Fact]
         public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_CommandSucceeded_to_the_outer_result()
