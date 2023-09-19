@@ -46,9 +46,9 @@ internal class CondaEnvironment : IJupyterEnvironment
             var results = JsonSerializer.Deserialize<EnvironmentListResults>(string.Join(string.Empty, envList.Output));
             return results.envs.Select(e =>
             {
-                if (e.Contains("envs"))
+                if (e.Contains("\\envs\\"))
                 {
-                    return e.Split(Path.PathSeparator).LastOrDefault();
+                    return e.Split("\\").LastOrDefault();
                 }
                 else
                 {
