@@ -11,6 +11,8 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 {
     private TextSpan _fullSpan;
@@ -60,13 +62,16 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
     protected bool TextContainsWhitespace()
     {
-        // ignore whitespace if it's the first or last token 
+        // We ignore whitespace if it's the first or last token, OR ignore the first or last token if it's not whitespace.  For this reason, the first and last tokens aren't interesting.
         for (var i = 1; i < _childNodesAndTokens.Count - 1; i++)
         {
             var nodeOrToken = _childNodesAndTokens[i];
             if (nodeOrToken is HttpSyntaxToken { Kind: HttpTokenKind.Whitespace })
             {
-                return true;
+                if (nodeOrToken.Span.OverlapsWith(_span))
+                {
+                    return true;
+                }
             }
         }
 
@@ -110,7 +115,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
                 FullSpan.End;
 
             _span = TextSpan.FromBounds(
-                startOfSignificantText, 
+                startOfSignificantText,
                 endOfSignificantText);
         }
     }
@@ -141,11 +146,11 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         if (addBefore)
         {
             _childNodesAndTokens.Insert(0, child);
-        } else
+        }
+        else
         {
             _childNodesAndTokens.Add(child);
         }
-        
 
         GrowSpan(child);
     }

@@ -14,7 +14,6 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 {
     private KernelCommand _parent;
     private string _token;
-    private string _id;
 
     protected KernelCommand(
         string targetKernelName = null)
@@ -24,23 +23,32 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         RoutingSlip = new CommandRoutingSlip();
     }
 
-    [JsonIgnore]
-    public KernelCommandInvocation Handler { get; set; }
+    [JsonIgnore] public KernelCommandInvocation Handler { get; set; }
 
     [JsonIgnore]
-    public KernelCommand Parent
+    public KernelCommand Parent => _parent;
+
+    public void SetParent(KernelCommand parent)
     {
-        get => _parent;
-        internal set
+        if (parent is null)
         {
-            if (_parent is null)
+            throw new ArgumentNullException(nameof(parent));
+        }
+
+        if (_parent is null)
+        {
+            if (_token is not null)
             {
-                _parent = value;
+                _token = null;
             }
-            else if (_parent != value)
-            {
-                throw new InvalidOperationException("Parent cannot be changed.");
-            }
+
+            _parent = parent;
+
+            GetOrCreateToken();
+        }
+        else if (_parent != parent)
+        {
+            throw new InvalidOperationException("Parent cannot be changed.");
         }
     }
 
@@ -87,11 +95,11 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
             return _token;
         }
 
-        _token = CreateToken();
+        _token = CreateRootToken();
 
         return _token;
 
-        static string CreateToken()
+        static string CreateRootToken()
         {
 #if DEBUG
             var token = Interlocked.Increment(ref _nextRootToken);
@@ -126,24 +134,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         return Handler(this, context);
     }
-
-    public void SetId(string id)
-    {
-        _id = id;
-    }
-
-    internal string GetOrCreateId()
-    {
-        if (_id is not null)
-        {
-            return _id;
-        }
-
-        SetId(Guid.NewGuid().ToString("N"));
-
-        return _id;
-    }
-
+    
     public bool Equals(KernelCommand other)
     {
         if (ReferenceEquals(this, other))
@@ -151,17 +142,14 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
             return true;
         }
 
-        if (other is null)
+        if (_token is not null && other?._token is not null)
         {
-            return false;
+            var tokensAreEqual = _token == other._token;
+
+            return tokensAreEqual;
         }
 
-        return GetOrCreateId() == other.GetOrCreateId();
-    }
-
-    public override int GetHashCode()
-    {
-        return GetOrCreateId().GetHashCode();
+        return false;
     }
 
     internal bool IsSelfOrDescendantOf(KernelCommand other)

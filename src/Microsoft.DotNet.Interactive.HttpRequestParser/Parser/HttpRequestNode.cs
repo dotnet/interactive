@@ -9,16 +9,18 @@ using System.Linq;
 using System.Net.Http;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
+
+using Diagnostic = CodeAnalysis.Diagnostic;
+using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
 internal class HttpRequestNode : HttpSyntaxNode
 {
     internal HttpRequestNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
-    
+
     public HttpMethodNode? MethodNode { get; private set; }
 
     public HttpUrlNode? UrlNode { get; private set; }
@@ -26,8 +28,6 @@ internal class HttpRequestNode : HttpSyntaxNode
     public HttpVersionNode? VersionNode { get; private set; }
 
     public HttpHeadersNode? HeadersNode { get; private set; }
-
-    public HttpBodySeparatorNode? BodySeparatorNode { get; private set; }
 
     public HttpBodyNode? BodyNode { get; private set; }
 
@@ -71,16 +71,6 @@ internal class HttpRequestNode : HttpSyntaxNode
         AddInternal(node);
     }
 
-    public void Add(HttpBodySeparatorNode node)
-    {
-        if (BodySeparatorNode is not null)
-        {
-            throw new InvalidOperationException($"{nameof(BodySeparatorNode)} was already added.");
-        }
-        BodySeparatorNode = node;
-        AddInternal(node);
-    }
-
     public void Add(HttpBodyNode node)
     {
         if (BodyNode is not null)
@@ -88,6 +78,11 @@ internal class HttpRequestNode : HttpSyntaxNode
             throw new InvalidOperationException($"{nameof(BodyNode)} was already added.");
         }
         BodyNode = node;
+        AddInternal(node);
+    }
+
+    public void Add(HttpCommentNode node)
+    {
         AddInternal(node);
     }
 
@@ -112,7 +107,7 @@ internal class HttpRequestNode : HttpSyntaxNode
                 diagnostics.AddRange(uriBindingResult.Diagnostics);
             }
         }
-       
+
         var bodyResult = BodyNode?.TryGetBody(bind);
         string body = "";
 
@@ -175,7 +170,9 @@ internal class HttpRequestNode : HttpSyntaxNode
                     }
                     catch (Exception exception)
                     {
-                        diagnostics.Add(headerNode.ValueNode.CreateDiagnostic(exception.Message));
+                        var diagnosticInfo = HttpDiagnostics.InvalidHeaderValue(exception.Message);
+                        var diagnostic = headerNode.ValueNode.CreateDiagnostic(diagnosticInfo);
+                        diagnostics.Add(diagnostic);
                     }
                 }
             }

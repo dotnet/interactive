@@ -87,6 +87,8 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
     public HttpHeadersNodeSyntaxSpec HeadersSection { get; }
 
     public HttpBodyNodeSyntaxSpec BodySection { get; }
+    
+    public Random ExtraTriviaRandomizer { get; set; }
 
     public override void Validate(HttpRequestNode requestNode)
     {
@@ -163,6 +165,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         var sb = new StringBuilder();
 
         sb.Append(MaybeNewLines());
+        sb.Append(MaybeLineComment());
         sb.Append(MaybeWhitespace());
 
         sb.Append(Method);
@@ -180,7 +183,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
 
         sb.Append(MaybeWhitespace());
         sb.AppendLine();
-        sb.Append(MaybeNewLines());
+        sb.Append(MaybeLineComment()); 
 
         if (HeadersSection is not null)
         {
@@ -200,14 +203,52 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         return sb.ToString();
     }
 
-    private string MaybeWhitespace()
-    {
-        return "";
-    }
+    private string MaybeWhitespace() =>
+        ExtraTriviaRandomizer?.NextDouble() switch
+        {
+            < .2  => " ",
+            > .2 and < .4 => "  ",
+            > .4 and < .6 => "\t",
+            > .6 and < .8 => "\t ",
+            _ => ""
+        };
 
-    private string MaybeNewLines()
+    private string MaybeNewLines() =>
+        ExtraTriviaRandomizer?.NextDouble() switch
+        {
+            < .2 => "\n",
+            > .2 and < .4 => "\r\n",
+            _ => ""
+        };
+
+    private string MaybeLineComment()
     {
-        return "";
+        var numberOfCommentLines = ExtraTriviaRandomizer?.NextDouble() switch
+        {
+            < .4 => 1,
+            > .4 and < .7 => 2,
+            _ => 0
+        };
+
+        var commentText = "";
+
+        for (int i = 0; i < numberOfCommentLines; i++)
+        {
+            commentText += CommentLine();
+        }
+
+        return commentText;
+
+        string CommentLine()
+        {
+            return ExtraTriviaRandomizer?.NextDouble() switch
+            {
+                < .25 => "# random line comment followed by a LF\n",
+                > .25 and < .5 => "# random line comment followed by a CRLF\r\n",
+                > .5 and < .75 => "// random line comment followed by a LF\n",
+                > .75  => "// random line comment followed by a CRLF\r\n",
+            };
+        }
     }
 }
 

@@ -12,7 +12,4 @@ public interface IKernelCommandEnvelope
     string CommandType { get; }
 
     string Token { get; }
-
-    // TODO: (CommandId) rename this 
-    string CommandId { get; }
 }

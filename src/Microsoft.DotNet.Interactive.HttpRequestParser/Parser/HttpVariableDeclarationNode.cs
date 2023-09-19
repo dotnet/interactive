@@ -3,11 +3,13 @@
 
 #nullable enable
 
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
+
+using Diagnostic = CodeAnalysis.Diagnostic;
 
 internal class HttpVariableDeclarationNode : HttpSyntaxNode
 {
@@ -17,7 +19,6 @@ internal class HttpVariableDeclarationNode : HttpSyntaxNode
 
     public string VariableName => ChildTokens.Where(t => t.Kind == HttpTokenKind.Word).Select(t => t.Text).FirstOrDefault() ?? string.Empty;
 
-   
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
         foreach (var diagnostic in base.GetDiagnostics())
@@ -27,7 +28,7 @@ internal class HttpVariableDeclarationNode : HttpSyntaxNode
 
         if (string.IsNullOrWhiteSpace(VariableName))
         {
-            yield return CreateDiagnostic("Variable name expected.");
+            yield return CreateDiagnostic(HttpDiagnostics.VariableNameExpected());
         }
     }
 }

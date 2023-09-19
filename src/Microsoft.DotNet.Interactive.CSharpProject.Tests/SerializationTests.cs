@@ -97,7 +97,6 @@ public class SerializationTests
             .UsingExtension($"{command.GetType().Name}.json")
             .SetInteractive(Debugger.IsAttached);
 
-        command.SetId("command-id");
         command.SetToken("the-token");
 
         var json = KernelCommandEnvelope.Serialize(command);
@@ -113,7 +112,6 @@ public class SerializationTests
             .UsingExtension($"{@event.GetType().Name}.json")
             .SetInteractive(Debugger.IsAttached);
 
-        @event.Command?.SetId("command-id");
         @event.Command?.SetToken("the-token");
             
         var json = KernelEventEnvelope.Serialize(@event);

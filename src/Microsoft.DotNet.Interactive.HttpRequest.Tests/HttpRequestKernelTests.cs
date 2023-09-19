@@ -299,7 +299,7 @@ public class HttpRequestKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be("Cannot resolve symbol 'api_endpoint'");
+        diagnostics.Diagnostics.First().Message.Should().Be("Cannot resolve symbol 'api_endpoint'.");
     }
 
     [Fact]
@@ -379,7 +379,7 @@ public class HttpRequestKernelTests
         });
         var client = new HttpClient(handler);
 
-        using var kernel = new HttpRequestKernel(client:client);
+        using var kernel = new HttpRequestKernel(client: client);
 
         await kernel.SendAsync(new SubmitCode("OOPS http://testuri.ninja"));
 

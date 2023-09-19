@@ -48,6 +48,10 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         }
     }
 
+    internal T CurrentValue => _currentlyRunningOperation is { } currentOperation
+                            ? currentOperation.Value
+                            : default;
+
     public Task<TResult> RunAsync(
         T value,
         KernelSchedulerDelegate<T, TResult> onExecuteAsync,

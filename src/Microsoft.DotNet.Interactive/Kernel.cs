@@ -136,8 +136,6 @@ public abstract partial class Kernel :
             throw new ArgumentNullException(nameof(command));
         }
 
-        command.SetToken($"deferredCommand::{Guid.NewGuid():N}");
-
         _deferredCommands.Enqueue(command);
     }
 
@@ -193,9 +191,9 @@ public abstract partial class Kernel :
             command.TargetKernelName ??= handlingKernel.Name;
 
             if (command.Parent is null &&
-                !command.Equals(originalCommand))
+                !ReferenceEquals(command, originalCommand))
             {
-                command.Parent = originalCommand;
+                command.SetParent(originalCommand);
             }
 
             if (handlingKernel is ProxyKernel &&
@@ -337,21 +335,20 @@ public abstract partial class Kernel :
 
         using var disposable = new SerialDisposable();
 
-        KernelInvocationContext context = null;
         command.ShouldPublishCompletionEvent ??= true;
 
-        context = KernelInvocationContext.GetOrCreateAmbientContext(command, GetKernelHost()?.ContextsByRootToken);
+        var context = KernelInvocationContext.GetOrCreateAmbientContext(command, GetKernelHost()?.ContextsByRootToken);
+
+        // only subscribe for the root command 
+        var currentCommandOwnsContext = ReferenceEquals(context.Command, command);
 
         if (command.Parent is null)
         {
-            if (!ReferenceEquals(command, context.Command))
+            if (Scheduler.CurrentValue is { } currentlyExecutingCommand)
             {
-                command.Parent = context.Command;
+                command.SetParent(currentlyExecutingCommand);
             }
         }
-
-        // only subscribe for the root command 
-        var currentCommandOwnsContext = context.Command.Equals(command);
 
         if (currentCommandOwnsContext)
         {
@@ -526,7 +523,7 @@ public abstract partial class Kernel :
             return Task.CompletedTask;
         }, targetKernelName: targetKernelName)
         {
-            Parent = parent;
+            SetParent(parent);
         }
 
         public override string ToString() => $"Undefer commands ahead of {Parent}";
@@ -603,7 +600,7 @@ public abstract partial class Kernel :
             var currentInvocationContext = KernelInvocationContext.Current;
             kernelCommand.TargetKernelName = Name;
             kernelCommand.SchedulingScope = SchedulingScope;
-            kernelCommand.Parent = currentInvocationContext?.Command;
+            kernelCommand.SetParent(currentInvocationContext.Command);
 
             if (TrySplitCommand(kernelCommand, currentInvocationContext, out var commands))
             {

@@ -37,7 +37,7 @@ public partial class ParserTests
                         .BeEquivalentSequenceTo(new[]
                         {
                             "GET https://example.com",
-                            "GET https://example1.com", 
+                            "GET https://example1.com",
                             "GET https://example2.com"
                         });
         }
@@ -53,7 +53,9 @@ public partial class ParserTests
             var requestNode = result.SyntaxTree.RootNode.ChildNodes
                                     .Should().ContainSingle<HttpRequestNode>().Which;
 
-            var bindingResult = requestNode.TryGetHttpRequestMessage(node => node.CreateBindingFailure("oops"));
+            var bindingResult =
+                requestNode.TryGetHttpRequestMessage(
+                    node => node.CreateBindingFailure(CreateDiagnosticInfo("oops")));
 
             bindingResult.IsSuccessful.Should().BeTrue();
             bindingResult.Value.RequestUri.ToString().Should().Be("https://example.com/");
@@ -71,7 +73,9 @@ public partial class ParserTests
             var requestNode = result.SyntaxTree.RootNode.ChildNodes
                                     .Should().ContainSingle<HttpRequestNode>().Which;
 
-            var bindingResult = requestNode.TryGetHttpRequestMessage(node => node.CreateBindingFailure("oops"));
+            var bindingResult =
+                requestNode.TryGetHttpRequestMessage(
+                    node => node.CreateBindingFailure(CreateDiagnosticInfo("oops")));
 
             bindingResult.IsSuccessful.Should().BeTrue();
             bindingResult.Value.RequestUri.ToString().Should().Be("https://example.com/");
@@ -115,9 +119,12 @@ public partial class ParserTests
 
             var message = "Variable 'version' was not defined.";
 
-            var bindingResult = requestNode.TryGetHttpRequestMessage(node => node.CreateBindingFailure(message));
+            var bindingResult =
+                requestNode.TryGetHttpRequestMessage(
+                    node => node.CreateBindingFailure(CreateDiagnosticInfo(message)));
+
             bindingResult.IsSuccessful.Should().BeFalse();
-            bindingResult.Diagnostics.Should().ContainSingle().Which.Message.Should().Be(message);
+            bindingResult.Diagnostics.Should().ContainSingle().Which.GetMessage().Should().Be(message);
         }
     }
 }

@@ -9,6 +9,8 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal class HttpVersionNode : HttpSyntaxNode
 {
     internal HttpVersionNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
@@ -24,14 +26,9 @@ internal class HttpVersionNode : HttpSyntaxNode
 
         if (ChildTokens.FirstOrDefault() is { Kind: HttpTokenKind.Word } word)
         {
-            if (word.Text.ToLowerInvariant() is not "http" and not "https")
+            if ((word.Text.ToLowerInvariant() is not "http" and not "https") || TextContainsWhitespace())
             {
-                yield return CreateDiagnostic("Invalid HTTP version");
-            }
-
-            if (TextContainsWhitespace())
-            {
-                yield return CreateDiagnostic("Invalid HTTP version");
+                yield return CreateDiagnostic(HttpDiagnostics.InvalidHttpVersion());
             }
         }
     }

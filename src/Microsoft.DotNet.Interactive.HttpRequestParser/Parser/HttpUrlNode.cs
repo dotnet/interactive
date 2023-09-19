@@ -11,6 +11,8 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal class HttpUrlNode : HttpSyntaxNode
 {
     internal HttpUrlNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
@@ -32,12 +34,12 @@ internal class HttpUrlNode : HttpSyntaxNode
             {
                 if (uri.Scheme is not "http" and not "https")
                 {
-                    yield return CreateDiagnostic($"Unrecognized URI scheme: {uri.Scheme}", DiagnosticSeverity.Warning);
+                    yield return CreateDiagnostic(HttpDiagnostics.UnrecognizedUriScheme(uri.Scheme));
                 }
             }
             else
             {
-                yield return CreateDiagnostic("Invalid URI");
+                yield return CreateDiagnostic(HttpDiagnostics.InvalidUri());
             }
         }
     }

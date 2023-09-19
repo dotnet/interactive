@@ -12,11 +12,9 @@
   "eventType": "DisplayedValueProduced",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "SubmitCode",
     "command": {
       "code": "b(\"hi!\")",
-      "submissionType": "run",
       "targetKernelName": "csharp",
       "originUri": null,
       "destinationUri": null

@@ -52,7 +52,7 @@ public class SubmissionParser
             {
                 if (!string.IsNullOrWhiteSpace(languageNode.Text))
                 {
-                    return new SubmitCode(languageNode, submitCode.SubmissionType, kernelNameNode);
+                    return new SubmitCode(languageNode, kernelNameNode);
                 }
                 else
                 {
@@ -259,7 +259,7 @@ public class SubmissionParser
 
         foreach (var command in commands)
         {
-            command.Parent = originalCommand;
+            command.SetParent(originalCommand);
         }
 
         return commands;
@@ -377,7 +377,7 @@ public class SubmissionParser
         return _directiveParser;
     }
 
-    internal static (string targetKernelName, string valueName) SplitKernelDesignatorToken(string tokenToReplace, string kernelNameIfNotSpecified)
+    internal static (string targetKernelName, string promptOrValueName) SplitKernelDesignatorToken(string tokenToReplace, string kernelNameIfNotSpecified)
     {
         var parts = tokenToReplace.Split(':');
 
@@ -410,29 +410,33 @@ public class SubmissionParser
             return false;
         }
 
-        var (targetKernelName, valueName) = SplitKernelDesignatorToken(tokenToReplace, _kernel.Name);
+        var (targetKernelName, promptOrValueName) = SplitKernelDesignatorToken(tokenToReplace, _kernel.Name);
 
         if (targetKernelName is "input" or "password")
         {
-            InterpolateUserInput(out replacementTokens);
+            ReplaceTokensWithUserInput(out replacementTokens);
             return true;
         }
 
-        if (context is { CurrentlyParsingDirectiveNode: ActionDirectiveNode { AllowValueSharingByInterpolation: true } })
+        if (context is not { CurrentlyParsingDirectiveNode: ActionDirectiveNode { AllowValueSharingByInterpolation: true } })
         {
-            var result = _kernel.RootKernel.SendAsync(new RequestValue(valueName, mimeType: "application/json", targetKernelName: targetKernelName)).GetAwaiter().GetResult();
+            return false;
+        }
 
-            var valueProduced = result.Events.OfType<ValueProduced>().SingleOrDefault();
+        var result = _kernel.RootKernel.SendAsync(new RequestValue(promptOrValueName, mimeType: "application/json", targetKernelName: targetKernelName)).GetAwaiter().GetResult();
 
-            if (valueProduced is { })
+        var valueProduced = result.Events.OfType<ValueProduced>().SingleOrDefault();
+
+        if (valueProduced is { })
+        {
+            string interpolatedValue = null;
+
+            if (valueProduced.Value is { } value)
             {
-                string interpolatedValue = null;
-
-                if (valueProduced.Value is { } value)
-                {
-                    interpolatedValue = value.ToString();
-                }
-                else switch (valueProduced.FormattedValue.MimeType)
+                interpolatedValue = value.ToString();
+            }
+            else
+                switch (valueProduced.FormattedValue.MimeType)
                 {
                     case "application/json":
                     {
@@ -463,54 +467,77 @@ public class SubmissionParser
                         return false;
                 }
 
-                replacementTokens = new[] { $"{interpolatedValue}" };
-                return true;
+            replacementTokens = new[] { $"{interpolatedValue}" };
+            return true;
+        }
+        else
+        {
+            errorMessage = $"Value '{tokenToReplace}' not found in kernel {targetKernelName}";
+            return false;
+        }
+
+        void ReplaceTokensWithUserInput(out IReadOnlyList<string> replacementTokens)
+        {
+            string typeHint = null;
+            string valueName = null;
+            string prompt = null;
+
+            if (context is not { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
+            {
+                replacementTokens = null;
+                return;
+            }
+
+            if (promptOrValueName.Contains(" "))
+            {
+                prompt = promptOrValueName;
             }
             else
             {
-                errorMessage = $"Value '{tokenToReplace}' not found in kernel {targetKernelName}";
-                return false;
+                valueName = promptOrValueName;
+                prompt = $"Please enter a value for field \"{promptOrValueName}\".";
             }
-        }
 
-        return false;
+            // use the parser to infer a type hint based on the expected type of the argument at the position of the input token
+            var replaceMe = "{2AB89A6C-88D9-4C53-8392-A3A4F902A1CA}";
 
-        void InterpolateUserInput(out IReadOnlyList<string> replacementTokens)
-        {
-            string typeHint = null;
+            var fixedUpText = currentDirectiveNode
+                              .Text
+                              .Replace($"@{tokenToReplace}", replaceMe)
+                              .Replace(" @", "");
+
+            var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
+
+            var symbolResult = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe));
 
             if (targetKernelName == "password")
             {
                 typeHint = "password";
             }
-            else if (context is { CurrentlyParsingDirectiveNode: { } currentDirectiveNode })
+            else if (symbolResult is { Symbol: { } symbol })
             {
-                // use the parser to infer a type hint based on the expected type of the argument at the position of the input token
-                var replaceMe = "{2AB89A6C-88D9-4C53-8392-A3A4F902A1CA}";
+                typeHint = GetTypeHint(symbol);
+            }
 
-                var fixedUpText = currentDirectiveNode
-                                  .Text
-                                  .Replace($"@{tokenToReplace}", replaceMe)
-                                  .Replace(" @", "");
+            switch (parseResult.CommandResult.Command.Name)
+            {
+                case "#!set":
+                    if (parseResult.CommandResult.Children.OfType<OptionResult>().SingleOrDefault(o => o.Option.Name == "name") is { } nameOptionResult)
+                    {
+                        valueName = nameOptionResult.GetValueOrDefault<string>();
+                    }
 
-                var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
-
-                var c = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe));
-
-                if (c is { Symbol: { } symbol })
-                {
-                    typeHint = GetTypeHint(symbol);
-                }
+                    break;
             }
 
             var inputRequest = new RequestInput(
                 valueName: valueName,
-                prompt: !valueName.Contains(" ") ? $"Please enter a value for field \"{valueName}\"." : valueName,
+                prompt: prompt,
                 inputTypeHint: typeHint);
 
-            var result = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
+            var requestInputResult = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 
-            if (result.Events.OfType<InputProduced>().SingleOrDefault() is { } valueProduced)
+            if (requestInputResult.Events.OfType<InputProduced>().SingleOrDefault() is { } valueProduced)
             {
                 replacementTokens = new[] { valueProduced.Value };
             }
@@ -526,7 +553,7 @@ public class SubmissionParser
             {
                 var c = tokenToReplace[i];
 
-                if (c == '\\' || c == '/')
+                if (c is '\\' or '/')
                 {
                     return true;
                 }

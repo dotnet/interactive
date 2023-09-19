@@ -291,7 +291,7 @@ internal static partial class Format
 
         writer.AppendProperties(
             (nameof(@event.Command), @event.Command.GetType().Name),
-            ("CommandToken", @event.Command.GetOrCreateToken()));
+            ("Token", @event.Command.GetOrCreateToken()));
     }
 
     private static void AppendProperties(this TextWriter writer, params (string Name, string? Value)[] properties)

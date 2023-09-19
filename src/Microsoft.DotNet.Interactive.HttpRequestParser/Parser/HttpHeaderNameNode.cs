@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal class HttpHeaderNameNode : HttpSyntaxNode
 {
     internal HttpHeaderNameNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
@@ -23,11 +25,11 @@ internal class HttpHeaderNameNode : HttpSyntaxNode
 
         if (Span.Length == 0)
         {
-            yield return CreateDiagnostic("Missing header name");
+            yield return CreateDiagnostic(HttpDiagnostics.MissingHeaderName());
         }
         else if (TextContainsWhitespace())
         {
-            yield return CreateDiagnostic("Invalid whitespace in header name");
+            yield return CreateDiagnostic(HttpDiagnostics.InvalidWhitespaceInHeaderName());
         }
     }
 }

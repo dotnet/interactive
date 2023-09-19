@@ -134,7 +134,6 @@ export interface SendValue extends KernelCommand {
 
 export interface SubmitCode extends KernelCommand {
     code: string;
-    submissionType?: SubmissionType;
 }
 
 export interface UpdateDisplayedValue extends KernelCommand {
@@ -516,10 +515,5 @@ export interface SignatureInformation {
 export interface ParameterInformation {
     label: string;
     documentation: FormattedValue;
-}
-
-export enum SubmissionType {
-    Run = "run",
-    Diagnose = "diagnose",
 }
 

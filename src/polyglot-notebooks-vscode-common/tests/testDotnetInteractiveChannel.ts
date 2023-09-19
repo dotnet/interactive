@@ -32,28 +32,30 @@ export class TestDotnetInteractiveChannel implements DotnetInteractiveChannel {
 
 
     private submitCommand(commandEnvelope: commandsAndEvents.KernelCommandEnvelope) {
+
+        const commandClone = commandEnvelope.clone();
         // find bare fake command events
-        let eventEnvelopesToReturn = this.fakedEventEnvelopes[commandEnvelope.commandType];
+        let eventEnvelopesToReturn = this.fakedEventEnvelopes[commandClone.commandType];
         if (!eventEnvelopesToReturn) {
             // check for numbered variants
-            let counter = this.fakedCommandCounter.get(commandEnvelope.commandType);
+            let counter = this.fakedCommandCounter.get(commandClone.commandType);
             if (!counter) {
                 // first encounter
                 counter = 1;
             }
 
             // and increment for next time
-            this.fakedCommandCounter.set(commandEnvelope.commandType, counter + 1);
+            this.fakedCommandCounter.set(commandClone.commandType, counter + 1);
 
-            eventEnvelopesToReturn = this.fakedEventEnvelopes[`${commandEnvelope.commandType}#${counter}`];
+            eventEnvelopesToReturn = this.fakedEventEnvelopes[`${commandClone.commandType}#${counter}`];
             if (!eventEnvelopesToReturn) {
                 // couldn't find numbered event names
-                throw new Error(`Unable to find events for command '${commandEnvelope.commandType}'.`);
+                throw new Error(`Unable to find events for command '${commandClone.commandType}'.`);
             }
         }
 
         for (let envelope of eventEnvelopesToReturn) {
-            const event = new commandsAndEvents.KernelEventEnvelope(envelope.eventType, envelope.event, commandEnvelope);
+            const event = new commandsAndEvents.KernelEventEnvelope(envelope.eventType, envelope.event, commandClone);
             this._receiverSubject.next(event);
         }
     }

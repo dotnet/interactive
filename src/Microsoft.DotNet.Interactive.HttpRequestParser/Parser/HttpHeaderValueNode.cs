@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal class HttpHeaderValueNode : HttpSyntaxNode
 {
     internal HttpHeaderValueNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
@@ -30,7 +32,7 @@ internal class HttpHeaderValueNode : HttpSyntaxNode
 
         if (Span.Length == 0)
         {
-            yield return CreateDiagnostic("Missing header value");
+            yield return CreateDiagnostic(HttpDiagnostics.MissingHeaderValue());
         }
     }
 }

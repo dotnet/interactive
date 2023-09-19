@@ -16,6 +16,8 @@ using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.HttpRequest;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 public class HttpRequestKernel :
     Kernel,
     IKernelCommandHandler<RequestValue>,
@@ -244,7 +246,24 @@ public class HttpRequestKernel :
                     .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
                     .ToArray();
 
-            context.Publish(new DiagnosticsProduced(diagnostics, command, formattedDiagnostics));
+            context.Publish(
+                new DiagnosticsProduced(
+                    diagnostics.Select(ToSerializedDiagnostic),
+                    command,
+                    formattedDiagnostics));
+        }
+
+        static Interactive.Diagnostic ToSerializedDiagnostic(Diagnostic d)
+        {
+            var lineSpan = d.Location.GetLineSpan();
+            var start = new LinePosition(lineSpan.StartLinePosition.Line, lineSpan.StartLinePosition.Character);
+            var end = new LinePosition(lineSpan.EndLinePosition.Line, lineSpan.EndLinePosition.Character);
+
+            return new Interactive.Diagnostic(
+                new LinePositionSpan(start, end),
+                d.Severity,
+                code: d.Id,
+                message: d.GetMessage());
         }
     }
 
@@ -286,7 +305,7 @@ public class HttpRequestKernel :
             return HttpBindingResult<object?>.Success(value);
         }
 
-        var diagnostic = node.CreateDiagnostic($"Cannot resolve symbol '{variableName}'");
+        var diagnostic = node.CreateDiagnostic(HttpDiagnostics.CannotResolveSymbol(variableName));
 
         return HttpBindingResult<object?>.Failure(diagnostic);
     }

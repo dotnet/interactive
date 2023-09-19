@@ -54,6 +54,7 @@ export class CompositeKernel extends Kernel {
                     {
                         targetKernelName: kernel.kernelInfo.localName
                     });
+                childCommand.setParent(invocation.commandEnvelope);
                 childCommand.routingSlip.continueWith(invocation.commandEnvelope.routingSlip);
                 await kernel.handleCommand(childCommand);
             }

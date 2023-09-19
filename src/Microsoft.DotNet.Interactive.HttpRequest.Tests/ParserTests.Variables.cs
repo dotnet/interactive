@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
@@ -81,7 +80,7 @@ public partial class ParserTests
                 .OfType<HttpVariableDeclarationAndAssignmentNode>();
 
             variableNodes.Select(v => v.DeclarationNode.VariableName).Should().BeEquivalentSequenceTo(new[] { "host", "version" });
-            variableNodes.Select(e => e.ValueNode.Text).Should().BeEquivalentSequenceTo(new[] { "https://httpbin.org/", "HTTP/1.1" });                  
+            variableNodes.Select(e => e.ValueNode.Text).Should().BeEquivalentSequenceTo(new[] { "https://httpbin.org/", "HTTP/1.1" });
         }
 
         [Fact]
@@ -109,9 +108,8 @@ public partial class ParserTests
 
             var variableDeclarationNode = variableNodes.Select(v => v.DeclarationNode.VariableName).Should()
                 .BeEquivalentSequenceTo(new[] { "hostname", "host" });
-            
-            variableNodes.Select(e => e.ValueNode.Text).Should().BeEquivalentSequenceTo(new[] { "httpbin.org", "https://{{hostname}}/" });
 
+            variableNodes.Select(e => e.ValueNode.Text).Should().BeEquivalentSequenceTo(new[] { "httpbin.org", "https://{{hostname}}/" });
         }
 
         [Fact]
@@ -136,7 +134,7 @@ public partial class ParserTests
             var variableNodes = result.SyntaxTree.RootNode.DescendantNodesAndTokens()
                                        .OfType<HttpVariableDeclarationNode>();
 
-            variableNodes.First().GetDiagnostics().Single().Message.Should().Be("Variable name expected.");
+            variableNodes.First().GetDiagnostics().Single().GetMessage().Should().Be("Variable name expected.");
         }
 
         [Fact]
@@ -167,7 +165,6 @@ public partial class ParserTests
 
             var variableDeclarationNode = declarationNodes.Select(v => v.VariableName).Should()
                 .BeEquivalentSequenceTo(new[] { "hostname", "host" });
-         
         }
     }
 }

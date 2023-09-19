@@ -65,7 +65,7 @@ public class InteractiveDocument : IEnumerable
     {
         EnsureImportFieldParserIsInitialized();
 
-        if (!TryGetKernelInfoFromMetadata(Metadata, out var kernelInfos))
+        if (!TryGetKernelInfosFromMetadata(Metadata, out var kernelInfos))
         {
             kernelInfos = new();
         }
@@ -198,9 +198,9 @@ public class InteractiveDocument : IEnumerable
 
     public string? GetDefaultKernelName()
     {
-        if (TryGetKernelInfoFromMetadata(Metadata, out var kernelInfo))
+        if (TryGetKernelInfosFromMetadata(Metadata, out var kernelInfos))
         {
-            return kernelInfo.DefaultKernelName;
+            return kernelInfos.DefaultKernelName;
         }
 
         return null;
@@ -208,42 +208,17 @@ public class InteractiveDocument : IEnumerable
 
     internal string? GetDefaultKernelName(KernelInfoCollection kernelInfos)
     {
-        if (TryGetKernelInfoFromMetadata(Metadata, out var kernelInfoCollection))
+        if (TryGetKernelInfosFromMetadata(Metadata, out var kernelInfoCollection))
         {
             return kernelInfoCollection.DefaultKernelName;
         }
-
-        if (Metadata is null)
-        {
-            return null;
-        }
-
-        if (Metadata.TryGetValue("kernelspec", out var kernelspecObj))
-        {
-            if (kernelspecObj is IDictionary<string, object> kernelspecDict)
-            {
-                if (kernelspecDict.TryGetValue("language", out var languageObj) &&
-                    languageObj is string defaultLanguage)
-                {
-                    return defaultLanguage;
-                }
-            }
-        }
-
-        if (kernelInfos.DefaultKernelName is { } defaultFromKernelInfos)
-        {
-            if (kernelInfos.TryGetByAlias(defaultFromKernelInfos, out var info))
-            {
-                return info.Name;
-            }
-        }
-
-        return null;
+        
+        return kernelInfos.DefaultKernelName;
     }
 
     internal static void MergeKernelInfos(InteractiveDocument document, KernelInfoCollection kernelInfos)
     {
-        if (TryGetKernelInfoFromMetadata(document.Metadata, out var kernelInfoCollection))
+        if (TryGetKernelInfosFromMetadata(document.Metadata, out var kernelInfoCollection))
         {
             MergeKernelInfos(kernelInfoCollection, kernelInfos);
         }
@@ -264,19 +239,19 @@ public class InteractiveDocument : IEnumerable
         destination.AddRange(source.Where(ki => added.Add(ki.Name)));
     }
 
-    internal static bool TryGetKernelInfoFromMetadata(
+    internal static bool TryGetKernelInfosFromMetadata(
         IDictionary<string, object>? metadata,
-        [NotNullWhen(true)] out KernelInfoCollection? kernelInfo)
+        [NotNullWhen(true)] out KernelInfoCollection? kernelInfos)
     {
         if (metadata is not null)
         {
             if (metadata.TryGetValue("kernelInfo", out var kernelInfoObj))
             {
                 if (kernelInfoObj is JsonElement kernelInfoJson &&
-                    JsonSerializer.Deserialize<KernelInfoCollection>(kernelInfoJson, JsonSerializerOptions) is
+                    kernelInfoJson.Deserialize<KernelInfoCollection>(JsonSerializerOptions) is
                         { } kernelInfoDeserialized)
                 {
-                    kernelInfo = kernelInfoDeserialized;
+                    kernelInfos = kernelInfoDeserialized;
                     return true;
                 }
 
@@ -319,7 +294,7 @@ public class InteractiveDocument : IEnumerable
                                     deserializedKernelInfo.Add(new KernelInfo(name, language, aliases));
                                 }
                             }
-                            kernelInfo = deserializedKernelInfo;
+                            kernelInfos = deserializedKernelInfo;
                             return true;
                         }
                     }
@@ -327,7 +302,7 @@ public class InteractiveDocument : IEnumerable
 
                 if (kernelInfoObj is KernelInfoCollection kernelInfoCollection)
                 {
-                    kernelInfo = kernelInfoCollection;
+                    kernelInfos = kernelInfoCollection;
                     return true;
                 }
             }
@@ -338,17 +313,17 @@ public class InteractiveDocument : IEnumerable
                 {
                     case KernelInfoCollection kernelInfoCollection:
 
-                        kernelInfo = kernelInfoCollection;
+                        kernelInfos = kernelInfoCollection;
                         return true;
 
                     case IDictionary<string, object> dotnetInteractiveDict:
                         {
-                            kernelInfo = new();
+                            kernelInfos = new();
 
                             if (dotnetInteractiveDict.TryGetValue("defaultKernelName", out var nameObj) &&
                                 nameObj is string name)
                             {
-                                kernelInfo.DefaultKernelName = name;
+                                kernelInfos.DefaultKernelName = name;
                             }
 
                             return true;
@@ -364,7 +339,7 @@ public class InteractiveDocument : IEnumerable
                     if (kernelspecDict.TryGetValue("language", out var languageObj) &&
                         languageObj is string defaultLanguage)
                     {
-                        kernelInfo = new KernelInfoCollection
+                        kernelInfos = new KernelInfoCollection
                         {
                             DefaultKernelName = defaultLanguage
                         };
@@ -375,7 +350,7 @@ public class InteractiveDocument : IEnumerable
         }
 
         // check if a KernelInfoCollection was directly serialized into the metadata
-        kernelInfo = default;
+        kernelInfos = default;
         return false;
     }
 

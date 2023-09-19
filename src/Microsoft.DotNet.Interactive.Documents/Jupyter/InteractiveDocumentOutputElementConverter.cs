@@ -97,11 +97,16 @@ internal class InteractiveDocumentOutputElementConverter : JsonConverter<Interac
                         break;
 
                     case "execute_result":
-                        var returnValueElement = new ReturnValueElement(data ?? new Dictionary<string, object>())
+                        var returnValueElement = new ReturnValueElement
                         {
                             ExecutionOrder = executionCount ?? 0
                         };
-                        
+
+                        if (data is not null)
+                        {
+                            returnValueElement.Data.MergeWith(data);
+                        }
+
                         if (metadata is not null)
                         {
                             returnValueElement.Metadata.MergeWith(metadata);

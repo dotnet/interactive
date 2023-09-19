@@ -1,6 +1,5 @@
 {
   "token": "the-token",
-  "id": "command-id",
   "commandType": "SendEditableCode",
   "command": {
     "kernelName": "someKernelName",

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.CommandLine;
 using System.IO.Pipes;
 using System.Threading.Tasks;
@@ -26,11 +26,11 @@ namespace WpfConnect
             base.OnStartup(e);
             _kernel = new CompositeKernel();
 
-            SetUpNamedPipeKernelConnection();
-
             AddDispatcherMagicCommand(_kernel);
 
             CSharpKernel csharpKernel = RegisterCSharpKernel();
+
+            SetUpNamedPipeKernelConnection();
 
             var _ = Task.Run(async () =>
             {

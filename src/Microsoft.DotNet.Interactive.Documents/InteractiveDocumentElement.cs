@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
-public class InteractiveDocumentElement
+public sealed class InteractiveDocumentElement
 {
     [JsonConstructor]
     public InteractiveDocumentElement()
