@@ -43,7 +43,7 @@ function toBase64String(value: Uint8Array): string {
 }
 export class KernelCommandEnvelope {
 
-    private _childCommandCounter: number = 0;
+    private _childCommandCounter: number = 1;
     private _routingSlip: CommandRoutingSlip = new CommandRoutingSlip();
     private _token?: string;
     private _parentCommand?: KernelCommandEnvelope;
@@ -111,7 +111,7 @@ export class KernelCommandEnvelope {
         return true;
     }
 
-
+    static _counter = 1;
     public getOrCreateToken(): string {
         if (this._token) {
             return this._token;
@@ -125,6 +125,8 @@ export class KernelCommandEnvelope {
         const guidBytes = uuid.parse(uuid.v4());
         const data = new Uint8Array(guidBytes);
         this._token = toBase64String(data);
+
+        // this._token = `${KernelCommandEnvelope._counter++}`;
 
         return this._token;
     }
