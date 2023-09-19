@@ -19,11 +19,12 @@ internal class CondaEnvironment : IJupyterEnvironment
     public const string BASE_ENV = "base";
     public string Name { get; set; }
     public static string CondaPath;
-    private static IReadOnlyCollection<string> _environments;
+    private static IReadOnlyCollection<string> _environments = null;
 
     static CondaEnvironment()
     {
         CondaPath = GetCondaPath();
+        _environments = new List<string>();
         Task.Run(async () => _environments = await GetEnvironmentsAsync());
     }
 
