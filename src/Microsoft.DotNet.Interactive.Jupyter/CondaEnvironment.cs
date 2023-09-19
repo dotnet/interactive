@@ -19,12 +19,11 @@ internal class CondaEnvironment : IJupyterEnvironment
     public const string BASE_ENV = "base";
     public string Name { get; set; }
     public static string CondaPath;
-    private static IReadOnlyCollection<string> _environments = null;
+    private static IReadOnlyCollection<string> _environments = new List<string>();
 
     static CondaEnvironment()
     {
         CondaPath = GetCondaPath();
-        _environments = new List<string>();
         Task.Run(async () => _environments = await GetEnvironmentsAsync());
     }
 
@@ -57,7 +56,7 @@ internal class CondaEnvironment : IJupyterEnvironment
             }).ToList();
         }
 
-        return null;
+        return _environments;
     }
 
     private static async Task<CommandLineResult> Execute(string command, string args, string environmentName = BASE_ENV, DirectoryInfo workingDir = null, TimeSpan? timeout = null)
