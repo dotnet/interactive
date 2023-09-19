@@ -51,4 +51,9 @@ internal class JupyterKernelSpecModuleSimulator : IJupyterKernelSpecModule
     {
         throw new NotImplementedException();
     }
+
+    public IJupyterEnvironment GetEnvironment()
+    {
+        throw new NotImplementedException();
+    }
 }
