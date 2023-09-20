@@ -34,7 +34,6 @@
   "eventType": "SignatureHelpProduced",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "RequestSignatureHelp",
     "command": {
       "code": "sig-help-contents",

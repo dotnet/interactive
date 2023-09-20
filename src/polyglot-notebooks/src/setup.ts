@@ -55,9 +55,10 @@ export function setup(configuration?: SetupConfiguration) {
         global.sendKernelCommand = (kernelCommandEnvelope: commandsAndEvents.KernelCommandEnvelope | commandsAndEvents.KernelCommandEnvelopeModel) => {
             let commandEnvelope = <commandsAndEvents.KernelCommandEnvelope>kernelCommandEnvelope;
 
-            if (!(<any>kernelCommandEnvelope).getOrCreateToken) {
-                commandEnvelope = commandsAndEvents.KernelCommandEnvelope.fromJson(<commandsAndEvents.KernelCommandEnvelopeModel>kernelCommandEnvelope);
+            if (commandsAndEvents.KernelCommandEnvelope.isKernelCommandEnvelopeModel(kernelCommandEnvelope)) {
+                commandEnvelope = commandsAndEvents.KernelCommandEnvelope.fromJson(kernelCommandEnvelope);
             }
+
             remoteToLocal.next(commandEnvelope);
         };
     }

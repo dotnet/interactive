@@ -15,7 +15,6 @@
   "eventType": "ProjectOpened",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "OpenProject",
     "command": {
       "project": {

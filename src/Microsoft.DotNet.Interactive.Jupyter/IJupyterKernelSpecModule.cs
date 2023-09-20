@@ -13,4 +13,5 @@ public interface IJupyterKernelSpecModule
     Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory);
     DirectoryInfo GetDefaultKernelSpecDirectory();
     Task<IReadOnlyDictionary<string, KernelSpec>> ListKernels();
+    IJupyterEnvironment GetEnvironment();
 }
