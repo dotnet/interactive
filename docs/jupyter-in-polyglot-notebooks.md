@@ -14,12 +14,12 @@ Before you begin, make sure you have the following installed:
 Run the following command in a notebook cell:
 If working with Anaconda:
 ```
-#!connect jupyter --kernel-name pythonkernel --kernel-spec python3
+#!connect jupyter --kernel-name pythonkernel --conda-env base --kernel-spec python3
 ```
 
 If working with Python and Jupyter directly:
 ```
-#!connect jupyter --kernel-name pythonkernel --conda-env base --kernel-spec python3
+#!connect jupyter --kernel-name pythonkernel --kernel-spec python3
 ```
 
 Once connected, create a new cell and select your Python kernel from the kernel picker in the bottom right hand corner of the cell.
@@ -38,11 +38,11 @@ IRkernel::installspec()
 You might need to restart VSCode.
 If working with Anaconda, run the following command in a notebook cell:
 ```
-#!connect jupyter --kernel-name Rkernel --kernel-spec ir
+#!connect jupyter --kernel-name Rkernel --conda-env base --kernel-spec ir
 ```
 If working with Jupyter directly:
 ```
-#!connect jupyter --kernel-name Rkernel --conda-env base --kernel-spec ir
+#!connect jupyter --kernel-name Rkernel --kernel-spec ir
 ```
 
 Once connected, create a new cell and select your R kernel from the kernel picker.
@@ -81,7 +81,7 @@ These environments can then be accessible as a kernel-spec in `#connect` command
 
 Additionally, for Conda environments, you can use the `--conda-env` option in the `#connect` command to use the environment.
 
-For example, if you create a conda environment `condaenvpython3.9` and use the python3.9 version.
+For example, if you create a conda environment `condaenvpython3.9` to use the python==3.9 version:
 ```
 conda create -n condaenvpython3.9 python==3.9
 conda activate condaenvpython3.9
@@ -95,7 +95,7 @@ You can target it using the following command and be able to use python==3.9 in 
 #!connect jupyter --kernel-name pythonkernel --conda-env condaenvpython3.9 --kernel-spec python3
 ```
 
-Or, you can also do this by adding `condaenvpython3.9` as a kernel spec to Jupyter and then using the `--kernel-spec` option to target it.
+Or, you can get similar experience by adding `condaenvpython3.9` as a kernel spec to Jupyter and then using the `--kernel-spec` option to target it.
 
 ```
 #!connect jupyter --kernel-name pythonkernel --conda-env base --kernel-spec condaenvpython3.9
