@@ -291,14 +291,18 @@ Microsoft.DotNet.Interactive
     .ctor()
   public class LinePosition, System.IEquatable<LinePosition>
     public static LinePosition FromCodeAnalysisLinePosition(Microsoft.CodeAnalysis.Text.LinePosition linePosition)
-    public static System.Boolean op_Equality(LinePosition a, LinePosition b)
-    public static System.Boolean op_Inequality(LinePosition a, LinePosition b)
-    .ctor(System.Int32 line, System.Int32 character)
-    public System.Int32 Character { get;}
-    public System.Int32 Line { get;}
+    public static System.Boolean op_Equality(LinePosition left, LinePosition right)
+    public static System.Boolean op_Inequality(LinePosition left, LinePosition right)
+    .ctor(System.Int32 Line, System.Int32 Character)
+    public System.Int32 Character { get; set;}
+    public System.Int32 Line { get; set;}
+    public LinePosition <Clone>$()
+    public System.Void Deconstruct(ref System.Int32& Line, ref System.Int32& Character)
     public System.Boolean Equals(System.Object obj)
     public System.Boolean Equals(LinePosition other)
+    protected System.Type get_EqualityContract()
     public System.Int32 GetHashCode()
+    protected System.Boolean PrintMembers(System.Text.StringBuilder builder)
     public LinePosition SubtractLineOffset(LinePosition offset)
     public Microsoft.CodeAnalysis.Text.LinePosition ToCodeAnalysisLinePosition()
     public System.String ToString()

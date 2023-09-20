@@ -111,7 +111,12 @@ public partial class Kernel
 
         var kernel = context.HandlingKernel;
 
-        Task.Run(async () => { await kernel.SendAsync(new DisplayValue(formatted)); }).Wait(context.CancellationToken);
+        Task.Run(async () =>
+        {
+            var kernelCommand = new DisplayValue(formatted);
+            context.Command.ShouldResultIncludeEventsFromChildren = true;
+            await kernel.SendAsync(kernelCommand);
+        }).Wait(context.CancellationToken);
     }
 
     private static IReadOnlyCollection<Type> GetImplementedCommandHandlerTypesFor(Type kernelType) =>

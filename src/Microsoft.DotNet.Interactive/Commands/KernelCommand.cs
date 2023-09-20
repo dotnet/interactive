@@ -119,6 +119,8 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     [JsonIgnore]
     public CommandRoutingSlip RoutingSlip { get; }
 
+    internal bool ShouldResultIncludeEventsFromChildren { get; set; }
+
     public virtual Task InvokeAsync(KernelInvocationContext context)
     {
         if (Handler is null)
@@ -145,7 +147,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         return false;
     }
-
+ 
     internal bool IsSelfOrDescendantOf(KernelCommand other)
     {
         return GetOrCreateToken().StartsWith(other.GetOrCreateToken());

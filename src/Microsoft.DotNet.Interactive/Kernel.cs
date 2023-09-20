@@ -161,6 +161,8 @@ public abstract partial class Kernel :
                     return false;
                 }
 
+                originalCommand.ShouldResultIncludeEventsFromChildren = true;
+
                 commands = new[] { adjustedCommand };
                 break;
 
@@ -169,8 +171,15 @@ public abstract partial class Kernel :
                 break;
         }
 
+        // FIX: (TrySplitCommand) 
+
         foreach (var command in commands)
         {
+            if (!command.Equals(originalCommand))
+            {
+                 originalCommand.ShouldResultIncludeEventsFromChildren = true;
+            }
+
             var handlingKernel = GetHandlingKernel(command, context);
 
             if (handlingKernel is null)
@@ -179,9 +188,9 @@ public abstract partial class Kernel :
                 return false;
             }
 
-            if (command.DestinationUri is { } &&
-                handlingKernel.KernelInfo.Uri is { } &&
-                command.DestinationUri == handlingKernel.KernelInfo.Uri)
+            if (command.DestinationUri is not null &&
+                handlingKernel.KernelInfo.Uri is { } uri &&
+                command.DestinationUri == uri)
             {
                 command.SchedulingScope = handlingKernel.SchedulingScope;
                 command.TargetKernelName = handlingKernel.Name;
@@ -241,8 +250,8 @@ public abstract partial class Kernel :
         {
             var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
             var offsetNodeLine = command.LinePosition.Line - nodeStartLine;
-            var position = new LinePosition(offsetNodeLine, command.LinePosition.Character);
-
+            var position = command.LinePosition with { Line = offsetNodeLine };
+            
             // create new command
             var offsetLanguageServiceCommand = command.With(
                 node,
@@ -710,7 +719,7 @@ public abstract partial class Kernel :
                     upToCursor.LastIndexOf(" ", StringComparison.CurrentCultureIgnoreCase) + 1);
 
             var resultRange = new LinePositionSpan(
-                new LinePosition(command.LinePosition.Line, indexOfPreviousSpace),
+                command.LinePosition with { Character = indexOfPreviousSpace },
                 command.LinePosition);
 
             context.Publish(

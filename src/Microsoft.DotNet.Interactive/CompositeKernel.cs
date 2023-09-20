@@ -190,6 +190,8 @@ public sealed class CompositeKernel :
     {
         context.Publish(new KernelInfoProduced(KernelInfo, command));
 
+        command.ShouldResultIncludeEventsFromChildren = true;
+
         foreach (var childKernel in ChildKernels)
         {
             if (childKernel.SupportsCommand(command))
