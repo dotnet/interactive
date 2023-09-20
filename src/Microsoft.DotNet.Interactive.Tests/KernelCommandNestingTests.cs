@@ -101,7 +101,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
                   .NotContain(e => e is CommandFailed);
         }
 
-        [Fact(Skip = "Need to remove command id first")] // FIX: (Commands_sent_within_the_code_of_another_command_do_not_publish_events_to_the_outer_result) 
+        [Fact] 
         public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_events_to_the_outer_result()
         {
             using var kernel = new CompositeKernel

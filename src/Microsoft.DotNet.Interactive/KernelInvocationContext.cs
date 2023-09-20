@@ -83,6 +83,19 @@ public class KernelInvocationContext : IDisposable
 
     public KernelCommand Command { get; }
 
+    internal KernelCommand CurrentlyExecutingCommand
+    {
+        get
+        {
+            if (HandlingKernel?.Scheduler?.CurrentValue is { } command)
+            {
+                return command;
+            }
+
+            return Command;
+        }
+    }
+
     public bool IsComplete { get; private set; }
 
     public CancellationToken CancellationToken => _cancellationTokenSource.IsCancellationRequested

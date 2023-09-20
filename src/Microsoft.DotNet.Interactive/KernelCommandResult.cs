@@ -22,5 +22,14 @@ public class KernelCommandResult
 
     public IReadOnlyList<KernelEvent> Events => _events;
 
-    internal void AddEvent(KernelEvent @event) => _events.Add(@event);
+    internal void AddEvent(KernelEvent @event)
+    {
+        // FIX: (AddEvent) 
+        // if (!@event.Command.Equals(Command))
+        // {
+        //     return;
+        // }
+
+        _events.Add(@event);
+    }
 }
