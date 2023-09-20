@@ -46,11 +46,12 @@ public partial class Kernel
         return await GetInputAsync(prompt, false, typeHint, valueName);
     }
         
-    public static async Task<string> GetPasswordAsync(
+    public static async Task<PasswordString> GetPasswordAsync(
         string prompt = "",
         string valueName = null)
     {
-        return await GetInputAsync(prompt, true, valueName: valueName);
+        var password = await GetInputAsync(prompt, true, valueName: valueName);
+        return new PasswordString(password);
     }
 
     private static async Task<string> GetInputAsync(
