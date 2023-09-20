@@ -3,7 +3,6 @@
 
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
-using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
@@ -12,27 +11,35 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnectionOptions
 {
-    private static JupyterConnection _currentJupyterConnection;
+    private readonly IReadOnlyCollection<Option> _options;
 
-    /// <summary>
-    /// Represents connection to the kernels in the current environment
-    /// </summary>
-    private static JupyterConnection CurrentConnection
+    public Option<string> CondaEnv { get; } =
+    new("--conda-env", "Conda environment to use; Default is base")
     {
-        get
+    };
+
+    public JupyterLocalKernelConnectionOptions()
+    {
+        _options = new List<Option>
         {
-            _currentJupyterConnection ??= new(new JupyterKernelSpecModule());
-            return _currentJupyterConnection;
-        }
+            CondaEnv.AddCompletions((ctx) => CondaEnvironment.GetEnvironments())
+        };
     }
 
     public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
     {
-        return CurrentConnection;
+        var condaEnv = connectionOptionsParseResult.GetValueForOption(CondaEnv);
+        IJupyterEnvironment environment = null;
+        if (condaEnv != null)
+        {
+            environment = new CondaEnvironment(condaEnv);
+        }
+
+        return new JupyterConnection(new JupyterKernelSpecModule(environment));
     }
 
     public IReadOnlyCollection<Option> GetOptions()
     {
-        return Array.Empty<Option>();
+        return _options;
     }
 }

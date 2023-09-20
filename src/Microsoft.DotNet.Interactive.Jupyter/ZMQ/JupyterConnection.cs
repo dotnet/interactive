@@ -3,7 +3,6 @@
 
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
-using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using System;
 using System.Collections.Generic;
@@ -18,6 +17,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 
 internal class JupyterConnection : IJupyterConnection
 {
+    private readonly IJupyterKernelSpecModule _kernelSpecModule;
     private readonly Task<IReadOnlyDictionary<string, KernelSpec>> _getKernelSpecs;
 
     public JupyterConnection(IJupyterKernelSpecModule kernelSpecModule)
@@ -27,6 +27,7 @@ internal class JupyterConnection : IJupyterConnection
             throw new ArgumentNullException(nameof(kernelSpecModule));
         }
 
+        _kernelSpecModule = kernelSpecModule;
         _getKernelSpecs = Task.Run(() => kernelSpecModule.ListKernels());
     }
 
@@ -124,7 +125,7 @@ internal class JupyterConnection : IJupyterConnection
         var arguments = string.Join(" ", kernelArgs.Skip(1));
 
         Logger kernelLog = new(spec.Name);
-        var kernelProcess = CommandLine.StartProcess(command,
+        var kernelProcess = _kernelSpecModule.GetEnvironment().StartProcess(command,
                                                      arguments,
                                                      null,
                                                      o => kernelLog.Info(o),
