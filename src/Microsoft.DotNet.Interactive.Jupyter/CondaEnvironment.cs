@@ -84,8 +84,8 @@ internal class CondaEnvironment : IJupyterEnvironment
             return Path.Combine(condaPath, condaCommand);
         }
 
-        string pathEnvVar = Environment.GetEnvironmentVariable("Path");
-        if (pathEnvVar.Contains("conda"))
+        string pathEnvVar = Environment.GetEnvironmentVariable("PATH");
+        if (pathEnvVar != null && pathEnvVar.Contains("conda"))
         {
             return condaCommand;
         }
