@@ -113,7 +113,7 @@ Microsoft.DotNet.Interactive
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
     public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text, System.String valueName = null)
-    public static System.Threading.Tasks.Task<System.String> GetPasswordAsync(System.String prompt = , System.String valueName = null)
+    public static System.Threading.Tasks.Task<PasswordString> GetPasswordAsync(System.String prompt = , System.String valueName = null)
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
     public ChooseKernelDirective ChooseKernelDirective { get;}
@@ -339,6 +339,7 @@ Microsoft.DotNet.Interactive
   public class PasswordString
     .ctor(System.String clearTextPassword)
     public System.String GetClearTextPassword()
+    public System.String ToString()
   public class ResolvedPackageReference : PackageReference
     .ctor(System.String packageName, System.String packageVersion, System.Collections.Generic.IReadOnlyList<System.String> assemblyPaths, System.String packageRoot = null, System.Collections.Generic.IReadOnlyList<System.String> probingPaths = null)
     public System.Collections.Generic.IReadOnlyList<System.String> AssemblyPaths { get;}

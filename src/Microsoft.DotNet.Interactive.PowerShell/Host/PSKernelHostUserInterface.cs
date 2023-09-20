@@ -81,7 +81,7 @@ public partial class PSKernelHostUserInterface : PSHostUserInterface, IHostUISup
         }
 
         var result = Kernel.GetPasswordAsync(prompt).GetAwaiter().GetResult();
-        return new PasswordString(result);
+        return result;
     }
 
     public override string ReadLine()
