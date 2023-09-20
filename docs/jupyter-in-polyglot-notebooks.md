@@ -12,12 +12,13 @@ Before you begin, make sure you have the following installed:
 
 ## Connecting to a Python kernel
 Run the following command in a notebook cell:
-If working with Anaconda:
+
+If working with Jupyter using Anaconda:
 ```
 #!connect jupyter --kernel-name pythonkernel --conda-env base --kernel-spec python3
 ```
 
-If working with Python and Jupyter directly:
+If working with Python and Jupyter directly without Anaconda:
 ```
 #!connect jupyter --kernel-name pythonkernel --kernel-spec python3
 ```
@@ -35,12 +36,13 @@ install.packages('IRkernel')
 IRkernel::installspec() 
 ```
 
-You might need to restart VSCode.
-If working with Anaconda, run the following command in a notebook cell:
+If you installed a new kernelspec or added new environment variables, you will need to restart VSCode.
+
+If working with Jupyter using Anaconda, run the following command in a notebook cell:
 ```
 #!connect jupyter --kernel-name Rkernel --conda-env base --kernel-spec ir
 ```
-If working with Jupyter directly:
+If working with Jupyter directly without Anaconda:
 ```
 #!connect jupyter --kernel-name Rkernel --kernel-spec ir
 ```
