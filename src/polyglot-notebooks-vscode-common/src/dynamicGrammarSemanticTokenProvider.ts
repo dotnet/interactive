@@ -516,7 +516,7 @@ export class DynamicGrammarSemanticTokenProvider {
         });
 
         const isEmpty = (text: string) => {
-            return text == null || text.match(/^\s*$/) !== null;
+            return text === null || text.match(/^\s*$/) !== null;
         };
 
         // prepare grammar scope loader
@@ -630,7 +630,7 @@ function fixAutoClosingPairs(value: any) {
                     open: pair[0],
                     close: pair[1]
                 }
-                )
+                );
             } else if (typeof pair === 'object' && pair.open && pair.close) {
                 newAutoClosingPairs.push(pair);
             }

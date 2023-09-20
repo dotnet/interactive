@@ -1,6 +1,5 @@
 {
   "token": "the-token",
-  "id": "command-id",
   "commandType": "CompileProject",
   "command": {
     "targetKernelName": null,

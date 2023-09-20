@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelInvocationContext, areCommandsTheSame } from "./kernelInvocationContext";
+import { KernelInvocationContext } from "./kernelInvocationContext";
 import * as commandsAndEvents from "./commandsAndEvents";
 import { Logger } from "./logger";
 import { CompositeKernel } from "./compositeKernel";
@@ -104,15 +104,15 @@ export class Kernel {
     async send(commandEnvelopeOrModel: commandsAndEvents.KernelCommandEnvelope | commandsAndEvents.KernelCommandEnvelopeModel): Promise<void> {
         let commandEnvelope = <commandsAndEvents.KernelCommandEnvelope>commandEnvelopeOrModel;
 
-        if (!(<any>commandEnvelopeOrModel).getOrCreateToken) {
+        if (commandsAndEvents.KernelCommandEnvelope.isKernelCommandEnvelopeModel(commandEnvelopeOrModel)) {
             Logger.default.warn(`Converting command envelope model to command envelope for backawards compatibility.`);
-            commandEnvelope = commandsAndEvents.KernelCommandEnvelope.fromJson(<commandsAndEvents.KernelCommandEnvelopeModel>commandEnvelopeOrModel);
+            commandEnvelope = commandsAndEvents.KernelCommandEnvelope.fromJson(commandEnvelopeOrModel);
         }
 
         const context = KernelInvocationContext.getOrCreateAmbientContext(commandEnvelope);
         if (context.commandEnvelope) {
-            if (context.commandEnvelope !== commandEnvelope) {
-                commandEnvelope.parent = context.commandEnvelope;
+            if (!commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(context.commandEnvelope, commandEnvelope)) {
+                commandEnvelope.setParent(context.commandEnvelope);
             }
         }
         const kernelUri = getKernelUri(this);
@@ -158,7 +158,7 @@ export class Kernel {
 
             const previoudHendlingKernel = context.handlingKernel;
             context.handlingKernel = this;
-            let isRootCommand = areCommandsTheSame(context.commandEnvelope, commandEnvelope);
+            let isRootCommand = commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(context.commandEnvelope, commandEnvelope);
 
             let eventSubscription: rxjs.Subscription | undefined = undefined;//?
 
@@ -166,7 +166,7 @@ export class Kernel {
                 const kernelType = (this.kernelInfo.isProxy ? "proxy" : "") + (this.kernelInfo.isComposite ? "composite" : "");
                 Logger.default.info(`kernel ${this.name} of type ${kernelType} subscribing to context events`);
                 eventSubscription = context.kernelEvents.pipe(rxjs.map(e => {
-                    const message = `kernel ${this.name} of type ${kernelType} saw event ${e.eventType} with token ${e.command?.getOrCreateToken()}`;
+                    const message = `kernel ${this.name} of type ${kernelType} saw event ${e.eventType} with token ${e.command?.getToken()}`;
                     message;//?
                     Logger.default.info(message);
                     const kernelUri = getKernelUri(this);
@@ -295,7 +295,7 @@ export async function submitCommandAndGetResult<TEvent extends commandsAndEvents
     let completionSource = new PromiseCompletionSource<TEvent>();
     let handled = false;
     let disposable = kernel.subscribeToKernelEvents(eventEnvelope => {
-        if (eventEnvelope.command?.getOrCreateToken() === commandEnvelope.getOrCreateToken()) {
+        if (eventEnvelope.command?.getToken() === commandEnvelope.getToken()) {
             switch (eventEnvelope.eventType) {
                 case commandsAndEvents.CommandFailedType:
                     if (!handled) {
@@ -305,8 +305,7 @@ export async function submitCommandAndGetResult<TEvent extends commandsAndEvents
                     }
                     break;
                 case commandsAndEvents.CommandSucceededType:
-                    if (areCommandsTheSame(eventEnvelope.command!, commandEnvelope)
-                        && (eventEnvelope.command?.id === commandEnvelope.id)) {
+                    if (commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(eventEnvelope.command!, commandEnvelope)) {
                         if (!handled) {//? ($ ? eventEnvelope : {})
                             handled = true;
                             completionSource.reject('Command was handled before reporting expected result.');

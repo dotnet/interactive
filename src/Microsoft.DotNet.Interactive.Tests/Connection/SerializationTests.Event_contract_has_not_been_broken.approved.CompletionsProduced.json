@@ -16,7 +16,6 @@
   "eventType": "CompletionsProduced",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "RequestCompletions",
     "command": {
       "code": "Console.Wri",

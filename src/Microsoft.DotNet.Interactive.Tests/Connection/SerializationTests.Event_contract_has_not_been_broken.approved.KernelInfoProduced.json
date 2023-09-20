@@ -23,7 +23,6 @@
   "eventType": "KernelInfoProduced",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "RequestKernelInfo",
     "command": {
       "targetKernelName": null,

@@ -5,7 +5,6 @@
   "eventType": "WorkingDirectoryChanged",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "ChangeWorkingDirectory",
     "command": {
       "workingDirectory": "some/different/directory",

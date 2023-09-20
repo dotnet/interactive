@@ -7,7 +7,6 @@
   "eventType": "DocumentOpened",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "OpenDocument",
     "command": {
       "relativeFilePath": "./path",

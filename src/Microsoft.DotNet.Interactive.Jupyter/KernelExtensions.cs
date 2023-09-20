@@ -224,6 +224,7 @@ using static {typeof(TopLevelMethods).FullName};
                 foreach (var subkernel in subkernels)
                 {
                     var command = new SubmitCode(((SubmitCode)context.Command).Code);
+                    command.SetParent(context.Command);
 
                     await subkernel.SendAsync(command);
                 }

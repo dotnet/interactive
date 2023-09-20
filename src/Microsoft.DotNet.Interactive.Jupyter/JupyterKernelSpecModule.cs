@@ -1,26 +1,32 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Linq;
-using Microsoft.DotNet.Interactive.Formatting;
-using System;
-using Pocket;
 using static Pocket.Logger;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public class JupyterKernelSpecModule : IJupyterKernelSpecModule
 {
+    private readonly IJupyterEnvironment _environment;
+
     private class KernelSpecListCommandResults
     {
         public Dictionary<string, KernelSpecResourceDetail> kernelspecs { get; set; }
     }
 
+    public JupyterKernelSpecModule(IJupyterEnvironment environment = null)
+    {
+        _environment = environment ?? new DefaultJupyterEnvironment();
+    }
     private class KernelSpecResourceDetail
     {
         public string resource_dir { get; set; }
@@ -29,7 +35,7 @@ public class JupyterKernelSpecModule : IJupyterKernelSpecModule
 
     private async Task<CommandLineResult> ExecuteCommand(string command, string args = "")
     {
-        return await CommandLine.Execute("jupyter", $"kernelspec {command} {args}");
+        return await _environment.Execute("jupyter", $"kernelspec {command} {args}");
     }
 
     public Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory)
@@ -65,7 +71,6 @@ public class JupyterKernelSpecModule : IJupyterKernelSpecModule
             return LookupInstalledKernels();
         }
     }
-
 
     public DirectoryInfo GetDefaultKernelSpecDirectory()
     {
@@ -114,5 +119,10 @@ public class JupyterKernelSpecModule : IJupyterKernelSpecModule
         }
 
         return null;
+    }
+
+    public IJupyterEnvironment GetEnvironment()
+    {
+        return _environment;
     }
 }

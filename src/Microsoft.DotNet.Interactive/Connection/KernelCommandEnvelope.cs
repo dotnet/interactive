@@ -37,8 +37,6 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 
     public string Token => _command.GetOrCreateToken();
 
-    public string CommandId => _command.GetOrCreateId();
-
     KernelCommand IKernelCommandEnvelope.Command => _command;
 
     public static void RegisterCommand<T>() where T : KernelCommand
@@ -137,17 +135,10 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         var commandTypeJson = string.Empty;
         string commandJson;
         var commandToken = string.Empty;
-        var commandId = string.Empty;
 
         if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
         {
             commandTypeJson = commandTypeProperty.GetString();
-        }
-
-        // restore the command id
-        if (json.TryGetProperty(nameof(SerializationModel.id), out var commandIdProperty))
-        {
-            commandId = commandIdProperty.GetString();
         }
 
         if (string.IsNullOrWhiteSpace(commandTypeJson))
@@ -167,11 +158,6 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 
         var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
 
-        if (commandId is not null)
-        {
-            command.SetId(commandId);
-        }
-
         // restore the command token
         if (json.TryGetProperty(nameof(SerializationModel.token), out var tokenProperty))
         {
@@ -182,7 +168,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
         {
             command.SetToken(commandToken);
         }
-
+      
         if (json.TryGetProperty(nameof(SerializationModel.routingSlip), out var routingSlipProperty))
         {
             foreach (var routingSlipItem in routingSlipProperty.EnumerateArray())
@@ -222,7 +208,6 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             command = envelope.Command,
             commandType = envelope.CommandType,
             token = envelope.Token,
-            id = envelope.CommandId,
             routingSlip = envelope.Command.RoutingSlip.ToUriArray()
         };
         return serializationModel;
@@ -231,8 +216,6 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
     internal class SerializationModel
     {
         public string token { get; set; }
-
-        public string id { get; set; }
 
         public string commandType { get; set; }
 

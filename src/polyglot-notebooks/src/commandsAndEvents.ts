@@ -20,7 +20,6 @@ export interface KernelEventEnvelopeModel {
 
 export interface KernelCommandEnvelopeModel {
     token?: string;
-    id?: string;
     commandType: contracts.KernelCommandType;
     command: contracts.KernelCommand;
     routingSlip?: string[];
@@ -44,23 +43,14 @@ function toBase64String(value: Uint8Array): string {
 }
 export class KernelCommandEnvelope {
 
-    private _childCommandCounter: number = 0;
+    private _childCommandCounter: number = 1;
     private _routingSlip: CommandRoutingSlip = new CommandRoutingSlip();
-    private _id: string;
     private _token?: string;
     private _parentCommand?: KernelCommandEnvelope;
 
     constructor(
         public commandType: contracts.KernelCommandType,
         public command: contracts.KernelCommand) {
-
-        const guidBytes = uuid.parse(uuid.v4());
-        const data = new Uint8Array(guidBytes);
-        this._id = toBase64String(data);
-    }
-
-    public get id(): string {
-        return this._id;
     }
 
     public get routingSlip(): CommandRoutingSlip {
@@ -71,17 +61,57 @@ export class KernelCommandEnvelope {
         return this._parentCommand;
     }
 
-    public set parent(parentCommand: KernelCommandEnvelope | undefined) {
+    public static isKernelCommandEnvelopeModel(arg: KernelCommandEnvelope | KernelCommandEnvelopeModel): arg is KernelCommandEnvelopeModel {
+        return !(<any>arg).getOrCreateToken;
+    }
+
+    public setParent(parentCommand: KernelCommandEnvelope | undefined) {
         if (this._parentCommand && this._parentCommand !== parentCommand) {
             throw new Error("Parent cannot be changed.");
         }
-        this._parentCommand = parentCommand;
+        if (this._parentCommand === null || this._parentCommand === undefined) {
+            {
+                // todo: do we need to override the token? Should this throw if parenting happens after token is set?
+                if (this._token) {
+                    this._token = undefined;
+                }
+                this._parentCommand = parentCommand;
+                this.getOrCreateToken();
+            }
+        }
+
     }
 
-    public setId(id: string) {
-        this._id = id;
+    public static areCommandsTheSame(envelope1: KernelCommandEnvelope, envelope2: KernelCommandEnvelope): boolean {
+        envelope1;//?
+        envelope2;//?
+        envelope1 === envelope2;//?
+
+        // reference equality
+        if (envelope1 === envelope2) {
+            return true;
+        }
+
+        // commandType equality
+        const sameCommandType = envelope1?.commandType === envelope2?.commandType; //?
+        if (!sameCommandType) {
+            return false;
+        }
+
+        // both must have tokens
+        if ((!envelope1?._token) || (!envelope2?._token)) {
+            return false;
+        }
+
+        // token equality
+        const sameToken = envelope1?._token === envelope2?._token; //?
+        if (!sameToken) {
+            return false;
+        }
+        return true;
     }
 
+    static _counter = 1;
     public getOrCreateToken(): string {
         if (this._token) {
             return this._token;
@@ -91,16 +121,26 @@ export class KernelCommandEnvelope {
             this._token = `${this._parentCommand.getOrCreateToken()}.${this._parentCommand.getNextChildToken()}`;
             return this._token;
         }
+
         const guidBytes = uuid.parse(uuid.v4());
         const data = new Uint8Array(guidBytes);
         this._token = toBase64String(data);
 
+        // this._token = `${KernelCommandEnvelope._counter++}`;
+
         return this._token;
     }
 
+    public getToken(): string {
+        if (this._token) {
+            return this._token;
+        }
+        throw new Error('token not set');
+    }
+
     public isSelforDescendantOf(otherCommand: KernelCommandEnvelope) {
-        const otherToken = otherCommand.getOrCreateToken();
-        const thisToken = this.getOrCreateToken();
+        const otherToken = otherCommand._token;
+        const thisToken = this._token;
         if (thisToken && otherToken) {
             return thisToken.startsWith(otherToken!);
         }
@@ -109,8 +149,8 @@ export class KernelCommandEnvelope {
     }
 
     public hasSameRootCommandAs(otherCommand: KernelCommandEnvelope) {
-        const otherToken = otherCommand.getOrCreateToken();
-        const thisToken = this.getOrCreateToken();
+        const otherToken = otherCommand._token;
+        const thisToken = this._token;
         if (thisToken && otherToken) {
             const otherRootToken = KernelCommandEnvelope.getRootToken(otherToken);
             const thisRootToken = KernelCommandEnvelope.getRootToken(thisToken);
@@ -129,7 +169,6 @@ export class KernelCommandEnvelope {
             commandType: this.commandType,
             command: this.command,
             routingSlip: this._routingSlip.toArray(),
-            id: this._id,
             token: this.getOrCreateToken()
         };
 
@@ -139,9 +178,6 @@ export class KernelCommandEnvelope {
     public static fromJson(model: KernelCommandEnvelopeModel): KernelCommandEnvelope {
         const command = new KernelCommandEnvelope(model.commandType, model.command);
         command._routingSlip = CommandRoutingSlip.fromUris(model.routingSlip || []);
-        if (model.id) {
-            command._id = model.id;
-        }
         command._token = model.token;
         return command;
     }

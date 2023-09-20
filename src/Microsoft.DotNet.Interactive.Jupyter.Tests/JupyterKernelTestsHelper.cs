@@ -102,7 +102,8 @@ internal sealed class JupyterZMQTestDataAttribute : JupyterTestDataAttribute
     protected override JupyterConnectionTestData GetConnectionTestData()
     {
         return new JupyterConnectionTestData(JUPYTER_ZMQ,
-            new TestJupyterConnectionOptions(new JupyterLocalKernelConnectionOptions(), KernelSpecName, AllowPlayback)
+            new TestJupyterConnectionOptions(new JupyterLocalKernelConnectionOptions(), KernelSpecName, AllowPlayback),
+            GetConnectionString()
             );
     }
 

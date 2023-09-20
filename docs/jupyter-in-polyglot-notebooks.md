@@ -10,8 +10,6 @@ Before you begin, make sure you have the following installed:
 2. OR Install [Python](https://www.python.org/downloads/) and add to your PATH. You would need to install [Jupyter](https://jupyter.org/install#jupyter-notebook)
 3. If you are working with R - Install [R](https://cran.r-project.org/)
 
-Please note that if you want to use Python and R in Polyglot Notebooks, you must open VS Code from the Anaconda prompt. Open the Anaconda prompt and activate the environment you want to work in. Then navigate to the desired folder and open VS code from the Anaconda prompt using the `code .` command. 
-
 ## Connecting to a Python kernel
 Run the following command in a notebook cell:
 If working with Anaconda:
@@ -21,7 +19,7 @@ If working with Anaconda:
 
 If working with Python and Jupyter directly:
 ```
-#!connect jupyter --kernel-name pythonkernel --kernel-spec python3
+#!connect jupyter --kernel-name pythonkernel --conda-env base --kernel-spec python3
 ```
 
 Once connected, create a new cell and select your Python kernel from the kernel picker in the bottom right hand corner of the cell.
@@ -44,7 +42,7 @@ If working with Anaconda, run the following command in a notebook cell:
 ```
 If working with Jupyter directly:
 ```
-#!connect jupyter --kernel-name Rkernel --kernel-spec ir
+#!connect jupyter --kernel-name Rkernel --conda-env base --kernel-spec ir
 ```
 
 Once connected, create a new cell and select your R kernel from the kernel picker.

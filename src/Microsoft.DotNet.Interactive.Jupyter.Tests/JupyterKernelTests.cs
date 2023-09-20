@@ -30,6 +30,10 @@ public class JupyterKernelTests : JupyterKernelTestBase
 
         var result = await kernel.SendAsync(command);
 
+        result.Events
+            .Should()
+            .NotContain(e => e is CommandFailed);
+
         var outputs = result.Events.OfType<StandardOutputValueProduced>();
 
         outputs.Should().HaveCount(1);

@@ -3,7 +3,6 @@
   "eventType": "KernelExtensionLoaded",
   "command": {
     "token": "the-token",
-    "id": "command-id",
     "commandType": "SubmitCode",
     "command": {
       "code": "#r \"nuget:package\" ",
