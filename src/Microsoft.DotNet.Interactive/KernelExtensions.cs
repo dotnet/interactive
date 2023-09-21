@@ -168,14 +168,27 @@ public static class KernelExtensions
         if (kernel.SupportsCommandType(typeof(SendValue)))
         {
             var events = new List<ValueProduced>();
-
-            using var subscription = context.KernelEvents.OfType<ValueProduced>().Subscribe(events.Add);
+            InputProduced inputProduced = null;
+            using var subscription = context.KernelEvents.Where(e => e is ValueProduced or InputProduced).Subscribe(
+                e =>
+                {
+                    switch (e)
+                    {
+                        case ValueProduced vp:
+                            events.Add(vp);
+                            break;
+                        case InputProduced ip:
+                            inputProduced = ip;
+                            break;
+                    }
+                });
 
             var valueOptionResult = cmdLineContext.ParseResult.GetValueForOption(valueOption);
 
             var sourceKernel = Kernel.Root.FindKernelByName(valueOptionResult.Kernel);
 
-            ValueProduced valueProduced;
+            ValueProduced valueProduced = null;
+
             if (valueOptionResult is { Name: var sourceValueName, Kernel: var sourceKernelName } 
                 && sourceKernelName != "input")
             {
@@ -192,10 +205,6 @@ public static class KernelExtensions
                         e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName);
                 }
             }
-            else
-            {
-                valueProduced = null;
-            }
 
             if (valueProduced is { })
             {
@@ -204,10 +213,22 @@ public static class KernelExtensions
 
                 await SendValue(kernel, referenceValue, formattedValue, valueName);
             }
+            else if (inputProduced is { })
+            {
+                if (inputProduced.Command is RequestInput { IsPassword: true })
+                {
+                    await SendValue(kernel, new PasswordString(inputProduced.Value), null, valueName);
+                }
+                else
+                {
+                    await SendValue(kernel, inputProduced.Value, null, valueName);
+                }
+            }
             else
             {
                 await SendValue(kernel, valueOptionResult?.Value, null, valueName);
             }
+            
         }
         else
         {
