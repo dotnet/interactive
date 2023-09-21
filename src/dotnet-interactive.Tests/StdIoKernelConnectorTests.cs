@@ -25,26 +25,28 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 loggingArgs = $"--verbose --log-path {logDir}";
             }
 
-            var binPath =
-                Path.GetDirectoryName(
+            var toolAppDllPath = typeof(StdIoKernelConnector).Assembly.Location;
+
+            if (Environment.GetEnvironmentVariable("DisableArcade") != "1")
+            {
+                var arcadeAssemblyLocation =
                     Path.GetDirectoryName(
                         Path.GetDirectoryName(
                             Path.GetDirectoryName(
-                                typeof(StdIoKernelConnector).Assembly.Location))));
+                                Path.GetDirectoryName(
+                                    toolAppDllPath))));
 
-            Func<string, bool> predicate =
-                filePath =>
-                    !string.Equals(
-                        Path.GetFileName(Path.GetDirectoryName(filePath)),
-                        "publish",
-                        StringComparison.OrdinalIgnoreCase);
-
-            var toolAppDllPath =
-                Directory.GetFiles(
-                    Path.Combine(binPath, "dotnet-interactive"),
-                    "Microsoft.DotNet.Interactive.App.dll",
-                    SearchOption.AllDirectories)
-                        .Single(predicate);
+                toolAppDllPath =
+                    Directory.GetFiles(
+                                 Path.Combine(arcadeAssemblyLocation, "dotnet-interactive"),
+                                 "Microsoft.DotNet.Interactive.App.dll",
+                                 SearchOption.AllDirectories)
+                             .Single(filePath =>
+                                         !string.Equals(
+                                             Path.GetFileName(Path.GetDirectoryName(filePath)),
+                                             "publish",
+                                             StringComparison.OrdinalIgnoreCase));
+            }
 
             var hostUri = KernelHost.CreateHostUri("host");
             var connector = new StdIoKernelConnector(

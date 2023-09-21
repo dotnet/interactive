@@ -137,6 +137,12 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
     internal bool ShouldResultIncludeEventsFrom(KernelCommand childCommand)
     {
+        if (WasProxied &&
+            childCommand.IsSelfOrDescendantOf(this))
+        {
+            return true;
+        }
+
         if (_childCommandsToBubbleEventsFrom is null)
         {
             return false;
