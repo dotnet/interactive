@@ -1,14 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions.Execution;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Utility;
@@ -86,7 +84,7 @@ public class Dotnet
         }
 
         var versionArg = version is not null ? $"--version {version}" : "";
-            
+
         var args = $@"{packageName}";
         if (toolPath is not null)
         {
