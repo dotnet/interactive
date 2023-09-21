@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
@@ -15,10 +14,8 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     private KernelCommand _parent;
     private string _token;
 
-    protected KernelCommand(
-        string targetKernelName = null)
+    protected KernelCommand(string targetKernelName = null)
     {
-        Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
         TargetKernelName = targetKernelName;
         RoutingSlip = new CommandRoutingSlip();
     }
@@ -51,9 +48,6 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
             throw new InvalidOperationException("Parent cannot be changed.");
         }
     }
-
-    [JsonIgnore]
-    public IDictionary<string, object> Properties { get; }
 
     public string TargetKernelName { get; internal set; }
 

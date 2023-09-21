@@ -55,8 +55,7 @@ public class SerializationTests
             .Should()
             .BeEquivalentToRespectingRuntimeTypes(
                 originalEnvelope,
-                o => o.Excluding(e => e.Command.Properties)
-                    .Excluding(e => e.Command.Handler));
+                o => o.Excluding(e => e.Command.Handler));
     }
 
     [Theory]
@@ -84,8 +83,7 @@ public class SerializationTests
             .Should()
             .BeEquivalentToRespectingRuntimeTypes(
                 originalEnvelope,
-                o => o.Excluding(envelope => envelope.Event.Command.Properties)
-                    .Excluding(memberInfo => ignoredProperties.Contains($"{memberInfo.DeclaringType.Name}.{memberInfo.Name}"))
+                o => o.Excluding(memberInfo => ignoredProperties.Contains($"{memberInfo.DeclaringType.Name}.{memberInfo.Name}"))
             );
     }
 

@@ -30,8 +30,6 @@ public static class KernelSupportsNugetExtensions
         return kernel;
     }
 
-    private static readonly string installPackagesPropertyName = "commandIHandler.InstallPackages";
-
     private static Command i()
     {
         var iDirective = new Command("#i")
@@ -152,20 +150,7 @@ public static class KernelSupportsNugetExtensions
     {
         return path.Length > 0 && path.EndsWith(Path.DirectorySeparatorChar);
     }
-
-    private static void CreateOrUpdateDisplayValue(KernelInvocationContext context, string name, object content)
-    {
-        if (!context.Command.Properties.TryGetValue(name, out var displayed))
-        {
-            displayed = context.Display(content);
-            context.Command.Properties.Add(name, displayed);
-        }
-        else
-        {
-            (displayed as DisplayedValue)?.Update(content);
-        }
-    }
-
+    
     internal static KernelCommandInvocation DoNugetRestore()
     {
         return async (_, invocationContext) =>
@@ -183,8 +168,8 @@ public static class KernelSupportsNugetExtensions
 
                 var installMessage = new InstallPackagesMessage(requestedSources, requestedPackages, Array.Empty<string>(), 0);
 
-                CreateOrUpdateDisplayValue(context, installPackagesPropertyName, installMessage);
-
+                var displayedValue = context.Display(installMessage);
+                
                 var restorePackagesTask = kernel.RestoreAsync();
                 var delay = 500;
                 while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
@@ -195,7 +180,8 @@ public static class KernelSupportsNugetExtensions
                     }
 
                     installMessage.Progress++;
-                    CreateOrUpdateDisplayValue(context, installPackagesPropertyName, installMessage);
+
+                    displayedValue.Update(installMessage);
                 }
 
                 var result = await restorePackagesTask;
@@ -204,10 +190,10 @@ public static class KernelSupportsNugetExtensions
                     requestedSources,
                     Array.Empty<string>(),
                     kernel.ResolvedPackageReferences
-                        .Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase))
-                        .Select(s => $"{s.PackageName}, {s.PackageVersion}")
-                        .OrderBy(s => s)
-                        .ToList(),
+                          .Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase))
+                          .Select(s => $"{s.PackageName}, {s.PackageVersion}")
+                          .OrderBy(s => s)
+                          .ToList(),
                     0);
 
                 if (result.Succeeded)
@@ -218,12 +204,12 @@ public static class KernelSupportsNugetExtensions
                         context.Publish(new PackageAdded(resolvedReference, context.Command));
                     }
 
-                    CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
+                    displayedValue.Update(resultMessage);
                 }
                 else
                 {
                     var errors = string.Join(Environment.NewLine, result.Errors);
-                    CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
+                    displayedValue.Update(resultMessage);
                     context.Fail(context.Command, message: errors);
                 }
             }
