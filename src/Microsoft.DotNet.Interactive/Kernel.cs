@@ -161,8 +161,6 @@ public abstract partial class Kernel :
                     return false;
                 }
 
-                originalCommand.ShouldResultIncludeEventsFromChildren = true;
-
                 commands = new[] { adjustedCommand };
                 break;
 
@@ -171,13 +169,11 @@ public abstract partial class Kernel :
                 break;
         }
 
-        // FIX: (TrySplitCommand) 
-
         foreach (var command in commands)
         {
             if (!command.Equals(originalCommand))
             {
-                 originalCommand.ShouldResultIncludeEventsFromChildren = true;
+                 originalCommand.ResultShouldIncludeEventsFrom(command);
             }
 
             var handlingKernel = GetHandlingKernel(command, context);

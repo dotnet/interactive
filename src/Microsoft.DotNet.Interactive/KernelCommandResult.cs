@@ -24,10 +24,9 @@ public class KernelCommandResult
 
     internal void AddEvent(KernelEvent @event)
     {
-        // FIX: (AddEvent) 
         if (!@event.Command.Equals(Command))
         {
-            if (!Command.ShouldResultIncludeEventsFromChildren)
+            if (!Command.ShouldResultIncludeEventsFrom(@event.Command))
             {
                 return;
             }

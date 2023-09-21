@@ -13,6 +13,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 {
     private KernelCommand _parent;
     private string _token;
+    private List<KernelCommand> _childCommandsToBubbleEventsFrom;
 
     protected KernelCommand(string targetKernelName = null)
     {
@@ -20,7 +21,8 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         RoutingSlip = new CommandRoutingSlip();
     }
 
-    [JsonIgnore] public KernelCommandInvocation Handler { get; set; }
+    [JsonIgnore] 
+    public KernelCommandInvocation Handler { get; set; }
 
     [JsonIgnore]
     public KernelCommand Parent => _parent;
@@ -109,9 +111,11 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     private static int _nextRootToken = 0;
 #endif
 
-    [JsonIgnore] internal SchedulingScope SchedulingScope { get; set; }
+    [JsonIgnore] 
+    internal SchedulingScope SchedulingScope { get; set; }
 
-    [JsonIgnore] internal bool? ShouldPublishCompletionEvent { get; set; }
+    [JsonIgnore] 
+    internal bool? ShouldPublishCompletionEvent { get; set; }
 
     [JsonIgnore]
     public ParseResult KernelChooserParseResult { get; internal set; }
@@ -119,7 +123,43 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     [JsonIgnore]
     public CommandRoutingSlip RoutingSlip { get; }
 
-    internal bool ShouldResultIncludeEventsFromChildren { get; set; }
+    internal bool WasProxied { get; set; }
+
+    internal void ResultShouldIncludeEventsFrom(KernelCommand childCommand)
+    {
+        if (_childCommandsToBubbleEventsFrom is null)
+        {
+            _childCommandsToBubbleEventsFrom = new();
+        }
+
+        _childCommandsToBubbleEventsFrom.Add(childCommand);
+    }
+
+    internal bool ShouldResultIncludeEventsFrom(KernelCommand childCommand)
+    {
+        if (_childCommandsToBubbleEventsFrom is null)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < _childCommandsToBubbleEventsFrom.Count; i++)
+        {
+            var command = _childCommandsToBubbleEventsFrom[i];
+
+            if (command.Equals(childCommand))
+            {
+                return true;
+            }
+
+            if (command.WasProxied &&
+                command.IsSelfOrDescendantOf(this))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public virtual Task InvokeAsync(KernelInvocationContext context)
     {

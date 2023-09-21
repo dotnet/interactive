@@ -190,13 +190,12 @@ public sealed class CompositeKernel :
     {
         context.Publish(new KernelInfoProduced(KernelInfo, command));
 
-        command.ShouldResultIncludeEventsFromChildren = true;
-
         foreach (var childKernel in ChildKernels)
         {
             if (childKernel.SupportsCommand(command))
             {
                 var childCommand = new RequestKernelInfo(childKernel.Name);
+                command.ResultShouldIncludeEventsFrom(childCommand);
                 childCommand.SetParent(command);
                 childCommand.RoutingSlip.ContinueWith(command.RoutingSlip);
                 await childKernel.HandleAsync(childCommand, context);
