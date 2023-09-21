@@ -179,7 +179,6 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task EndInvoke(System.IAsyncResult result)
     public System.Threading.Tasks.Task Invoke(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
   public class KernelCommandResult
-    .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public Microsoft.DotNet.Interactive.Commands.KernelCommand Command { get;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Events.KernelEvent> Events { get;}
   public class KernelCommandScheduler : KernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult>, IKernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult>, System.IDisposable
@@ -390,7 +389,6 @@ Microsoft.DotNet.Interactive.Commands
     public System.CommandLine.Parsing.ParseResult KernelChooserParseResult { get;}
     public System.Uri OriginUri { get; set;}
     public KernelCommand Parent { get;}
-    public System.Collections.Generic.IDictionary<System.String,System.Object> Properties { get;}
     public Microsoft.DotNet.Interactive.CommandRoutingSlip RoutingSlip { get;}
     public System.String TargetKernelName { get;}
     public System.Boolean Equals(KernelCommand other)

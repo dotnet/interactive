@@ -13,7 +13,7 @@ public class KernelCommandResult
 {
     private readonly List<KernelEvent> _events = new();
 
-    public KernelCommandResult(KernelCommand command)
+    internal KernelCommandResult(KernelCommand command)
     {
         Command = command;
     }
