@@ -308,14 +308,18 @@ Microsoft.DotNet.Interactive
     public System.String ToString()
   public class LinePositionSpan, System.IEquatable<LinePositionSpan>
     public static LinePositionSpan FromCodeAnalysisLinePositionSpan(Microsoft.CodeAnalysis.Text.LinePositionSpan linePositionSpan)
-    public static System.Boolean op_Equality(LinePositionSpan a, LinePositionSpan b)
-    public static System.Boolean op_Inequality(LinePositionSpan a, LinePositionSpan b)
-    .ctor(LinePosition start, LinePosition end)
-    public LinePosition End { get;}
-    public LinePosition Start { get;}
+    public static System.Boolean op_Equality(LinePositionSpan left, LinePositionSpan right)
+    public static System.Boolean op_Inequality(LinePositionSpan left, LinePositionSpan right)
+    .ctor(LinePosition Start, LinePosition End)
+    public LinePosition End { get; set;}
+    public LinePosition Start { get; set;}
+    public LinePositionSpan <Clone>$()
+    public System.Void Deconstruct(ref LinePosition& Start, ref LinePosition& End)
     public System.Boolean Equals(System.Object obj)
     public System.Boolean Equals(LinePositionSpan other)
+    protected System.Type get_EqualityContract()
     public System.Int32 GetHashCode()
+    protected System.Boolean PrintMembers(System.Text.StringBuilder builder)
     public LinePositionSpan SubtractLineOffset(LinePosition offset)
     public System.String ToString()
   public class NoSuitableKernelException : System.Exception, System.Runtime.Serialization.ISerializable
@@ -399,7 +403,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.Boolean Equals(KernelCommand other)
     public System.String GetOrCreateToken()
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Void SetParent(KernelCommand parent)
+    public System.Void SetParent(KernelCommand parent, System.Boolean bubbleEvents = False)
     public System.Void SetToken(System.String token)
   public abstract class LanguageServiceCommand : KernelCommand, System.IEquatable<KernelCommand>
     public System.String Code { get;}

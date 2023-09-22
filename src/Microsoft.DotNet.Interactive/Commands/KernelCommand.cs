@@ -25,10 +25,10 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     [JsonIgnore] 
     public KernelCommandInvocation Handler { get; set; }
 
-    [JsonIgnore]
+    [JsonIgnore] 
     public KernelCommand Parent => _parent;
 
-    public void SetParent(KernelCommand parent)
+    public void SetParent(KernelCommand parent, bool bubbleEvents = false)
     {
         if (parent is null)
         {
@@ -37,16 +37,27 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         if (_parent is null)
         {
+            _parent = parent;
+
             if (_token is not null)
             {
                 _token = null;
             }
 
-            _parent = parent;
+            if (_parent._token is null)
+            {
+                // FIX: (SetParent) force parent token creation?
+                _parent.GetOrCreateToken();
+            }
 
             GetOrCreateToken();
+
+            if (bubbleEvents)
+            {
+                _parent.ResultShouldIncludeEventsFrom(this);
+            }
         }
-        else if (_parent != parent)
+        else if (!_parent.Equals(parent))
         {
             throw new InvalidOperationException("Parent cannot be changed.");
         }
