@@ -266,6 +266,7 @@ public class PackageRestoreContext : IDisposable
         if (!result.Success)
         {
             errors.AddRange(result.StdOut);
+
             packageRestoreResult = new PackageRestoreResult(
                 succeeded: false,
                 requestedPackages: newlyRequestedPackageReferences,
