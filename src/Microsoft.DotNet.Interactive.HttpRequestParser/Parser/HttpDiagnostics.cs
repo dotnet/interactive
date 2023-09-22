@@ -77,7 +77,7 @@ internal static class HttpDiagnostics
     {
         var id = $"HTTP0009";
         var severity = DiagnosticSeverity.Error;
-        var messageFormat = "Invalid header value: {0}.";
+        var messageFormat = "Invalid header value: {0}";
         return new HttpDiagnosticInfo(id, messageFormat, severity, exceptionMessage);
     }
 

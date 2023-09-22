@@ -102,7 +102,8 @@ public class HttpRequestKernel :
 
         if (diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
         {
-            context.Fail(command);
+            var message = string.Join(Environment.NewLine, diagnostics.Select(d => d.ToString()));
+            context.Fail(command, message: message);
             return;
         }
 

@@ -226,6 +226,29 @@ public class HttpRequestKernelTests
     }
 
     [Fact]
+    public async Task invalid_header_value_produces_error()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpRequestKernel(client: client);
+
+        var result = await kernel.SendAsync(new SubmitCode("""
+            Get  https://location1.com:1200/endpoint
+            Date: OOPS!
+            """));
+
+        using var _ = new AssertionScope();
+        result.Events.OfType<CommandFailed>().Single().Message.Should().EndWith(
+            "The format of value 'OOPS!' is invalid.");
+    }
+
+    [Fact]
     public async Task can_use_symbols_in_body()
     {
         HttpRequestMessage request = null;
