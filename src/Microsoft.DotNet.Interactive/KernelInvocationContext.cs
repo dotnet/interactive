@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -82,6 +81,19 @@ public class KernelInvocationContext : IDisposable
     internal bool IsFailed { get; private set; }
 
     public KernelCommand Command { get; }
+
+    internal KernelCommand CurrentlyExecutingCommand
+    {
+        get
+        {
+            if (HandlingKernel?.Scheduler?.CurrentValue is { } command)
+            {
+                return command;
+            }
+
+            return Command;
+        }
+    }
 
     public bool IsComplete { get; private set; }
 
@@ -387,10 +399,13 @@ public class KernelInvocationContext : IDisposable
 
     internal DirectiveNode CurrentlyParsingDirectiveNode { get; set; }
 
-    public Task ScheduleAsync(Func<KernelInvocationContext, Task> func) =>
-        // FIX: (ScheduleAsync) inline this
-        HandlingKernel.SendAsync(new AnonymousKernelCommand((_, invocationContext) =>
-            func(invocationContext)));
+    public async Task ScheduleAsync(Func<KernelInvocationContext, Task> func)
+    {
+        // FIX: (ScheduleAsync) make this method internal
+        var anonymousCommand = new AnonymousKernelCommand((_, invocationContext) => func(invocationContext));
+        anonymousCommand.SetParent(Command, true);
+        await HandlingKernel.SendAsync(anonymousCommand);
+    }
 
     internal class KernelCommandTokenComparer : IEqualityComparer<KernelCommand>
     {

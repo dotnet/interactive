@@ -179,9 +179,9 @@ public abstract partial class Kernel :
                 return false;
             }
 
-            if (command.DestinationUri is { } &&
-                handlingKernel.KernelInfo.Uri is { } &&
-                command.DestinationUri == handlingKernel.KernelInfo.Uri)
+            if (command.DestinationUri is not null &&
+                handlingKernel.KernelInfo.Uri is { } uri &&
+                command.DestinationUri == uri)
             {
                 command.SchedulingScope = handlingKernel.SchedulingScope;
                 command.TargetKernelName = handlingKernel.Name;
@@ -189,11 +189,10 @@ public abstract partial class Kernel :
 
             command.SchedulingScope ??= handlingKernel.SchedulingScope;
             command.TargetKernelName ??= handlingKernel.Name;
-
-            if (command.Parent is null &&
-                !ReferenceEquals(command, originalCommand))
+            
+            if (!command.Equals(originalCommand))
             {
-                command.SetParent(originalCommand);
+                command.SetParent(originalCommand, true);
             }
 
             if (handlingKernel is ProxyKernel &&
@@ -241,8 +240,8 @@ public abstract partial class Kernel :
         {
             var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
             var offsetNodeLine = command.LinePosition.Line - nodeStartLine;
-            var position = new LinePosition(offsetNodeLine, command.LinePosition.Character);
-
+            var position = command.LinePosition with { Line = offsetNodeLine };
+            
             // create new command
             var offsetLanguageServiceCommand = command.With(
                 node,
@@ -710,7 +709,7 @@ public abstract partial class Kernel :
                     upToCursor.LastIndexOf(" ", StringComparison.CurrentCultureIgnoreCase) + 1);
 
             var resultRange = new LinePositionSpan(
-                new LinePosition(command.LinePosition.Line, indexOfPreviousSpace),
+                command.LinePosition with { Character = indexOfPreviousSpace },
                 command.LinePosition);
 
             context.Publish(

@@ -101,7 +101,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
                   .NotContain(e => e is CommandFailed);
         }
 
-        [Fact(Skip = "Need to remove command id first")] // FIX: (Commands_sent_within_the_code_of_another_command_do_not_publish_events_to_the_outer_result) 
+        [Fact] 
         public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_events_to_the_outer_result()
         {
             using var kernel = new CompositeKernel
@@ -115,6 +115,33 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
                 using {typeof(KernelCommand).Namespace};
                 var result = await Kernel.Root.SendAsync(new SubmitCode("123.Display();\n456", "cs2"));
                 """, "cs1");
+
+            var result = await kernel.SendAsync(command);
+
+            using var _ = new AssertionScope();
+            result.Events.Should().NotContainErrors();
+            result.Events.Should().NotContain(e => e is DisplayedValueProduced);
+            result.Events.Should().NotContain(e => e is ReturnValueProduced);
+        }
+
+        [Fact]
+        public async Task Commands_sent_via_API_within_a_split_submission_do_not_bubble_events()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel("cs1"),
+                new CSharpKernel("cs2")
+            };
+
+            var command = new SubmitCode($"""
+                #!cs1
+                using {typeof(Kernel).Namespace};
+                using {typeof(KernelCommand).Namespace};
+                var result = await Kernel.Root.SendAsync(new SubmitCode("123.Display();\n456", "cs2"));
+
+                #!cs2
+                Console.WriteLine(789);
+                """);
 
             var result = await kernel.SendAsync(command);
 
