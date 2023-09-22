@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
@@ -89,7 +88,7 @@ public partial class ParserTests
 
             var requestNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens()
                                     .Should().ContainSingle<HttpRequestNode>().Which;
-           
+
             requestNode.DescendantNodesAndTokens().Should().ContainSingle<HttpCommentNode>().Which.Text.Should().Be("# this is a comment");
             requestNode.ChildNodes.Should().ContainSingle<HttpHeadersNode>();
         }
@@ -138,7 +137,6 @@ public partial class ParserTests
                 Accept: {{accept}}
                 Accept-Encoding : {{acceptEncoding}}
                 Accept-Language : {{acceptLanguage}}
-                Content-Length:  {{contentLength}}
                 Cookie: {{cookie}}
                 user-agent: {{userAgent}}
                 """);
@@ -146,7 +144,6 @@ public partial class ParserTests
             var accept = "*/*";
             var acceptEncoding = "gzip, deflate, br";
             var acceptLanguage = "en-US,en;q=0.9";
-            var contentLength = 7060;
             var cookie = "expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;";
             var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.203";
 
@@ -157,7 +154,6 @@ public partial class ParserTests
                     "accept" => accept,
                     "acceptEncoding" => acceptEncoding,
                     "acceptLanguage" => acceptLanguage,
-                    "contentLength" => contentLength,
                     "cookie" => cookie,
                     "userAgent" => userAgent
                 });
@@ -179,9 +175,34 @@ public partial class ParserTests
                    .Where(q => q.Quality.HasValue)
                    .Select(l => l.Quality.Value)
                    .Should().BeEquivalentSequenceTo(0.9);
+        }
 
-            request.Content.Headers.ContentLength.Should().Be(7060);
+        [Fact]
+        public void cannot_set_content_headers_without_a_body()
+        {
+            var result = Parse(
+                """
+                GET https://example.com
+                Content-Type: application/json
+                Content-Length: 0
+                Content-Encoding: compress
+                Content-Language: en-us
+                """);
 
+            HttpBindingDelegate bind =
+                node => HttpBindingResult<object>.Failure(
+                    node.CreateDiagnostic(CreateDiagnosticInfo("oops!")));
+
+            var requestNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpRequestNode>().Single();
+
+            var bindingResult = requestNode.TryGetHttpRequestMessage(bind);
+
+            bindingResult.Value.Should().BeNull();
+            bindingResult.Diagnostics.Should().HaveCount(4);
+            foreach (var diagnostic in bindingResult.Diagnostics)
+            {
+                diagnostic.ToString().Should().EndWith("Cannot set content header without content.");
+            }
         }
 
         [Fact]
