@@ -399,13 +399,11 @@ public class KernelInvocationContext : IDisposable
 
     internal DirectiveNode CurrentlyParsingDirectiveNode { get; set; }
 
-    public async Task ScheduleAsync(
-        Func<KernelInvocationContext, Task> func)
+    public async Task ScheduleAsync(Func<KernelInvocationContext, Task> func)
     {
         // FIX: (ScheduleAsync) make this method internal
         var anonymousCommand = new AnonymousKernelCommand((_, invocationContext) => func(invocationContext));
-        anonymousCommand.SetParent(Command);
-        Command.ResultShouldIncludeEventsFrom(anonymousCommand);
+        anonymousCommand.SetParent(Command, true);
         await HandlingKernel.SendAsync(anonymousCommand);
     }
 

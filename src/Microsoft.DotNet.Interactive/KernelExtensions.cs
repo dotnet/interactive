@@ -558,8 +558,7 @@ public static class KernelExtensions
                 value,
                 formattedValue);
 
-            sendValue.SetParent(context.Command);
-            context.Command.ResultShouldIncludeEventsFrom(sendValue);
+            sendValue.SetParent(context.Command, true);
 
             await kernel.SendAsync(sendValue);
         }
@@ -584,8 +583,7 @@ public static class KernelExtensions
 
         var requestValue = new RequestValue(name, mimeType: requestedMimeType);
 
-        requestValue.SetParent(context.Command);
-        context.Command.ResultShouldIncludeEventsFrom(requestValue);
+        requestValue.SetParent(context.Command, true);
 
         var requestValueResult = await kernel.SendAsync(requestValue);
 

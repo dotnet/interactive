@@ -114,8 +114,7 @@ public partial class Kernel
         Task.Run(async () =>
         {
             var displayValue = new DisplayValue(formatted);
-            displayValue.SetParent(context.Command);
-            context.Command.ResultShouldIncludeEventsFrom(displayValue);
+            displayValue.SetParent(context.Command, true);
             await kernel.SendAsync(displayValue);
         }).Wait(context.CancellationToken);
     }

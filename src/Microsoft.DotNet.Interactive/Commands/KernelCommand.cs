@@ -25,8 +25,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     [JsonIgnore] 
     public KernelCommandInvocation Handler { get; set; }
 
-    [JsonIgnore] 
-    public KernelCommand Parent => _parent;
+    [JsonIgnore] public KernelCommand Parent => _parent;
 
     public void SetParent(KernelCommand parent, bool bubbleEvents = false)
     {
@@ -46,20 +45,19 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
             if (_parent._token is null)
             {
-                // FIX: (SetParent) force parent token creation?
                 _parent.GetOrCreateToken();
             }
 
             GetOrCreateToken();
-
-            if (bubbleEvents)
-            {
-                _parent.ResultShouldIncludeEventsFrom(this);
-            }
         }
         else if (!_parent.Equals(parent))
         {
             throw new InvalidOperationException("Parent cannot be changed.");
+        }
+
+        if (bubbleEvents)
+        {
+            _parent.ResultShouldIncludeEventsFrom(this);
         }
     }
 
@@ -136,18 +134,8 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
     internal bool WasProxied { get; set; }
 
-    internal void ResultShouldIncludeEventsFrom(KernelCommand childCommand)
+    private void ResultShouldIncludeEventsFrom(KernelCommand childCommand)
     {
-#if DEBUG
-        if (childCommand.Parent is null)
-        {
-            // FIX: (ResultShouldIncludeEventsFrom) 
-        }
-        else if (!childCommand.Parent.Equals(this))
-        {
-        }
-#endif
-
         if (_childCommandsToBubbleEventsFrom is null)
         {
             _childCommandsToBubbleEventsFrom = new();

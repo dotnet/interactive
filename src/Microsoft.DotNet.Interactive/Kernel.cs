@@ -192,8 +192,7 @@ public abstract partial class Kernel :
             
             if (!command.Equals(originalCommand))
             {
-                command.SetParent(originalCommand);
-                originalCommand.ResultShouldIncludeEventsFrom(command);
+                command.SetParent(originalCommand, true);
             }
 
             if (handlingKernel is ProxyKernel &&
