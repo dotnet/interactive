@@ -189,15 +189,10 @@ public abstract partial class Kernel :
 
             command.SchedulingScope ??= handlingKernel.SchedulingScope;
             command.TargetKernelName ??= handlingKernel.Name;
-
-            if (command.Parent is null &&
-                !ReferenceEquals(command, originalCommand))
-            {
-                command.SetParent(originalCommand);
-            }
-
+            
             if (!command.Equals(originalCommand))
             {
+                command.SetParent(originalCommand);
                 originalCommand.ResultShouldIncludeEventsFrom(command);
             }
 
