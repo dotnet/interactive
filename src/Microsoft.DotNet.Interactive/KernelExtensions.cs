@@ -211,22 +211,22 @@ public static class KernelExtensions
                 var referenceValue = isByref ? valueProduced.Value : null;
                 var formattedValue = valueProduced.FormattedValue;
 
-                await SendValue(kernel, referenceValue, formattedValue, valueName);
+                await SendValue(context, kernel, referenceValue, formattedValue, valueName);
             }
             else if (inputProduced is { })
             {
                 if (inputProduced.Command is RequestInput { IsPassword: true })
                 {
-                    await SendValue(kernel, new PasswordString(inputProduced.Value), null, valueName);
+                    await SendValue(context, kernel, new PasswordString(inputProduced.Value), null, valueName);
                 }
                 else
                 {
-                    await SendValue(kernel, inputProduced.Value, null, valueName);
+                    await SendValue(context, kernel, inputProduced.Value, null, valueName);
                 }
             }
             else
             {
-                await SendValue(kernel, valueOptionResult?.Value, null, valueName);
+                await SendValue(context, kernel, valueOptionResult?.Value, null, valueName);
             }
             
         }
@@ -489,6 +489,7 @@ public static class KernelExtensions
             if (kernel.FindKernelByName(from) is { } fromKernel)
             {
                 await fromKernel.GetValueAndSendTo(
+                    context,
                     kernel,
                     valueName,
                     mimeType,
@@ -505,22 +506,27 @@ public static class KernelExtensions
 
     internal static async Task GetValueAndSendTo(
         this Kernel fromKernel,
+        KernelInvocationContext context,
         Kernel toKernel,
         string fromName,
         string requestedMimeType,
         string toName)
     {
-        var valueProduced = await GetValue(fromKernel, fromName, requestedMimeType);
+        var valueProduced = await GetValue(context, fromKernel, fromName, requestedMimeType);
 
-        if (valueProduced is { })
+        if (valueProduced is not null)
         {
             var declarationName = toName ?? fromName;
 
-            await SendValue(toKernel, requestedMimeType is not null, valueProduced, declarationName);
+            await SendValue(context, toKernel, requestedMimeType is not null, valueProduced, declarationName);
         }
     }
 
-    private static async Task SendValue(Kernel kernel, bool ignoreReferenceValue, ValueProduced valueProduced,
+    private static async Task SendValue(
+        KernelInvocationContext context,
+        Kernel kernel, 
+        bool ignoreReferenceValue, 
+        ValueProduced valueProduced,
         string declarationName)
     {
         if (kernel.SupportsCommandType(typeof(SendValue)))
@@ -530,7 +536,7 @@ public static class KernelExtensions
                     ? null
                     : valueProduced.Value;
 
-            await SendValue(kernel, value, valueProduced.FormattedValue, declarationName);
+            await SendValue(context, kernel, value, valueProduced.FormattedValue, declarationName);
         }
         else
         {
@@ -538,16 +544,23 @@ public static class KernelExtensions
         }
     }
 
-    private static async Task SendValue(Kernel kernel, object value, FormattedValue formattedValue,
+    private static async Task SendValue(
+        KernelInvocationContext context,
+        Kernel kernel, 
+        object value, 
+        FormattedValue formattedValue,
         string declarationName)
     {
         if (kernel.SupportsCommandType(typeof(SendValue)))
         {
-            await kernel.SendAsync(
-                new SendValue(
-                    declarationName,
-                    value,
-                    formattedValue));
+            var sendValue = new SendValue(
+                declarationName,
+                value,
+                formattedValue);
+
+            context.Command.ResultShouldIncludeEventsFrom(sendValue);
+
+            await kernel.SendAsync(sendValue);
         }
         else
         {
@@ -555,7 +568,11 @@ public static class KernelExtensions
         }
     }
 
-    private static async Task<ValueProduced> GetValue(Kernel kernel, string name, string requestedMimeType)
+    private static async Task<ValueProduced> GetValue(
+        KernelInvocationContext context,
+        Kernel kernel, 
+        string name, 
+        string requestedMimeType)
     {
         var supportedRequestValue = kernel.SupportsCommandType(typeof(RequestValue));
 
@@ -564,7 +581,11 @@ public static class KernelExtensions
             throw new InvalidOperationException($"Kernel {kernel} does not support command {nameof(RequestValue)}");
         }
 
-        var requestValueResult = await kernel.SendAsync(new RequestValue(name, mimeType: requestedMimeType));
+        var requestValue = new RequestValue(name, mimeType: requestedMimeType);
+
+        context.Command.ResultShouldIncludeEventsFrom(requestValue);
+
+        var requestValueResult = await kernel.SendAsync(requestValue);
 
         return requestValueResult.Events.OfType<ValueProduced>().SingleOrDefault();
     }
