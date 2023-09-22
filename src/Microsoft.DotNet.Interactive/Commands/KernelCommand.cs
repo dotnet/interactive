@@ -121,13 +121,22 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     [JsonIgnore]
     public ParseResult KernelChooserParseResult { get; internal set; }
 
-    [JsonIgnore]
-    public CommandRoutingSlip RoutingSlip { get; }
+    [JsonIgnore] public CommandRoutingSlip RoutingSlip { get; }
 
     internal bool WasProxied { get; set; }
 
     internal void ResultShouldIncludeEventsFrom(KernelCommand childCommand)
     {
+#if DEBUG
+        if (childCommand.Parent is null)
+        {
+            // FIX: (ResultShouldIncludeEventsFrom) 
+        }
+        else if (!childCommand.Parent.Equals(this))
+        {
+        }
+#endif
+
         if (_childCommandsToBubbleEventsFrom is null)
         {
             _childCommandsToBubbleEventsFrom = new();

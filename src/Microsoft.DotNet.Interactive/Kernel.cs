@@ -171,11 +171,6 @@ public abstract partial class Kernel :
 
         foreach (var command in commands)
         {
-            if (!command.Equals(originalCommand))
-            {
-                 originalCommand.ResultShouldIncludeEventsFrom(command);
-            }
-
             var handlingKernel = GetHandlingKernel(command, context);
 
             if (handlingKernel is null)
@@ -199,6 +194,11 @@ public abstract partial class Kernel :
                 !ReferenceEquals(command, originalCommand))
             {
                 command.SetParent(originalCommand);
+            }
+
+            if (!command.Equals(originalCommand))
+            {
+                originalCommand.ResultShouldIncludeEventsFrom(command);
             }
 
             if (handlingKernel is ProxyKernel &&

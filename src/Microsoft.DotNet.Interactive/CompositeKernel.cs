@@ -195,8 +195,8 @@ public sealed class CompositeKernel :
             if (childKernel.SupportsCommand(command))
             {
                 var childCommand = new RequestKernelInfo(childKernel.Name);
-                command.ResultShouldIncludeEventsFrom(childCommand);
                 childCommand.SetParent(command);
+                command.ResultShouldIncludeEventsFrom(childCommand);
                 childCommand.RoutingSlip.ContinueWith(command.RoutingSlip);
                 await childKernel.HandleAsync(childCommand, context);
             }
