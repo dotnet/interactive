@@ -200,32 +200,6 @@ public class HttpRequestKernelTests
     }
 
     [Fact]
-    public async Task can_set_contenttype_without_a_body()
-    {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            request = message;
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            return Task.FromResult(response);
-        });
-        var client = new HttpClient(handler);
-        using var kernel = new HttpRequestKernel(client: client);
-
-        var result = await kernel.SendAsync(new SubmitCode("""
-            
-            Get  https://location1.com:1200/endpoint
-            Authorization: Basic username password
-            Content-Type: application/json
-
-            """));
-
-        using var _ = new AssertionScope();
-        result.Events.Should().NotContainErrors();
-        request.Content.Headers.ContentType.ToString().Should().Be("application/json");
-    }
-
-    [Fact]
     public async Task invalid_header_value_produces_error()
     {
         HttpRequestMessage request = null;

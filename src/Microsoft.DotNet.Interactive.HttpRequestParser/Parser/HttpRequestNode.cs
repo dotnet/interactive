@@ -121,7 +121,10 @@ internal class HttpRequestNode : HttpSyntaxNode
             diagnostics.AddRange(bodyResult.Diagnostics);
         }
 
-        request.Content = new StringContent(body);
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            request.Content = new StringContent(body);
+        }
 
         if (HeadersNode is { HeaderNodes: { } headerNodes })
         {
@@ -151,27 +154,53 @@ internal class HttpRequestNode : HttpSyntaxNode
                         switch (headerName.ToLowerInvariant())
                         {
                             case "content-encoding":
-                                request.Content.Headers.Add(headerName, headerValue);
-                                break;
                             case "content-language":
-                                request.Content.Headers.Add(headerName, headerValue);
+                                if (request.Content is null)
+                                {
+                                    ReportDiagnosticForMissingContent();
+                                }
+                                else
+                                {
+                                    request.Content.Headers.Add(headerName, headerValue);
+                                }
                                 break;
                             case "content-length":
-                                request.Content.Headers.ContentLength = long.Parse(headerValue);
+                                if (request.Content is null)
+                                {
+                                    ReportDiagnosticForMissingContent();
+                                }
+                                else
+                                {
+                                    request.Content.Headers.ContentLength = long.Parse(headerValue);
+                                }
                                 break;
                             case "content-type":
-                                request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(headerValue);
+                                if (request.Content is null)
+                                {
+                                    ReportDiagnosticForMissingContent();
+                                }
+                                else
+                                {
+                                    request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(headerValue);
+                                }
                                 break;
 
                             default:
                                 request.Headers.Add(headerName, headerValue);
                                 break;
                         }
+
+                        void ReportDiagnosticForMissingContent()
+                        {
+                            var diagnosticInfo = HttpDiagnostics.CannotSetContentHeaderWithoutContent(headerNode!.Text);
+                            var diagnostic = headerNode.CreateDiagnostic(diagnosticInfo);
+                            diagnostics!.Add(diagnostic);
+                        }
                     }
                     catch (Exception exception)
                     {
-                        var diagnosticInfo = HttpDiagnostics.InvalidHeaderValue(exception.Message);
-                        var diagnostic = headerNode.ValueNode.CreateDiagnostic(diagnosticInfo);
+                        var diagnosticInfo = HttpDiagnostics.InvalidHeader(headerNode.Text, exception.Message);
+                        var diagnostic = headerNode.CreateDiagnostic(diagnosticInfo);
                         diagnostics.Add(diagnostic);
                     }
                 }

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
+using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.HttpRequest.Tests.Utility;
 using Xunit;
@@ -83,6 +83,53 @@ public partial class ParserTests
             var result = Parse(code);
 
             result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().NotContain(n => n is HttpBodyNode);
+        }
+
+        [Fact]
+        public void When_body_is_absent_HttpRequestMessage_Content_is_set_to_null()
+        {
+            var result = Parse(
+                """
+                GET https://example.com
+                """);
+
+            HttpBindingDelegate bind =
+                node => HttpBindingResult<object>.Failure(
+                    node.CreateDiagnostic(CreateDiagnosticInfo("oops!")));
+
+            var requestNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpRequestNode>().Single();
+            var bindingResult = requestNode.TryGetHttpRequestMessage(bind);
+            bindingResult.Diagnostics.Should().BeEmpty();
+
+            var request = bindingResult.Value;
+            request.Headers.Should().BeEmpty();
+            request.Content.Should().BeNull();
+        }
+
+        [Fact]
+        public void When_body_is_present_HttpRequestMessage_Content_is_set_appropriately()
+        {
+            var result = Parse(
+                """
+                GET https://example.com
+
+                name=value
+                """);
+
+            HttpBindingDelegate bind =
+                node => HttpBindingResult<object>.Failure(
+                    node.CreateDiagnostic(CreateDiagnosticInfo("oops!")));
+
+            var requestNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpRequestNode>().Single();
+            var bindingResult = requestNode.TryGetHttpRequestMessage(bind);
+            bindingResult.Diagnostics.Should().BeEmpty();
+
+            var request = bindingResult.Value;
+            request.Headers.Should().BeEmpty();
+
+            var contentHeaders = request.Content.Headers;
+            contentHeaders.ContentType.ToString().Should().Be("text/plain; charset=utf-8");
+            contentHeaders.ContentLength.Should().Be(10);
         }
     }
 }
