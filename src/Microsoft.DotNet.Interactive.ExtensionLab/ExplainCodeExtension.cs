@@ -8,9 +8,9 @@ using Microsoft.DotNet.Interactive.CSharp;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab;
 
-public class ExplainCodeExtension : IKernelExtension
+public class ExplainCodeExtension
 {
-    public Task OnLoadAsync(Kernel kernel)
+    public static Task LoadAsync(Kernel kernel)
     {
         var mermaidKernel = kernel
             .FindKernels(k => k.KernelInfo.LanguageName == "Mermaid")

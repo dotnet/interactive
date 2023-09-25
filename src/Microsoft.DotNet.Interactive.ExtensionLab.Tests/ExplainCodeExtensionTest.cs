@@ -22,9 +22,8 @@ public class ExplainCodeExtensionTest
             new CSharpKernel(),
         };
         
-        var extension = new ExplainCodeExtension();
 
-        var executeTask = () => extension.OnLoadAsync(kernel);
+        var executeTask = () => ExplainCodeExtension.LoadAsync(kernel);
         await executeTask.Should().ThrowAsync<KernelException>();
 
     }
@@ -40,7 +39,7 @@ public class ExplainCodeExtensionTest
 
         var events = kernel.KernelEvents.ToSubscribedList();
         var extension = new ExplainCodeExtension();
-        await extension.OnLoadAsync(kernel);
+        await ExplainCodeExtension.LoadAsync(kernel);
 
         await kernel.SendAsync(new SubmitCode(@"
 #!explain

@@ -1,0 +1,6 @@
+#!csharp
+
+await Microsoft.DotNet.Interactive.ExtensionLab.DataFrameKernelExtension.LoadAsync(Microsoft.DotNet.Interactive.Kernel.Root);
+await Microsoft.DotNet.Interactive.ExtensionLab.ExplainCodeExtension.LoadAsync(Microsoft.DotNet.Interactive.Kernel.Root);
+await Microsoft.DotNet.Interactive.ExtensionLab.InspectExtension.LoadAsync(Microsoft.DotNet.Interactive.Kernel.Root);
+await Microsoft.DotNet.Interactive.ExtensionLab.RecordTranscriptExtension.LoadAsync(Microsoft.DotNet.Interactive.Kernel.Root);
