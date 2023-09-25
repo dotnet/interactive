@@ -21,6 +21,7 @@
     <SystemDrawingCommonVersion>7.0.0</SystemDrawingCommonVersion>
     <SystemReactiveVersion>6.0.0</SystemReactiveVersion>
     <SystemSecurityCryptographyXmlVersion>7.0.1</SystemSecurityCryptographyXmlVersion>
+    <SystemSecurityCryptographyPkcsVersion>7.0.3</SystemSecurityCryptographyPkcsVersion>
     <xunitVersion>2.4.2</xunitVersion>
     <xunitrunnervisualstudioVersion>2.4.5</xunitrunnervisualstudioVersion>
   </PropertyGroup>
