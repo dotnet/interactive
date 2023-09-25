@@ -106,9 +106,9 @@ Microsoft.DotNet.Interactive.SqlServer
     .ctor()
     public ResultMessage Message { get; set;}
     public System.String OwnerUri { get; set;}
-  public class MsSqlKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
+  public class MsSqlKernelExtension
+    public static System.Threading.Tasks.Task LoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
     .ctor()
-    public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
   public class Position
     .ctor()
     public System.Int32 Character { get; set;}
