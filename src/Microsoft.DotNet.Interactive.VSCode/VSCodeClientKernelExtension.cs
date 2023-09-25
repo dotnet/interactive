@@ -7,9 +7,9 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.VSCode;
 
-public class VSCodeClientKernelExtension : IKernelExtension
+public class VSCodeClientKernelExtension
 {
-    public async Task OnLoadAsync(Kernel kernel)
+    public static async Task LoadAsync(Kernel kernel)
     {
         if (kernel is CompositeKernel root)
         {

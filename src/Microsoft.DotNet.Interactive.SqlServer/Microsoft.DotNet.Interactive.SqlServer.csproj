@@ -42,11 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\net7.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.SqlServer.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+    <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
 </Project>

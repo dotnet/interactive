@@ -6,9 +6,9 @@ using Microsoft.DotNet.Interactive.CSharp;
 
 namespace Microsoft.DotNet.Interactive.AspNetCore;
 
-public class AspNetCoreKernelExtension : IKernelExtension
+public class AspNetCoreKernelExtension
 {
-    public Task OnLoadAsync(Kernel kernel)
+    public static Task LoadAsync(Kernel kernel)
     {
         kernel.VisitSubkernelsAndSelf(kernel =>
         {

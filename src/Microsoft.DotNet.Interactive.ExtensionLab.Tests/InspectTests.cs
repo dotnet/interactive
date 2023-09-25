@@ -21,7 +21,7 @@ public sealed class InspectTests
             new CSharpKernel()
         };
 
-        await new InspectExtension().OnLoadAsync(kernel);
+        await InspectExtension.LoadAsync(kernel);
 
         var submission = @"
 #!inspect
@@ -49,7 +49,7 @@ public class A
             new CSharpKernel()
         };
 
-        await new InspectExtension().OnLoadAsync(kernel);
+        await InspectExtension.LoadAsync(kernel);
 
         var submission = @"
 #!inspect
@@ -90,7 +90,7 @@ public class A
             new CSharpKernel()
         };
 
-        await new InspectExtension().OnLoadAsync(kernel);
+        await InspectExtension.LoadAsync(kernel);
 
         var submission = @"
 #!inspect -c Release -k Regular
@@ -147,7 +147,7 @@ public static class A {
             new CSharpKernel()
         };
 
-        await new InspectExtension().OnLoadAsync(kernel);
+        await InspectExtension.LoadAsync(kernel);
 
         var submission = @$"
 #!inspect -c {configuration}
@@ -190,7 +190,7 @@ public class A
             new CSharpKernel()
         };
 
-        await new InspectExtension().OnLoadAsync(kernel);
+        await InspectExtension.LoadAsync(kernel);
 
         var submission = @$"
 #!inspect -k {kind}
@@ -235,7 +235,7 @@ public class A
             new CSharpKernel()
         };
 
-        await new InspectExtension().OnLoadAsync(kernel);
+        await InspectExtension.LoadAsync(kernel);
 
         var submission = @"
 #!inspect

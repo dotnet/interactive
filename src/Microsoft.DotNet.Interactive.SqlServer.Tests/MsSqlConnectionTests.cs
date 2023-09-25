@@ -36,8 +36,7 @@ public class MsSqlConnectionTests : IDisposable
 
         kernel.DefaultKernelName = csharpKernel.Name;
 
-        var sqlKernelExtension = new MsSqlKernelExtension();
-        await sqlKernelExtension.OnLoadAsync(kernel);
+        await MsSqlKernelExtension.LoadAsync(kernel);
 
         return kernel;
     }

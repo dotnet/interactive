@@ -52,7 +52,7 @@ public abstract class JupyterRequestHandlerTestBase : IDisposable
             }
             .UseDefaultMagicCommands();
 
-        Task.Run(() => new JupyterClientKernelExtension().OnLoadAsync(_compositeKernel)).Wait(5000);
+        Task.Run(() => JupyterClientKernelExtension.LoadAsync(_compositeKernel)).Wait(5000);
 
         SetKernelLanguage(Language.CSharp);
 

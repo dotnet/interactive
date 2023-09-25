@@ -1,0 +1,3 @@
+#!csharp
+
+await Microsoft.DotNet.Interactive.Kql.KqlKernelExtension.LoadAsync(Microsoft.DotNet.Interactive.Kernel.Root);

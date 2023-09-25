@@ -21,9 +21,8 @@ using Microsoft.ML;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class DataFrameKernelExtension : IKernelExtension
-    {
-        public Task OnLoadAsync(Kernel rootKernel)
+    public class DataFrameKernelExtension{
+        public static Task LoadAsync(Kernel rootKernel)
         {
             RegisterFormatters();
 
@@ -88,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return Task.CompletedTask;
         }
 
-        private void RegisterFormatters()
+        private static void RegisterFormatters()
         {
             Formatter.Register<IDataView>((dataView, writer) =>
             {
@@ -97,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }, TabularDataResourceFormatter.MimeType);
         }
 
-        public string BuildTypedDataFrameCode(
+        public static string BuildTypedDataFrameCode(
             DataFrame sourceDataFrame,
             string variableName)
         {
@@ -145,7 +144,7 @@ var {variableName} = new {frameTypeName}();
             return sb.ToString();
         }
 
-        private string MakeValidMethodName(string value)
+        private static string MakeValidMethodName(string value)
         {
             value = Regex.Replace(value, @"^[0-9]", "_");
             value = Regex.Replace(value, @"([^a-zA-Z]+)", "_");

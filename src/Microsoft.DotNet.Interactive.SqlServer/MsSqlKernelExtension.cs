@@ -8,9 +8,9 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
-public class MsSqlKernelExtension : IKernelExtension
+public class MsSqlKernelExtension
 {
-    public async Task OnLoadAsync(Kernel kernel)
+    public static async Task LoadAsync(Kernel kernel)
     {
         if (kernel is CompositeKernel compositeKernel)
         {
