@@ -24,7 +24,7 @@ public class AspNetCoreTests : IDisposable
             new CSharpKernel(),
         };
 
-        var loadTask = new AspNetCoreKernelExtension().OnLoadAsync(_kernel);
+        var loadTask = AspNetCoreKernelExtension.LoadAsync(_kernel);
         Assert.Same(Task.CompletedTask, loadTask);
 
         HttpResponseMessageFormattingExtensions.RegisterFormatters();
