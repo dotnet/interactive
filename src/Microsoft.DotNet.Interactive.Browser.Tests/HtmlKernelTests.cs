@@ -14,11 +14,6 @@ using Microsoft.Playwright;
 
 using Pocket;
 using Pocket.For.Xunit;
-
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
@@ -111,7 +106,7 @@ public class HtmlKernelTests : IDisposable
                           .FormattedValue
                           .Value;
 
-        value.Invoking(v => Image.Load(Convert.FromBase64String(v), new PngDecoder()))
+        value.Invoking(v => SkiaSharp.SKImage.FromEncodedData(Convert.FromBase64String(v)))
              .Should()
              .NotThrow();
     }
@@ -136,9 +131,11 @@ public class HtmlKernelTests : IDisposable
                           .FormattedValue
                           .Value;
 
-        value.Invoking(v => Image.Load(Convert.FromBase64String(v), new JpegDecoder()))
+        value.Invoking(v =>
+                SkiaSharp.SKImage.FromEncodedData(Convert.FromBase64String(v)))
              .Should()
              .NotThrow();
+
     }
 
     [FactSkipLinux("Requires Playwright installed")]
