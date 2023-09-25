@@ -25,7 +25,7 @@ public class TranscriptTests : IDisposable
             new FSharpKernel()
         };
 
-        await new RecordTranscriptExtension().OnLoadAsync(kernel);
+        await RecordTranscriptExtension.LoadAsync(kernel);
 
         var filePath = Path.Combine(
             Directory.GetCurrentDirectory(),

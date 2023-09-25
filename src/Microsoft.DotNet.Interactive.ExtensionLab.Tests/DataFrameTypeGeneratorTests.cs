@@ -83,7 +83,7 @@ public class DataFrameTypeGeneratorTests
         var kernel = new CSharpKernel()
             .UseNugetDirective();
 
-        await new DataFrameKernelExtension().OnLoadAsync(kernel);
+        await DataFrameKernelExtension.LoadAsync(kernel);
 
         await kernel.SubmitCodeAsync($@"
 #r ""{typeof(DataFrame).Assembly.Location}""
@@ -120,7 +120,7 @@ using Microsoft.Data.Analysis;
         var kernel = new CSharpKernel()
             .UseNugetDirective();
 
-        await new DataFrameKernelExtension().OnLoadAsync(kernel);
+        await DataFrameKernelExtension.LoadAsync(kernel);
 
         await kernel.SubmitCodeAsync($@"
 #r ""{typeof(DataFrame).Assembly.Location}""
@@ -148,7 +148,7 @@ using Microsoft.Data.Analysis;
         var kernel = new CSharpKernel()
             .UseNugetDirective();
 
-        await new DataFrameKernelExtension().OnLoadAsync(kernel);
+        await DataFrameKernelExtension.LoadAsync(kernel);
 
         await kernel.SubmitCodeAsync($@"
 #r ""{typeof(DataFrame).Assembly.Location}""

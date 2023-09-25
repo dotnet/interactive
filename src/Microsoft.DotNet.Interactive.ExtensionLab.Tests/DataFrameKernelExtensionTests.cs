@@ -31,9 +31,7 @@ public class DataFrameKernelExtensionTests : IDisposable
     {
         using var kernel = new CompositeKernel();
 
-        var kernelExtension = new DataFrameKernelExtension();
-
-        await kernelExtension.OnLoadAsync(kernel);
+        await DataFrameKernelExtension.LoadAsync(kernel);
 
         var stream = @"id,name,color,deliciousness
 1,apple,green,10

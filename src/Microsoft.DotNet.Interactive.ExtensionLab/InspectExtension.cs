@@ -17,10 +17,10 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab;
 
-public class InspectExtension : IKernelExtension
+public class InspectExtension
 {
     private const string InspectCommand = "inspect";
-    public Task OnLoadAsync(Kernel kernel)
+    public static Task LoadAsync(Kernel kernel)
     {
         var inspect = new Command($"#!{InspectCommand}", "Inspect the following code in the submission")
         {
@@ -48,7 +48,7 @@ public class InspectExtension : IKernelExtension
         return Task.CompletedTask;
     }
 
-    private void Inspect(OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context)
+    private static void Inspect(OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context)
     {
         if (context.Command is not SubmitCode command)
         {

@@ -11,9 +11,9 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab;
 
-public class RecordTranscriptExtension : IKernelExtension
+public class RecordTranscriptExtension
 {
-    public Task OnLoadAsync(Kernel kernel)
+    public static Task LoadAsync(Kernel kernel)
     {
         if (kernel is CompositeKernel compositeKernel)
         {
