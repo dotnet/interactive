@@ -10,6 +10,7 @@ using FluentAssertions.Execution;
 using HtmlAgilityPack;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Mermaid.Tests;
@@ -66,8 +67,9 @@ public class MermaidKernelTests
 ");
 
         var returnValue = result.Events
-                                .OfType<DisplayedValueProduced>()
-                                .Single()
+                                .Should()
+                                .ContainSingle<DisplayedValueProduced>()
+                                .Which
                                 .Value as MermaidMarkdown;
 
         returnValue.ToString().Should().Be(@"graph TD
@@ -121,8 +123,9 @@ public class MermaidKernelTests
 ");
 
         var formattedData = result.Events
-                                  .OfType<DisplayedValueProduced>()
-                                  .Single()
+                                  .Should()
+                                  .ContainSingle<DisplayedValueProduced>()
+                                  .Which
                                   .FormattedValues
                                   .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
                                   .Value;
@@ -154,8 +157,9 @@ public class MermaidKernelTests
 ");
 
         var formattedData = result.Events
-                                  .OfType<DisplayedValueProduced>()
-                                  .Single()
+                                  .Should()
+                                  .ContainSingle<DisplayedValueProduced>()
+                                  .Which
                                   .FormattedValues
                                   .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
                                   .Value;

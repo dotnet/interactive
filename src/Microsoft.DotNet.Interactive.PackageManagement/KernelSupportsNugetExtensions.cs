@@ -13,8 +13,8 @@ namespace Microsoft.DotNet.Interactive;
 
 public static class KernelSupportsNugetExtensions
 {
-    public static T UseNugetDirective<T>(this T kernel, bool useResultsCache = true) 
-        where T: Kernel, ISupportNuget
+    public static T UseNugetDirective<T>(this T kernel, bool useResultsCache = true)
+        where T : Kernel, ISupportNuget
     {
         kernel.AddDirective(i());
         kernel.AddDirective(r());
@@ -28,6 +28,8 @@ public static class KernelSupportsNugetExtensions
         kernel.AddDirective(restore);
 
         return kernel;
+
+        static KernelCommandInvocation DoNugetRestore() => async (_, context) => await context.ScheduleAsync(Restore);
     }
 
     private static Command i()
@@ -151,70 +153,62 @@ public static class KernelSupportsNugetExtensions
         return path.Length > 0 && path.EndsWith(Path.DirectorySeparatorChar);
     }
     
-    internal static KernelCommandInvocation DoNugetRestore()
+    private static async Task Restore(KernelInvocationContext context)
     {
-        return async (_, invocationContext) =>
+        if (context.HandlingKernel is not ISupportNuget kernel)
         {
-            async Task Restore(KernelInvocationContext context)
-            {
-                if (context.HandlingKernel is not ISupportNuget kernel)
-                {
-                    return;
-                }
+            return;
+        }
 
-                var requestedPackages = kernel.RequestedPackageReferences.Select(s => s.PackageName).OrderBy(s => s).ToList();
+        var requestedPackages = kernel.RequestedPackageReferences.Select(s => s.PackageName).OrderBy(s => s).ToList();
 
-                var requestedSources = kernel.RestoreSources.OrderBy(s => s).ToList();
+        var requestedSources = kernel.RestoreSources.OrderBy(s => s).ToList();
 
-                var installMessage = new InstallPackagesMessage(requestedSources, requestedPackages, Array.Empty<string>(), 0);
+        var installMessage = new InstallPackagesMessage(requestedSources, requestedPackages, Array.Empty<string>(), 0);
 
-                var displayedValue = context.Display(installMessage);
+        var displayedValue = context.Display(installMessage);
                 
-                var restorePackagesTask = kernel.RestoreAsync();
-                var delay = 500;
-                while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
-                {
-                    if (context.CancellationToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
-                    installMessage.Progress++;
-
-                    displayedValue.Update(installMessage);
-                }
-
-                var result = await restorePackagesTask;
-
-                var resultMessage = new InstallPackagesMessage(
-                    requestedSources,
-                    Array.Empty<string>(),
-                    kernel.ResolvedPackageReferences
-                          .Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase))
-                          .Select(s => $"{s.PackageName}, {s.PackageVersion}")
-                          .OrderBy(s => s)
-                          .ToList(),
-                    0);
-
-                if (result.Succeeded)
-                {
-                    kernel.RegisterResolvedPackageReferences(result.ResolvedReferences);
-                    foreach (var resolvedReference in result.ResolvedReferences)
-                    {
-                        context.Publish(new PackageAdded(resolvedReference, context.Command));
-                    }
-
-                    displayedValue.Update(resultMessage);
-                }
-                else
-                {
-                    var errors = string.Join(Environment.NewLine, result.Errors);
-                    displayedValue.Update(resultMessage);
-                    context.Fail(context.Command, message: errors);
-                }
+        var restorePackagesTask = kernel.RestoreAsync();
+        var delay = 500;
+        while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
+        {
+            if (context.CancellationToken.IsCancellationRequested)
+            {
+                break;
             }
 
-            await invocationContext.ScheduleAsync(Restore);
-        };
+            installMessage.Progress++;
+
+            displayedValue.Update(installMessage);
+        }
+
+        var result = await restorePackagesTask;
+
+        var resultMessage = new InstallPackagesMessage(
+            requestedSources,
+            Array.Empty<string>(),
+            kernel.ResolvedPackageReferences
+                  .Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase))
+                  .Select(s => $"{s.PackageName}, {s.PackageVersion}")
+                  .OrderBy(s => s)
+                  .ToList(),
+            0);
+
+        if (result.Succeeded)
+        {
+            kernel.RegisterResolvedPackageReferences(result.ResolvedReferences);
+            foreach (var resolvedReference in result.ResolvedReferences)
+            {
+                context.Publish(new PackageAdded(resolvedReference, context.Command));
+            }
+
+            displayedValue.Update(resultMessage);
+        }
+        else
+        {
+            var errors = string.Join(Environment.NewLine, result.Errors);
+            displayedValue.Update(resultMessage);
+            context.Fail(context.Command, message: errors);
+        }
     }
 }

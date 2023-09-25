@@ -73,17 +73,25 @@ internal static class HttpDiagnostics
         return new HttpDiagnosticInfo(id, messageFormat, severity);
     }
 
-    internal static HttpDiagnosticInfo InvalidHeaderValue(string exceptionMessage)
+    internal static HttpDiagnosticInfo CannotSetContentHeaderWithoutContent(string headerText)
     {
         var id = $"HTTP0009";
         var severity = DiagnosticSeverity.Error;
-        var messageFormat = "Invalid header value: {0}.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, exceptionMessage);
+        var messageFormat = "Invalid header '{0}': Cannot set content header without content.";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, headerText);
+    }
+
+    internal static HttpDiagnosticInfo InvalidHeader(string headerText, string exceptionMessage)
+    {
+        var id = $"HTTP0010";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = "Invalid header '{0}': {1}";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, headerText, exceptionMessage);
     }
 
     internal static HttpDiagnosticInfo VariableNameExpected()
     {
-        var id = $"HTTP0010";
+        var id = $"HTTP0011";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Variable name expected.";
         return new HttpDiagnosticInfo(id, messageFormat, severity);
@@ -91,7 +99,7 @@ internal static class HttpDiagnostics
 
     internal static HttpDiagnosticInfo CannotResolveSymbol(string symbol)
     {
-        var id = $"HTTP0011";
+        var id = $"HTTP0012";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Cannot resolve symbol '{0}'.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, symbol);

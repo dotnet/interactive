@@ -200,7 +200,7 @@ public class HttpRequestKernelTests
     }
 
     [Fact]
-    public async Task can_set_contenttype_without_a_body()
+    public async Task invalid_header_value_produces_error()
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -213,16 +213,13 @@ public class HttpRequestKernelTests
         using var kernel = new HttpRequestKernel(client: client);
 
         var result = await kernel.SendAsync(new SubmitCode("""
-            
             Get  https://location1.com:1200/endpoint
-            Authorization: Basic username password
-            Content-Type: application/json
-
+            Date: OOPS!
             """));
 
         using var _ = new AssertionScope();
-        result.Events.Should().NotContainErrors();
-        request.Content.Headers.ContentType.ToString().Should().Be("application/json");
+        result.Events.OfType<CommandFailed>().Single().Message.Should().EndWith(
+            "The format of value 'OOPS!' is invalid.");
     }
 
     [Fact]

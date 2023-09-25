@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
@@ -13,6 +14,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 {
     private KernelCommand _parent;
     private string _token;
+    private List<KernelCommand> _childCommandsToBubbleEventsFrom;
 
     protected KernelCommand(string targetKernelName = null)
     {
@@ -20,12 +22,12 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         RoutingSlip = new CommandRoutingSlip();
     }
 
-    [JsonIgnore] public KernelCommandInvocation Handler { get; set; }
+    [JsonIgnore] 
+    public KernelCommandInvocation Handler { get; set; }
 
-    [JsonIgnore]
-    public KernelCommand Parent => _parent;
+    [JsonIgnore] public KernelCommand Parent => _parent;
 
-    public void SetParent(KernelCommand parent)
+    public void SetParent(KernelCommand parent, bool bubbleEvents = false)
     {
         if (parent is null)
         {
@@ -34,18 +36,28 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         if (_parent is null)
         {
+            _parent = parent;
+
             if (_token is not null)
             {
                 _token = null;
             }
 
-            _parent = parent;
+            if (_parent._token is null)
+            {
+                _parent.GetOrCreateToken();
+            }
 
             GetOrCreateToken();
         }
-        else if (_parent != parent)
+        else if (!_parent.Equals(parent))
         {
             throw new InvalidOperationException("Parent cannot be changed.");
+        }
+
+        if (bubbleEvents)
+        {
+            _parent.ResultShouldIncludeEventsFrom(this);
         }
     }
 
@@ -109,15 +121,60 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     private static int _nextRootToken = 0;
 #endif
 
-    [JsonIgnore] internal SchedulingScope SchedulingScope { get; set; }
+    [JsonIgnore] 
+    internal SchedulingScope SchedulingScope { get; set; }
 
-    [JsonIgnore] internal bool? ShouldPublishCompletionEvent { get; set; }
+    [JsonIgnore] 
+    internal bool? ShouldPublishCompletionEvent { get; set; }
 
     [JsonIgnore]
     public ParseResult KernelChooserParseResult { get; internal set; }
 
-    [JsonIgnore]
-    public CommandRoutingSlip RoutingSlip { get; }
+    [JsonIgnore] public CommandRoutingSlip RoutingSlip { get; }
+
+    internal bool WasProxied { get; set; }
+
+    private void ResultShouldIncludeEventsFrom(KernelCommand childCommand)
+    {
+        if (_childCommandsToBubbleEventsFrom is null)
+        {
+            _childCommandsToBubbleEventsFrom = new();
+        }
+
+        _childCommandsToBubbleEventsFrom.Add(childCommand);
+    }
+
+    internal bool ShouldResultIncludeEventsFrom(KernelCommand childCommand)
+    {
+        if (WasProxied &&
+            childCommand.IsSelfOrDescendantOf(this))
+        {
+            return true;
+        }
+
+        if (_childCommandsToBubbleEventsFrom is null)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < _childCommandsToBubbleEventsFrom.Count; i++)
+        {
+            var command = _childCommandsToBubbleEventsFrom[i];
+
+            if (command.Equals(childCommand))
+            {
+                return true;
+            }
+
+            if (command.WasProxied &&
+                command.IsSelfOrDescendantOf(this))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public virtual Task InvokeAsync(KernelInvocationContext context)
     {
@@ -145,7 +202,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
         return false;
     }
-
+ 
     internal bool IsSelfOrDescendantOf(KernelCommand other)
     {
         return GetOrCreateToken().StartsWith(other.GetOrCreateToken());

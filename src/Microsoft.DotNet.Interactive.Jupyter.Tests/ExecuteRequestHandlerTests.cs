@@ -383,7 +383,7 @@ f();"));
         JupyterMessageSender.PubSubMessages
                             .OfType<ExecuteResult>()
                             .Should()
-                            .Contain(dp => (dp.Data["text/html"] as string).Contains($"{SummaryTextBegin}{typeof(PasswordString).FullName}{SummaryTextEnd}"),
+                            .Contain(dp => (dp.Data["text/html"] as string).Contains("<code>************</code>"),
                                      because: $" password function returns the {typeof(PasswordString)} instance");
     }
 

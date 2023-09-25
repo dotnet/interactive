@@ -73,6 +73,8 @@ public sealed class ProxyKernel : Kernel
 
     private Task HandleByForwardingToRemoteAsync(KernelCommand command, KernelInvocationContext context)
     {
+        command.WasProxied = true;
+
         if (command.OriginUri is null)
         {
             if (context.HandlingKernel == this)
@@ -98,6 +100,7 @@ public sealed class ProxyKernel : Kernel
                 return Task.CompletedTask;
             }
         }
+
         var targetKernelName = command.TargetKernelName;
         if (command.TargetKernelName == Name)
         {
@@ -126,7 +129,6 @@ public sealed class ProxyKernel : Kernel
         return completionSource.Task.ContinueWith(te =>
         {
             command.TargetKernelName = targetKernelName;
-
 
             if (te.Result is CommandFailed cf)
             {

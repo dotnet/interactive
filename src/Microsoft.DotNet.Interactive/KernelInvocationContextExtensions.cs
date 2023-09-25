@@ -26,7 +26,7 @@ public static class KernelInvocationContextExtensions
         context.Publish(
             new DisplayedValueProduced(
                 value,
-                context?.Command,
+                context?.CurrentlyExecutingCommand,
                 formattedValues,
                 displayedValue.DisplayId));
 

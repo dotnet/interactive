@@ -46,11 +46,12 @@ public partial class Kernel
         return await GetInputAsync(prompt, false, typeHint, valueName);
     }
         
-    public static async Task<string> GetPasswordAsync(
+    public static async Task<PasswordString> GetPasswordAsync(
         string prompt = "",
         string valueName = null)
     {
-        return await GetInputAsync(prompt, true, valueName: valueName);
+        var password = await GetInputAsync(prompt, true, valueName: valueName);
+        return new PasswordString(password);
     }
 
     private static async Task<string> GetInputAsync(
@@ -110,7 +111,12 @@ public partial class Kernel
 
         var kernel = context.HandlingKernel;
 
-        Task.Run(async () => { await kernel.SendAsync(new DisplayValue(formatted)); }).Wait(context.CancellationToken);
+        Task.Run(async () =>
+        {
+            var displayValue = new DisplayValue(formatted);
+            displayValue.SetParent(context.Command, true);
+            await kernel.SendAsync(displayValue);
+        }).Wait(context.CancellationToken);
     }
 
     private static IReadOnlyCollection<Type> GetImplementedCommandHandlerTypesFor(Type kernelType) =>

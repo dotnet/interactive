@@ -21,6 +21,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     private readonly Task _runLoopTask;
 
     private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
+    private ScheduledOperation _currentlyRunningTopLevelOperation;
     private ScheduledOperation _currentlyRunningOperation;
     private readonly Barrier _childOperationsBarrier = new(1);
 
@@ -41,16 +42,16 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     public void CancelCurrentOperation()
     {
-        if (_currentlyRunningOperation is { } operation)
+        if (_currentlyRunningTopLevelOperation is { } operation)
         {
             operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
-            _currentlyRunningOperation = null;
+            _currentlyRunningTopLevelOperation = null;
         }
     }
 
-    internal T CurrentValue => _currentlyRunningOperation is { } currentOperation
-                            ? currentOperation.Value
-                            : default;
+    internal T CurrentValue => (_currentlyRunningOperation ?? _currentlyRunningTopLevelOperation) is { } currentOperation
+                                   ? currentOperation.Value
+                                   : default;
 
     public Task<TResult> RunAsync(
         T value,
@@ -62,7 +63,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
         ScheduledOperation operation;
 
-        if (_currentlyRunningOperation is { } currentlyRunningOperation &&
+        if (_currentlyRunningTopLevelOperation is { } currentlyRunningOperation &&
             IsChildOperation(currentlyRunningOperation.Value, value))
         {
             operation = new ScheduledOperation(
@@ -94,7 +95,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     internal async Task IdleAsync()
     {
-        if (_currentlyRunningOperation is {} currentlyRunning && 
+        if (_currentlyRunningTopLevelOperation is {} currentlyRunning && 
             !currentlyRunning.TaskCompletionSource.Task.IsCompleted)
         {
             await currentlyRunning.TaskCompletionSource.Task;
@@ -107,7 +108,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     {
         foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
         {
-            _currentlyRunningOperation = operation;
+            _currentlyRunningTopLevelOperation = operation;
 
             var executionContext = operation.ExecutionContext;
             
@@ -126,7 +127,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             }
             finally
             {
-                _currentlyRunningOperation = default;
+                _currentlyRunningTopLevelOperation = default;
             }
         }
     }
@@ -137,22 +138,24 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
         try
         {
+            _currentlyRunningOperation = operation;
+
             var operationTask = operation
-                .ExecuteAsync()
-                .ContinueWith(t =>
-                {
-                    if (!operation.TaskCompletionSource.Task.IsCompleted)
-                    {
-                        if (t.GetIsCompletedSuccessfully())
-                        {
-                            operation.TaskCompletionSource.TrySetResult(t.Result);
-                        }
-                        else if (t.Exception is { })
-                        {
-                            operation.TaskCompletionSource.SetException(t.Exception);
-                        }
-                    }
-                });
+                                .ExecuteAsync()
+                                .ContinueWith(t =>
+                                {
+                                    if (!operation.TaskCompletionSource.Task.IsCompleted)
+                                    {
+                                        if (t.GetIsCompletedSuccessfully())
+                                        {
+                                            operation.TaskCompletionSource.TrySetResult(t.Result);
+                                        }
+                                        else if (t.Exception is { })
+                                        {
+                                            operation.TaskCompletionSource.SetException(t.Exception);
+                                        }
+                                    }
+                                });
 
             Task.WaitAny(new[]
             {
@@ -168,6 +171,10 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             {
                 operation.TaskCompletionSource.SetException(exception);
             }
+        }
+        finally
+        {
+            _currentlyRunningOperation = null;
         }
     }
 
