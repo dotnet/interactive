@@ -13,9 +13,9 @@ Microsoft.DotNet.Interactive.Kql
     public System.String Cluster { get; set;}
     public System.String Database { get; set;}
     public System.String Token { get; set;}
-  public class KqlKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
+  public class KqlKernelExtension
+    public static System.Threading.Tasks.Task LoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
     .ctor()
-    public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
 Microsoft.DotNet.Interactive.SqlServer
   public class BatchSummary
     .ctor()
