@@ -37,8 +37,7 @@ public class KqlConnectionTests : IDisposable
 
         kernel.DefaultKernelName = csharpKernel.Name;
 
-        var kqlKernelExtension = new KqlKernelExtension();
-        await kqlKernelExtension.OnLoadAsync(kernel);
+        await KqlKernelExtension.LoadAsync(kernel);
 
         return kernel;
     }

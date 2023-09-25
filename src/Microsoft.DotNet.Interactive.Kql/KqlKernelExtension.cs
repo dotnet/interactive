@@ -9,9 +9,9 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Kql;
 
-public class KqlKernelExtension : IKernelExtension
+public class KqlKernelExtension
 {
-    public async Task OnLoadAsync(Kernel kernel)
+    public static async Task LoadAsync(Kernel kernel)
     {
         if (kernel is CompositeKernel compositeKernel)
         {

@@ -39,11 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\$(TargetFramework)\Microsoft.DotNet.Interactive.Kql.dll" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.Kql.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+    <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
 </Project>
