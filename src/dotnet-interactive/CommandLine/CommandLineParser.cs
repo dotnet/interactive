@@ -216,7 +216,7 @@ public static class CommandLineParser
                 var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
                 cancellationToken.Register(kernel.Dispose);
 
-                await new JupyterClientKernelExtension().OnLoadAsync(kernel);
+                await JupyterClientKernelExtension.LoadAsync(kernel);
 
                 services.AddKernel(kernel);
 
@@ -364,8 +364,7 @@ public static class CommandLineParser
 
                     if (isVSCode)
                     {
-                        var vscodeSetup = new VSCodeClientKernelExtension();
-                        await vscodeSetup.OnLoadAsync(kernel);
+                        await VSCodeClientKernelExtension.LoadAsync(kernel);
                     }
 
                     if (startupOptions.EnableHttpApi)

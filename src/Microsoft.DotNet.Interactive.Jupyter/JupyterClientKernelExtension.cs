@@ -9,9 +9,9 @@ using Microsoft.DotNet.Interactive.PowerShell;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
-public class JupyterClientKernelExtension : IKernelExtension
+public class JupyterClientKernelExtension
 {
-    public Task OnLoadAsync(Kernel kernel)
+    public static  Task LoadAsync(Kernel kernel)
     {
         if (kernel is CompositeKernel root)
         {
