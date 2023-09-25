@@ -50,9 +50,9 @@ Microsoft.DotNet.Interactive.Jupyter
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
     public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
     protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
-  public class JupyterClientKernelExtension, Microsoft.DotNet.Interactive.IKernelExtension
+  public class JupyterClientKernelExtension
+    public static System.Threading.Tasks.Task LoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
     .ctor()
-    public System.Threading.Tasks.Task OnLoadAsync(Microsoft.DotNet.Interactive.Kernel kernel)
   public class JupyterHttpKernelConnectionOptions, Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions
     .ctor()
     public System.CommandLine.Option<System.String> TargetUrl { get;}
