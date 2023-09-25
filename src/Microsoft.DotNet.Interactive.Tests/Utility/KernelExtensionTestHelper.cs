@@ -112,7 +112,7 @@ public static class KernelExtensionTestHelper
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <PackageId>{packageName}</PackageId>
     <PackageVersion>{packageVersion}</PackageVersion>
@@ -251,7 +251,7 @@ public static class KernelExtensionTestHelper
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     <AssemblyName>{extensionName}</AssemblyName>
   </PropertyGroup>
 
