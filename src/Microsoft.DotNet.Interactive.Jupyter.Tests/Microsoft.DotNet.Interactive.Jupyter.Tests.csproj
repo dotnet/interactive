@@ -8,6 +8,12 @@
     <NoWarn>$(NoWarn);VSTHRD002</NoWarn><!-- Ignore: Synchronously waiting on tasks or awaiters may cause deadlocks. -->
     <NoWarn>$(NoWarn);VSTHRD003</NoWarn><!-- Ignore: Avoid awaiting foreign Tasks -->
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
+    <NoWarn>$(NoWarn);VSTHRD103</NoWarn><!-- Ignore: Cancel synchronously blocks. Await CancelAsync instead -->
+    <!-- Ignore: warning NU1608: Detected package version outside of dependency constraint:
+    xunit 2.4.1 requires xunit.core (= 2.4.1) but version xunit.core 2.4.2 was resolved.
+    This suppression can be removed once PocketLogger.For.XUnit which currently references
+    xunit v2.4.1 is updated to reference xunit v2.4.2. -->
+    <NoWarn>$(NoWarn);NU1608</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

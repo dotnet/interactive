@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <NoWarn>;NU5104;NU5100;2003;8002</NoWarn>
+    <NoWarn>$(NoWarn);NU5104;NU5100;2003;8002</NoWarn>
   </PropertyGroup>
 
   <!-- PowerShell Module Package References -->
