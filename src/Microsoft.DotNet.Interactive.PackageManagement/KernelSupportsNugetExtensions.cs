@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.IO;
@@ -15,6 +16,18 @@ public static class KernelSupportsNugetExtensions
 {
     public static T UseNugetDirective<T>(this T kernel, bool useResultsCache = true)
         where T : Kernel, ISupportNuget
+    {
+        kernel.UseNugetDirective((k, resolvedPackageReference) =>
+        {
+            k.RegisterResolvedPackageReferences(resolvedPackageReference);
+            return Task.CompletedTask;
+        }, useResultsCache);
+
+        return kernel;
+    }
+
+    public static T UseNugetDirective<T>(this T kernel, Func<T, IReadOnlyList<ResolvedPackageReference>, Task> registerResolvedPackageReferences, bool useResultsCache = true)
+        where T : Kernel
     {
         var lazyPackageRestoreContext = new Lazy<PackageRestoreContext>(() =>
         {
@@ -30,7 +43,7 @@ public static class KernelSupportsNugetExtensions
 
         var restore = new Command("#!nuget-restore")
         {
-            Handler = CommandHandler.Create((KernelCommandInvocation)(async (_, context) => await context.ScheduleAsync(c => Restore(c, lazyPackageRestoreContext)))),
+            Handler = CommandHandler.Create((KernelCommandInvocation)(async (_, context) => await context.ScheduleAsync(c => Restore<T>(c, lazyPackageRestoreContext, registerResolvedPackageReferences)))),
             IsHidden = true
         };
 
@@ -46,7 +59,7 @@ public static class KernelSupportsNugetExtensions
             new Argument<string>("source")
         };
 
-        iDirective.Handler = CommandHandler.Create<string>((source) =>
+        iDirective.Handler = CommandHandler.Create<string>(source =>
         {
             lazyPackageRestoreContext.Value.TryAddRestoreSource(source.Replace("nuget:", ""));
         });
@@ -159,14 +172,10 @@ public static class KernelSupportsNugetExtensions
         return path.Length > 0 && path.EndsWith(Path.DirectorySeparatorChar);
     }
     
-    private static async Task Restore(KernelInvocationContext context, Lazy<PackageRestoreContext> lazyPackageRestoreContext)
+    private static async Task Restore<T>(KernelInvocationContext context,
+        Lazy<PackageRestoreContext> lazyPackageRestoreContext, Func<T, IReadOnlyList<ResolvedPackageReference>, Task> registerResolvedPackageReferences) where T : Kernel
     {
-        if (context.HandlingKernel is not ISupportNuget kernel)
-        {
-            return;
-        }
-
-
+        
         var requestedPackages = lazyPackageRestoreContext.Value.RequestedPackageReferences.Select(s => s.PackageName).OrderBy(s => s).ToList();
 
         var requestedSources = lazyPackageRestoreContext.Value.RestoreSources.OrderBy(s => s).ToList();
@@ -203,7 +212,7 @@ public static class KernelSupportsNugetExtensions
 
         if (result.Succeeded)
         {
-            kernel.RegisterResolvedPackageReferences(result.ResolvedReferences);
+            await registerResolvedPackageReferences(context.HandlingKernel as T ,result.ResolvedReferences);
             foreach (var resolvedReference in result.ResolvedReferences)
             {
                 context.Publish(new PackageAdded(resolvedReference, context.Command));
