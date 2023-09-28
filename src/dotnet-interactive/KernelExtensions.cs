@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.App;
 
 public static class KernelExtensions
 {
-    public static CSharpKernel UseNugetDirective(this CSharpKernel kernel, bool useResultsCache = true)
+    public static CSharpKernel UseNugetDirective(this CSharpKernel kernel, bool forceRestore = false)
     {
         kernel.UseNugetDirective((k, resolvedPackageReference) =>
         {
@@ -32,12 +32,12 @@ public static class KernelExtensions
             k.AddAssemblyReferences(resolvedPackageReference
                 .SelectMany(r => r.AssemblyPaths));
             return Task.CompletedTask;
-        }, useResultsCache);
+        }, forceRestore);
 
         return kernel;
     }
 
-    public static FSharpKernel UseNugetDirective(this FSharpKernel kernel, bool useResultsCache = true)
+    public static FSharpKernel UseNugetDirective(this FSharpKernel kernel, bool forceRestore = false)
     {
         kernel.UseNugetDirective((k, resolvedPackageReference) =>
         {
@@ -50,7 +50,7 @@ public static class KernelExtensions
 
             k.AddAssemblyReferencesAndPackageRoots(resolvedAssemblies, packageRoots);
             return Task.CompletedTask;
-        }, useResultsCache);
+        }, forceRestore);
 
         return kernel;
     }
