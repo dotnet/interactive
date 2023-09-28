@@ -414,6 +414,28 @@ type FSharpKernel () as this =
         | _ ->
             false
 
+    member this.AddAssemblyReferencesAndPackageRoots(assemblyReferences: IEnumerable<string>, packageRoots: IEnumerable<string>) = 
+        let sb = StringBuilder()
+        let hashset = HashSet()
+
+        for packageRoot in packageRoots do
+            match packageRoot with
+            | null -> ()
+            | root ->
+                if hashset.Add(root) then
+                    if File.Exists root then
+                        sb.AppendFormat("#I @\"{0}\"", root) |> ignore
+                        sb.Append(Environment.NewLine) |> ignore
+            
+        for assemblyReference in assemblyReferences do
+            if hashset.Add(assemblyReference) then
+                if File.Exists assemblyReference then
+                    sb.AppendFormat("#r @\"{0}\"", assemblyReference) |> ignore
+                    sb.Append(Environment.NewLine) |> ignore
+
+        let command = new SubmitCode(sb.ToString(), "fsharp")
+        this.DeferCommand(command)
+
     interface IKernelCommandHandler<RequestCompletions> with
         member this.HandleAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context
 
@@ -442,25 +464,3 @@ type FSharpKernel () as this =
     interface IKernelCommandHandler<ChangeWorkingDirectory> with
         member this.HandleAsync(command: ChangeWorkingDirectory, context: KernelInvocationContext) = handleChangeWorkingDirectory command context 
 
-    interface ISupportNuget with
-        member _.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
-            // Generate #r and #I from packageReferences
-            let sb = StringBuilder()
-            let hashset = HashSet()
-
-            for reference in packageReferences do
-                for assembly in reference.AssemblyPaths do
-                    if hashset.Add(assembly) then
-                        if File.Exists assembly then
-                            sb.AppendFormat("#r @\"{0}\"", assembly) |> ignore
-                            sb.Append(Environment.NewLine) |> ignore
-
-                match reference.PackageRoot with
-                | null -> ()
-                | root ->
-                    if hashset.Add(root) then
-                        if File.Exists root then
-                            sb.AppendFormat("#I @\"{0}\"", root) |> ignore
-                            sb.Append(Environment.NewLine) |> ignore
-            let command = new SubmitCode(sb.ToString(), "fsharp")
-            this.DeferCommand(command)

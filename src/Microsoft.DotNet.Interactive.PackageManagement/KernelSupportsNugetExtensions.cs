@@ -14,18 +14,6 @@ namespace Microsoft.DotNet.Interactive;
 
 public static class KernelSupportsNugetExtensions
 {
-    public static T UseNugetDirective<T>(this T kernel, bool useResultsCache = true)
-        where T : Kernel, ISupportNuget
-    {
-        kernel.UseNugetDirective((k, resolvedPackageReference) =>
-        {
-            k.RegisterResolvedPackageReferences(resolvedPackageReference);
-            return Task.CompletedTask;
-        }, useResultsCache);
-
-        return kernel;
-    }
-
     public static T UseNugetDirective<T>(this T kernel, Func<T, IReadOnlyList<ResolvedPackageReference>, Task> registerResolvedPackageReferences, bool useResultsCache = true)
         where T : Kernel
     {
