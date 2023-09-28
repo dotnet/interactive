@@ -13,6 +13,7 @@ using Microsoft.DotNet.Interactive.Journey;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Kql;
 using Microsoft.DotNet.Interactive.Mermaid;
+using Microsoft.DotNet.Interactive.PackageManagement;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.SQLite;
 using Microsoft.DotNet.Interactive.SqlServer;

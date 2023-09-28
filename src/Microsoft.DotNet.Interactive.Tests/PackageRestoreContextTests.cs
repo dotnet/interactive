@@ -6,6 +6,7 @@ using System.IO;
 using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.PackageManagement;
 using Xunit;
 using Xunit.Abstractions;
 
