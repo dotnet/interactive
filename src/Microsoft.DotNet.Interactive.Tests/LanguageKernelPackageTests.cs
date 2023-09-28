@@ -930,11 +930,6 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             .PackageName
             .Should()
             .Be("Newtonsoft.Json");
-
-        kernel.FindKernelByName("csharp").As<CSharpKernel>()
-            .ResolvedPackageReferences
-            .Should()
-            .ContainSingle(p => p.PackageName == "Newtonsoft.Json");
     }
 
     [Theory]

@@ -16,39 +16,44 @@ public static class KernelSupportsNugetExtensions
     public static T UseNugetDirective<T>(this T kernel, bool useResultsCache = true)
         where T : Kernel, ISupportNuget
     {
-        kernel.AddDirective(i());
-        kernel.AddDirective(r());
+        var lazyPackageRestoreContext = new Lazy<PackageRestoreContext>(() =>
+        {
+            var packageRestoreContext = new PackageRestoreContext(useResultsCache);
+
+            kernel.RegisterForDisposal(packageRestoreContext);
+
+            return packageRestoreContext;
+        });
+
+        kernel.AddDirective(i(lazyPackageRestoreContext));
+        kernel.AddDirective(r(lazyPackageRestoreContext));
 
         var restore = new Command("#!nuget-restore")
         {
-            Handler = CommandHandler.Create(DoNugetRestore()),
+            Handler = CommandHandler.Create((KernelCommandInvocation)(async (_, context) => await context.ScheduleAsync(c => Restore(c, lazyPackageRestoreContext)))),
             IsHidden = true
         };
-        kernel.Configure(useResultsCache);
+
         kernel.AddDirective(restore);
 
         return kernel;
-
-        static KernelCommandInvocation DoNugetRestore() => async (_, context) => await context.ScheduleAsync(Restore);
     }
 
-    private static Command i()
+    private static Command i(Lazy<PackageRestoreContext> lazyPackageRestoreContext)
     {
         var iDirective = new Command("#i")
         {
             new Argument<string>("source")
         };
-        iDirective.Handler = CommandHandler.Create<string, KernelInvocationContext>((source, context) =>
+
+        iDirective.Handler = CommandHandler.Create<string>((source) =>
         {
-            if (context.HandlingKernel is ISupportNuget kernel)
-            {
-                kernel.TryAddRestoreSource(source.Replace("nuget:", ""));
-            }
+            lazyPackageRestoreContext.Value.TryAddRestoreSource(source.Replace("nuget:", ""));
         });
         return iDirective;
     }
 
-    private static Command r()
+    private static Command r(Lazy<PackageRestoreContext> lazyPackageRestoreContext)
     {
         var rDirective = new Command("#r")
         {
@@ -80,19 +85,20 @@ public static class KernelSupportsNugetExtensions
             }
         };
 
-        rDirective.Handler = CommandHandler.Create<PackageReferenceOrFileInfo, KernelInvocationContext>(HandleAddPackageReference);
+        rDirective.Handler = CommandHandler.Create<PackageReferenceOrFileInfo, KernelInvocationContext>((package, context) => HandleAddPackageReference(package, context, lazyPackageRestoreContext));
 
         return rDirective;
 
         Task HandleAddPackageReference(
             PackageReferenceOrFileInfo package,
-            KernelInvocationContext context)
+            KernelInvocationContext context, 
+            Lazy<PackageRestoreContext> packageRestoreContext)
         {
             if (package?.Value is PackageReference pkg &&
                 context.HandlingKernel is ISupportNuget kernel)
             {
-                var alreadyGotten = kernel.ResolvedPackageReferences
-                    .Concat(kernel.RequestedPackageReferences)
+                var alreadyGotten = packageRestoreContext.Value.ResolvedPackageReferences
+                    .Concat(packageRestoreContext.Value.RequestedPackageReferences)
                     .FirstOrDefault(r => r.PackageName.Equals(pkg.PackageName, StringComparison.OrdinalIgnoreCase));
 
                 if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
@@ -100,7 +106,7 @@ public static class KernelSupportsNugetExtensions
                     if (!pkg.IsPackageVersionSpecified || pkg.PackageVersion is "*-*" or "*")
                     {
                         // we will reuse the the already loaded since this is a wildcard
-                        var added = kernel.GetOrAddPackageReference(alreadyGotten.PackageName, alreadyGotten.PackageVersion);
+                        var added = packageRestoreContext.Value.GetOrAddPackageReference(alreadyGotten.PackageName, alreadyGotten.PackageVersion);
 
                         if (added is null)
                         {
@@ -116,7 +122,7 @@ public static class KernelSupportsNugetExtensions
                 }
                 else
                 {
-                    var added = kernel.GetOrAddPackageReference(pkg.PackageName, pkg.PackageVersion);
+                    var added = packageRestoreContext.Value.GetOrAddPackageReference(pkg.PackageName, pkg.PackageVersion);
 
                     if (added is null)
                     {
@@ -153,22 +159,23 @@ public static class KernelSupportsNugetExtensions
         return path.Length > 0 && path.EndsWith(Path.DirectorySeparatorChar);
     }
     
-    private static async Task Restore(KernelInvocationContext context)
+    private static async Task Restore(KernelInvocationContext context, Lazy<PackageRestoreContext> lazyPackageRestoreContext)
     {
         if (context.HandlingKernel is not ISupportNuget kernel)
         {
             return;
         }
 
-        var requestedPackages = kernel.RequestedPackageReferences.Select(s => s.PackageName).OrderBy(s => s).ToList();
 
-        var requestedSources = kernel.RestoreSources.OrderBy(s => s).ToList();
+        var requestedPackages = lazyPackageRestoreContext.Value.RequestedPackageReferences.Select(s => s.PackageName).OrderBy(s => s).ToList();
+
+        var requestedSources = lazyPackageRestoreContext.Value.RestoreSources.OrderBy(s => s).ToList();
 
         var installMessage = new InstallPackagesMessage(requestedSources, requestedPackages, Array.Empty<string>(), 0);
 
         var displayedValue = context.Display(installMessage);
                 
-        var restorePackagesTask = kernel.RestoreAsync();
+        var restorePackagesTask = lazyPackageRestoreContext.Value.RestoreAsync();
         var delay = 500;
         while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
         {
@@ -187,7 +194,7 @@ public static class KernelSupportsNugetExtensions
         var resultMessage = new InstallPackagesMessage(
             requestedSources,
             Array.Empty<string>(),
-            kernel.ResolvedPackageReferences
+            lazyPackageRestoreContext.Value.ResolvedPackageReferences
                   .Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase))
                   .Select(s => $"{s.PackageName}, {s.PackageVersion}")
                   .OrderBy(s => s)
