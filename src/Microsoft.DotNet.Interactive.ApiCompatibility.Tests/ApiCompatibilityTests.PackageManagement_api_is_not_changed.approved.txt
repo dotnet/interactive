@@ -1,8 +1,8 @@
 Microsoft.DotNet.Interactive.PackageManagement
   public static class KernelExtensions
-    public static T UseNugetDirective<T>(Func<T,System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.ResolvedPackageReference>,System.Threading.Tasks.Task> onResolvePackageReferences, System.Boolean useResultsCache = True)
+    public static T UseNugetDirective<T>(Func<T,System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.ResolvedPackageReference>,System.Threading.Tasks.Task> onResolvePackageReferences, System.Boolean forceRestore = False)
   public class PackageRestoreContext, System.IDisposable
-    .ctor(System.Boolean useResultsCache = True)
+    .ctor(System.Boolean forceRestore = False)
     public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.PackageReference> RequestedPackageReferences { get;}
     public System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.ResolvedPackageReference> ResolvedPackageReferences { get;}
     public System.Collections.Generic.IEnumerable<System.String> RestoreSources { get;}

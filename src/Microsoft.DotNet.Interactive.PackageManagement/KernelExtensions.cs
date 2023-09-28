@@ -14,12 +14,12 @@ namespace Microsoft.DotNet.Interactive.PackageManagement;
 
 public static class KernelExtensions
 {
-    public static T UseNugetDirective<T>(this T kernel, Func<T, IReadOnlyList<ResolvedPackageReference>, Task> onResolvePackageReferences, bool useResultsCache = true)
+    public static T UseNugetDirective<T>(this T kernel, Func<T, IReadOnlyList<ResolvedPackageReference>, Task> onResolvePackageReferences, bool forceRestore = false)
         where T : Kernel
     {
         var lazyPackageRestoreContext = new Lazy<PackageRestoreContext>(() =>
         {
-            var packageRestoreContext = new PackageRestoreContext(useResultsCache);
+            var packageRestoreContext = new PackageRestoreContext(forceRestore);
 
             kernel.RegisterForDisposal(packageRestoreContext);
 
