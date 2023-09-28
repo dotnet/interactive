@@ -107,8 +107,7 @@ public static class KernelSupportsNugetExtensions
             KernelInvocationContext context, 
             Lazy<PackageRestoreContext> packageRestoreContext)
         {
-            if (package?.Value is PackageReference pkg &&
-                context.HandlingKernel is ISupportNuget kernel)
+            if (package?.Value is PackageReference pkg)
             {
                 var alreadyGotten = packageRestoreContext.Value.ResolvedPackageReferences
                     .Concat(packageRestoreContext.Value.RequestedPackageReferences)
