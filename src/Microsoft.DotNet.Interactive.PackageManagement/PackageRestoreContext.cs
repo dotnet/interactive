@@ -5,15 +5,15 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using FSharp.Compiler.DependencyManager;
 using Pocket;
 using static Pocket.Logger;
-using FSharp.Compiler.DependencyManager;
-using System.Globalization;
 
-namespace Microsoft.DotNet.Interactive;
+namespace Microsoft.DotNet.Interactive.PackageManagement;
 
 public class PackageRestoreContext : IDisposable
 {

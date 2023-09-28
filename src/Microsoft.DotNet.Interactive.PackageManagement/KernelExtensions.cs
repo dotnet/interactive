@@ -10,11 +10,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive;
+namespace Microsoft.DotNet.Interactive.PackageManagement;
 
-public static class KernelSupportsNugetExtensions
+public static class KernelExtensions
 {
-    public static T UseNugetDirective<T>(this T kernel, Func<T, IReadOnlyList<ResolvedPackageReference>, Task> registerResolvedPackageReferences, bool useResultsCache = true)
+    public static T UseNugetDirective<T>(this T kernel, Func<T, IReadOnlyList<ResolvedPackageReference>, Task> onResolvePackageReferences, bool useResultsCache = true)
         where T : Kernel
     {
         var lazyPackageRestoreContext = new Lazy<PackageRestoreContext>(() =>
@@ -31,7 +31,7 @@ public static class KernelSupportsNugetExtensions
 
         var restore = new Command("#!nuget-restore")
         {
-            Handler = CommandHandler.Create((KernelCommandInvocation)(async (_, context) => await context.ScheduleAsync(c => Restore<T>(c, lazyPackageRestoreContext, registerResolvedPackageReferences)))),
+            Handler = CommandHandler.Create((KernelCommandInvocation)(async (_, context) => await context.ScheduleAsync(c => Restore<T>(c, lazyPackageRestoreContext, onResolvePackageReferences)))),
             IsHidden = true
         };
 

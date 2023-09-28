@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive;
+namespace Microsoft.DotNet.Interactive.PackageManagement;
 
 public class PackageRestoreResult
 {
