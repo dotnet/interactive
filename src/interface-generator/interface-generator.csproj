@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Microsoft.DotNet.Interactive.InterfaceGen.App</RootNamespace>
     <AssemblyName>Microsoft.DotNet.Interactive.InterfaceGen.App</AssemblyName>
   </PropertyGroup>

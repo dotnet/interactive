@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <NoWarn>$(NoWarn);8002</NoWarn><!-- Assent isn't strongly signed -->
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
     <NoWarn>$(NoWarn);CS8509</NoWarn><!-- The switch expression does not handle all possible values of its input type (it is not exhaustive). For example, the pattern '""' is not covered.	Microsoft.DotNet.Interactive.Documents.Tests	C:\dev\interactive\src\Microsoft.DotNet.Interactive.Documents.Tests\ImportNotebookTests.cs	50	Active
