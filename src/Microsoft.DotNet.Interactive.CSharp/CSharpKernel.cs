@@ -28,7 +28,6 @@ namespace Microsoft.DotNet.Interactive.CSharp;
 
 public class CSharpKernel :
     Kernel,
-    ISupportNuget,
     IKernelCommandHandler<RequestCompletions>,
     IKernelCommandHandler<RequestDiagnostics>,
     IKernelCommandHandler<RequestHoverText>,
@@ -478,12 +477,10 @@ public class CSharpKernel :
     private bool HasReturnValue =>
         ScriptState is not null &&
         (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
-
-
-    void ISupportNuget.RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
+    
+    public void AddAssemblyReferences(IEnumerable<string> assemblyPaths)
     {
-        var references = resolvedReferences
-            .SelectMany(r => r.AssemblyPaths)
+        var references = assemblyPaths
             .Select(r => CachingMetadataResolver.ResolveReferenceWithXmlDocumentationProvider(r))
             .ToArray();
 
