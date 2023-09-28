@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -26,8 +27,27 @@ public static class KernelExtensions
     {
         kernel.UseNugetDirective((k, resolvedPackageReference) =>
         {
+            
             k.AddAssemblyReferences(resolvedPackageReference
                 .SelectMany(r => r.AssemblyPaths));
+            return Task.CompletedTask;
+        }, useResultsCache);
+
+        return kernel;
+    }
+
+    public static FSharpKernel UseNugetDirective(this FSharpKernel kernel, bool useResultsCache = true)
+    {
+        kernel.UseNugetDirective((k, resolvedPackageReference) =>
+        {
+            var resolvedAssemblies = resolvedPackageReference
+                .SelectMany(r => r.AssemblyPaths);
+
+            var packageRoots = resolvedPackageReference
+                .Select(r => r.PackageRoot);
+
+
+            k.AddAssemblyReferencesAndPackageRoots(resolvedAssemblies, packageRoots);
             return Task.CompletedTask;
         }, useResultsCache);
 

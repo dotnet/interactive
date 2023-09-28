@@ -1,8 +1,5 @@
 Microsoft.DotNet.Interactive
-  public abstract class ISupportNuget
-    public System.Void RegisterResolvedPackageReferences(System.Collections.Generic.IReadOnlyList<ResolvedPackageReference> packageReferences)
   public static class KernelSupportsNugetExtensions
-    public static T UseNugetDirective<T>(System.Boolean useResultsCache = True)
     public static T UseNugetDirective<T>(Func<T,System.Collections.Generic.IReadOnlyList<ResolvedPackageReference>,System.Threading.Tasks.Task> registerResolvedPackageReferences, System.Boolean useResultsCache = True)
   public class PackageRestoreContext, System.IDisposable
     .ctor(System.Boolean useResultsCache = True)
