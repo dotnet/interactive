@@ -7,6 +7,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests.Utilities;

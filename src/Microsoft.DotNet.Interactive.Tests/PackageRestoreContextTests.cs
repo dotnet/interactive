@@ -6,6 +6,7 @@ using System.IO;
 using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.PackageManagement;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -20,7 +21,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Returns_new_references_if_they_are_added()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
         added.Should().NotBeNull();
 
@@ -42,7 +43,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Returns_references_when_package_version_is_not_specified()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         var added = restoreContext.GetOrAddPackageReference("NewtonSoft.Json");
         added.Should().NotBeNull();
 
@@ -63,7 +64,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Returns_failure_if_package_installation_fails()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         var added = restoreContext.GetOrAddPackageReference("not-a-real-package-definitely-not", "5.7.0");
         added.Should().NotBeNull();
 
@@ -75,7 +76,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Returns_failure_if_adding_package_twice_at_different_versions()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         var added = restoreContext.GetOrAddPackageReference("another-not-a-real-package-definitely-not", "5.7.0");
         added.Should().NotBeNull();
 
@@ -91,7 +92,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     public async Task A_failing_package_restore_does_not_cause_future_resolves_to_fail()
 
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
         added.Should().NotBeNull();
 
@@ -114,7 +115,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Invalid_package_restores_are_not_remembered()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
 
         // This package does not exist
         restoreContext.GetOrAddPackageReference("NonExistentNugetPackage", "99.99.99-NoReallyIDontExist");
@@ -134,7 +135,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Can_get_path_to_nuget_packaged_assembly()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
         await restoreContext.RestoreAsync();
@@ -162,7 +163,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Can_get_path_to_nuget_package_root()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
         await restoreContext.RestoreAsync();
@@ -182,7 +183,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Can_get_path_to_nuget_package_when_multiple_packages_are_added()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
         restoreContext.GetOrAddPackageReference("htmlagilitypack", "1.11.12");
 
@@ -205,7 +206,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Fail_if_restore_source_has_an_invalid_uri()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         restoreContext.TryAddRestoreSource("https://completelyFakerestore Source");
         var result = await restoreContext.RestoreAsync();
         result.Succeeded.Should().BeFalse();
@@ -214,7 +215,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Can_add_to_list_of_added_sources()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
 
         restoreContext.TryAddRestoreSource("https://completelyFakerestoreSource");
         await restoreContext.RestoreAsync();
@@ -225,7 +226,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Can_add_same_source_to_list_of_added_sources_without_error()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
 
         var savedRestoreSources = restoreContext.RestoreSources.ToArray();
         restoreContext.TryAddRestoreSource("https://completelyFakerestoreSource");
@@ -239,7 +240,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Allows_duplicate_package_specifications()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         restoreContext.GetOrAddPackageReference("NodaTime", "3.1.9");
         restoreContext.GetOrAddPackageReference("NodaTime", "3.1.9");
 
@@ -254,7 +255,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     // Question:   should it not throw, or is ignore sufficient
     public async Task Ignores_subsequent_package_specifications_with_different_higher_version()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         restoreContext.GetOrAddPackageReference("NodaTime", "3.1.0");
         restoreContext.GetOrAddPackageReference("NodaTime", "3.1.9");
 
@@ -268,7 +269,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Disallows_package_specifications_with_different_lower_version()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         restoreContext.GetOrAddPackageReference("NodaTime", "3.1.9");
         restoreContext.GetOrAddPackageReference("NodaTime", "3.1.0");
         await restoreContext.RestoreAsync();
@@ -281,7 +282,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Disallows_package_specifications_with_different_lower_unspecified_version_first()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         restoreContext.GetOrAddPackageReference("NodaTime", "*");
         restoreContext.GetOrAddPackageReference("NodaTime", "3.1.0");
 
@@ -295,7 +296,7 @@ public class PackageRestoreContextTests : LanguageKernelTestBase
     [Fact]
     public async Task Disallows_package_specifications_with_different_lower_unspecified_version_last()
     {
-        using var restoreContext = new PackageRestoreContext(false);
+        using var restoreContext = new PackageRestoreContext(true);
         restoreContext.GetOrAddPackageReference("NodaTime", "3.1.0");
         restoreContext.GetOrAddPackageReference("NodaTime", "*");
 

@@ -6,12 +6,16 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.PackageManagement;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -20,6 +24,37 @@ namespace Microsoft.DotNet.Interactive.App;
 
 public static class KernelExtensions
 {
+    public static CSharpKernel UseNugetDirective(this CSharpKernel kernel, bool forceRestore = false)
+    {
+        kernel.UseNugetDirective((k, resolvedPackageReference) =>
+        {
+            
+            k.AddAssemblyReferences(resolvedPackageReference
+                .SelectMany(r => r.AssemblyPaths));
+            return Task.CompletedTask;
+        }, forceRestore);
+
+        return kernel;
+    }
+
+    public static FSharpKernel UseNugetDirective(this FSharpKernel kernel, bool forceRestore = false)
+    {
+        kernel.UseNugetDirective((k, resolvedPackageReference) =>
+        {
+            var resolvedAssemblies = resolvedPackageReference
+                .SelectMany(r => r.AssemblyPaths);
+
+            var packageRoots = resolvedPackageReference
+                .Select(r => r.PackageRoot);
+
+
+            k.AddAssemblyReferencesAndPackageRoots(resolvedAssemblies, packageRoots);
+            return Task.CompletedTask;
+        }, forceRestore);
+
+        return kernel;
+    }
+
     public static T UseAboutMagicCommand<T>(this T kernel)
         where T : Kernel
     {

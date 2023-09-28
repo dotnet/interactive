@@ -11,7 +11,7 @@
     <IsPackable>true</IsPackable>
     <PackageDescription>Core types for adding Nuget support when using interactive programming for .NET.</PackageDescription>
     <PackageTags>polyglot notebook dotnet interactive packagemanagement nuget</PackageTags>
-    <RootNamespace>Microsoft.DotNet.Interactive</RootNamespace>
+    <RootNamespace>Microsoft.DotNet.Interactive.PackageManagement</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
