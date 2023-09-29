@@ -218,8 +218,6 @@ i");
     {
         using var kernel = new FakeKernel();
 
-        using var events = kernel.KernelEvents.ToSubscribedList();
-
         kernel.AddDirective(new Command("#!wrap")
         {
             Handler = CommandHandler.Create((InvocationContext ctx) =>
@@ -236,9 +234,9 @@ i");
             })
         });
 
-        await kernel.SubmitCodeAsync("#!wrap");
+        var result = await kernel.SubmitCodeAsync("#!wrap");
 
-        events
+        result.Events
             .OfType<DisplayedValueProduced>()
             .Select(e => e.Value)
             .Should()
