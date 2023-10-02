@@ -14,7 +14,8 @@ In .NET interactive kernel variable sharing is enabled for IPython and IR kernel
 
 1. Ensure that the kernel to be added supports handling [`comms`](https://jupyter-client.readthedocs.io/en/stable/messaging.html#custom-messages) messages. If not, variable sharing cannot be enabled. 
 2. If intended kernel supports `comms` messages, create a language specific script for it under the [LanguageHandlers](https://github.com/dotnet/interactive/tree/main/src/Microsoft.DotNet.Interactive.Jupyter/CommandEvents/LanguageHandlers) folder in the .NET interactive kernel repo.
-3. This script is sent to the kernel on kernel launch should create a comm message handler and a comm target named: `dotnet_coe_handler_comm`, the script is responsible for registering the target and the comm handlers. Take a look at the [python script](https://github.com/dotnet/interactive/blob/main/src/Microsoft.DotNet.Interactive.Jupyter/CommandEvents/LanguageHandlers/python/coe_comm_handler.py) here. The expected schema of messages to be send back in the comm_msg data field is
+3. This script is sent to the kernel on kernel launch, and should then create a _comm message handler_ and a _comm target_, that is named `dotnet_coe_handler_comm`.
+   That is responsible for registering the target and the comm handlers. Take a look at the [python script](https://github.com/dotnet/interactive/blob/main/src/Microsoft.DotNet.Interactive.Jupyter/CommandEvents/LanguageHandlers/python/coe_comm_handler.py) here. The expected schema of messages to be send back in the comm_msg data field is
 
 ```json
 {
