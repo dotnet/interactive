@@ -13,7 +13,7 @@ using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App;
 
-public class Startup
+internal class Startup
 {
     public Startup(
         IHostEnvironment env,

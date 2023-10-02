@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Connection;
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class SignalRKernelConnector
+internal class SignalRKernelConnector
 {
     public SignalRKernelConnector(Uri hubUrl)
     {

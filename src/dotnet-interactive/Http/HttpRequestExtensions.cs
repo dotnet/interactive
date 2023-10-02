@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.AspNetCore.Http;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -17,7 +16,7 @@ internal static class HttpRequestExtensions
     /// </summary>
     /// <param name="request">The <see cref="HttpRequest"/>.</param>
     /// <returns>A New Uri object representing request Uri.</returns>
-    public static Uri GetUri(this HttpRequest request)
+    public static Uri GetUri(this AspNetCore.Http.HttpRequest request)
     {
         if (request == null)
         {

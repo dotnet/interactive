@@ -18,7 +18,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class VariableRouter : IRouter
+internal class VariableRouter : IRouter
 {
     private static readonly JsonSerializerOptions SerializerOptions;
 

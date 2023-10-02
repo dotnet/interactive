@@ -18,7 +18,6 @@ internal partial class LogEvents
             new[]
             {
                 typeof(LogEvents).Assembly,
-                typeof(Startup).Assembly,
                 typeof(CommandLine).Assembly,
                 typeof(CSharpKernel).Assembly,
                 typeof(FSharpKernel).Assembly,

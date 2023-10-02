@@ -65,11 +65,7 @@ public class FileProvider : IFileProvider, IDisposable
         IFileProvider SelectProvider()
         {
             var name = parts[1];
-            if (!_providers.TryGetValue(name, out var embeddedFileProvider))
-            {
-                throw new StaticContentSourceNotFoundException(name);
-            }
-            return embeddedFileProvider;
+            return _providers[name];
         }
     }
 

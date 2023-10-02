@@ -12,7 +12,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class SignalRBackchannelKernelClient : KernelClientBase
+internal class SignalRBackchannelKernelClient : KernelClientBase
 {
     private IHubContext<KernelHub> _hubContext;
 

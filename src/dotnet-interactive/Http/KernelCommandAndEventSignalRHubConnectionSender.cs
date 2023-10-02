@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class KernelCommandAndEventSignalRHubConnectionSender : IKernelCommandAndEventSender
+internal class KernelCommandAndEventSignalRHubConnectionSender : IKernelCommandAndEventSender
 {
     // QUESTION: (KernelCommandAndEventSignalRHubConnectionSender) tests?
     private readonly HubConnection _hubConnection;
