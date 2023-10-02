@@ -43,6 +43,14 @@ The most popular notebook platform is Jupyter, and .NET Interactive is a fully s
 
 We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](docs/small-factor-devices.md).
 
+## Adding new languages
+
+There is principle support for all languages, that have a Jupyter kernel. 
+In order for variable sharing to work, two things need to be fulfilled: 
+
+* The kernel needs to support [comms](https://jupyter-client.readthedocs.io/en/stable/messaging.html#custom-messages) 
+* That comms support for the specific language needs to be implemented [into interactive](https://github.com/dotnet/interactive/blob/main/docs/adding-jupyter-kernels.md). 
+
 ## FAQ
 
 For more information, please refer to our [FAQ](./docs/FAQ.md). 
