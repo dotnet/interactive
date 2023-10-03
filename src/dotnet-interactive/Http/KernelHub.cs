@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class KernelHub : Hub
+internal class KernelHub : Hub
 {
     private readonly KernelHubConnection _connection;
 

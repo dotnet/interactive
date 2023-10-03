@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public static class AspNetExtensions
+internal static class AspNetExtensions
 {
     public static IServiceCollection AddKernel<T>(this IServiceCollection services, T kernel) where T : Kernel
     {

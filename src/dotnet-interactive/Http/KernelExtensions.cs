@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public static class KernelExtensions
+internal static class KernelExtensions
 {
     public static T UseHttpApi<T>(this T kernel, HttpPort httpPort, HttpProbingSettings httpProbingSettings)
         where T : Kernel

@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class KernelsRouter : IRouter
+internal class KernelsRouter : IRouter
 {
     private readonly Kernel _kernel;
 
