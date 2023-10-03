@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class KernelHubConnection : IDisposable
+internal class KernelHubConnection : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
     private readonly SignalRBackchannelKernelClient _backchannelKernelClient;

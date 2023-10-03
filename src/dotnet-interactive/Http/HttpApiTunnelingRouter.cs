@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class HttpApiTunnelingRouter : IRouter
+internal class HttpApiTunnelingRouter : IRouter
 {
     private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
 

@@ -45,6 +45,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="Serilog" Version="2.10.0" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
@@ -74,7 +75,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Http\Microsoft.DotNet.Interactive.Http.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.HttpRequest\Microsoft.DotNet.Interactive.HttpRequest.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Mermaid\Microsoft.DotNet.Interactive.Mermaid.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.PackageManagement\Microsoft.DotNet.Interactive.PackageManagement.csproj" />
@@ -121,7 +121,7 @@
     <Compile Include="..\Microsoft.DotNet.Interactive.Documents\JsonReaderExtensions.cs" Link="ParserServer\JsonReaderExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Documents\Json\ByteArrayConverter.cs" Link="ParserServer\ByteArrayConverter.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\DictionaryExtensions.cs" Link="%28Recipes%29\DictionaryExtensions.cs" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Http\Utility\InvocationContextExtensions.cs" />
 
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive.js" />
 
@@ -155,6 +155,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Http\" />
   </ItemGroup>
 
   <Target Name="CopyKernelSpecificFiles" DependsOnTargets="PrepareKernels;CopyLogoFiles">

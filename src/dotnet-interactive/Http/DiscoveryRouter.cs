@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class DiscoveryRouter : IRouter
+internal class DiscoveryRouter : IRouter
 {
     private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
 

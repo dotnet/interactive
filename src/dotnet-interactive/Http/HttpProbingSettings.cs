@@ -9,7 +9,7 @@ using System.Net.NetworkInformation;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-public class HttpProbingSettings
+internal class HttpProbingSettings
 {
     public Uri[] AddressList { get; private set; }
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -145,7 +146,7 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
 
         Action action = () => provider.GetFileInfo("extensions/TestKernelExtension/resources/file.txt");
 
-        action.Should().Throw<StaticContentSourceNotFoundException>();
+        action.Should().Throw<KeyNotFoundException>();
     }
 
     [Theory]
@@ -179,7 +180,7 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
         Action action
             = () => provider.GetFileInfo("extensions/not_found/resources/file.txt");
 
-        action.Should().Throw<StaticContentSourceNotFoundException>();
+        action.Should().Throw<KeyNotFoundException>();
     }
 
     protected override CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp, bool openTestingNamespaces = false)
