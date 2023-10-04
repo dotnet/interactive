@@ -121,7 +121,7 @@ public class SemanticCollection<T, TQuery> : ICollection<T>
     public bool IsReadOnly => false;
 }
 
-public static class IEnumerableSearchExtensions{
+public static class EnumerableSearchExtensions{
     public static IEnumerable<ScoredItem<T>> Search<T, TQuery>(this IEnumerable<T> source, TQuery query,
         ISimilarityComparer<T, TQuery> comparer, int limit =1, float threshold = 0.8f)
     {
