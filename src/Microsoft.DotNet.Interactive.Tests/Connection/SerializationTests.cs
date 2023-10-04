@@ -163,8 +163,6 @@ public class SerializationTests
 
         IEnumerable<KernelCommand> commands()
         {
-            yield return new ChangeWorkingDirectory("/path/to/somewhere");
-
             yield return new DisplayError("oops!");
 
             yield return new DisplayValue(
@@ -391,10 +389,6 @@ public class SerializationTests
                 {
                     new FormattedValue("text/plain", "123")
                 });
-
-            yield return new WorkingDirectoryChanged(
-                "some/different/directory",
-                new ChangeWorkingDirectory("some/different/directory"));
 
             yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
 

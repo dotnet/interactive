@@ -52,10 +52,6 @@ internal static partial class Format
 
         switch (command)
         {
-            case ChangeWorkingDirectory changeWorkingDirectory:
-                writer.Write(changeWorkingDirectory.WorkingDirectory.TruncateIfNeeded());
-                break;
-
             case DisplayError displayError:
                 writer.Write(displayError.Message.TruncateIfNeeded());
                 break;

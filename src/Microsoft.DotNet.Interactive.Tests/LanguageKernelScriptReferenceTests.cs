@@ -68,31 +68,4 @@ public class LanguageKernelScriptReferenceTests : LanguageKernelTestBase
         KernelEvents.Should()
             .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
     }
-
-    [Theory]
-    [InlineData(Language.CSharp)]
-    //Not implemented: [InlineData(Language.FSharp)]
-    public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_command_changeWorkingDirectory(Language language)
-    {
-        var currentDirectory = Directory.GetCurrentDirectory();
-        DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
-
-        var kernel = CreateKernel(language);
-        var absolutePathOneLevelHigher = Directory.GetParent(currentDirectory).FullName;
-        await kernel.SendAsync(new ChangeWorkingDirectory(absolutePathOneLevelHigher));
-
-        var relativePath = Path.GetRelativePath(absolutePathOneLevelHigher, currentDirectory);
-
-        var code = language switch
-        {
-            Language.CSharp => $"#load \"{Path.Combine(relativePath, "RelativeLoadingSample.csx")}\"",
-            Language.FSharp => $"#load \"{Path.Combine(relativePath, "RelativeLoadingSample.fsx")}\""
-        };
-
-        var command = new SubmitCode(code);
-        await kernel.SendAsync(command);
-
-        KernelEvents.Should()
-            .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
-    }
 }

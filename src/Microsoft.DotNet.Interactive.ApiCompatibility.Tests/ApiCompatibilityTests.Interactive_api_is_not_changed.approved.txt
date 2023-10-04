@@ -380,10 +380,6 @@ Microsoft.DotNet.Interactive.Commands
   public class Cancel : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String targetKernelName = null)
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public class ChangeWorkingDirectory : KernelCommand, System.IEquatable<KernelCommand>
-    .ctor(System.String workingDirectory)
-    public System.String WorkingDirectory { get;}
-    public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public class DisplayError : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String message)
     public System.String Message { get;}
