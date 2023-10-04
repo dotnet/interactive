@@ -20,9 +20,11 @@ public class SimilaritySearchTests
             "chuck"
         };
 
-        var search = collection.Search("diego",
-            new CosineSimilarityComparer<string>(a => a.Select(c => (float)c).ToArray()),
-            q => q.Select(c => (float)c).ToArray()
+        Func<string, float[]> stringToFloatArray = a => a.Select(c => (float)c).ToArray();
+        var search = collection.Search(
+            "diego",
+            new CosineSimilarityComparer<string>(stringToFloatArray),
+            stringToFloatArray
         );
 
         search.Should().BeEquivalentTo(new [] { new ScoredItem<string>("diago", 0.9998783f) });
