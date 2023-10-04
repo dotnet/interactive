@@ -16,8 +16,9 @@ public static class TextChunkingExtensions
         }
 
         var start = 0;
-        while (start < text.Length - overlapSize) {
-            var size = Math.Min( text.Length - start, maxChunkSize) ;
+        while (start < text.Length - overlapSize)
+        {
+            var size = Math.Min(text.Length - start, maxChunkSize);
             yield return text.Substring(start, size);
             start += (maxChunkSize - overlapSize);
 
@@ -27,7 +28,7 @@ public static class TextChunkingExtensions
     public static Task<IEnumerable<string>> ChunkByTokenCountAsync(this string text, int maxTokenCount,
         TokenizerModel model)
     {
-       return text.ChunkByTokenCountWithOverlapAsync(maxTokenCount,0, model);
+        return text.ChunkByTokenCountWithOverlapAsync(maxTokenCount, 0, model);
     }
 
     public static async Task<IEnumerable<string>> ChunkByTokenCountWithOverlapAsync(this string text, int maxTokenCount,
@@ -35,8 +36,10 @@ public static class TextChunkingExtensions
     {
         if (maxTokenCount <= overlapTokenCount)
         {
-            throw new ArgumentException($"Cannot be greater or equal to {nameof(maxTokenCount)}", nameof(overlapTokenCount));
+            throw new ArgumentException($"Cannot be greater or equal to {nameof(maxTokenCount)}",
+                nameof(overlapTokenCount));
         }
+
         var tokenizer = model switch
         {
             TokenizerModel.ada2 => await TokenizerBuilder.CreateByModelNameAsync("text-embedding-ada-002"),
@@ -46,16 +49,18 @@ public static class TextChunkingExtensions
         };
 
         var encoded = tokenizer.Encode(text, Array.Empty<string>()).ToArray();
-        var chunks =  new List<string>();
+        var chunks = new List<string>();
         var start = 0;
         while (start < encoded.Length - overlapTokenCount)
         {
             var size = Math.Min(encoded.Length - start, maxTokenCount);
-            chunks.Add( tokenizer.Decode( encoded[start..(start +size)]));
+            chunks.Add(tokenizer.Decode(encoded[start..(start + size)]));
             start += (maxTokenCount - overlapTokenCount);
 
         }
 
         return chunks;
     }
+
+
 }
