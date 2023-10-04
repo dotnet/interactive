@@ -1,29 +1,25 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// ReSharper disable once CheckNamespace
-namespace System.Collections;
 
-public class CosineSimilarityComparer<T> : ISimilarityComparer<T, float[]>
+namespace Microsoft.DotNet.Interactive.AIUtilities;
+
+public class CosineSimilarityComparer<T> : ISimilarityComparer<T>
 {
     private readonly Func<T, float[]> _toVector;
 
-    public CosineSimilarityComparer(Func<T, float[]> toVector)
+    public CosineSimilarityComparer(Func<T, float[]> toFloatVector)
     {
-        _toVector = toVector ?? throw new ArgumentNullException(nameof(toVector));
+        _toVector = toFloatVector ?? throw new ArgumentNullException(nameof(toFloatVector));
     }
+
     public float Score(T a, T b)
     {
-        var vb = _toVector(b);
-        return Score(a, vb);
-    }
-
-    public float Score(T a, float[] query)
-    {
         var va = _toVector(a);
-
-        return CosineSimilarity(va, query);
+        var vb = _toVector(b);
+        return CosineSimilarity(va, vb);
     }
+
 
     private float CosineSimilarity(float[] vector1, float[] vector2)
     {
