@@ -19,10 +19,12 @@ public class SimilaritySearchTests
             "chuck"
         };
 
-        var search = collection.OrderBySimilarity(
+        var search = collection.ScoreBySimilarity(
             "diego",
             new CosineSimilarityComparer<string>(a => a.Select(c => (float)c).ToArray())
-        ).Take(1);
+        )
+            .OrderByDescending(e => e.Value)
+            .Take(1);
 
         search.Should().BeEquivalentTo(new [] { KeyValuePair.Create("diago", 0.9998783f) });
     }
@@ -37,10 +39,11 @@ public class SimilaritySearchTests
             new []{1f,1.7f},
             new []{1f,1.9f}
         };
-        var search = vectorCollection.OrderBySimilarity(
+        var search = vectorCollection.ScoreBySimilarity(
             new[] { 1f, 1f },
             new CosineSimilarityComparer<float[]>(t => t)
-        ).Take(2);
+        ).OrderByDescending(e => e.Value)
+            .Take(2);
 
         var expected = new[]
         {

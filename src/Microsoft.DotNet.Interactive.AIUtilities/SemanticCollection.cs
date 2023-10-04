@@ -4,10 +4,10 @@
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 public static class EnumerableSearchExtensions{
-    public static IEnumerable<KeyValuePair<T, float>> OrderBySimilarity<T>(this IEnumerable<T> source, T query,
+
+    public static IEnumerable<KeyValuePair<T, float>> ScoreBySimilarity<T>(this IEnumerable<T> source, T value,
         ISimilarityComparer<T> comparer)
     {
-        return source.Select(item => new KeyValuePair<T, float>(item, comparer.Score(item, query)))
-            .OrderByDescending(entry => entry.Value);
+        return source.Select(item => new KeyValuePair<T, float>(item, comparer.Score(item, value)));
     }
 }
