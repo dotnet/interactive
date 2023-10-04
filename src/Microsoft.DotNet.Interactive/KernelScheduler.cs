@@ -95,12 +95,11 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     internal async Task IdleAsync()
     {
-        if (_currentlyRunningTopLevelOperation is {} currentlyRunning && 
-            !currentlyRunning.TaskCompletionSource.Task.IsCompleted)
+        if (_currentlyRunningTopLevelOperation is { } currentlyRunning && !currentlyRunning.IsCompleted)
         {
             await currentlyRunning.TaskCompletionSource.Task;
         }
-        
+
         _childOperationsBarrier.SignalAndWait();
     }
 
@@ -111,7 +110,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             _currentlyRunningTopLevelOperation = operation;
 
             var executionContext = operation.ExecutionContext;
-            
+
             try
             {
                 ExecutionContext.Run(
@@ -124,10 +123,6 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             catch (Exception e)
             {
                 Log.Error("while executing {operation}", e, operation);
-            }
-            finally
-            {
-                _currentlyRunningTopLevelOperation = default;
             }
         }
     }
@@ -144,15 +139,15 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
                                 .ExecuteAsync()
                                 .ContinueWith(t =>
                                 {
-                                    if (!operation.TaskCompletionSource.Task.IsCompleted)
+                                    if (!operation.IsCompleted)
                                     {
                                         if (t.GetIsCompletedSuccessfully())
                                         {
-                                            operation.TaskCompletionSource.TrySetResult(t.Result);
+                                            CompleteWithResult(t.Result);
                                         }
                                         else if (t.Exception is { })
                                         {
-                                            operation.TaskCompletionSource.SetException(t.Exception);
+                                            CompleteWithException(t.Exception);
                                         }
                                     }
                                 });
@@ -167,13 +162,31 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         }
         catch (Exception exception)
         {
-            if (!operation.TaskCompletionSource.Task.IsCompleted)
+            if (!operation.IsCompleted)
             {
-                operation.TaskCompletionSource.SetException(exception);
+                CompleteWithException(exception);
             }
         }
-        finally
+
+        void CompleteWithResult(TResult result)
         {
+            ResetCurrentlyRunning();
+            operation.TaskCompletionSource.TrySetResult(result);
+        }
+
+        void CompleteWithException(Exception exception)
+        {
+            ResetCurrentlyRunning();
+            operation.TaskCompletionSource.SetException(exception);
+        }
+
+        void ResetCurrentlyRunning()
+        {
+            if (ReferenceEquals(_currentlyRunningTopLevelOperation, _currentlyRunningOperation))
+            {
+                _currentlyRunningTopLevelOperation = null;
+            }
+
             _currentlyRunningOperation = null;
         }
     }
@@ -343,6 +356,8 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         public TaskCompletionSource<TResult> TaskCompletionSource { get; }
 
         public T Value { get; }
+
+        public bool IsCompleted => TaskCompletionSource.Task.IsCompleted;
 
         public bool IsDeferred { get; }
 
