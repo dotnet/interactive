@@ -5,7 +5,7 @@ namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 public static class EnumerableSearchExtensions{
 
-    public static IEnumerable<KeyValuePair<T, float>> ScoreBySimilarity<T>(this IEnumerable<T> source, T value,
+    public static IEnumerable<KeyValuePair<T, float>> ScoreBySimilarityTo<T>(this IEnumerable<T> source, T value,
         ISimilarityComparer<T> comparer)
     {
         return source.Select(item => new KeyValuePair<T, float>(item, comparer.Score(item, value)));
