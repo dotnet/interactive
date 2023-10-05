@@ -1,0 +1,3 @@
+#!csharp
+
+await await Microsoft.DotNet.Interactive.AIUtilities.InteractiveExtension.LoadAsync();
