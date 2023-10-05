@@ -35,20 +35,7 @@ public static class ObservableTextChunkingExtensions
 
     public static IObservable<string> ChunkByTokenCount(this IObservable<string> source, int maxTokenCount, TokenizerModel model)
     {
-        return source.SelectMany(text =>
-        {
-            return Observable.Create<string>( o =>
-            {
-                var chunks = text.ChunkByTokenCountAsync(maxTokenCount, model).GetAwaiter().GetResult();
-                foreach (var chunk in chunks)
-                {
-                    o.OnNext(chunk);
-                }
-
-                o.OnCompleted();
-                return Disposable.Empty;
-            });
-        });
+        return source.ChunkByTokenCountWithOverlap(maxTokenCount, 0, model);
     }
 }
 
