@@ -14,7 +14,7 @@
   "//version": "%description.version%",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.81.0"
+    "vscode": "^1.83.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -220,7 +220,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.440202",
+          "default": "1.0.450502",
           "description": "%description.requiredInteractiveToolVersion%"
         }
       }
@@ -478,6 +478,9 @@
           ],
           "polyglot-notebook-source-groovy-embedded": [
             "source.groovy.embedded"
+          ],
+          "polyglot-notebook-variable-legacy-builtin-python": [
+            "variable.legacy.builtin.python"
           ],
           "polyglot-notebook-emphasis": [
             "emphasis"
