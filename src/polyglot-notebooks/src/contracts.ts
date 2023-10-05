@@ -6,7 +6,6 @@
 // --------------------------------------------- Kernel Commands
 
 export const CancelType = "Cancel";
-export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const CompileProjectType = "CompileProject";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
@@ -28,7 +27,6 @@ export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
       typeof CancelType
-    | typeof ChangeWorkingDirectoryType
     | typeof CompileProjectType
     | typeof DisplayErrorType
     | typeof DisplayValueType
@@ -55,10 +53,6 @@ export interface KernelCommand {
     targetKernelName?: string;
     originUri?: string;
     destinationUri?: string;
-}
-
-export interface ChangeWorkingDirectory extends KernelCommand {
-    workingDirectory: string;
 }
 
 export interface CompileProject extends KernelCommand {
@@ -232,7 +226,6 @@ export const StandardErrorValueProducedType = "StandardErrorValueProduced";
 export const StandardOutputValueProducedType = "StandardOutputValueProduced";
 export const ValueInfosProducedType = "ValueInfosProduced";
 export const ValueProducedType = "ValueProduced";
-export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
       typeof AssemblyProducedType
@@ -259,8 +252,7 @@ export type KernelEventType =
     | typeof StandardErrorValueProducedType
     | typeof StandardOutputValueProducedType
     | typeof ValueInfosProducedType
-    | typeof ValueProducedType
-    | typeof WorkingDirectoryChangedType;
+    | typeof ValueProducedType;
 
 export interface AssemblyProduced extends KernelEvent {
     assembly: Base64EncodedAssembly;
@@ -369,10 +361,6 @@ export interface ValueInfosProduced extends KernelEvent {
 export interface ValueProduced extends KernelEvent {
     name: string;
     formattedValue: FormattedValue;
-}
-
-export interface WorkingDirectoryChanged extends KernelEvent {
-    workingDirectory: string;
 }
 
 // --------------------------------------------- Required Types
