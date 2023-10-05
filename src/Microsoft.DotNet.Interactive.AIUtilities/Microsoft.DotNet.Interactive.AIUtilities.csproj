@@ -4,6 +4,13 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive.AIUtilities</PackageId>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription Condition="'$(PackageDescription)'==''">Utilities for AI workload in .NET Interactive and Polyglot Notebooks</PackageDescription>
+    <PackageTags Condition="'$(PackageTags)'==''">polyglot notebook dotnet interactive ai</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,6 +6,7 @@ using Microsoft.DeepDev;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
+
 public static class TextChunkingExtensions
 {
     public static async Task<int> GetTokenCountAsync(this string text, TokenizerModel model)
