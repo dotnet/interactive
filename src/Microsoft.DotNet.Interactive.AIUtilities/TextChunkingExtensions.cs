@@ -28,6 +28,25 @@ public static class TextChunkingExtensions
         return encoded.Length;
     }
 
+    public static async Task<string> TruncateByTokenCountAsync(this string text, int tokenCount, TokenizerModel model)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        var tokenizer = model switch
+        {
+            TokenizerModel.ada2 => await TokenizerBuilder.CreateByModelNameAsync("text-embedding-ada-002"),
+            TokenizerModel.gpt35 => await TokenizerBuilder.CreateByModelNameAsync("gpt-3.5-turbo"),
+            TokenizerModel.gpt4 => await TokenizerBuilder.CreateByModelNameAsync("gpt4"),
+            _ => throw new NotSupportedException()
+        };
+
+        var encoded = tokenizer.Encode(text, Array.Empty<string>()).ToArray();
+        return tokenizer.Decode(encoded.Take(tokenCount).ToArray());
+    }
+
     public static IEnumerable<string> ChunkWithOverlap(this string text, int maxChunkSize, int overlapSize)
     {
         if (maxChunkSize <= overlapSize)

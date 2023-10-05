@@ -22,6 +22,13 @@ public class TextChunkingTests
     }
 
     [Fact]
+    public async Task can_truncate_by_token_count()
+    {
+        var truncatedText = await LongText.TruncateByTokenCountAsync(20, TokenizerModel.ada2);
+        truncatedText.Should().Be("Call me Ishmael. Some years ago—never mind how long precisely—having little or no");
+    }
+
+    [Fact]
     public void can_create_overlapping_chunks_by_size()
     {
         var text = "abcdefghijklmnopqrs";
