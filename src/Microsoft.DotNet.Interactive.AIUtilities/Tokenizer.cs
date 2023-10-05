@@ -7,35 +7,17 @@ using Microsoft.DeepDev;
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 
-public static class TextChunkingExtensions
+public static class Tokenizer
 {
-    public static async Task<int> GetTokenCountAsync(this string text, TokenizerModel model)
+    public static int GetTokenCount(this ITokenizer tokenizer, string text)
     {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return 0;
-        }
-
-        var tokenizer = model switch
-        {
-            TokenizerModel.ada2 => await TokenizerBuilder.CreateByModelNameAsync("text-embedding-ada-002"),
-            TokenizerModel.gpt35 => await TokenizerBuilder.CreateByModelNameAsync("gpt-3.5-turbo"),
-            TokenizerModel.gpt4 => await TokenizerBuilder.CreateByModelNameAsync("gpt4"),
-            _ => throw new NotSupportedException()
-        };
-
         var encoded = tokenizer.Encode(text, Array.Empty<string>()).ToArray();
 
         return encoded.Length;
     }
 
-    public static async Task<string> TruncateByTokenCountAsync(this string text, int tokenCount, TokenizerModel model)
+    public static async Task<ITokenizer> CreateAsync(TokenizerModel model)
     {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return text;
-        }
-
         var tokenizer = model switch
         {
             TokenizerModel.ada2 => await TokenizerBuilder.CreateByModelNameAsync("text-embedding-ada-002"),
@@ -43,6 +25,15 @@ public static class TextChunkingExtensions
             TokenizerModel.gpt4 => await TokenizerBuilder.CreateByModelNameAsync("gpt4"),
             _ => throw new NotSupportedException()
         };
+        return tokenizer;
+    }
+
+    public static string TruncateByTokenCount(this ITokenizer tokenizer,  string text, int tokenCount)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
 
         var encoded = tokenizer.Encode(text, Array.Empty<string>()).ToArray();
         return tokenizer.Decode(encoded.Take(tokenCount).ToArray());
@@ -65,14 +56,14 @@ public static class TextChunkingExtensions
         }
     }
 
-    public static Task<IEnumerable<string>> ChunkByTokenCountAsync(this string text, int maxTokenCount,
-        TokenizerModel model, bool average = false)
+    public static IEnumerable<string> ChunkByTokenCount(this ITokenizer tokenizer, string text, int maxTokenCount,
+        bool average = false)
     {
-        return text.ChunkByTokenCountWithOverlapAsync(maxTokenCount, 0, model, average);
+        return tokenizer.ChunkByTokenCountWithOverlap(text, maxTokenCount, 0,  average);
     }
 
-    public static async Task<IEnumerable<string>> ChunkByTokenCountWithOverlapAsync(this string text, int maxTokenCount,
-        int overlapTokenCount, TokenizerModel model, bool average = false)
+    public static IEnumerable<string> ChunkByTokenCountWithOverlap(this ITokenizer tokenizer, string text, int maxTokenCount,
+        int overlapTokenCount,  bool average = false)
     {
         if (maxTokenCount <= overlapTokenCount)
         {
@@ -80,13 +71,6 @@ public static class TextChunkingExtensions
                 nameof(overlapTokenCount));
         }
 
-        var tokenizer = model switch
-        {
-            TokenizerModel.ada2 => await TokenizerBuilder.CreateByModelNameAsync("text-embedding-ada-002"),
-            TokenizerModel.gpt35 => await TokenizerBuilder.CreateByModelNameAsync("gpt-3.5-turbo"),
-            TokenizerModel.gpt4 => await TokenizerBuilder.CreateByModelNameAsync("gpt4"),
-            _ => throw new NotSupportedException()
-        };
         var chunkSize = maxTokenCount;
         var chunkOverlapSize = overlapTokenCount;
         var encoded = tokenizer.Encode(text, Array.Empty<string>()).ToArray();

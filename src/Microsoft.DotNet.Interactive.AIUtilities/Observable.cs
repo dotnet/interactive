@@ -3,12 +3,13 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Microsoft.DeepDev;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
-public static class ObservableTextChunkingExtensions
+public static class Observable
 {
-    public static IObservable<string> ChunkByTokenCountWithOverlap(this IObservable<string> source, int maxTokenCount, int overlapTokenCount, TokenizerModel model)
+    public static IObservable<string> ChunkByTokenCountWithOverlap(this IObservable<string> source, ITokenizer tokenizer, int maxTokenCount, int overlapTokenCount)
     {
         if (maxTokenCount <= overlapTokenCount)
         {
@@ -18,9 +19,9 @@ public static class ObservableTextChunkingExtensions
 
         return source.SelectMany(text =>
         {
-            return Observable.Create<string>(o =>
+            return System.Reactive.Linq.Observable.Create<string>(o =>
             {
-                var chunks = text.ChunkByTokenCountWithOverlapAsync(maxTokenCount, overlapTokenCount, model).GetAwaiter().GetResult();
+                var chunks = tokenizer.ChunkByTokenCountWithOverlap(text ,maxTokenCount, overlapTokenCount);
                 foreach (var chunk in chunks)
                 {
                     o.OnNext(chunk);
@@ -33,9 +34,9 @@ public static class ObservableTextChunkingExtensions
         });
     }
 
-    public static IObservable<string> ChunkByTokenCount(this IObservable<string> source, int maxTokenCount, TokenizerModel model)
+    public static IObservable<string> ChunkByTokenCount(this IObservable<string> source, ITokenizer tokenizer, int maxTokenCount)
     {
-        return source.ChunkByTokenCountWithOverlap(maxTokenCount, 0, model);
-    }
+        return source.ChunkByTokenCountWithOverlap(tokenizer, maxTokenCount,0 );
+    } 
 }
 
