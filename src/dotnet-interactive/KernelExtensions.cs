@@ -58,7 +58,6 @@ public static class KernelExtensions
     public static T UseAboutMagicCommand<T>(this T kernel)
         where T : Kernel
     {
-
         var about = new Command("#!about", LocalizationResources.Magics_about_Description())
         {
             Handler = CommandHandler.Create((InvocationContext ctx) =>
@@ -122,7 +121,8 @@ public static class KernelExtensions
         kernel.AddMiddleware(async (command, context, next) =>
         {
             await next(command, context);
-            if (command is SubmitCode submitCode)
+
+            if (command is SubmitCode)
             {
                 var properties = GetStandardPropertiesFromCommand(command);
 
@@ -130,7 +130,6 @@ public static class KernelExtensions
                     "CodeSubmitted",
                     properties: properties);
             }
-
         });
 
         kernel.RegisterForDisposal(subscription);
@@ -181,12 +180,12 @@ public static class KernelExtensions
             return properties;
         }
 
-        Dictionary<string, double> GetStandardMeasurementsFromEvent(KernelEvent event1)
+        Dictionary<string, double> GetStandardMeasurementsFromEvent(KernelEvent @event)
         {
             return new Dictionary<string, double>
             {
                 ["ExecutionOrder"] = ++executionOrder,
-                ["Succeeded"] = event1 is CommandSucceeded ? 1 : 0
+                ["Succeeded"] = @event is CommandSucceeded ? 1 : 0
             };
         }
     }

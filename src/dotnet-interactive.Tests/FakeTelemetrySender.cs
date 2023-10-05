@@ -32,7 +32,7 @@ public class FakeTelemetrySender : TelemetrySender
 
     private static string GetInstrumentationKey() =>
         _configuredConnectionString ?? 
-        $@"InstrumentationKey={Guid.NewGuid()};IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/";
+        $"InstrumentationKey={Guid.NewGuid()};IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/";
 
     protected override void DoTrackEvent(
         string eventName,

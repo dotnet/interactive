@@ -23,15 +23,17 @@ public class TelemetrySender : ITelemetrySender
     private Dictionary<string, double> _commonMetrics = null;
     private Task _trackEventTask = null;
 
-    private const string DefaultAppInsightsConnectionString = @"InstrumentationKey=b0dafad5-1430-4852-bc61-95c836b3e612;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/";
+    private const string DefaultAppInsightsConnectionString = "InstrumentationKey=b0dafad5-1430-4852-bc61-95c836b3e612;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/";
     public const string TelemetryOptOutEnvironmentVariableName = "DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT";
 
-    public const string WelcomeMessage = @"Welcome to .NET Interactive!
----------------------
-Telemetry
----------
-The .NET Core tools collect usage data in order to help us improve your experience.The data is anonymous and doesn't include command-line arguments. The data is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
-";
+    public const string WelcomeMessage = $"""
+        Welcome to .NET Interactive!
+        ---------------------
+        Telemetry
+        ---------
+        The .NET Core tools collect usage data in order to help us improve your experience. The data is anonymous and doesn't include command-line arguments. The data is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the {TelemetryOptOutEnvironmentVariableName} environment variable to '1' or 'true' using your favorite shell.
+
+        """;
 
     public TelemetrySender(
         string productVersion,
