@@ -228,7 +228,7 @@ public class StartupTelemetryTests : IDisposable
     }
 
     [Fact]
-    public async Task stdio_command_sends_fronted_telemetry()
+    public async Task stdio_command_sends_frontend_telemetry()
     {
         await _parser.InvokeAsync("[synapse] stdio", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().Contain(
@@ -240,7 +240,24 @@ public class StartupTelemetryTests : IDisposable
     }
 
     [Fact]
-    public async Task githubCodeSpaces_is_a_valid_fronted_for_stdio()
+    public async Task stdio_command_sends_frontend_telemetry_when_frontend_is_VS()
+    {
+        await _parser.InvokeAsync(
+            """
+            [vs9628] stdio --working-dir D:\Notebooks --kernel-host 9628-5c7e913f-8966-4afe-8d37-cc863292a352
+            """,
+            _console);
+
+        _fakeTelemetrySender.TelemetryEvents.Should().Contain(
+            x => x.EventName == "command" &&
+                 x.Properties.Count == 3 &&
+                 x.Properties["verb"] == "STDIO".ToSha256Hash() &&
+                 x.Properties["frontend"] == "vs" &&
+                 x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
+    }
+
+    [Fact]
+    public async Task githubCodeSpaces_is_a_valid_frontend_for_stdio()
     {
         Environment.SetEnvironmentVariable("CODESPACES", "true");
         try
@@ -284,7 +301,7 @@ public class StartupTelemetryTests : IDisposable
     }
 
     [Fact]
-    public async Task vscode_is_a_valid_fronted_for_stdio()
+    public async Task vscode_is_a_valid_frontend_for_stdio()
     {
         await _parser.InvokeAsync("[vscode] stdio", _console);
 
@@ -297,7 +314,7 @@ public class StartupTelemetryTests : IDisposable
     }
 
     [Fact]
-    public async Task stdio_command_sends_default_fronted_telemetry()
+    public async Task stdio_command_sends_default_frontend_telemetry()
     {
         var defaultFrontend = GetDefaultFrontendName();
         await _parser.InvokeAsync("stdio", _console);
@@ -311,7 +328,7 @@ public class StartupTelemetryTests : IDisposable
 
     private static string GetDefaultFrontendName()
     {
-        var frontendName =  Environment.GetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME");
+        var frontendName = Environment.GetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME");
         frontendName = string.IsNullOrWhiteSpace(frontendName) ? "unknown" : frontendName;
         return frontendName;
     }
