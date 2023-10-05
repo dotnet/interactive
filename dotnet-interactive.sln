@@ -104,9 +104,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.CSharpProject.Tests", "src\Microsoft.DotNet.Interactive.CSharpProject.Tests\Microsoft.DotNet.Interactive.CSharpProject.Tests.csproj", "{F5A3EA0D-77C0-41DC-8506-EA6AF4A3FC70}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.HttpRequest", "src\Microsoft.DotNet.Interactive.HttpRequest\Microsoft.DotNet.Interactive.HttpRequest.csproj", "{B830CFD8-6EE0-45FA-9C29-E3F0244912C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Http", "src\Microsoft.DotNet.Interactive.Http\Microsoft.DotNet.Interactive.Http.csproj", "{B830CFD8-6EE0-45FA-9C29-E3F0244912C6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.HttpRequest.Tests", "src\Microsoft.DotNet.Interactive.HttpRequest.Tests\Microsoft.DotNet.Interactive.HttpRequest.Tests.csproj", "{0BFB2568-B6FB-4C1E-A002-B2DB86551A4F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Http.Tests", "src\Microsoft.DotNet.Interactive.Http.Tests\Microsoft.DotNet.Interactive.Http.Tests.csproj", "{0BFB2568-B6FB-4C1E-A002-B2DB86551A4F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.SQLite", "src\Microsoft.DotNet.Interactive.SQLite\Microsoft.DotNet.Interactive.SQLite.csproj", "{CAB71ACA-9CDA-492D-A3DD-E5BA2C84FD64}"
 EndProject
@@ -119,9 +119,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.HttpRequestParser", "src\Microsoft.DotNet.Interactive.HttpRequestParser\Microsoft.DotNet.Interactive.HttpRequestParser.csproj", "{DA0B3BFC-ED19-4754-A9A0-0F831DBCC9C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Interactive.AIUtilities", "src\Microsoft.DotNet.Interactive.AIUtilities\Microsoft.DotNet.Interactive.AIUtilities.csproj", "{C874F96E-AC54-4AEF-A2E7-F6679378662A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.AIUtilities", "src\Microsoft.DotNet.Interactive.AIUtilities\Microsoft.DotNet.Interactive.AIUtilities.csproj", "{C874F96E-AC54-4AEF-A2E7-F6679378662A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Interactive.AIUtilities.Tests", "src\Microsoft.DotNet.Interactive.AIUtilities.Tests\Microsoft.DotNet.Interactive.AIUtilities.Tests.csproj", "{B711649D-0397-4B2F-A367-8101823DE481}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.AIUtilities.Tests", "src\Microsoft.DotNet.Interactive.AIUtilities.Tests\Microsoft.DotNet.Interactive.AIUtilities.Tests.csproj", "{B711649D-0397-4B2F-A367-8101823DE481}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -43,7 +43,6 @@ try {
                 "Microsoft.DotNet.Interactive.Formatting",
                 "Microsoft.DotNet.Interactive.FSharp",
                 "Microsoft.DotNet.Interactive.Http,",
-                "Microsoft.DotNet.Interactive.HttpRequest",
                 "Microsoft.DotNet.Interactive.Journey",
                 "Microsoft.DotNet.Interactive.Kql",
                 "Microsoft.DotNet.Interactive.Mermaid",
