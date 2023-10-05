@@ -41,6 +41,9 @@ changelog:
     - title: Area-Formatting
       labels:
         - Area-Formatting
+    - title: Area-Http
+      labels:
+        - Area-Http
     - title: Area-JavaScript HTML CSS
       labels:
         - Area-JavaScript HTML CSS
