@@ -35,7 +35,8 @@ try {
             $packagestoPublish = @(
                 "Microsoft.dotnet-interactive",
                 "Microsoft.DotNet.Interactive",
-                "Microsoft.DotNet.Interactive.AspNetCore",
+                "Microsoft.DotNet.Interactive.AIUtilities",
+                "Microsoft.DotNet.Interactive.AspNetCore",                
                 "Microsoft.DotNet.Interactive.Browser",
                 "Microsoft.DotNet.Interactive.CSharp",
                 "Microsoft.DotNet.Interactive.Documents",
