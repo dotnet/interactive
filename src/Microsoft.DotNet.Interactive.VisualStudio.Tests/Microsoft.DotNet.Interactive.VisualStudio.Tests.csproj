@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\dotnet-interactive\Pocket\Format.CustomizeLogString.cs" Link="Pocket\Format.CustomizeLogString.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\ConnectHost.cs" Link="Utility\ConnectHost.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FactSkipLinux.cs" Link="Utility\FactSkipLinux.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FactSkipNetFramework.cs" Link="Utility\FactSkipNetFramework.cs" />
