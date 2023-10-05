@@ -19,7 +19,7 @@ public class SimilaritySearchTests
             "chuck"
         };
 
-        var search = collection.ScoreBySimilarity(
+        var search = collection.ScoreBySimilarityTo(
             "diego",
             new CosineSimilarityComparer<string>(a => a.Select(c => (float)c).ToArray())
         )
@@ -39,7 +39,7 @@ public class SimilaritySearchTests
             new []{1f,1.7f},
             new []{1f,1.9f}
         };
-        var search = vectorCollection.ScoreBySimilarity(
+        var search = vectorCollection.ScoreBySimilarityTo(
             new[] { 1f, 1f },
             new CosineSimilarityComparer<float[]>(t => t)
         ).OrderByDescending(e => e.Value)
