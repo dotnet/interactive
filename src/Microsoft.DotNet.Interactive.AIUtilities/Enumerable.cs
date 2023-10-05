@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
-public static class EnumerableSearchExtensions{
+public static class Enumerable{
 
     public static IEnumerable<KeyValuePair<T, float>> ScoreBySimilarityTo<T>(this IEnumerable<T> source, T value,
         ISimilarityComparer<T> comparer)
