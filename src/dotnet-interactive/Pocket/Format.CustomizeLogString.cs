@@ -242,10 +242,6 @@ internal static partial class Format
                 writer.Write(')');
                 break;
 
-            case WorkingDirectoryChanged workingDirectoryChanged:
-                writer.Write(workingDirectoryChanged.WorkingDirectory.TruncateIfNeeded());
-                break;
-
             // Base event types.
             case DisplayEvent displayEvent:
                 writer.Write('\'');

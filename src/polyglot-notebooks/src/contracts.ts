@@ -226,7 +226,6 @@ export const StandardErrorValueProducedType = "StandardErrorValueProduced";
 export const StandardOutputValueProducedType = "StandardOutputValueProduced";
 export const ValueInfosProducedType = "ValueInfosProduced";
 export const ValueProducedType = "ValueProduced";
-export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
       typeof AssemblyProducedType
@@ -253,8 +252,7 @@ export type KernelEventType =
     | typeof StandardErrorValueProducedType
     | typeof StandardOutputValueProducedType
     | typeof ValueInfosProducedType
-    | typeof ValueProducedType
-    | typeof WorkingDirectoryChangedType;
+    | typeof ValueProducedType;
 
 export interface AssemblyProduced extends KernelEvent {
     assembly: Base64EncodedAssembly;
@@ -363,10 +361,6 @@ export interface ValueInfosProduced extends KernelEvent {
 export interface ValueProduced extends KernelEvent {
     name: string;
     formattedValue: FormattedValue;
-}
-
-export interface WorkingDirectoryChanged extends KernelEvent {
-    workingDirectory: string;
 }
 
 // --------------------------------------------- Required Types
