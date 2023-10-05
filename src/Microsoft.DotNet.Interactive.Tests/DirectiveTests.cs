@@ -8,7 +8,6 @@ using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -215,6 +214,32 @@ i");
 
     [Fact]
     public async Task OnComplete_can_be_used_to_act_on_completion_of_commands()
+    {
+        var onCompleteWasCalled = false;
+        using var kernel = new FakeKernel();
+
+        kernel.AddDirective(new Command("#!wrap")
+        {
+            Handler = CommandHandler.Create((InvocationContext ctx) =>
+            {
+                var c = ctx.GetService<KernelInvocationContext>();
+
+                c.OnComplete(context =>
+                {
+                    onCompleteWasCalled = true;
+                });
+
+                return Task.CompletedTask;
+            })
+        });
+
+        await kernel.SubmitCodeAsync("#!wrap");
+
+        onCompleteWasCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task OnComplete_can_be_used_to_publish_events_before_context_is_completed()
     {
         using var kernel = new FakeKernel();
 
