@@ -15,10 +15,17 @@ public class TextChunkingTests
         """;
 
     [Fact]
+    public async Task can_calculate_token_count()
+    {
+        var tokenCount = await LongText.GetTokenCountAsync(TokenizerModel.ada2);
+        tokenCount.Should().Be(239);
+    }
+
+    [Fact]
     public void can_create_overlapping_chunks_by_size()
     {
         var text = "abcdefghijklmnopqrs";
-        var chunks = text.ChunkWithOverlap(maxChunkSize:10, overlapSize:5);
+        var chunks = text.ChunkWithOverlap(maxChunkSize: 10, overlapSize: 5);
         chunks.Should().BeEquivalentTo(new[]
         {
             "abcdefghij",
