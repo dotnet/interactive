@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 public static class ObservableTextChunkingExtensions
 {
-    public static IObservable<string> ChunkByTokenCountWithOverlapAsync(this IObservable<string> source, int maxTokenCount, int overlapTokenCount, TokenizerModel model)
+    public static IObservable<string> ChunkByTokenCountWithOverlap(this IObservable<string> source, int maxTokenCount, int overlapTokenCount, TokenizerModel model)
     {
         if (maxTokenCount <= overlapTokenCount)
         {
@@ -33,7 +33,7 @@ public static class ObservableTextChunkingExtensions
         });
     }
 
-    public static IObservable<string> ChunkByTokenCountAsync(this IObservable<string> source, int maxTokenCount, TokenizerModel model)
+    public static IObservable<string> ChunkByTokenCount(this IObservable<string> source, int maxTokenCount, TokenizerModel model)
     {
         return source.SelectMany(text =>
         {
