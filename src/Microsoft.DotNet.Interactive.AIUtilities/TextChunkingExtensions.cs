@@ -99,11 +99,17 @@ public static class TextChunkingExtensions
         if (average)
         {
             var averageChunk = encodedChucks.Sum(x => x.Length) / (double)(encodedChucks.Count);
-            start = 0;
-            chunkSize = (int)Math.Ceiling(averageChunk);
-            chunkOverlapSize = Math.Min(chunkOverlapSize, chunkSize - 1);
-            encodedChucks = new List<int[]>();
-            ExtractEncodedChunks();
+            var newChunkSize = (int)Math.Ceiling(averageChunk);
+            var newChunkOverlapSize = Math.Min(chunkOverlapSize, newChunkSize - 1);
+
+            if (newChunkSize != chunkSize || newChunkOverlapSize != chunkOverlapSize)
+            {
+                start = 0;
+                chunkSize = newChunkSize;
+                chunkOverlapSize = newChunkOverlapSize;
+                encodedChucks = new List<int[]>();
+                ExtractEncodedChunks();
+            }
         }
 
         chunks.AddRange(encodedChucks.Select(tokenizer.Decode));
