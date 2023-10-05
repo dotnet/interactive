@@ -46,13 +46,13 @@ public static class TextChunkingExtensions
     }
 
     public static Task<IEnumerable<string>> ChunkByTokenCountAsync(this string text, int maxTokenCount,
-        TokenizerModel model)
+        TokenizerModel model, bool average = false)
     {
-        return text.ChunkByTokenCountWithOverlapAsync(maxTokenCount, 0, model);
+        return text.ChunkByTokenCountWithOverlapAsync(maxTokenCount, 0, model, average);
     }
 
     public static async Task<IEnumerable<string>> ChunkByTokenCountWithOverlapAsync(this string text, int maxTokenCount,
-        int overlapTokenCount, TokenizerModel model)
+        int overlapTokenCount, TokenizerModel model, bool average = false)
     {
         if (maxTokenCount <= overlapTokenCount)
         {
@@ -67,17 +67,37 @@ public static class TextChunkingExtensions
             TokenizerModel.gpt4 => await TokenizerBuilder.CreateByModelNameAsync("gpt4"),
             _ => throw new NotSupportedException()
         };
-
+        var chunkSize = maxTokenCount;
+        var chunkOverlapSize = overlapTokenCount;
         var encoded = tokenizer.Encode(text, Array.Empty<string>()).ToArray();
+
         var chunks = new List<string>();
+        var encodedChucks = new List<int[]>();
         var start = 0;
+
         while (start < encoded.Length - overlapTokenCount)
         {
-            var size = Math.Min(encoded.Length - start, maxTokenCount);
-            chunks.Add(tokenizer.Decode(encoded[start..(start + size)]));
-            start += (maxTokenCount - overlapTokenCount);
-
+            var size = Math.Min(encoded.Length - start, chunkSize);
+            encodedChucks.Add(encoded[start..(start + size)]);
+            start += (chunkSize - chunkOverlapSize);
         }
+
+        if (average)
+        {
+            var averageChunk = encodedChucks.Sum(x => x.Length) / (double)(encodedChucks.Count);
+            start = 0;
+            chunkSize = (int)Math.Ceiling(averageChunk);
+            chunkOverlapSize = Math.Min(chunkOverlapSize, chunkSize - 1);
+            encodedChucks = new List<int[]>();
+            while (start < encoded.Length - chunkOverlapSize)
+            {
+                var size = Math.Min(encoded.Length - start, chunkSize);
+                encodedChucks.Add(encoded[start..(start + size)]);
+                start += (chunkSize - chunkOverlapSize);
+            }
+        }
+
+        chunks.AddRange(encodedChucks.Select(tokenizer.Decode));
 
         return chunks;
     }
