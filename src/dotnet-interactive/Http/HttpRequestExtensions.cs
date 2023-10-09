@@ -14,7 +14,7 @@ internal static class HttpRequestExtensions
     /// <summary>
     /// Gets http request Uri from request object.
     /// </summary>
-    /// <param name="request">The <see cref="HttpRequest"/>.</param>
+    /// <param name="request">The <see cref="AspNetCore.Http.HttpRequest"/>.</param>
     /// <returns>A New Uri object representing request Uri.</returns>
     public static Uri GetUri(this AspNetCore.Http.HttpRequest request)
     {
