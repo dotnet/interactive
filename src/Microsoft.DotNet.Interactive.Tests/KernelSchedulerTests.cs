@@ -495,6 +495,71 @@ public class KernelSchedulerTests : IDisposable
                          "inner 2",
                          "outer 2");
     }
+    
+    [Fact]
+    public async Task CurrentValue_reflects_the_work_that_is_in_progress()
+    {
+        using var scheduler = new KernelScheduler<int, int>();
+
+        var work = 1000;
+        await scheduler.RunAsync(work, async _ =>
+        {
+            scheduler.CurrentValue.Should().Be(work);
+            return 2000;
+        });
+    }
+
+    [Fact]
+    public async Task CurrentValue_reflects_the_child_operation_when_called_from_within_a_child_operation()
+    {
+        using var scheduler = new TestKernelScheduler<string>((o, i) => o == "outer" && i == "inner");
+
+        await scheduler.RunAsync("outer", async _ =>
+        {
+            await scheduler.RunAsync("inner", async _ =>
+            {
+                scheduler.CurrentValue.Should().Be("inner");
+                return default;
+            });
+
+            return default;
+        });
+    }
+
+    [Fact]
+    public async Task CurrentValue_reflects_the_parent_operation_when_called_from_within_a_parent_operation()
+    {
+        using var scheduler = new TestKernelScheduler<string>((o, i) => o == "outer" && i == "inner");
+
+        await scheduler.RunAsync("outer", async _ =>
+        {
+            await scheduler.RunAsync("inner", async _ =>
+            {
+                return default;
+            });
+
+            scheduler.CurrentValue.Should().Be("outer");
+            return default;
+        });
+    }
+
+    [Fact]
+    public async Task CurrentValue_is_reset_once_all_work_is_complete()
+    {
+        using var scheduler = new TestKernelScheduler<string>((o, i) => o == "outer" && i == "inner");
+
+        await scheduler.RunAsync("outer", async _ =>
+        {
+            await scheduler.RunAsync("inner", async _ =>
+            {
+                return default;
+            });
+
+            return default;
+        });
+
+        scheduler.CurrentValue.Should().BeNull();
+    }
 
     [Fact]
     public async Task concurrent_schedulers_do_not_interfere_with_one_another()
