@@ -4,10 +4,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using FluentAssertions;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
@@ -90,7 +91,7 @@ public class KernelSchedulerTests : IDisposable
 
         maxObservedParallelism.Should().Be(1);
     }
-    
+
     public class TestKernelScheduler<T> : KernelScheduler<T, T>
     {
         private readonly Func<T, T, bool> _isChildOperation;
@@ -494,6 +495,108 @@ public class KernelSchedulerTests : IDisposable
                          "inner 1",
                          "inner 2",
                          "outer 2");
+    }
+
+    [Fact]
+    public async Task CurrentValue_reflects_the_work_that_is_in_progress()
+    {
+        using var scheduler = new KernelScheduler<int, int>();
+
+        var work = 1000;
+        await scheduler.RunAsync(work, async _ =>
+        {
+            scheduler.CurrentValue.Should().Be(work);
+            return 2000;
+        });
+    }
+
+    [Fact]
+    public async Task CurrentValue_reflects_the_child_operation_when_called_from_within_a_child_operation()
+    {
+        using var scheduler = new TestKernelScheduler<string>((o, i) => o == "outer" && i == "inner");
+
+        await scheduler.RunAsync("outer", async _ =>
+        {
+            await scheduler.RunAsync("inner", async _ =>
+            {
+                scheduler.CurrentValue.Should().Be("inner");
+                return default;
+            });
+
+            return default;
+        });
+    }
+
+    [Fact]
+    public async Task CurrentValue_reflects_the_parent_operation_when_called_from_within_a_parent_operation()
+    {
+        using var scheduler = new TestKernelScheduler<string>((o, i) => o == "outer" && i == "inner");
+
+        await scheduler.RunAsync("outer", async _ =>
+        {
+            await scheduler.RunAsync("inner", async _ =>
+            {
+                return default;
+            });
+
+            scheduler.CurrentValue.Should().Be("outer");
+            return default;
+        });
+    }
+
+    [Fact]
+    public async Task CurrentValue_is_reset_once_all_work_is_complete()
+    {
+        using var scheduler = new TestKernelScheduler<string>((o, i) => o == "outer" && i == "inner");
+
+        await scheduler.RunAsync("outer", async _ =>
+        {
+            await scheduler.RunAsync("inner", async _ =>
+            {
+                return default;
+            });
+
+            return default;
+        });
+
+        scheduler.CurrentValue.Should().BeNull();
+    }
+
+    [Fact(Skip = "Disabled pending https://github.com/dotnet/interactive/issues/3236")]
+    public async Task CurrentValue_reflects_correct_value_within_parent_child_as_well_as_grand_child_operations()
+    {
+        using var scheduler =
+            new TestKernelScheduler<string>(
+                (o, i) => o == "parent" && i == "child" || o == "child" && i == "grandchild" || o == "parent" && i == "grandchild");
+
+        using var _ = new AssertionScope();
+
+        scheduler.CurrentValue.Should().BeNull();
+
+        await scheduler.RunAsync("parent", async _ =>
+        {
+            scheduler.CurrentValue.Should().Be("parent");
+
+            await scheduler.RunAsync("child", async _ =>
+            {
+                scheduler.CurrentValue.Should().Be("child");
+
+                await scheduler.RunAsync("grandchild", async _ =>
+                {
+                    scheduler.CurrentValue.Should().Be("grandchild");
+                    return default;
+                });
+
+                // See https://github.com/dotnet/interactive/issues/3236
+                scheduler.CurrentValue.Should().Be("child");
+                return default;
+            });
+
+            scheduler.CurrentValue.Should().Be("parent");
+            return default;
+        });
+
+        scheduler.CurrentValue.Should().BeNull();
     }
 
     [Fact]

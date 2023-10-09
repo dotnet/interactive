@@ -44,14 +44,15 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     {
         if (_currentlyRunningTopLevelOperation is { } operation)
         {
-            operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
             _currentlyRunningTopLevelOperation = null;
+            operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
         }
     }
 
-    internal T CurrentValue => (_currentlyRunningOperation ?? _currentlyRunningTopLevelOperation) is { } currentOperation
-                                   ? currentOperation.Value
-                                   : default;
+    public T CurrentValue =>
+        (_currentlyRunningOperation ?? _currentlyRunningTopLevelOperation) is { } currentOperation
+            ? currentOperation.Value
+            : default;
 
     public Task<TResult> RunAsync(
         T value,
@@ -182,7 +183,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
         void ResetCurrentlyRunning()
         {
-            if (ReferenceEquals(_currentlyRunningTopLevelOperation, _currentlyRunningOperation))
+            if (ReferenceEquals(_currentlyRunningTopLevelOperation, operation))
             {
                 _currentlyRunningTopLevelOperation = null;
             }
