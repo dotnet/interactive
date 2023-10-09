@@ -117,7 +117,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 		{1A4A744F-FEF3-4361-A2E5-C5D496F7BFDC} = {1A4A744F-FEF3-4361-A2E5-C5D496F7BFDC}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.HttpRequestParser", "src\Microsoft.DotNet.Interactive.HttpRequestParser\Microsoft.DotNet.Interactive.HttpRequestParser.csproj", "{DA0B3BFC-ED19-4754-A9A0-0F831DBCC9C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Http.Parsing", "src\Microsoft.DotNet.Interactive.Http.Parsing\Microsoft.DotNet.Interactive.Http.Parsing.csproj", "{DA0B3BFC-ED19-4754-A9A0-0F831DBCC9C4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.AIUtilities", "src\Microsoft.DotNet.Interactive.AIUtilities\Microsoft.DotNet.Interactive.AIUtilities.csproj", "{C874F96E-AC54-4AEF-A2E7-F6679378662A}"
 EndProject
