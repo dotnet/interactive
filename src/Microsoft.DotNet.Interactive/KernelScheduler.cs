@@ -49,7 +49,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         }
     }
 
-    public T CurrentValue => 
+    public T CurrentValue =>
         (_currentlyRunningOperation ?? _currentlyRunningTopLevelOperation) is { } currentOperation
             ? currentOperation.Value
             : default;
