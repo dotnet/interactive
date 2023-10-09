@@ -7,7 +7,7 @@ using Microsoft.DeepDev;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
-public static class Observable
+public static class ObservableAI
 {
     public static IObservable<string> ChunkByTokenCountWithOverlap(this IObservable<string> source, ITokenizer tokenizer, int maxTokenCount, int overlapTokenCount)
     {
