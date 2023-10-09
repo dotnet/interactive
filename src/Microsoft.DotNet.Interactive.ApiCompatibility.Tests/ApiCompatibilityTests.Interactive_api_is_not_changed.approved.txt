@@ -267,6 +267,7 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task Invoke(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
   public class KernelScheduler<T,TResult>, IKernelScheduler<T,TResult>, System.IDisposable
     .ctor()
+    public T CurrentValue { get;}
     public System.Void CancelCurrentOperation()
     public System.Void Dispose()
     protected System.Boolean IsChildOperation(T current, T incoming)
