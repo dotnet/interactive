@@ -2,13 +2,19 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using Microsoft.DeepDev;
+using System.Reactive.Linq;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
-public static class ObservableAI
-{
+public static class Text {
+
+    public static IEnumerable<KeyValuePair<T, float>> ScoreBySimilarityTo<T>(this IEnumerable<T> source, T value,
+        ISimilarityComparer<T> comparer)
+    {
+        return source.Select(item => new KeyValuePair<T, float>(item, comparer.Score(item, value)));
+    }
+
     public static IObservable<string> ChunkByTokenCountWithOverlap(this IObservable<string> source, ITokenizer tokenizer, int maxTokenCount, int overlapTokenCount)
     {
         if (maxTokenCount <= overlapTokenCount)
@@ -21,7 +27,7 @@ public static class ObservableAI
         {
             return System.Reactive.Linq.Observable.Create<string>(o =>
             {
-                var chunks = tokenizer.ChunkByTokenCountWithOverlap(text ,maxTokenCount, overlapTokenCount);
+                var chunks = tokenizer.ChunkByTokenCountWithOverlap(text, maxTokenCount, overlapTokenCount);
                 foreach (var chunk in chunks)
                 {
                     o.OnNext(chunk);
@@ -36,7 +42,6 @@ public static class ObservableAI
 
     public static IObservable<string> ChunkByTokenCount(this IObservable<string> source, ITokenizer tokenizer, int maxTokenCount)
     {
-        return source.ChunkByTokenCountWithOverlap(tokenizer, maxTokenCount,0 );
-    } 
+        return source.ChunkByTokenCountWithOverlap(tokenizer, maxTokenCount, 0);
+    }
 }
-
