@@ -35,8 +35,7 @@ public class CSharpKernel :
     IKernelCommandHandler<RequestValue>,
     IKernelCommandHandler<RequestValueInfos>,
     IKernelCommandHandler<SendValue>,
-    IKernelCommandHandler<SubmitCode>,
-    IKernelCommandHandler<ChangeWorkingDirectory>
+    IKernelCommandHandler<SubmitCode>
 {
     internal const string DefaultKernelName = "csharp";
 
@@ -346,11 +345,6 @@ public class CSharpKernel :
         {
             context.Fail(submitCode, null, "Command cancelled");
         }
-    }
-
-    Task IKernelCommandHandler<ChangeWorkingDirectory>.HandleAsync(ChangeWorkingDirectory command, KernelInvocationContext context)
-    {
-        return Task.CompletedTask;
     }
 
     private async Task RunAsync(

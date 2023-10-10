@@ -1,0 +1,3 @@
+#!csharp
+
+Microsoft.DotNet.Interactive.Http.HttpKernelExtension.Load(Microsoft.DotNet.Interactive.Kernel.Root);

@@ -186,12 +186,6 @@ type FSharpKernel () as this =
         let errorId = sprintf "FS%04i" error.ErrorNumber
         Diagnostic(linePositionSpan, severity, errorId, error.Message)
 
-    let handleChangeWorkingDirectory (changeDirectory: ChangeWorkingDirectory) (context: KernelInvocationContext) =
-        task {
-            this.workingDirectory <- changeDirectory.WorkingDirectory;
-            return Task.CompletedTask;
-        }
-
     let handleSubmitCode (codeSubmission: SubmitCode) (context: KernelInvocationContext) =
         task {
             let codeSubmissionReceived = CodeSubmissionReceived(codeSubmission)
@@ -460,7 +454,3 @@ type FSharpKernel () as this =
 
     interface IKernelCommandHandler<SubmitCode> with
         member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context
-
-    interface IKernelCommandHandler<ChangeWorkingDirectory> with
-        member this.HandleAsync(command: ChangeWorkingDirectory, context: KernelInvocationContext) = handleChangeWorkingDirectory command context 
-

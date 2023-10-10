@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.CSharpProject;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.HttpRequest;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Journey;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Kql;
@@ -134,7 +134,7 @@ public class ApiCompatibilityTests
     [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
     public void httpRequest_api_is_not_changed()
     {
-        var contract = ApiContract.GenerateContract<HttpRequestKernel>();
+        var contract = ApiContract.GenerateContract<HttpKernel>();
         this.Assent(contract, _configuration);
     }
 }

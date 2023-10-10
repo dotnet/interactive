@@ -50,7 +50,7 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Documents\Microsoft.DotNet.Interactive.Documents.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.HttpRequest\Microsoft.DotNet.Interactive.HttpRequest.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Http\Microsoft.DotNet.Interactive.Http.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Journey\Microsoft.DotNet.Interactive.Journey.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Kql\Microsoft.DotNet.Interactive.Kql.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Mermaid\Microsoft.DotNet.Interactive.Mermaid.csproj" />
