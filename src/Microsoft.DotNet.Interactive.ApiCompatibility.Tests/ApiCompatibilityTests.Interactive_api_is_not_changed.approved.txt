@@ -381,10 +381,6 @@ Microsoft.DotNet.Interactive.Commands
   public class Cancel : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String targetKernelName = null)
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public class ChangeWorkingDirectory : KernelCommand, System.IEquatable<KernelCommand>
-    .ctor(System.String workingDirectory)
-    public System.String WorkingDirectory { get;}
-    public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public class DisplayError : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String message)
     public System.String Message { get;}
@@ -662,9 +658,6 @@ Microsoft.DotNet.Interactive.Events
     public Microsoft.DotNet.Interactive.FormattedValue FormattedValue { get;}
     public System.String Name { get;}
     public System.Object Value { get;}
-  public class WorkingDirectoryChanged : KernelEvent
-    .ctor(System.String workingDirectory, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    public System.String WorkingDirectory { get;}
 Microsoft.DotNet.Interactive.Http
   public static class JavascriptUtilities
     public static System.String GetCodeForEnsureRequireJs(System.Uri requireJsUri = null, System.String onRequirejsLoadedCallBackName = null)

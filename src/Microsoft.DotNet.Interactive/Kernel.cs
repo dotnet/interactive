@@ -823,10 +823,6 @@ public abstract partial class Kernel :
                     SetHandler(requestValueInfos, requestValueInfosHandler);
                     break;
 
-                case (ChangeWorkingDirectory changeWorkingDirectory, IKernelCommandHandler<ChangeWorkingDirectory> changeWorkingDirectoryHandler):
-                    SetHandler(changeWorkingDirectory, changeWorkingDirectoryHandler);
-                    break;
-
                 case (RequestKernelInfo requestKernelInfo, IKernelCommandHandler<RequestKernelInfo> requestKernelInfoHandler):
                     SetHandler(requestKernelInfo, requestKernelInfoHandler);
                     break;
