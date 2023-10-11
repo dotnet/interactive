@@ -19,17 +19,16 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
 
 using Pocket;
 
-using static Pocket.Logger<Microsoft.DotNet.Interactive.App.Connection.StdIoKernelConnector>;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Connection.StdIoKernelConnector>;
 
 using CompositeDisposable = Pocket.CompositeDisposable;
 
-namespace Microsoft.DotNet.Interactive.App.Connection;
+namespace Microsoft.DotNet.Interactive.Connection;
 
 public class StdIoKernelConnector
 {

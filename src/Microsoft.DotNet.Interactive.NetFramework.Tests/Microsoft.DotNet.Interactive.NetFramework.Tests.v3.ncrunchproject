@@ -7,7 +7,7 @@
     </HiddenComponentWarnings>
     <IgnoredTests>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.StdIoKernelConnectorTests</FixtureName>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.StdIoKernelConnectorTests</FixtureName>
       </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
