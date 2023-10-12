@@ -16,4 +16,6 @@ internal class AnonymousKernelCommand : KernelCommand
         Handler = handler;
         ShouldPublishCompletionEvent = false;
     }
+
+    internal override bool IsHidden => true;
 }
