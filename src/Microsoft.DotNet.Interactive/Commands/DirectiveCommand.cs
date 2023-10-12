@@ -33,6 +33,8 @@ internal class DirectiveCommand : KernelCommand
         await ParseResult.InvokeAsync();
     }
 
+    internal override bool IsHidden => true;
+
     public override string ToString()
     {
         return $"Directive: {ParseResult.CommandResult.Command.Name}";

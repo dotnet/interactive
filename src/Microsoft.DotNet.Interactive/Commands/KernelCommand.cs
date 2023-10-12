@@ -15,6 +15,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     private KernelCommand _parent;
     private string _token;
     private List<KernelCommand> _childCommandsToBubbleEventsFrom;
+    private KernelCommand _selfOrFirstUnhiddenAncestor;
 
     protected KernelCommand(string targetKernelName = null)
     {
@@ -221,5 +222,32 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         var parts = token.Split(new[] { '.' });
 
         return parts[0];
+    }
+
+    internal virtual bool IsHidden => false;
+
+    internal KernelCommand SelfOrFirstUnhiddenAncestor
+    {
+        get
+        {
+            if (_selfOrFirstUnhiddenAncestor is null)
+            {
+                var command = this;
+
+                while (command.IsHidden)
+                {
+                    command = command.Parent;
+
+                    if (command is null)
+                    {
+                        return null;
+                    }
+                }
+
+                _selfOrFirstUnhiddenAncestor = command;
+            }
+
+            return _selfOrFirstUnhiddenAncestor;
+        }
     }
 }

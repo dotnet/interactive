@@ -8,6 +8,7 @@ using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -336,5 +337,40 @@ i");
         events.Should().NotContainErrors();
         oneWasCalled.Should().BeTrue();
         twoWasCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DirectiveCommand_is_not_referenced_by_KernelEvent_Command()
+    {
+        using var kernel = new FakeKernel();
+
+        kernel.AddDirective(new Command("#!test")
+        {
+            Handler = CommandHandler.Create((InvocationContext ctx) =>
+            {
+                var context = ctx.GetService<KernelInvocationContext>();
+
+                context.Display("goodbye!");
+
+                return Task.CompletedTask;
+            })
+        });
+
+        if (kernel is null)
+        {
+            throw new ArgumentNullException(nameof(kernel));
+        }
+
+        var submitCode = new SubmitCode("#!test");
+
+        var result = await kernel.SendAsync(submitCode);
+
+        result.Events
+              .Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .Command
+              .Should()
+              .Be(submitCode);
     }
 }
