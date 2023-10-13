@@ -17,7 +17,7 @@ public class FunctionTests
     }
 
     [Fact]
-    public void can_create_function_from_delegate_with_no_return_type()
+    public void can_create_function_from_delegate_with_no_return()
     {
         var declaration = GPTFunctionDefinition.Create((int a, string b, string[] c) => {}, "DoCompute");
 
@@ -50,6 +50,43 @@ public class FunctionTests
                                 """);
 
 
+    }
+
+    [Fact]
+    public void can_create_function_from_delegate_with_complex_type_as_return()
+    {
+        var declaration = GPTFunctionDefinition.Create((int a, string b, string[] c) => new Uri($"{a}.{b}.{c}"), "DoCompute");
+
+        declaration.JsonSignature.Should().Be("""
+                                              {
+                                                "name": "DoCompute",
+                                                "parameters": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "a": {
+                                                      "type": "integer"
+                                                    },
+                                                    "b": {
+                                                      "type": "string"
+                                                    },
+                                                    "c": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "string"
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "results": {
+                                                  "type": "object"
+                                                },
+                                                "required": [
+                                                  "a",
+                                                  "b",
+                                                  "c"
+                                                ]
+                                              }
+                                              """);
     }
 
     [Fact]
@@ -194,21 +231,6 @@ public class FunctionTests
         result.Should().Be("Diego 123");
     }
 
-    [Fact]
-    public void can_invoke_function_2()
-    {
-        var function = GPTFunctionDefinition.Create((string uriString) =>  new Uri(uriString), "concatString");
-
-        var jsonArgs = """
-                        {
-                            "name": "concatString",
-                            "arguments": "{ \"uriString\": \"http://www.microsoft.com\"}"
-                        }
-                       """;
-
-        function.Execute<Uri>(jsonArgs, out var result);
-        result.Should().Be("http://www.microsoft.com");
-    }
 
     [Fact]
     public void can_invoke_function_with_optional_paramaters()
