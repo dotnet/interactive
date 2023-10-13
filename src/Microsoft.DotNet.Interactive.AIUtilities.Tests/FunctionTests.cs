@@ -20,7 +20,7 @@ public class FunctionTests
     [Fact]
     public void can_create_function_from_delegate_with_no_return()
     {
-        var declaration = GPTFunctionDefinition.Create((int a, string b, string[] c) => {}, "DoCompute");
+        var declaration = GptFunction.Create((int a, string b, string[] c) => {}, "DoCompute");
 
         declaration.JsonSignature.FormatJson().Should().Be("""
                                 {
@@ -56,7 +56,7 @@ public class FunctionTests
     [Fact]
     public void can_create_function_from_delegate_with_complex_type_as_return()
     {
-        var declaration = GPTFunctionDefinition.Create((int a, string b, string[] c) => new Uri($"{a}.{b}.{c}"), "DoCompute");
+        var declaration = GptFunction.Create((int a, string b, string[] c) => new Uri($"{a}.{b}.{c}"), "DoCompute");
 
         declaration.JsonSignature.FormatJson().Should().Be("""
                                                            {
@@ -93,7 +93,7 @@ public class FunctionTests
     [Fact]
     public void can_create_function_from_delegate_with_enums_as_parameters()
     {
-        var declaration = GPTFunctionDefinition.Create((int a, double b, EnumType c) => $"{a} {b} {c}", "DoCompute");
+        var declaration = GptFunction.Create((int a, double b, EnumType c) => $"{a} {b} {c}", "DoCompute");
 
         declaration.JsonSignature.FormatJson().Should().Be("""
                                                            {
@@ -135,7 +135,7 @@ public class FunctionTests
     [Fact]
     public void can_create_function_from_delegate_with_array_of_enums_as_parameters()
     {
-        var declaration = GPTFunctionDefinition.Create((byte a, bool b, EnumType[] c) => $"{a} {b} {c}", "DoCompute");
+        var declaration = GptFunction.Create((byte a, bool b, EnumType[] c) => $"{a} {b} {c}", "DoCompute");
 
         declaration.JsonSignature.FormatJson().Should().Be("""
                                 {
@@ -180,7 +180,7 @@ public class FunctionTests
     [Fact]
     public void can_invoke_function()
     {
-        var function = GPTFunctionDefinition.Create((string a, double b) => $"{a} {b}", "concatString");
+        var function = GptFunction.Create((string a, double b) => $"{a} {b}", "concatString");
 
         var jsonArgs = """
                         {
@@ -189,7 +189,7 @@ public class FunctionTests
                         }
                        """;
         
-        function.Execute<string>(jsonArgs, out var result);
+        var result = function.Execute(jsonArgs);
         result.Should().Be("Diego 123");
     }
 
@@ -197,7 +197,7 @@ public class FunctionTests
     [Fact]
     public void can_invoke_function_with_optional_parameters()
     {
-        var function = GPTFunctionDefinition.Create((int a, int b = 1) => a+b, "inc");
+        var function = GptFunction.Create((int a, int b = 1) => a+b, "inc");
 
         var jsonArgs = """
                         {
@@ -206,7 +206,7 @@ public class FunctionTests
                         }
                        """;
 
-        function.Execute<int>(jsonArgs, out var result);
+        var result = function.Execute(jsonArgs);
         result.Should().Be(24);
     }
 }
