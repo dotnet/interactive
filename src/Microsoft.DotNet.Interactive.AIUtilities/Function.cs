@@ -12,13 +12,13 @@ public class GPTFunctionDefinition
 {
     public string Name { get; }
     private readonly Delegate _function;
-    public string Signature { get; }
+    public string JsonSignature { get; }
 
-    private GPTFunctionDefinition(Delegate function, string signature, string name)
+    private GPTFunctionDefinition(Delegate function, string jsonSignature, string name)
     {
         Name = name;
         _function = function;
-        Signature = signature;
+        JsonSignature = jsonSignature;
     }
 
     public void Execute<T>(string parameterJson, out T? result)
@@ -28,18 +28,31 @@ public class GPTFunctionDefinition
         result = (T?)_function.DynamicInvoke(parameters);
     }
 
-    private object?[]? ExtractParameters(string parameterJson)
+    private object?[] ExtractParameters(string parameterJson)
     {
         var json = JsonDocument.Parse(parameterJson).RootElement;
         var parameterInfos = _function.Method.GetParameters();
         var parameters = new object?[parameterInfos.Length];
-        var jsonArgs = JsonDocument.Parse( json.GetProperty("arguments").GetString() ).RootElement;
-        for (var i = 0; i < parameterInfos.Length; i++)
+        if (json.TryGetProperty("arguments", out var args))
         {
-            parameters[i] = Deserialize(parameterInfos[i], jsonArgs);
+            var argsString = args.ToString();
+            if (string.IsNullOrWhiteSpace(argsString))
+            {
+                if (parameterInfos.Any(p =>! p.IsOptional))
+                {
+                    throw new ArgumentException("no parameters defined.");
+                }
+            }
+            var jsonArgs = JsonDocument.Parse(args.GetString()!).RootElement;
+            for (var i = 0; i < parameterInfos.Length; i++)
+            {
+                parameters[i] = Deserialize(parameterInfos[i], jsonArgs);
+            }
+
+            return parameters;
         }
-        
-        return parameters;
+
+        throw new ArgumentException("arguments property is not found.");
     }
 
     private object? Deserialize(ParameterInfo parameterInfo, JsonElement jsonArgs)
@@ -49,15 +62,13 @@ public class GPTFunctionDefinition
             var arg = jsonArgs.GetProperty(parameterInfo.Name);
             return arg.Deserialize(parameterInfo.ParameterType);
         }
-        else
-        {
-            if (parameterInfo.HasDefaultValue)
-            {
-                return parameterInfo.DefaultValue;
-            }
 
-            throw new ArgumentException($"The argument {parameterInfo.Name} is missing.");
+        if (parameterInfo.HasDefaultValue)
+        {
+            return parameterInfo.DefaultValue;
         }
+
+        throw new ArgumentException($"The argument {parameterInfo.Name} is missing.");
     }
 
     public static GPTFunctionDefinition Create(Delegate function, string name)
