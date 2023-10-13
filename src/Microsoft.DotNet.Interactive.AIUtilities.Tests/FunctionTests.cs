@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
 using FluentAssertions;
 using Xunit;
 
@@ -21,7 +22,7 @@ public class FunctionTests
     {
         var declaration = GPTFunctionDefinition.Create((int a, string b, string[] c) => {}, "DoCompute");
 
-        declaration.JsonSignature.Should().Be("""
+        declaration.JsonSignature.FormatJson().Should().Be("""
                                 {
                                   "name": "DoCompute",
                                   "parameters": {
@@ -57,75 +58,36 @@ public class FunctionTests
     {
         var declaration = GPTFunctionDefinition.Create((int a, string b, string[] c) => new Uri($"{a}.{b}.{c}"), "DoCompute");
 
-        declaration.JsonSignature.Should().Be("""
-                                              {
-                                                "name": "DoCompute",
-                                                "parameters": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "a": {
-                                                      "type": "integer"
-                                                    },
-                                                    "b": {
-                                                      "type": "string"
-                                                    },
-                                                    "c": {
-                                                      "type": "array",
-                                                      "items": {
-                                                        "type": "string"
-                                                      }
-                                                    }
-                                                  }
-                                                },
-                                                "results": {
-                                                  "type": "object"
-                                                },
-                                                "required": [
-                                                  "a",
-                                                  "b",
-                                                  "c"
-                                                ]
-                                              }
-                                              """);
-    }
-
-    [Fact]
-    public void can_create_function_from_delegate()
-    {
-        var declaration = GPTFunctionDefinition.Create((int a, string b, string[]c) => $"{a} {b} {c}", "DoCompute");
-
-        declaration.JsonSignature.Should().Be("""
-                                {
-                                  "name": "DoCompute",
-                                  "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                      "a": {
-                                        "type": "integer"
-                                      },
-                                      "b": {
-                                        "type": "string"
-                                      },
-                                      "c": {
-                                        "type": "array",
-                                        "items": {
-                                          "type": "string"
-                                        }
-                                      }
-                                    }
-                                  },
-                                  "results": {
-                                    "type": "string"
-                                  },
-                                  "required": [
-                                    "a",
-                                    "b",
-                                    "c"
-                                  ]
-                                }
-                                """);
-
-      
+        declaration.JsonSignature.FormatJson().Should().Be("""
+                                                           {
+                                                             "name": "DoCompute",
+                                                             "parameters": {
+                                                               "type": "object",
+                                                               "properties": {
+                                                                 "a": {
+                                                                   "type": "integer"
+                                                                 },
+                                                                 "b": {
+                                                                   "type": "string"
+                                                                 },
+                                                                 "c": {
+                                                                   "type": "array",
+                                                                   "items": {
+                                                                     "type": "string"
+                                                                   }
+                                                                 }
+                                                               }
+                                                             },
+                                                             "results": {
+                                                               "type": "object"
+                                                             },
+                                                             "required": [
+                                                               "a",
+                                                               "b",
+                                                               "c"
+                                                             ]
+                                                           }
+                                                           """);
     }
 
     [Fact]
@@ -133,39 +95,39 @@ public class FunctionTests
     {
         var declaration = GPTFunctionDefinition.Create((int a, double b, EnumType c) => $"{a} {b} {c}", "DoCompute");
 
-        declaration.JsonSignature.Should().Be("""
-                                {
-                                  "name": "DoCompute",
-                                  "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                      "a": {
-                                        "type": "integer"
-                                      },
-                                      "b": {
-                                        "type": "number"
-                                      },
-                                      "c": {
-                                        "type": "integer",
-                                        "enum": [
-                                          0,
-                                          1,
-                                          2,
-                                          3
-                                        ]
-                                      }
-                                    }
-                                  },
-                                  "results": {
-                                    "type": "string"
-                                  },
-                                  "required": [
-                                    "a",
-                                    "b",
-                                    "c"
-                                  ]
-                                }
-                                """);
+        declaration.JsonSignature.FormatJson().Should().Be("""
+                                                           {
+                                                             "name": "DoCompute",
+                                                             "parameters": {
+                                                               "type": "object",
+                                                               "properties": {
+                                                                 "a": {
+                                                                   "type": "integer"
+                                                                 },
+                                                                 "b": {
+                                                                   "type": "number"
+                                                                 },
+                                                                 "c": {
+                                                                   "type": "integer",
+                                                                   "enum": [
+                                                                     0,
+                                                                     1,
+                                                                     2,
+                                                                     3
+                                                                   ]
+                                                                 }
+                                                               }
+                                                             },
+                                                             "results": {
+                                                               "type": "string"
+                                                             },
+                                                             "required": [
+                                                               "a",
+                                                               "b",
+                                                               "c"
+                                                             ]
+                                                           }
+                                                           """);
 
 
     }
@@ -175,7 +137,7 @@ public class FunctionTests
     {
         var declaration = GPTFunctionDefinition.Create((byte a, bool b, EnumType[] c) => $"{a} {b} {c}", "DoCompute");
 
-        declaration.JsonSignature.Should().Be("""
+        declaration.JsonSignature.FormatJson().Should().Be("""
                                 {
                                   "name": "DoCompute",
                                   "parameters": {
@@ -246,5 +208,14 @@ public class FunctionTests
 
         function.Execute<int>(jsonArgs, out var result);
         result.Should().Be(24);
+    }
+}
+
+internal static class JsonFormatting
+{
+    public static string FormatJson(this string text)
+    {
+        return JsonSerializer.Serialize(JsonDocument.Parse(text).RootElement,
+            new JsonSerializerOptions(JsonSerializerOptions.Default) { WriteIndented = true });
     }
 }
