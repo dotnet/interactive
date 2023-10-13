@@ -1,8 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
-using System.Reflection;
 using FluentAssertions;
 using Xunit;
 
@@ -30,7 +28,7 @@ public class FunctionTests
                                     "type": "object",
                                     "properties": {
                                       "a": {
-                                        "type": "number"
+                                        "type": "integer"
                                       },
                                       "b": {
                                         "type": "string"
@@ -60,7 +58,7 @@ public class FunctionTests
     [Fact]
     public void can_create_function_from_delegate_with_enums_as_parameters()
     {
-        var declaration = GPTFunctioDefinition.Do((int a, string b, EnumType c) => $"{a} {b} {c}", "DoCompute");
+        var declaration = GPTFunctioDefinition.Do((int a, double b, EnumType c) => $"{a} {b} {c}", "DoCompute");
 
         declaration.Should().Be("""
                                 {
@@ -69,13 +67,13 @@ public class FunctionTests
                                     "type": "object",
                                     "properties": {
                                       "a": {
-                                        "type": "number"
+                                        "type": "integer"
                                       },
                                       "b": {
-                                        "type": "string"
+                                        "type": "number"
                                       },
                                       "c": {
-                                        "type": "number",
+                                        "type": "integer",
                                         "enum": [
                                           0,
                                           1,
@@ -102,7 +100,7 @@ public class FunctionTests
     [Fact]
     public void can_create_function_from_delegate_with_array_of_enums_as_parameters()
     {
-        var declaration = GPTFunctioDefinition.Do((int a, string b, EnumType[] c) => $"{a} {b} {c}", "DoCompute");
+        var declaration = GPTFunctioDefinition.Do((byte a, bool b, EnumType[] c) => $"{a} {b} {c}", "DoCompute");
 
         declaration.Should().Be("""
                                 {
@@ -111,15 +109,15 @@ public class FunctionTests
                                     "type": "object",
                                     "properties": {
                                       "a": {
-                                        "type": "number"
+                                        "type": "integer"
                                       },
                                       "b": {
-                                        "type": "string"
+                                        "type": "boolean"
                                       },
                                       "c": {
                                         "type": "array",
                                         "items": {
-                                          "type": "number",
+                                          "type": "integer",
                                           "enum": [
                                             0,
                                             1,
