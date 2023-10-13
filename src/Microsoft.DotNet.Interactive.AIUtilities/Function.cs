@@ -83,7 +83,7 @@ public class GPTFunctionDefinition
 
 
         var requiredParameters = parameters.Where(p => !p.HasDefaultValue).Select(p => p.Name).ToArray();
-        var call = new Dictionary<string, object>
+        var signature = new Dictionary<string, object>
         {
             ["name"] = name,
             ["parameters"] = new Dictionary<string, object>
@@ -95,13 +95,13 @@ public class GPTFunctionDefinition
 
         if (function.Method.ReturnType != typeof(void) )
         {
-            call["results"] = GetType(function.Method.ReturnType);
+            signature["results"] = GetType(function.Method.ReturnType);
         }
 
 
         if (requiredParameters.Length > 0)
         {
-            call["required"] = requiredParameters;
+            signature["required"] = requiredParameters;
         }
 
         Dictionary<string, object> GetParameters(ParameterInfo[] parameterInfos)
@@ -153,8 +153,7 @@ public class GPTFunctionDefinition
             return "object";
         }
 
-
-        return JsonSerializer.Serialize(call, new JsonSerializerOptions(JsonSerializerOptions.Default) { WriteIndented = true });
+        return JsonSerializer.Serialize(signature);
 
         Dictionary<string, object> GetType(Type type)
         {
