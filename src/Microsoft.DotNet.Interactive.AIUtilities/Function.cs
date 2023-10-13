@@ -38,7 +38,7 @@ public class GPTFunctionDefinition
             var argsString = args.ToString();
             if (string.IsNullOrWhiteSpace(argsString))
             {
-                if (parameterInfos.Any(p =>! p.IsOptional))
+                if (parameterInfos.Any(p => !p.IsOptional))
                 {
                     throw new ArgumentException("no parameters defined.");
                 }
@@ -57,9 +57,8 @@ public class GPTFunctionDefinition
 
     private object? Deserialize(ParameterInfo parameterInfo, JsonElement jsonArgs)
     {
-        if (jsonArgs.TryGetProperty(parameterInfo.Name, out var prop))
+        if (jsonArgs.TryGetProperty(parameterInfo.Name!, out var arg))
         {
-            var arg = jsonArgs.GetProperty(parameterInfo.Name);
             return arg.Deserialize(parameterInfo.ParameterType);
         }
 
@@ -93,7 +92,7 @@ public class GPTFunctionDefinition
             }
         };
 
-        if (function.Method.ReturnType != typeof(void) )
+        if (function.Method.ReturnType != typeof(void))
         {
             signature["results"] = GetType(function.Method.ReturnType);
         }
