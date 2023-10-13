@@ -13,12 +13,14 @@ public class GptFunction
     public string Name { get; }
     private readonly Delegate _function;
     public string JsonSignature { get; }
+    public string? Description { get; }
 
-    internal GptFunction(string name, string jsonSignature, Delegate function)
+    internal GptFunction(string name, string jsonSignature, Delegate function, string? description)
     {
         Name = name;
         _function = function;
         JsonSignature = jsonSignature;
+        Description = description;
     }
 
     public object? Execute(string parameterJson)
@@ -70,9 +72,9 @@ public class GptFunction
         throw new ArgumentException($"The argument {parameterInfo.Name} is missing.");
     }
 
-    public static GptFunction Create(string name, Delegate function)
+    public static GptFunction Create(string name, Delegate function, string? description = null)
     {
-        return new GptFunction(name, CreateSignature(function, name), function);
+        return new GptFunction(name, CreateSignature(function, name), function, description);
     }
 
     private static string CreateSignature(Delegate function, string name)
