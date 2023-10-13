@@ -21,7 +21,7 @@ public class FunctionTests
     {
         var declaration = GPTFunctionDefinition.Create((int a, string b, string[] c) => {}, "DoCompute");
 
-        declaration.Signature.Should().Be("""
+        declaration.JsonSignature.Should().Be("""
                                 {
                                   "name": "DoCompute",
                                   "parameters": {
@@ -57,7 +57,7 @@ public class FunctionTests
     {
         var declaration = GPTFunctionDefinition.Create((int a, string b, string[]c) => $"{a} {b} {c}", "DoCompute");
 
-        declaration.Signature.Should().Be("""
+        declaration.JsonSignature.Should().Be("""
                                 {
                                   "name": "DoCompute",
                                   "parameters": {
@@ -96,7 +96,7 @@ public class FunctionTests
     {
         var declaration = GPTFunctionDefinition.Create((int a, double b, EnumType c) => $"{a} {b} {c}", "DoCompute");
 
-        declaration.Signature.Should().Be("""
+        declaration.JsonSignature.Should().Be("""
                                 {
                                   "name": "DoCompute",
                                   "parameters": {
@@ -138,7 +138,7 @@ public class FunctionTests
     {
         var declaration = GPTFunctionDefinition.Create((byte a, bool b, EnumType[] c) => $"{a} {b} {c}", "DoCompute");
 
-        declaration.Signature.Should().Be("""
+        declaration.JsonSignature.Should().Be("""
                                 {
                                   "name": "DoCompute",
                                   "parameters": {
@@ -211,7 +211,7 @@ public class FunctionTests
     }
 
     [Fact]
-    public void can_invoke_function_3()
+    public void can_invoke_function_with_optional_paramaters()
     {
         var function = GPTFunctionDefinition.Create((int a, int b = 1) => a+b, "inc");
 
