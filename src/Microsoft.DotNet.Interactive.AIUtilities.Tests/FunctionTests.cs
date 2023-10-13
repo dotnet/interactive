@@ -17,6 +17,42 @@ public class FunctionTests
     }
 
     [Fact]
+    public void can_create_function_from_delegate_with_no_return_type()
+    {
+        var declaration = GPTFunctioDefinition.Do((int a, string b, string[] c) => {}, "DoCompute");
+
+        declaration.Should().Be("""
+                                {
+                                  "name": "DoCompute",
+                                  "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                      "a": {
+                                        "type": "integer"
+                                      },
+                                      "b": {
+                                        "type": "string"
+                                      },
+                                      "c": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "a",
+                                    "b",
+                                    "c"
+                                  ]
+                                }
+                                """);
+
+
+    }
+
+    [Fact]
     public void can_create_function_from_delegate()
     {
         var declaration = GPTFunctioDefinition.Do((int a, string b, string[]c) => $"{a} {b} {c}", "DoCompute");
