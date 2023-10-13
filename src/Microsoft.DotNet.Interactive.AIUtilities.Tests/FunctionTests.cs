@@ -195,7 +195,7 @@ public class FunctionTests
 
 
     [Fact]
-    public void can_invoke_function_with_optional_paramaters()
+    public void can_invoke_function_with_optional_parameters()
     {
         var function = GPTFunctionDefinition.Create((int a, int b = 1) => a+b, "inc");
 
