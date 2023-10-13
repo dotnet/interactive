@@ -194,21 +194,21 @@ public class FunctionTests
     }
 
 
-    [Fact(Skip = "requires new language version")]
-    public void can_invoke_function_with_optional_parameters()
-    {
-        var function = GptFunction.Create("inc", (int a, int b = 1) => a+b);
+    //[Fact(Skip = "requires new language version")]
+    //public void can_invoke_function_with_optional_parameters()
+    //{
+    //    var function = GptFunction.Create("inc", (int a, int b = 1) => a+b);
 
-        var jsonArgs = """
-                        {
-                            "name": "inc",
-                            "arguments": "{ \"a\": 23}"
-                        }
-                       """;
+    //    var jsonArgs = """
+    //                    {
+    //                        "name": "inc",
+    //                        "arguments": "{ \"a\": 23}"
+    //                    }
+    //                   """;
 
-        var result = function.Execute(jsonArgs);
-        result.Should().Be(24);
-    }
+    //    var result = function.Execute(jsonArgs);
+    //    result.Should().Be(24);
+    //}
 }
 
 internal static class JsonFormatting
