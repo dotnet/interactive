@@ -15,7 +15,7 @@ public static class GPTFunctioDefinition
     {
         var parameters = d.Method.GetParameters();
 
-       
+
 
         var requiredParameters = parameters.Where(p => !p.HasDefaultValue).Select(p => p.Name).ToArray();
         var call = new Dictionary<string, object>
@@ -55,7 +55,7 @@ public static class GPTFunctioDefinition
 
         static string GetTypeName(Type type)
         {
-            if ( type == typeof(short)
+            if (type == typeof(short)
                 || type == typeof(int)
                 || type == typeof(long)
                 || type == typeof(ushort)
@@ -72,7 +72,7 @@ public static class GPTFunctioDefinition
                 || type == typeof(double)
                 || type == typeof(decimal))
             {
-                return  "number";
+                return "number";
             }
 
             if (type == typeof(string))
@@ -89,19 +89,17 @@ public static class GPTFunctioDefinition
         }
 
 
-        return JsonSerializer.Serialize(call, new JsonSerializerOptions(JsonSerializerOptions.Default){ WriteIndented = true});
+        return JsonSerializer.Serialize(call, new JsonSerializerOptions(JsonSerializerOptions.Default) { WriteIndented = true });
 
         Dictionary<string, object> GetType(Type type)
         {
             var parameter = new Dictionary<string, object>();
-            
+
             if (type.IsEnum)
             {
                 var underlyingType = type.GetEnumUnderlyingType();
                 parameter["type"] = GetTypeName(underlyingType);
                 parameter["enum"] = GetEnumValues(type);
-                
-
             }
             else if (type.IsArray)
             {
@@ -110,12 +108,12 @@ public static class GPTFunctioDefinition
                 if (elementType.IsEnum)
                 {
                     var underlyingType = elementType.GetEnumUnderlyingType();
-                    
+
                     parameter["items"] = new Dictionary<string, object>
                     {
                         ["type"] = GetTypeName(underlyingType),
                         ["enum"] = GetEnumValues(elementType)
-                };
+                    };
                 }
                 else
                 {
