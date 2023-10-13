@@ -8,24 +8,24 @@ using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
-public class GPTFunctionDefinition
+public class GptFunction
 {
     public string Name { get; }
     private readonly Delegate _function;
     public string JsonSignature { get; }
 
-    private GPTFunctionDefinition(Delegate function, string jsonSignature, string name)
+    internal GptFunction(Delegate function, string jsonSignature, string name)
     {
         Name = name;
         _function = function;
         JsonSignature = jsonSignature;
     }
 
-    public void Execute<T>(string parameterJson, out T? result)
+    public object? Execute(string parameterJson)
     {
         // parameters extraction
         var parameters = ExtractParameters(parameterJson);
-        result = (T?)_function.DynamicInvoke(parameters);
+        return _function.DynamicInvoke(parameters);
     }
 
     private object?[] ExtractParameters(string parameterJson)
@@ -70,9 +70,9 @@ public class GPTFunctionDefinition
         throw new ArgumentException($"The argument {parameterInfo.Name} is missing.");
     }
 
-    public static GPTFunctionDefinition Create(Delegate function, string name)
+    public static GptFunction Create(Delegate function, string name)
     {
-        return new GPTFunctionDefinition(function, CreateSignature(function, name), name);
+        return new GptFunction(function, CreateSignature(function, name), name);
     }
 
     private static string CreateSignature(Delegate function, string name)
@@ -127,7 +127,7 @@ public class GPTFunctionDefinition
                 || type == typeof(ulong)
                 || type == typeof(byte)
                 || type == typeof(sbyte)
-                )
+               )
             {
                 return "integer";
             }
