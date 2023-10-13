@@ -4,7 +4,6 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn>
-    <LangVersion>preview</LangVersion>
     <!-- Ignore: Use "Async" suffix for async methods -->
   </PropertyGroup>
 

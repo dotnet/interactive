@@ -194,7 +194,7 @@ public class FunctionTests
     }
 
 
-    [Fact]
+    [Fact(Skip = "requires new language version")]
     public void can_invoke_function_with_optional_parameters()
     {
         var function = GptFunction.Create("inc", (int a, int b = 1) => a+b);
@@ -215,9 +215,12 @@ internal static class JsonFormatting
 {
     public static string FormatJson(this string text)
     {
-        var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerOptions.Default);
-        jsonSerializerOptions.WriteIndented = true;
-        return JsonSerializer.Serialize(JsonDocument.Parse(text).RootElement,
+        var jsonSerializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
+        var element = JsonDocument.Parse(text).RootElement;
+        return JsonSerializer.Serialize(element,
             jsonSerializerOptions);
     }
 }
