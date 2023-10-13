@@ -79,18 +79,36 @@ public static class GPTFunctioDefinition
         Dictionary<string, object> GetType(Type type)
         {
             var parameter = new Dictionary<string, object>();
-
-            if (type.IsArray)
-            {
-                parameter["type"] = "array";
-                parameter["items"] = new
-                {
-                    type = GetTypeName(type.GetElementType()!),
-                };
-            }
-            else if (type.IsEnum)
+            
+            if (type.IsEnum)
             {
                 var underlyingType = type.GetEnumUnderlyingType();
+                parameter["type"] = GetTypeName(underlyingType);
+                parameter["enum"] = GetEnumValues(type);
+                
+
+            }
+            else if (type.IsArray)
+            {
+                parameter["type"] = "array";
+                var elementType = type.GetElementType()!;
+                if (elementType.IsEnum)
+                {
+                    var underlyingType = type.GetEnumUnderlyingType();
+                    parameter["type"] = GetTypeName(underlyingType);
+                    parameter["enum"] = GetEnumValues(type);
+                    parameter["items"] = new
+                    {
+                        type = GetTypeName(type.GetElementType()!),
+                    };
+                }
+                else
+                {
+                    parameter["items"] = new
+                    {
+                        type = GetTypeName(type.GetElementType()!),
+                    };
+                }
             }
             else
             {
@@ -98,6 +116,11 @@ public static class GPTFunctioDefinition
             }
 
             return parameter;
+        }
+
+        Array GetEnumValues(Type enumType)
+        {
+            return Enum.GetValues(enumType);
         }
     }
 }
