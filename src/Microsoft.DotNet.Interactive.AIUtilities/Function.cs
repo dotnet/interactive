@@ -2,18 +2,72 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 
-using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
+
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
-public static class GPTFunctioDefinition
+public class GPTFunctionDefinition
 {
-    public static string Do(Delegate d, string name)
+    public string Name { get; }
+    private readonly Delegate _function;
+    public string Signature { get; }
+
+    private GPTFunctionDefinition(Delegate function, string signature, string name)
     {
-        var parameters = d.Method.GetParameters();
+        Name = name;
+        _function = function;
+        Signature = signature;
+    }
+
+    public void Execute<T>(string parameterJson, out T? result)
+    {
+        // parameters extraction
+        var parameters = ExtractParameters(parameterJson);
+        result = (T?)_function.DynamicInvoke(parameters);
+    }
+
+    private object?[]? ExtractParameters(string parameterJson)
+    {
+        var json = JsonDocument.Parse(parameterJson).RootElement;
+        var parameterInfos = _function.Method.GetParameters();
+        var parameters = new object?[parameterInfos.Length];
+        var jsonArgs = JsonDocument.Parse( json.GetProperty("arguments").GetString() ).RootElement;
+        for (var i = 0; i < parameterInfos.Length; i++)
+        {
+            parameters[i] = Deserialize(parameterInfos[i], jsonArgs);
+        }
+        
+        return parameters;
+    }
+
+    private object? Deserialize(ParameterInfo parameterInfo, JsonElement jsonArgs)
+    {
+        if (jsonArgs.TryGetProperty(parameterInfo.Name, out var prop))
+        {
+            var arg = jsonArgs.GetProperty(parameterInfo.Name);
+            return arg.Deserialize(parameterInfo.ParameterType);
+        }
+        else
+        {
+            if (parameterInfo.HasDefaultValue)
+            {
+                return parameterInfo.DefaultValue;
+            }
+
+            throw new ArgumentException($"The argument {parameterInfo.Name} is missing.");
+        }
+    }
+
+    public static GPTFunctionDefinition Create(Delegate function, string name)
+    {
+        return new GPTFunctionDefinition(function, CreateSignature(function, name), name);
+    }
+
+    private static string CreateSignature(Delegate function, string name)
+    {
+        var parameters = function.Method.GetParameters();
 
 
 
@@ -28,9 +82,9 @@ public static class GPTFunctioDefinition
             }
         };
 
-        if (d.Method.ReturnType != typeof(void) )
+        if (function.Method.ReturnType != typeof(void) )
         {
-            call["results"] = GetType(d.Method.ReturnType);
+            call["results"] = GetType(function.Method.ReturnType);
         }
 
 
@@ -85,7 +139,7 @@ public static class GPTFunctioDefinition
                 return "boolean";
             }
 
-            throw new ArgumentException($"Invalid type {type}", nameof(type));
+            return "object";
         }
 
 
