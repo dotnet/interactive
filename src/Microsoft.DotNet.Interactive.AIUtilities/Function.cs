@@ -28,7 +28,7 @@ public static class GPTFunctioDefinition
             }
         };
 
-        if (d.Method.ReturnType is not null)
+        if (d.Method.ReturnType != typeof(void) )
         {
             call["results"] = GetType(d.Method.ReturnType);
         }
