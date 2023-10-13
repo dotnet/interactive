@@ -55,12 +55,22 @@ public static class GPTFunctioDefinition
 
         static string GetTypeName(Type type)
         {
-            if (type == typeof(int))
+            if ( type == typeof(short)
+                || type == typeof(int)
+                || type == typeof(long)
+                || type == typeof(ushort)
+                || type == typeof(uint)
+                || type == typeof(ulong)
+                || type == typeof(byte)
+                || type == typeof(sbyte)
+                )
             {
-                return "number";
+                return "integer";
             }
 
-            if (type == typeof(long))
+            if (type == typeof(float)
+                || type == typeof(double)
+                || type == typeof(decimal))
             {
                 return  "number";
             }
@@ -68,6 +78,11 @@ public static class GPTFunctioDefinition
             if (type == typeof(string))
             {
                 return "string";
+            }
+
+            if (type == typeof(bool))
+            {
+                return "boolean";
             }
 
             throw new ArgumentException($"Invalid type {type}", nameof(type));
@@ -94,13 +109,13 @@ public static class GPTFunctioDefinition
                 var elementType = type.GetElementType()!;
                 if (elementType.IsEnum)
                 {
-                    var underlyingType = type.GetEnumUnderlyingType();
-                    parameter["type"] = GetTypeName(underlyingType);
-                    parameter["enum"] = GetEnumValues(type);
-                    parameter["items"] = new
+                    var underlyingType = elementType.GetEnumUnderlyingType();
+                    
+                    parameter["items"] = new Dictionary<string, object>
                     {
-                        type = GetTypeName(type.GetElementType()!),
-                    };
+                        ["type"] = GetTypeName(underlyingType),
+                        ["enum"] = GetEnumValues(elementType)
+                };
                 }
                 else
                 {
