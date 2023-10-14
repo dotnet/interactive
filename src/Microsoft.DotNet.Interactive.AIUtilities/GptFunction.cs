@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using System.Reflection;
 using System.Text.Json;
 
@@ -26,13 +25,19 @@ public class GptFunction
     public object? Execute(string parameterJson)
     {
         // parameters extraction
-        var parameters = ExtractParameters(parameterJson);
+        var json = JsonDocument.Parse(parameterJson).RootElement;
+        return Execute(json);
+    }
+    public object? Execute(JsonElement json)
+    {
+        // parameters extraction
+        var parameters = ExtractParameters(json);
         return _function.DynamicInvoke(parameters);
     }
 
-    private object?[] ExtractParameters(string parameterJson)
+    private object?[] ExtractParameters(JsonElement json)
     {
-        var json = JsonDocument.Parse(parameterJson).RootElement;
+
         var parameterInfos = _function.Method.GetParameters();
         var parameters = new object?[parameterInfos.Length];
         if (json.TryGetProperty("arguments", out var args))
@@ -80,8 +85,6 @@ public class GptFunction
     private static string CreateSignature(Delegate function, string name)
     {
         var parameters = function.Method.GetParameters();
-
-
 
         var requiredParameters = parameters.Where(p => !p.HasDefaultValue).Select(p => p.Name).ToArray();
         var signature = new Dictionary<string, object>
