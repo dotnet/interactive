@@ -133,6 +133,51 @@ public class FunctionTests
     }
 
     [Fact]
+    public void can_create_function_from_delegate_with_enums_strings_as_parameters()
+    {
+        var declaration = GptFunction.Create("DoCompute", (int a, double b, EnumType[] c) => $"{a} {b} {c}", enumsAsString:true);
+
+        declaration.JsonSignature.FormatJson().Should().Be("""
+                                                           {
+                                                             "name": "DoCompute",
+                                                             "parameters": {
+                                                               "type": "object",
+                                                               "properties": {
+                                                                 "a": {
+                                                                   "type": "integer"
+                                                                 },
+                                                                 "b": {
+                                                                   "type": "number"
+                                                                 },
+                                                                 "c": {
+                                                                   "type": "array",
+                                                                   "items": {
+                                                                     "type": "string",
+                                                                     "enum": [
+                                                                       "One",
+                                                                       "Two",
+                                                                       "Three",
+                                                                       "Four"
+                                                                     ]
+                                                                   }
+                                                                 }
+                                                               }
+                                                             },
+                                                             "results": {
+                                                               "type": "string"
+                                                             },
+                                                             "required": [
+                                                               "a",
+                                                               "b",
+                                                               "c"
+                                                             ]
+                                                           }
+                                                           """);
+
+
+    }
+
+    [Fact]
     public void can_create_function_from_delegate_with_array_of_enums_as_parameters()
     {
         var declaration = GptFunction.Create("DoCompute", (byte a, bool b, EnumType[] c) => $"{a} {b} {c}");
@@ -191,6 +236,38 @@ public class FunctionTests
         
         var result = function.Execute(jsonArgs);
         result.Should().Be("Diego 123");
+    }
+
+    [Fact]
+    public void can_invoke_function_with_string_for_enum()
+    {
+        var function = GptFunction.Create("concatString", (string a, EnumType b) => $"{a} {b}");
+
+        var jsonArgs = """
+                        {
+                            "name": "concatString",
+                            "arguments": "{ \"a\": \"Diego\", \"b\":\"Three\"}"
+                        }
+                       """;
+
+        var result = function.Execute(jsonArgs);
+        result.Should().Be("Diego Three");
+    }
+
+    [Fact]
+    public void can_invoke_function_with_string_for_enum_array()
+    {
+        var function = GptFunction.Create("concatString", (string a, EnumType[] b) => $"{a} {string.Join(",", b.Select(b => b.ToString()))}");
+
+        var jsonArgs = """
+                        {
+                            "name": "concatString",
+                            "arguments": "{ \"a\": \"Diego\", \"b\":[\"Three\",\"Three\"]}"
+                        }
+                       """;
+
+        var result = function.Execute(jsonArgs);
+        result.Should().Be("Diego Three,Three");
     }
 
 

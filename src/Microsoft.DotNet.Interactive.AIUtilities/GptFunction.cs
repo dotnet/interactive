@@ -3,6 +3,8 @@
 
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.CSharp.RuntimeBinder;
 
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
@@ -66,7 +68,10 @@ public class GptFunction
     {
         if (jsonArgs.TryGetProperty(parameterInfo.Name!, out var arg))
         {
-            return arg.Deserialize(parameterInfo.ParameterType);
+           return arg.Deserialize(parameterInfo.ParameterType, new JsonSerializerOptions
+           {
+               Converters = { new JsonStringEnumConverter() }
+           });
         }
 
         if (parameterInfo.HasDefaultValue)
@@ -77,12 +82,12 @@ public class GptFunction
         throw new ArgumentException($"The argument {parameterInfo.Name} is missing.");
     }
 
-    public static GptFunction Create(string name, Delegate function, string? description = null)
+    public static GptFunction Create(string name, Delegate function, string? description = null, bool enumsAsString = false)
     {
-        return new GptFunction(name, CreateSignature(function, name), function, description);
+        return new GptFunction(name, CreateSignature(function, name, enumsAsString), function, description);
     }
 
-    private static string CreateSignature(Delegate function, string name)
+    private static string CreateSignature(Delegate function, string name, bool enumsAsString)
     {
         var parameters = function.Method.GetParameters();
 
@@ -166,8 +171,16 @@ public class GptFunction
             if (type.IsEnum)
             {
                 var underlyingType = type.GetEnumUnderlyingType();
-                parameter["type"] = GetTypeName(underlyingType);
-                parameter["enum"] = GetEnumValues(type);
+                if (!enumsAsString)
+                {
+                    parameter["type"] = GetTypeName(underlyingType);
+                    parameter["enum"] = GetEnumValues(type);
+                }
+                else
+                {
+                    parameter["type"] = "string";
+                    parameter["enum"] = Enum.GetNames(type);
+                }
             }
             else if (type.IsArray)
             {
@@ -176,12 +189,23 @@ public class GptFunction
                 if (elementType.IsEnum)
                 {
                     var underlyingType = elementType.GetEnumUnderlyingType();
-
-                    parameter["items"] = new Dictionary<string, object>
+                    if (!enumsAsString)
                     {
-                        ["type"] = GetTypeName(underlyingType),
-                        ["enum"] = GetEnumValues(elementType)
+                        parameter["items"] = new Dictionary<string, object>
+                        {
+                            ["type"] = GetTypeName(underlyingType),
+                            ["enum"] = GetEnumValues(elementType)
+                        };
+
+                    }
+                    else
+                    {
+                        parameter["items"] = new Dictionary<string, object>
+                        {
+                            ["type"] = "string",
+                            ["enum"] = Enum.GetNames(elementType)
                     };
+                    }
                 }
                 else
                 {
