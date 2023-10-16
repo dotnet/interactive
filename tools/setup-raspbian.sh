@@ -63,7 +63,7 @@ echo ""
 
 
 ################################
-### Install .NET interactive ###
+### Install .NET Interactive ###
 ################################
 
 if echo "$(dotnet tool list -g)" | grep -q "microsoft.dotnet-interactive"; then
