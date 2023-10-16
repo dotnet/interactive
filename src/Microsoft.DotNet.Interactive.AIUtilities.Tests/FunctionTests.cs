@@ -287,6 +287,19 @@ public class FunctionTests
     }
 
     [Fact]
+    public void can_invoke_function_from_json_string()
+    {
+        var function = GptFunction.Create("concatString", (string a, EnumType[] b) => $"{a} {string.Join(",", b.Select(b => b.ToString()))}");
+
+        var jsonArgs = """
+                       { "a" : "Diego", "b":["Three","Three"]}
+                       """;
+
+        var result = function.Execute(jsonArgs);
+        result.Should().Be("Diego Three,Three");
+    }
+
+    [Fact]
     public async Task can_invoke_async_function()
     {
         var function = GptFunction.Create("concatString", async(string a, EnumType[] b) =>
