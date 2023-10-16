@@ -57,7 +57,7 @@ internal class HttpApiClient : IDisposable
     protected virtual HttpRequestMessage CreateRequest(string token, string relativeApiPath, HttpContent content, HttpMethod method)
     {
         _httpClient.DefaultRequestHeaders.Clear();
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(".NET interactive");
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(".NET Interactive");
 
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"{_authProvider.AuthScheme} {token}");
 

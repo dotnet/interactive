@@ -10,18 +10,18 @@ Polyglot Notebooks are fully interoperable with Jupyter and support the `.ipynb`
 
 The following languages are supported by Polyglot Notebooks:
 
-| Language                                    | Variable sharing supported |
-|---------------------------------------------|-------------------------------------------------------|
-| C#                                          |        ✅                 |
-| F#                                          |        ✅                 |   
-| PowerShell                                  |        ✅                 |          
-| JavaScript                                  |        ✅                 |          
-| SQL                                         |        ✅                 |   
-| KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))    |        ✅       |       
-| HTML                                        |        ⛔                 |     
-| [Mermaid](https://mermaid.js.org/intro/)    |        ⛔                 |        
-| Python (Preview)                            |        ✅                 |          
-| R (Preview)                                 |        ✅                 |          
+| Language                      | Variable sharing |
+|-------------------------------|------------------|
+| C#                            |        ✅       |
+| F#                            |        ✅       |   
+| PowerShell                    |        ✅       |          
+| JavaScript                    |        ✅       |          
+| SQL                           |        ✅       |   
+| KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))    |        ✅       |  
+| [Python](docs/jupyter-in-polyglot-notebooks.md)  |        ✅       |
+| [R](docs/jupyter-in-polyglot-notebooks.md)       |        ✅       |      
+| HTML                         |        ⛔         |     
+| [Mermaid](https://mermaid.js.org/intro/)         |        ⛔       |        
   
 ## Features
 
