@@ -35,6 +35,21 @@ public class GptFunction
     {
         // parameters extraction
         var json = JsonDocument.Parse(parameterJson).RootElement;
+        if (json.TryGetProperty("arguments", out var args))
+        {
+            var argsString = args.ToString();
+            if (string.IsNullOrWhiteSpace(argsString))
+            {
+                var parameterInfos = _function.Method.GetParameters();
+                if (parameterInfos.Any(p => !p.IsOptional))
+                {
+                    throw new ArgumentException("no parameters defined.");
+                }
+            }
+            var jsonArgs = JsonDocument.Parse(args.GetString()!).RootElement;
+            return Execute(jsonArgs);
+        }
+
         return Execute(json);
     }
     public object? Execute(JsonElement json)
@@ -49,24 +64,12 @@ public class GptFunction
 
         var parameterInfos = _function.Method.GetParameters();
         var parameters = new object?[parameterInfos.Length];
-        if (json.TryGetProperty("arguments", out var args))
+        for (var i = 0; i < parameterInfos.Length; i++)
         {
-            var argsString = args.ToString();
-            if (string.IsNullOrWhiteSpace(argsString))
-            {
-                if (parameterInfos.Any(p => !p.IsOptional))
-                {
-                    throw new ArgumentException("no parameters defined.");
-                }
-            }
-            var jsonArgs = JsonDocument.Parse(args.GetString()!).RootElement;
-            for (var i = 0; i < parameterInfos.Length; i++)
-            {
-                parameters[i] = Deserialize(parameterInfos[i], jsonArgs);
-            }
-
-            return parameters;
+            parameters[i] = Deserialize(parameterInfos[i], json);
         }
+
+        return parameters;
 
         throw new ArgumentException("arguments property is not found.");
     }
