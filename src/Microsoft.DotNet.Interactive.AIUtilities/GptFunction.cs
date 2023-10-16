@@ -4,17 +4,24 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.CSharp.RuntimeBinder;
 
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 public class GptFunction
 {
+    private static readonly JsonSerializerOptions SerializerOptions;
     public string Name { get; }
     private readonly Delegate _function;
     public string JsonSignature { get; }
     public string? Description { get; }
+
+    static GptFunction()
+    {
+        SerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
+
+        SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    }
 
     internal GptFunction(string name, string jsonSignature, Delegate function, string? description)
     {
@@ -68,10 +75,7 @@ public class GptFunction
     {
         if (jsonArgs.TryGetProperty(parameterInfo.Name!, out var arg))
         {
-           return arg.Deserialize(parameterInfo.ParameterType, new JsonSerializerOptions
-           {
-               Converters = { new JsonStringEnumConverter() }
-           });
+           return arg.Deserialize(parameterInfo.ParameterType, SerializerOptions);
         }
 
         if (parameterInfo.HasDefaultValue)
