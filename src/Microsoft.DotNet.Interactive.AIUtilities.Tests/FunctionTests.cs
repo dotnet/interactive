@@ -239,6 +239,22 @@ public class FunctionTests
     }
 
     [Fact]
+    public void can_invoke_function_with__enum()
+    {
+        var function = GptFunction.Create("concatString", (string a, EnumType b) => $"{a} {b}");
+
+        var jsonArgs = """
+                        {
+                            "name": "concatString",
+                            "arguments": "{ \"a\": \"Diego\", \"b\":0}"
+                        }
+                       """;
+
+        var result = function.Execute(jsonArgs);
+        result.Should().Be("Diego One");
+    }
+
+    [Fact]
     public void can_invoke_function_with_string_for_enum()
     {
         var function = GptFunction.Create("concatString", (string a, EnumType b) => $"{a} {b}");
