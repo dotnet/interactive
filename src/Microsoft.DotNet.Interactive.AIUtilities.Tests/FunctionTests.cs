@@ -286,6 +286,26 @@ public class FunctionTests
         result.Should().Be("Diego Three,Three");
     }
 
+    [Fact]
+    public async Task can_invoke_async_function()
+    {
+        var function = GptFunction.Create("concatString", async(string a, EnumType[] b) =>
+        {
+            await Task.Yield();
+            return $"{a} {string.Join(",", b.Select(b => b.ToString()))}";
+        });
+
+        var jsonArgs = """
+                        {
+                            "name": "concatString",
+                            "arguments": "{ \"a\": \"Diego\", \"b\":[\"Three\",\"Three\"]}"
+                        }
+                       """;
+
+        var result = await (Task<string>)function.Execute(jsonArgs);
+        result.Should().Be("Diego Three,Three");
+    }
+
 
     //[Fact(Skip = "requires new language version")]
     //public void can_invoke_function_with_optional_parameters()
