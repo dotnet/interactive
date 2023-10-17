@@ -77,7 +77,8 @@ function hashBangConnectPrivate(clientMapper: ClientMapper, hostUri: string, ker
             messageHandlerMap.set(documentUriString, messageHandler);
         }
         let extensionHostToWebviewSender = KernelCommandAndEventSender.FromFunction(envelope => {
-            controllerPostMessage({ envelope: envelope.toJson() });
+            const commandOrEventForWebview = { envelope: envelope.toJson() };
+            controllerPostMessage(commandOrEventForWebview);
         });
 
         let WebviewToExtensionHostReceiver = KernelCommandAndEventReceiver.FromObservable(messageHandler);
