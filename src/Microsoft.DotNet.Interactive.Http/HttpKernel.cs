@@ -304,11 +304,9 @@ public class HttpKernel :
 
         if (_variables.TryGetValue(expression, out var value))
         {
-            return HttpBindingResult<object?>.Success(value);
+            return node.CreateBindingSuccess(value);
         }
 
-        var diagnostic = node.CreateDiagnostic(HttpDiagnostics.CannotResolveSymbol(variableName));
-
-        return HttpBindingResult<object?>.Failure(diagnostic);
+        return node.CreateBindingFailure(HttpDiagnostics.CannotResolveSymbol(variableName));
     }
 }
