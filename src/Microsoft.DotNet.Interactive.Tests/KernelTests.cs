@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using Microsoft.DotNet.Interactive.App;
 
 #if !NETFRAMEWORK
 using Microsoft.DotNet.Interactive.CSharp;
@@ -165,6 +166,30 @@ public partial class KernelTests
 
         var lastEvent = await events;
         lastEvent.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task language_service_command_with_empty_buffer_doesnt_crash()
+    {
+        var kernel = new CompositeKernel() { new CSharpKernel() };
+
+        var request = new RequestCompletions(
+            string.Empty,
+            new LinePosition(0, 0),
+            "csharp");
+
+        bool fail = false;
+
+        try
+        {
+            await kernel.SendAsync(request);
+        }
+        catch
+        {
+            fail = true;
+        }
+
+        fail.Should().BeFalse(because: "there were no unhandled exceptions emitted");
     }
 
 #if !NETFRAMEWORK
