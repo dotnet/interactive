@@ -232,7 +232,7 @@ public abstract partial class Kernel :
         {
             absolutePosition--;
         }
-        else if (char.IsWhiteSpace(rootNode.Text[absolutePosition]))
+        else if (char.IsWhiteSpace(rootNode.Text[absolutePosition]) && absolutePosition > 0)
         {
             absolutePosition--;
         }
