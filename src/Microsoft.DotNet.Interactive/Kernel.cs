@@ -264,7 +264,7 @@ public abstract partial class Kernel :
             adjustedCommand = null;
             // need to return false to notify caller of failure
             // otherwise caller assumes out param is valid ref
-            //return false;
+            return false;
         }
 
         return true;
