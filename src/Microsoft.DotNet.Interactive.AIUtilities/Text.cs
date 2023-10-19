@@ -15,6 +15,12 @@ public static class Text {
         return source.Select(item => new KeyValuePair<T, float>(item, comparer.Score(item, value)));
     }
 
+    public static IEnumerable<KeyValuePair<TCollection, float>> ScoreBySimilarityTo<TCollection, TValue>(this IEnumerable<TCollection> source, TValue value,
+        ISimilarityComparer<TValue> comparer, Func<TCollection, TValue> valueSelector)
+    {
+        return source.Select(item => new KeyValuePair<TCollection, float>(item, comparer.Score(valueSelector(item), value)));
+    }
+
     public static IObservable<string> ChunkByTokenCountWithOverlap(this IObservable<string> source, ITokenizer tokenizer, int maxTokenCount, int overlapTokenCount)
     {
         if (maxTokenCount <= overlapTokenCount)

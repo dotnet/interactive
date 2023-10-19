@@ -6,13 +6,12 @@ using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Http;
 
 namespace Microsoft.DotNet.Interactive.Mermaid;
 
 internal class MermaidMarkdownFormatter : ITypeFormatterSource
 {
-    private const string DefaultLibraryVersion = "10.1.0";
+    private const string DefaultLibraryVersion = "10.5.0";
     private static readonly Uri DefaultLibraryUri = new($@"https://cdn.jsdelivr.net/npm/mermaid@{DefaultLibraryVersion}/dist/mermaid.esm.min.mjs", UriKind.Absolute);
     private static readonly Uri RequireUri = new("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
     
@@ -54,7 +53,6 @@ internal class MermaidMarkdownFormatter : ITypeFormatterSource
        
         var divId = Guid.NewGuid().ToString("N");
         var code = new StringBuilder();
-        var functionName = $"loadMermaid_{divId}";
         code.AppendLine($"<div class=\"mermaidMarkdownContainer\" style=\"background-color:{markdown.Background}\">");
         code.AppendLine(@"<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"">");
             

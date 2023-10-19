@@ -30,6 +30,28 @@ public class SimilaritySearchTests
     }
 
     [Fact]
+    public void can_search_collection_for_element_similar_to_value()
+    {
+        var collection = new[]
+        {
+           new { Text =  "diugo", Number = 1.0f},
+           new { Text = "diago",  Number = 1.0f},
+           new { Text = "carlo", Number = 1.0f }, 
+           new { Text = "chuck",  Number = 1.0f }
+        };
+
+        var search = collection.ScoreBySimilarityTo(
+                "diego",
+                new CosineSimilarityComparer<string>(a => a.Select(c => (float)c).ToArray()),
+                        e => e.Text
+            )
+            .OrderByDescending(e => e.Value)
+            .Take(1);
+
+        search.Should().BeEquivalentTo(new[] { KeyValuePair.Create(new { Text = "diago", Number = 1.0f }, 0.9998783f) });
+    }
+
+    [Fact]
     public void can_search_collection_for_similar_element_f()
     {
         var vectorCollection = new List<float[]>

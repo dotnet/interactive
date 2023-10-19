@@ -227,7 +227,8 @@ public abstract partial class Kernel :
         // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
         var absolutePosition = tree.GetAbsolutePosition(command.LinePosition);
 
-        if (absolutePosition >= tree.Length)
+        // don't let abs position drop below 0
+        if (absolutePosition >= tree.Length && absolutePosition > 0)
         {
             absolutePosition--;
         }
@@ -258,6 +259,9 @@ public abstract partial class Kernel :
         else
         {
             adjustedCommand = null;
+            // need to return false to notify caller of failure
+            // otherwise caller assumes out param is valid ref
+            return false;
         }
 
         return true;

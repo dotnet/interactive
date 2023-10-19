@@ -543,9 +543,9 @@ public class KernelSchedulerTests : IDisposable
             return default;
         });
     }
-
+    
     [Fact]
-    public async Task CurrentValue_is_reset_once_all_work_is_complete()
+    public async Task CurrentValue_is_null_once_all_work_is_complete()
     {
         using var scheduler = new TestKernelScheduler<string>((o, i) => o == "outer" && i == "inner");
 

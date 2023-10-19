@@ -252,7 +252,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
         if (success)
         {
-            return HttpBindingResult<string>.Success(text.ToString().Trim());
+            return HttpBindingResult<string>.Success(text.ToString().Trim(), diagnostics.ToArray());
         }
         else
         {

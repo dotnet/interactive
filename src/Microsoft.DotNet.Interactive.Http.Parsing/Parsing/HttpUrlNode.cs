@@ -52,7 +52,7 @@ internal class HttpUrlNode : HttpSyntaxNode
         {
             var uri = new Uri(result.Value!, UriKind.Absolute);
 
-            return HttpBindingResult<Uri>.Success(uri);
+            return HttpBindingResult<Uri>.Success(uri, result.Diagnostics.ToArray());
         }
         else
         {
