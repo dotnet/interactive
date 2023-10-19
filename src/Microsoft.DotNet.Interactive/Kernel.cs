@@ -228,13 +228,16 @@ public abstract partial class Kernel :
         var absolutePosition = tree.GetAbsolutePosition(command.LinePosition);
 
         // don't let abs position drop below 0
-        if (absolutePosition >= tree.Length && absolutePosition > 0)
+        if (absolutePosition > 0)
         {
-            absolutePosition--;
-        }
-        else if (char.IsWhiteSpace(rootNode.Text[absolutePosition]))
-        {
-            absolutePosition--;
+            if (absolutePosition >= tree.Length)
+            {
+                absolutePosition--;
+            }
+            else if (char.IsWhiteSpace(rootNode.Text[absolutePosition]))
+            {
+                absolutePosition--;
+            }
         }
 
         if (rootNode.FindNode(absolutePosition) is LanguageNode node)
@@ -261,7 +264,7 @@ public abstract partial class Kernel :
             adjustedCommand = null;
             // need to return false to notify caller of failure
             // otherwise caller assumes out param is valid ref
-            return false;
+            //return false;
         }
 
         return true;
