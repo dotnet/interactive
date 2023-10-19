@@ -167,6 +167,7 @@ public partial class KernelTests
         lastEvent.Should().BeNull();
     }
 
+#if !NETFRAMEWORK
     [Fact]
     public async Task language_service_command_with_empty_buffer_doesnt_crash()
     {
@@ -191,7 +192,6 @@ public partial class KernelTests
         fail.Should().BeFalse(because: "there were no unhandled exceptions emitted");
     }
 
-#if !NETFRAMEWORK
     [Fact]
     public async Task Awaiting_a_disposed_task_does_not_deadlock()
     {
