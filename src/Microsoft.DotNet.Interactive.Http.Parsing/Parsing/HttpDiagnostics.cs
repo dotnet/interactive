@@ -76,8 +76,8 @@ internal static class HttpDiagnostics
     internal static HttpDiagnosticInfo CannotSetContentHeaderWithoutContent(string headerText)
     {
         var id = $"HTTP0009";
-        var severity = DiagnosticSeverity.Error;
-        var messageFormat = "Invalid header '{0}': Cannot set content header without content.";
+        var severity = DiagnosticSeverity.Warning;
+        var messageFormat = "Header '{0}' will be ignored: Cannot set content header without content.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, headerText);
     }
 

@@ -3,6 +3,7 @@
 
 using System.Linq;
 using FluentAssertions;
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -179,7 +180,7 @@ public partial class ParserTests
         }
 
         [Fact]
-        public void cannot_set_content_headers_without_a_body()
+        public void content_headers_are_ignored_when_body_is_absent()
         {
             var result = Parse(
                 """
@@ -198,10 +199,11 @@ public partial class ParserTests
 
             var bindingResult = requestNode.TryGetHttpRequestMessage(bind);
 
-            bindingResult.Value.Should().BeNull();
+            bindingResult.Value.Headers.Should().HaveCount(0);
             bindingResult.Diagnostics.Should().HaveCount(4);
             foreach (var diagnostic in bindingResult.Diagnostics)
             {
+                diagnostic.Severity.Should().Be(DiagnosticSeverity.Warning);
                 diagnostic.ToString().Should().EndWith("Cannot set content header without content.");
             }
         }

@@ -207,9 +207,9 @@ internal class HttpRequestNode : HttpSyntaxNode
             }
         }
 
-        if (diagnostics.All(d => d.Severity != DiagnosticSeverity.Error))
+        if (diagnostics.All(d => d.Severity is not DiagnosticSeverity.Error))
         {
-            return HttpBindingResult<HttpRequestMessage>.Success(request);
+            return HttpBindingResult<HttpRequestMessage>.Success(request, diagnostics.ToArray());
         }
         else
         {
