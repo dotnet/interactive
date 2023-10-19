@@ -7,8 +7,7 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "enabledApiProposals": [
-    "notebookMessaging",
-    "languageConfigurationAutoClosingPairs"
+    "notebookMessaging"
   ],
   "preview": false,
   "//version": "%description.version%",
@@ -220,7 +219,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.450502",
+          "default": "1.0.451701",
           "description": "%description.requiredInteractiveToolVersion%"
         }
       }

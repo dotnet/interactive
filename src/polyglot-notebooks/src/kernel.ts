@@ -204,14 +204,40 @@ export class Kernel {
                     reject(e);
                 }
             } else {
+                // hack like there is no tomorrow
+                const shouldNoop = this.shouldNoopCommand(commandEnvelope, context);
+                if (shouldNoop) {
+                    context.complete(commandEnvelope);
+                }
                 context.handlingKernel = previoudHendlingKernel;
                 if (isRootCommand) {
                     eventSubscription?.unsubscribe();
                     context.dispose();
                 }
-                reject(new Error(`No handler found for command type ${commandEnvelope.commandType}`));
+                if (!shouldNoop) {
+                    reject(new Error(`No handler found for command type ${commandEnvelope.commandType}`));
+                } else {
+                    Logger.default.warn(`kernel ${this.name} done noop handling command: ${JSON.stringify(commandEnvelope)}`);
+                    resolve();
+                }
             }
         });
+    }
+    private shouldNoopCommand(commandEnvelope: commandsAndEvents.KernelCommandEnvelope, context: KernelInvocationContext): boolean {
+
+        let shouldNoop = false;
+        switch (commandEnvelope.commandType) {
+            case commandsAndEvents.RequestCompletionsType:
+            case commandsAndEvents.RequestSignatureHelpType:
+            case commandsAndEvents.RequestDiagnosticsType:
+            case commandsAndEvents.RequestHoverTextType:
+                shouldNoop = true;
+                break;
+            default:
+                shouldNoop = false;
+                break;
+        }
+        return shouldNoop;
     }
 
     subscribeToKernelEvents(observer: commandsAndEvents.KernelEventEnvelopeObserver): disposables.DisposableSubscription {
