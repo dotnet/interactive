@@ -169,6 +169,30 @@ public partial class KernelTests
 
 #if !NETFRAMEWORK
     [Fact]
+    public async Task language_service_command_with_empty_buffer_doesnt_crash()
+    {
+        using var kernel = new CompositeKernel() { new CSharpKernel() };
+
+        var request = new RequestCompletions(
+            string.Empty,
+            new LinePosition(0, 0),
+            "csharp");
+
+        bool fail = false;
+
+        try
+        {
+            await kernel.SendAsync(request);
+        }
+        catch
+        {
+            fail = true;
+        }
+
+        fail.Should().BeFalse(because: "there were no unhandled exceptions emitted");
+    }
+
+    [Fact]
     public async Task Awaiting_a_disposed_task_does_not_deadlock()
     {
         using var kernel = new CompositeKernel
