@@ -5,7 +5,7 @@ namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 public static class Sampling
 {
-    public static IEnumerable<T> RandomOrder<T>(this IEnumerable<T> source)
+    public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
     {
         var rnd = new Random();
         var list = new List<T>(source);

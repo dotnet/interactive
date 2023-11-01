@@ -12,7 +12,7 @@ public class SamplingTest
     public void can_shuffle_collection()
     {
         var src = Enumerable.Range(0, 10);
-        var shuffled = src.RandomOrder().ToArray();
+        var shuffled = src.Shuffle().ToArray();
         shuffled.Should().NotBeInAscendingOrder();
     }
 
@@ -20,7 +20,7 @@ public class SamplingTest
     public void does_not_duplicate_items()
     {
         var src = Enumerable.Range(0, 10).ToArray();
-        var shuffled = src.RandomOrder().Distinct().ToArray();
+        var shuffled = src.Shuffle().Distinct().ToArray();
         shuffled.Should().HaveCount(src.Length);
     }
 }
