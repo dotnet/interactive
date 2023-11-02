@@ -149,7 +149,7 @@ internal class PackageDirectoryExtensionLoader
 
             context.Display(logMessage);
 
-            await kernel.LoadAndRunInteractiveDocument(extensionFile);
+            await kernel.LoadAndRunInteractiveDocument(extensionFile, context.Command);
 
             op.Succeed();
         }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
@@ -143,5 +144,48 @@ public class ImportNotebookTests
         await kernel.SubmitCodeAsync($"#!import {filePath}");
 
         events.Should().ContainSingle<DisplayedValueProduced>(v => v.FormattedValues.Any(f => f.MimeType == "text/markdown"));
+    }
+
+    [Theory]
+    [InlineData(".ipynb")]
+    [InlineData(".dib")]
+    public async Task It_load_packages_from_imports(string notebookExt)
+    {
+
+        using var kernel = new CompositeKernel {
+                new CSharpKernel().UseNugetDirective()
+                    .UseKernelHelpers()
+                    .UseWho()
+                    .UseValueSharing(),
+                new FSharpKernel(),
+                new HtmlKernel(),
+            }
+            .UseImportMagicCommand();
+
+        var document = new InteractiveDocument
+        {
+            new InteractiveDocumentElement
+            {
+                Contents = "#r \"nuget: Microsoft.DotNet.Interactive.AIUtilities, 1.0.0-beta.23517.1\"",
+                KernelName = "csharp"
+            }
+        };
+
+        var notebookContents = notebookExt switch
+        {
+            ".ipynb" => document.ToJupyterJson(),
+            ".dib" => document.ToCodeSubmissionContent(),
+            _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {notebookExt}")
+        };
+
+        var filePath = $@".\testnotebook{notebookExt}";
+
+        await File.WriteAllTextAsync(filePath, notebookContents);
+
+        using var events = kernel.KernelEvents.ToSubscribedList();
+
+        await kernel.SubmitCodeAsync($"#!import {filePath}");
+
+        events.Should().NotContainErrors();
     }
 }
