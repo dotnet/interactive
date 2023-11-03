@@ -39,7 +39,7 @@ Microsoft.DotNet.Interactive.Journey
     public System.String Name { get;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Setup { get;}
     public Challenge ToChallenge()
-  public enum ChallengeDirective : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum ChallengeDirective : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     ChallengeSetup=0
     Question=1
     Scratchpad=2
@@ -82,9 +82,9 @@ Microsoft.DotNet.Interactive.Journey
     .ctor(System.String name, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> setup)
     public System.String Name { get;}
     public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.SubmitCode> Setup { get;}
-  public enum LessonDirective : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum LessonDirective : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Challenge=0
-  public enum LessonMode : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum LessonMode : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     TeacherMode=0
     StudentMode=1
   public static class Main
@@ -95,7 +95,7 @@ Microsoft.DotNet.Interactive.Journey
     public static System.Void Parse(Microsoft.DotNet.Interactive.Documents.InteractiveDocument document, ref LessonDefinition& lesson, ref System.Collections.Generic.List<ChallengeDefinition> challenges)
     public static Microsoft.DotNet.Interactive.Documents.InteractiveDocument ReadFileAsInteractiveDocument(System.IO.FileInfo file, Microsoft.DotNet.Interactive.CompositeKernel kernel = null)
     .ctor()
-  public enum Outcome : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum Outcome : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Failure=0
     PartialSuccess=1
     Success=2

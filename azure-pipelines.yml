@@ -157,14 +157,14 @@ stages:
           inputs:
             versionSpec: $(NodeJSVersion)
 
-        - task: UseDotNet@2
-          displayName: Use .NET SDK
-          inputs:
-            packageType: sdk
-            useGlobalJson: true
-            includePreviewVersions: true
-            workingDirectory: $(Build.SourcesDirectory)
-            installationPath: $(Agent.ToolsDirectory)/dotnet
+        # - task: UseDotNet@2
+        #   displayName: Use .NET SDK
+        #   inputs:
+        #     packageType: sdk
+        #     useGlobalJson: true
+        #     includePreviewVersions: true
+        #     workingDirectory: $(Build.SourcesDirectory)
+        #     installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - script: |
             robocopy "eng\resources" "$(Build.SourcesDirectory)\artifacts"
@@ -307,14 +307,14 @@ stages:
           inputs:
             versionSpec: $(NodeJSVersion)
 
-        - task: UseDotNet@2
-          displayName: Use .NET SDK
-          inputs:
-            packageType: sdk
-            useGlobalJson: true
-            includePreviewVersions: true
-            workingDirectory: $(Build.SourcesDirectory)
-            installationPath: $(Agent.ToolsDirectory)/dotnet
+        # - task: UseDotNet@2
+        #   displayName: Use .NET SDK
+        #   inputs:
+        #     packageType: sdk
+        #     useGlobalJson: true
+        #     includePreviewVersions: true
+        #     workingDirectory: $(Build.SourcesDirectory)
+        #     installationPath: $(Agent.ToolsDirectory)/dotnet
 
         - script: |
             mkdir -p "$(Build.SourcesDirectory)/artifacts"
