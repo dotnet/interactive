@@ -204,7 +204,7 @@ Microsoft.DotNet.Interactive
   public static class KernelExtensions
     public static Kernel FindKernelByName(System.String name)
     public static System.Collections.Generic.IEnumerable<Kernel> FindKernels(System.Func<Kernel,System.Boolean> predicate)
-    public static System.Threading.Tasks.Task LoadAndRunInteractiveDocument(System.IO.FileInfo file)
+    public static System.Threading.Tasks.Task LoadAndRunInteractiveDocument(System.IO.FileInfo file, Microsoft.DotNet.Interactive.Commands.KernelCommand parentCommand = null)
     public static System.Collections.Generic.IEnumerable<Kernel> Subkernels(System.Boolean recursive = False)
     public static System.Collections.Generic.IEnumerable<Kernel> SubkernelsAndSelf(System.Boolean recursive = False)
     public static System.Threading.Tasks.Task<KernelCommandResult> SubmitCodeAsync(System.String code)

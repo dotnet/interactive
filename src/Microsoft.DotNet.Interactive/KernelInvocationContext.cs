@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -203,7 +204,7 @@ public class KernelInvocationContext : IDisposable
 
         void StopPublishingChildCommandEvents()
         {
-            if (_childCommands.TryGetValue(command, out var events) &&
+            if (TryGetChildCommandEvents(command, out var events) &&
                 !events.IsDisposed)
             {
                 events.OnCompleted();
@@ -250,7 +251,7 @@ public class KernelInvocationContext : IDisposable
             @event.StampRoutingSlipAndLog(HandlingKernel.KernelInfo.Uri);
         }
 
-        if (!publishOnAmbientContextOnly && _childCommands.TryGetValue(command, out var events))
+        if (!publishOnAmbientContextOnly && TryGetChildCommandEvents(command, out var events))
         {
             events.OnNext(@event);
         }
@@ -275,6 +276,11 @@ public class KernelInvocationContext : IDisposable
 
     public KernelCommandResult Result { get; }
 
+    private bool TryGetChildCommandEvents(KernelCommand command, out ReplaySubject<KernelEvent> events)
+    {
+        return _childCommands.TryGetValue(command, out events);
+    }
+
     internal KernelCommandResult ResultFor(KernelCommand command)
     {
         if (command.Equals(Command))
@@ -283,7 +289,7 @@ public class KernelInvocationContext : IDisposable
         }
         else
         {
-            var events = _childCommands[command];
+            TryGetChildCommandEvents(command, out var events);
             var result = new KernelCommandResult(command);
             using var _ = events.Subscribe(result.AddEvent);
             return result;

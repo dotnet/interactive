@@ -100,7 +100,8 @@ public static class KernelExtensions
         command.SetHandler(async ctx =>
         {
             var file = ctx.ParseResult.GetValueForArgument(fileArg);
-            await LoadAndRunInteractiveDocument(kernel, file);
+            var currentInvocationContext = ctx.GetService<KernelInvocationContext>();
+            await LoadAndRunInteractiveDocument(kernel, file, currentInvocationContext.Command);
         });
 
         kernel.AddDirective(command);
@@ -110,7 +111,8 @@ public static class KernelExtensions
 
     public static async Task LoadAndRunInteractiveDocument(
         this Kernel kernel,
-        FileInfo file)
+        FileInfo file,
+        KernelCommand parentCommand = null)
     {
         var kernelInfoCollection = CreateKernelInfos(kernel.RootKernel as CompositeKernel);
         var document = await InteractiveDocument.LoadAsync(
@@ -124,11 +126,21 @@ public static class KernelExtensions
                 StringComparer.OrdinalIgnoreCase.Equals(kernelInfo.LanguageName, "markdown"))
             {
                 var formattedValue = new FormattedValue("text/markdown", element.Contents);
-                await kernel.SendAsync(new DisplayValue(formattedValue));
+                var displayValue = new DisplayValue(formattedValue);
+                if (parentCommand is not null)
+                {
+                    displayValue.SetParent(parentCommand);
+                }
+                await kernel.SendAsync(displayValue);
             }
             else
             {
-                await kernel.RootKernel.SendAsync(new SubmitCode(element.Contents, element.KernelName));
+                var submitCode = new SubmitCode(element.Contents, element.KernelName);
+                if (parentCommand is not null)
+                {
+                    submitCode.SetParent(parentCommand);
+                }
+                await kernel.RootKernel.SendAsync(submitCode);
             }
         }
 
