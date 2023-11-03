@@ -10,7 +10,7 @@ public static class Vectors
     {
         var size = vectors.First().Length;
 
-        var accumulated = vectors.Aggregate((Enumerable.Repeat<float>(0f, size), 0), (acc, d) => (acc.Item1.Zip(d, (a, b) => a + b).ToArray(), acc.Item2 + 1));
+        var accumulated = vectors.Aggregate((Enumerable.Repeat(0f, size), 0), (acc, d) => (acc.Item1.Zip(d, (a, b) => a + b).ToArray(), acc.Item2 + 1));
 
         return accumulated.Item1.Select(e => e/ accumulated.Item2).ToArray();
     }
