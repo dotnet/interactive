@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 
+using System.Reactive.Linq;
+
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 public static class Vectors
@@ -17,5 +19,22 @@ public static class Vectors
         });
 
         return accumulated.Item1.Select(e => e/ accumulated.Item2).ToArray();
+    }
+
+    public static IObservable<float[]> Centroid(this IObservable<float[]> vectors, int vectorSize)
+    {
+        var acc = Enumerable.Repeat(0f, vectorSize).ToArray();
+        var sampled = 0;
+        return vectors.Select(vector =>
+        {
+            sampled++; 
+            acc = acc.Zip(vector, (a, v) =>
+            {
+                return ((a * (sampled - 1)) + v) / sampled;
+            }).ToArray();
+
+            return acc;
+
+        });
     }
 }
