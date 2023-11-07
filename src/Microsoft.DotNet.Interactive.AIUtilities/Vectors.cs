@@ -11,7 +11,7 @@ public static class Vectors
 {
     static Vectors()
     {
-        _logger = new Logger(typeof(Text).FullName);
+        _logger = new Logger(typeof(Vectors).FullName);
     }
 
     private static readonly Logger _logger;

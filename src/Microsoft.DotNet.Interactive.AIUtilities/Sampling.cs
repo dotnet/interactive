@@ -9,7 +9,7 @@ public static class Sampling
 {
     static Sampling()
     {
-        _logger = new Logger(typeof(Text).FullName);
+        _logger = new Logger(typeof(Sampling).FullName);
     }
 
     private static readonly Logger _logger;

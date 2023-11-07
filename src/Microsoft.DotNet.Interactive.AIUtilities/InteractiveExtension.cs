@@ -11,7 +11,7 @@ public static class InteractiveExtension
 {
     static InteractiveExtension()
     {
-        _logger = new Logger(typeof(Text).FullName);
+        _logger = new Logger(typeof(InteractiveExtension).FullName);
     }
 
     private static readonly Logger _logger;
