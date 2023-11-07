@@ -16,10 +16,17 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.DeepDev.TokenizerLib" Version="1.3.2" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
+    <PackageReference Include="PocketLogger" Version="0.8.2">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
     <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
   </ItemGroup>
 
 </Project>

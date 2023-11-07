@@ -29,7 +29,8 @@ public class RuntimeTelemetryTests : IDisposable
             {
                 new CSharpKernel().UseNugetDirective(false)
             }
-            .UseTelemetrySender(_telemetrySender);
+            .UseTelemetrySender(_telemetrySender)
+            .UseNuGetExtensions(_telemetrySender);
     }
 
     public void Dispose() => _kernel.Dispose();
@@ -163,5 +164,18 @@ telemetry
                         .Contain(
                             new KeyValuePair<string, string>("PackageName", "nodatime".ToSha256HashWithNormalizedCasing()),
                             new KeyValuePair<string, string>("PackageVersion", "3.1.9".ToSha256Hash()));
+    }
+
+    [Fact(Skip = "Package version with extension telemetry needs to be published.")]
+    public async Task Extensions_can_send_telemetry_using_PocketLogger()
+    {
+        var results = await _kernel.SendAsync(new SubmitCode("""
+            #i "nuget:c:\temp\packages"
+            #r "nuget:Microsoft.DotNet.Interactive.AIUtilities,*-*"
+            """));
+
+        results.Events.Should().NotContainErrors();
+        
+        _telemetrySender.TelemetryEvents.Should().Contain(e => e.EventName == "Microsoft.DotNet.Interactive.AIUtilities.LoadAsync");
     }
 }

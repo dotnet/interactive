@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
@@ -10,9 +11,6 @@ public static class InteractiveExtension
 {
     public static async Task LoadAsync()
     {
-
-      
-
-
+        Logger.Log.Event();
     }
 }

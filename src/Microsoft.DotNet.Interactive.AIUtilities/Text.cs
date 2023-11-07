@@ -31,7 +31,7 @@ public static class Text {
 
         return source.SelectMany(text =>
         {
-            return System.Reactive.Linq.Observable.Create<string>(o =>
+            return Observable.Create<string>(o =>
             {
                 var chunks = tokenizer.ChunkByTokenCountWithOverlap(text, maxTokenCount, overlapTokenCount);
                 foreach (var chunk in chunks)

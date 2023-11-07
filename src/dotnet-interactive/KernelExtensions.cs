@@ -47,8 +47,8 @@ public static class KernelExtensions
             var packageRoots = resolvedPackageReference
                 .Select(r => r.PackageRoot);
 
-
             k.AddAssemblyReferencesAndPackageRoots(resolvedAssemblies, packageRoots);
+
             return Task.CompletedTask;
         }, forceRestore);
 

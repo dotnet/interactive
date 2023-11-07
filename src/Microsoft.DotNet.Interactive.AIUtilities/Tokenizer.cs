@@ -1,11 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using Microsoft.DeepDev;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
-
 
 public static class Tokenizer
 {
@@ -18,6 +17,8 @@ public static class Tokenizer
 
     public static async Task<ITokenizer> CreateAsync(TokenizerModel model)
     {
+        Logger.Log.Event(properties: ("model", model));
+
         var tokenizer = model switch
         {
             TokenizerModel.ada2 => await TokenizerBuilder.CreateByModelNameAsync("text-embedding-ada-002"),
