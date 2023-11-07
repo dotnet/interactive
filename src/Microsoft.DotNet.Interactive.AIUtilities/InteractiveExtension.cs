@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.AIUtilities;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class InteractiveExtension
 {
-    public static async Task LoadAsync()
+    public static void Load()
     {
         Logger.Log.Event();
     }

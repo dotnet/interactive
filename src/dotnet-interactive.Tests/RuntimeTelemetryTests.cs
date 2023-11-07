@@ -176,6 +176,6 @@ telemetry
 
         results.Events.Should().NotContainErrors();
         
-        _telemetrySender.TelemetryEvents.Should().Contain(e => e.EventName == "Microsoft.DotNet.Interactive.AIUtilities.LoadAsync");
+        _telemetrySender.TelemetryEvents.Should().Contain(e => e.EventName == "Microsoft.DotNet.Interactive.AIUtilities.Load");
     }
 }
