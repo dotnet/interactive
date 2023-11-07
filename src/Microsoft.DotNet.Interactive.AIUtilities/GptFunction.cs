@@ -5,16 +5,12 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 public class GptFunction
 {
     private static readonly JsonSerializerOptions SerializerOptions;
-    public string Name { get; }
     private readonly Delegate _function;
-    public string JsonSignature { get; }
-    public string? Description { get; }
 
     static GptFunction()
     {
@@ -30,6 +26,10 @@ public class GptFunction
         JsonSignature = jsonSignature;
         Description = description;
     }
+
+    public string? Description { get; }
+    public string JsonSignature { get; }
+    public string Name { get; }
 
     public object? Execute(string parameterJson)
     {
@@ -52,6 +52,7 @@ public class GptFunction
 
         return Execute(json);
     }
+
     public object? Execute(JsonElement json)
     {
         // parameters extraction
@@ -70,8 +71,6 @@ public class GptFunction
         }
 
         return parameters;
-
-        throw new ArgumentException("arguments property is not found.");
     }
 
     private object? Deserialize(ParameterInfo parameterInfo, JsonElement jsonArgs)

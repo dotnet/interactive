@@ -62,7 +62,7 @@ internal partial class JupyterKernel : Kernel
         return kernelInfoReply;
     }
 
-    private async static Task<T> RunOnKernelAsync<T>(
+    private static async Task<T> RunOnKernelAsync<T>(
         RequestMessage content,
         IMessageSender sender,
         IMessageReceiver receiver,
