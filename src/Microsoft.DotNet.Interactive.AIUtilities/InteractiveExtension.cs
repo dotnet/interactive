@@ -9,8 +9,15 @@ namespace Microsoft.DotNet.Interactive.AIUtilities;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class InteractiveExtension
 {
+    static InteractiveExtension()
+    {
+        _logger = new Logger(typeof(Text).FullName);
+    }
+
+    private static readonly Logger _logger;
+
     public static void Load()
     {
-        Logger.Log.Event();
+        _logger.Event();
     }
 }
