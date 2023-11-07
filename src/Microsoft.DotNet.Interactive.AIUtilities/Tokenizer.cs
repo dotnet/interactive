@@ -31,6 +31,7 @@ public static class Tokenizer
 
     public static string TruncateByTokenCount(this ITokenizer tokenizer,  string text, int tokenCount)
     {
+        Logger.Log.Event();
         if (string.IsNullOrWhiteSpace(text))
         {
             return text;
@@ -42,6 +43,7 @@ public static class Tokenizer
 
     public static IEnumerable<string> ChunkWithOverlap(this string text, int maxChunkSize, int overlapSize)
     {
+        Logger.Log.Event();
         if (maxChunkSize <= overlapSize)
         {
             throw new ArgumentException($"Cannot be greater or equal to {nameof(maxChunkSize)}", nameof(overlapSize));
@@ -60,6 +62,7 @@ public static class Tokenizer
     public static IEnumerable<string> ChunkByTokenCount(this ITokenizer tokenizer, string text, int maxTokenCount,
         bool average = false)
     {
+
         return tokenizer.ChunkByTokenCountWithOverlap(text, maxTokenCount, 0,  average);
     }
 

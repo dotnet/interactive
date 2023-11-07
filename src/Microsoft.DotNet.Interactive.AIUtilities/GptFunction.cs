@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Pocket;
+
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -33,6 +35,7 @@ public class GptFunction
 
     public object? Execute(string parameterJson)
     {
+        Logger.Log.Event();
         // parameters extraction
         var json = JsonDocument.Parse(parameterJson).RootElement;
         if (json.TryGetProperty("arguments", out var args))
@@ -90,6 +93,7 @@ public class GptFunction
 
     public static GptFunction Create(string name, Delegate function, string? description = null, bool enumsAsString = false)
     {
+        Logger.Log.Event();
         return new GptFunction(name, CreateSignature(function, name, enumsAsString), function, description);
     }
 
