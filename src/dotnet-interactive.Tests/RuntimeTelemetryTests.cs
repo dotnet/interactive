@@ -166,7 +166,7 @@ telemetry
                             new KeyValuePair<string, string>("PackageVersion", "3.1.9".ToSha256Hash()));
     }
 
-    [Fact(Skip = "Package version with extension telemetry needs to be published.")]
+    [Fact(Skip = "requires package on internal feed")]
     public async Task Extensions_can_send_telemetry_using_PocketLogger()
     {
         var results = await _kernel.SendAsync(new SubmitCode("""
@@ -176,6 +176,6 @@ telemetry
 
         results.Events.Should().NotContainErrors();
         
-        _telemetrySender.TelemetryEvents.Should().Contain(e => e.EventName == "Microsoft.DotNet.Interactive.AIUtilities.Load");
+        _telemetrySender.TelemetryEvents.Should().Contain(e => e.EventName == "Microsoft.DotNet.Interactive.AIUtilities.InteractiveExtension.Load");
     }
 }

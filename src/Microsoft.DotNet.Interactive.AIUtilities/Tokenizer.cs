@@ -10,7 +10,7 @@ public static class Tokenizer
 {
     static Tokenizer()
     {
-        _logger = new Logger(typeof(Text).FullName);
+        _logger = new Logger(typeof(Tokenizer).FullName);
     }
 
     private static readonly Logger _logger;

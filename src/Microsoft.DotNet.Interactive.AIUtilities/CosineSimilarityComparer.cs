@@ -12,7 +12,7 @@ public class CosineSimilarityComparer<T> : ISimilarityComparer<T>
 
     static CosineSimilarityComparer()
     {
-        _logger = new Logger(typeof(Text).FullName);
+        _logger = new Logger(typeof(CosineSimilarityComparer<T>).FullName);
     }
 
     private static readonly Logger _logger;
