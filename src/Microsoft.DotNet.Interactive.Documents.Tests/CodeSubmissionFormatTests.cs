@@ -576,7 +576,9 @@ Console.Write(""hello"");
     [Fact]
     public void Input_tokens_are_parsed_from_dib_files()
     {
-        var dib = "#!value --from-file @input:filename --name myfile";
+        var dib = """
+          #!value --from-file @input:"Enter a filename" --name myfile
+          """;
 
         var document = CodeSubmission.Parse(dib);
 
@@ -586,7 +588,7 @@ Console.Write(""hello"");
                 .Which
                 .ValueName
                 .Should()
-                .Be("filename");
+                .Be("myfile");
     }
 
     [Fact]
@@ -620,6 +622,40 @@ Console.Write(""hello"");
                 .Which
                 .Should()
                 .BeEquivalentTo(new InputField("the-password", "password"));
+    }
+
+    [Fact]
+    public void When_using_set_magic_then_input_field_names_are_set_using_name_option()
+    {
+        var dib = """
+            #!set --name value_name --value @input:"This is the prompt" 
+            """;
+
+        var document = CodeSubmission.Parse(dib);
+
+        document.GetInputFields()
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .BeEquivalentTo(new InputField("value_name", "text"));
+    }
+    
+    [Fact]
+    public void When_using_set_magic_then_password_field_names_are_set_using_name_option()
+    {
+        var dib = """
+            #!set --name value_name --value @password:"This is the prompt" 
+            """;
+
+        var document = CodeSubmission.Parse(dib);
+
+        document.GetInputFields()
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .BeEquivalentTo(new InputField("value_name", "password"));
     }
 
     private async Task<string> RoundTripDib(string filePath)
