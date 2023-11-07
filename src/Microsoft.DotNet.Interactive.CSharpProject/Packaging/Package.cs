@@ -119,7 +119,7 @@ public abstract class Package :
         if (Directory.Exists)
         {
             var cacheFile = BuildCacheFileUtilities.FindCacheFile(Directory);
-            if (cacheFile != null)
+            if (cacheFile is not null)
             {
                 LoadDesignTimeBuildDataFromBuildCacheFile(this, cacheFile).Wait();
             }
@@ -142,16 +142,13 @@ public abstract class Package :
                 throw new InvalidOperationException("The cache file seems to contain no solutions or projects");
             }
 
-            if (result != null)
+            package.RoslynWorkspace = null;
+            package.DesignTimeBuildResult = result;
+            package.LastDesignTimeBuild = cacheFile.LastWriteTimeUtc;
+            if (result.Succeeded && !cacheFile.Name.EndsWith(BuildCacheFileUtilities.cacheFilenameSuffix))
             {
-                package.RoslynWorkspace = null;
-                package.DesignTimeBuildResult = result;
-                package.LastDesignTimeBuild = cacheFile.LastWriteTimeUtc;
-                if (result.Succeeded && !cacheFile.Name.EndsWith(BuildCacheFileUtilities.cacheFilenameSuffix))
-                {
-                    package.LastSuccessfulBuildTime = cacheFile.LastWriteTimeUtc;
-                    package.RoslynWorkspace = package.DesignTimeBuildResult.Workspace;
-                }
+                package.LastSuccessfulBuildTime = cacheFile.LastWriteTimeUtc;
+                package.RoslynWorkspace = package.DesignTimeBuildResult.Workspace;
             }
         }
     }
@@ -547,53 +544,49 @@ public abstract class Package :
 
     private protected BuildDataResults DesignTimeBuildResult { get; set; }
 
-    protected virtual bool ShouldDoFullBuild()
-    {
-        return LastSuccessfulBuildTime == null
-               || ShouldDoDesignTimeBuild()
-               || (LastDesignTimeBuild > LastSuccessfulBuildTime);
-    }
+    protected virtual bool ShouldDoFullBuild() =>
+        LastSuccessfulBuildTime is null ||
+        ShouldDoDesignTimeBuild() || 
+        LastDesignTimeBuild > LastSuccessfulBuildTime;
 
-    protected virtual bool ShouldDoDesignTimeBuild()
-    {
-        return DesignTimeBuildResult == null
-               || DesignTimeBuildResult.Succeeded == false;
-    }
+    protected virtual bool ShouldDoDesignTimeBuild() =>
+        DesignTimeBuildResult is null || 
+        DesignTimeBuildResult.Succeeded == false;
 
     private protected async Task<BuildDataResults> DesignTimeBuild()
     {
-        using (var operation = _log.OnEnterAndConfirmOnExit())
+        using var operation = _log.OnEnterAndConfirmOnExit();
+
+        BuildDataResults result;
+        var csProj = this.GetProjectFile();
+        var logWriter = new StringWriter();
+
+        using (await FileLock.TryCreateAsync(Directory))
         {
-            BuildDataResults result;
-            var csProj = this.GetProjectFile();
-            var logWriter = new StringWriter();
-
-            using (await FileLock.TryCreateAsync(Directory))
-            {
-                await BuildCacheFileUtilities.BuildAndCreateCacheFileAsync(csProj.FullName);
-                result = ResultsFromCacheFileUsingProjectFilePath(csProj.FullName);
-                var languageVersion = csProj.SuggestedLanguageVersion();
-                // TODO: analyzer.SetGlobalProperty("langVersion", languageVersion);
-            }
-
-            DesignTimeBuildResult = result;
-            LastDesignTimeBuild = DateTimeOffset.Now;
-            if (result.Succeeded == false)
-            {
-                var logData = logWriter.ToString();
-                File.WriteAllText(
-                    LastBuildErrorLogFile.FullName,
-                    string.Join(Environment.NewLine, "Design Time Build Error", logData));
-            }
-            else if (LastBuildErrorLogFile.Exists)
-            {
-                LastBuildErrorLogFile.Delete();
-            }
-
-            operation.Succeed();
-
-            return result;
+            await BuildCacheFileUtilities.BuildAndCreateCacheFileAsync(csProj.FullName);
+            result = ResultsFromCacheFileUsingProjectFilePath(csProj.FullName);
+            var languageVersion = csProj.SuggestedLanguageVersion();
+            // TODO: analyzer.SetGlobalProperty("langVersion", languageVersion);
         }
+
+        DesignTimeBuildResult = result;
+        LastDesignTimeBuild = DateTimeOffset.Now;
+
+        if (result?.Succeeded == false)
+        {
+            var logData = logWriter.ToString();
+            File.WriteAllText(
+                LastBuildErrorLogFile.FullName,
+                string.Join(Environment.NewLine, "Design Time Build Error", logData));
+        }
+        else if (LastBuildErrorLogFile.Exists)
+        {
+            LastBuildErrorLogFile.Delete();
+        }
+
+        operation.Succeed();
+
+        return result;
     }
 
     public virtual SyntaxTree GetInstrumentationEmitterSyntaxTree() =>
