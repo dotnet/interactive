@@ -10,15 +10,22 @@ public class CosineSimilarityComparer<T> : ISimilarityComparer<T>
 {
     private readonly Func<T, float[]> _toVector;
 
+    static CosineSimilarityComparer()
+    {
+        _logger = new Logger(typeof(Text).FullName);
+    }
+
+    private static readonly Logger _logger;
+
+
     public CosineSimilarityComparer(Func<T, float[]> toFloatVector)
     {
-        Logger.Log.Event();
         _toVector = toFloatVector ?? throw new ArgumentNullException(nameof(toFloatVector));
     }
 
     public float Score(T a, T b)
     {
-        Logger.Log.Event();
+        _logger.Event();
         var va = _toVector(a);
         var vb = _toVector(b);
         return CosineSimilarity(va, vb);

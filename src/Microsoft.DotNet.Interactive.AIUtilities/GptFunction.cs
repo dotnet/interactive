@@ -9,6 +9,8 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
+using Logger = Pocket.Logger<GptFunction>;
+
 public class GptFunction
 {
     private static readonly JsonSerializerOptions SerializerOptions;
@@ -58,6 +60,7 @@ public class GptFunction
 
     public object? Execute(JsonElement json)
     {
+        Logger.Log.Event();
         // parameters extraction
         var parameters = ExtractParameters(json);
         return _function.DynamicInvoke(parameters);
@@ -125,16 +128,16 @@ public class GptFunction
 
         Dictionary<string, object> GetParameters(ParameterInfo[] parameterInfos)
         {
-            var signature = new Dictionary<string, object>();
+            var s = new Dictionary<string, object>();
 
             foreach (var parameterInfo in parameterInfos)
             {
                 var parameter = GetType(parameterInfo.ParameterType);
 
-                signature[parameterInfo.Name!] = parameter;
+                s[parameterInfo.Name!] = parameter;
             }
 
-            return signature;
+            return s;
         }
 
         static string GetTypeName(Type type)

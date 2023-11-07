@@ -9,9 +9,16 @@ namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 public static class Vectors
 {
+    static Vectors()
+    {
+        _logger = new Logger(typeof(Text).FullName);
+    }
+
+    private static readonly Logger _logger;
+
     public static float[] Centroid(this IEnumerable<float[]> vectors, Func<float[], float>? weight = null)
     {
-        Logger.Log.Event();
+        _logger.Event();
         var size = vectors.First().Length;
 
         var accumulated = vectors.Aggregate((Enumerable.Repeat(0f, size), 0), (acc, d) =>
@@ -25,7 +32,7 @@ public static class Vectors
 
     public static IObservable<float[]> Centroid(this IObservable<float[]> vectors, int vectorSize)
     {
-        Logger.Log.Event();
+        _logger.Event();
         var acc = Enumerable.Repeat(0f, vectorSize).ToArray();
         var sampled = 0;
         return vectors.Select(vector =>
