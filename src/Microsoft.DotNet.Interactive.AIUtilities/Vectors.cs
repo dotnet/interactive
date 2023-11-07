@@ -3,6 +3,7 @@
 
 
 using System.Reactive.Linq;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
@@ -10,6 +11,7 @@ public static class Vectors
 {
     public static float[] Centroid(this IEnumerable<float[]> vectors, Func<float[], float>? weight = null)
     {
+        Logger.Log.Event();
         var size = vectors.First().Length;
 
         var accumulated = vectors.Aggregate((Enumerable.Repeat(0f, size), 0), (acc, d) =>
@@ -23,15 +25,13 @@ public static class Vectors
 
     public static IObservable<float[]> Centroid(this IObservable<float[]> vectors, int vectorSize)
     {
+        Logger.Log.Event();
         var acc = Enumerable.Repeat(0f, vectorSize).ToArray();
         var sampled = 0;
         return vectors.Select(vector =>
         {
             sampled++; 
-            acc = acc.Zip(vector, (a, v) =>
-            {
-                return ((a * (sampled - 1)) + v) / sampled;
-            }).ToArray();
+            acc = acc.Zip(vector, (a, v) => ((a * (sampled - 1)) + v) / sampled).ToArray();
 
             return acc;
 

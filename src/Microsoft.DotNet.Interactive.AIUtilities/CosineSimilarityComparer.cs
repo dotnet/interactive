@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 
+using Pocket;
+
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
 public class CosineSimilarityComparer<T> : ISimilarityComparer<T>
@@ -10,11 +12,13 @@ public class CosineSimilarityComparer<T> : ISimilarityComparer<T>
 
     public CosineSimilarityComparer(Func<T, float[]> toFloatVector)
     {
+        Logger.Log.Event();
         _toVector = toFloatVector ?? throw new ArgumentNullException(nameof(toFloatVector));
     }
 
     public float Score(T a, T b)
     {
+        Logger.Log.Event();
         var va = _toVector(a);
         var vb = _toVector(b);
         return CosineSimilarity(va, vb);
