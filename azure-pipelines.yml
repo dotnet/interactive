@@ -125,7 +125,7 @@ stages:
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           - group: DotNet-Symbol-Server-Pats
           - name: _SignType
-            value: Real
+            value: Realb
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
                    /p:DotNetSignType=$(_SignType)
