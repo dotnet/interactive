@@ -5,10 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.DotNet.PlatformAbstractions;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Telemetry;
 
@@ -179,4 +181,33 @@ public class TelemetrySender
 
     public void CreateFirstTimeUseNoticeSentinelIfNotExists() => 
         _firstTimeUseNoticeSentinel.CreateIfNotExists();
+
+    public IDisposable SubscribeToPocketLogger(
+        Assembly assembly)
+    {
+        var logSubscription = LogEvents.Subscribe(
+            e =>
+            {
+                var eventName = $"{e.Category}.{e.OperationName}";
+
+                Dictionary<string, string> properties = null;
+
+                if (e.Properties is { } props)
+                {
+                    properties = new();
+
+                    foreach (var tuple in props)
+                    {
+                        properties.TryAdd(tuple.Name, tuple.Value?.ToString());
+                    }
+                }
+
+                TrackEvent(
+                    eventName,
+                    properties
+                );
+            },
+            new[] { assembly });
+        return logSubscription;
+    }
 }

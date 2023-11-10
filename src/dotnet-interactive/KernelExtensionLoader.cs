@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
@@ -46,29 +47,7 @@ public static class KernelExtensionLoader
                         {
                             var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(resolved.AssemblyPaths[0]);
 
-                            var logSubscription = LogEvents.Subscribe(
-                                e =>
-                                {
-                                    var eventName = resolved.PackageName + "." + e.OperationName;
-
-                                    Dictionary<string, string> properties = null;
-
-                                    if (e.Properties is { } props)
-                                    {
-                                        properties = new();
-
-                                        foreach (var tuple in props)
-                                        {
-                                            properties.TryAdd(tuple.Name, tuple.Value?.ToString());
-                                        }
-                                    }
-
-                                    telemetrySender.TrackEvent(
-                                        eventName,
-                                        properties
-                                    );
-                                },
-                                new[] { assembly });
+                            var logSubscription = telemetrySender.SubscribeToPocketLogger(assembly);
 
                             kernel.RegisterForDisposal(logSubscription);
                         }
