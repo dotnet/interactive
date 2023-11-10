@@ -88,6 +88,18 @@ internal class HttpRequestNode : HttpSyntaxNode
 
     public HttpBindingResult<HttpRequestMessage> TryGetHttpRequestMessage(HttpBindingDelegate bind)
     {
+        var declaredVariables = SyntaxTree?.RootNode.GetDeclaredVariables();
+        if (declaredVariables?.Count > 0)
+        {
+            bind = node =>
+            {
+                if (declaredVariables.TryGetValue(node.Text, out var declaredValue))
+                {
+                    return HttpBindingResult<object>.Success(declaredValue.Value);
+                }
+                else { return bind(node); }
+            };
+        }
         var request = new HttpRequestMessage();
         var diagnostics = new List<Diagnostic>(base.GetDiagnostics());
 

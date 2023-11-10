@@ -1,9 +1,11 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
+using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -166,6 +168,32 @@ public partial class ParserTests
 
             var variableDeclarationNode = declarationNodes.Select(v => v.VariableName).Should()
                 .BeEquivalentSequenceTo(new[] { "hostname", "host" });
+        }
+
+        [Fact]
+        public void declared_variables_can_be_used_for_binding()
+        {
+            var result = Parse(
+                """
+                @hostname=httpbin.org
+                """);
+
+            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            variables.Should().ContainSingle().Which.Value.Value.Should().Be("httpbin.org");
+        }
+
+        [Fact]
+        public void declared_variables_using_another_variable_can_be_resolved()
+        {
+            var result = Parse(
+                """
+                @hostname=httpbin.org
+                @host=https://{{hostname}}
+                """);
+
+            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
+
         }
     }
 }
