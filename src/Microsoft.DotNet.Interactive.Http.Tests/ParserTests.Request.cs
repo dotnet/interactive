@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using System.Net.Http;
 using FluentAssertions;
@@ -126,6 +127,37 @@ public partial class ParserTests
 
             bindingResult.IsSuccessful.Should().BeFalse();
             bindingResult.Diagnostics.Should().ContainSingle().Which.GetMessage().Should().Be(message);
+        }
+
+        [Fact]
+        public void binding_for_variable_using_another_variable_is_correct()
+        {
+            var result = Parse(
+                """             
+                @hostname = httpbin.org
+                @host = https://{{hostname}}                     
+
+                POST {{host}}/anything HTTP/1.1
+                content-type: application/json
+
+                {
+                    "name": "sample1",
+                }
+
+                
+                """
+                );
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes
+                                    .Should().ContainSingle<HttpRequestNode>().Which;
+
+            var bindingResult = requestNode.TryGetHttpRequestMessage(node =>
+            {
+                return node.CreateBindingFailure(CreateDiagnosticInfo(""));
+            });
+
+            bindingResult.IsSuccessful.Should().BeTrue();
+            bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/anything");
         }
     }
 }
