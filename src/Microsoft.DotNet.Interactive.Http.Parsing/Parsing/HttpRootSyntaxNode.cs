@@ -31,8 +31,6 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
         AddInternal(separatorNode);
     }
 
-    public HttpBindingDelegate HttpBindingDelegate { get; set; }
-
     public Dictionary<string, DeclaredVariable> GetDeclaredVariables()
     {
 
@@ -55,7 +53,7 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                 {
                     var value = node.ValueNode.TryGetValue(node =>
                     {
-                        if (foundVariableValues.TryGetValue(node.Text, out string strinValue))
+                        if (foundVariableValues.TryGetValue(node.Text, out string? strinValue))
                         {
                             return node.CreateBindingSuccess(strinValue);
                         }
@@ -65,7 +63,12 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                         }
 
                     });
-                    declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode?.VariableName, value.Value, value);
+
+                    if (value is not null && value.Value is not null)
+                    {
+                        declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
+                    }
+                    
                 }
             }
         }

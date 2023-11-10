@@ -95,7 +95,7 @@ internal class HttpRequestNode : HttpSyntaxNode
             {
                 if (declaredVariables.TryGetValue(node.Text, out var declaredValue))
                 {
-                    return HttpBindingResult<object>.Success(declaredValue.Value);
+                    return HttpBindingResult<object?>.Success(declaredValue.Value);
                 }
                 else { return bind(node); }
             };
