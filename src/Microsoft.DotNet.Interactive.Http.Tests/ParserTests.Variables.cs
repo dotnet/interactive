@@ -108,8 +108,7 @@ public partial class ParserTests
             var variableNodes = result.SyntaxTree.RootNode.DescendantNodesAndTokens()
                                        .OfType<HttpVariableDeclarationAndAssignmentNode>();
 
-
-            var variableDeclarationNode = variableNodes.Select(v => v.DeclarationNode.VariableName).Should()
+            variableNodes.Select(v => v.DeclarationNode.VariableName).Should()
                 .BeEquivalentSequenceTo(new[] { "hostname", "host" });
 
             variableNodes.Select(e => e.ValueNode.Text).Should().BeEquivalentSequenceTo(new[] { "httpbin.org", "https://{{hostname}}/" });

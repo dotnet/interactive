@@ -1611,7 +1611,9 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     {
         var ipynbJson = new InteractiveDocument
         {
-            new("#!value --from-file @input:filename --name myfile")
+            new("""
+                #!value --from-file @input:"Enter a filename" --name myfile
+                """)
         }.ToJupyterJson();
 
         var document = Notebook.Parse(ipynbJson);
@@ -1622,7 +1624,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .Which
                 .ValueName
                 .Should()
-                .Be("filename");
+                .Be("myfile");
     }
 
     private async Task<string> RoundTripIpynb(string filePath)
