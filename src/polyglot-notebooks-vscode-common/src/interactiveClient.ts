@@ -180,11 +180,12 @@ export class InteractiveClient {
                             break;
                         case CommandFailedType:
                             {
-                                const err = <CommandFailed>eventEnvelope.event;
-                                const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
-                                outputReporter(errorOutput);
-                                failureReported = true;
                                 if (eventEnvelope.command?.getToken() === commandToken) {
+                                    const err = <CommandFailed>eventEnvelope.event;
+                                    const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
+                                    outputReporter(errorOutput);
+                                    failureReported = true;
+
                                     // only complete this promise if it's the root command
                                     reject(err);
                                 }
