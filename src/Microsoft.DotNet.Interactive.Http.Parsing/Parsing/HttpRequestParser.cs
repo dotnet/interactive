@@ -433,6 +433,11 @@ internal class HttpRequestParser
 
                         ParseLeadingWhitespaceAndComments(node);
                     }
+                    else if (IsAtStartOfEmbeddedExpression())
+                    {
+                        node = new HttpUrlNode(_sourceText, _syntaxTree);
+                        node.Add(ParseEmbeddedExpression());
+                    }
                     else
                     {
                         break;

@@ -5,33 +5,36 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.DotNet.PlatformAbstractions;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Telemetry;
 
-public class TelemetrySender : ITelemetrySender
+public class TelemetrySender
 {
     private readonly IFirstTimeUseNoticeSentinel _firstTimeUseNoticeSentinel;
     private readonly string _eventsNamespace;
-    private readonly string _appInsightsConnectionString;
-    private readonly string _currentSessionId = null;
     private TelemetryClient _client = null;
     private Dictionary<string, string> _commonProperties = null;
     private Dictionary<string, double> _commonMetrics = null;
     private Task _trackEventTask = null;
+    private readonly bool _enabled;
 
-    private const string DefaultAppInsightsConnectionString = @"InstrumentationKey=b0dafad5-1430-4852-bc61-95c836b3e612;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/";
+    private const string DefaultAppInsightsConnectionString = "InstrumentationKey=b0dafad5-1430-4852-bc61-95c836b3e612;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/";
     public const string TelemetryOptOutEnvironmentVariableName = "DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT";
 
-    public const string WelcomeMessage = @"Welcome to .NET Interactive!
----------------------
-Telemetry
----------
-The .NET Core tools collect usage data in order to help us improve your experience.The data is anonymous and doesn't include command-line arguments. The data is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
-";
+    public const string WelcomeMessage = $"""
+        Welcome to .NET Interactive!
+        ---------------------
+        Telemetry
+        ---------
+        The .NET tools collect usage data in order to help us improve your experience. The data is anonymous and doesn't include command-line arguments. The data is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the {TelemetryOptOutEnvironmentVariableName} environment variable to '1' or 'true' using your favorite shell.
+
+        """;
 
     public TelemetrySender(
         string productVersion,
@@ -46,47 +49,58 @@ The .NET Core tools collect usage data in order to help us improve your experien
 
         _firstTimeUseNoticeSentinel = firstTimeUseNoticeSentinel ?? throw new ArgumentNullException(nameof(firstTimeUseNoticeSentinel));
         _eventsNamespace = eventsNamespace;
-        _appInsightsConnectionString = appInsightsConnectionString ?? DefaultAppInsightsConnectionString;
+        var s = appInsightsConnectionString ?? DefaultAppInsightsConnectionString;
 
-        Enabled = !GetEnvironmentVariableAsBool(TelemetryOptOutEnvironmentVariableName) &&
-                  firstTimeUseNoticeSentinel.Exists();
+        _enabled = !GetEnvironmentVariableAsBool(TelemetryOptOutEnvironmentVariableName) &&
+                   firstTimeUseNoticeSentinel.Exists();
 
-        if (Enabled)
+        if (_enabled)
         {
-            // Store the session ID in a static field so that it can be reused
-            _currentSessionId = Guid.NewGuid().ToString();
-
             //initialize in task to offload to parallel thread
-            _trackEventTask = Task.Factory.StartNew(() => InitializeTelemetry(productVersion));
+            _trackEventTask = Task.Factory.StartNew(Initialize);
+        }
+
+        void Initialize()
+        {
+            try
+            {
+                var config = new TelemetryConfiguration();
+                config.ConnectionString = s;
+                _client = new TelemetryClient(config);
+                _client.Context.Session.Id = Guid.NewGuid().ToString();
+                _client.Context.Device.OperatingSystem = RuntimeEnvironment.OperatingSystem;
+
+                _commonProperties = new TelemetryCommonProperties(productVersion).GetTelemetryCommonProperties();
+                _commonMetrics = new Dictionary<string, double>();
+            }
+            catch (Exception e)
+            {
+                _client = null;
+                // we don't want to fail the tool if telemetry fails.
+                Debug.Fail(e.ToString());
+            }
         }
     }
-
-    public bool Enabled { get; }
 
     public static bool SkipFirstTimeExperience => GetEnvironmentVariableAsBool(FirstTimeUseNoticeSentinel.SkipFirstTimeExperienceEnvironmentVariableName);
 
     public static bool IsRunningInDockerContainer => GetEnvironmentVariableAsBool("DOTNET_RUNNING_IN_CONTAINER");
 
-    private static bool GetEnvironmentVariableAsBool(string name)
-    {
-        switch (Environment.GetEnvironmentVariable(name)?.ToLowerInvariant())
+    private static bool GetEnvironmentVariableAsBool(string name) =>
+        Environment.GetEnvironmentVariable(name)?.ToLowerInvariant() switch
         {
-            case "true":
-            case "1":
-            case "yes":
-                return true;
-
-            default:
-                return false;
-        }
-    }
+            "true" => true,
+            "1" => true,
+            "yes" => true,
+            _ => false
+        };
 
     public void TrackEvent(
         string eventName,
         IDictionary<string, string> properties = null,
         IDictionary<string, double> measurements = null)
     {
-        if (!Enabled)
+        if (!_enabled)
         {
             return;
         }
@@ -100,35 +114,9 @@ The .NET Core tools collect usage data in order to help us improve your experien
 
     public void TrackStartupEvent(ParseResult parseResult, StartupTelemetryEventBuilder eventBuilder)
     {
-        if (parseResult is null || !Enabled || eventBuilder is null)
-        {
-            return;
-        }
-
         foreach (var entry in eventBuilder.GetTelemetryEventsFrom(parseResult))
         {
             TrackEvent(entry.EventName, entry.Properties, entry.Metrics);
-        }
-    }
-
-    protected virtual void InitializeTelemetry(string productVersion)
-    {
-        try
-        {
-            var config = new TelemetryConfiguration();
-            config.ConnectionString = _appInsightsConnectionString;
-            _client = new TelemetryClient(config);
-            _client.Context.Session.Id = _currentSessionId;
-            _client.Context.Device.OperatingSystem = RuntimeEnvironment.OperatingSystem;
-
-            _commonProperties = new TelemetryCommonProperties(productVersion).GetTelemetryCommonProperties();
-            _commonMetrics = new Dictionary<string, double>();
-        }
-        catch (Exception e)
-        {
-            _client = null;
-            // we don't want to fail the tool if telemetry fails.
-            Debug.Fail(e.ToString());
         }
     }
 
@@ -193,4 +181,33 @@ The .NET Core tools collect usage data in order to help us improve your experien
 
     public void CreateFirstTimeUseNoticeSentinelIfNotExists() => 
         _firstTimeUseNoticeSentinel.CreateIfNotExists();
+
+    public IDisposable SubscribeToPocketLogger(
+        Assembly assembly)
+    {
+        var logSubscription = LogEvents.Subscribe(
+            e =>
+            {
+                var eventName = $"{e.Category}.{e.OperationName}";
+
+                Dictionary<string, string> properties = null;
+
+                if (e.Properties is { } props)
+                {
+                    properties = new();
+
+                    foreach (var tuple in props)
+                    {
+                        properties.TryAdd(tuple.Name, tuple.Value?.ToString());
+                    }
+                }
+
+                TrackEvent(
+                    eventName,
+                    properties
+                );
+            },
+            new[] { assembly });
+        return logSubscription;
+    }
 }

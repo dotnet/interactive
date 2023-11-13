@@ -3,6 +3,7 @@
 
 #nullable enable
 
+using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -136,7 +136,7 @@ public static class CommandLineParser
         rootCommand.AddCommand(StdIO());
         rootCommand.AddCommand(NotebookParser());
 
-        var filter = new StartupTelemetryEventBuilder(Sha256Hasher.ToSha256HashWithNormalizedCasing);
+        var eventBuilder = new StartupTelemetryEventBuilder(Sha256Hasher.ToSha256HashWithNormalizedCasing);
 
         return new CommandLineBuilder(rootCommand)
             .UseDefaults()
@@ -145,7 +145,7 @@ public static class CommandLineParser
             {
                 if (context.ParseResult.Errors.Count == 0)
                 {
-                    telemetrySender.TrackStartupEvent(context.ParseResult, filter);
+                    telemetrySender.TrackStartupEvent(context.ParseResult, eventBuilder);
                 }
 
                 // If sentinel does not exist, print the welcome message showing the telemetry notification.
@@ -505,7 +505,7 @@ public static class CommandLineParser
             .UseDefaultMagicCommands()
             .UseAboutMagicCommand()
             .UseImportMagicCommand()
-            .UseNuGetExtensions();
+            .UseNuGetExtensions(telemetrySender);
 
         kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());

@@ -46,8 +46,8 @@ public class InteractiveDocument : IEnumerable
 
     private static Parser? _inputFieldsParser;
     private static Option<string>? _valueNameOption;
-    private static Option<string[]>? _discoveredInputName;
-    private static Option<string[]>? _discoveredPasswordName;
+    private static Option<string[]>? _discoveredInputPrompts;
+    private static Option<string[]>? _discoveredPasswordPrompts;
 
     private IDictionary<string, object>? _metadata;
 
@@ -121,19 +121,21 @@ public class InteractiveDocument : IEnumerable
             var inputFields = new List<InputField>();
             var result = _inputFieldsParser!.Parse(line);
 
-            if (result.GetValueForOption(_discoveredInputName!) is { } inputNames)
+            var nameOptionValue = result.GetValueForOption(_valueNameOption!);
+
+            if (result.GetValueForOption(_discoveredInputPrompts!) is { } inputNames)
             {
                 foreach (var inputName in inputNames.Distinct())
                 {
-                    inputFields.Add(new InputField(inputName, "text"));
+                    inputFields.Add(new InputField(nameOptionValue ?? inputName, "text"));
                 }
             }
 
-            if (result.GetValueForOption(_discoveredPasswordName!) is { } passwordNames)
+            if (result.GetValueForOption(_discoveredPasswordPrompts!) is { } passwordNames)
             {
                 foreach (var passwordName in passwordNames.Distinct())
                 {
-                    inputFields.Add(new InputField(passwordName, "password"));
+                    inputFields.Add(new InputField(nameOptionValue ?? passwordName, "password"));
                 }
             }
 
@@ -394,29 +396,35 @@ public class InteractiveDocument : IEnumerable
         {
             _valueNameOption
         };
+        
+        var setCommand = new Command("#!set")
+        {
+            _valueNameOption
+        };
 
         var rootCommand = new RootCommand
         {
+            setCommand,
             valueCommand
         };
 
-        _discoveredInputName = new Option<string[]>("--discovered-input-name");
-        _discoveredPasswordName = new Option<string[]>("--discovered-password-name");
-        rootCommand.AddGlobalOption(_discoveredInputName);
-        rootCommand.AddGlobalOption(_discoveredPasswordName);
+        _discoveredInputPrompts = new Option<string[]>("--discovered-input-name");
+        _discoveredPasswordPrompts = new Option<string[]>("--discovered-password-name");
+        rootCommand.AddGlobalOption(_discoveredInputPrompts);
+        rootCommand.AddGlobalOption(_discoveredPasswordPrompts);
 
         _inputFieldsParser = new CommandLineBuilder(rootCommand)
                              .UseTokenReplacer((string replace, out IReadOnlyList<string>? tokens, out string? message) =>
                              {
                                  if (replace.StartsWith("input:"))
                                  {
-                                     tokens = new[] { _discoveredInputName.Aliases.First(), replace.Split(':')[1] };
+                                     tokens = new[] { _discoveredInputPrompts.Aliases.First(), replace.Split(':')[1] };
                                      message = null;
                                      return true;
                                  }
                                  else if (replace.StartsWith("password:"))
                                  {
-                                     tokens = new[] { _discoveredPasswordName.Aliases.First(), replace.Split(':')[1] };
+                                     tokens = new[] { _discoveredPasswordPrompts.Aliases.First(), replace.Split(':')[1] };
                                      message = null;
                                      return true;
                                  }

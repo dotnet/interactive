@@ -130,7 +130,6 @@ stages:
             value: /p:SignType=$(_SignType)
                    /p:DotNetSignType=$(_SignType)
                    /p:MicroBuild_SigningEnabled=true
-                   /p:OverridePackageSource=https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
                    /p:TeamName=$(_TeamName)
                    /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
                    /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
@@ -286,7 +285,6 @@ stages:
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
               /p:DotNetSignType=$(_SignType)
-              /p:OverridePackageSource=https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
               /p:TeamName=$(_TeamName)
               /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
         # else

@@ -4,6 +4,9 @@
 #nullable enable
 
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -26,5 +29,49 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
     public void Add(HttpRequestSeparatorNode separatorNode)
     {
         AddInternal(separatorNode);
+    }
+
+    public Dictionary<string, DeclaredVariable> GetDeclaredVariables()
+    {
+
+        var variableAndDeclarationNodes = ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
+
+        var foundVariableValues = new Dictionary<string, string>();
+        var declaredVariables = new Dictionary<string, DeclaredVariable>();
+
+        foreach (var node in variableAndDeclarationNodes)
+        {
+            if (node.ValueNode is not null && node.DeclarationNode is not null)
+            {
+                var embeddedExpressionNodes = node.ValueNode.ChildNodes.OfType<HttpEmbeddedExpressionNode>();
+                if (!embeddedExpressionNodes.Any())
+                {
+                    foundVariableValues.Add(node.DeclarationNode.VariableName, node.ValueNode.Text);
+                    declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, node.ValueNode.Text, HttpBindingResult<string>.Success(Text));
+                }
+                else
+                {
+                    var value = node.ValueNode.TryGetValue(node =>
+                    {
+                        if (foundVariableValues.TryGetValue(node.Text, out string? strinValue))
+                        {
+                            return node.CreateBindingSuccess(strinValue);
+                        }
+                        else
+                        {
+                            return node.CreateBindingFailure(new HttpDiagnosticInfo("1", "invalid variable", CodeAnalysis.DiagnosticSeverity.Error));
+                        }
+
+                    });
+
+                    if (value is not null && value.Value is not null)
+                    {
+                        declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
+                    }
+                    
+                }
+            }
+        }
+        return declaredVariables;
     }
 }

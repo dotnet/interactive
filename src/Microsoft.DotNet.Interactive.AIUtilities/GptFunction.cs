@@ -1,20 +1,20 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Pocket;
+
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-
 namespace Microsoft.DotNet.Interactive.AIUtilities;
+
+using Logger = Pocket.Logger<GptFunction>;
 
 public class GptFunction
 {
     private static readonly JsonSerializerOptions SerializerOptions;
-    public string Name { get; }
     private readonly Delegate _function;
-    public string JsonSignature { get; }
-    public string? Description { get; }
 
     static GptFunction()
     {
@@ -31,8 +31,13 @@ public class GptFunction
         Description = description;
     }
 
+    public string? Description { get; }
+    public string JsonSignature { get; }
+    public string Name { get; }
+
     public object? Execute(string parameterJson)
     {
+        Logger.Log.Event();
         // parameters extraction
         var json = JsonDocument.Parse(parameterJson).RootElement;
         if (json.TryGetProperty("arguments", out var args))
@@ -52,8 +57,10 @@ public class GptFunction
 
         return Execute(json);
     }
+
     public object? Execute(JsonElement json)
     {
+        Logger.Log.Event();
         // parameters extraction
         var parameters = ExtractParameters(json);
         return _function.DynamicInvoke(parameters);
@@ -70,8 +77,6 @@ public class GptFunction
         }
 
         return parameters;
-
-        throw new ArgumentException("arguments property is not found.");
     }
 
     private object? Deserialize(ParameterInfo parameterInfo, JsonElement jsonArgs)
@@ -91,6 +96,7 @@ public class GptFunction
 
     public static GptFunction Create(string name, Delegate function, string? description = null, bool enumsAsString = false)
     {
+        Logger.Log.Event();
         return new GptFunction(name, CreateSignature(function, name, enumsAsString), function, description);
     }
 
@@ -122,16 +128,16 @@ public class GptFunction
 
         Dictionary<string, object> GetParameters(ParameterInfo[] parameterInfos)
         {
-            var signature = new Dictionary<string, object>();
+            var s = new Dictionary<string, object>();
 
             foreach (var parameterInfo in parameterInfos)
             {
                 var parameter = GetType(parameterInfo.ParameterType);
 
-                signature[parameterInfo.Name!] = parameter;
+                s[parameterInfo.Name!] = parameter;
             }
 
-            return signature;
+            return s;
         }
 
         static string GetTypeName(Type type)

@@ -1,35 +1,44 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using Microsoft.DeepDev;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.AIUtilities;
 
-
 public static class Tokenizer
 {
+    static Tokenizer()
+    {
+        _logger = new Logger(typeof(Tokenizer).FullName);
+    }
+
+    private static readonly Logger _logger;
+
     public static int GetTokenCount(this ITokenizer tokenizer, string text)
     {
+        _logger.Event();
         var encoded = tokenizer.Encode(text, Array.Empty<string>()).ToArray();
-
         return encoded.Length;
     }
 
     public static async Task<ITokenizer> CreateAsync(TokenizerModel model)
     {
+        _logger.Event(properties: ("model", model));
+
         var tokenizer = model switch
         {
             TokenizerModel.ada2 => await TokenizerBuilder.CreateByModelNameAsync("text-embedding-ada-002"),
             TokenizerModel.gpt35 => await TokenizerBuilder.CreateByModelNameAsync("gpt-3.5-turbo"),
             TokenizerModel.gpt4 => await TokenizerBuilder.CreateByModelNameAsync("gpt4"),
-            _ => throw new NotSupportedException()
+            _ => throw new ArgumentOutOfRangeException($"{model}")
         };
         return tokenizer;
     }
 
     public static string TruncateByTokenCount(this ITokenizer tokenizer,  string text, int tokenCount)
     {
+        _logger.Event();
         if (string.IsNullOrWhiteSpace(text))
         {
             return text;
@@ -41,6 +50,7 @@ public static class Tokenizer
 
     public static IEnumerable<string> ChunkWithOverlap(this string text, int maxChunkSize, int overlapSize)
     {
+        _logger.Event();
         if (maxChunkSize <= overlapSize)
         {
             throw new ArgumentException($"Cannot be greater or equal to {nameof(maxChunkSize)}", nameof(overlapSize));
@@ -65,9 +75,11 @@ public static class Tokenizer
     public static IEnumerable<string> ChunkByTokenCountWithOverlap(this ITokenizer tokenizer, string text, int maxTokenCount,
         int overlapTokenCount,  bool average = false)
     {
+        _logger.Event();
+
         if (maxTokenCount <= overlapTokenCount)
         {
-            throw new ArgumentException($"Cannot be greater or equal to {nameof(maxTokenCount)}",
+            throw new ArgumentException($"Cannot be greater or equal to {maxTokenCount}",
                 nameof(overlapTokenCount));
         }
 
