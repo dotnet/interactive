@@ -300,7 +300,7 @@ Microsoft.DotNet.Interactive.Formatting.TabularData
     public System.String Format { get;}
     public System.String Name { get;}
     public TableSchemaFieldType Type { get;}
-  public enum TableSchemaFieldType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum TableSchemaFieldType : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Any=0
     Object=1
     Null=2
