@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive.AIUtilities</PackageId>
   </PropertyGroup>
@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.DeepDev.TokenizerLib" Version="1.3.2" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
+    <PackageReference Include="System.Text.Json" Version="7.0.0" />
     <PackageReference Include="PocketLogger" Version="0.8.2">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
