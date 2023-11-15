@@ -1,0 +1,778 @@
+{
+  "name": "dotnet-interactive-vscode",
+  "displayName": "Polyglot Notebooks",
+  "description": "Polyglot Notebooks for VS Code. Use multiple languages in one notebook with full language server support for each language and share variables between them.",
+  "icon": "images/icon.png",
+  "publisher": "ms-dotnettools",
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "enabledApiProposals": [
+    "notebookMessaging"
+  ],
+  "preview": true,
+  "//version": "The version '42.42.42' is auto-set during CI package creation.",
+  "version": "42.42.42",
+  "engines": {
+    "vscode": "1.76.0-insider"
+  },
+  "bugs": {
+    "url": "https://github.com/dotnet/interactive/issues"
+  },
+  "repository": {
+    "url": "https://github.com/dotnet/interactive"
+  },
+  "categories": [
+    "Data Science",
+    "Machine Learning",
+    "Notebooks",
+    "Visualization"
+  ],
+  "keywords": [
+    ".NET",
+    "interactive",
+    "C#",
+    "data science",
+    "dotnet",
+    "F#",
+    "ipynb",
+    "Jupyter",
+    "notebooks",
+    "PowerShell"
+  ],
+  "activationEvents": [
+    "onUri",
+    "onNotebook:dotnet-interactive",
+    "onNotebook:dotnet-interactive-window",
+    "onNotebook:jupyter-notebook",
+    "onNotebook:polyglot-notebook",
+    "onNotebook:polyglot-notebook-window",
+    "onNotebook:jupyter-notebook",
+    "onCommand:dotnet-interactive.acquire",
+    "onCommand:polyglot-notebook.newNotebook",
+    "onCommand:polyglot-notebook.openNotebook",
+    "onCommand:polyglot-notebook.saveAsNotebook",
+    "onView:polyglot-notebook-panel-values"
+  ],
+  "main": "./out/src/vscode-common/extension.js",
+  "extensionDependencies": [
+    "ms-toolsai.jupyter"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Execution of cells in Interactive Window and Notebooks is not supported in untrusted workspaces."
+    },
+    "virtualWorkspaces": true
+  },
+  "contributes": {
+    "notebooks": [
+      {
+        "type": "polyglot-notebook",
+        "displayName": "Polyglot Notebook",
+        "selector": [
+          {
+            "filenamePattern": "*.dib"
+          }
+        ]
+      },
+      {
+        "type": "polyglot-nortebook-window",
+        "displayName": "Polyglot Notebook",
+        "selector": []
+      }
+    ],
+    "jupyter.kernels": [
+      {
+        "title": ".NET Interactive (C#)",
+        "defaultlanguage": "polyglot-notebook"
+      },
+      {
+        "title": ".NET Interactive (F#)",
+        "defaultlanguage": "polyglot-notebook"
+      },
+      {
+        "title": ".NET Interactive (PowerShell)",
+        "defaultlanguage": "polyglot-notebook"
+      }
+    ],
+    "configuration": {
+      "title": "Polyglot Notebook",
+      "properties": {
+        "polyglot-notebook.kernelEnvironmentVariables": {
+          "type": "object",
+          "default": {},
+          "description": "Environment variables to set when starting a notebook session."
+        },
+        "polyglot-notebook.languageServiceDelay": {
+          "type": "number",
+          "default": 500,
+          "description": "The delay in ms before language services are invoked."
+        },
+        "polyglot-notebook.logLevel": {
+          "type": "string",
+          "default": "Error",
+          "enum": [
+            "Info",
+            "Warn",
+            "Error",
+            "None"
+          ],
+          "enumDescriptions": [
+            "Logs informational messages",
+            "Logs warning messages",
+            "Logs error messages",
+            "Disables logging"
+          ]
+        },
+        "dotnet-interactive.kernelTransportArgs": {
+          "type": "array",
+          "default": [
+            "{dotnet_path}",
+            "tool",
+            "run",
+            "dotnet-interactive",
+            "--",
+            "[vscode]",
+            "stdio",
+            "--working-dir",
+            "{working_dir}"
+          ],
+          "description": "Command and arguments used to start a notebook session."
+        },
+        "dotnet-interactive.notebookParserArgs": {
+          "type": "array",
+          "default": [
+            "{dotnet_path}",
+            "tool",
+            "run",
+            "dotnet-interactive",
+            "--",
+            "notebook-parser"
+          ]
+        },
+        "dotnet-interactive.kernelTransportWorkingDirectory": {
+          "type": "string",
+          "default": "{global_storage_path}",
+          "description": "The working directory in which the kernel transport process is started."
+        },
+        "dotnet-interactive.interactiveToolSource": {
+          "type": "string",
+          "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json",
+          "description": "The NuGet source to use when acquiring the .NET Interactive tool."
+        },
+        "dotnet-interactive.minimumDotNetSdkVersion": {
+          "type": "string",
+          "default": "8.0",
+          "description": "The minimum required version of the .NET SDK."
+        },
+        "dotnet-interactive.requiredInteractiveToolVersion": {
+          "type": "string",
+          "default": "1.0.408001",
+          "description": "The required version of the .NET Interactive tool."
+        }
+      }
+    },
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "polyglot-notebook-panel",
+          "title": "Polyglot Notebook",
+          "icon": "resources/icons/notebook.svg"
+        }
+      ]
+    },
+    "views": {
+      "polyglot-notebook-panel": [
+        {
+          "type": "webview",
+          "id": "polyglot-notebook-panel-values",
+          "name": "Variables",
+          "icon": "resources/icons/notebook.svg"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "dotnet-interactive.acquire",
+        "title": "Install .NET Interactive"
+      },
+      {
+        "command": "polyglot-notebook.openNotebook",
+        "title": "Polyglot Notebook: Open notebook"
+      },
+      {
+        "command": "polyglot-notebook.saveAsNotebook",
+        "title": "Polyglot Notebook: Save notebook as..."
+      },
+      {
+        "command": "polyglot-notebook.newNotebook",
+        "title": "Polyglot Notebook: Create new blank notebook"
+      },
+      {
+        "command": "polyglot-notebook.restartCurrentNotebookKernel",
+        "title": "Polyglot Notebook: Restart the current notebook's kernel"
+      },
+      {
+        "command": "polyglot-notebook.stopCurrentNotebookKernel",
+        "title": "Polyglot Notebook: Stop the current notebook's kernel"
+      },
+      {
+        "command": "polyglot-notebook.stopAllNotebookKernels",
+        "title": "Polyglot Notebook: Stop all notebook kernels"
+      },
+      {
+        "command": "polyglot-notebook.shareValueWith",
+        "title": "Share value with..."
+      },
+      {
+        "command": "polyglot-notebook.selectCellKernel",
+        "title": "Polyglot Notebook: Select cell kernel"
+      },
+      {
+        "command": "polyglot-notebook.notebookEditor.restartKernel",
+        "title": "Restart",
+        "icon": {
+          "light": "resources/light/restart-kernel.svg",
+          "dark": "resources/dark/restart-kernel.svg"
+        }
+      },
+      {
+        "command": "polyglot-notebook.notebookEditor.openValueViewer",
+        "title": "Variables",
+        "icon": "$(variable-group)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "polyglot-notebook.newNotebook",
+        "key": "ctrl+alt+shift+n",
+        "mac": "cmd+alt+shift+n"
+      }
+    ],
+    "languages": [
+      {
+        "id": "polyglot-notebook",
+        "aliases": [
+          "Code"
+        ]
+      }
+    ],
+    "menus": {
+      "notebook/toolbar": [
+        {
+          "command": "polyglot-notebook.notebookEditor.restartKernel",
+          "group": "navigation/execute@1",
+          "when": "notebookKernel =~ /polyglot-notebook/ && isWorkspaceTrusted"
+        },
+        {
+          "command": "polyglot-notebook.notebookEditor.openValueViewer",
+          "group": "navigation@1",
+          "when": "notebookKernel =~ /polyglot-notebook/ && isWorkspaceTrusted"
+        }
+      ]
+    },
+    "semanticTokenScopes": [
+      {
+        "comment": "the `scopes` object is generated by a script",
+        "scopes": {
+          "polyglot-notebook-entity-name-function": [
+            "entity.name.function"
+          ],
+          "polyglot-notebook-entity-name-variable-local": [
+            "entity.name.variable.local"
+          ],
+          "polyglot-notebook-entity-name-type": [
+            "entity.name.type"
+          ],
+          "polyglot-notebook-entity-name-type-namespace": [
+            "entity.name.type.namespace"
+          ],
+          "polyglot-notebook-punctuation-accessor": [
+            "punctuation.accessor"
+          ],
+          "polyglot-notebook-punctuation-definition-variable": [
+            "punctuation.definition.variable"
+          ],
+          "polyglot-notebook-punctuation-parenthesis": [
+            "punctuation.parenthesis"
+          ],
+          "polyglot-notebook-punctuation-terminator-statement": [
+            "punctuation.terminator.statement"
+          ],
+          "polyglot-notebook-variable-other-object": [
+            "variable.other.object"
+          ],
+          "polyglot-notebook-variable-other-readwrite": [
+            "variable.other.readwrite"
+          ],
+          "polyglot-notebook-variable-other-readwrite-global": [
+            "variable.other.readwrite.global"
+          ],
+          "polyglot-notebook-meta-bracket": [
+            "meta.bracket"
+          ],
+          "polyglot-notebook-meta-attribute": [
+            "meta.attribute"
+          ],
+          "polyglot-notebook-meta-function": [
+            "meta.function"
+          ],
+          "polyglot-notebook-meta-function-call-arguments": [
+            "meta.function-call.arguments"
+          ],
+          "polyglot-notebook-meta-function-call-generic": [
+            "meta.function-call.generic"
+          ],
+          "polyglot-notebook-meta-indexed-name": [
+            "meta.indexed-name"
+          ],
+          "polyglot-notebook-meta-item-access-arguments": [
+            "meta.item-access.arguments"
+          ],
+          "polyglot-notebook-punctuation-definition-arguments-begin": [
+            "punctuation.definition.arguments.begin"
+          ],
+          "polyglot-notebook-punctuation-definition-arguments-end": [
+            "punctuation.definition.arguments.end"
+          ],
+          "polyglot-notebook-punctuation-definition-list-begin": [
+            "punctuation.definition.list.begin"
+          ],
+          "polyglot-notebook-punctuation-definition-list-end": [
+            "punctuation.definition.list.end"
+          ],
+          "polyglot-notebook-punctuation-definition-parameters-begin": [
+            "punctuation.definition.parameters.begin"
+          ],
+          "polyglot-notebook-punctuation-definition-parameters-end": [
+            "punctuation.definition.parameters.end"
+          ],
+          "polyglot-notebook-punctuation-section-function-begin": [
+            "punctuation.section.function.begin"
+          ],
+          "polyglot-notebook-punctuation-section-function-end": [
+            "punctuation.section.function.end"
+          ],
+          "polyglot-notebook-punctuation-separator-element": [
+            "punctuation.separator.element"
+          ],
+          "polyglot-notebook-punctuation-separator-colon": [
+            "punctuation.separator.colon"
+          ],
+          "polyglot-notebook-punctuation-separator-period": [
+            "punctuation.separator.period"
+          ],
+          "polyglot-notebook-punctuation-separator-slice": [
+            "punctuation.separator.slice"
+          ],
+          "polyglot-notebook-variable-parameter-function-call": [
+            "variable.parameter.function-call"
+          ],
+          "polyglot-notebook-punctuation-section-brackets-single-begin": [
+            "punctuation.section.brackets.single.begin"
+          ],
+          "polyglot-notebook-punctuation-section-brackets-single-end": [
+            "punctuation.section.brackets.single.end"
+          ],
+          "polyglot-notebook-punctuation-section-parens-begin": [
+            "punctuation.section.parens.begin"
+          ],
+          "polyglot-notebook-punctuation-section-parens-end": [
+            "punctuation.section.parens.end"
+          ],
+          "polyglot-notebook-punctuation-separator-parameters": [
+            "punctuation.separator.parameters"
+          ],
+          "polyglot-notebook-support-function": [
+            "support.function"
+          ],
+          "polyglot-notebook-variable-other": [
+            "variable.other"
+          ],
+          "polyglot-notebook-variable-function": [
+            "variable.function"
+          ],
+          "polyglot-notebook-variable-parameter": [
+            "variable.parameter"
+          ],
+          "polyglot-notebook-meta-group-simple-subexpression": [
+            "meta.group.simple.subexpression"
+          ],
+          "polyglot-notebook-punctuation-section-group-begin": [
+            "punctuation.section.group.begin"
+          ],
+          "polyglot-notebook-punctuation-section-group-end": [
+            "punctuation.section.group.end"
+          ],
+          "polyglot-notebook-meta-embedded": [
+            "meta.embedded"
+          ],
+          "polyglot-notebook-source-groovy-embedded": [
+            "source.groovy.embedded"
+          ],
+          "polyglot-notebook-emphasis": [
+            "emphasis"
+          ],
+          "polyglot-notebook-strong": [
+            "strong"
+          ],
+          "polyglot-notebook-meta-diff-header": [
+            "meta.diff.header"
+          ],
+          "polyglot-notebook-comment": [
+            "comment"
+          ],
+          "polyglot-notebook-constant-language": [
+            "constant.language"
+          ],
+          "polyglot-notebook-constant-numeric": [
+            "constant.numeric"
+          ],
+          "polyglot-notebook-variable-other-enummember": [
+            "variable.other.enummember"
+          ],
+          "polyglot-notebook-keyword-operator-plus-exponent": [
+            "keyword.operator.plus.exponent"
+          ],
+          "polyglot-notebook-keyword-operator-minus-exponent": [
+            "keyword.operator.minus.exponent"
+          ],
+          "polyglot-notebook-constant-regexp": [
+            "constant.regexp"
+          ],
+          "polyglot-notebook-entity-name-tag": [
+            "entity.name.tag"
+          ],
+          "polyglot-notebook-entity-name-selector": [
+            "entity.name.selector"
+          ],
+          "polyglot-notebook-entity-other-attribute-name": [
+            "entity.other.attribute-name"
+          ],
+          "polyglot-notebook-entity-other-attribute-name-class-css": [
+            "entity.other.attribute-name.class.css"
+          ],
+          "polyglot-notebook-entity-other-attribute-name-class-mixin-css": [
+            "entity.other.attribute-name.class.mixin.css"
+          ],
+          "polyglot-notebook-entity-other-attribute-name-id-css": [
+            "entity.other.attribute-name.id.css"
+          ],
+          "polyglot-notebook-entity-other-attribute-name-parent-selector-css": [
+            "entity.other.attribute-name.parent-selector.css"
+          ],
+          "polyglot-notebook-entity-other-attribute-name-pseudo-class-css": [
+            "entity.other.attribute-name.pseudo-class.css"
+          ],
+          "polyglot-notebook-entity-other-attribute-name-pseudo-element-css": [
+            "entity.other.attribute-name.pseudo-element.css"
+          ],
+          "polyglot-notebook-entity-other-attribute-name-scss": [
+            "entity.other.attribute-name.scss"
+          ],
+          "polyglot-notebook-invalid": [
+            "invalid"
+          ],
+          "polyglot-notebook-markup-underline": [
+            "markup.underline"
+          ],
+          "polyglot-notebook-markup-bold": [
+            "markup.bold"
+          ],
+          "polyglot-notebook-markup-heading": [
+            "markup.heading"
+          ],
+          "polyglot-notebook-markup-italic": [
+            "markup.italic"
+          ],
+          "polyglot-notebook-markup-strikethrough": [
+            "markup.strikethrough"
+          ],
+          "polyglot-notebook-markup-inserted": [
+            "markup.inserted"
+          ],
+          "polyglot-notebook-markup-deleted": [
+            "markup.deleted"
+          ],
+          "polyglot-notebook-markup-changed": [
+            "markup.changed"
+          ],
+          "polyglot-notebook-punctuation-definition-quote-begin-markdown": [
+            "punctuation.definition.quote.begin.markdown"
+          ],
+          "polyglot-notebook-punctuation-definition-list-begin-markdown": [
+            "punctuation.definition.list.begin.markdown"
+          ],
+          "polyglot-notebook-markup-inline-raw": [
+            "markup.inline.raw"
+          ],
+          "polyglot-notebook-punctuation-definition-tag": [
+            "punctuation.definition.tag"
+          ],
+          "polyglot-notebook-meta-preprocessor": [
+            "meta.preprocessor"
+          ],
+          "polyglot-notebook-entity-name-function-preprocessor": [
+            "entity.name.function.preprocessor"
+          ],
+          "polyglot-notebook-meta-preprocessor-string": [
+            "meta.preprocessor.string"
+          ],
+          "polyglot-notebook-meta-preprocessor-numeric": [
+            "meta.preprocessor.numeric"
+          ],
+          "polyglot-notebook-meta-structure-dictionary-key-python": [
+            "meta.structure.dictionary.key.python"
+          ],
+          "polyglot-notebook-storage": [
+            "storage"
+          ],
+          "polyglot-notebook-storage-type": [
+            "storage.type"
+          ],
+          "polyglot-notebook-storage-modifier": [
+            "storage.modifier"
+          ],
+          "polyglot-notebook-keyword-operator-noexcept": [
+            "keyword.operator.noexcept"
+          ],
+          "polyglot-notebook-string": [
+            "string"
+          ],
+          "polyglot-notebook-meta-embedded-assembly": [
+            "meta.embedded.assembly"
+          ],
+          "polyglot-notebook-string-comment-buffered-block-pug": [
+            "string.comment.buffered.block.pug"
+          ],
+          "polyglot-notebook-string-quoted-pug": [
+            "string.quoted.pug"
+          ],
+          "polyglot-notebook-string-interpolated-pug": [
+            "string.interpolated.pug"
+          ],
+          "polyglot-notebook-string-unquoted-plain-in-yaml": [
+            "string.unquoted.plain.in.yaml"
+          ],
+          "polyglot-notebook-string-unquoted-plain-out-yaml": [
+            "string.unquoted.plain.out.yaml"
+          ],
+          "polyglot-notebook-string-unquoted-block-yaml": [
+            "string.unquoted.block.yaml"
+          ],
+          "polyglot-notebook-string-quoted-single-yaml": [
+            "string.quoted.single.yaml"
+          ],
+          "polyglot-notebook-string-quoted-double-xml": [
+            "string.quoted.double.xml"
+          ],
+          "polyglot-notebook-string-quoted-single-xml": [
+            "string.quoted.single.xml"
+          ],
+          "polyglot-notebook-string-unquoted-cdata-xml": [
+            "string.unquoted.cdata.xml"
+          ],
+          "polyglot-notebook-string-quoted-double-html": [
+            "string.quoted.double.html"
+          ],
+          "polyglot-notebook-string-quoted-single-html": [
+            "string.quoted.single.html"
+          ],
+          "polyglot-notebook-string-unquoted-html": [
+            "string.unquoted.html"
+          ],
+          "polyglot-notebook-string-quoted-single-handlebars": [
+            "string.quoted.single.handlebars"
+          ],
+          "polyglot-notebook-string-quoted-double-handlebars": [
+            "string.quoted.double.handlebars"
+          ],
+          "polyglot-notebook-string-regexp": [
+            "string.regexp"
+          ],
+          "polyglot-notebook-punctuation-definition-template-expression-begin": [
+            "punctuation.definition.template-expression.begin"
+          ],
+          "polyglot-notebook-punctuation-definition-template-expression-end": [
+            "punctuation.definition.template-expression.end"
+          ],
+          "polyglot-notebook-punctuation-section-embedded": [
+            "punctuation.section.embedded"
+          ],
+          "polyglot-notebook-meta-template-expression": [
+            "meta.template.expression"
+          ],
+          "polyglot-notebook-support-constant-property-value": [
+            "support.constant.property-value"
+          ],
+          "polyglot-notebook-support-constant-font-name": [
+            "support.constant.font-name"
+          ],
+          "polyglot-notebook-support-constant-media-type": [
+            "support.constant.media-type"
+          ],
+          "polyglot-notebook-support-constant-media": [
+            "support.constant.media"
+          ],
+          "polyglot-notebook-constant-other-color-rgb-value": [
+            "constant.other.color.rgb-value"
+          ],
+          "polyglot-notebook-constant-other-rgb-value": [
+            "constant.other.rgb-value"
+          ],
+          "polyglot-notebook-support-constant-color": [
+            "support.constant.color"
+          ],
+          "polyglot-notebook-support-type-vendored-property-name": [
+            "support.type.vendored.property-name"
+          ],
+          "polyglot-notebook-support-type-property-name": [
+            "support.type.property-name"
+          ],
+          "polyglot-notebook-variable-css": [
+            "variable.css"
+          ],
+          "polyglot-notebook-variable-scss": [
+            "variable.scss"
+          ],
+          "polyglot-notebook-variable-other-less": [
+            "variable.other.less"
+          ],
+          "polyglot-notebook-source-coffee-embedded": [
+            "source.coffee.embedded"
+          ],
+          "polyglot-notebook-support-type-property-name-json": [
+            "support.type.property-name.json"
+          ],
+          "polyglot-notebook-keyword": [
+            "keyword"
+          ],
+          "polyglot-notebook-keyword-control": [
+            "keyword.control"
+          ],
+          "polyglot-notebook-keyword-operator": [
+            "keyword.operator"
+          ],
+          "polyglot-notebook-keyword-operator-new": [
+            "keyword.operator.new"
+          ],
+          "polyglot-notebook-keyword-operator-expression": [
+            "keyword.operator.expression"
+          ],
+          "polyglot-notebook-keyword-operator-cast": [
+            "keyword.operator.cast"
+          ],
+          "polyglot-notebook-keyword-operator-sizeof": [
+            "keyword.operator.sizeof"
+          ],
+          "polyglot-notebook-keyword-operator-alignof": [
+            "keyword.operator.alignof"
+          ],
+          "polyglot-notebook-keyword-operator-typeid": [
+            "keyword.operator.typeid"
+          ],
+          "polyglot-notebook-keyword-operator-alignas": [
+            "keyword.operator.alignas"
+          ],
+          "polyglot-notebook-keyword-operator-instanceof": [
+            "keyword.operator.instanceof"
+          ],
+          "polyglot-notebook-keyword-operator-logical-python": [
+            "keyword.operator.logical.python"
+          ],
+          "polyglot-notebook-keyword-operator-wordlike": [
+            "keyword.operator.wordlike"
+          ],
+          "polyglot-notebook-keyword-other-unit": [
+            "keyword.other.unit"
+          ],
+          "polyglot-notebook-punctuation-section-embedded-begin-php": [
+            "punctuation.section.embedded.begin.php"
+          ],
+          "polyglot-notebook-punctuation-section-embedded-end-php": [
+            "punctuation.section.embedded.end.php"
+          ],
+          "polyglot-notebook-support-function-git-rebase": [
+            "support.function.git-rebase"
+          ],
+          "polyglot-notebook-constant-sha-git-rebase": [
+            "constant.sha.git-rebase"
+          ],
+          "polyglot-notebook-storage-modifier-import-java": [
+            "storage.modifier.import.java"
+          ],
+          "polyglot-notebook-variable-language-wildcard-java": [
+            "variable.language.wildcard.java"
+          ],
+          "polyglot-notebook-storage-modifier-package-java": [
+            "storage.modifier.package.java"
+          ],
+          "polyglot-notebook-variable-language": [
+            "variable.language"
+          ]
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "compile-preloads": "cd ../microsoft-dotnet-interactive && npm run compile",
+    "copy-preloads": "npx copyfiles --error --verbose --up 3 ../microsoft-dotnet-interactive/dist/activation.js ./resources",
+    "compile-variable-grid": "cd ../polyglot-notebooks-ui-components && npm run buildDev",
+    "copy-variable-grid": "npx copyfiles --error --verbose --up 3 ../polyglot-notebooks-ui-components/dist/*.* ./resources",
+    "vscode:prepublish": "npm run compile",
+    "compile-and-copy-preloads": "npm run compile-preloads && npm run copy-preloads",
+    "compile-and-copy-variable-grid": "npm run compile-variable-grid && npm run copy-variable-grid",
+    "compile": "npm run lint && tsc -p ./ && npm run compile-and-copy-preloads && npm run compile-and-copy-variable-grid",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "mocha out/tests/**/*.test.js",
+    "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
+    "tdd": "npm test -- --watch",
+    "package": "npx @vscode/vsce package",
+    "clearUserData": "del-cli \"./userData/**/*\" \"!.gitignore\""
+  },
+  "mocha": {},
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "21.0.1",
+    "@rollup/plugin-node-resolve": "13.0.5",
+    "@types/chai": "4.2.11",
+    "@types/chai-as-promised": "7.1.3",
+    "@types/chai-fs": "2.0.2",
+    "@types/glob": "7.1.1",
+    "@types/mocha": "9.1.0",
+    "@types/node": "16.11.6",
+    "@types/node-fetch": "2.5.12",
+    "@types/tmp": "0.2.0",
+    "@types/uuid": "8.3.0",
+    "@typescript-eslint/eslint-plugin": "5.3.0",
+    "@typescript-eslint/parser": "5.3.0",
+    "@vscode/vsce": "2.16.0",
+    "chai": "4.2.0",
+    "chai-as-promised": "7.1.1",
+    "chai-fs": "2.0.0",
+    "copyfiles": "2.4.1",
+    "del-cli": "4.0.1",
+    "eslint": "7.32.0",
+    "eslint-plugin-deprecation": "1.2.1",
+    "glob": "7.2.0",
+    "mocha": "9.2.2",
+    "mocha-multi-reporters": "1.5.1",
+    "mocha-trx-reporter": "3.3.1",
+    "rollup": "2.60.1",
+    "rollup-plugin-typescript2": "0.31.1",
+    "source-map-support": "0.5.21",
+    "tmp": "0.2.1",
+    "typescript": "4.4.4",
+    "vscode-test": "1.6.1"
+  },
+  "dependencies": {
+    "compare-versions": "3.6.0",
+    "node-fetch": "2.6.7",
+    "rxjs": "7.5.6",
+    "uuid": "8.3.2",
+    "vscode-oniguruma": "1.6.1",
+    "vscode-textmate": "6.0.0",
+    "vscode-uri": "3.0.6"
+  }
+}

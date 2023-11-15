@@ -78,7 +78,7 @@ Microsoft.DotNet.Interactive.SqlServer
     public CompletionContext Context { get; set;}
     public Position Position { get; set;}
     public TextDocumentIdentifier TextDocument { get; set;}
-  public enum CompletionTriggerKind : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum CompletionTriggerKind : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Invoked=1
     TriggerCharacter=2
     TriggerForIncompleteCompletions=3
@@ -203,7 +203,7 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.Nullable<System.Boolean> Preselect { get; set;}
     public System.String SortText { get; set;}
     public TextEdit TextEdit { get; set;}
-  public enum SqlCompletionItemKind : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum SqlCompletionItemKind : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Text=1
     Method=2
     Function=3
