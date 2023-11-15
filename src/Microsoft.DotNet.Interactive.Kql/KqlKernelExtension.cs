@@ -16,7 +16,7 @@ public class KqlKernelExtension
         if (kernel is CompositeKernel compositeKernel)
         {
             var kqlToolName = "MicrosoftKustoServiceLayer";
-            await Utils.CheckAndInstallGlobalToolAsync(kqlToolName, "1.2.0", "Microsoft.SqlServer.KustoServiceLayer.Tool");
+            await Utils.CheckAndInstallGlobalToolAsync(kqlToolName, "1.3.0", "Microsoft.SqlServer.KustoServiceLayer.Tool");
 
             var kqlToolPath = Path.Combine(Paths.DotnetToolsPath, kqlToolName);
             compositeKernel
