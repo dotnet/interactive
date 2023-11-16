@@ -69,7 +69,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                           e => e.Should().BeOfType<CommandSucceeded>());
     }
 
-    [Fact(Skip = "Waiting for a fix for https://github.com/PowerShell/PowerShell/issues/20079")]
+    [Fact]
     public async Task When_command_is_not_recognized_then_the_command_fails()
     {
         using var kernel = CreateKernel(Language.PowerShell);

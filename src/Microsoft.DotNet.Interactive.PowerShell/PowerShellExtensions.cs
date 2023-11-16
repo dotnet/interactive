@@ -15,7 +15,7 @@ internal static class PowerShellExtensions
         AddToHistory = true
     };
 
-    public static void InvokeAndClearCommands(this PowerShell pwsh)
+    public static void InvokeAndClear(this PowerShell pwsh)
     {
         try
         {
@@ -23,9 +23,14 @@ internal static class PowerShellExtensions
         }
         finally
         {
-            pwsh.Streams.ClearStreams();
-            pwsh.Commands.Clear();
+            Clear(pwsh);
         }
+    }
+
+    public static void Clear(this PowerShell pwsh)
+    {
+        pwsh.Streams.ClearStreams();
+        pwsh.Commands.Clear();
     }
 
     internal static SecureString GetSecureStringPassword(this PasswordString pwdString)
