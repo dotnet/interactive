@@ -47,6 +47,7 @@ try {
                 "Microsoft.DotNet.Interactive.Journey",
                 "Microsoft.DotNet.Interactive.Kql",
                 "Microsoft.DotNet.Interactive.Mermaid",
+                "Microsoft.DotNet.Interactive.NamedPipeConnector",
                 "Microsoft.DotNet.Interactive.PackageManagement",
                 "Microsoft.DotNet.Interactive.PowerShell",
                 "Microsoft.DotNet.Interactive.SQLite",

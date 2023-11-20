@@ -5,15 +5,18 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipes;
 using System.Threading.Tasks;
+using FluentAssertions;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Tests;
 
+using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests;
+namespace Microsoft.DotNet.Interactive.NamedPipeConnectorConnector.Tests;
 
 public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 {
@@ -21,6 +24,18 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 
     public NamedPipeConnectionTests(ITestOutputHelper output) : base(output)
     {
+    }
+
+    [Fact]
+    public void connect_command_is_available_when_a_user_adds_a_kernel_connection_type()
+    {
+        using var compositeKernel = new CompositeKernel();
+
+        compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
+
+        compositeKernel.Directives
+            .Should()
+            .Contain(c => c.Name == "#!connect");
     }
 
     protected override Func<string, Task<ProxyKernel>> CreateConnector()

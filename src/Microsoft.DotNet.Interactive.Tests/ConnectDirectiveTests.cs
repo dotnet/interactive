@@ -42,17 +42,7 @@ public class ConnectDirectiveTests : IDisposable
             .NotContain(c => c.Name == "#!connect");
     }
 
-    [Fact]
-    public void connect_command_is_available_when_a_user_adds_a_kernel_connection_type()
-    {
-        using var compositeKernel = new CompositeKernel();
 
-        compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
-
-        compositeKernel.Directives
-            .Should()
-            .Contain(c => c.Name == "#!connect");
-    }
 
     [Fact]
     public async Task When_a_kernel_is_connected_then_information_about_it_is_displayed()
