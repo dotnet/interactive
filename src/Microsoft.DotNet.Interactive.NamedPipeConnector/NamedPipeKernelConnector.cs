@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System;
 using System.IO.Pipes;
 using System.Reactive.Disposables;
@@ -8,18 +10,16 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
-using CompositeDisposable = Pocket.CompositeDisposable;
+using Microsoft.DotNet.Interactive.Connection;
 
-#nullable enable
-
-namespace Microsoft.DotNet.Interactive.Connection;
+namespace Microsoft.DotNet.Interactive.NamedPipeConnectorConnector;
 
 public class NamedPipeKernelConnector : IDisposable
 {
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private NamedPipeClientStream? _clientStream;
-    private RefCountDisposable? _refCountDisposable = null;
+    private RefCountDisposable? _refCountDisposable;
 
     public NamedPipeKernelConnector(string pipeName)
     {
@@ -30,6 +30,7 @@ public class NamedPipeKernelConnector : IDisposable
     public string PipeName { get; }
 
     public Uri RemoteHostUri { get; }
+
 
     public async Task<ProxyKernel> CreateKernelAsync(string localName)
     {
@@ -55,8 +56,8 @@ public class NamedPipeKernelConnector : IDisposable
 
             _refCountDisposable = new RefCountDisposable(new CompositeDisposable
             {
-                () => _clientStream.Dispose(),
-                () => _receiver.Dispose()
+                Disposable.Create( () => _clientStream.Dispose()),
+                Disposable.Create( () => _receiver.Dispose())
             });
 
             proxyKernel = new ProxyKernel(
