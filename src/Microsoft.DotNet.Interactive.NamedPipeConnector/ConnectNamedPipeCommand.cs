@@ -7,7 +7,7 @@ using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.NamedPipeConnectorConnector;
+namespace Microsoft.DotNet.Interactive.NamedPipeConnector;
 
 public class ConnectNamedPipeCommand : ConnectKernelCommand
 {
