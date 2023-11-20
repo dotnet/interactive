@@ -5,6 +5,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive.NamedPipeConnectorConnector</PackageId>
+    <NoWarn>$(NoWarn);8002;CS8002</NoWarn>
+    <NoWarn>$(NoWarn);CA1416</NoWarn> <!-- Ignore: This call site is reachable on all platforms. 'PipeTransmissionMode.Message' is supported on: 'windows'. -->
   </PropertyGroup>
 
   <PropertyGroup>
