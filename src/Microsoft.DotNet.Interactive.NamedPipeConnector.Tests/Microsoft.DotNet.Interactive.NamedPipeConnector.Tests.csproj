@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net7.0-windows</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <AssetTargetFallback>portable-net45+win8+wp8+wpa81</AssetTargetFallback>
     <NoWarn>$(NoWarn);8002</NoWarn><!-- Assent isn't strongly signed -->
     <NoWarn>$(NoWarn);CS8524</NoWarn><!-- The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value. -->
     <NoWarn>$(NoWarn);VSTHRD002</NoWarn><!-- Ignore: Avoid problematic synchronous waits -->
