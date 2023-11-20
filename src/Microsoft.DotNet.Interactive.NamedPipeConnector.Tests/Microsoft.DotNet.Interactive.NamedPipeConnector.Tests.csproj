@@ -13,6 +13,7 @@
     <NoWarn>$(NoWarn);VSTHRD110</NoWarn><!-- Ignore: Observe result of async calls -->
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
     <NoWarn>$(NoWarn);CS0219</NoWarn><!-- Ignore: The variable is assigned but its value is never used -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn><!-- Ignore: This call site is reachable on all platforms. 'PipeTransmissionMode.Message' is supported on: 'windows'. -->
   </PropertyGroup>
 
   <ItemGroup>
