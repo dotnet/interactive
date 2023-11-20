@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipes;
 using System.Threading.Tasks;
+
 using FluentAssertions;
 
 using Microsoft.DotNet.Interactive.Commands;
@@ -16,7 +17,7 @@ using Microsoft.DotNet.Interactive.Tests;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.NamedPipeConnectorConnector.Tests;
+namespace Microsoft.DotNet.Interactive.NamedPipeConnector.Tests;
 
 public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 {
