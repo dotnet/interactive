@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipes;
 using System.Threading.Tasks;
 
@@ -59,8 +58,7 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
     {
         compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
     }
-
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
+   
     private void CreateRemoteKernelTopology(string pipeName)
     {
         var remoteCompositeKernel = new CompositeKernel
