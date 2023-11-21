@@ -2,18 +2,21 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipes;
 using System.Threading.Tasks;
+
+using FluentAssertions;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Tests;
 
+using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests;
+namespace Microsoft.DotNet.Interactive.NamedPipeConnector.Tests;
 
 public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 {
@@ -21,6 +24,18 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 
     public NamedPipeConnectionTests(ITestOutputHelper output) : base(output)
     {
+    }
+
+    [Fact]
+    public void connect_command_is_available_when_a_user_adds_a_kernel_connection_type()
+    {
+        using var compositeKernel = new CompositeKernel();
+
+        compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
+
+        compositeKernel.Directives
+            .Should()
+            .Contain(c => c.Name == "#!connect");
     }
 
     protected override Func<string, Task<ProxyKernel>> CreateConnector()
@@ -43,8 +58,7 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
     {
         compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
     }
-
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
+   
     private void CreateRemoteKernelTopology(string pipeName)
     {
         var remoteCompositeKernel = new CompositeKernel
