@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive.NamedPipeConnectorConnector</PackageId>
+    <NoWarn>$(NoWarn);8002;CS8002</NoWarn>
+    <NoWarn>$(NoWarn);CA1416</NoWarn> <!-- Ignore: This call site is reachable on all platforms. 'PipeTransmissionMode.Message' is supported on: 'windows'. -->
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription Condition="'$(PackageDescription)'==''">Extension that allows connecting via namedpaipes</PackageDescription>
+    <PackageTags Condition="'$(PackageTags)'==''">polyglot notebook dotnet interactive namedpipe</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PocketLogger" Version="0.8.2">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+</Project>
