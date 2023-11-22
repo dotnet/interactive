@@ -17,7 +17,7 @@
   <PropertyGroup>
     <MicrosoftNETTestSdkVersion>17.4.0</MicrosoftNETTestSdkVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
-    <MicrosoftCodeAnalysisCommonVersion>4.8.0-3.final</MicrosoftCodeAnalysisCommonVersion>
+    <MicrosoftCodeAnalysisCommonVersion>4.8.0</MicrosoftCodeAnalysisCommonVersion>
     <SystemDrawingCommonVersion>7.0.0</SystemDrawingCommonVersion>
     <SystemReactiveVersion>6.0.0</SystemReactiveVersion>
     <SystemSecurityCryptographyXmlVersion>7.0.1</SystemSecurityCryptographyXmlVersion>
