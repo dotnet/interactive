@@ -605,7 +605,7 @@ Microsoft.DotNet.Interactive.Events
   public class InputProduced : KernelEvent
     .ctor(System.String value, Microsoft.DotNet.Interactive.Commands.RequestInput command)
     public System.String Value { get;}
-  public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     PlainText=1
     Snippet=2
   public abstract class KernelCommandCompletionEvent : KernelEvent
@@ -654,7 +654,7 @@ Microsoft.DotNet.Interactive.Http
 Microsoft.DotNet.Interactive.Parsing
   public class ActionDirectiveNode : DirectiveNode
     public System.String ParentKernelName { get;}
-  public enum DiagnosticSeverity : System.Enum, System.IComparable, System.IConvertible, System.IFormattable
+  public enum DiagnosticSeverity : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     Hidden=0
     Info=1
     Warning=2

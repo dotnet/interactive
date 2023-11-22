@@ -214,7 +214,7 @@
         },
         "dotnet-interactive.minimumDotNetSdkVersion": {
           "type": "string",
-          "default": "7.0",
+          "default": "8.0",
           "description": "%description.minimumDotNetSdkVersion%"
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
