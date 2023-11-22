@@ -143,7 +143,7 @@ public static class KernelExtensionTestHelper
 "),
             ("global.json", @"{
   ""sdk"": {
-    ""version"": ""8.0.100-alpha.1.23061.8"",
+    ""version"": ""8.0.100"",
     ""allowPrerelease"": true,
     ""rollForward"": ""latestMinor""
   }
