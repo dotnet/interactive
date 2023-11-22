@@ -32,6 +32,7 @@ try {
     $flakyTestAssemblyDirectories = @(
         "Microsoft.DotNet.Interactive.Tests",
         "Microsoft.DotNet.Interactive.App.Tests",
+        "Microsoft.DotNet.Interactive.Browser.Tests",
         "Microsoft.DotNet.Interactive.Jupyter.Tests"
         )
     
