@@ -59,7 +59,7 @@ public class CSharpKernel :
     public CSharpKernel(string name) : base(name)
     {
         KernelInfo.LanguageName = "C#";
-        KernelInfo.LanguageVersion = "11.0";
+        KernelInfo.LanguageVersion = "12.0";
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - C# Script";
         _workspace = new InteractiveWorkspace();
 
@@ -67,7 +67,7 @@ public class CSharpKernel :
         //...so we wait for RunAsync to read Directory.GetCurrentDirectory() the first time.
 
         _scriptOptions = ScriptOptions.Default
-            .WithLanguageVersion(LanguageVersion.CSharp11)
+            .WithLanguageVersion(LanguageVersion.CSharp12)
             .AddImports(
                 "System",
                 "System.Text",
