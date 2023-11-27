@@ -507,7 +507,6 @@ public static class CommandLineParser
             .UseImportMagicCommand()
             .UseNuGetExtensions(telemetrySender);
 
-        kernel.AddKernelConnector(new ConnectNamedPipeCommand());
         kernel.AddKernelConnector(new ConnectSignalRCommand());
         kernel.AddKernelConnector(new ConnectStdIoCommand(startupOptions.KernelHost));
 

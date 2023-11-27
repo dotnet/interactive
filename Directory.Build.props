@@ -17,7 +17,7 @@
   <PropertyGroup>
     <MicrosoftNETTestSdkVersion>17.4.0</MicrosoftNETTestSdkVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
-    <MicrosoftCodeAnalysisCommonVersion>4.6.0</MicrosoftCodeAnalysisCommonVersion>
+    <MicrosoftCodeAnalysisCommonVersion>4.8.0</MicrosoftCodeAnalysisCommonVersion>
     <SystemDrawingCommonVersion>7.0.0</SystemDrawingCommonVersion>
     <SystemReactiveVersion>6.0.0</SystemReactiveVersion>
     <SystemSecurityCryptographyXmlVersion>7.0.1</SystemSecurityCryptographyXmlVersion>
@@ -25,6 +25,21 @@
     <xunitVersion>2.4.2</xunitVersion>
     <xunitrunnervisualstudioVersion>2.4.5</xunitrunnervisualstudioVersion>
   </PropertyGroup>
+
+  <!-- Prevent the following warning on .NET 8 SDK by preserving legacy behavior for
+       transitive dependencies that use distribution-specific runtime identifiers. This can
+       be removed in the future once we update our NuGet references, and once transitive
+       dependencies (such as Microsoft.Management.Infrastructure.Runtime.Win below) no longer
+       use distribution-specific runtime identifiers.
+
+       NETSDK1206: Found version-specific or distribution-specific runtime identifier(s):
+       win10-x64, win10-x86, win7-x64, win7-x86, win81-x64, win81-x86, win8-x64, win8-x86.
+       Affected libraries: Microsoft.Management.Infrastructure.Runtime.Win. In .NET 8.0 and
+       higher, assets for version-specific and distribution-specific runtime identifiers will
+       not be found by default. See https://aka.ms/dotnet/rid-usage for details. -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
+  </ItemGroup>
 
   <PropertyGroup>
     <XUnitCoreSettingsFile>$(MSBuildThisFileDirectory)xunit.runner.json</XUnitCoreSettingsFile>

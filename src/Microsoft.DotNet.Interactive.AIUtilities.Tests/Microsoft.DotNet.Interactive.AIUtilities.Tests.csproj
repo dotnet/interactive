@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn>
     <!-- Ignore: Use "Async" suffix for async methods -->
@@ -30,9 +30,6 @@
     <PackageReference Include="PocketLogger.Subscribe" Version="0.8.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="PocketLogger.For.Xunit" Version="0.6.1">
-      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
 
