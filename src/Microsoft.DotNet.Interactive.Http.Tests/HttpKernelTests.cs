@@ -15,7 +15,9 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.Extensions.Hosting;
 using Xunit;
+using static System.Net.WebRequestMethods;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
@@ -281,6 +283,33 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         request.RequestUri.AbsoluteUri.Should().Be("https://example.com/");
+    }
+
+    [Fact]
+    public async Task url_in_embedded_expression_is_valid()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @hostname=httpbin.org
+            @host=https://{{hostname}}
+            POST {{host}}/anything
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        request.RequestUri.AbsoluteUri.Should().Be("https://httpbin.org/anything");
     }
 
     [Fact]

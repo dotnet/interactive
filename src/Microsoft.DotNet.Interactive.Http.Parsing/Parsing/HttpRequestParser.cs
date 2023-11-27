@@ -81,7 +81,7 @@ internal class HttpRequestParser
         }
 
         private static void AddCommentsIfAny(
-            List<HttpCommentNode> comments, 
+            List<HttpCommentNode> comments,
             HttpSyntaxNode toNode,
             bool addBefore = true)
         {
@@ -423,7 +423,7 @@ internal class HttpRequestParser
         {
             HttpUrlNode? node = null;
 
-            while (CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation)
+            while ((CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression()))
             {
                 if (node is null)
                 {
