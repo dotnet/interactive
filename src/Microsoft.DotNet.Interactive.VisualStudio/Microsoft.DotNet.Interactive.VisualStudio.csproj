@@ -43,6 +43,7 @@
     <PackageReference Update="System.Collections.Immutable" Version="7.0.0" />
     <PackageReference Update="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Update="System.CommandLine.NamingConventionBinder" Version="2.0.0-beta4.22272.1" />
+    <PackageReference Update="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
     <PackageReference Update="System.Reflection.Metadata" Version="7.0.0" />
     <PackageReference Update="System.Text.Json" Version="7.0.0" />
   </ItemGroup>
