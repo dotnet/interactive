@@ -3,10 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -15,9 +19,9 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.Extensions.Hosting;
+using Pocket;
 using Xunit;
-using static System.Net.WebRequestMethods;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
@@ -866,5 +870,23 @@ Content-Type: {{contentType}}
         valueProduced
             .FormattedValue.Should()
             .BeEquivalentTo(new FormattedValue(JsonFormatter.MimeType, "123"));
+    }
+
+    [Fact] // https://github.com/dotnet/interactive/issues/3239
+    public async Task traceparent_header_has_a_new_top_level_value_for_each_request()
+    {
+        using var kernel = new HttpKernel();
+
+        // the app often creates a parent activity
+        using var activity = new Activity(MethodBase.GetCurrentMethod().Name).Start();
+
+        var result1 = await kernel.SendAsync(new SubmitCode("GET https://example.com"));
+        var traceparent1 = result1.Events.OfType<ReturnValueProduced>().Single().Value.As<HttpResponse>().Request.Headers["traceparent"];
+
+        var result2 = await kernel.SendAsync(new SubmitCode("GET https://example.com"));
+        var traceparent2 = result2.Events.OfType<ReturnValueProduced>().Single().Value.As<HttpResponse>().Request.Headers["traceparent"];
+
+        // the traceparent format looks like this: 00-d00689882649007396cd32ab75c2611c-59402ab4fd5c55f7-00
+        traceparent1.Single()[0..36].Should().NotBe(traceparent2.Single()[0..36]);
     }
 }
