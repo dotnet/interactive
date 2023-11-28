@@ -77,19 +77,19 @@ public partial class VariableSharingTests
         }
 
         [Fact]
-        public async Task can_handle_multiple_set_commands_in_single_submission()
+        public async Task multiple_set_commands_can_be_used_in_single_submission()
         {
             using var kernel = CreateCompositeKernel();
 
             kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
             {
-                context.Publish(new InputProduced("hello!", requestInput));
+                context.Publish(new InputProduced("three", requestInput));
                 return Task.CompletedTask;
             });
 
-            await kernel.SendAsync( new SubmitCode("""
-                let var1 = "a"
-                let var2 = "b"
+            await kernel.SendAsync(new SubmitCode("""
+                let var1 = "one"
+                let var2 = "two"
                 """, targetKernelName:"fsharp"));
 
             var result = await kernel.SendAsync(new SubmitCode("""
@@ -107,6 +107,20 @@ public partial class VariableSharingTests
                 .Which;
 
             valueInfosProduced.ValueInfos.Select(v => v.Name).Should().BeEquivalentTo("newVar1", "newVar2", "newVar3");
+
+            var csharpKernel = (CSharpKernel)kernel.FindKernelByName("csharp");
+
+           csharpKernel.TryGetValue("newVar1", out object newVar1)
+                       .Should().BeTrue();
+           newVar1.Should().Be("one");
+           
+           csharpKernel.TryGetValue("newVar2", out object newVar2)
+                       .Should().BeTrue();
+           newVar2.Should().Be("two");
+
+           csharpKernel.TryGetValue("newVar3", out object newVar3)
+                       .Should().BeTrue();
+           newVar3.Should().Be("three");
         }
 
         [Fact]
