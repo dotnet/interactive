@@ -21,6 +21,7 @@ The following languages are supported by Polyglot Notebooks:
 | [Python](docs/jupyter-in-polyglot-notebooks.md)  |        ✅       |
 | [R](docs/jupyter-in-polyglot-notebooks.md)       |        ✅       |      
 | HTML                         |        ⛔         |     
+| HTTP                         |        ✅         |
 | [Mermaid](https://mermaid.js.org/intro/)         |        ⛔       |        
   
 ## Features

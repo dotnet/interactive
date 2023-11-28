@@ -388,6 +388,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                 "fsharp",
                 "pwsh",
                 "html",
+                "http",
                 "javascript",
                 "mermaid",
                 "value");
