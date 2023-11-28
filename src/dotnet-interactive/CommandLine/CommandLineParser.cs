@@ -501,6 +501,10 @@ public static class CommandLineParser
         compositeKernel.Add(
             new MermaidKernel());
 
+        compositeKernel.Add(
+            new HttpKernel()
+                .UseValueSharing());
+
         var kernel = compositeKernel
             .UseDefaultMagicCommands()
             .UseAboutMagicCommand()

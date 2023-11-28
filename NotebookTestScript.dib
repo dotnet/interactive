@@ -100,7 +100,7 @@ console.log(jsKernel.name);
 # Execute the next cell. After execution, the output immediately below should be:
 
 ```
-[".NET","csharp","fsharp","html","javascript","kql","mermaid","pwsh","sql","value","vscode","webview"]
+[".NET","csharp","fsharp","html","http","javascript","kql","mermaid","pwsh","sql","value","vscode","webview"]
 ```
 
 #!javascript
