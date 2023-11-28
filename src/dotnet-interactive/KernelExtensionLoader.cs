@@ -3,15 +3,12 @@
 
 using System;
 using System.Collections.Concurrent;    
-using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Linq;
-using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Telemetry;
-using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App;
 

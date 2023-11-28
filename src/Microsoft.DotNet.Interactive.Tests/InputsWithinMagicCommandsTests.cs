@@ -19,9 +19,13 @@ namespace Microsoft.DotNet.Interactive.Tests;
 public class InputsWithinMagicCommandsTests : IDisposable
 {
     private readonly CompositeKernel kernel;
+
     private RequestInput _receivedRequestInput = null;
+
     private readonly List<string> _receivedUserInput = new();
+
     private readonly Command _shimCommand;
+
     private readonly Queue<string> _responses = new();
 
     public InputsWithinMagicCommandsTests()
@@ -110,7 +114,7 @@ public class InputsWithinMagicCommandsTests : IDisposable
 
         _receivedUserInput.Should().BeEquivalentTo("one", "two");
     }
-    
+
     [Fact]
     public async Task Input_token_in_magic_command_prompts_user_for_password()
     {
