@@ -16,9 +16,9 @@ internal class InterceptingHttpMessageHandler : HttpMessageHandler
     {
         _handler = handler;
     }
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-
         var response = await _handler(request, cancellationToken);
         response.RequestMessage = request;
         return response;
