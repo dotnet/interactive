@@ -547,6 +547,12 @@ Microsoft.DotNet.Interactive.Connection
     public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
     public static CommandOrEvent DeserializeCommandOrEvent(System.String json)
     public static CommandOrEvent DeserializeCommandOrEvent(System.Text.Json.JsonElement jsonObject)
+  public class StdIoKernelConnector
+    .ctor(System.String[] command, System.String rootProxyKernelLocalName, System.Uri kernelHostUri, System.IO.DirectoryInfo workingDirectory = null)
+    public System.Nullable<System.Int32> ProcessId { get;}
+    public System.Threading.Tasks.Task<ProxyKernel> CreateProxyKernelAsync(System.String remoteName, System.String localNameOverride = null)
+    public System.Threading.Tasks.Task<ProxyKernel> CreateProxyKernelAsync(Microsoft.DotNet.Interactive.KernelInfo remoteInfo, System.String localNameOverride = null)
+    public System.Threading.Tasks.Task<ProxyKernel> CreateRootProxyKernelAsync()
 Microsoft.DotNet.Interactive.Events
   public class CodeSubmissionReceived : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.SubmitCode command)

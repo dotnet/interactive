@@ -5,12 +5,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.App.Tests
+namespace Microsoft.DotNet.Interactive.Tests
 {
     public class StdIoKernelConnectorTests
     {
