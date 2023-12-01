@@ -3,7 +3,6 @@
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.Tests;
-using Microsoft.DotNet.Interactive.CSharpProject.Tests;
 using Microsoft.DotNet.Interactive.Telemetry;
 
 using Xunit;
@@ -27,10 +26,10 @@ public class SimilaritySearchTests
             "diego",
             new CosineSimilarityComparer<string>(a => a.Select(c => (float)c).ToArray())
         )
-            .OrderByDescending(e => e.Value)
+            .OrderByDescending(e => e.Score)
             .Take(1);
 
-        search.Should().BeEquivalentTo(new [] { KeyValuePair.Create("diago", 0.9998783f) });
+        search.Should().BeEquivalentTo(new [] { ScoredValue.Create("diago", 0.9998783f) });
     }
 
     [Fact]
@@ -49,10 +48,10 @@ public class SimilaritySearchTests
                 new CosineSimilarityComparer<string>(a => a.Select(c => (float)c).ToArray()),
                         e => e.Text
             )
-            .OrderByDescending(e => e.Value)
+            .OrderByDescending(e => e.Score)
             .Take(1);
 
-        search.Should().BeEquivalentTo(new[] { KeyValuePair.Create(new { Text = "diago", Number = 1.0f }, 0.9998783f) });
+        search.Should().BeEquivalentTo(new[] { ScoredValue.Create(new { Text = "diago", Number = 1.0f }, 0.9998783f) });
     }
 
     [Fact]
@@ -68,13 +67,13 @@ public class SimilaritySearchTests
         var search = vectorCollection.ScoreBySimilarityTo(
             new[] { 1f, 1f },
             new CosineSimilarityComparer<float[]>(t => t)
-        ).OrderByDescending(e => e.Value)
+        ).OrderByDescending(e => e.Score)
             .Take(2);
 
         var expected = new[]
         {
-            KeyValuePair.Create(  new  [] { 1f,1.5f },  0.9805807f ),
-            KeyValuePair.Create( new[] { 1f,1.7f },  0.9679969f )
+            ScoredValue.Create(  new  [] { 1f,1.5f }, 0.9805807f ),
+            ScoredValue.Create( new[] { 1f,1.7f },  0.9679969f )
         };
 
         search.Should().BeEquivalentTo(expected);
