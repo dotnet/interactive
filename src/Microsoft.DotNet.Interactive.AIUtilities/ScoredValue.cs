@@ -8,7 +8,7 @@ public static class ScoredValue
     public static ScoredValue<T> Create<T>(T value, float score) => new(value, score);
 }
 
-public readonly struct ScoredValue<T>
+public class ScoredValue<T>
 {
     public ScoredValue(T value, float score)
     {
