@@ -21,18 +21,18 @@ public static class Text {
 
     private static readonly Logger _logger;
 
-    public static IEnumerable<KeyValuePair<T, float>> ScoreBySimilarityTo<T>(this IEnumerable<T> source, T value,
+    public static IEnumerable<ScoredValue<T>> ScoreBySimilarityTo<T>(this IEnumerable<T> source, T value,
         ISimilarityComparer<T> comparer)
     {
         _logger.Event( properties: ("comparer", comparer.GetType().FullName));
-        return source.Select(item => new KeyValuePair<T, float>(item, comparer.Score(item, value)));
+        return source.Select(item => new ScoredValue<T>(item, comparer.Score(item, value)));
     }
 
-    public static IEnumerable<KeyValuePair<TCollection, float>> ScoreBySimilarityTo<TCollection, TValue>(this IEnumerable<TCollection> source, TValue value,
-        ISimilarityComparer<TValue> comparer, Func<TCollection, TValue> valueSelector)
+    public static IEnumerable<ScoredValue<T>> ScoreBySimilarityTo<T, TValue>(this IEnumerable<T> source, TValue value,
+        ISimilarityComparer<TValue> comparer, Func<T, TValue> valueSelector)
     {
         _logger.Event(properties: ("comparer", comparer.GetType().FullName));
-        return source.Select(item => new KeyValuePair<TCollection, float>(item, comparer.Score(valueSelector(item), value)));
+        return source.Select(item => new ScoredValue<T>(item, comparer.Score(valueSelector(item), value)));
     }
 
     public static IObservable<string> ChunkByTokenCountWithOverlap(this IObservable<string> source, ITokenizer tokenizer, int maxTokenCount, int overlapTokenCount)
