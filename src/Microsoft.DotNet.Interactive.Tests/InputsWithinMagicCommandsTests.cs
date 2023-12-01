@@ -132,11 +132,27 @@ public class InputsWithinMagicCommandsTests : IDisposable
     }
 
     [Fact]
-    public async Task An_input_type_hint_is_set_for_file_inputs()
+    public async Task An_input_type_hint_is_set_for_file_inputs_when_prompt_is_unquoted()
     {
         _shimCommand.Add(new Option<FileInfo>("--file"));
 
-        await kernel.SendAsync(new SubmitCode("#!shim --file @input:file-please\n// some more stuff", "csharp"));
+        await kernel.SendAsync(new SubmitCode("""
+            #!shim --file @input:file-please
+            // some more stuff
+            """, "csharp"));
+
+        _receivedRequestInput.InputTypeHint.Should().Be("file");
+    }
+
+    [Fact]
+    public async Task An_input_type_hint_is_set_for_file_inputs_when_prompt_is_quoted()
+    {
+        _shimCommand.Add(new Option<FileInfo>("--file"));
+
+        await kernel.SendAsync(new SubmitCode("""
+            #!shim --file @input:"file please"
+            // some more stuff
+            """, "csharp"));
 
         _receivedRequestInput.InputTypeHint.Should().Be("file");
     }
@@ -171,9 +187,9 @@ public class InputsWithinMagicCommandsTests : IDisposable
         });
 
         var result = await kernel.SendAsync(new SubmitCode("""
-                #!set --name value1 --value @input:input-please 
-                #!set --name value2 --value @input:input-please 
-                #!set --name value3 --value @input:input-please
+                #!set --name value1 --value @input:"input-please "
+                #!set --name value2 --value @input:"input-please "
+                #!set --name value3 --value @input:"input-please"
                 """, targetKernelName: "csharp"));
 
         result.Events.Should().NotContainErrors();
@@ -191,6 +207,62 @@ public class InputsWithinMagicCommandsTests : IDisposable
         csharpKernel.TryGetValue("value3", out object value3)
                     .Should().BeTrue();
         value3.Should().Be("three");
+    }
+
+    [Fact]
+    public async Task additional_properties_of_input_request_are_set_by_input_properties_when_prompt_is_quoted()
+    {
+        using var kernel = new CSharpKernel();
+
+        var command = new Command("#!test")
+        {
+            new Argument<string>()
+        };
+        kernel.AddDirective(command);
+
+        RequestInput requestInput = null;
+        kernel.RegisterCommandHandler<RequestInput>((input, context) =>
+        {
+            requestInput = input;
+
+            return Task.CompletedTask;
+        });
+
+        var magicCommand = """#!test @input:"pick a number",save,type=file  """;
+
+        await kernel.SendAsync(new SubmitCode(magicCommand));
+
+        requestInput.Prompt.Should().Be("pick a number");
+        // FIX: requestInput.Persistent.Should().BeTrue();
+        requestInput.InputTypeHint.Should().Be("file");
+    }
+
+    [Fact(Skip = "Evaluating different syntax approaches")]
+    public async Task additional_properties_of_input_request_are_set_by_input_properties_when_prompt_or_field_name_is_not_quoted()
+    {
+        using var kernel = new CSharpKernel();
+
+        var command = new Command("#!test")
+        {
+            new Argument<string>()
+        };
+        kernel.AddDirective(command);
+
+        RequestInput requestInput = null;
+        kernel.RegisterCommandHandler<RequestInput>((input, context) =>
+        {
+            requestInput = input;
+
+            return Task.CompletedTask;
+        });
+
+        var magicCommand = """#!test @input:promptOrFieldName,save,type=file  """;
+
+        await kernel.SendAsync(new SubmitCode(magicCommand));
+
+        requestInput.Prompt.Should().Be("promptOrFieldName");
+        // FIX: requestInput.Persistent.Should().BeTrue();
+        requestInput.InputTypeHint.Should().Be("file");
     }
 
     private static CompositeKernel CreateKernel() =>

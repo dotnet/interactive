@@ -503,18 +503,17 @@ public class SubmissionParser
 
             var fixedUpText = currentDirectiveNode
                               .Text
+                              .Replace("\"", "") // paired quotes are removed from tokenToReplace by the command line string splitter so we also need to remove them from the raw text to find possible matches
                               .Replace($"@{tokenToReplace}", replaceMe)
-                              .Replace(" @", "");
+                              .Replace(" @", " ");
 
             var parseResult = currentDirectiveNode.DirectiveParser.Parse(fixedUpText);
-
-            var symbolResult = parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe));
 
             if (targetKernelName == "password")
             {
                 typeHint = "password";
             }
-            else if (symbolResult is { Symbol: { } symbol })
+            else if (parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe)) is { Symbol: { } symbol })
             {
                 typeHint = GetTypeHint(symbol);
             }
@@ -530,10 +529,58 @@ public class SubmissionParser
                     break;
             }
 
+            var startOfReplaceMe = fixedUpText.IndexOf(replaceMe, StringComparison.OrdinalIgnoreCase);
+            var rawTokenTextPlusRawTrailingText = currentDirectiveNode.Text[startOfReplaceMe..];
+            var endOfReplaceMe = startOfReplaceMe + replaceMe.Length;
+            var rawTrailingText = currentDirectiveNode.Text[Math.Min(endOfReplaceMe, currentDirectiveNode.Text.Length)..];
+            string rawTokenText;
+
+            if (rawTrailingText.Length > 0)
+            {
+                if (rawTokenTextPlusRawTrailingText.EndsWith(rawTrailingText))
+                {
+                    rawTokenText = rawTokenTextPlusRawTrailingText.Remove(rawTokenTextPlusRawTrailingText.LastIndexOf(rawTrailingText));
+                }
+                else
+                {
+                    rawTokenText = rawTokenTextPlusRawTrailingText;
+                }
+            }
+            else
+            {
+                rawTokenText = rawTokenTextPlusRawTrailingText;
+            }
+
+            bool persistent = false;
+
+            foreach (var annotation in ParseInputProperties(rawTokenText))
+            {
+                switch (annotation.key)
+                {
+                    case "prompt":
+                        prompt = annotation.value;
+                        break;
+                    case "valueName":
+                        valueName ??= annotation.value;
+                        break;
+                    case "save":
+                        persistent = true;
+                        break;
+                    case "type":
+                        typeHint = annotation.value;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
             var inputRequest = new RequestInput(
                 valueName: valueName,
                 prompt: prompt,
-                inputTypeHint: typeHint);
+                inputTypeHint: typeHint)
+            {
+                // Persistent = persistent
+            };
 
             var requestInputResult = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 
@@ -553,13 +600,87 @@ public class SubmissionParser
             {
                 var c = tokenToReplace[i];
 
-                if (c is '\\' or '/')
+                if (c is '\\' or '/')   
                 {
                     return true;
                 }
             }
-
+            
             return false;
+        }
+    }
+
+    private static IEnumerable<(string key, string value)> ParseInputProperties(string input)
+    {
+        int? quoteStartIndex = null;
+        int currentAnnotationStartIndex = 0;
+
+        if (input.StartsWith("@input:"))
+        {
+            input = input["@input:".Length ..];
+        }
+        else if (input.StartsWith("@password:"))
+        {
+            input = input["@password:".Length ..];
+        }
+
+        for (var i = 0; i < input.Length; i++)
+        {
+            var c = input[i];
+
+            if (c == '"')
+            {
+                if (quoteStartIndex is { } start)
+                {
+                    var value = input[(start + 1) .. i];
+                    yield return GetPromptOrFieldName(value);
+                }
+                else
+                {
+                    quoteStartIndex = i;
+                }
+
+                currentAnnotationStartIndex = i + 1;
+            }
+            else if (c == ',' || i == input.Length - 1)
+            {
+                var annotation = input[currentAnnotationStartIndex..i];
+
+                if (quoteStartIndex is null)
+                {
+                    yield return GetPromptOrFieldName(annotation);
+                }
+                else
+                {
+                    var keyAndValue = annotation.Split('=');
+
+                    if (annotation.Length > 0)
+                    {
+                        if (keyAndValue.Length == 1)
+                        {
+                            yield return (annotation, null);
+                        }
+                        else
+                        {
+                            yield return (keyAndValue[0], keyAndValue[1]);
+                        }
+                    }
+                }
+
+                currentAnnotationStartIndex = i + 1;
+            }
+        }
+
+        static (string key, string value) GetPromptOrFieldName(string value)
+        {
+            if (value.Contains(" "))
+            {
+                return ("prompt", value);
+            }
+            else
+            {
+                return ("valueName", value);
+            }
         }
     }
 
