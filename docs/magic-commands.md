@@ -25,6 +25,7 @@ The following are some useful magic commands that are available in all or nearly
 | `#!lsmagic`                           | Lists the available magic commands, including those that might have been installed via an extension. 
 | `#!markdown`                          | Indicates that the code that follows is Markdown, which can then be directly rendered as HTML in the browser.
 | [`#!share`](variable-sharing.md)      | Shares a variable from another specified subkernel (including one stored using `#!value`).
+| [`#!set`](variable-sharing.md)        | An improved version of `#!share`.
 | `#!time`                              | Measures the execution time of the code submission.
 | `#!connect`                           | Enables connection of additional kernels.
 
