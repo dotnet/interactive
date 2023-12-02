@@ -551,7 +551,7 @@ public class SubmissionParser
                 rawTokenText = rawTokenTextPlusRawTrailingText;
             }
 
-            bool persistent = false;
+            // FIX: (InterpolateValueFromKernel)    bool persistent = false;
 
             foreach (var annotation in ParseInputProperties(rawTokenText))
             {
@@ -564,7 +564,7 @@ public class SubmissionParser
                         valueName ??= annotation.value;
                         break;
                     case "save":
-                        persistent = true;
+                        // FIX: (InterpolateValueFromKernel) persistent = true;
                         break;
                     case "type":
                         typeHint = annotation.value;
