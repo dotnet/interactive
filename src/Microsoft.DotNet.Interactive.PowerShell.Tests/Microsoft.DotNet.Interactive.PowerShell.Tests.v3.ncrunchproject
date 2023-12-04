@@ -29,9 +29,6 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.GetCorrectProfilePaths</TestName>
       </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.When_code_produces_errors_then_the_command_fails</TestName>
-      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

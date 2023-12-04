@@ -96,7 +96,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     internal async Task IdleAsync()
     {
-        if (_currentlyRunningTopLevelOperation is { } currentlyRunning && !currentlyRunning.IsCompleted)
+        if (_currentlyRunningTopLevelOperation is { IsCompleted: false } currentlyRunning)
         {
             await currentlyRunning.TaskCompletionSource.Task;
         }

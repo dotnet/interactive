@@ -168,32 +168,32 @@ public static class KernelExtensions
         InvocationContext cmdLineContext,
         Option<string> nameOption,
         Option<ValueOptionResult> valueOption,
-        Option<string> mimeTypeOption,
         Option<bool> byrefOption)
         where T : Kernel
     {
-        var valueName = cmdLineContext.ParseResult.GetValueForOption(nameOption);
-        var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
         var context = cmdLineContext.GetService<KernelInvocationContext>();
-        var isByref = cmdLineContext.ParseResult.GetValueForOption(byrefOption);
 
         if (kernel.SupportsCommandType(typeof(SendValue)))
         {
-            var events = new List<ValueProduced>();
-            InputProduced inputProduced = null;
-            using var subscription = context.KernelEvents.Where(e => e is ValueProduced or InputProduced).Subscribe(
-                e =>
-                {
-                    switch (e)
-                    {
-                        case ValueProduced vp:
-                            events.Add(vp);
-                            break;
-                        case InputProduced ip:
-                            inputProduced = ip;
-                            break;
-                    }
-                });
+            var valueProducedEvents = new List<ValueProduced>();
+
+            var inputProducedEvents = new List<InputProduced>();
+
+            using var subscription = context.KernelEvents
+                                            .Where(e => e is ValueProduced or InputProduced)
+                                            .Subscribe(
+                                                e =>
+                                                {
+                                                    switch (e)
+                                                    {
+                                                        case ValueProduced vp:
+                                                            valueProducedEvents.Add(vp);
+                                                            break;
+                                                        case InputProduced ip:
+                                                            inputProducedEvents.Add(ip);
+                                                            break;
+                                                    }
+                                                });
 
             var valueOptionResult = cmdLineContext.ParseResult.GetValueForOption(valueOption);
 
@@ -201,46 +201,51 @@ public static class KernelExtensions
 
             ValueProduced valueProduced = null;
 
-            if (valueOptionResult is { Name: var sourceValueName, Kernel: var sourceKernelName } 
-                && sourceKernelName != "input")
+            if (valueOptionResult is { Name: var sourceValueName, Kernel: var sourceKernelName } && 
+                sourceKernelName != "input")
             {
                 if (sourceKernel?.KernelInfo.IsProxy == true)
                 {
                     var destinationUri = sourceKernel?.KernelInfo.RemoteUri;
 
-                    valueProduced = events.SingleOrDefault(e =>
-                        e.Name == sourceValueName && e.Command.DestinationUri == destinationUri);
+                    valueProduced = valueProducedEvents.SingleOrDefault(e =>
+                                                                            e.Name == sourceValueName && e.Command.DestinationUri == destinationUri);
                 }
                 else
                 {
-                    valueProduced = events.SingleOrDefault(e =>
-                        e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName);
+                    valueProduced = valueProducedEvents.SingleOrDefault(e =>
+                                                                            e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName);
                 }
             }
 
             if (valueProduced is { })
             {
+                var isByref = cmdLineContext.ParseResult.GetValueForOption(byrefOption);
+                var valueNameFromCommandLine = cmdLineContext.ParseResult.GetValueForOption(nameOption);
+
                 var referenceValue = isByref ? valueProduced.Value : null;
                 var formattedValue = valueProduced.FormattedValue;
 
-                await SendValue(context, kernel, referenceValue, formattedValue, valueName);
+                await SendValue(context, kernel, referenceValue, formattedValue, valueNameFromCommandLine);
             }
-            else if (inputProduced is { })
+
+            if (inputProducedEvents.Count > 0)
             {
-                if (inputProduced.Command is RequestInput { IsPassword: true })
+                foreach (var inputProduced in inputProducedEvents)
                 {
-                    await SendValue(context, kernel, new PasswordString(inputProduced.Value), null, valueName);
-                }
-                else
-                {
-                    await SendValue(context, kernel, inputProduced.Value, null, valueName);
+                    if (inputProduced.Command is RequestInput requestInput)
+                    {
+                        if (requestInput.IsPassword)
+                        {
+                            await SendValue(context, kernel, new PasswordString(inputProduced.Value), null, requestInput.ValueName);
+                        }
+                        else
+                        {
+                            await SendValue(context, kernel, inputProduced.Value, null, requestInput.ValueName);
+                        }
+                    }
                 }
             }
-            else
-            {
-                await SendValue(context, kernel, valueOptionResult?.Value, null, valueName);
-            }
-            
         }
         else
         {
@@ -346,7 +351,7 @@ public static class KernelExtensions
         };
 
         set.SetHandler(async cmdLineContext =>
-                           await HandleSetMagicCommand(destinationKernel, cmdLineContext, nameOption, valueOption, mimeTypeOption, byrefOption));
+                           await HandleSetMagicCommand(destinationKernel, cmdLineContext, nameOption, valueOption, byrefOption));
 
         destinationKernel.AddDirective(set);
 
