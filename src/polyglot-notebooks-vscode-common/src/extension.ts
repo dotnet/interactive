@@ -104,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     } catch (e) {
         showHelpPage = true;
-        vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download/${minDotNetSdkVersion}`);
+        vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download/dotnet/${minDotNetSdkVersion}`);
     }
 
     if (showHelpPage) {
