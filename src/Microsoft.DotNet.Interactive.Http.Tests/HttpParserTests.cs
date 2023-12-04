@@ -10,11 +10,11 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
-public partial class ParserTests : IDisposable
+public partial class HttpParserTests : IDisposable
 {
     private readonly AssertionScope _assertionScope;
 
-    public ParserTests(ITestOutputHelper output)
+    public HttpParserTests(ITestOutputHelper output)
     {
         _output = output;
         _assertionScope = new AssertionScope();
