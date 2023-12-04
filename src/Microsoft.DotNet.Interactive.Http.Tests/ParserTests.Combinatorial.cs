@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
-public partial class ParserTests
+public partial class HttpParserTests
 {
     private readonly ITestOutputHelper _output;
 
