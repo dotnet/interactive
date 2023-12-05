@@ -197,16 +197,27 @@ public static class KernelExtensions
 
             var valueOptionResult = cmdLineContext.ParseResult.GetValueForOption(valueOption);
 
-            var sourceKernel = Kernel.Root.FindKernelByName(valueOptionResult.Kernel);
+            var sourceKernelName = valueOptionResult.Kernel;
+
+            // FIX: (HandleSetMagicCommand) delete
+            switch (sourceKernelName)
+            {
+                case "input": break;
+                case "password": break;
+                case "csharp": break;
+                default: break;
+            }
+
+            var sourceKernel = Kernel.Root.FindKernelByName(sourceKernelName);
 
             ValueProduced valueProduced = null;
 
-            if (valueOptionResult is { Name: var sourceValueName, Kernel: var sourceKernelName } && 
-                sourceKernelName != "input")
+            if (valueOptionResult is { Name: var sourceValueName } && 
+                sourceKernel is not null)
             {
-                if (sourceKernel?.KernelInfo.IsProxy == true)
+                if (sourceKernel.KernelInfo.IsProxy == true)
                 {
-                    var destinationUri = sourceKernel?.KernelInfo.RemoteUri;
+                    var destinationUri = sourceKernel.KernelInfo.RemoteUri;
 
                     valueProduced = valueProducedEvents.SingleOrDefault(e =>
                                                                             e.Name == sourceValueName && e.Command.DestinationUri == destinationUri);
@@ -218,10 +229,11 @@ public static class KernelExtensions
                 }
             }
 
+            var valueNameFromCommandLine = cmdLineContext.ParseResult.GetValueForOption(nameOption);
+
             if (valueProduced is { })
             {
                 var isByref = cmdLineContext.ParseResult.GetValueForOption(byrefOption);
-                var valueNameFromCommandLine = cmdLineContext.ParseResult.GetValueForOption(nameOption);
 
                 var referenceValue = isByref ? valueProduced.Value : null;
                 var formattedValue = valueProduced.FormattedValue;
@@ -244,6 +256,14 @@ public static class KernelExtensions
                             await SendValue(context, kernel, inputProduced.Value, null, requestInput.ValueName);
                         }
                     }
+                }
+            }
+
+            if (sourceKernelName is null)
+            {
+                if (inputProducedEvents.All(e => ((RequestInput)e.Command).ValueName != valueNameFromCommandLine))
+                {
+                    await SendValue(context, kernel, valueOptionResult.Value, null, valueNameFromCommandLine);
                 }
             }
         }
