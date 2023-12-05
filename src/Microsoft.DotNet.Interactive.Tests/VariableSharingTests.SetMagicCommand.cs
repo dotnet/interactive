@@ -31,19 +31,12 @@ public partial class VariableSharingTests
         [Fact]
         public async Task can_set_value_directly()
         {
-            
-  var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(Language.CSharp);
 
             using var composite = new CompositeKernel
             {
                 kernel
             };
-
-            composite.RegisterCommandHandler<RequestInput>((requestInput, context) =>
-            {
-                context.Publish(new InputProduced("hello!", requestInput));
-                return Task.CompletedTask;
-            });
 
             composite.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), composite.Name);
 
@@ -51,7 +44,7 @@ public partial class VariableSharingTests
                 #!set --name x --value hello!
                 """));
             var valueProduced = await kernel.RequestValueAsync("x");
-            
+
             valueProduced.Value.Should().Be("hello!");
         }
 
