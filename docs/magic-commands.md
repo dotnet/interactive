@@ -22,9 +22,10 @@ The following are some useful magic commands that are available in all or nearly
 |---------------------------------------|----------------------------------------------------------------------
 | `#!about`                             | Displays information about the version of the kernel.
 | [`#!import`](import-magic-command.md) | Runs code from another notebook or source code file.
-| `#!lsmagic`                           | Lists the available magic commands, including those that might have been installed via an extension. 
+| `#!lsmagic`                           | Lists the available magic commands (including those that might have been installed via an extension). 
 | `#!markdown`                          | Indicates that the code that follows is Markdown, which can then be directly rendered as HTML in the browser.
 | [`#!share`](variable-sharing.md)      | Shares a variable from another specified subkernel (including one stored using `#!value`).
+| [`#!set`](variable-sharing.md)        | Sets a value in the current kernel (including support for inputs and literals).
 | `#!time`                              | Measures the execution time of the code submission.
 | `#!connect`                           | Enables connection of additional kernels.
 
@@ -55,7 +56,7 @@ The following magic commands are available within a C# language context.
 | `#i`                                    | Adds a NuGet source to the session. Subsequent `#r nuget` commands will include the specified source when resolving packages.
 | `#r`                                    | In C# Interactive, the `#r` compiler directive adds a reference to a specified assembly, e.g. `#r "/path/to/a.dll"`, or system assembly, e.g. `#r "System.Net.Http.Json.dll"`.  In .NET Interactive, this capability has been expanded to provide the ability to reference NuGet packages using the syntax `#r "nuget:PackageName,1.0.0-beta"`.<br />You cannot reference two different versions of the same package. If you try to do so, you'll receive an error.
 | `#!who`                                 | Displays the names of the top-level variables within the C# subkernel.
-| `#!whos`                                | Displays the top-level variables within the C# subkernel, including their name, type, and value.
+| `#!whos`                                | Displays the top-level variables within the C# subkernel (including their name, type, and value).
 
 ## F# Kernel
 
@@ -66,7 +67,7 @@ The following magic commands are available within an F# language context.
 | `#i`                                    | Adds a NuGet source to the session. Subsequent `#r nuget` commands will include the specified source when resolving packages.
 | `#r`                                    | In F# Interactive, the `#r` compiler directive adds a reference to a specified assembly, e.g. `#r "/path/to/a.dll"`. <br/> When used with the `nuget` qualifier, it can also reference NuGet packages using the syntax `#r "nuget:PackageName,1.0.0-beta"`.<br />You cannot reference two different versions of the same package. If you try to do so, you'll receive an error.
 | `#!who`                                 | Displays the names of the top-level variables within the F# subkernel.
-| `#!whos`                                | Displays the top-level variables within the F# subkernel, including their name, type, and value.
+| `#!whos`                                | Displays the top-level variables within the F# subkernel (including their name, type, and value).
 
 ## Extensibility
 
