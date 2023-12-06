@@ -75,9 +75,6 @@ public partial class HttpParserTests
                 @host=https://{{hostname}}
                 # variable using "dynamic variables"
                 @createdAt = {{$datetime iso8601}}
-                @anyhost={{host}}/anything
-                @fakeuser=fakeuser
-                @fakepwd=fakepwd
 
                 https://httpbin.org/get
                 """);
@@ -85,7 +82,32 @@ public partial class HttpParserTests
             var requestNode = result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
 
             var variableNodes = result.SyntaxTree.RootNode.ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
-            variableNodes.Count().Should().Be(7);
+            variableNodes.Count().Should().Be(4);
+
+            variableNodes.Select(n => n.DeclarationNode.Text).Should().BeEquivalentTo(["@searchTerm", "@hostname", "@host", "@createdAt"]);
+            variableNodes.Select(n => n.ValueNode.Text).Should().BeEquivalentTo(["some-search-term", "httpbin.org", "https://{{hostname}}", "{{$datetime iso8601}}"]);
+
+            variableNodes.Last().DescendantNodesAndTokens().OfType<HttpExpressionNode>().Count().Should().Be(1);
+        }
+
+        [Fact]
+        public void request_node_with_embedded_expression_after_embedded_expression()
+        {
+            var result = Parse(
+                """
+                @host=https://httpbin.org
+                @anything=anything
+                @anyhost={{host}}/{{anything}}
+
+                https://httpbin.org/get
+                """);
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+            var variableNodes = result.SyntaxTree.RootNode.ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
+            variableNodes.Count().Should().Be(3);
+
+            variableNodes.Last().DescendantNodesAndTokens().OfType<HttpExpressionNode>().Count().Should().Be(2);
 
             requestNode.UrlNode.Text.Should().Be("https://httpbin.org/get");
         }
