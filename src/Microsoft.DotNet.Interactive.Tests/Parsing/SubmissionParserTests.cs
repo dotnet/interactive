@@ -43,7 +43,7 @@ x
 
         var tree = parser.Parse(code);
 
-        var nodes = tree.GetRoot().ChildNodes;
+        var nodes = tree.RootNode.ChildNodes;
 
         nodes
             .Should()
@@ -61,7 +61,7 @@ x
 
         var tree = parser.Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx");
 
-        tree.GetRoot()
+        tree.RootNode
             .ChildNodes
             .Should()
             .ContainSingle<DirectiveNode>()
@@ -78,7 +78,7 @@ x
 
         var tree = parser.Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx");
 
-        tree.GetRoot()
+        tree.RootNode
             .ChildNodes
             .Should()
             .ContainSingle<DirectiveNode>()
@@ -95,7 +95,7 @@ x
 
         var tree = parser.Parse("var x = 1;\n#i \"nuget:/some/path\"\nx");
 
-        tree.GetRoot()
+        tree.RootNode
             .ChildNodes
             .Should()
             .ContainSingle<DirectiveNode>()
@@ -130,11 +130,11 @@ x
 
         var tree = parser.Parse("#!csharp --invalid-option\nvar x = 1;");
 
-        var node = tree.GetRoot()
-            .ChildNodes
-            .Should()
-            .ContainSingle<DirectiveNode>()
-            .Which;
+        var node = tree.RootNode
+                       .ChildNodes
+                       .Should()
+                       .ContainSingle<DirectiveNode>()
+                       .Which;
 
         var diagnostics = node.GetDiagnostics();
 
@@ -169,7 +169,7 @@ x
 
         var tree = CreateSubmissionParser().Parse(code);
 
-        var textSpan = tree.GetRoot().FindNode(position.Value);
+        var textSpan = tree.RootNode.FindNode(position.Value);
 
         textSpan.Should().BeOfType(expectedNodeType);
     }
@@ -187,12 +187,12 @@ x
 
         var tree = CreateSubmissionParser("csharp").Parse(code);
 
-        var textSpan = tree.GetRoot()
-            .FindNode(span)
-            .ChildTokens
-            .OfType<DirectiveToken>()
-            .Single()
-            .Span;
+        var textSpan = tree.RootNode
+                           .FindNode(span)
+                           .ChildTokens
+                           .OfType<DirectiveToken>()
+                           .Single()
+                           .Span;
 
         textSpan.Should().BeEquivalentTo(span);
     }
@@ -269,7 +269,7 @@ let x =
 
             foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
             {
-                var node = tree.GetRoot().FindNode(position);
+                var node = tree.RootNode.FindNode(position);
 
                 switch (node)
                 {
@@ -308,7 +308,7 @@ let x = 123
         {
             foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
             {
-                var node = tree.GetRoot().FindNode(position);
+                var node = tree.RootNode.FindNode(position);
 
                 node.Should().BeAssignableTo<DirectiveNode>();
             }
@@ -324,7 +324,7 @@ let x = 123
 
         var tree = parser.Parse(code);
 
-        tree.GetRoot()
+        tree.RootNode
             .ChildNodes
             .Should()
             .ContainSingle<LanguageNode>()
@@ -341,7 +341,7 @@ let x = 123
 // language line";
         var parser = CreateSubmissionParser();
         var tree = parser.Parse(code);
-        var root = tree.GetRoot();
+        var root = tree.RootNode;
         var rootSpan = root.Span;
 
         root.ChildNodes

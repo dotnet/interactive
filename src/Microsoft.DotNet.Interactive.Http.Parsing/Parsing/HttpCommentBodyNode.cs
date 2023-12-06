@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpCommentBodyNode : HttpSyntaxNode
+internal class HttpCommentBodyNode : SyntaxNode
 {
     internal HttpCommentBodyNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {

@@ -15,7 +15,7 @@ public interface ISyntaxSpec
 }
 
 internal abstract class SyntaxSpecBase<T> : ISyntaxSpec
-    where T : HttpSyntaxNode
+    where T : SyntaxNode
 {
     private readonly Action<T>[] _assertions;
 

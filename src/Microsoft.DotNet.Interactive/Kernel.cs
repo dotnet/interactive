@@ -211,7 +211,7 @@ public abstract partial class Kernel :
         out LanguageServiceCommand adjustedCommand)
     {
         var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
-        var rootNode = tree.GetRoot();
+        var rootNode = tree.RootNode;
         var sourceText = SourceText.From(command.Code);
         var lines = sourceText.Lines;
         if (command.LinePosition.Line < 0

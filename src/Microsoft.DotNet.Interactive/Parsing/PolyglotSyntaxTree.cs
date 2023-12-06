@@ -1,10 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System;
 using Microsoft.CodeAnalysis.Text;
-
-#nullable enable
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
@@ -20,15 +20,10 @@ public class PolyglotSyntaxTree
 
     public int Length => _sourceText.Length;
 
-    internal SyntaxNode? RootNode
+    public SyntaxNode? RootNode
     {
         get => _root;
         set => _root = value ?? throw new ArgumentNullException(nameof(value));
-    }
-
-    public SyntaxNode? GetRoot()
-    {
-        return _root;
     }
 
     public override string ToString()
@@ -49,7 +44,7 @@ public class PolyglotSyntaxTree
         }
 
         var node = _root.FindNode(position);
-            
+
         switch (node)
         {
             case LanguageNode languageNode:

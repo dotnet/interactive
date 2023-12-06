@@ -8,7 +8,7 @@ using System;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpVariableDeclarationAndAssignmentNode : HttpSyntaxNode
+internal class HttpVariableDeclarationAndAssignmentNode : SyntaxNode
 {
     public HttpVariableDeclarationNode? DeclarationNode { get; private set; }
     public HttpVariableAssignmentNode? AssignmentNode { get; private set; }

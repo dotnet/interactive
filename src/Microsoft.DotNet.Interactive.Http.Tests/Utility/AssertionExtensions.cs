@@ -12,8 +12,8 @@ namespace Microsoft.DotNet.Interactive.Http.Tests.Utility;
 internal static class AssertionExtensions
 {
     public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
-        this GenericCollectionAssertions<HttpSyntaxNode> should)
-        where T : HttpSyntaxNode
+        this GenericCollectionAssertions<SyntaxNode> should)
+        where T : SyntaxNode
     {
         should.ContainSingle(e => e is T);
 
@@ -25,8 +25,8 @@ internal static class AssertionExtensions
     }
     
     public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
-        this GenericCollectionAssertions<HttpSyntaxNodeOrToken> should)
-        where T : HttpSyntaxNode
+        this GenericCollectionAssertions<SyntaxNodeOrToken> should)
+        where T : SyntaxNode
     {
         should.ContainSingle(e => e is T);
 

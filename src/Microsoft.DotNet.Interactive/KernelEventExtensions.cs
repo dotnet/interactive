@@ -54,7 +54,7 @@ internal static class KernelEventExtensions
         this LanguageNode languageNode, 
         IReadOnlyCollection<Diagnostic> diagnostics)
     {
-        var root = languageNode.SyntaxTree.GetRoot();
+        var root = languageNode.SyntaxTree.RootNode;
         var initialSpan = languageNode.Span;
         var sourceText = SourceText.From(root.Text);
         var codePosition = sourceText.Lines.GetLinePositionSpan(initialSpan);

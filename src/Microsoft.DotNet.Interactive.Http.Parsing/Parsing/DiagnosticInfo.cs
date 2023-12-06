@@ -5,14 +5,9 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal sealed class HttpDiagnosticInfo
+internal sealed class DiagnosticInfo
 {
-    internal string Id { get; }
-    internal string MessageFormat { get; }
-    internal DiagnosticSeverity Severity { get; }
-    internal object[] MessageArguments { get; }
-
-    internal HttpDiagnosticInfo(
+    internal DiagnosticInfo(
         string id,
         string messageFormat,
         DiagnosticSeverity severity,
@@ -23,4 +18,12 @@ internal sealed class HttpDiagnosticInfo
         Severity = severity;
         MessageArguments = messageArguments;
     }
+
+    internal string Id { get; }
+
+    internal string MessageFormat { get; }
+
+    internal DiagnosticSeverity Severity { get; }
+
+    internal object[] MessageArguments { get; }
 }

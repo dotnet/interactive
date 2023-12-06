@@ -13,14 +13,14 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 using Diagnostic = CodeAnalysis.Diagnostic;
 
-internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
+internal abstract class SyntaxNode : SyntaxNodeOrToken
 {
     private TextSpan _fullSpan;
-    private readonly List<HttpSyntaxNodeOrToken> _childNodesAndTokens = new();
+    private readonly List<SyntaxNodeOrToken> _childNodesAndTokens = new();
     private TextSpan _span;
     private bool _isSignificant = false;
 
-    private protected HttpSyntaxNode(
+    private protected SyntaxNode(
         SourceText sourceText,
         HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
@@ -37,25 +37,25 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
     /// </summary>
     public string FullText => SourceText.ToString(FullSpan);
 
-    public bool Contains(HttpSyntaxNode node) => false;
+    public bool Contains(SyntaxNode node) => false;
 
-    public HttpSyntaxNode? FindNode(TextSpan span) =>
+    public SyntaxNode? FindNode(TextSpan span) =>
         DescendantNodesAndTokensAndSelf()
-            .OfType<HttpSyntaxNode>()
+            .OfType<SyntaxNode>()
             .Reverse()
             .FirstOrDefault(n => n.FullSpan.Contains(span));
 
-    public HttpSyntaxNode? FindNode(int position) =>
+    public SyntaxNode? FindNode(int position) =>
         FindToken(position)?.Parent;
 
-    public HttpSyntaxToken? FindToken(int position)
+    public SyntaxToken? FindToken(int position)
     {
         var candidate = _childNodesAndTokens.FirstOrDefault(n => n.FullSpan.Contains(position));
 
         return candidate switch
         {
-            HttpSyntaxNode node => node.FindToken(position),
-            HttpSyntaxToken token => token,
+            SyntaxNode node => node.FindToken(position),
+            SyntaxToken token => token,
             _ => null
         };
     }
@@ -66,7 +66,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         for (var i = 1; i < _childNodesAndTokens.Count - 1; i++)
         {
             var nodeOrToken = _childNodesAndTokens[i];
-            if (nodeOrToken is HttpSyntaxToken { Kind: HttpTokenKind.Whitespace })
+            if (nodeOrToken is SyntaxToken { Kind: HttpTokenKind.Whitespace })
             {
                 if (nodeOrToken.Span.OverlapsWith(_span))
                 {
@@ -78,7 +78,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         return false;
     }
 
-    private void GrowSpan(HttpSyntaxNodeOrToken child)
+    private void GrowSpan(SyntaxNodeOrToken child)
     {
         if (_fullSpan == default)
         {
@@ -90,7 +90,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
             // if the child span is empty and uninitialized, then set it to the end of the current node's span.
             if (child.FullSpan is { Start: 0, End: 0 })
             {
-                if (child is HttpSyntaxNode childNode)
+                if (child is SyntaxNode childNode)
                 {
                     childNode._fullSpan = new TextSpan(FullSpan.End, 0);
                 }
@@ -120,11 +120,11 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         }
     }
 
-    internal void Add(HttpSyntaxToken token) => AddInternal(token);
+    internal void Add(SyntaxToken token) => AddInternal(token);
 
     internal void Add(HttpCommentNode node, bool addBefore) => AddInternal(node, addBefore);
 
-    protected void AddInternal(HttpSyntaxNodeOrToken child, bool addBefore = false)
+    protected void AddInternal(SyntaxNodeOrToken child, bool addBefore = false)
     {
         if (child is null)
         {
@@ -155,12 +155,12 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         GrowSpan(child);
     }
 
-    public IEnumerable<HttpSyntaxNode> ChildNodes =>
-        _childNodesAndTokens.OfType<HttpSyntaxNode>();
+    public IEnumerable<SyntaxNode> ChildNodes =>
+        _childNodesAndTokens.OfType<SyntaxNode>();
 
-    public IEnumerable<HttpSyntaxToken> ChildTokens => _childNodesAndTokens.OfType<HttpSyntaxToken>();
+    public IEnumerable<SyntaxToken> ChildTokens => _childNodesAndTokens.OfType<SyntaxToken>();
 
-    public IReadOnlyList<HttpSyntaxNodeOrToken> ChildNodesAndTokens => _childNodesAndTokens;
+    public IReadOnlyList<SyntaxNodeOrToken> ChildNodesAndTokens => _childNodesAndTokens;
 
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
@@ -179,7 +179,7 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
 
     }
 
-    public IEnumerable<HttpSyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()
+    public IEnumerable<SyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()
     {
         yield return this;
 
@@ -189,11 +189,11 @@ internal abstract class HttpSyntaxNode : HttpSyntaxNodeOrToken
         }
     }
 
-    public IEnumerable<HttpSyntaxNodeOrToken> DescendantNodesAndTokens() =>
+    public IEnumerable<SyntaxNodeOrToken> DescendantNodesAndTokens() =>
         FlattenBreadthFirst(_childNodesAndTokens, n => n switch
         {
-            HttpSyntaxNode node => node.ChildNodesAndTokens,
-            _ => Array.Empty<HttpSyntaxNodeOrToken>()
+            SyntaxNode node => node.ChildNodesAndTokens,
+            _ => Array.Empty<SyntaxNodeOrToken>()
         });
 
     private static IEnumerable<T> FlattenBreadthFirst<T>(

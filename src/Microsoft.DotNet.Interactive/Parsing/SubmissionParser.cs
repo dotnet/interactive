@@ -86,7 +86,7 @@ public class SubmissionParser
         var hoistedCommandsIndex = 0;
 
         var tree = Parse(code, originalCommand.TargetKernelName);
-        var nodes = tree.GetRoot().ChildNodes.ToArray();
+        var nodes = tree.RootNode.ChildNodes.ToArray();
 
         var targetKernelName = originalCommand.TargetKernelName ?? DefaultKernelName();
 

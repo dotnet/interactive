@@ -28,7 +28,7 @@ internal class HttpRequestParser
     private class HttpSyntaxParser
     {
         private readonly SourceText _sourceText;
-        private IReadOnlyList<HttpSyntaxToken>? _tokens;
+        private IReadOnlyList<SyntaxToken>? _tokens;
         private int _currentTokenIndex = 0;
         private readonly HttpSyntaxTree _syntaxTree;
 
@@ -90,7 +90,7 @@ internal class HttpRequestParser
 
         private static void AddCommentsIfAny(
             List<HttpCommentNode> comments,
-            HttpSyntaxNode toNode,
+            SyntaxNode toNode,
             bool addBefore = true)
         {
             foreach (var comment in comments)
@@ -208,12 +208,12 @@ internal class HttpRequestParser
             return ParseTrailingWhitespace(node);
         }
 
-        private HttpSyntaxToken? CurrentToken =>
+        private SyntaxToken? CurrentToken =>
             MoreTokens()
                 ? _tokens![_currentTokenIndex]
                 : null;
 
-        private HttpSyntaxToken? CurrentTokenPlus(int offset)
+        private SyntaxToken? CurrentTokenPlus(int offset)
         {
             var nextTokenIndex = _currentTokenIndex + offset;
 
@@ -234,7 +234,7 @@ internal class HttpRequestParser
         private void AdvanceToNextToken() => _currentTokenIndex++;
 
         [DebuggerStepThrough]
-        private void ConsumeCurrentTokenInto(HttpSyntaxNode node)
+        private void ConsumeCurrentTokenInto(SyntaxNode node)
         {
             if (CurrentToken is { } token)
             {
@@ -243,7 +243,7 @@ internal class HttpRequestParser
             }
         }
 
-        private T ParseLeadingWhitespaceAndComments<T>(T node) where T : HttpSyntaxNode
+        private T ParseLeadingWhitespaceAndComments<T>(T node) where T : SyntaxNode
         {
             while (MoreTokens())
             {
@@ -271,7 +271,7 @@ internal class HttpRequestParser
             return node;
         }
 
-        private T ParseTrailingWhitespace<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewLine = false) where T : HttpSyntaxNode
+        private T ParseTrailingWhitespace<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewLine = false) where T : SyntaxNode
         {
             while (MoreTokens())
             {
@@ -502,7 +502,7 @@ internal class HttpRequestParser
                        : null;
         }
 
-        private HttpSyntaxToken? GetNextSignificantToken()
+        private SyntaxToken? GetNextSignificantToken()
         {
             var token = CurrentToken;
             int i = 0;
@@ -869,7 +869,7 @@ internal class HttpRequestParser
         private readonly SourceText _sourceText;
         private readonly HttpSyntaxTree _syntaxTree;
         private TextWindow? _textWindow;
-        private readonly List<HttpSyntaxToken> _tokens = new();
+        private readonly List<SyntaxToken> _tokens = new();
 
         public HttpLexer(SourceText sourceText, HttpSyntaxTree syntaxTree)
         {
@@ -877,7 +877,7 @@ internal class HttpRequestParser
             _syntaxTree = syntaxTree;
         }
 
-        public IReadOnlyList<HttpSyntaxToken> Lex()
+        public IReadOnlyList<SyntaxToken> Lex()
         {
             _textWindow = new TextWindow(0, _sourceText.Length);
 
@@ -935,7 +935,7 @@ internal class HttpRequestParser
                 return;
             }
 
-            _tokens.Add(new HttpSyntaxToken(kind, _sourceText, _textWindow.Span, _syntaxTree));
+            _tokens.Add(new SyntaxToken(kind, _sourceText, _textWindow.Span, _syntaxTree));
 
             _textWindow = new TextWindow(_textWindow.End, _sourceText.Length);
         }

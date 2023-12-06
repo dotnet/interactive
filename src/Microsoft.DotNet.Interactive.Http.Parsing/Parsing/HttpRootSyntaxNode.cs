@@ -10,7 +10,7 @@ using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpRootSyntaxNode : HttpSyntaxNode
+internal class HttpRootSyntaxNode : SyntaxNode
 {
     internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree? tree) : base(sourceText, tree)
     {
@@ -69,7 +69,7 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
 
                     });
 
-                    if (value is not null && value.Value is not null)
+                    if (value?.Value != null)
                     {
                         declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
                     }

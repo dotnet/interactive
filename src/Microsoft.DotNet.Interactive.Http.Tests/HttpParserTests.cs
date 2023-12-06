@@ -32,6 +32,6 @@ public partial class HttpParserTests : IDisposable
         return result;
     }
 
-    private static HttpDiagnosticInfo CreateDiagnosticInfo(string message) => 
+    private static DiagnosticInfo CreateDiagnosticInfo(string message) => 
         new(id: "HTTP0000", message, DiagnosticSeverity.Error);
 }

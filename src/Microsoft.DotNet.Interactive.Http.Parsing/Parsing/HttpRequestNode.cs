@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 using Diagnostic = CodeAnalysis.Diagnostic;
 using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
-internal class HttpRequestNode : HttpSyntaxNode
+internal class HttpRequestNode : SyntaxNode
 {
     internal HttpRequestNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {

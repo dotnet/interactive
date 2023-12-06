@@ -7,9 +7,9 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal sealed class HttpSyntaxToken : HttpSyntaxNodeOrToken
+internal sealed class SyntaxToken : SyntaxNodeOrToken
 {
-    internal HttpSyntaxToken(
+    internal SyntaxToken(
         HttpTokenKind kind,
         SourceText sourceText,
         TextSpan fullSpan,

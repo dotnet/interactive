@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="NullableAttributes.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxTree.cs" Link="Parsing\SyntaxTree.cs" />
   </ItemGroup>
 
   <ItemGroup>

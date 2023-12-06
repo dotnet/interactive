@@ -24,7 +24,7 @@ public class DirectiveTokenTests
 
         var tree = submissionParser.Parse(code);
 
-        tree.GetRoot()
+        tree.RootNode
             .DescendantNodesAndTokensAndSelf()
             .Should()
             .ContainSingle<DirectiveToken>()

@@ -11,11 +11,11 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 using Diagnostic = CodeAnalysis.Diagnostic;
 
-internal abstract class HttpSyntaxNodeOrToken
+internal abstract class SyntaxNodeOrToken
 {
     protected List<Diagnostic>? _diagnostics = null;
 
-    private protected HttpSyntaxNodeOrToken(SourceText sourceText, HttpSyntaxTree? syntaxTree)
+    private protected SyntaxNodeOrToken(SourceText sourceText, HttpSyntaxTree? syntaxTree)
     {
         SourceText = sourceText;
         SyntaxTree = syntaxTree;
@@ -23,7 +23,7 @@ internal abstract class HttpSyntaxNodeOrToken
 
     public SourceText SourceText { get; }
 
-    public HttpSyntaxNode? Parent { get; internal set; }
+    public SyntaxNode? Parent { get; internal set; }
 
     public abstract bool IsSignificant { get; }
 
@@ -57,7 +57,7 @@ internal abstract class HttpSyntaxNodeOrToken
         _diagnostics.Add(d);
     }
 
-    public Diagnostic CreateDiagnostic(HttpDiagnosticInfo diagnosticInfo, Location? location = null)
+    public Diagnostic CreateDiagnostic(DiagnosticInfo diagnosticInfo, Location? location = null)
     {
         if (location is null)
         {

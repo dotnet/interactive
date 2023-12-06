@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -9,92 +9,92 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 internal static class HttpDiagnostics
 {
-    internal static HttpDiagnosticInfo UnrecognizedVerb(string verb)
+    internal static DiagnosticInfo UnrecognizedVerb(string verb)
     {
         var id = $"HTTP0001";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Unrecognized HTTP verb '{0}'.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, verb);
+        return new DiagnosticInfo(id, messageFormat, severity, verb);
     }
 
-    internal static HttpDiagnosticInfo MissingUrl()
+    internal static DiagnosticInfo MissingUrl()
     {
         var id = $"HTTP0002";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Missing URL.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity);
+        return new DiagnosticInfo(id, messageFormat, severity);
     }
 
-    internal static HttpDiagnosticInfo UnrecognizedUriScheme(string scheme)
+    internal static DiagnosticInfo UnrecognizedUriScheme(string scheme)
     {
         var id = $"HTTP0003";
         var severity = DiagnosticSeverity.Warning;
         var messageFormat = "Unrecognized URI scheme: '{0}'.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, scheme);
+        return new DiagnosticInfo(id, messageFormat, severity, scheme);
     }
 
-    internal static HttpDiagnosticInfo InvalidUri()
+    internal static DiagnosticInfo InvalidUri()
     {
         var id = $"HTTP0004";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Invalid URI.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity);
+        return new DiagnosticInfo(id, messageFormat, severity);
     }
 
-    internal static HttpDiagnosticInfo InvalidHttpVersion()
+    internal static DiagnosticInfo InvalidHttpVersion()
     {
         var id = $"HTTP0005";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Invalid HTTP version.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity);
+        return new DiagnosticInfo(id, messageFormat, severity);
     }
 
-    internal static HttpDiagnosticInfo InvalidWhitespaceInHeaderName()
+    internal static DiagnosticInfo InvalidWhitespaceInHeaderName()
     {
         var id = $"HTTP0006";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Invalid whitespace in header name.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity);
+        return new DiagnosticInfo(id, messageFormat, severity);
     }
 
-    internal static HttpDiagnosticInfo MissingHeaderName()
+    internal static DiagnosticInfo MissingHeaderName()
     {
         var id = $"HTTP0007";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Missing header name.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity);
+        return new DiagnosticInfo(id, messageFormat, severity);
     }
 
-    internal static HttpDiagnosticInfo MissingHeaderValue()
+    internal static DiagnosticInfo MissingHeaderValue()
     {
         var id = $"HTTP0008";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Missing header value.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity);
+        return new DiagnosticInfo(id, messageFormat, severity);
     }
 
-    internal static HttpDiagnosticInfo CannotSetContentHeaderWithoutContent(string headerText)
+    internal static DiagnosticInfo CannotSetContentHeaderWithoutContent(string headerText)
     {
         var id = $"HTTP0009";
         var severity = DiagnosticSeverity.Warning;
         var messageFormat = "Header '{0}' will be ignored: Cannot set content header without content.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, headerText);
+        return new DiagnosticInfo(id, messageFormat, severity, headerText);
     }
 
-    internal static HttpDiagnosticInfo InvalidHeader(string headerText, string exceptionMessage)
+    internal static DiagnosticInfo InvalidHeader(string headerText, string exceptionMessage)
     {
         var id = $"HTTP0010";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Invalid header '{0}': {1}";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, headerText, exceptionMessage);
+        return new DiagnosticInfo(id, messageFormat, severity, headerText, exceptionMessage);
     }
 
-    internal static HttpDiagnosticInfo VariableNameExpected()
+    internal static DiagnosticInfo VariableNameExpected()
     {
         var id = $"HTTP0011";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Variable name expected.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity);
+        return new DiagnosticInfo(id, messageFormat, severity);
     }
 
     internal static HttpDiagnosticInfo UnableToEvaluateExpression(string symbol)
@@ -102,7 +102,7 @@ internal static class HttpDiagnostics
         var id = $"HTTP0012";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "Unable to evaluate expression '{0}'.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, symbol);
+        return new DiagnosticInfo(id, messageFormat, severity, symbol);
     }
 
     internal static HttpDiagnosticInfo IncorrectDateTimeFormat(string expression, string dateTimeType)
@@ -163,8 +163,8 @@ internal static class HttpDiagnostics
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "The supplied argument '{1}' in the expression '{0}' is not a valid integer.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, expression, argument);
-    }
-
+    }
+
     internal static HttpDiagnosticInfo IncorrectDateTimeCustomFormat(string format)
     {
         var id = $"HTTP0020";
