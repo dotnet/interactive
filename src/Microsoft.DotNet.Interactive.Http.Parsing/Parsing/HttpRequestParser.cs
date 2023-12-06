@@ -131,6 +131,15 @@ internal class HttpRequestParser
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
 
                         ParseLeadingWhitespaceAndComments(node);
+                    } 
+                    else if (IsAtStartOfEmbeddedExpression())
+                    {
+                        node = new HttpVariableValueNode(_sourceText, _syntaxTree);
+                        node.Add(ParseEmbeddedExpression());
+                        if(CurrentToken is { Kind: HttpTokenKind.NewLine })
+                        {
+                            break;
+                        }
                     }
                     else
                     {

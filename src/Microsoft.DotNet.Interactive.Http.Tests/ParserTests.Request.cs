@@ -65,6 +65,32 @@ public partial class ParserTests
         }
 
         [Fact]
+        public void request_node_with_multiple_variables_declared_prior_parsed_correctly()
+        {
+            var result = Parse(
+                """
+                @searchTerm=some-search-term
+                @hostname=httpbin.org
+                # variable using another variable
+                @host=https://{{hostname}}
+                # variable using "dynamic variables"
+                @createdAt = {{$datetime iso8601}}
+                @anyhost={{host}}/anything
+                @fakeuser=fakeuser
+                @fakepwd=fakepwd
+
+                https://httpbin.org/get
+                """);
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+            var variableNodes = result.SyntaxTree.RootNode.ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
+            variableNodes.Count().Should().Be(7);
+
+            requestNode.UrlNode.Text.Should().Be("https://httpbin.org/get");
+        }
+
+        [Fact]
         public void request_node_containing_method_and_url_and_no_variable_expressions_returns_HttpRequestMessage_with_specified_method()
         {
             var result = Parse(
