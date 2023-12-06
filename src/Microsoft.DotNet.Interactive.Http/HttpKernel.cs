@@ -144,7 +144,7 @@ public class HttpKernel :
 
         async Task HandleDelayedResponseAsync()
         {
-            await Task.Delay(_responseDelayThresholdInMilliseconds);
+            await Task.Delay(_responseDelayThresholdInMilliseconds, cancellationToken);
 
             await semaphore.WaitAsync(cancellationToken);
             try
@@ -223,14 +223,22 @@ public class HttpKernel :
     {
         HttpResponse response;
         var stopWatch = Stopwatch.StartNew();
+        var originalActivity = Activity.Current;
 
         try
         {
+            // null out the current activity so the new one that we create won't be parented to it.
+            Activity.Current = null;
+
+            Activity.Current = new Activity("").Start();
+            
             var responseMessage = await _client.SendAsync(requestMessage, cancellationToken);
             response = (await responseMessage.ToHttpResponseAsync(cancellationToken))!;
         }
         finally
         {
+            // restore the original activity
+            Activity.Current = originalActivity;
             stopWatch.Stop();
         }
 

@@ -70,8 +70,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.PackageManagement", "src\Microsoft.DotNet.Interactive.PackageManagement\Microsoft.DotNet.Interactive.PackageManagement.csproj", "{53EF46D6-5E21-4507-B8C0-779B634262AA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.VisualStudio", "src\Microsoft.DotNet.Interactive.VisualStudio\Microsoft.DotNet.Interactive.VisualStudio.csproj", "{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.VSCode", "src\Microsoft.DotNet.Interactive.VSCode\Microsoft.DotNet.Interactive.VSCode.csproj", "{382C875B-2CB2-4F93-B5E9-EC14CDDB2256}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Documents", "src\Microsoft.DotNet.Interactive.Documents\Microsoft.DotNet.Interactive.Documents.csproj", "{E06F109D-E9B5-4C68-9904-6955CA30252D}"
@@ -112,7 +110,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.SQLite.Tests", "src\Microsoft.DotNet.Interactive.SQLite.Tests\Microsoft.DotNet.Interactive.SQLite.Tests.csproj", "{83B62E34-7AE3-4A7A-A105-1707FF389D39}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.VisualStudio.Tests", "src\Microsoft.DotNet.Interactive.VisualStudio.Tests\Microsoft.DotNet.Interactive.VisualStudio.Tests.csproj", "{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.NetFramework.Tests", "src\Microsoft.DotNet.Interactive.NetFramework.Tests\Microsoft.DotNet.Interactive.NetFramework.Tests.csproj", "{DE705C7B-7CBD-42C2-81DE-B43ECD179EBC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1A4A744F-FEF3-4361-A2E5-C5D496F7BFDC} = {1A4A744F-FEF3-4361-A2E5-C5D496F7BFDC}
 	EndProjectSection
@@ -413,18 +411,6 @@ Global
 		{53EF46D6-5E21-4507-B8C0-779B634262AA}.Release|x64.Build.0 = Release|Any CPU
 		{53EF46D6-5E21-4507-B8C0-779B634262AA}.Release|x86.ActiveCfg = Release|Any CPU
 		{53EF46D6-5E21-4507-B8C0-779B634262AA}.Release|x86.Build.0 = Release|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Debug|x64.Build.0 = Debug|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Debug|x86.Build.0 = Debug|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Release|x64.ActiveCfg = Release|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Release|x64.Build.0 = Release|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Release|x86.ActiveCfg = Release|Any CPU
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0}.Release|x86.Build.0 = Release|Any CPU
 		{382C875B-2CB2-4F93-B5E9-EC14CDDB2256}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{382C875B-2CB2-4F93-B5E9-EC14CDDB2256}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{382C875B-2CB2-4F93-B5E9-EC14CDDB2256}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -765,7 +751,6 @@ Global
 		{EBDC3450-C4C0-42C6-8D53-85FEDF897664} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
 		{79FBB52B-BC6B-44F9-9DF0-F58F2DA83EE0} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}
 		{53EF46D6-5E21-4507-B8C0-779B634262AA} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
-		{0FAA07B9-DBE4-47B5-939F-E1A69B975AD0} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
 		{382C875B-2CB2-4F93-B5E9-EC14CDDB2256} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
 		{E06F109D-E9B5-4C68-9904-6955CA30252D} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
 		{BF607791-F6C2-4E41-B916-DF675FA52D5C} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}

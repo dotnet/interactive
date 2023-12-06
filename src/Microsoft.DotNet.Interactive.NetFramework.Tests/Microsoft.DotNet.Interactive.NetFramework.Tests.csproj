@@ -18,15 +18,24 @@
 
   <ItemGroup>
     <Compile Include="..\dotnet-interactive\Pocket\Format.CustomizeLogString.cs" Link="Pocket\Format.CustomizeLogString.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\ProxyKernelConnectionTestsBase.cs" Link="ProxyKernelConnectionTestsBase.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\StdIoKernelConnectorTests.cs" Link="StdIoKernelConnectorTests.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\ConnectHost.cs" Link="Utility\ConnectHost.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FactSkipLinux.cs" Link="Utility\FactSkipLinux.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FactSkipNetFramework.cs" Link="Utility\FactSkipNetFramework.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FakeKernel.cs" Link="Utility\FakeKernel.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="Utilitiy\MarkupTestFile.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\TestUtility.cs" Link="Utility\TestUtility.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\KernelTests.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\KernelRoutingTests.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\KernelSchedulerTests.cs" />
-    <Compile Include="..\dotnet-interactive.Tests\StdIoKernelConnectorTests.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\WindowsFact.cs" Link="Utility\WindowsFact.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Microsoft.DotNet.Interactive.Tests\xunit.runner.json" Link="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -45,17 +54,14 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.VisualStudio\Microsoft.DotNet.Interactive.VisualStudio.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Update="xunit.runner.visualstudio" Version="$(xunitrunnervisualstudioVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
   </ItemGroup>
 
 </Project>

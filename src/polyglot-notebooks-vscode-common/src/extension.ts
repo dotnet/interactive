@@ -71,7 +71,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
     const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);
-    const minDotNetSdkVersion = dotnetConfig.get<string>('minimumDotNetSdkVersion') || '7.0';
+    const minDotNetSdkVersion = dotnetConfig.get<string>('minimumDotNetSdkVersion') || '8.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : diagnostics'));
     const loggerChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('Polyglot Notebook : logger'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
@@ -98,13 +98,13 @@ export async function activate(context: vscode.ExtensionContext) {
         const dotnetVersion = await getDotNetVersionOrThrow(DotNetPathManager.getDotNetPath(), diagnosticsChannel);
         if (!isVersionGreaterOrEqual(dotnetVersion, minDotNetSdkVersion)) {
             showHelpPage = true;
-            const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The minimum required version is ${minDotNetSdkVersion}.`;
+            const message = `The .NET SDK version ${dotnetVersion} is not sufficient. The required version is ${minDotNetSdkVersion}.`;
             diagnosticsChannel.appendLine(message);
             vscode.window.showErrorMessage(message);
         }
     } catch (e) {
         showHelpPage = true;
-        vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download`);
+        vscode.window.showErrorMessage(`Please install the .NET SDK version ${minDotNetSdkVersion} from https://dotnet.microsoft.com/en-us/download/dotnet/${minDotNetSdkVersion}`);
     }
 
     if (showHelpPage) {

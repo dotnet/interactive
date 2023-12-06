@@ -29,6 +29,33 @@ public partial class VariableSharingTests
         private readonly CompositeDisposable _disposables = new();
 
         [Fact]
+        public async Task can_set_value_directly()
+        {
+            
+  var kernel = CreateKernel(Language.CSharp);
+
+            using var composite = new CompositeKernel
+            {
+                kernel
+            };
+
+            composite.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+            {
+                context.Publish(new InputProduced("hello!", requestInput));
+                return Task.CompletedTask;
+            });
+
+            composite.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), composite.Name);
+
+            await composite.SendAsync(new SubmitCode("""
+                #!set --name x --value hello!
+                """));
+            var valueProduced = await kernel.RequestValueAsync("x");
+            
+            valueProduced.Value.Should().Be("hello!");
+        }
+
+        [Fact]
         public async Task can_set_value_prompting_user()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -77,19 +104,19 @@ public partial class VariableSharingTests
         }
 
         [Fact]
-        public async Task can_handle_multiple_set_commands_in_single_submission()
+        public async Task multiple_set_commands_in_single_submission_can_combine_input_and_sharing()
         {
             using var kernel = CreateCompositeKernel();
 
             kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
             {
-                context.Publish(new InputProduced("hello!", requestInput));
+                context.Publish(new InputProduced("three", requestInput));
                 return Task.CompletedTask;
             });
 
-            await kernel.SendAsync( new SubmitCode("""
-                let var1 = "a"
-                let var2 = "b"
+            await kernel.SendAsync(new SubmitCode("""
+                let var1 = "one"
+                let var2 = "two"
                 """, targetKernelName:"fsharp"));
 
             var result = await kernel.SendAsync(new SubmitCode("""
@@ -107,6 +134,67 @@ public partial class VariableSharingTests
                 .Which;
 
             valueInfosProduced.ValueInfos.Select(v => v.Name).Should().BeEquivalentTo("newVar1", "newVar2", "newVar3");
+
+            var csharpKernel = (CSharpKernel)kernel.FindKernelByName("csharp");
+
+           csharpKernel.TryGetValue("newVar1", out object newVar1)
+                       .Should().BeTrue();
+           newVar1.Should().Be("one");
+           
+           csharpKernel.TryGetValue("newVar2", out object newVar2)
+                       .Should().BeTrue();
+           newVar2.Should().Be("two");
+
+           csharpKernel.TryGetValue("newVar3", out object newVar3)
+                       .Should().BeTrue();
+           newVar3.Should().Be("three");
+        }
+
+        [Fact]
+        public async Task multiple_set_commands_in_single_submission_can_combine_input_and_sharing_and_literal_values()
+        {
+            using var kernel = CreateCompositeKernel();
+
+            kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+            {
+                context.Publish(new InputProduced("three", requestInput));
+                return Task.CompletedTask;
+            });
+
+            await kernel.SendAsync(new SubmitCode("""
+                let var1 = "one"
+                let var2 = "two"
+                """, targetKernelName: "fsharp"));
+
+            var result = await kernel.SendAsync(new SubmitCode("""
+                #!set --name newVar1 --value @fsharp:var1  --mime-type text/plain
+                #!set --name newVar2 --value two 
+                #!set --name newVar3 --value @input:input-please
+                """, targetKernelName: "csharp"));
+
+            result.Events.Should().NotContainErrors();
+
+            result = await kernel.SendAsync(new RequestValueInfos("csharp"));
+
+            var valueInfosProduced = result.Events.Should()
+                                           .ContainSingle<ValueInfosProduced>()
+                                           .Which;
+
+            valueInfosProduced.ValueInfos.Select(v => v.Name).Should().BeEquivalentTo("newVar1", "newVar2", "newVar3");
+
+            var csharpKernel = (CSharpKernel)kernel.FindKernelByName("csharp");
+
+            csharpKernel.TryGetValue("newVar1", out object newVar1)
+                        .Should().BeTrue();
+            newVar1.Should().Be("one");
+
+            csharpKernel.TryGetValue("newVar2", out object newVar2)
+                        .Should().BeTrue();
+            newVar2.Should().Be("two");
+
+            csharpKernel.TryGetValue("newVar3", out object newVar3)
+                        .Should().BeTrue();
+            newVar3.Should().Be("three");
         }
 
         [Fact]

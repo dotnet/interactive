@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
     
  <PropertyGroup>
@@ -15,6 +16,7 @@
     
  <ItemGroup>
    <Compile Include="..\Microsoft.DotNet.Interactive.CSharpProject\%28Recipes%29\AsyncLazy{T}.cs" Link="%28Recipes%29\AsyncLazy{T}.cs" />
+   <Compile Include="..\Microsoft.DotNet.Interactive\Utility\IsExternalInit.cs" Link="Utility\IsExternalInit.cs" />
  </ItemGroup>
   
   <ItemGroup>
@@ -38,6 +40,10 @@
 
   <ItemGroup>
     <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utility\" />
   </ItemGroup>
 
 </Project>

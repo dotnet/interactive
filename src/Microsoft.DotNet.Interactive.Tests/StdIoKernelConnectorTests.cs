@@ -2,15 +2,16 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.App.Tests
+namespace Microsoft.DotNet.Interactive.Tests
 {
     public class StdIoKernelConnectorTests
     {
@@ -25,28 +26,28 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 loggingArgs = $"--verbose --log-path {logDir}";
             }
 
-            var toolAppDllPath = typeof(StdIoKernelConnector).Assembly.Location;
+            var currentAssemblyPath = Assembly.GetExecutingAssembly().Location;
+            var currentAssemblyProjectName = Path.GetFileNameWithoutExtension(currentAssemblyPath);
+            var currentAssemblyName = Path.GetFileName(currentAssemblyPath);
 
-            if (Environment.GetEnvironmentVariable("DisableArcade") != "1")
-            {
-                var arcadeAssemblyLocation =
-                    Path.GetDirectoryName(
-                        Path.GetDirectoryName(
-                            Path.GetDirectoryName(
-                                Path.GetDirectoryName(
-                                    toolAppDllPath))));
+            // Go from current test assembly path to the location of Microsoft.DotNet.Interactive.App.dll.
+            //
+            // When arcade is disabled:
+            // D:\interactive\src\Microsoft.DotNet.Interactive.NetFramework.Tests\bin\Debug\net472\Microsoft.DotNet.Interactive.NetFramework.Tests.dll ->
+            //     D:\interactive\src\dotnet-interactive\bin\debug\net8.0\Microsoft.DotNet.Interactive.App.dll.
+            // D:\interactive\src\Microsoft.DotNet.Interactive.Tests\bin\Debug\net8.0\Microsoft.DotNet.Interactive.Tests.dll ->
+            //     D:\interactive\src\dotnet-interactive\bin\debug\net8.0\Microsoft.DotNet.Interactive.App.dll.
+            //
+            // When arcade is enabled:
+            // D:\interactive2\artifacts\bin\Microsoft.DotNet.Interactive.NetFramework.Tests\Debug\net472\Microsoft.DotNet.Interactive.NetFramework.Tests.dll ->
+            //     D:\interactive\artifacts\bin\dotnet-interactive\Debug\net8.0\Microsoft.DotNet.Interactive.App.dll.
+            // D:\interactive2\artifacts\bin\Microsoft.DotNet.Interactive.Tests\Debug\net8.0\Microsoft.DotNet.Interactive.Tests.dll ->
+            //     D:\interactive\artifacts\bin\dotnet-interactive\Debug\net8.0\Microsoft.DotNet.Interactive.App.dll.
 
-                toolAppDllPath =
-                    Directory.GetFiles(
-                                 Path.Combine(arcadeAssemblyLocation, "dotnet-interactive"),
-                                 "Microsoft.DotNet.Interactive.App.dll",
-                                 SearchOption.AllDirectories)
-                             .Single(filePath =>
-                                         !string.Equals(
-                                             Path.GetFileName(Path.GetDirectoryName(filePath)),
-                                             "publish",
-                                             StringComparison.OrdinalIgnoreCase));
-            }
+            var toolAppDllPath =
+                currentAssemblyPath.Replace(currentAssemblyName, "Microsoft.DotNet.Interactive.App.dll");
+            toolAppDllPath = toolAppDllPath.Replace(currentAssemblyProjectName, "dotnet-interactive");
+            toolAppDllPath = toolAppDllPath.Replace("net472", "net8.0");
 
             var hostUri = KernelHost.CreateHostUri("host");
             var connector = new StdIoKernelConnector(

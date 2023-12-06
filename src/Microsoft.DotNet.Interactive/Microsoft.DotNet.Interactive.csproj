@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework Condition="'$(TargetFramework)'==''">netstandard2.1</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive</PackageId>
     <NoWarn>$(NoWarn);8002;CS8002</NoWarn>
@@ -12,6 +12,14 @@
     <PackageDescription Condition="'$(PackageDescription)'==''">Core types for building applications providing interactive programming for .NET.</PackageDescription>
     <PackageTags Condition="'$(PackageTags)'==''">polyglot notebook dotnet interactive</PackageTags>
   </PropertyGroup>
+  
+  <ItemGroup Label="Logging Customization">
+    <!-- Implementation for partial method in Pocket that customizes logging for commands and events -->
+    <None Include="..\dotnet-interactive\Pocket\Format.CustomizeLogString.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles\cs\any\(Pocket)\LoggerExtensions\Format.CustomizeLogString.cs</PackagePath>
+    </None>
+  </ItemGroup>
 
   <PropertyGroup>
     <MicrosoftCodeAnalysisAnalyzersVersion>2.9.6</MicrosoftCodeAnalysisAnalyzersVersion>	
@@ -26,8 +34,8 @@
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.CommandLine.NamingConventionBinder" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="System.Collections.Immutable" Version="7.0.0" />
-    <PackageReference Include="System.Reflection.Metadata" Version="7.0.0" />
+    <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
+    <PackageReference Include="System.Reflection.Metadata" Version="8.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="PocketLogger" Version="0.8.2">
       <PrivateAssets>all</PrivateAssets>
@@ -36,8 +44,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Text.Json" Version="7.0.0" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.2" />
+    <PackageReference Include="System.Text.Json" Version="8.0.0" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

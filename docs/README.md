@@ -30,7 +30,7 @@ If you're just starting out here, you might want to start with the [FAQ](./FAQ.m
 ## Technical overview
 
 * [Architecture](kernels-overview.md)
-* [Jupyter kernel installation](NotebookswithJupyter.md)
+* [Install as Jupyter kernel](NotebookswithJupyter.md)
 
 ## .NET Interactive Developer Documentation
 
@@ -46,6 +46,7 @@ If you're just starting out here, you might want to start with the [FAQ](./FAQ.m
 
 ## Extending .NET Interactive
 
+* [Adding support for new Jupyter subkernels](adding-jupyter-kernels.md)
 * [Building your own extension](extending-dotnet-interactive.md)
   * [Adding magic commands](extending-dotnet-interactive.md#adding-magic-commands)
 

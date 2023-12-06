@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
-public partial class ParserTests
+public partial class HttpParserTests
 {
     public class Variables
     {

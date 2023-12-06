@@ -1,6 +1,6 @@
-# Using .NET Interactive with Jupyter 
+# Using .NET Interactive as a Jupyter kernel
 
-To use the .NET Interactive kernel for your multi-language notebooks in Jupyter Notebook, JupyterLab, and other Jupyter frontends, you first need to register .NET Interactive as a kernel with Jupyter.  
+To use the .NET Interactive kernel for your multi-language notebooks in Jupyter Notebook, JupyterLab, and other Jupyter frontends, you first need to register .NET Interactive as a kernel with Jupyter.
 
 Make sure you have the following installed:
 
@@ -13,7 +13,7 @@ Make sure you have the following installed:
 > jupyter kernelspec list
   python3        ~\jupyter\kernels\python3
 > dotnet --version
-  7.0.200
+  8.0.100
 ```
 
 (The `dotnet` minor version isn't important.)
