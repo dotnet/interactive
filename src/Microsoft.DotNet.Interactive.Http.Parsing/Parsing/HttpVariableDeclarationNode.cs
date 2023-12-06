@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 using Diagnostic = CodeAnalysis.Diagnostic;
 
-internal class HttpVariableDeclarationNode : HttpSyntaxNode
+internal class HttpVariableDeclarationNode : SyntaxNode
 {
     internal HttpVariableDeclarationNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {

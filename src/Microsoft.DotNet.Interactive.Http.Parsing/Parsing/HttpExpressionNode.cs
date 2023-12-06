@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpExpressionNode : HttpSyntaxNode
+internal class HttpExpressionNode : SyntaxNode
 {
     internal HttpExpressionNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {

@@ -93,7 +93,7 @@ internal class HttpRequestParser
 
         private static void AddCommentsIfAny(
             List<HttpCommentNode> comments,
-            HttpSyntaxNode toNode,
+            SyntaxNode toNode,
             bool addBefore = true)
         {
             foreach (var comment in comments)
@@ -246,7 +246,7 @@ internal class HttpRequestParser
             }
         }
 
-        private T ParseLeadingWhitespaceAndComments<T>(T node) where T : HttpSyntaxNode
+        private T ParseLeadingWhitespaceAndComments<T>(T node) where T : SyntaxNode
         {
             while (MoreTokens())
             {

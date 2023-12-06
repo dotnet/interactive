@@ -21,7 +21,8 @@ public partial class HttpParserTests
             var result = Parse("  \t  ");
 
             result.SyntaxTree.RootNode
-                  .ChildTokens.First().Should().BeOfType<HttpSyntaxToken>();
+                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+                  .ChildTokens.First().Should().BeOfType<SyntaxToken>();
 
             result.SyntaxTree.RootNode
                   .ChildTokens.Single().Text.Should().Be("  \t  ");

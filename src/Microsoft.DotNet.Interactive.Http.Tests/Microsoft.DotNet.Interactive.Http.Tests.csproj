@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive.Parsing.Tests\Utility\SyntaxAssertionExtensions.cs" Link="Utility\SyntaxAssertionExtensions.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Parsing.Tests\Utility\AssertionExtensions.cs" Link="Utility\AssertionExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNode.cs" Link="Parsing\SyntaxNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNodeOrToken.cs" Link="Parsing\SyntaxNodeOrToken.cs" LinkBase="Parsing" />

@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpVariableValueNode : HttpSyntaxNode
+internal class HttpVariableValueNode : SyntaxNode
 {
     internal HttpVariableValueNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {

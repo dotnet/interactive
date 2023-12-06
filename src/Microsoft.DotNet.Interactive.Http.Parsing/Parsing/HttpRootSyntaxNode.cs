@@ -10,7 +10,7 @@ using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpRootSyntaxNode : HttpSyntaxNode
+internal class HttpRootSyntaxNode : SyntaxNode
 {
     internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree tree) : base(sourceText, tree)
     {

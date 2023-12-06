@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 using Diagnostic = CodeAnalysis.Diagnostic;
 
-internal class HttpUrlNode : HttpSyntaxNode
+internal class HttpUrlNode : SyntaxNode
 {
     internal HttpUrlNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {

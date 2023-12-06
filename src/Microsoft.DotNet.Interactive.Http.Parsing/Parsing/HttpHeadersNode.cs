@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpHeadersNode : HttpSyntaxNode
+internal class HttpHeadersNode : SyntaxNode
 {
     internal HttpHeadersNode(
         SourceText sourceText,
