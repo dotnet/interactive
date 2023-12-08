@@ -1,4 +1,4 @@
-﻿<ProjectConfiguration>
+<ProjectConfiguration>
   <Settings>
     <CopyReferencedAssembliesToWorkspace>True</CopyReferencedAssembliesToWorkspace>
     <DefaultTestTimeout>10000</DefaultTestTimeout>
@@ -9,30 +9,7 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.StdIoKernelConnectorTests</FixtureName>
       </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests</FixtureName>
-      </FixtureTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelTests.Deferred_initialization_command_is_executed_on_first_submission</TestName>
-      </NamedTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests</FixtureName>
-      </FixtureTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelTests.Deferred_initialization_command_is_not_executed_prior_to_first_submission</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelTests.kernelEvents_sequence_completes_when_kernel_is_disposed</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelTests.Middleware_is_only_executed_once_per_command</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelTests.Split_non_referencing_directives_are_executed_in_textual_order</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelTests.it_can_handle_commands_that_submit_commands_that_are_split</TestName>
-      </NamedTestSelector>
+      <AllTestsSelector />
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

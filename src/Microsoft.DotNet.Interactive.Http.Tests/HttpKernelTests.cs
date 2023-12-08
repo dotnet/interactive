@@ -17,6 +17,14 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.AspNetCore.Http;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 

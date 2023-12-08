@@ -5,12 +5,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpRootSyntaxNode : SyntaxNode
+internal class HttpRootSyntaxNode : HttpSyntaxNode
 {
     internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree tree) : base(sourceText, tree)
     {

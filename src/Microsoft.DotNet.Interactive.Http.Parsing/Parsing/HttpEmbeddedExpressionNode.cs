@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpEmbeddedExpressionNode : SyntaxNode
+internal class HttpEmbeddedExpressionNode : HttpSyntaxNode
 {
     internal HttpEmbeddedExpressionNode(
         SourceText sourceText,

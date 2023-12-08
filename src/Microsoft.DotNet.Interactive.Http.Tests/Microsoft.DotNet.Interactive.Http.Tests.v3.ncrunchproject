@@ -1,5 +1,10 @@
 <ProjectConfiguration>
   <Settings>
-    <DefaultTestTimeout>20000</DefaultTestTimeout>
+    <DefaultTestTimeout>5000</DefaultTestTimeout>
+    <IgnoredTests>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Http.Tests.HttpKernelTests</FixtureName>
+      </FixtureTestSelector>
+    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

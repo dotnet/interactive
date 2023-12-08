@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -21,10 +21,10 @@ public class SubmitCode : KernelCommand
         DirectiveNode directiveNode = null)
         : base(syntaxNode.TargetKernelName)
     {
-        Code = syntaxNode.Text;
-        SyntaxNode = syntaxNode;
-        DirectiveNode = directiveNode;
-        SchedulingScope = SchedulingScope.Parse(syntaxNode.CommandScope);
+        Code = languageNode.Text;
+        LanguageNode = languageNode;
+        KernelNameDirectiveNode = kernelNameDirectiveNode;
+        SchedulingScope = SchedulingScope.Parse(languageNode.CommandScope);
 
         if (syntaxNode is DirectiveNode { Kind: DirectiveNodeKind.Action } actionDirectiveNode)
         {

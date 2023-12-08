@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -45,26 +45,6 @@ internal abstract partial class SyntaxNodeOrToken
     {
         _diagnostics ??= new List<CodeAnalysis.Diagnostic>();
         _diagnostics.Add(d);
-    }
-
-    public IEnumerable<SyntaxNodeOrToken> Ancestors()
-    {
-        var parent = Parent;
-        while (parent is not null)
-        {
-            yield return parent;
-            parent = parent.Parent;
-        }
-    }
-
-    public IEnumerable<SyntaxNodeOrToken> AncestorsAndSelf()
-    {
-        yield return this;
-
-        foreach (var ancestor in Ancestors())
-        {
-            yield return ancestor;
-        }
     }
 
     public Microsoft.CodeAnalysis.Diagnostic CreateDiagnostic(DiagnosticInfo diagnosticInfo, Location? location = null)

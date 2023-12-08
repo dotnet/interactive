@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -6,25 +6,19 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-internal class DirectiveNode : TopLevelSyntaxNode
+internal abstract class DirectiveNode : LanguageNode
 {
     private ParseResult? _parseResult;
 
     internal DirectiveNode(
         SourceText sourceText,
-        PolyglotSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
+        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
@@ -66,50 +60,12 @@ internal class DirectiveNode : TopLevelSyntaxNode
         }
         else
         {
-            foreach (var diagnostic in base.GetDiagnostics())
-            {
-                yield return diagnostic;
-            }
+            var descriptor = new DiagnosticInfo(
+                id: "DNI0001",
+                messageFormat: error.Message,
+                severity: DiagnosticSeverity.Error);
 
-            if (TryGetDirective(out var directive) )
-            {
-                foreach (var namedParameter in directive.Parameters)
-                {
-                    if (namedParameter.Required)
-                    {
-                        var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
-                                                      .Where(p => p.NameNode?.Text == namedParameter.Name);
-
-                        if (!matchingNodes.Any())
-                        {
-                            yield return CreateDiagnostic(
-                                new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
-                                    "Missing required parameter '{0}'",
-                                    DiagnosticSeverity.Error,
-                                    namedParameter.Name));
-                        }
-                    }
-                }
-            }
-
-            var foundParameter = false;
-
-            foreach (var childNode in ChildNodes)
-            {
-                if (childNode is DirectiveSubcommandNode)
-                {
-                    if (foundParameter)
-                    {
-                        yield return childNode.CreateDiagnostic(
-                            new(PolyglotSyntaxParser.ErrorCodes.ParametersMustAppearAfterSubcommands,
-                                "Parameters must appear after subcommands.", DiagnosticSeverity.Error));
-                    }
-                }
-                else if (childNode is DirectiveParameterNode)
-                {
-                    foundParameter = true;
-                }
-            }
+            yield return CreateDiagnostic(descriptor);
         }
     }
 

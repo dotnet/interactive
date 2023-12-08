@@ -5,6 +5,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
@@ -17,21 +19,15 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 internal class PolyglotSyntaxParser
 {
     private readonly SourceText _sourceText;
-    private readonly PolyglotParserConfiguration _configuration;
-    private readonly PolyglotSyntaxTree _syntaxTree;
-    private readonly KernelInfo? _compositeKernelInfo = null;
-
+    private readonly Parser _rootKernelDirectiveParser;
+    private readonly IDictionary<string, (string scope, Func<Parser> getParser)> _subkernelInfoByKernelName;
     private IReadOnlyList<SyntaxToken>? _tokens;
-    private int _currentTokenIndex = 0;
-    private string? _currentKernelName = null;
-    private KernelDirective? _currentlyScopedDirective;
-    private KernelDirectiveParameter? _currentlyScopedParameter;
+    private HashSet<string>? _mapOfKernelNamesByAlias;
+    private readonly Func<IReadOnlyCollection<string>?> _getMapOfKernelNamesByAlias;
 
-    public static PolyglotSyntaxTree Parse(
-        string code,
-        PolyglotParserConfiguration configuration)
+    public static PolyglotSyntaxTree Parse(string code, string defaultLanguage )
     {
-        var parser = new PolyglotSyntaxParser(SourceText.From(code), configuration);
+        var parser = new PolyglotSyntaxParser(SourceText.From(code), defaultLanguage, null, null);
 
         var tree = parser.Parse();
 
@@ -40,18 +36,20 @@ internal class PolyglotSyntaxParser
 
     internal PolyglotSyntaxParser(
         SourceText sourceText,
-        PolyglotParserConfiguration configuration)
+        string? defaultLanguage,
+        Parser rootKernelDirectiveParser,
+        Func<IReadOnlyCollection<string>?>? getMapOfKernelNamesByAlias = null,
+        IDictionary<string, (string scope, Func<Parser> getParser)>? subkernelInfoByKernelName = null)
     {
         _sourceText = sourceText;
-        _configuration = configuration;
-        _syntaxTree = new(_sourceText, configuration);
-        _compositeKernelInfo = configuration.KernelInfos.FirstOrDefault(i => i.IsComposite);
+        _rootKernelDirectiveParser = rootKernelDirectiveParser;
+        _getMapOfKernelNamesByAlias = getMapOfKernelNamesByAlias ?? (() => Array.Empty<string>());
+        _subkernelInfoByKernelName = subkernelInfoByKernelName ?? new ConcurrentDictionary<string, (string scope, Func<Parser> getParser)>();
     }
 
     public PolyglotSyntaxTree Parse()
     {
-        _currentKernelName = _configuration.DefaultKernelName;
-        _tokens = new PolyglotLexer(_sourceText, _syntaxTree).Lex();
+        var tree = new PolyglotSyntaxTree(_sourceText, DefaultLanguage);
 
         while (MoreTokens())
         {
@@ -65,24 +63,19 @@ internal class PolyglotSyntaxParser
             }
         }
 
-        return _syntaxTree;
-    }
+        var rootNode = new PolyglotSubmissionNode(
+            _sourceText,
+            tree);
 
-    private DirectiveNode? ParseDirective()
-    {
-        if (IsAtStartOfDirective())
-        {
-            var directiveNameNode = ParseParameterName();
-
-            var targetKernelName = _currentKernelName ?? _compositeKernelInfo?.LocalName;
+        ParseSubmission(rootNode);
 
             var directiveNode = new DirectiveNode(_sourceText, _syntaxTree);
             directiveNode.TargetKernelName = targetKernelName;
 
-            if (_configuration.TryGetDirectiveByName(targetKernelName, directiveNameNode.Text, out var directive) ||
-                _compositeKernelInfo?.TryGetDirective(directiveNameNode.Text, out directive) == true)
-            {
-                _currentlyScopedDirective = directive;
+    private void ParseSubmission(PolyglotSubmissionNode rootNode)
+    {
+        var currentKernelName = DefaultLanguage;
+        // FIX: (ParseSubmission) rewrite
 
                 switch (directive)
                 {
@@ -167,360 +160,149 @@ internal class PolyglotSyntaxParser
         {
             var directiveNameNode = new DirectiveNameNode(_sourceText, _syntaxTree);
 
-            while (CurrentToken is { Kind: TokenKind.Punctuation or TokenKind.Word })
-            {
-                ConsumeCurrentTokenInto(directiveNameNode);
-            }
-
-            return ParseTrailingWhitespace(directiveNameNode, stopBeforeNewLine: true);
+            // switch (currentToken)
+            // {
+            //     case DirectiveToken directiveToken:
+            //
+            //         DirectiveNode? directiveNode;
+            //
+            //         if (IsChooseKernelDirective(directiveToken))
+            //         {
+            //             directiveNode =
+            //                 new KernelNameDirectiveNode(_sourceText, rootNode.SyntaxTree);
+            //
+            //             currentKernelName = directiveToken.DirectiveName;
+            //
+            //             if (_subkernelInfoByKernelName.TryGetValue(currentKernelName, out currentKernelInfo))
+            //             {
+            //                 directiveNode.CommandScope = currentKernelInfo.commandScope;
+            //             }
+            //         }
+            //         else
+            //         {
+            //             directiveNode = new ActionDirectiveNode(
+            //                 directiveToken,
+            //                 _sourceText,
+            //                 currentKernelName ?? DefaultLanguage,
+            //                 rootNode.SyntaxTree);
+            //
+            //             directiveNode.AllowValueSharingByInterpolation = AllowsValueSharingByInterpolation(directiveToken);
+            //         }
+            //
+            //         if (_tokens.Count > i + 1 && _tokens[i + 1] is TriviaToken triviaNode)
+            //         {
+            //             i += 1;
+            //             directiveNode.Add(triviaNode);
+            //         }
+            //
+            //         if (_tokens.Count > i + 1 &&
+            //             _tokens[i + 1] is DirectiveArgsNode directiveArgs)
+            //         {
+            //             i += 1;
+            //
+            //             directiveNode.Add(directiveArgs);
+            //         }
+            //
+            //         AssignDirectiveParser(directiveNode);
+            //
+            //         if (directiveToken.Text == "#r")
+            //         {
+            //             var parseResult = directiveNode.GetDirectiveParseResult();
+            //             if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
+            //                     out currentKernelInfo))
+            //             {
+            //                 directiveNode.CommandScope = currentKernelInfo.commandScope;
+            //             }
+            //
+            //             if (parseResult.Errors.Count == 0)
+            //             {
+            //                 var value = parseResult.GetValueForArgument(parseResult.Parser.FindPackageArgument());
+            //
+            //                 if (value?.Value is FileInfo)
+            //                 {
+            //                     // #r <file> is treated as a LanguageNode to be handled by the compiler
+            //                     AppendAsLanguageNode(directiveNode);
+            //
+            //                     break;
+            //                 }
+            //             }
+            //         }
+            //
+            //         rootNode.Add(directiveNode);
+            //
+            //         break;
+            //
+            //     case LanguageToken languageToken:
+            //         AppendAsLanguageNode(languageToken);
+            //         break;
+            //
+            //     default:
+            //         throw new ArgumentOutOfRangeException(nameof(currentToken));
+            // }
         }
 
-        DirectiveParameterValueNode ParseParameterValue()
+        void AppendAsLanguageNode(SyntaxNodeOrToken nodeOrToken)
         {
-            DirectiveParameterValueNode valueNode = new(_sourceText, _syntaxTree);
+            // var previousSyntaxNode = rootNode.ChildNodes.LastOrDefault();
+            // var previousLanguageNode = previousSyntaxNode as LanguageNode;
+            // if (previousLanguageNode is { } &&
+            //     previousLanguageNode is not KernelNameDirectiveNode &&
+            //     previousLanguageNode.Name == currentKernelName)
+            // {
+            //     previousLanguageNode.Add(nodeOrToken);
+            //     rootNode.GrowSpan(previousLanguageNode);
+            // }
+            // else
+            // {
+            //     var targetKernelName = currentKernelName ?? DefaultLanguage;
+            //     var languageNode = new LanguageNode(
+            //         _sourceText,
+            //         rootNode.SyntaxTree);
+            //     languageNode.CommandScope = currentKernelInfo.commandScope;
+            //     languageNode.Add(nodeOrToken);
+            //
+            //     rootNode.Add(languageNode);
+            // }
+        }
 
-            var currentToken = CurrentToken;
+        void AssignDirectiveParser(DirectiveNode directiveNode)
+        {
+            var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
 
-            if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "-" } &&
-                CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "-" })
+            if (IsDefinedInRootKernel(directiveName))
             {
+                directiveNode.DirectiveParser = _rootKernelDirectiveParser;
             }
-            else if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "{" or "\"" })
+            else if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
+                                                            out var info))
             {
-                ParseJsonValueInto(valueNode);
-
-                ParseTrailingWhitespace(valueNode, stopBeforeNewLine: true);
-            }
-            else if (currentToken is not ({ Kind: TokenKind.Punctuation } and { Text: "@" }))
-            {
-                ParsePlainTextInto(valueNode);
-
-                ParseTrailingWhitespace(valueNode, stopBeforeNewLine: true);
+                directiveNode.DirectiveParser = info.getParser();
             }
             else
             {
-                var expressionNode = new DirectiveExpressionNode(_sourceText, _syntaxTree);
-
-                var tokenNameNode = new DirectiveExpressionTypeNode(_sourceText, _syntaxTree);
-
-                ConsumeCurrentTokenInto(tokenNameNode);
-
-                if (CurrentToken is { Kind: TokenKind.Word })
-                {
-                    ConsumeCurrentTokenInto(tokenNameNode);
-                }
-
-                if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: ":" })
-                {
-                    ConsumeCurrentTokenInto(tokenNameNode);
-                }
-
-                expressionNode.Add(tokenNameNode);
-
-                var inputParametersNode = new DirectiveExpressionParametersNode(_sourceText, _syntaxTree);
-
-                if (CurrentToken is { Kind : TokenKind.Punctuation } and ({ Text: "{" } or { Text: "\"" }))
-                {
-                    ParseJsonValueInto(inputParametersNode);
-                }
-                else
-                {
-                    ParsePlainTextInto(inputParametersNode);
-                }
-
-                expressionNode.Add(inputParametersNode);
-
-                valueNode.Add(expressionNode);
-
-                ParseTrailingWhitespace(inputParametersNode, stopBeforeNewLine: true);
-            }
-
-            return valueNode;
-
-            void ParsePlainTextInto(SyntaxNode node)
-            {
-                while (MoreTokens())
-                {
-                    if (CurrentToken is { Kind: TokenKind.NewLine } or { Kind: TokenKind.Whitespace })
-                    {
-                        break;
-                    }
-                    
-                    ConsumeCurrentTokenInto(node);
-                }
-            }
-
-            void ParseJsonValueInto(SyntaxNode node)
-            {
-                var currentToken = CurrentToken;
-
-                if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "{" })
-                {
-                    // Parse a JSON object
-                    var jsonDepth = 0;
-
-                    while (MoreTokens())
-                    {
-                        currentToken = CurrentToken;
-
-                        if (currentToken is { Kind: TokenKind.NewLine })
-                        {
-                            break;
-                        }
-
-                        switch (currentToken)
-                        {
-                            case { Kind: TokenKind.Punctuation } and { Text: "{" }:
-                                jsonDepth++;
-                                break;
-
-                            case { Kind: TokenKind.Punctuation } and { Text: "}" }:
-                                jsonDepth--;
-                                break;
-                        }
-
-                        ConsumeCurrentTokenInto(node);
-
-                        if (jsonDepth <= 0)
-                        {
-                            break;
-                        }
-                    }
-                }
-                else if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "\"" })
-                {
-                    // Parse a JSON string
-                    var quoteCount = 0;
-
-                    while (MoreTokens())
-                    {
-                        currentToken = CurrentToken;
-
-                        if (currentToken is { Kind: TokenKind.NewLine })
-                        {
-                            break;
-                        }
-
-                        if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "\"" })
-                        {
-                            if (CurrentTokenPlus(-1) is not { Text: "\\" })
-                            {
-                                quoteCount++;
-                            }
-                        }
-
-                        ConsumeCurrentTokenInto(node);
-
-                        if (quoteCount == 2)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                if (node.Text is { } json)
-                {
-                    try
-                    {
-                        JsonDocument.Parse(json);
-                    }
-                    catch (JsonException exception)
-                    {
-                        var positionInLine = (int)exception.BytePositionInLine! + node.FullSpan.Start;
-
-                        var location = Location.Create(
-                            filePath: string.Empty,
-                            new TextSpan(positionInLine, 1),
-                            new(new(0, positionInLine), new(0, positionInLine + 1)));
-
-                        var message = exception.Message;
-
-                        if (message.IndexOf(" LineNumber", StringComparison.InvariantCulture) is var index and > -1)
-                        {
-                            // Example message to be cleaned up since the character positions won't be accurate for the user's complete text: "Invalid JSON: 'c' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 11." 
-                            message = message.Remove(index);
-                        }
-
-                        var diagnostic = node.CreateDiagnostic(
-                            new(ErrorCodes.InvalidJsonInParameterValue,
-                                "Invalid JSON: {0}",
-                                DiagnosticSeverity.Error,
-                                message),
-                            location);
-
-                        node.AddDiagnostic(diagnostic);
-                    }
-                }
-            }
-        }
-
-        DirectiveParameterNode? ParseNamedParameter()
-        {
-            DirectiveParameterNode? parameterNode = null;
-            DirectiveParameterNameNode? parameterNameNode = null;
-
-            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "-" } ||
-                CurrentTokenPlus(-1) is { Kind: TokenKind.Whitespace })
-            {
-                while (MoreTokens())
-                {
-                    if (CurrentToken is { Kind: TokenKind.NewLine } or { Kind: TokenKind.Whitespace })
-                    {
-                        break;
-                    }
-
-                    if (parameterNode is null)
-                    {
-                        parameterNode = new DirectiveParameterNode(_sourceText, _syntaxTree);
-                        parameterNameNode = new DirectiveParameterNameNode(_sourceText, _syntaxTree);
-                    }
-                 
-                    ConsumeCurrentTokenInto(parameterNameNode!);
-
-                    if (_currentlyScopedDirective is KernelActionDirective actionDirective)
-                    {
-                        if (actionDirective.TryGetParameter(parameterNameNode.Text, out var parameter))
-                        {
-                            _currentlyScopedParameter = parameter;
-                        }
-                    }
-                }
-
-                if (parameterNode is not null &&
-                    parameterNameNode is not null)
-                {
-                    ParseTrailingWhitespace(parameterNameNode, stopBeforeNewLine: true);
-
-                    parameterNode.Add(parameterNameNode);
-
-                    if (_currentlyScopedParameter?.Flag is not true)
-                    {
-                        if (ParseParameterValue() is { } parameterValueNode)
-                        {
-                            parameterNode.Add(parameterValueNode);
-                        }
-                    }
-                }
-            }
-
-            if (parameterNode is not null)
-            {
-                return ParseTrailingWhitespace(parameterNode, stopBeforeNewLine: true);
-            }
-            else
-            {
-                return null;
+                directiveNode.DirectiveParser = _rootKernelDirectiveParser;
             }
         }
     }
 
-    private bool IsAtStartOfParameterName() =>
-        CurrentTokenPlus(-1) is { Kind: TokenKind.Whitespace } &&
-        CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "-" };
-
-    private LanguageNode ParseLanguageNode()
+    private bool IsDefinedInRootKernel(string directiveName)
     {
-        var node = new LanguageNode(_currentKernelName!, _sourceText, _syntaxTree);
-
-        while (MoreTokens())
-        {
-            if (IsAtStartOfDirective())
-            {
-                break;
-            }
-
-            ConsumeCurrentTokenInto(node);
-        }
-
-        return node;
+        return _rootKernelDirectiveParser
+               .Configuration
+               .RootCommand
+               .Children
+               .OfType<IdentifierSymbol>()
+               .Any(c => c.HasAlias(directiveName));
     }
 
-    private T ParseTrailingWhitespace<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewLine = false) where T : SyntaxNode
+    private bool IsChooseKernelDirective(DirectiveNode directiveNode)
     {
-        while (MoreTokens())
+        if (_mapOfKernelNamesByAlias is null)
         {
-            if (CurrentToken?.Kind is TokenKind.NewLine)
-            {
-                if (stopBeforeNewLine)
-                {
-                    break;
-                }
-
-                if (stopAfterNewLine)
-                {
-                    ConsumeCurrentTokenInto(node);
-                    break;
-                }
-            }
-
-            if (CurrentToken is not { Kind: TokenKind.Whitespace } and not { Kind: TokenKind.NewLine })
-            {
-                break;
-            }
-
-            ConsumeCurrentTokenInto(node);
+            _mapOfKernelNamesByAlias = new(_getMapOfKernelNamesByAlias());
         }
 
-        return node;
-    }
-
-    private static bool IsCompilerDirective(DirectiveNode node) =>
-        node.ChildNodes.OfType<DirectiveNameNode>().Any(n => n is { Text: "#r" or "#i" });
-
-    private bool IsAtStartOfDirective()
-    {
-        if (CurrentToken is not { Text: "#" })
-        {
-            return false;
-        }
-
-        var previousToken = CurrentTokenPlus(-1);
-
-        if (previousToken is not null && previousToken is not { Kind: TokenKind.NewLine })
-        {
-            return false;
-        }
-
-        return CurrentTokenPlus(1) is { Text: "!" } or { Text: "r" } or { Text: "i" };
-    }
-
-    private SyntaxToken? CurrentToken =>
-        MoreTokens()
-            ? _tokens![_currentTokenIndex]
-            : null;
-
-    private SyntaxToken? CurrentTokenPlus(int offset)
-    {
-        var nextTokenIndex = _currentTokenIndex + offset;
-
-        if (nextTokenIndex >= _tokens!.Count)
-        {
-            return null;
-        }
-        else if (nextTokenIndex < 0)
-        {
-            return null;
-        }
-        else
-        {
-            return _tokens![nextTokenIndex];
-        }
-    }
-
-    [DebuggerStepThrough]
-    private bool MoreTokens() => _tokens!.Count > _currentTokenIndex;
-
-    [DebuggerStepThrough]
-    private void AdvanceToNextToken() => _currentTokenIndex++;
-
-    [DebuggerStepThrough]
-    private void ConsumeCurrentTokenInto(SyntaxNode node)
-    {
-        if (CurrentToken is { } token)
-        {
-            node.Add(token);
-            AdvanceToNextToken();
-        }
+        return _mapOfKernelNamesByAlias.Contains(directiveNode.Text);
     }
 
     private bool AllowsValueSharingByInterpolation(DirectiveNode directiveNode) =>
@@ -528,7 +310,7 @@ internal class PolyglotSyntaxParser
 
     internal class PolyglotLexer
     {
-        private TextWindow? _textWindow;
+        private TextWindow _textWindow;
         private readonly SourceText _sourceText;
         private readonly PolyglotSyntaxTree _syntaxTree;
         private readonly List<SyntaxToken> _tokens = new();
@@ -543,64 +325,36 @@ internal class PolyglotSyntaxParser
         {
             _textWindow = new TextWindow(0, _sourceText.Length);
 
-            TokenKind? previousTokenKind = null;
-
-            char previousCharacter = default;
-
             while (More())
             {
-                var currentCharacter = _sourceText[_textWindow.End];
+                LexTrivia();
 
-                var currentTokenKind = currentCharacter switch
-                {
-                    ' ' or '\t' => TokenKind.Whitespace,
-                    '\n' or '\r' or '\v' => TokenKind.NewLine,
-                    _ => char.IsLetterOrDigit(currentCharacter)
-                             ? TokenKind.Word
-                             : TokenKind.Punctuation,
-                };
-
-                if (previousTokenKind is { } previousTokenKindValue)
-                {
-                    if (previousTokenKind != currentTokenKind ||
-                        currentTokenKind is TokenKind.NewLine ||
-                        currentTokenKind is TokenKind.Punctuation)
-                    {
-                        if (!IsCurrentTokenANewLinePrecededByACarriageReturn(
-                                previousTokenKindValue,
-                                previousCharacter,
-                                currentTokenKind,
-                                currentCharacter))
-                        {
-                            FlushToken(previousTokenKindValue);
-                        }
-                    }
-                }
-
-                previousTokenKind = currentTokenKind;
-
-                previousCharacter = currentCharacter;
-
-                _textWindow.Advance();
-            }
-
-            if (previousTokenKind is not null)
-            {
-                FlushToken(previousTokenKind.Value);
+                LexSyntax();
             }
 
             return _tokens;
         }
 
-        private bool IsCurrentTokenANewLinePrecededByACarriageReturn(
-            TokenKind previousTokenKindValue,
-            char previousCharacter,
-            TokenKind currentTokenKind,
-            char currentCharacter) =>
-            currentTokenKind is TokenKind.NewLine &&
-            previousTokenKindValue is TokenKind.NewLine
-            &&
-            previousCharacter is '\r' && currentCharacter is '\n';
+        private void LexTrivia()
+        {
+            // while (More())
+            // {
+            //     switch (_sourceText[_textWindow.End])
+            //     {
+            //         case ' ':
+            //         case '\t':
+            //         case '\r':
+            //         case '\n':
+            //         case '\v':
+            //             _textWindow.Advance();
+            //             break;
+            //
+            //         default:
+            //             FlushToken(TokenKind.Trivia);
+            //             return;
+            //     }
+            // }
+        }
 
         private bool IsDirective()
         {
@@ -621,7 +375,7 @@ internal class PolyglotSyntaxParser
 
             // look ahead to see if this is a directive
             var textIsLongEnoughToContainDirective =
-                _sourceText.Length >= _textWindow!.End + 2;
+                _sourceText.Length >= _textWindow.End + 2;
 
             if (!textIsLongEnoughToContainDirective)
             {
@@ -674,6 +428,105 @@ internal class PolyglotSyntaxParser
             }
         }
 
+        private void LexDirective()
+        {
+            // if (!_textWindow.IsEmpty)
+            // {
+            //     FlushToken(TokenKind.Language);
+            // }
+            //
+            // while (More())
+            // {
+            //     switch (GetNextChar())
+            //     {
+            //         case ' ':
+            //         case '\t':
+            //             FlushToken(TokenKind.Directive);
+            //             LexDirectiveArgs();
+            //             return;
+            //
+            //         case '\r':
+            //         case '\n':
+            //             FlushToken(TokenKind.Directive);
+            //             LexTrivia();
+            //             return;
+            //
+            //         default:
+            //             _textWindow.Advance();
+            //             break;
+            //     }
+            // }
+            //
+            // FlushToken(TokenKind.Directive);
+        }
+
+        private void LexDirectiveArgs()
+        {
+            // var inTrivia = true;
+            // var foundArgs = false;
+            //
+            // while (More())
+            // {
+            //     var next = GetNextChar();
+            //
+            //     switch (next)
+            //     {
+            //         case ' ' when inTrivia:
+            //         case '\t'  when inTrivia:
+            //             _textWindow.Advance();
+            //             break;
+            //
+            //         case '\r':
+            //         case '\n':
+            //             if (foundArgs)
+            //             {
+            //                 FlushToken(TokenKind.DirectiveArgs);
+            //                 LexTrivia();
+            //             }
+            //             else
+            //             {
+            //                 FlushToken(TokenKind.Trivia);
+            //             }
+            //
+            //             return;
+            //
+            //         default:
+            //             if (inTrivia)
+            //             {
+            //                 FlushToken(TokenKind.Trivia);
+            //                 inTrivia = false;
+            //             }
+            //             else
+            //             {
+            //                 _textWindow.Advance();
+            //             }
+            //
+            //             foundArgs = true;
+            //
+            //             break;
+            //     }
+            // }
+            //
+            // FlushToken(TokenKind.DirectiveArgs);
+        }
+
+        private void LexSyntax()
+        {
+            // while (More())
+            // {
+            //     if (IsDirective())
+            //     {
+            //         LexDirective();
+            //     }
+            //     else if(More())
+            //     {
+            //         _textWindow.Advance();
+            //     }
+            // }
+            //
+            // FlushToken(TokenKind.Language);
+        }
+
         private void FlushToken(TokenKind kind)
         {
             if (_textWindow is null || _textWindow.IsEmpty)
@@ -687,11 +540,11 @@ internal class PolyglotSyntaxParser
         }
 
         [DebuggerHidden]
-        private char GetNextChar() => _sourceText[_textWindow!.End];
+        private char GetNextChar() => _sourceText[_textWindow.End];
 
         [DebuggerHidden]
         private char GetPreviousChar() =>
-            _textWindow!.End switch
+            _textWindow.End switch
             {
                 0 => default,
                 _ => _sourceText[_textWindow.End - 1]
@@ -700,10 +553,10 @@ internal class PolyglotSyntaxParser
         [DebuggerHidden]
         private bool More()
         {
-            return _textWindow!.End < _sourceText.Length;
+            return _textWindow.End < _sourceText.Length;
         }
 
-        private string CurrentTextWindow => _sourceText.GetSubText(_textWindow!.Span).ToString();
+        private string CurrentTextWindow => _sourceText.GetSubText(_textWindow.Span).ToString();
 
         private class TextWindow
         {
@@ -740,32 +593,5 @@ internal class PolyglotSyntaxParser
 
             public override string ToString() => $"[{Start}..{End}]";
         }
-    }
-
-    internal static class ErrorCodes
-    {
-        // parsing errors
-        public const string UnknownDirective = "DNI101";
-        public const string UnknownParameterName = "DNI103";
-        public const string MissingRequiredParameter = "DNI104";
-        public const string TooManyOccurrencesOfParameter = "DNI105";
-        public const string InvalidJsonInParameterValue = "DNI106";
-        public const string ParametersMustAppearAfterSubcommands = "DNI107";
-
-        // magic command usage errors
-        public const string UnsupportedMimeType = "DNI201";
-        public const string ValueNotFoundInKernel = "DNI202";
-        public const string ByRefNotSupportedWithProxyKernels = "DNI203";
-        public const string InputNotProvided = "DNI204";
-        public const string FromUrlAndFromFileCannotBeUsedTogether = "DNI205";
-        public const string FromUrlAndFromValueCannotBeUsedTogether = "DNI206";
-        public const string FromFileAndFromValueCannotBeUsedTogether = "DNI207";
-        public const string FromFileAndCellContentCannotBeUsedTogether = "DNI208";
-        public const string FromUrlAndCellContentCannotBeUsedTogether = "DNI209";
-
-        // API usage errors
-        public const string MissingBindingDelegate = "DNI301";
-        public const string MissingSerializationType = "DNI302";
-        public const string ByRefAndMimeTypeCannotBeCombined = "DNI303";
     }
 }

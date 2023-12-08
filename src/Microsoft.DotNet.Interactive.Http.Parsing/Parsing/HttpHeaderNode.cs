@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpHeaderNode : SyntaxNode
+internal class HttpHeaderNode : HttpSyntaxNode
 {
     internal HttpHeaderNode(
         SourceText sourceText,

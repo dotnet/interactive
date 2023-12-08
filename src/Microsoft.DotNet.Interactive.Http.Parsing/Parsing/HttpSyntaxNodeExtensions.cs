@@ -14,6 +14,7 @@ internal static class HttpSyntaxNodeExtensions
         this HttpSyntaxNode httpSyntaxNode, 
         HttpBindingDelegate bind)
     {
+        // FIX: (BindByInterpolation) move to partial class?
         var text = new StringBuilder();
         var diagnostics = new List<CodeAnalysis.Diagnostic>();
         var success = true;

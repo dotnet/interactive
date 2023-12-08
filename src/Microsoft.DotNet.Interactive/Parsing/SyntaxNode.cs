@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -21,7 +21,7 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
 
     private protected SyntaxNode(
         SourceText sourceText,
-        SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
+        SyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
@@ -161,7 +161,7 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
 
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
-        foreach (var child in ChildNodes)
+        foreach (var child in ChildNodesAndTokens)
         {
             foreach (var diagnostic in child.GetDiagnostics())
             {
@@ -173,6 +173,7 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
         {
             yield return diagnostic;
         }
+
     }
 
     public IEnumerable<SyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()
@@ -191,30 +192,6 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
             SyntaxNode node => node.ChildNodesAndTokens,
             _ => Array.Empty<SyntaxNodeOrToken>()
         });
-
-    public SyntaxNode? NextNode()
-    {
-        if (Parent is null)
-        {
-            return null;
-        }
-
-        var next = false;
-
-        foreach (var sibling in Parent.ChildNodes)
-        {
-            if (next)
-            {
-                return sibling;
-            }
-            else if (sibling == this)
-            {
-                next = true;
-            }
-        }
-
-        return null;
-    }
 
     private static IEnumerable<T> FlattenBreadthFirst<T>(
         IEnumerable<T> source,

@@ -1,9 +1,10 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.CodeAnalysis;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
@@ -17,29 +18,21 @@ public partial class PolyglotSyntaxParserTests : IDisposable
     public PolyglotSyntaxParserTests(ITestOutputHelper output)
     {
         _output = output;
-
-        // FIX: (PolyglotSyntaxParserTests) put back
-        // _assertionScope = new AssertionScope();
+        _assertionScope = new AssertionScope();
     }
 
     public void Dispose()
-        => _assertionScope?.Dispose();
+        => _assertionScope.Dispose();
 
     private static PolyglotSyntaxTree Parse(string code, string defaultLanguage = "csharp")
     {
-        var syntaxTree = PolyglotSyntaxParser.Parse(code, PolyglotParserConfigurationTests.GetDefaultConfiguration(defaultLanguage));
+        var syntaxTree = PolyglotSyntaxParser.Parse(code, defaultLanguage);
 
         syntaxTree.RootNode.FullText.Should().Be(code);
 
         return syntaxTree;
     }
-    
-    private static PolyglotSyntaxTree Parse(string code, PolyglotParserConfiguration configuration)
-    {
-        var syntaxTree = PolyglotSyntaxParser.Parse(code, configuration);
 
-        syntaxTree.RootNode.FullText.Should().Be(code);
-
-        return syntaxTree;
-    }
+    private static DiagnosticInfo CreateDiagnosticInfo(string message) =>
+        new(id: "DNI0000", message, DiagnosticSeverity.Error);
 }

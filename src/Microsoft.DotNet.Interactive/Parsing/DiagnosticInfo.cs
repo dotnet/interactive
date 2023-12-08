@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -29,6 +29,3 @@ internal sealed class DiagnosticInfo
     internal object[] MessageArguments { get; }
 <<<<<<<< HEAD:src/Microsoft.DotNet.Interactive/Parsing/DiagnosticInfo.cs
 }
-========
-}
->>>>>>>> febb2b963 (rename lower-level parsing classes for reuse):src/Microsoft.DotNet.Interactive.Http.Parsing/Parsing/DiagnosticInfo.cs

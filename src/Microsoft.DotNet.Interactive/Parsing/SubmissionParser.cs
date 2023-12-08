@@ -39,7 +39,7 @@ public class SubmissionParser
     {
         var sourceText = SourceText.From(code);
 
-        var configuration = GetParserConfiguration(defaultKernelName ?? DefaultKernelName());
+        var configuration = GetParserConfiguration(defaultKernelName);
 
         var parser = new PolyglotSyntaxParser(
             sourceText,
@@ -52,11 +52,11 @@ public class SubmissionParser
         await SplitSubmission(
             submitCode,
             submitCode.Code,
-            (languageNode, parent, directiveNode) =>
+            (languageNode, parent, kernelNameNode) =>
             {
                 if (!string.IsNullOrWhiteSpace(languageNode.Text))
                 {
-                    return new SubmitCode(languageNode, directiveNode);
+                    return new SubmitCode(languageNode, kernelNameNode);
                 }
                 else
                 {
@@ -82,7 +82,7 @@ public class SubmissionParser
     private async Task<IReadOnlyList<KernelCommand>> SplitSubmission(
         KernelCommand originalCommand,
         string code,
-        CreateChildCommand createChildCommand)
+        CreateChildCommand createCommand)
     {
         var commands = new List<KernelCommand>();
         var nugetRestoreOnKernels = new HashSet<string>();
@@ -110,22 +110,17 @@ public class SubmissionParser
 
                     if (diagnostics.Length > 0)
                     {
-                        switch (directiveNode)
+                        if (directiveNode is { Kind: DirectiveNodeKind.Action } adn)
                         {
-                            case { Kind: DirectiveNodeKind.Action } adn when IsUnknownDirective(adn) && (IsCompilerDirective(adn) || AcceptUnknownDirective(adn)):
-                                var command = createChildCommand(directiveNode, originalCommand, lastKernelNameNode);
+                            if (IsUnknownDirective(adn) && (IsCompilerDirective(adn) || AcceptUnknownDirective(adn)))
+                            {
+                                var command = createCommand(directiveNode, originalCommand, lastKernelNameNode);
                                 commands.Add(command);
-                                break;
-
-                            case { Kind: DirectiveNodeKind.Action }:
+                            }
+                            else
+                            {
                                 ClearCommandsAndFail(diagnostics[0]);
-                                break;
-
-                            case { Kind: DirectiveNodeKind.KernelSelector }:
-
-                               
-
-                                break;
+                            }
                         }
                     }
                     else
@@ -135,10 +130,36 @@ public class SubmissionParser
                         switch (directiveNode)
                         {
                             case { Kind: DirectiveNodeKind.Action }:
-
-                                if (await CreateActionDirectiveCommand(directiveNode, targetKernelName) is { } actionDirectiveCommand)
+                                
+                                if (directiveNode.TryGetActionDirective(out var directive) &&
+                                    directive.KernelCommandType is not null)
                                 {
-                                    commands.Add(actionDirectiveCommand);
+                                    var directiveJsonResult = await directiveNode.TryGetJsonAsync(
+                                                                  expressionNode => GetValueFromKernelOrRequestInput(expressionNode, targetKernelName));
+
+                                    if (directiveJsonResult.IsSuccessful)
+                                    {
+                                        var commandEnvelope = KernelCommandEnvelope.Deserialize(directiveJsonResult.Value);
+
+                                        directiveCommand = commandEnvelope.Command;
+                                        directiveCommand.TargetKernelName ??= targetKernelName;
+                                    }
+                                    else
+                                    {
+                                        ClearCommandsAndFail(directiveJsonResult.Diagnostics[0]);
+                                    }
+                                }
+                                else
+                                {
+                                    directiveCommand = new DirectiveCommand(directiveNode)
+                                    {
+                                        TargetKernelName = targetKernelName
+                                    };
+                                }
+
+                                if (directiveCommand is not null)
+                                {
+                                    commands.Add(directiveCommand);
                                 }
 
                                 break;
@@ -148,30 +169,10 @@ public class SubmissionParser
                                 targetKernelName = kernelNameNode.TargetKernelName;
                                 lastKernelNameNode = kernelNameNode;
 
-                                if (directiveNode.TryGetKernelSpecifierDirective(out var kernelSpecifierDirective) &&
-                                    kernelSpecifierDirective.TryGetKernelCommandAsync is not null)
+                                directiveCommand = new DirectiveCommand(directiveNode)
                                 {
-                                    directiveCommand = await kernelSpecifierDirective.TryGetKernelCommandAsync(
-                                                           directiveNode, 
-                                                           await directiveNode.RequestAllInputsAndKernelValues(_kernel),
-                                                           _kernel);
-
-                                    if (directiveCommand is null)
-                                    {
-                                        ClearCommandsAndFail(directiveNode.GetDiagnostics().FirstOrDefault());
-                                        break;
-                                    }
-
-                                    directiveCommand.TargetKernelName = targetKernelName;
-                                }
-                                else
-                                {
-                                    directiveCommand = new DirectiveCommand(directiveNode)
-                                    {
-                                        TargetKernelName = targetKernelName,
-                                        Handler = (_, _) => Task.CompletedTask
-                                    };
-                                }
+                                    TargetKernelName = targetKernelName
+                                };
 
                                 hoistedCommandsIndex = commands.Count;
 
@@ -196,7 +197,7 @@ public class SubmissionParser
 
                                         if (valueNode is FileInfo)
                                         {
-                                            var hoistedCommand = createChildCommand(directiveNode, originalCommand, lastKernelNameNode);
+                                            var hoistedCommand = createCommand(directiveNode, originalCommand, lastKernelNameNode);
                                             AddHoistedCommand(hoistedCommand);
                                         }
                                         else
@@ -325,10 +326,11 @@ public class SubmissionParser
             }
             else
             {
-                var command = createChildCommand(languageNode, originalCommand, lastKernelNameNode);
+                var command = createCommand(languageNode, originalCommand, lastKernelNameNode);
 
                 if (command is not null)
                 {
+                    // command.KernelChooserParseResult = lastKernelNameNode?.GetDirectiveParseResult();
                     commands.Add(command);
                 }
             }
@@ -337,12 +339,6 @@ public class SubmissionParser
         void ClearCommandsAndFail(CodeAnalysis.Diagnostic diagnostic)
         {
             commands.Clear();
-
-            // FIX: (SplitSubmission) 
-            if (diagnostic is null)
-            {
-                
-            }
 
             commands.Add(
                 new AnonymousKernelCommand((_, context) =>
@@ -353,66 +349,6 @@ public class SubmissionParser
                     context.Fail(originalCommand, message: diagnostic.ToString());
                     return Task.CompletedTask;
                 }));
-        }
-
-        async Task<KernelCommand> CreateActionDirectiveCommand(DirectiveNode directiveNode, string targetKernelName)
-        {
-            if (!directiveNode.TryGetActionDirective(out var directive) || 
-                directive.KernelCommandType is null)
-            {
-                // No command serialization needed.
-                return new DirectiveCommand(directiveNode)
-                {
-                    TargetKernelName = targetKernelName
-                };
-            }
-
-            if (directive.TryGetKernelCommandAsync is not null &&
-                await directive.TryGetKernelCommandAsync(
-                    directiveNode,
-                    await directiveNode.RequestAllInputsAndKernelValues(_kernel),
-                    _kernel) is { } command)
-            {
-                var diagnostics = directiveNode.GetDiagnostics().ToArray();
-
-                if (diagnostics is { Length: > 0 })
-                {
-                    ClearCommandsAndFail(diagnostics[0]);
-                    return null;
-                }
-                else
-                {
-                    return command;
-                }
-            }
-
-            // Get command JSON and deserialize.
-            var directiveJsonResult = await directiveNode.TryGetJsonAsync(
-                                          async expressionNode =>
-                                          {
-                                              var (boundValue, _, _) = await RequestSingleValueOrInputAsync(expressionNode, targetKernelName);
-
-                                              return boundValue;
-                                          });
-
-            if (directiveJsonResult.IsSuccessful)
-            {
-                var commandEnvelope = KernelCommandEnvelope.Deserialize(directiveJsonResult.Value);
-
-                var directiveCommand = commandEnvelope.Command;
-
-                if (directiveCommand.TargetKernelName is null)
-                {
-                    // FIX: (SplitSubmission) is this needed or does the initial parse always get it right?
-                    directiveCommand.TargetKernelName = targetKernelName;
-                }
-                return directiveCommand;
-            }
-            else
-            {
-                ClearCommandsAndFail(directiveJsonResult.Diagnostics[0]);
-                return null;
-            }
         }
     }
 
@@ -429,7 +365,7 @@ public class SubmissionParser
 
     private PolyglotParserConfiguration GetParserConfiguration(string defaultKernelName = null)
     {
-        if (_parserConfiguration is not null &&
+        if (_parserConfiguration is null &&
             defaultKernelName is not null &&
             defaultKernelName != DefaultKernelName())
         {
@@ -453,7 +389,32 @@ public class SubmissionParser
 
         return _parserConfiguration;
     }
-    
+
+    internal IDictionary<string, (string commandScope, Func<Parser> getParser)> GetSubkernelDirectiveParsers()
+    {
+        if (!(_kernel is CompositeKernel compositeKernel))
+        {
+            return null;
+        }
+
+        var dict = new Dictionary<string, (string, Func<Parser>)>();
+
+        foreach (var childKernel in compositeKernel.ChildKernels)
+        {
+            if (childKernel.ChooseKernelDirective is { } chooseKernelDirective)
+            {
+                foreach (var alias in chooseKernelDirective.Aliases)
+                {
+                    dict.Add(alias[2..], GetParser());
+                }
+            }
+
+            (string, Func<Parser>) GetParser() => (childKernel.SchedulingScope.ToString(), () => childKernel.SubmissionParser.GetDirectiveParser());
+        }
+
+        return dict;
+    }
+
     internal Parser GetDirectiveParser()
     {
         if (_directiveParser is null)
@@ -497,266 +458,147 @@ public class SubmissionParser
         return (targetKernelName, valueName);
     }
 
-    internal async Task<(DirectiveBindingResult<object> boundValue, ValueProduced valueProduced, InputProduced inputProduced)> RequestSingleValueOrInputAsync(
-        DirectiveExpressionNode expressionNode,
-        string targetKernelName)
+    private async Task<DirectiveBindingResult<object>> GetValueFromKernelOrRequestInput(DirectiveExpressionNode expressionNode, string targetKernelName)
     {
-        if (expressionNode.ChildNodes.OfType<DirectiveExpressionTypeNode>().SingleOrDefault() is not { } expressionTypeNode)
-        {
-            throw new ArgumentException("Expression type not found");
-        }
+        object? boundValue = null;
 
-        var expressionType = expressionTypeNode.Type;
-
-        if (expressionType is "input" or "password")
+        if (expressionNode.ChildNodes.OfType<DirectiveExpressionTypeNode>().SingleOrDefault() is { } expressionTypeNode)
         {
+            var expressionType = expressionTypeNode.Type;
             var parametersNode = expressionNode.ChildNodes.OfType<DirectiveExpressionParametersNode>().SingleOrDefault();
 
-            var (bindingResult, inputProduced) = await RequestSingleInput(expressionNode, parametersNode, expressionType);
-            return (bindingResult, null, inputProduced);
-        }
-        else
-        {
-            var (bindingResult, valueProduced) = await RequestSingleValueFromKernel(
-                                                     _kernel,
-                                                     expressionNode,
-                                                     targetKernelName);
-            return (bindingResult, valueProduced, null);
-        }
-    }
+            if (expressionType is "input" or "password")
+            {
+                var parametersNodeText = parametersNode?.Text;
 
-    internal static async Task<(DirectiveBindingResult<object> boundValue, ValueProduced valueProduced)> RequestSingleValueFromKernel(
-        Kernel destinationKernel,
-        DirectiveExpressionNode expressionNode,
-        string targetKernelName)
-    {
-        if (!(expressionNode
-             .Ancestors()
-             .OfType<DirectiveNode>()
-             .FirstOrDefault() is { } directiveNode))
-        {
-            throw new ArgumentException($"Parameter '{nameof(expressionNode)}' does not have a parent {nameof(DirectiveNode)}");
-        }
-
-        var allowByRef = directiveNode
-                      .DescendantNodesAndTokens()
-                      .OfType<DirectiveParameterNameNode>()
-                      .Any(node => node.Text == "--byref");
-       
-        var (sourceKernelName, sourceValueName) = SplitKernelDesignatorToken(expressionNode.Text, targetKernelName);
-
-        var sourceKernel = destinationKernel.RootKernel.FindKernelByName(sourceKernelName);
-        
-        if (allowByRef &&
-            sourceKernel is not null &&
-            sourceKernel.KernelInfo.IsProxy)
-        {
-            var diagnostic = expressionNode.CreateDiagnostic(
-                new(PolyglotSyntaxParser.ErrorCodes.ByRefNotSupportedWithProxyKernels,
-                    LocalizationResources.Magics_set_ErrorMessageSharingByReference(),
-                    DiagnosticSeverity.Error));
-            return (DirectiveBindingResult<object>.Failure(diagnostic), null);
-        }
-
-        var mimeType = allowByRef
-                           ? PlainTextFormatter.MimeType
-                           : directiveNode
-                             .DescendantNodesAndTokens()
-                             .OfType<DirectiveParameterNode>()
-                             .FirstOrDefault(node => node.NameNode?.Text == "--mime-type")?.ValueNode?.Text
-                             ??
-                             "application/json";
-
-        return await RequestSingleValueFromKernel(
-                   destinationKernel, 
-                   sourceKernelName, 
-                   sourceValueName, 
-                   mimeType, 
-                   allowByRef,
-                   expressionNode);
-    }
-
-    internal static async Task<(DirectiveBindingResult<object> boundValue, ValueProduced valueProduced)> RequestSingleValueFromKernel(
-        Kernel destinationKernel,
-        string sourceKernelName,
-        string sourceValueName,
-        string mimeType,
-        bool allowByRef,
-        DirectiveExpressionNode expressionNode)
-    {
-        var requestValue = new RequestValue(sourceValueName, mimeType: mimeType, targetKernelName: sourceKernelName);
-
-        var result = await destinationKernel.RootKernel.SendAsync(requestValue);
-
-        switch (result.Events[^1])
-        {
-            case CommandSucceeded:
-
-                if (result.Events.OfType<ValueProduced>().SingleOrDefault() is not { } valueProduced)
+                RequestInput requestInput;
+                if (parametersNodeText?[0] == '{')
                 {
-                    break;
+                    requestInput = JsonSerializer.Deserialize<RequestInput>(parametersNode.Text, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 }
-
-                object boundValue = null;
-
-                if (valueProduced.Value is { } value)
+                else
                 {
-                    if (allowByRef)
+                    if (parametersNodeText?[0] == '"')
                     {
-                        boundValue = value;
+                        parametersNodeText = JsonSerializer.Deserialize<string>(parametersNode.Text);
+                    }
+
+                    var valueName = GetValueNameFromNameParameter();
+
+                    if (parametersNodeText?.Contains(" ") == true)
+                    {
+                        requestInput = new(prompt: parametersNodeText,
+                                           valueName: valueName);
                     }
                     else
                     {
-                        // Direct interpolation
-                        boundValue = value.ToString();
+                        requestInput = new(prompt: $"Please enter a value for field \"{parametersNodeText}\".",
+                                           valueName: valueName ?? parametersNodeText);
                     }
                 }
-                else
-                    // Deserialize formatted value.
-                    switch (valueProduced.FormattedValue.MimeType)
+
+                if (expressionType is "password")
+                {
+                    requestInput.InputTypeHint = "password";
+                }
+                else if (string.IsNullOrEmpty(requestInput.InputTypeHint))
+                {
+                    if (expressionNode.Parent?.Parent is DirectiveParameterNode parameterValueNode &&
+                        parameterValueNode.TryGetParameter(out var parameter) &&
+                        parameter.TypeHint is { } typeHint)
                     {
-                        case "application/json":
+                        requestInput.InputTypeHint = typeHint;
+                    }
+                }
+
+                var result = await _kernel.SendAsync(requestInput);
+
+                switch (result.Events[^1])
+                {
+                    case CommandSucceeded:
+                        if (result.Events.OfType<InputProduced>().SingleOrDefault() is { } inputProduced)
                         {
-                            var stringValue = valueProduced.FormattedValue.Value;
-
-                            var jsonDoc = JsonDocument.Parse(stringValue);
-
-                            object jsonValue = jsonDoc.RootElement.ValueKind switch
-                            {
-                                JsonValueKind.True => true,
-                                JsonValueKind.False => false,
-                                JsonValueKind.String => jsonDoc.Deserialize<string>(),
-                                JsonValueKind.Number => jsonDoc.Deserialize<double>(),
-                                JsonValueKind.Array => jsonDoc,
-                                JsonValueKind.Object => jsonDoc,
-                                JsonValueKind.Null => null,
-                                JsonValueKind.Undefined => null,
-                                _ => null
-                            };
-
-                            boundValue = jsonValue;
-                            break;
+                            boundValue = inputProduced.Value;
                         }
 
-                        case "text/plain":
-                            boundValue = valueProduced.FormattedValue.Value;
-                            break;
-
-                        default:
-                            var errorMessage = result.Events.OfType<CommandFailed>().LastOrDefault()?.Message ??
-                                               $"Unsupported MIME type: {valueProduced.FormattedValue.MimeType}";
-
-                            var diagnostic = expressionNode.CreateDiagnostic(
-                                new(PolyglotSyntaxParser.ErrorCodes.UnsupportedMimeType,
-                                    errorMessage,
-                                    DiagnosticSeverity.Error));
-
-                            return (DirectiveBindingResult<object>.Failure(diagnostic), valueProduced);
-                    }
-
-                return (DirectiveBindingResult<object>.Success(boundValue), valueProduced);
-
-            case CommandFailed commandFailed:
-
-                return (DirectiveBindingResult<object>.Failure(
-                               expressionNode.CreateDiagnostic(
-                                   new(PolyglotSyntaxParser.ErrorCodes.ValueNotFoundInKernel,
-                                       commandFailed.Message,
-                                       DiagnosticSeverity.Error))),
-                           valueProduced: null);
-        }
-
-        return (DirectiveBindingResult<object>.Failure(
-                       expressionNode.CreateDiagnostic(
-                           new(PolyglotSyntaxParser.ErrorCodes.ValueNotFoundInKernel,
-                               "Value not found",
-                               DiagnosticSeverity.Error))),
-                   valueProduced: null);
-    }
-
-    private async Task<(DirectiveBindingResult<object> boundValue, InputProduced inputProduced)> RequestSingleInput(
-        DirectiveExpressionNode expressionNode, 
-        DirectiveExpressionParametersNode parametersNode, 
-        string expressionType)
-    {
-        var parametersNodeText = parametersNode?.Text;
-
-        RequestInput requestInput;
-
-        if (parametersNodeText?[0] == '{')
-        {
-            requestInput = JsonSerializer.Deserialize<RequestInput>(parametersNode.Text, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        }
-        else
-        {
-            if (parametersNodeText?[0] == '"')
-            {
-                parametersNodeText = JsonSerializer.Deserialize<string>(parametersNode.Text);
-            }
-
-            var valueName = GetValueNameFromNameParameter();
-
-            if (parametersNodeText?.Contains(" ") == true)
-            {
-                requestInput = new(prompt: parametersNodeText,
-                                   valueName: valueName);
+                        break;
+                    default:
+                        break;
+                }
             }
             else
             {
-                requestInput = new(prompt: $"Please enter a value for field \"{parametersNodeText}\".",
-                                   valueName: valueName ?? parametersNodeText);
-            }
-        }
+                var (sourceKernelName, sourceValueName) = SplitKernelDesignatorToken(expressionNode.Text, targetKernelName);
 
-        if (expressionType is "password")
-        {
-            requestInput.InputTypeHint = "password";
-        }
-        else if (string.IsNullOrEmpty(requestInput.InputTypeHint))
-        {
-            if (expressionNode.Parent?.Parent is DirectiveParameterNode parameterValueNode &&
-                parameterValueNode.TryGetParameter(out var parameter) &&
-                parameter.TypeHint is { } typeHint)
-            {
-                requestInput.InputTypeHint = typeHint;
-            }
-        }
+                var result = _kernel.RootKernel.SendAsync(new RequestValue(sourceValueName, mimeType: "application/json", targetKernelName: sourceKernelName)).GetAwaiter()
+                                    .GetResult();
 
-        var result = await _kernel.SendAsync(requestInput);
-
-        switch (result.Events[^1])
-        {
-            case CommandSucceeded:
-            {
-                string boundValue = null;
-
-                if (result.Events.OfType<InputProduced>().SingleOrDefault() is { } inputProduced)
+                switch (result.Events[^1])
                 {
-                    return (DirectiveBindingResult<object>.Success(inputProduced.Value),
-                               inputProduced);
-                }
-                else
-                {
-                    return (DirectiveBindingResult<object>.Failure(
-                                   expressionNode.CreateDiagnostic(
-                                       new(PolyglotSyntaxParser.ErrorCodes.InputNotProvided,
-                                           "Input not provided",
-                                           DiagnosticSeverity.Error))),
-                               inputProduced: null);
+                    case CommandSucceeded:
+
+                        if (result.Events.OfType<ValueProduced>().SingleOrDefault() is { } valueProduced)
+                        {
+                            if (valueProduced.Value is { } value)
+                            {
+                                boundValue = value.ToString();
+                            }
+                            else
+                                switch (valueProduced.FormattedValue.MimeType)
+                                {
+                                    case "application/json":
+                                    {
+                                        var stringValue = valueProduced.FormattedValue.Value;
+
+                                        var jsonDoc = JsonDocument.Parse(stringValue);
+
+                                        object jsonValue = jsonDoc.RootElement.ValueKind switch
+                                        {
+                                            JsonValueKind.True => true,
+                                            JsonValueKind.False => false,
+                                            JsonValueKind.String => jsonDoc.Deserialize<string>(),
+                                            JsonValueKind.Number => jsonDoc.Deserialize<double>(),
+                                            JsonValueKind.Object => stringValue,
+                                            _ => null
+                                        };
+
+                                        boundValue = jsonValue?.ToString();
+                                        break;
+                                    }
+
+                                    case "text/plain":
+                                        boundValue = valueProduced.FormattedValue.Value;
+                                        break;
+
+                                    default:
+                                        var errorMessage = result.Events.OfType<CommandFailed>().LastOrDefault()?.Message ??
+                                                           $"Unsupported MIME type: {valueProduced.FormattedValue.MimeType}";
+
+                                        var diagnostic = expressionNode.CreateDiagnostic(
+                                            new(PolyglotSyntaxParser.ErrorCodes.UnsupportedMimeType,
+                                                errorMessage,
+                                                DiagnosticSeverity.Error));
+
+                                        return DirectiveBindingResult<object>.Failure(
+                                            diagnostic);
+                                }
+                        }
+
+                        break;
+
+                    case CommandFailed commandFailed:
+
+                        var diagnostic1 = expressionNode.CreateDiagnostic(
+                            new(PolyglotSyntaxParser.ErrorCodes.ValueNotFoundInKernel,
+                                commandFailed.Message,
+                                DiagnosticSeverity.Error));
+
+                        return DirectiveBindingResult<object>.Failure(diagnostic1);
                 }
             }
-
-            case CommandFailed commandFailed:
-                return (DirectiveBindingResult<object>.Failure(
-                               expressionNode.CreateDiagnostic(
-                                   new(PolyglotSyntaxParser.ErrorCodes.InputNotProvided,
-                                       commandFailed.Message,
-                                       DiagnosticSeverity.Error))),
-                           inputProduced: null);
-
-            default:
-                throw new ArgumentOutOfRangeException();
         }
+
+        return DirectiveBindingResult<object>.Success(boundValue);
 
         string GetValueNameFromNameParameter()
         {

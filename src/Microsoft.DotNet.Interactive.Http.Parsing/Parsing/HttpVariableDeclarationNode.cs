@@ -5,12 +5,13 @@
 
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 using Diagnostic = CodeAnalysis.Diagnostic;
 
-internal class HttpVariableDeclarationNode : SyntaxNode
+internal class HttpVariableDeclarationNode : HttpSyntaxNode
 {
     internal HttpVariableDeclarationNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {

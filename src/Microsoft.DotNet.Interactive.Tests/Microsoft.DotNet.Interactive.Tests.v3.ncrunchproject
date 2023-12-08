@@ -1,4 +1,4 @@
-﻿<ProjectConfiguration>
+<ProjectConfiguration>
   <Settings>
     <CopyReferencedAssembliesToWorkspace>True</CopyReferencedAssembliesToWorkspace>
     <DefaultTestTimeout>7000</DefaultTestTimeout>
@@ -14,6 +14,15 @@
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.StdIoKernelConnectorTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.VariableSharingWithinMagicCommandsTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.VariableSharingTests+ShareMagicCommand</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.VariableSharingTests+SetMagicCommand</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.SqlDiscoverabilityKernelTests</FixtureName>
@@ -43,16 +52,34 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KqlDiscoverabilityKernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.KeyValueStoreKernelTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests+SubmissionCount</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests+RegisteringCommandHandlers</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests</FixtureName>
       </FixtureTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_pound_r_and_pound_i</TestName>
-      </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests</FixtureName>
+      </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInvocationContextTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForUnparentedKernel</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelExtensionsTests</FixtureName>
@@ -67,6 +94,9 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.JavaScriptKernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.InputsWithinMagicCommandsTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.ImportNotebookTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
@@ -76,10 +106,19 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.EventRoutingSlipTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.DirectiveTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.DataExplorerTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.ConnectDirectiveTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.CompositeKernelTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.CommandRoutingSlipTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.CancelCommandTests</FixtureName>
@@ -96,67 +135,6 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageServices.CompletionTests</FixtureName>
       </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests</FixtureName>
-      </FixtureTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
-#r one.dll
-#r two.dll", "csharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
-#r one.dll
-let x = 123 // with some intervening code
-#r two.dll", "fsharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
-#r one.dll
-var x = 123; // with some intervening code
-#r two.dll", "csharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
-#r one.dll
-#r two.dll", "fsharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.DirectiveTests.Directives_can_display_help(".NET")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.DirectiveTests.Directives_can_display_help("csharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_custom_magics</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.When_target_kernel_name_is_not_specified_then_proxyKernel_does_not_split_pound_r_and_pound_i</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.proxy_kernel_can_register_command_types_handled_by_remote</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.events_routing_slip_contains_proxy_kernels_that_have_been_traversed</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.events_routing_slip_contains_kernels_that_have_been_traversed</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.commands_routing_slip_contains_proxy_kernels_that_have_been_traversed</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.commands_routing_slip_contains_kernels_that_have_been_traversed</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.A_default_kernel_name_can_be_specified_to_handle_a_command_type</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.When_target_kernel_name_is_not_specified_then_ProxyKernel_does_not_split_custom_magics</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KeyValueStoreKernelTests.Completions_show_value_options</TestName>
-      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

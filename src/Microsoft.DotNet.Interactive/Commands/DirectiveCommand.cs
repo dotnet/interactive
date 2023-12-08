@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -10,7 +10,10 @@ internal class DirectiveCommand : KernelCommand
 {
     internal DirectiveCommand(DirectiveNode directiveNode)
     {
-        DirectiveNode = directiveNode ?? throw new ArgumentNullException(nameof(directiveNode));
+        ParseResult = parseResult;
+        DirectiveNode = directiveNode;
+        SchedulingScope = SchedulingScope.Parse(directiveNode?.CommandScope);
+    }
 
         if (directiveNode.CommandScope is not null)
         {

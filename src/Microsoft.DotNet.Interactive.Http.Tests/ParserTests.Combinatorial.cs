@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -31,6 +31,9 @@ public partial class HttpParserTests
             var code = syntaxSpec.ToString();
             
             var parseResult = Parse(code);
+
+            // FIX: (Valid_syntax_produces_expected_parse_tree_and_no_diagnostics) should these all be calling  HttpParserTests.Parse?
+            var parseResult = HttpRequestParser.Parse(code);
 
             _output.WriteLine($"""
                 === Generation #{index} ===

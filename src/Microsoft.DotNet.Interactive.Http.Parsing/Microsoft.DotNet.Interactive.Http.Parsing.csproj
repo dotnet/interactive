@@ -27,7 +27,6 @@
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxTree.cs" Link="Parsing\SyntaxTree.cs" LinkBase="Parsing"  />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TokenKind.cs" Link="Parsing\TokenKind.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="NullableAttributes.cs" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxTree.cs" Link="Parsing\SyntaxTree.cs" />
   </ItemGroup>
 
   <ItemGroup>
