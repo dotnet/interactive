@@ -3,14 +3,11 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpVariableValueNode : SyntaxNode
+internal class HttpVariableValueNode : HttpSyntaxNode
 {
     internal HttpVariableValueNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
@@ -18,6 +15,5 @@ internal class HttpVariableValueNode : SyntaxNode
 
     public void Add(HttpEmbeddedExpressionNode node) => AddInternal(node);
 
-    public HttpBindingResult<string> TryGetValue(HttpBindingDelegate bind) => BindByInterpolation(bind);
-
+    public HttpBindingResult<string> TryGetValue(HttpBindingDelegate bind) => this.BindByInterpolation(bind);
 }

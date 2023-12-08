@@ -4,10 +4,11 @@
 #nullable enable
 
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpExpressionNode : SyntaxNode
+internal class HttpExpressionNode : HttpSyntaxNode
 {
     internal HttpExpressionNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {

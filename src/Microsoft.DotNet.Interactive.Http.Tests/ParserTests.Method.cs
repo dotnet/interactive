@@ -5,6 +5,7 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
+using Microsoft.DotNet.Interactive.Parsing;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
@@ -21,7 +22,7 @@ public partial class HttpParserTests
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .ChildTokens.First().Kind
-                  .Should().Be(HttpTokenKind.Whitespace);
+                  .Should().Be(TokenKind.Whitespace);
         }
 
         [Fact]
@@ -39,7 +40,7 @@ public partial class HttpParserTests
                                    .Should()
                                    .ContainSingle<HttpRequestNode>().Which;
 
-            requestNode.ChildTokens.First().Kind.Should().Be(HttpTokenKind.NewLine);
+            requestNode.ChildTokens.First().Kind.Should().Be(TokenKind.NewLine);
             requestNode.MethodNode.Text.Should().Be("GET");
         }
 

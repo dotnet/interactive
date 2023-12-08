@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -10,7 +10,7 @@ using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpRootSyntaxNode : SyntaxNode
+internal class HttpRootSyntaxNode : HttpSyntaxNode
 {
     internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree? tree) : base(sourceText, tree)
     {
@@ -38,7 +38,6 @@ internal class HttpRootSyntaxNode : SyntaxNode
 
     public Dictionary<string, DeclaredVariable> GetDeclaredVariables()
     {
-
         var variableAndDeclarationNodes = ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
 
         var foundVariableValues = new Dictionary<string, string>();
@@ -58,9 +57,9 @@ internal class HttpRootSyntaxNode : SyntaxNode
                 {
                     var value = node.ValueNode.TryGetValue(node =>
                     {
-                        if (foundVariableValues.TryGetValue(node.Text, out string? strinValue))
+                        if (foundVariableValues.TryGetValue(node.Text, out string? stringValue))
                         {
-                            return node.CreateBindingSuccess(strinValue);
+                            return node.CreateBindingSuccess(stringValue);
                         }
                         else
                         {

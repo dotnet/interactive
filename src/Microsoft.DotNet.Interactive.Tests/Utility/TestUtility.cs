@@ -130,63 +130,7 @@ public static class AssertionExtensions
 
         return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
     }
-
-    public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
-        this GenericCollectionAssertions<SyntaxNodeOrToken> should,
-        Func<T, bool> where = null)
-        where T : SyntaxNodeOrToken
-    {
-        T subject;
-
-        if (where is null)
-        {
-            should.ContainSingle(e => e is T);
-
-            subject = should.Subject
-                            .OfType<T>()
-                            .Single();
-        }
-        else
-        {
-            should.ContainSingle(e => e is T && where((T)e));
-
-            subject = should.Subject
-                            .OfType<T>()
-                            .Where(where)
-                            .Single();
-        }
-
-        return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
-    }
-
-    public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
-        this GenericCollectionAssertions<SyntaxNode> should,
-        Func<T, bool> where = null)
-        where T : SyntaxNode
-    {
-        T subject;
-
-        if (where is null)
-        {
-            should.ContainSingle(e => e is T);
-
-            subject = should.Subject
-                            .OfType<T>()
-                            .Single();
-        }
-        else
-        {
-            should.ContainSingle(e => e is T && where((T)e));
-
-            subject = should.Subject
-                            .OfType<T>()
-                            .Where(where)
-                            .Single();
-        }
-
-        return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
-    }
-
+    
     public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
         this GenericCollectionAssertions<KernelEvent> should,
         Func<T, bool> where = null)

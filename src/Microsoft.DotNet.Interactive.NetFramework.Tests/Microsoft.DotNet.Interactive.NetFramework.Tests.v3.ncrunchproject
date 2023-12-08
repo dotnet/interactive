@@ -9,6 +9,7 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.StdIoKernelConnectorTests</FixtureName>
       </FixtureTestSelector>
+      <AllTestsSelector />
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

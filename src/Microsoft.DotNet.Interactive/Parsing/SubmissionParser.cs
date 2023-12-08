@@ -32,14 +32,15 @@ public class SubmissionParser
 
     public IReadOnlyList<Command> Directives => _rootCommand?.Subcommands ?? Array.Empty<Command>();
 
-    public PolyglotSyntaxTree Parse(string code, string language = null)
+    internal PolyglotSyntaxTree Parse(string code, string language = null)
     {
         var sourceText = SourceText.From(code);
 
         var parser = new PolyglotSyntaxParser(
             sourceText,
             language ?? DefaultKernelName(),
-            GetDirectiveParser(),
+            GetDirectiveParser(), 
+            null,
             GetSubkernelDirectiveParsers());
 
         return parser.Parse();
@@ -328,14 +329,14 @@ public class SubmissionParser
         return kernelName;
     }
 
-    internal IDictionary<string, (SchedulingScope commandScope, Func<Parser> getParser)> GetSubkernelDirectiveParsers()
+    internal IDictionary<string, (string commandScope, Func<Parser> getParser)> GetSubkernelDirectiveParsers()
     {
         if (!(_kernel is CompositeKernel compositeKernel))
         {
             return null;
         }
 
-        var dict = new Dictionary<string, (SchedulingScope, Func<Parser>)>();
+        var dict = new Dictionary<string, (string, Func<Parser>)>();
 
         foreach (var childKernel in compositeKernel.ChildKernels)
         {
@@ -347,7 +348,7 @@ public class SubmissionParser
                 }
             }
 
-            (SchedulingScope, Func<Parser>) GetParser() => (childKernel.SchedulingScope, () => childKernel.SubmissionParser.GetDirectiveParser());
+            (string, Func<Parser>) GetParser() => (childKernel.SchedulingScope.ToString(), () => childKernel.SubmissionParser.GetDirectiveParser());
         }
 
         return dict;

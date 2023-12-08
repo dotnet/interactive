@@ -8,14 +8,12 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-[DebuggerStepThrough]
-public class ActionDirectiveNode : DirectiveNode
+internal class ActionDirectiveNode : DirectiveNode
 {
     internal ActionDirectiveNode(
-        DirectiveToken directiveToken,
         SourceText sourceText,
         string parentKernelName,
-        PolyglotSyntaxTree? syntaxTree) : base(directiveToken, sourceText, syntaxTree)
+        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
         ParentKernelName = parentKernelName;
     }

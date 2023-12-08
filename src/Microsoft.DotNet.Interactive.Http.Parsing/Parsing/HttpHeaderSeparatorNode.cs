@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpHeaderSeparatorNode : SyntaxNode
+internal class HttpHeaderSeparatorNode : HttpSyntaxNode
 {
     internal HttpHeaderSeparatorNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {

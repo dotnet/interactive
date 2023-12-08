@@ -113,6 +113,7 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.App.Tests.TypeScriptInterfacesContractTests</FixtureName>
       </FixtureTestSelector>
+      <AllTestsSelector />
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

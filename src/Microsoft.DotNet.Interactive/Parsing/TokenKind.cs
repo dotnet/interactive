@@ -3,10 +3,10 @@
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-public enum DiagnosticSeverity
+internal enum TokenKind
 {
-    Hidden = 0,
-    Info = 1,
-    Warning = 2,
-    Error = 3
+    Word,
+    Whitespace,
+    Punctuation,
+    NewLine
 }

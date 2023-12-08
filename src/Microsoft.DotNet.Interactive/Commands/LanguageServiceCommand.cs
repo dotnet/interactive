@@ -17,7 +17,7 @@ public abstract class LanguageServiceCommand : KernelCommand
         LinePosition = linePosition;
     }
         
-    protected LanguageServiceCommand(
+    private protected LanguageServiceCommand(
         LanguageNode languageNode,
         LinePosition linePosition)
         : base(languageNode.Name)
@@ -25,7 +25,7 @@ public abstract class LanguageServiceCommand : KernelCommand
         Code = languageNode.Text;
         LanguageNode = languageNode;
         LinePosition = linePosition;
-        SchedulingScope = languageNode.CommandScope;
+        SchedulingScope = SchedulingScope.Parse(languageNode.CommandScope);
     }
 
     public string Code { get; protected set; }

@@ -23,7 +23,7 @@ public class SubmitCode : KernelCommand
         Code = languageNode.Text;
         LanguageNode = languageNode;
         KernelNameDirectiveNode = kernelNameDirectiveNode;
-        SchedulingScope = languageNode.CommandScope;
+        SchedulingScope = SchedulingScope.Parse(languageNode.CommandScope);
 
         if (languageNode is ActionDirectiveNode actionDirectiveNode)
         {

@@ -29,6 +29,7 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.GetCorrectProfilePaths</TestName>
       </NamedTestSelector>
+      <AllTestsSelector />
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

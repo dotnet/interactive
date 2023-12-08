@@ -5,9 +5,8 @@ using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Collections;
 using FluentAssertions.Primitives;
-using Microsoft.DotNet.Interactive.Parsing;
 
-namespace Microsoft.DotNet.Interactive.Http.Tests.Utility;
+namespace Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 
 internal static class AssertionExtensions
 {

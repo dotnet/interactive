@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpExpressionEndNode : SyntaxNode
+internal class HttpExpressionEndNode : HttpSyntaxNode
 {
     internal HttpExpressionEndNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {

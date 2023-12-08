@@ -4,6 +4,7 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Kql.Tests.KqlConnectionTests.query_produces_expected_formatted_values</TestName>
       </NamedTestSelector>
+      <AllTestsSelector />
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

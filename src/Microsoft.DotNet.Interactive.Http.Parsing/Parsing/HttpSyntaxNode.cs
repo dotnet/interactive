@@ -4,12 +4,15 @@
 #nullable enable
 
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpVariableAssignmentNode : HttpSyntaxNode
+internal class HttpSyntaxNode : SyntaxNode
 {
-    internal HttpVariableAssignmentNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpSyntaxNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
     }
+
+    internal void Add(HttpCommentNode node, bool addBefore) => AddInternal(node, addBefore);
 }

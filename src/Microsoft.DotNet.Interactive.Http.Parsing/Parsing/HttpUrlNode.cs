@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 using Diagnostic = CodeAnalysis.Diagnostic;
 
-internal class HttpUrlNode : SyntaxNode
+internal class HttpUrlNode : HttpSyntaxNode
 {
     internal HttpUrlNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
@@ -46,7 +46,7 @@ internal class HttpUrlNode : SyntaxNode
 
     internal HttpBindingResult<Uri> TryGetUri(HttpBindingDelegate bind)
     {
-        var result = BindByInterpolation(bind);
+        var result = this.BindByInterpolation(bind);
 
         if (result.IsSuccessful)
         {

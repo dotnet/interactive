@@ -6,20 +6,19 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-public abstract class DirectiveNode : LanguageNode
+internal abstract class DirectiveNode : LanguageNode
 {
     private ParseResult? _parseResult;
 
     internal DirectiveNode(
-        DirectiveToken directiveToken,
         SourceText sourceText,
-        PolyglotSyntaxTree? syntaxTree) : base(directiveToken.DirectiveName, sourceText, syntaxTree)
+        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
-        Add(directiveToken);
     }
 
     internal Parser? DirectiveParser { get; set; }
@@ -36,16 +35,18 @@ public abstract class DirectiveNode : LanguageNode
         return _parseResult ??= DirectiveParser.Parse(Text);
     }
 
-    public override IEnumerable<Diagnostic> GetDiagnostics()
+    public override IEnumerable<CodeAnalysis.Diagnostic> GetDiagnostics()
     {
         var parseResult = GetDirectiveParseResult();
 
         foreach (var error in parseResult.Errors)
         {
-            yield return new Diagnostic(
-                message: error.Message,
-                severity: CodeAnalysis.DiagnosticSeverity.Error,
-                linePositionSpan: GetLinePositionSpan(), code: "DNI0001");
+            var descriptor = new DiagnosticInfo(
+                id: "DNI0001",
+                messageFormat: error.Message,
+                severity: DiagnosticSeverity.Error);
+
+            yield return CreateDiagnostic(descriptor);
         }
     }
 

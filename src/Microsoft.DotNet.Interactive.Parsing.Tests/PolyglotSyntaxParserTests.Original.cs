@@ -2,24 +2,19 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.App;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Jupyter;
-using Microsoft.DotNet.Interactive.Parsing;
-using Microsoft.DotNet.Interactive.PowerShell;
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 
-namespace Microsoft.DotNet.Interactive.Tests.Parsing;
+namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
-public class SubmissionParserTests
+public partial class PolyglotSyntaxParserTests
 {
     [Fact]
     public void Parsed_tree_can_recapitulate_original_text()
@@ -29,7 +24,7 @@ public class SubmissionParserTests
 var x = 123;
 x
 ";
-        var tree = CreateSubmissionParser().Parse(code);
+        var tree = Parse(code);
 
         tree.ToString().Should().Be(code);
     }
@@ -39,9 +34,7 @@ x
     [InlineData("#r \"/path/to/a.dll\"\nlet x = 123", "fsharp")]
     public void Pound_r_file_path_is_parsed_as_a_language_node(string code, string language)
     {
-        var parser = CreateSubmissionParser(language);
-
-        var tree = parser.Parse(code);
+        var tree = Parse(code);
 
         var nodes = tree.RootNode.ChildNodes;
 
@@ -57,9 +50,7 @@ x
     [Fact]
     public void Pound_r_nuget_is_parsed_as_a_directive_node_in_csharp()
     {
-        var parser = CreateSubmissionParser("csharp");
-
-        var tree = parser.Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx");
+        var tree = Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx", "csharp");
 
         tree.RootNode
             .ChildNodes
@@ -74,9 +65,7 @@ x
     [Fact]
     public void Pound_r_nuget_is_parsed_as_a_language_node_in_fsharp()
     {
-        var parser = CreateSubmissionParser("fsharp");
-
-        var tree = parser.Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx");
+        var tree = Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx", "fsharp");
 
         tree.RootNode
             .ChildNodes
@@ -91,9 +80,7 @@ x
     [Fact]
     public void Pound_i_is_a_valid_directive()
     {
-        var parser = CreateSubmissionParser("csharp");
-
-        var tree = parser.Parse("var x = 1;\n#i \"nuget:/some/path\"\nx");
+        var tree = Parse("var x = 1;\n#i \"nuget:/some/path\"\nx");
 
         tree.RootNode
             .ChildNodes
@@ -112,23 +99,21 @@ x
     [InlineData(Language.FSharp, Language.FSharp)]
     public void Pound_i_is_dispatched_to_the_correct_kernel(Language defaultKernel, Language targetKernel)
     {
-        var parser = CreateSubmissionParser(defaultKernel.LanguageName());
+        // var command = new SubmitCode("#i \"nuget: SomeLocation\"", targetKernelName: targetKernel.LanguageName());
+        //
+        // var subCommands = parser.SplitSubmission(command);
+        //
+        // subCommands
+        //     .Should()
+        //     .AllSatisfy(c => c.TargetKernelName.Should().Be(targetKernel.LanguageName()));
 
-        var command = new SubmitCode("#i \"nuget: SomeLocation\"", targetKernelName: targetKernel.LanguageName());
-
-        var subCommands = parser.SplitSubmission(command);
-
-        subCommands
-            .Should()
-            .AllSatisfy(c => c.TargetKernelName.Should().Be(targetKernel.LanguageName()));
+        throw new Exception("rewrite");
     }
 
     [Fact]
     public void Directive_parsing_errors_are_available_as_diagnostics()
     {
-        var parser = CreateSubmissionParser("csharp");
-
-        var tree = parser.Parse("#!csharp --invalid-option\nvar x = 1;");
+        var tree = Parse("#!csharp --invalid-option\nvar x = 1;");
 
         var node = tree.RootNode
                        .ChildNodes
@@ -136,13 +121,16 @@ x
                        .ContainSingle<DirectiveNode>()
                        .Which;
 
-        var diagnostics = node.GetDiagnostics();
+        IEnumerable<Diagnostic> diagnostics = node.GetDiagnostics();
 
         diagnostics
             .Should()
             .ContainSingle(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error)
             .Which
-            .LinePositionSpan.End.Character
+            .Location
+            .GetLineSpan()
+            .EndLinePosition
+            .Character
             .Should()
             .Be(node.Span.End);
 
@@ -150,7 +138,10 @@ x
             .Should()
             .ContainSingle(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error)
             .Which
-            .LinePositionSpan.Start.Character
+            .Location
+            .GetLineSpan()
+            .StartLinePosition
+            .Character
             .Should()
             .Be(node.Span.Start);
     }
@@ -167,7 +158,7 @@ x
     {
         MarkupTestFile.GetPosition(markupCode, out var code, out var position);
 
-        var tree = CreateSubmissionParser().Parse(code);
+        var tree = Parse(code);
 
         var textSpan = tree.RootNode.FindNode(position.Value);
 
@@ -185,12 +176,12 @@ x
 
         MarkupTestFile.GetSpan(markupCode, out var code, out var span);
 
-        var tree = CreateSubmissionParser("csharp").Parse(code);
+        var tree = Parse(code);
 
         var textSpan = tree.RootNode
                            .FindNode(span)
                            .ChildTokens
-                           .OfType<DirectiveToken>()
+                           .OfType<DirectiveNode>()
                            .Single()
                            .Span;
 
@@ -221,9 +212,7 @@ x
     {
         MarkupTestFile.GetNamedSpans(markupCode, out var code, out var spansByName);
 
-        var parser = CreateSubmissionParser(defaultLanguage);
-
-        var tree = parser.Parse(code);
+        var tree = Parse(code, defaultLanguage);
 
         using var _ = new AssertionScope();
 
@@ -256,9 +245,7 @@ let x =
     {
         MarkupTestFile.GetNamedSpans(markupCode, out var code, out var spansByName);
 
-        var parser = CreateSubmissionParser(defaultLanguage);
-
-        var tree = parser.Parse(code);
+        var tree = Parse(code, defaultLanguage);
 
         using var _ = new AssertionScope();
 
@@ -300,9 +287,7 @@ let x = 123
     {
         MarkupTestFile.GetSpans(markupCode, out var code, out var spans);
 
-        var parser = CreateSubmissionParser(defaultLanguage);
-
-        var tree = parser.Parse(code);
+        var tree = Parse(code, defaultLanguage);
 
         using var _ = new AssertionScope();
         {
@@ -318,11 +303,9 @@ let x = 123
     [Fact]
     public void Shebang_after_the_end_of_a_line_is_not_a_node_delimiter()
     {
-        var parser = CreateSubmissionParser();
-
         var code = "Console.WriteLine(\"Hello from C#!\");";
 
-        var tree = parser.Parse(code);
+        var tree = Parse(code);
 
         tree.RootNode
             .ChildNodes
@@ -339,8 +322,7 @@ let x = 123
     {
         var code = @"#r ""path/to/file""
 // language line";
-        var parser = CreateSubmissionParser();
-        var tree = parser.Parse(code);
+        var tree = Parse(code);
         var root = tree.RootNode;
         var rootSpan = root.Span;
 
@@ -348,75 +330,51 @@ let x = 123
             .Should()
             .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
     }
-
-    private static SubmissionParser CreateSubmissionParser(string defaultLanguage = "csharp")
-    {
-        using var compositeKernel = new CompositeKernel
-        {
-            DefaultKernelName = defaultLanguage
-        };
-
-        compositeKernel.Add(
-            new CSharpKernel()
-                .UseNugetDirective()
-                .UseWho(),
-            new[] { "c#", "C#" });
-
-        compositeKernel.Add(
-            new FSharpKernel()
-                .UseNugetDirective(),
-            new[] { "f#", "F#" });
-
-        compositeKernel.Add(
-            new PowerShellKernel(),
-            new[] { "powershell" });
-
-        compositeKernel.UseDefaultMagicCommands();
-
-        return compositeKernel.SubmissionParser;
-    }
-
+    
     [Fact]
     public async Task DiagnosticsProduced_events_always_point_back_to_the_original_command()
     {
-        using var kernel = new CSharpKernel();
-        var command = new SubmitCode("#!unrecognized");
-        var result = await kernel.SendAsync(command);
-        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Command.Should().BeSameAs(command);
+        // using var kernel = new CSharpKernel();
+        // var command = new SubmitCode("#!unrecognized");
+        // var result = await kernel.SendAsync(command);
+        // result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Command.Should().BeSameAs(command);
+
+        throw new Exception("rewrite");
     }
 
     [Fact]
     public async Task ParsedDirectives_With_Args_Consume_Newlines()
     {
-        using var kernel = new CompositeKernel
-        {
-            new CSharpKernel().UseValueSharing(),
-            new FSharpKernel().UseValueSharing(),
-        };
-        kernel.DefaultKernelName = "csharp";
+//         using var kernel = new CompositeKernel
+//         {
+//             new CSharpKernel().UseValueSharing(),
+//             new FSharpKernel().UseValueSharing(),
+//         };
+//         kernel.DefaultKernelName = "csharp";
+//
+//         var csharpCode = @"
+// int x = 123;
+// int y = 456;";
+//
+//         await kernel.SubmitCodeAsync(csharpCode);
+//
+//         var fsharpCode = @"
+// #!share --from csharp x
+// #!share --from csharp y
+// Console.WriteLine($""{x} {y}"");";
+//         var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(fsharpCode));
+//
+//         commands
+//             .Should()
+//             .HaveCount(3)
+//             .And
+//             .ContainSingle<SubmitCode>()
+//             .Which
+//             .Code
+//             .Should()
+//             .NotBeEmpty();
 
-        var csharpCode = @"
-int x = 123;
-int y = 456;";
-
-        await kernel.SubmitCodeAsync(csharpCode);
-
-        var fsharpCode = @"
-#!share --from csharp x
-#!share --from csharp y
-Console.WriteLine($""{x} {y}"");";
-        var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(fsharpCode));
-
-        commands
-            .Should()
-            .HaveCount(3)
-            .And
-            .ContainSingle<SubmitCode>()
-            .Which
-            .Code
-            .Should()
-            .NotBeEmpty();
-
+        throw new Exception("rewrite");
     }
 
     [Theory]
@@ -438,23 +396,25 @@ let x = 123 // with some intervening code
         string code,
         string defaultKernel)
     {
-        using var kernel = new CompositeKernel
-        {
-            new CSharpKernel().UseNugetDirective(),
-            new FSharpKernel().UseNugetDirective(),
-        };
+        // using var kernel = new CompositeKernel
+        // {
+        //     new CSharpKernel().UseNugetDirective(),
+        //     new FSharpKernel().UseNugetDirective(),
+        // };
+        //
+        // kernel.DefaultKernelName = defaultKernel;
+        //
+        // var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(code));
+        //
+        // commands
+        //     .Should()
+        //     .ContainSingle<SubmitCode>()
+        //     .Which
+        //     .Code
+        //     .Should()
+        //     .ContainAll("#r one.dll", "#r two.dll");
 
-        kernel.DefaultKernelName = defaultKernel;
-
-        var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(code));
-
-        commands
-            .Should()
-            .ContainSingle<SubmitCode>()
-            .Which
-            .Code
-            .Should()
-            .ContainAll("#r one.dll", "#r two.dll");
+        throw new Exception("rewrite");
     }
 
     [Fact]
@@ -468,61 +428,85 @@ let x = 123 // with some intervening code
 
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var _, out var _);
 
-        var command = new RequestDiagnostics(code);
-        var commands = new CSharpKernel().UseDefaultMagicCommands().SubmissionParser.SplitSubmission(command);
+        // var command = new RequestDiagnostics(code);
+        // var commands = new CSharpKernel().UseDefaultMagicCommands().SubmissionParser.SplitSubmission(command);
+        //
+        // commands
+        //     .Should()
+        //     .ContainSingle<RequestDiagnostics>()
+        //     .Which
+        //     .Code
+        //     .Should()
+        //     .NotContain("#!time");
 
-        commands
-            .Should()
-            .ContainSingle<RequestDiagnostics>()
-            .Which
-            .Code
-            .Should()
-            .NotContain("#!time");
+        throw new Exception("rewrite");
     }
 
     [Fact]
     public void Whitespace_only_nodes_do_not_generate_separate_SubmitCode_commands()
     {
-        using var kernel = new CompositeKernel
-        {
-            new FakeKernel("one"),
-            new FakeKernel("two")
-        };
+//         using var kernel = new CompositeKernel
+//         {
+//             new FakeKernel("one"),
+//             new FakeKernel("two")
+//         };
+//
+//         kernel.DefaultKernelName = "two";
+//
+//         var commands = kernel.SubmissionParser.SplitSubmission(
+//             new SubmitCode(@"
+//
+// #!one
+//
+// #!two
+//
+// "));
+//
+//         commands.Should().NotContain(c => c is SubmitCode);
 
-        kernel.DefaultKernelName = "two";
-
-        var commands = kernel.SubmissionParser.SplitSubmission(
-            new SubmitCode(@"
-
-#!one
-
-#!two
-
-"));
-
-        commands.Should().NotContain(c => c is SubmitCode);
+        throw new Exception("rewrite");
     }
 
     [Fact]
     public void ChooseKernelDirective_parserResults_are_available_in_the_split_commands()
     {
-        using var kernel = new CompositeKernel
-        {
-            new CSharpKernel()
-        };
+        //         using var kernel = new CompositeKernel
+        //         {
+        //             new CSharpKernel()
+        //         };
+        //
+        //         var code = @"
+        // #!csharp
+        // var a = 12;
+        // a.Display();";
+        //         var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(code));
+        //
+        //         commands.Should().ContainSingle<SubmitCode>()
+        //             .Which
+        //             .KernelChooserParseResult
+        //             .CommandResult.Command.Name
+        //             .Should()
+        //             .Be("#!csharp");
 
-        var code = @"
-#!csharp
-var a = 12;
-a.Display();";
-        var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(code));
+        throw new Exception("rewrite");
+    }
 
-        commands.Should().ContainSingle<SubmitCode>()
-            .Which
-            .KernelChooserParseResult
-            .CommandResult.Command.Name
+    [Theory]
+    [InlineData("#!foo arg1 arg2")]
+    [InlineData("#!foo")]
+    [InlineData("#!foo\n")]
+    [InlineData("#!foo\r\n")]
+    public void Text_returns_directive_token_text(string code)
+    {
+        var tree = Parse(code);
+
+        tree.RootNode
+            .DescendantNodesAndTokensAndSelf()
             .Should()
-            .Be("#!csharp");
-
+            .ContainSingle<DirectiveNode>()
+            .Which
+            .Text
+            .Should()
+            .Be("#!foo");
     }
 }

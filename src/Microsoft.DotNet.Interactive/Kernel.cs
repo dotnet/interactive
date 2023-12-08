@@ -225,12 +225,12 @@ public abstract partial class Kernel :
         }
 
         // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
-        var absolutePosition = tree.GetAbsolutePosition(command.LinePosition);
+        var absolutePosition = tree.RootNode.SourceText.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
 
         // don't let abs position drop below 0
         if (absolutePosition > 0)
         {
-            if (absolutePosition >= tree.Length)
+            if (absolutePosition >= tree.RootNode.SourceText.Length)
             {
                 absolutePosition--;
             }

@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpBodyNode : SyntaxNode
+internal class HttpBodyNode : HttpSyntaxNode
 {
     internal HttpBodyNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
@@ -17,6 +17,6 @@ internal class HttpBodyNode : SyntaxNode
 
     public HttpBindingResult<string> TryGetBody(HttpBindingDelegate bind)
     {
-        return BindByInterpolation(bind);
+        return this.BindByInterpolation(bind);
     }
 }

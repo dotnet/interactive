@@ -5,6 +5,7 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
+using Microsoft.DotNet.Interactive.Parsing;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
@@ -20,7 +21,7 @@ public partial class HttpParserTests
 
             result.SyntaxTree.RootNode
                   .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
-                  .UrlNode.ChildTokens.Last().Kind.Should().Be(HttpTokenKind.Whitespace);
+                  .UrlNode.ChildTokens.Last().Kind.Should().Be(TokenKind.Whitespace);
         }
 
         [Fact]

@@ -14,8 +14,6 @@ namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
-    private readonly ITestOutputHelper _output;
-
     public class Combinatorial
     {
         private readonly ITestOutputHelper _output;
@@ -31,6 +29,7 @@ public partial class HttpParserTests
         {
             var code = syntaxSpec.ToString();
 
+            // FIX: (Valid_syntax_produces_expected_parse_tree_and_no_diagnostics) should these all be calling  HttpParserTests.Parse?
             var parseResult = HttpRequestParser.Parse(code);
 
             _output.WriteLine($"""
@@ -38,7 +37,7 @@ public partial class HttpParserTests
 
                 {code}
                 """);
-
+            
             parseResult.GetDiagnostics().Should().BeEmpty();
 
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());

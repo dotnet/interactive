@@ -5,6 +5,7 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
+using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -33,10 +34,10 @@ public partial class HttpParserTests
 
             result.SyntaxTree.RootNode
                   .ChildTokens.Select(t => new { t.Text, t.Kind }).Should().BeEquivalentSequenceTo(
-                      new { Text = "\n", Kind = HttpTokenKind.NewLine },
-                      new { Text = "\v", Kind = HttpTokenKind.NewLine },
-                      new { Text = "\r\n", Kind = HttpTokenKind.NewLine },
-                      new { Text = "\n", Kind = HttpTokenKind.NewLine });
+                      new { Text = "\n", Kind = TokenKind.NewLine },
+                      new { Text = "\v", Kind = TokenKind.NewLine },
+                      new { Text = "\r\n", Kind = TokenKind.NewLine },
+                      new { Text = "\n", Kind = TokenKind.NewLine });
         }
 
         [Fact]
@@ -48,12 +49,12 @@ public partial class HttpParserTests
             requestNode
                   .ChildTokens.Select(t => new { t.Text, t.Kind })
                   .Should().BeEquivalentSequenceTo(
-                      new { Text = ".", Kind = HttpTokenKind.Punctuation },
-                      new { Text = "!", Kind = HttpTokenKind.Punctuation },
-                      new { Text = "?", Kind = HttpTokenKind.Punctuation },
-                      new { Text = ".", Kind = HttpTokenKind.Punctuation },
-                      new { Text = ":", Kind = HttpTokenKind.Punctuation },
-                      new { Text = "/", Kind = HttpTokenKind.Punctuation });
+                      new { Text = ".", Kind = TokenKind.Punctuation },
+                      new { Text = "!", Kind = TokenKind.Punctuation },
+                      new { Text = "?", Kind = TokenKind.Punctuation },
+                      new { Text = ".", Kind = TokenKind.Punctuation },
+                      new { Text = ":", Kind = TokenKind.Punctuation },
+                      new { Text = "/", Kind = TokenKind.Punctuation });
         }
     }
 }

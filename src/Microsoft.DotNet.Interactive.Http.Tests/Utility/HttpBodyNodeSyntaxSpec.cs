@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests.Utility;
 

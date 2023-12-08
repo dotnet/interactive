@@ -3,47 +3,30 @@
 
 #nullable enable
 
-using System;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-public class PolyglotSyntaxTree
+internal class PolyglotSyntaxTree : SyntaxTree
 {
-    private readonly SourceText _sourceText;
-    private SyntaxNode? _root;
-
-    internal PolyglotSyntaxTree(SourceText sourceText)
+    internal PolyglotSyntaxTree(SourceText sourceText, string defaultLanguage)
     {
-        _sourceText = sourceText;
+        DefaultLanguage = defaultLanguage;
+        RootNode = new PolyglotSubmissionNode(sourceText, this);
     }
 
-    public int Length => _sourceText.Length;
+    public string DefaultLanguage { get; }
 
-    public SyntaxNode? RootNode
-    {
-        get => _root;
-        set => _root = value ?? throw new ArgumentNullException(nameof(value));
-    }
-
-    public override string ToString()
-    {
-        return _sourceText.ToString();
-    }
+    public PolyglotSubmissionNode RootNode { get; }
 
     public string? GetLanguageAtPosition(int position)
     {
-        if (_root is null)
+        if (position >= RootNode.Span.End)
         {
-            return null;
+            position = RootNode.Span.End - 1;
         }
 
-        if (position >= _root.Span.End)
-        {
-            position = _root.Span.End - 1;
-        }
-
-        var node = _root.FindNode(position);
+        var node = RootNode.FindNode(position);
 
         switch (node)
         {
@@ -51,15 +34,10 @@ public class PolyglotSyntaxTree
                 return languageNode.Name;
 
             case PolyglotSubmissionNode submissionNode:
-                return submissionNode.DefaultLanguage;
+                return DefaultLanguage;
 
             default:
                 return null;
         }
-    }
-
-    public int GetAbsolutePosition(LinePosition linePosition)
-    {
-        return _sourceText.Lines.GetPosition(linePosition.ToCodeAnalysisLinePosition());
     }
 }

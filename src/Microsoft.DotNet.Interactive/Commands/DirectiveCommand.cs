@@ -17,7 +17,7 @@ internal class DirectiveCommand : KernelCommand
     {
         ParseResult = parseResult;
         DirectiveNode = directiveNode;
-        SchedulingScope = directiveNode?.CommandScope;
+        SchedulingScope = SchedulingScope.Parse(directiveNode?.CommandScope);
     }
 
     public ParseResult ParseResult { get; }
