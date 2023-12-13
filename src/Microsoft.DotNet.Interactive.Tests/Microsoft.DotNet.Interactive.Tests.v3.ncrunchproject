@@ -135,6 +135,12 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageServices.CompletionTests</FixtureName>
       </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

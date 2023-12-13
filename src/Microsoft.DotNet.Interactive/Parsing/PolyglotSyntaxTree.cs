@@ -29,7 +29,7 @@ internal class PolyglotSyntaxTree : SyntaxTree
         return _sourceText.ToString();
     }
 
-    public string? GetLanguageAtPosition(int position)
+    public string? GetKernelNameAtPosition(int position)
     {
         if (_root is null)
         {

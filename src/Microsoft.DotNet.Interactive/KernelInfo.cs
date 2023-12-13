@@ -11,6 +11,22 @@ using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive;
 
+public record KernelCommandInfo(string Name);
+
+public class KernelDirectiveInfo
+{
+    public KernelDirectiveInfo(string Name, bool IsKernelSpecifier)
+    {
+        this.Name = Name;
+        this.IsKernelSpecifier = IsKernelSpecifier;
+    }
+
+    public string Name { get; init; }
+
+    public bool IsKernelSpecifier { get; init; }
+
+}
+
 public class KernelInfo
 {
     private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();

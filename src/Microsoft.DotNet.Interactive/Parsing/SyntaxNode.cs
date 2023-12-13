@@ -173,7 +173,6 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
         {
             yield return diagnostic;
         }
-
     }
 
     public IEnumerable<SyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()

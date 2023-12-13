@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
@@ -240,8 +240,13 @@ public class KeyValueStoreKernel :
         SubmitCode command,
         KernelInvocationContext context)
     {
-        // FIX: (HandleAsync) 
-      
+        var parseResult = command.KernelChooserParseResult;
+
+        var value = command.SyntaxNode.Text.Trim();
+
+        var options = ValueDirectiveOptions.Create(parseResult, _chooseKernelDirective);
+
+        await StoreValueAsync(command, context, options, value);
     }
 
     internal override bool AcceptsUnknownDirectives => true;

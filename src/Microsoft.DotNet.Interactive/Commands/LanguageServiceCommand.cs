@@ -18,14 +18,14 @@ public abstract class LanguageServiceCommand : KernelCommand
     }
         
     private protected LanguageServiceCommand(
-        LanguageNode languageNode,
+        TopLevelSyntaxNode syntaxNode,
         LinePosition linePosition)
         : base(syntaxNode.TargetKernelName)
     {
         Code = syntaxNode.Text;
         SyntaxNode = syntaxNode;
         LinePosition = linePosition;
-        SchedulingScope = SchedulingScope.Parse(languageNode.CommandScope);
+        SchedulingScope = SchedulingScope.Parse(syntaxNode.CommandScope);
     }
 
     public string Code { get; protected set; }

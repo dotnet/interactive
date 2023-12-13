@@ -18,20 +18,23 @@ public partial class PolyglotSyntaxParserTests : IDisposable
     public PolyglotSyntaxParserTests(ITestOutputHelper output)
     {
         _output = output;
-        _assertionScope = new AssertionScope();
+
+        // FIX: (PolyglotSyntaxParserTests) put back
+        // _assertionScope = new AssertionScope();
     }
 
     public void Dispose()
-        => _assertionScope.Dispose();
+        => _assertionScope?.Dispose();
 
     private static PolyglotSyntaxTree Parse(string code, string defaultLanguage = "csharp")
     {
-        var syntaxTree = PolyglotSyntaxParser.Parse(code, defaultLanguage);
+        var syntaxTree = PolyglotSyntaxParser.Parse(code, defaultLanguage, PolyglotParserConfigurationTests.GetDefaultConfiguration());
 
         syntaxTree.RootNode.FullText.Should().Be(code);
 
         return syntaxTree;
     }
+
 
     private static DiagnosticInfo CreateDiagnosticInfo(string message) =>
         new(id: "DNI0000", message, DiagnosticSeverity.Error);

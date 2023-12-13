@@ -108,12 +108,7 @@ public abstract partial class Kernel :
     {
         var kernelInfo = new KernelInfo(name);
 
-        foreach (var directive in Directives)
-        {
-            kernelInfo.SupportedDirectives.Add(directive is ChooseKernelDirective
-                                                   ? new KernelSpecifierDirective(directive.Name, Name)
-                                                   : new KernelActionDirective(directive.Name));
-        }
+        var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name, d is ChooseKernelDirective)).ToArray();
 
         foreach (var commandInfo in _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)))
         {
@@ -156,11 +151,11 @@ public abstract partial class Kernel :
         switch (originalCommand)
         {
             case SubmitCode { SyntaxNode: null } submitCode:
-                commands = await SubmissionParser.SplitSubmission(submitCode);
+                commands = SubmissionParser.SplitSubmission(submitCode);
                 break;
 
             case RequestDiagnostics { SyntaxNode: null } requestDiagnostics:
-                commands = await SubmissionParser.SplitSubmission(requestDiagnostics);
+                commands = SubmissionParser.SplitSubmission(requestDiagnostics);
                 break;
 
             case LanguageServiceCommand { SyntaxNode: null } languageServiceCommand:
@@ -296,11 +291,7 @@ public abstract partial class Kernel :
     public void AddDirective(Command command)
     {
         SubmissionParser.AddDirective(command);
-
-        KernelInfo.SupportedDirectives.Add(command is ChooseKernelDirective
-                                               ? (KernelDirective)new KernelSpecifierDirective(command.Name, Name)
-                                               : (KernelDirective)new KernelActionDirective(command.Name));
-        SubmissionParser.ResetParser();
+        KernelInfo.SupportedDirectives.Add(new(command.Name, command is ChooseKernelDirective));
     }
 
     public void AddDirective(KernelActionDirective directive, KernelCommandInvocation handler)  
