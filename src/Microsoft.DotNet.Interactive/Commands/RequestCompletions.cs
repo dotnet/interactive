@@ -16,16 +16,16 @@ public class RequestCompletions : LanguageServiceCommand
     }
 
     internal RequestCompletions(
-        LanguageNode languageNode,
+        TopLevelSyntaxNode syntaxNode,
         LinePosition linePosition) 
-        : base(languageNode, linePosition)
+        : base(syntaxNode, linePosition)
     {
     }
 
     internal override LanguageServiceCommand With(
-        LanguageNode languageNode,
+        TopLevelSyntaxNode syntaxNode,
         LinePosition position)
     {
-        return new RequestCompletions(languageNode, position);
+        return new RequestCompletions(syntaxNode, position);
     }
 }

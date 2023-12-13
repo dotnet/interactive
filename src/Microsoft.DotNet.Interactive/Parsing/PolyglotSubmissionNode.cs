@@ -17,12 +17,7 @@ internal class PolyglotSubmissionNode : SyntaxNode
     {
     }
 
-    public void Add(LanguageNode node)
-    {
-        AddInternal(node);
-    }
-
-    public void Add(DirectiveNode node)
+    public void Add(TopLevelSyntaxNode node)
     {
         AddInternal(node);
     }

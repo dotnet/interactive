@@ -24,6 +24,7 @@ public class SubmissionParser
     private Parser _directiveParser;
     private RootCommand _rootCommand;
     private Dictionary<Type, string> _customInputTypeHints;
+    private PolyglotParserConfiguration _parserConfiguration;
 
     public SubmissionParser(Kernel kernel)
     {
@@ -39,9 +40,7 @@ public class SubmissionParser
         var parser = new PolyglotSyntaxParser(
             sourceText,
             language ?? DefaultKernelName(),
-            GetDirectiveParser(), 
-            null,
-            GetSubkernelDirectiveParsers());
+            _parserConfiguration);
 
         return parser.Parse();
     }
@@ -73,9 +72,9 @@ public class SubmissionParser
     }
 
     private delegate KernelCommand CreateChildCommand(
-        LanguageNode languageNode,
+        TopLevelSyntaxNode syntaxNode,
         KernelCommand parentCommand,
-        KernelNameDirectiveNode kernelNameDirectiveNode);
+        DirectiveNode kernelNameDirectiveNode);
 
     private IReadOnlyList<KernelCommand> SplitSubmission(
         KernelCommand originalCommand,
@@ -92,7 +91,7 @@ public class SubmissionParser
         var targetKernelName = originalCommand.TargetKernelName ?? DefaultKernelName();
 
         var lastCommandScope = originalCommand.SchedulingScope;
-        KernelNameDirectiveNode lastKernelNameNode = null;
+        DirectiveNode lastKernelNameNode = null;
 
         foreach (var node in nodes)
         {
@@ -111,7 +110,7 @@ public class SubmissionParser
                         bool accept = false;
                         AnonymousKernelCommand sendExtraDiagnostics = null;
 
-                        if (directiveNode is ActionDirectiveNode adn)
+                        if (directiveNode is { Kind: DirectiveNodeKind.Action} adn)
                         {
                             if (IsUnknownDirective(adn) && (adn.IsCompilerDirective || AcceptUnknownDirective(adn)))
                             {
@@ -167,9 +166,9 @@ public class SubmissionParser
                         break;
                     }
 
-                    if (directiveNode is KernelNameDirectiveNode kernelNameNode)
+                    if (directiveNode is { Kind: DirectiveNodeKind.KernelSelector } kernelNameNode)
                     {
-                        targetKernelName = kernelNameNode.Name;
+                        targetKernelName = kernelNameNode.TargetKernelName;
                         lastKernelNameNode = kernelNameNode;
                     }
 
@@ -209,7 +208,7 @@ public class SubmissionParser
                     else
                     {
                         commands.Add(directiveCommand);
-                        if (directiveNode is KernelNameDirectiveNode)
+                        if (directiveNode is { Kind: DirectiveNodeKind.KernelSelector })
                         {
                             hoistedCommandsIndex = commands.Count;
                         }
@@ -302,15 +301,15 @@ public class SubmissionParser
             return false;
         }
 
-        static bool IsUnknownDirective(ActionDirectiveNode adn) =>
+        static bool IsUnknownDirective(DirectiveNode adn) =>
             adn.GetDirectiveParseResult().Errors.All(e => e.SymbolResult?.Symbol is RootCommand);
 
-        bool AcceptUnknownDirective(ActionDirectiveNode node)
+        bool AcceptUnknownDirective(DirectiveNode node)
         {
             var kernel = _kernel switch
             {
                 // The parent kernel is the one where a directive would be defined, and therefore the one that should decide whether to accept this submission. 
-                CompositeKernel composite => composite.FindKernelByName(node.ParentKernelName) ?? _kernel,
+                CompositeKernel composite => composite.FindKernelByName(node.TargetKernelName) ?? _kernel,
                 _ => _kernel
             };
 
@@ -377,6 +376,9 @@ public class SubmissionParser
                         });
 
             _directiveParser = commandLineBuilder.Build();
+
+            // FIX: (GetDirectiveParser) 
+            _parserConfiguration = new();
         }
 
         return _directiveParser;
@@ -423,7 +425,7 @@ public class SubmissionParser
             return true;
         }
 
-        if (context is not { CurrentlyParsingDirectiveNode: ActionDirectiveNode { AllowValueSharingByInterpolation: true } })
+        if (context is not { CurrentlyParsingDirectiveNode: { Kind: DirectiveNodeKind.Action , AllowValueSharingByInterpolation: true } })
         {
             return false;
         }

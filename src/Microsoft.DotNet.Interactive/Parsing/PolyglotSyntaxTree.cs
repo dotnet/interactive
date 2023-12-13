@@ -19,7 +19,7 @@ internal class PolyglotSyntaxTree : SyntaxTree
 
     public PolyglotSubmissionNode RootNode { get; }
 
-    public string? GetLanguageAtPosition(int position)
+    public string? GetKernelNameAtPosition(int position)
     {
         if (position >= RootNode.Span.End)
         {
@@ -31,11 +31,8 @@ internal class PolyglotSyntaxTree : SyntaxTree
         switch (node)
         {
             case LanguageNode languageNode:
-                return languageNode.Name;
-
-            case PolyglotSubmissionNode submissionNode:
-                return DefaultLanguage;
-
+                return languageNode.TargetKernelName;
+                
             default:
                 return null;
         }

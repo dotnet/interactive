@@ -78,7 +78,7 @@ public class KeyValueStoreKernel :
     {
         var parseResult = command.KernelChooserParseResult;
 
-        var value = command.LanguageNode.Text.Trim();
+        var value = command.SyntaxNode.Text.Trim();
 
         var options = ValueDirectiveOptions.Create(parseResult, _chooseKernelDirective);
 

@@ -9,17 +9,16 @@ using Microsoft.CodeAnalysis.Text;
 namespace Microsoft.DotNet.Interactive.Parsing;
 
 [DebuggerStepThrough]
-internal class LanguageNode : SyntaxNode
+internal class LanguageNode : TopLevelSyntaxNode
 {
     internal LanguageNode(
+        string targetKernelName,
         SourceText sourceText,
-        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        PolyglotSyntaxTree? syntaxTree) : base(targetKernelName, sourceText, syntaxTree)
     {
     }
 
-    public string Name { get; }
-
-    internal string CommandScope { get; set; }
-
     public override bool IsSignificant => true;
+
+    internal void Add(SyntaxNode node, bool addBefore) => AddInternal(node, addBefore);
 }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive;
 
-public class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
+internal class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
 {
     public ChooseKeyValueStoreKernelDirective(Kernel kernel) : base(kernel,
         "Stores a value that can then be shared with other subkernels.")

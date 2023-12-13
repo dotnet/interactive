@@ -215,13 +215,13 @@ public sealed class CompositeKernel :
         var compositeKernelDirectiveParser = SubmissionParser.GetDirectiveParser();
 
         if (indexOfPreviousSpace >= 0 &&
-            directiveNode is ActionDirectiveNode actionDirectiveNode)
+            directiveNode is { Kind : DirectiveNodeKind.Action } actionDirectiveNode)
         {
             // if the first token has been specified, we can narrow down to the specific directive parser that defines this directive
 
             var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
 
-            var kernel = this.FindKernelByName(actionDirectiveNode.ParentKernelName) ?? this;
+            var kernel = this.FindKernelByName(actionDirectiveNode.TargetKernelName) ?? this;
             
             var languageKernelDirectiveParser = kernel.SubmissionParser.GetDirectiveParser();
 

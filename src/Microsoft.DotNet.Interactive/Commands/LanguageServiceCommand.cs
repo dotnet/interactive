@@ -18,14 +18,14 @@ public abstract class LanguageServiceCommand : KernelCommand
     }
         
     private protected LanguageServiceCommand(
-        LanguageNode languageNode,
+        TopLevelSyntaxNode syntaxNode,
         LinePosition linePosition)
-        : base(languageNode.Name)
+        : base(syntaxNode.TargetKernelName)
     {
-        Code = languageNode.Text;
-        LanguageNode = languageNode;
+        Code = syntaxNode.Text;
+        SyntaxNode = syntaxNode;
         LinePosition = linePosition;
-        SchedulingScope = SchedulingScope.Parse(languageNode.CommandScope);
+        SchedulingScope = SchedulingScope.Parse(syntaxNode.CommandScope);
     }
 
     public string Code { get; protected set; }
@@ -33,8 +33,8 @@ public abstract class LanguageServiceCommand : KernelCommand
     public LinePosition LinePosition { get; protected set; }
 
     internal abstract LanguageServiceCommand With(
-        LanguageNode languageNode,
+        TopLevelSyntaxNode syntaxNode,
         LinePosition position);
 
-    internal LanguageNode LanguageNode { get; }
+    internal TopLevelSyntaxNode SyntaxNode { get; }
 }

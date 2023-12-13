@@ -16,16 +16,16 @@ public class RequestSignatureHelp : LanguageServiceCommand
     }
 
     internal RequestSignatureHelp(
-        LanguageNode languageNode,
+        TopLevelSyntaxNode syntaxNode,
         LinePosition linePosition)
-        : base(languageNode, linePosition)
+        : base(syntaxNode, linePosition)
     {
     }
 
     internal override LanguageServiceCommand With(
-        LanguageNode languageNode,
+        TopLevelSyntaxNode syntaxNode,
         LinePosition position)
     {
-        return new RequestSignatureHelp(languageNode, position);
+        return new RequestSignatureHelp(syntaxNode, position);
     }
 }

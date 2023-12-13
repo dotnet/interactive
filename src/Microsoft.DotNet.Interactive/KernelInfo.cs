@@ -2,14 +2,28 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
-using Microsoft.DotNet.Interactive.Documents;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive;
+
+public record KernelCommandInfo(string Name);
+
+public class KernelDirectiveInfo
+{
+    public KernelDirectiveInfo(string Name, bool IsKernelSpecifier)
+    {
+        this.Name = Name;
+        this.IsKernelSpecifier = IsKernelSpecifier;
+    }
+
+    public string Name { get; init; }
+
+    public bool IsKernelSpecifier { get; init; }
+
+}
 
 public class KernelInfo
 {

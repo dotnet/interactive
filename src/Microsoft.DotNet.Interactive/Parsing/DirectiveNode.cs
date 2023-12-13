@@ -11,19 +11,36 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-internal abstract class DirectiveNode : LanguageNode
+internal abstract class TopLevelSyntaxNode : SyntaxNode
+{
+    // FIX: (TopLevelSyntaxNode) move to another file
+    internal TopLevelSyntaxNode(string targetKernelName, SourceText sourceText, SyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    {
+        TargetKernelName = targetKernelName;
+        CommandScope = targetKernelName; // FIX: (TopLevelSyntaxNode) are these concepts redundant at this level?
+    }
+
+    public string TargetKernelName { get; }
+
+    internal string CommandScope { get; set; }
+}
+
+internal class DirectiveNode : TopLevelSyntaxNode
 {
     private ParseResult? _parseResult;
 
     internal DirectiveNode(
+        string targetKernelName,
         SourceText sourceText,
-        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        PolyglotSyntaxTree? syntaxTree) : base(targetKernelName, sourceText, syntaxTree)
     {
     }
 
+    internal bool AllowValueSharingByInterpolation { get; set; }
+
     internal Parser? DirectiveParser { get; set; }
 
-    internal bool AllowValueSharingByInterpolation { get; set; }
+    public DirectiveNodeKind Kind { get; set; }
 
     public ParseResult GetDirectiveParseResult()
     {
@@ -59,6 +76,8 @@ internal abstract class DirectiveNode : LanguageNode
             return sourceText[1] != '!';
         }
     }
+
+    public string DirectiveName => Text.Split(new[] { ' ', '\t' })[0];
 
     internal int GetLine()
     {

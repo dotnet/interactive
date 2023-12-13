@@ -106,7 +106,7 @@ public abstract partial class Kernel :
     {
         var supportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray();
 
-        var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name)).ToArray();
+        var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name, d is ChooseKernelDirective)).ToArray();
 
         return new KernelInfo(name, aliases: null)
         {
@@ -146,15 +146,15 @@ public abstract partial class Kernel :
     {
         switch (originalCommand)
         {
-            case SubmitCode { LanguageNode: null } submitCode:
+            case SubmitCode { SyntaxNode: null } submitCode:
                 commands = SubmissionParser.SplitSubmission(submitCode);
                 break;
 
-            case RequestDiagnostics { LanguageNode: null } requestDiagnostics:
+            case RequestDiagnostics { SyntaxNode: null } requestDiagnostics:
                 commands = SubmissionParser.SplitSubmission(requestDiagnostics);
                 break;
 
-            case LanguageServiceCommand { LanguageNode: null } languageServiceCommand:
+            case LanguageServiceCommand { SyntaxNode: null } languageServiceCommand:
                 if (!TryAdjustLanguageServiceCommandLinePositions(languageServiceCommand, context, out var adjustedCommand))
                 {
                     commands = null;
@@ -251,11 +251,7 @@ public abstract partial class Kernel :
                 node,
                 position);
 
-            offsetLanguageServiceCommand.TargetKernelName = node switch
-            {
-                DirectiveNode => Name,
-                _ => node.Name,
-            };
+            offsetLanguageServiceCommand.TargetKernelName = node.TargetKernelName;
 
             adjustedCommand = offsetLanguageServiceCommand;
         }
@@ -291,7 +287,7 @@ public abstract partial class Kernel :
     public void AddDirective(Command command)
     {
         SubmissionParser.AddDirective(command);
-        KernelInfo.SupportedDirectives.Add(new(command.Name));
+        KernelInfo.SupportedDirectives.Add(new(command.Name, command is ChooseKernelDirective));
     }
 
     public void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
@@ -701,7 +697,7 @@ public abstract partial class Kernel :
         RequestCompletions command,
         KernelInvocationContext context)
     {
-        if (command.LanguageNode is DirectiveNode directiveNode)
+        if (command.SyntaxNode is DirectiveNode directiveNode)
         {
             var requestPosition = SourceText.From(command.Code)
                 .Lines
@@ -796,7 +792,7 @@ public abstract partial class Kernel :
                     SetHandler(submitCode, submitCodeHandler);
                     break;
 
-                case (RequestCompletions { LanguageNode: DirectiveNode } rq, _):
+                case (RequestCompletions { SyntaxNode: DirectiveNode } rq, _):
                     rq.Handler = (_, _) => HandleRequestCompletionsAsync(rq, context);
                     break;
 
