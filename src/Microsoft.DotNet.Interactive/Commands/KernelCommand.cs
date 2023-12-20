@@ -39,11 +39,6 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         {
             _parent = parent;
 
-            if (_token is not null)
-            {
-                _token = null;
-            }
-
             if (_parent._token is null)
             {
                 _parent.GetOrCreateToken();

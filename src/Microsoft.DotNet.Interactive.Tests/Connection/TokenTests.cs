@@ -4,6 +4,7 @@
 using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
@@ -45,5 +46,20 @@ public class TokenTests
             .Message
             .Should()
             .Be("Command token cannot be changed.");
+    }
+
+    [Fact]
+    public void Once_set_then_after_serialization_command_tokens_cannot_be_changed_using_SetParent()
+    {
+        var parent = new SubmitCode("parent");
+        var child = new SubmitCode("child");
+        child.SetParent(parent);
+        var originalToken = child.GetOrCreateToken();
+
+        var serializedChild = KernelCommandEnvelope.Serialize(child);
+        var deserializedChild = KernelCommandEnvelope.Deserialize(serializedChild).Command;
+        deserializedChild.SetParent(new SubmitCode("new parent"));
+
+        deserializedChild.GetOrCreateToken().Should().Be(originalToken);
     }
 }

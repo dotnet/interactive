@@ -338,9 +338,14 @@ public class KernelInvocationContext : IDisposable
 
         return _current.Value;
 
-        static void AddChildCommandToContext(KernelCommand kernelCommand, KernelInvocationContext currentContext)
+        static void AddChildCommandToContext(KernelCommand childCommand, KernelInvocationContext currentContext)
         {
-            currentContext._childCommands.GetOrAdd(kernelCommand, innerCommand =>
+            if (childCommand.Parent is null)
+            {
+                childCommand.SetParent(currentContext.Command);
+            }
+
+            currentContext._childCommands.GetOrAdd(childCommand, innerCommand =>
             {
                 var replaySubject = new ReplaySubject<KernelEvent>();
 
