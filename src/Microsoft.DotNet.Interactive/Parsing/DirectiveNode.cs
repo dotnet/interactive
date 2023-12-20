@@ -11,20 +11,6 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-internal abstract class TopLevelSyntaxNode : SyntaxNode
-{
-    // FIX: (TopLevelSyntaxNode) move to another file
-    internal TopLevelSyntaxNode(string targetKernelName, SourceText sourceText, SyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
-    {
-        TargetKernelName = targetKernelName;
-        CommandScope = targetKernelName; // FIX: (TopLevelSyntaxNode) are these concepts redundant at this level?
-    }
-
-    public string TargetKernelName { get; }
-
-    internal string CommandScope { get; set; }
-}
-
 internal class DirectiveNode : TopLevelSyntaxNode
 {
     private ParseResult? _parseResult;
