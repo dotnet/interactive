@@ -36,7 +36,7 @@ type FSharpKernel () as this =
     inherit Kernel("fsharp")
 
     do this.KernelInfo.LanguageName <- "F#"
-    do this.KernelInfo.LanguageVersion <- "7.0"
+    do this.KernelInfo.LanguageVersion <- "8.0"
     do this.KernelInfo.DisplayName <- $"{this.KernelInfo.LocalName} - F# Script"
 
     static let lockObj = Object();
@@ -94,7 +94,7 @@ type FSharpKernel () as this =
         match xmlDocuments.TryGetValue(xmlFile) with
         | true, doc -> Some doc
         | _ ->
-            if not (File.Exists(xmlFile)) || 
+            if not (File.Exists(xmlFile)) ||
                not (String.Equals(Path.GetExtension(xmlFile), ".xml", StringComparison.OrdinalIgnoreCase)) then
                 None
             else
@@ -223,7 +223,7 @@ type FSharpKernel () as this =
                 if not (tokenSource.IsCancellationRequested) then
                     let aggregateError = String.Join("\n", fsiDiagnostics)
                     match result with
-                    | Error (:? FsiCompilationException) 
+                    | Error (:? FsiCompilationException)
                     | Ok _ ->
                         let ex = CodeSubmissionCompilationErrorException(Exception(aggregateError))
                         context.Fail(codeSubmission, ex, aggregateError)
@@ -263,7 +263,7 @@ type FSharpKernel () as this =
                 async {
                     match res.TryGetSymbolUse (mkPos line col) lineContent with
                     | Some symbolUse ->
-                        let fullName = 
+                        let fullName =
                             match symbolUse with
                             | FsAutoComplete.Patterns.SymbolUse.Val sym ->
                                 match sym.DeclaringEntity with
@@ -295,14 +295,14 @@ type FSharpKernel () as this =
                     |> Seq.concat
                     |> Seq.map (fun (signature, comment, footer) ->
                         // make footer look like in Ionide
-                        let newFooter = 
+                        let newFooter =
                             footer.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries)
                             |> Seq.map (fun line -> line.TrimEnd('\r'))
                             |> Seq.filter (fsiAssemblyRx.IsMatch >> not)
                             |> Seq.map (sprintf "*%s*")
                             |> String.concat "\n\n----\n"
 
-                        let markdown = 
+                        let markdown =
                             String.concat "\n\n----\n" [
                                 if not (String.IsNullOrWhiteSpace signature) then
                                     let code =
@@ -329,7 +329,7 @@ type FSharpKernel () as this =
                                                 ]
                                         | Some None ->
                                             sprintf "%s // null" signature
-                                        | _ -> 
+                                        | _ ->
                                             signature
 
                                     sprintf "```fsharp\n%s\n```" code
@@ -358,7 +358,7 @@ type FSharpKernel () as this =
                 context.Publish(HoverTextProduced(requestHoverText, reply, lps))
                 ()
         }
-   
+
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
         task {
             let _parseResults, checkFileResults, _checkProjectResults = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
@@ -393,7 +393,7 @@ type FSharpKernel () as this =
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
         |> List.map (fun x -> KernelValue( new KernelValueInfo(x.Name, new FormattedValue(PlainTextFormatter.MimeType, x.Value.ToDisplayString(PlainTextFormatter.MimeType)) , x.Value.ReflectionType), x.Value.ReflectionValue, this.Name))
 
-    member this.getValueType(name:string) = 
+    member this.getValueType(name:string) =
         match script.Value.Fsi.TryFindBoundValue(name) with
         | Some cv ->
             cv.Value.ReflectionValue.GetType()
@@ -408,7 +408,7 @@ type FSharpKernel () as this =
         | _ ->
             false
 
-    member this.AddAssemblyReferencesAndPackageRoots(assemblyReferences: IEnumerable<string>, packageRoots: IEnumerable<string>) = 
+    member this.AddAssemblyReferencesAndPackageRoots(assemblyReferences: IEnumerable<string>, packageRoots: IEnumerable<string>) =
         let sb = StringBuilder()
         let hashset = HashSet()
 
@@ -420,7 +420,7 @@ type FSharpKernel () as this =
                     if File.Exists root then
                         sb.AppendFormat("#I @\"{0}\"", root) |> ignore
                         sb.Append(Environment.NewLine) |> ignore
-            
+
         for assemblyReference in assemblyReferences do
             if hashset.Add(assemblyReference) then
                 if File.Exists assemblyReference then
@@ -434,23 +434,23 @@ type FSharpKernel () as this =
         member this.HandleAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context
 
     interface IKernelCommandHandler<RequestDiagnostics> with
-        member this.HandleAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context 
+        member this.HandleAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context
 
     interface IKernelCommandHandler<RequestHoverText> with
-        member this.HandleAsync(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context 
+        member this.HandleAsync(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context
 
     interface IKernelCommandHandler<RequestValueInfos> with
-        member this.HandleAsync(command: RequestValueInfos, context: KernelInvocationContext) = handleRequestValueValueInfos command context 
+        member this.HandleAsync(command: RequestValueInfos, context: KernelInvocationContext) = handleRequestValueValueInfos command context
 
     interface IKernelCommandHandler<RequestValue> with
-        member this.HandleAsync(command: RequestValue, context: KernelInvocationContext) = handleRequestValue command context 
+        member this.HandleAsync(command: RequestValue, context: KernelInvocationContext) = handleRequestValue command context
 
     interface IKernelCommandHandler<SendValue> with
-        member this.HandleAsync(command: SendValue, context: KernelInvocationContext) = 
-            let handle (name : string) (value : obj) (declaredType : Type) : Task = 
+        member this.HandleAsync(command: SendValue, context: KernelInvocationContext) =
+            let handle (name : string) (value : obj) (declaredType : Type) : Task =
                 script.Value.Fsi.AddBoundValue(name, value)
                 Task.CompletedTask
-            base.SetValueAsync(command, context, handle) 
+            base.SetValueAsync(command, context, handle)
 
     interface IKernelCommandHandler<SubmitCode> with
         member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context
