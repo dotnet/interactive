@@ -64,7 +64,7 @@ public class LanguageInfo
 
 public class CSharpLanguageInfo : LanguageInfo
 {
-    public CSharpLanguageInfo(string version = "11.0") : base("C#", version, "text/x-csharp", ".cs", pygmentsLexer: "csharp")
+    public CSharpLanguageInfo(string version = "12.0") : base("C#", version, "text/x-csharp", ".cs", pygmentsLexer: "csharp")
     {
     }
 }
