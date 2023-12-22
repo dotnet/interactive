@@ -238,7 +238,7 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     public System.String Text { get;}
     public System.String Type { get;}
   public class CSharpLanguageInfo : LanguageInfo
-    .ctor(System.String version = 11.0)
+    .ctor(System.String version = 12.0)
   public class DisplayData : PubSubMessage
     .ctor(System.String source = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> transient = null)
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
@@ -285,7 +285,7 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Transient { get;}
   public static class ExecutionStateValues
   public class FSharpLanguageInfo : LanguageInfo
-    .ctor(System.String version = 7.0)
+    .ctor(System.String version = 8.0)
   public abstract class HistoryElement
     public System.Int32 LineNumber { get;}
     public System.Int32 Session { get;}
