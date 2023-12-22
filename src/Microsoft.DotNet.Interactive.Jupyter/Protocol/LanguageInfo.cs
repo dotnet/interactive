@@ -71,7 +71,7 @@ public class CSharpLanguageInfo : LanguageInfo
 
 public class FSharpLanguageInfo : LanguageInfo
 {
-    public FSharpLanguageInfo(string version = "7.0") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
+    public FSharpLanguageInfo(string version = "8.0") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
     {
     }
 }
