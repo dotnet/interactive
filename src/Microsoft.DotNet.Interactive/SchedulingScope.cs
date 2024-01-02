@@ -9,6 +9,17 @@ namespace Microsoft.DotNet.Interactive;
 [DebuggerStepThrough]
 internal class SchedulingScope
 {
+    private SchedulingScope(string scope)
+    {
+        if (string.IsNullOrWhiteSpace(scope))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(scope));
+        }
+
+        Parts = scope.Split('/');
+        _stringValue = scope;
+    }
+
     protected bool Equals(SchedulingScope other)
     {
         return StringComparer.Ordinal.Equals(_stringValue, other._stringValue);
@@ -34,28 +45,11 @@ internal class SchedulingScope
         return Equals((SchedulingScope)obj);
     }
 
-    public override int GetHashCode()
-    {
-        return (_stringValue is not null ? _stringValue.GetHashCode() : 0);
-    }
+    public override int GetHashCode() => _stringValue.GetHashCode();
 
     private readonly string _stringValue;
 
-    private SchedulingScope(string scope)
-    {
-        if (string.IsNullOrWhiteSpace(scope))
-        {
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(scope));
-        }
-
-        Parts = scope.Split('/');
-        _stringValue = scope;
-    }
-
-    public override string ToString()
-    {
-        return _stringValue;
-    }
+    public override string ToString() => _stringValue;
 
     public static SchedulingScope Parse(string scope) => new(scope);
 

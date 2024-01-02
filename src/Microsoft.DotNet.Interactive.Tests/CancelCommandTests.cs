@@ -59,10 +59,14 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
             // make sure the deferred commands are flushed
             await kernel.SubmitCodeAsync(" ");
 
-            var commandToCancel = new SubmitCode(@"
-using Microsoft.DotNet.Interactive;
-await Task.Delay(10);
-while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested){ await Task.Delay(10); }",
+            var commandToCancel = new SubmitCode("""
+                using Microsoft.DotNet.Interactive;
+                await Task.Delay(10);
+                while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested)
+                { 
+                    await Task.Delay(10); 
+                }
+                """,
                 targetKernelName: "csharp");
             var followingCommand = new SubmitCode("1");
             try

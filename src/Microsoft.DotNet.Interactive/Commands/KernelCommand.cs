@@ -35,6 +35,13 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
             throw new ArgumentNullException(nameof(parent));
         }
 
+        if (_token is not null &&
+            parent._token is not null && 
+            GetRootToken(_token) != GetRootToken(parent._token))
+        {
+            throw new InvalidOperationException("Token of parented command cannot be changed.");
+        }
+
         if (_parent is null)
         {
             _parent = parent;

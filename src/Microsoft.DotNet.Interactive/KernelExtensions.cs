@@ -198,16 +198,7 @@ public static class KernelExtensions
             var valueOptionResult = cmdLineContext.ParseResult.GetValueForOption(valueOption);
 
             var sourceKernelName = valueOptionResult.Kernel;
-
-            // FIX: (HandleSetMagicCommand) delete
-            switch (sourceKernelName)
-            {
-                case "input": break;
-                case "password": break;
-                case "csharp": break;
-                default: break;
-            }
-
+            
             var sourceKernel = Kernel.Root.FindKernelByName(sourceKernelName);
 
             ValueProduced valueProduced = null;
