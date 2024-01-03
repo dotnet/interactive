@@ -562,6 +562,26 @@ public class KernelSchedulerTests : IDisposable
         scheduler.CurrentValue.Should().BeNull();
     }
 
+    [Fact]
+    public async Task CurrentValue_is_null_after_cancellation()
+    {
+        using var scheduler = new TestKernelScheduler<string>((_, _) => false);
+        var barrier = new Barrier(2);
+        var _ = scheduler.RunAsync("one", async _ =>
+        {
+            barrier.SignalAndWait();
+
+            await Task.Delay(2000);
+
+            return default;
+        });
+
+        barrier.SignalAndWait();
+        scheduler.CancelCurrentOperation();
+
+        scheduler.CurrentValue.Should().BeNull();
+    }
+
     [Fact(Skip = "Disabled pending https://github.com/dotnet/interactive/issues/3236")]
     public async Task CurrentValue_reflects_correct_value_within_parent_child_as_well_as_grand_child_operations()
     {

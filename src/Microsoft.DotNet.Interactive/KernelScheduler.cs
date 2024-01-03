@@ -45,6 +45,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         if (_currentlyRunningTopLevelOperation is { } operation)
         {
             _currentlyRunningTopLevelOperation = null;
+            _currentlyRunningOperation = null;
             operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
         }
     }

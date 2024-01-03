@@ -352,7 +352,11 @@ public abstract partial class Kernel :
         {
             if (Scheduler.CurrentValue is { } currentlyExecutingCommand)
             {
-                command.SetParent(currentlyExecutingCommand);
+                // don't parent heterogeneous commands
+                if (currentlyExecutingCommand.GetType() == command.GetType())
+                {
+                    command.SetParent(currentlyExecutingCommand);
+                }
             }
         }
 
