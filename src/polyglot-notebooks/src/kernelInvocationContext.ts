@@ -33,17 +33,19 @@ export class KernelInvocationContext implements Disposable {
     }
 
     private completionSource = new PromiseCompletionSource<void>();
-    static getOrCreateAmbientContext(kernelCommandInvocation: commandsAndEvents.KernelCommandEnvelope): KernelInvocationContext {
+    static getOrCreateAmbientContext(command: commandsAndEvents.KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
         if (!current || current._isComplete) {
-            kernelCommandInvocation.getOrCreateToken();
-            KernelInvocationContext._current = new KernelInvocationContext(kernelCommandInvocation);
+            command.getOrCreateToken();
+            KernelInvocationContext._current = new KernelInvocationContext(command);
         } else {
-            if (!commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(kernelCommandInvocation, current._commandEnvelope)) {
-                const found = current._childCommands.includes(kernelCommandInvocation);
+            if (!commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(command, current._commandEnvelope)) {
+                const found = current._childCommands.includes(command);
                 if (!found) {
-                    kernelCommandInvocation.setParent(current._commandEnvelope);
-                    current._childCommands.push(kernelCommandInvocation);
+                    if (command.parentCommand === null || command.parentCommand === undefined) {
+                        command.setParent(current._commandEnvelope);
+                    }
+                    current._childCommands.push(command);
                 }
             }
         }

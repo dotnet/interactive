@@ -69,6 +69,13 @@ export class KernelCommandEnvelope {
         if (this._parentCommand && this._parentCommand !== parentCommand) {
             throw new Error("Parent cannot be changed.");
         }
+
+        if ((this._token !== undefined && this._token !== null) &&
+            (parentCommand?._token !== undefined && parentCommand?._token !== null) &&
+            KernelCommandEnvelope.getRootToken(this._token) !== KernelCommandEnvelope.getRootToken(parentCommand._token)
+        ) {
+            throw new Error("Token of parented command cannot be changed.");
+        }
         if (this._parentCommand === null || this._parentCommand === undefined) {
             {
                 // todo: do we need to override the token? Should this throw if parenting happens after token is set?
