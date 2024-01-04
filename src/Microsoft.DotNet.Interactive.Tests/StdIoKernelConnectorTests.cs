@@ -127,7 +127,13 @@ namespace Microsoft.DotNet.Interactive.Tests
                 LanguageVersion = csharpKernelInfo.LanguageVersion,
                 RemoteUri = csharpKernelInfo.Uri,
                 SupportedDirectives = csharpKernelInfo.SupportedDirectives,
-                SupportedKernelCommands = csharpKernelInfo.SupportedKernelCommands
+                SupportedKernelCommands = csharpKernelInfo.SupportedKernelCommands,
+                Description = """
+                              This Kernel can compile and execute C# code and display the results.
+                              The language is C# Scripting, a dialect of C# that is used for interactive programming.
+                              
+                              Can load packages from nuget.org or any other nuget feed.
+                              """
             };
 
             var fsharpKernelInfo = kernelInfos.Should().ContainSingle(i => i.LanguageName == "F#").Which;
@@ -140,7 +146,12 @@ namespace Microsoft.DotNet.Interactive.Tests
                 LanguageVersion = fsharpKernelInfo.LanguageVersion,
                 RemoteUri = fsharpKernelInfo.Uri,
                 SupportedDirectives = fsharpKernelInfo.SupportedDirectives,
-                SupportedKernelCommands = fsharpKernelInfo.SupportedKernelCommands
+                SupportedKernelCommands = fsharpKernelInfo.SupportedKernelCommands,
+                Description = """
+                              This Kernel can compile and execute F# code and display the results.
+                              
+                              Can load packages from nuget.org or any other nuget feed.
+                              """
             };
 
             csharpProxyKernel.Name.Should().Be(csharpKernelInfo.LocalName);
