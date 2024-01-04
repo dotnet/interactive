@@ -26,7 +26,10 @@ internal class MsSqlKernel : ToolsServiceKernel
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionString));
         }
-
+        KernelInfo.Description = """
+                                  This Kernel can execute T-SQL and SQL queries against a SQL Server database.
+                                  It is connected to a MSSQL database.
+                                  """;
         _connectionString = connectionString;
     }
 

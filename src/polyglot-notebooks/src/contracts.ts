@@ -443,6 +443,7 @@ export interface KernelInfo {
     localName: string;
     uri: string;
     remoteUri?: string;
+    description?: string;
     supportedKernelCommands: Array<KernelCommandInfo>;
     supportedDirectives: Array<KernelDirectiveInfo>;
 }

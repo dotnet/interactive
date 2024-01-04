@@ -217,6 +217,7 @@ describe("proxyKernel", () => {
                         kernelInfo: {
                             isComposite: false,
                             isProxy: false,
+                            description: `This kernel executes g# code.`,
                             localName: "remoteKernel",
                             aliases: [],
                             uri: 'kernel://local/remoteKernel',
@@ -230,7 +231,6 @@ describe("proxyKernel", () => {
                     e
                 );
                 remoteToLocal.next(kernelInfoProduced);
-
                 remoteToLocal.next(new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CommandSucceededType, <commandsAndEvents.CommandSucceeded>{}, e));
             }
         });
@@ -259,6 +259,7 @@ describe("proxyKernel", () => {
             languageVersion: '1.2.3',
             localName: 'proxy',
             remoteUri: 'kernel://local/remoteKernel',
+            description: `This kernel executes g# code.`,
             supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },

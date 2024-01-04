@@ -225,8 +225,9 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Connection.ProxyKernel> ConnectProxyKernelOnDefaultConnectorAsync(System.String localName, System.Uri remoteKernelUri, System.String[] aliases = null)
     public System.Void Dispose()
   public class KernelInfo
-    .ctor(System.String localName, System.String[] aliases = null, System.Boolean isProxy = False, System.Boolean isComposite = False)
+    .ctor(System.String localName, System.String[] aliases = null, System.Boolean isProxy = False, System.Boolean isComposite = False, System.String description = null)
     public System.String[] Aliases { get; set;}
+    public System.String Description { get; set;}
     public System.String DisplayName { get; set;}
     public System.Boolean IsComposite { get; set;}
     public System.Boolean IsProxy { get; set;}

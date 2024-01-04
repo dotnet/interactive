@@ -61,6 +61,10 @@ public class CSharpKernel :
         KernelInfo.LanguageName = "C#";
         KernelInfo.LanguageVersion = "12.0";
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - C# Script";
+        KernelInfo.Description = """
+                                 This Kernel can compile and execute C# code and display the results.
+                                 The language is C# Scripting, a dialect of C# that is used for interactive programming.
+                                 """;
         _workspace = new InteractiveWorkspace();
 
         //For the VSCode-Add-In Directory.GetCurrentDirectory() would here return something like: c:\Users\<username>\AppData\Roaming\Code\User\globalStorage\ms-dotnettools.dotnet-interactive-vscode

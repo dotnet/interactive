@@ -90,6 +90,10 @@ public class PowerShellKernel :
     {
         KernelInfo.LanguageName = LanguageName;
         KernelInfo.LanguageVersion = "7";
+        KernelInfo.Description = """
+                                 This Kernel can evaluate Powershell scripts and commands. 
+                                 It uses Powershell Core and can interop with the operative system and host machine.
+                                 """;
 
         _psHost = new PSKernelHost(this);
         _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);

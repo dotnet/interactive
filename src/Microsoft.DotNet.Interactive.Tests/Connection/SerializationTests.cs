@@ -333,6 +333,7 @@ public class SerializationTests
                 {
                     LanguageName = "CSharp",
                     Uri = new Uri("kernel://pid/csharp"),
+                    Description = "executes C# code",
                     SupportedDirectives = new[]
                     {
                         new KernelDirectiveInfo("#r"),

@@ -29,6 +29,12 @@ public static class KernelExtensions
         kernel.AddDirective(i(lazyPackageRestoreContext));
         kernel.AddDirective(r(lazyPackageRestoreContext));
 
+        kernel.KernelInfo.Description = $"""
+                                         {@kernel.KernelInfo.Description}
+
+                                         Can load packages from nuget.org or any other nuget feed.
+                                         """;
+
         var restore = new Command("#!nuget-restore")
         {
             Handler = CommandHandler.Create((KernelCommandInvocation)(async (_, context) => await context.ScheduleAsync(c => Restore<T>(c, lazyPackageRestoreContext, onResolvePackageReferences)))),

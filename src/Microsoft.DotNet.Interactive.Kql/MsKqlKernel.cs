@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -24,6 +24,10 @@ internal class MsKqlKernel : ToolsServiceKernel
         ToolsServiceClient client) : base(name, client, "KQL")
     {
         _connectionDetails = connectionDetails ?? throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
+        KernelInfo.Description = $"""
+                                  This Kernel can execute KQL queries against a Kusto database. 
+                                  This instance is connected to cluster {connectionDetails.Cluster} and database {connectionDetails.Database}.
+                                  """;
     }
 
     public override async Task ConnectAsync()

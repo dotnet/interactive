@@ -12,6 +12,7 @@
       "localName": "javascript",
       "uri": "kernel://vscode/javascript",
       "remoteUri": null,
+      "description": null,
       "supportedKernelCommands": [
         {
           "name": "SubmitCode"

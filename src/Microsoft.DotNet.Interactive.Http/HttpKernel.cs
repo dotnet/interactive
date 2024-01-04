@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -44,6 +44,9 @@ public class HttpKernel :
     {
         KernelInfo.LanguageName = "HTTP";
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - HTTP Request";
+        KernelInfo.Description = """
+                                 This Kernel is able to execute http requests and display the results.
+                                 """;
 
         _client = client ?? new HttpClient();
         _responseDelayThresholdInMilliseconds = responseDelayThresholdInMilliseconds;

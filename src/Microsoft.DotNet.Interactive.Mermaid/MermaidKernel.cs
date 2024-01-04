@@ -14,6 +14,27 @@ public class MermaidKernel : Kernel,
     public MermaidKernel() : base("mermaid")
     {
         KernelInfo.LanguageName = "Mermaid";
+        KernelInfo.Description = """
+                                 This Kernel uses the Mermaid library to render diagrams. 
+                                 It supports the following diagrams types:
+                                  - Flowchart
+                                 - Sequence Diagram
+                                 - Class Diagram
+                                 - State Diagram
+                                 - Entity Relationship Diagram
+                                 - User Journey
+                                 - Gantt
+                                 - Pie Chart
+                                 - Quadrant Chart
+                                 - Requirement Diagram
+                                 - Gitgraph (Git) Diagram
+                                 - C4 Diagram
+                                 - Mindmap
+                                 - Timeline
+                                 - Zenuml
+                                 - Sankey
+                                 - XYChart
+                                 """;
     }
 
     Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
