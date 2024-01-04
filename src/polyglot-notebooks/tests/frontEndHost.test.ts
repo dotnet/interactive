@@ -72,6 +72,7 @@ describe("frontEndHost", () => {
                     },
                     {
                         aliases: ['js'],
+                        description: 'This Kernel is for executing JavaScript code.',
                         displayName: 'javascript - JavaScript',
                         isComposite: false,
                         isProxy: false,
@@ -107,6 +108,7 @@ describe("frontEndHost", () => {
                     isProxy: false,
                     localName: 'sql',
                     uri: 'kernel://remote/sql',
+                    description: 'This Kernel is for executing SQL code.',
                     aliases: [],
                     languageName: 'SQL',
                     languageVersion: '10',
@@ -140,6 +142,7 @@ describe("frontEndHost", () => {
             languageVersion: '10',
             localName: 'sql',
             remoteUri: 'kernel://remote/sql',
+            description: 'This Kernel is for executing SQL code.',
             supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },
@@ -164,6 +167,7 @@ describe("frontEndHost", () => {
                     isProxy: false,
                     localName: 'sql',
                     uri: 'kernel://remote/sql',
+                    description: 'This Kernel is for executing SQL code.',
                     aliases: [],
                     displayName: 'SQL',
                     supportedDirectives: [],
@@ -187,6 +191,7 @@ describe("frontEndHost", () => {
                     languageName: 'SQL',
                     languageVersion: '10',
                     displayName: 'SQL',
+                    description: 'This Kernel is for executing SQL code.',
                     supportedDirectives: [],
                     supportedKernelCommands: [
                         {
@@ -216,6 +221,7 @@ describe("frontEndHost", () => {
             languageVersion: '10',
             localName: 'sql',
             remoteUri: 'kernel://remote/sql',
+            description: 'This Kernel is for executing SQL code.',
             supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },

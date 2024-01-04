@@ -210,7 +210,7 @@ public class InterfaceGenerator
         builder.AppendLine();
         builder.AppendLine($"export interface {TypeName(type)} {extends}{{");
 
-        foreach (var property in GetProperties(type))
+        foreach (var property in GetProperties(type).OrderBy(t => t.Name))
         {
             builder.AppendLine($"    {PropertyName(type, property)}: {GetTypeScriptTypeName(property.PropertyType)};");
         }

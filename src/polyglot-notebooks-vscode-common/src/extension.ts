@@ -166,6 +166,8 @@ export async function activate(context: vscode.ExtensionContext) {
     function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {
         compositeKernel.setDefaultTargetKernelNameForCommand(commandsAndEvents.RequestInputType, compositeKernel.name);
         compositeKernel.setDefaultTargetKernelNameForCommand(commandsAndEvents.SendEditableCodeType, compositeKernel.name);
+        compositeKernel.kernelInfo.description = `This Kernel is provided by the .NET Interactive Extension.
+        This allows adding new cells to the notebook and prompting user for input.`;
 
         compositeKernel.registerCommandHandler({
             commandType: commandsAndEvents.RequestInputType, handle: async (commandInvocation) => {

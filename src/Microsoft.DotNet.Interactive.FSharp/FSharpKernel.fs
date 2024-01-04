@@ -38,6 +38,7 @@ type FSharpKernel () as this =
     do this.KernelInfo.LanguageName <- "F#"
     do this.KernelInfo.LanguageVersion <- "8.0"
     do this.KernelInfo.DisplayName <- $"{this.KernelInfo.LocalName} - F# Script"
+    do this.KernelInfo.Description <- """This Kernel can compile and execute F# code and display the results."""
 
     static let lockObj = Object();
 

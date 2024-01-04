@@ -182,6 +182,10 @@ export function updateKernelInfo(destination: commandsAndEvents.KernelInfo, sour
     destination.displayName = source.displayName;
     destination.isComposite = source.isComposite;
 
+    if (destination.description === undefined || destination.description === null || destination.description.match(/^\s*$/)) {
+        destination.description = source.description;
+    }
+
     if (source.displayName) {
         destination.displayName = source.displayName;
     }

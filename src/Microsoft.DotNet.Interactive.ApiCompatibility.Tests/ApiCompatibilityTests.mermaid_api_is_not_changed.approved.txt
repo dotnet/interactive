@@ -1,6 +1,4 @@
 Microsoft.DotNet.Interactive.Mermaid
-  public static class MermaidExtensions
-    public static T UseMermaid<T>(System.Uri libraryUri = null, System.String libraryVersion = null, System.String cacheBuster = null)
   public class MermaidKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     .ctor()
     public Microsoft.DotNet.Interactive.ChooseKernelDirective ChooseKernelDirective { get;}

@@ -18,7 +18,7 @@ public class KernelInfo
     private string? _displayName;
 
     [JsonConstructor]
-    public KernelInfo(string localName, string[]? aliases = null, bool isProxy = false, bool isComposite = false)
+    public KernelInfo(string localName, string[]? aliases = null, bool isProxy = false, bool isComposite = false, string? description = null)
     {
         if (string.IsNullOrWhiteSpace(localName))
         {
@@ -40,6 +40,7 @@ public class KernelInfo
         }
         IsProxy = isProxy;
         IsComposite = isComposite;
+        Description = description;
     }
 
     private string CreateDisplayName()
@@ -77,6 +78,8 @@ public class KernelInfo
     public Uri Uri { get; set; }
 
     public Uri? RemoteUri { get; set; }
+
+    public string? Description { get; set; }
 
     public ICollection<KernelCommandInfo> SupportedKernelCommands
     {

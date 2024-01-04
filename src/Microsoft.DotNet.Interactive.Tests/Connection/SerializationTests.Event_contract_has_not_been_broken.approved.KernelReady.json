@@ -13,6 +13,7 @@
         "localName": "javascript",
         "uri": "kernel://vscode/javascript",
         "remoteUri": null,
+        "description": null,
         "supportedKernelCommands": [
           {
             "name": "SubmitCode"
@@ -32,6 +33,7 @@
         "localName": "csharp",
         "uri": "kernel://pid/csharp",
         "remoteUri": null,
+        "description": "executes C# code",
         "supportedKernelCommands": [
           {
             "name": "SubmitCode"
