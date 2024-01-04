@@ -10,7 +10,7 @@ export class HtmlKernel extends Kernel {
     constructor(kernelName?: string, private readonly htmlFragmentInserter?: (htmlFragment: string) => Promise<string>, languageName?: string, languageVersion?: string) {
         super(kernelName ?? "html", languageName ?? "HTML", languageVersion ?? "5");
         this.kernelInfo.displayName = 'HTML';
-        this.kernelInfo.description = `This Kernel can evaluate html snippets and display them as output. `
+        this.kernelInfo.description = `This Kernel can evaluate html snippets and display them as output.`;
         if (!this.htmlFragmentInserter) {
             this.htmlFragmentInserter = htmlDomFragmentInserter;
         }

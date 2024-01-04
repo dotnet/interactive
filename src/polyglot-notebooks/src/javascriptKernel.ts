@@ -15,7 +15,7 @@ export class JavascriptKernel extends Kernel {
     constructor(name?: string) {
         super(name ?? "javascript", "JavaScript");
         this.kernelInfo.displayName = `${this.kernelInfo.localName} - ${this.kernelInfo.languageName}`;
-        this.kernelInfo.description = `This Kernel is for executing JavaScript code.`
+        this.kernelInfo.description = `This Kernel is for executing JavaScript code.`;
         this.suppressedLocals = new Set<string>(this.allLocalVariableNames());
         this.registerCommandHandler({ commandType: commandsAndEvents.SubmitCodeType, handle: invocation => this.handleSubmitCode(invocation) });
         this.registerCommandHandler({ commandType: commandsAndEvents.RequestValueInfosType, handle: invocation => this.handleRequestValueInfos(invocation) });
