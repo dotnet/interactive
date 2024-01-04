@@ -50,9 +50,9 @@ export interface Cancel extends KernelCommand {
 }
 
 export interface KernelCommand {
-    targetKernelName?: string;
-    originUri?: string;
     destinationUri?: string;
+    originUri?: string;
+    targetKernelName?: string;
 }
 
 export interface CompileProject extends KernelCommand {
@@ -68,8 +68,8 @@ export interface DisplayValue extends KernelCommand {
 }
 
 export interface OpenDocument extends KernelCommand {
-    relativeFilePath: string;
     regionName?: string;
+    relativeFilePath: string;
 }
 
 export interface OpenProject extends KernelCommand {
@@ -95,9 +95,9 @@ export interface RequestHoverText extends LanguageServiceCommand {
 }
 
 export interface RequestInput extends KernelCommand {
-    prompt: string;
-    isPassword: boolean;
     inputTypeHint: string;
+    isPassword: boolean;
+    prompt: string;
     valueName: string;
 }
 
@@ -108,8 +108,8 @@ export interface RequestSignatureHelp extends LanguageServiceCommand {
 }
 
 export interface RequestValue extends KernelCommand {
-    name: string;
     mimeType: string;
+    name: string;
 }
 
 export interface RequestValueInfos extends KernelCommand {
@@ -117,8 +117,8 @@ export interface RequestValueInfos extends KernelCommand {
 }
 
 export interface SendEditableCode extends KernelCommand {
-    kernelName: string;
     code: string;
+    kernelName: string;
 }
 
 export interface SendValue extends KernelCommand {
@@ -164,27 +164,27 @@ export interface ErrorElement extends InteractiveDocumentOutputElement {
 }
 
 export interface DocumentKernelInfo {
-    name: string;
-    languageName?: string;
     aliases: Array<string>;
+    languageName?: string;
+    name: string;
 }
 
 export interface NotebookParseRequest extends NotebookParseOrSerializeRequest {
-    type: RequestType;
     rawData: Uint8Array;
+    type: RequestType;
 }
 
 export interface NotebookParseOrSerializeRequest {
-    type: RequestType;
+    defaultLanguage: string;
     id: string;
     serializationType: DocumentSerializationType;
-    defaultLanguage: string;
+    type: RequestType;
 }
 
 export interface NotebookSerializeRequest extends NotebookParseOrSerializeRequest {
-    type: RequestType;
-    newLine: string;
     document: InteractiveDocument;
+    newLine: string;
+    type: RequestType;
 }
 
 export interface NotebookParseResponse extends NotebookParserServerResponse {
@@ -278,8 +278,8 @@ export interface CompleteCodeSubmissionReceived extends KernelEvent {
 }
 
 export interface CompletionsProduced extends KernelEvent {
-    linePositionSpan?: LinePositionSpan;
     completions: Array<CompletionItem>;
+    linePositionSpan?: LinePositionSpan;
 }
 
 export interface DiagnosticsProduced extends KernelEvent {
@@ -299,9 +299,9 @@ export interface DisplayedValueUpdated extends DisplayEvent {
 }
 
 export interface DocumentOpened extends KernelEvent {
-    relativeFilePath: string;
-    regionName?: string;
     content: string;
+    regionName?: string;
+    relativeFilePath: string;
 }
 
 export interface ErrorProduced extends DisplayEvent {
@@ -343,9 +343,9 @@ export interface ReturnValueProduced extends DisplayEvent {
 }
 
 export interface SignatureHelpProduced extends KernelEvent {
-    signatures: Array<SignatureInformation>;
-    activeSignatureIndex: number;
     activeParameterIndex: number;
+    activeSignatureIndex: number;
+    signatures: Array<SignatureInformation>;
 }
 
 export interface StandardErrorValueProduced extends DisplayEvent {
@@ -359,8 +359,8 @@ export interface ValueInfosProduced extends KernelEvent {
 }
 
 export interface ValueProduced extends KernelEvent {
-    name: string;
     formattedValue: FormattedValue;
+    name: string;
 }
 
 // --------------------------------------------- Required Types
@@ -371,12 +371,12 @@ export interface Base64EncodedAssembly {
 
 export interface CompletionItem {
     displayText: string;
-    kind: string;
+    documentation: string;
     filterText: string;
-    sortText: string;
     insertText: string;
     insertTextFormat?: InsertTextFormat;
-    documentation: string;
+    kind: string;
+    sortText: string;
 }
 
 export enum InsertTextFormat {
@@ -385,10 +385,10 @@ export enum InsertTextFormat {
 }
 
 export interface Diagnostic {
-    linePositionSpan: LinePositionSpan;
-    severity: DiagnosticSeverity;
     code: string;
+    linePositionSpan: LinePositionSpan;
     message: string;
+    severity: DiagnosticSeverity;
 }
 
 export enum DiagnosticSeverity {
@@ -399,13 +399,13 @@ export enum DiagnosticSeverity {
 }
 
 export interface LinePositionSpan {
-    start: LinePosition;
     end: LinePosition;
+    start: LinePosition;
 }
 
 export interface LinePosition {
-    line: number;
     character: number;
+    line: number;
 }
 
 export enum DocumentSerializationType {
@@ -415,8 +415,8 @@ export enum DocumentSerializationType {
 
 export interface FormattedValue {
     mimeType: string;
-    value: string;
     suppressDisplay: boolean;
+    value: string;
 }
 
 export interface InteractiveDocument {
@@ -425,27 +425,27 @@ export interface InteractiveDocument {
 }
 
 export interface InteractiveDocumentElement {
+    contents: string;
+    executionOrder: number;
     id?: string;
     kernelName?: string;
-    contents: string;
-    outputs: Array<InteractiveDocumentOutputElement>;
-    executionOrder: number;
     metadata?: { [key: string]: any; };
+    outputs: Array<InteractiveDocumentOutputElement>;
 }
 
 export interface KernelInfo {
     aliases: Array<string>;
+    description?: string;
+    displayName: string;
+    isComposite: boolean;
+    isProxy: boolean;
     languageName?: string;
     languageVersion?: string;
-    isProxy: boolean;
-    isComposite: boolean;
-    displayName: string;
     localName: string;
-    uri: string;
     remoteUri?: string;
-    description?: string;
-    supportedKernelCommands: Array<KernelCommandInfo>;
     supportedDirectives: Array<KernelDirectiveInfo>;
+    supportedKernelCommands: Array<KernelCommandInfo>;
+    uri: string;
 }
 
 export interface KernelCommandInfo {
@@ -457,10 +457,10 @@ export interface KernelDirectiveInfo {
 }
 
 export interface KernelValueInfo {
-    typeName: string;
-    name: string;
     formattedValue: FormattedValue;
+    name: string;
     preferredMimeTypes: Array<string>;
+    typeName: string;
 }
 
 export interface Project {
@@ -468,14 +468,14 @@ export interface Project {
 }
 
 export interface ProjectFile {
-    relativeFilePath: string;
     content: string;
+    relativeFilePath: string;
 }
 
 export interface ProjectItem {
-    relativeFilePath: string;
     regionNames: Array<string>;
     regionsContent: { [key: string]: string; };
+    relativeFilePath: string;
 }
 
 export enum RequestType {
@@ -485,24 +485,24 @@ export enum RequestType {
 
 export interface ResolvedPackageReference extends PackageReference {
     assemblyPaths: Array<string>;
-    probingPaths: Array<string>;
     packageRoot: string;
+    probingPaths: Array<string>;
 }
 
 export interface PackageReference {
+    isPackageVersionSpecified: boolean;
     packageName: string;
     packageVersion: string;
-    isPackageVersionSpecified: boolean;
 }
 
 export interface SignatureInformation {
-    label: string;
     documentation: FormattedValue;
+    label: string;
     parameters: Array<ParameterInformation>;
 }
 
 export interface ParameterInformation {
-    label: string;
     documentation: FormattedValue;
+    label: string;
 }
 
