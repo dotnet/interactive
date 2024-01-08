@@ -3,8 +3,7 @@
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
-using Microsoft.DotNet.Interactive.Http.Tests.Utility;
-using System.Linq;
+using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;

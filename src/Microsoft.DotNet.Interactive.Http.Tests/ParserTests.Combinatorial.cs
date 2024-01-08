@@ -7,6 +7,7 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
+using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 

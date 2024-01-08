@@ -737,6 +737,7 @@ public abstract partial class Kernel :
             GetDirectiveParsersForCompletion(directiveNode, requestPosition));
 
         var result = directiveNode.GetDirectiveParseResult();
+
         if (result.CommandResult.Command == ChooseKernelDirective)
         {
             return result.GetCompletions()

@@ -147,7 +147,7 @@ internal class HttpRequestParser
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
                         node.Add(ParseEmbeddedExpression());
-                        if (CurrentToken is { Kind: HttpTokenKind.NewLine })
+                        if (CurrentToken is { Kind: TokenKind.NewLine })
                         {
                             break;
                         }
