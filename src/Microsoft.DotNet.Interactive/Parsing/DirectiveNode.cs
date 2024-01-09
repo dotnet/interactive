@@ -40,16 +40,19 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public override IEnumerable<CodeAnalysis.Diagnostic> GetDiagnostics()
     {
-        var parseResult = GetDirectiveParseResult();
-
-        foreach (var error in parseResult.Errors)
+        if (DirectiveParser is not null)
         {
-            var descriptor = new DiagnosticInfo(
-                id: "DNI0001",
-                messageFormat: error.Message,
-                severity: DiagnosticSeverity.Error);
+            var parseResult = GetDirectiveParseResult();
 
-            yield return CreateDiagnostic(descriptor);
+            foreach (var error in parseResult.Errors)
+            {
+                var descriptor = new DiagnosticInfo(
+                    id: "DNI0001",
+                    messageFormat: error.Message,
+                    severity: DiagnosticSeverity.Error);
+
+                yield return CreateDiagnostic(descriptor);
+            }
         }
     }
 
@@ -63,7 +66,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
         }
     }
 
-    public string DirectiveName => Text.Split(new[] { ' ', '\t' })[0];
+    public DirectiveNameNode? DirectiveNameNode { get; private set; }
 
     internal int GetLine()
     {
@@ -87,5 +90,21 @@ internal class DirectiveNode : TopLevelSyntaxNode
         return new LinePositionSpan(
             new LinePosition(line, Span.Start),
             new LinePosition(line, Span.End));
+    }
+
+    public void Add(DirectiveNameNode node)
+    {
+        DirectiveNameNode = node;
+        AddInternal(node);
+    }
+
+    public void Add(DirectiveArgumentNode node)
+    {
+        AddInternal(node);
+    }
+
+    public void Add(DirectiveOptionNode node)
+    {
+        AddInternal(node);
     }
 }

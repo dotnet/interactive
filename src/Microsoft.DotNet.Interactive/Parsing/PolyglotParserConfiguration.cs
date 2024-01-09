@@ -11,11 +11,14 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 internal class PolyglotParserConfiguration
 {
     private Dictionary<string, KernelInfo>? _kernelInfoByKernelName;
-    private HashSet<string> _topLevelDirectives;
+    private HashSet<string>? _topLevelDirectives;
 
     public Dictionary<string, KernelInfo> KernelInfos { get; } = new();
 
-    public bool IsDirectiveInScope(string currentKernelName, string directiveName, [NotNullWhen(true)] out DirectiveNodeKind? kind)
+    public bool IsDirectiveInScope(
+        string currentKernelName, 
+        string directiveName, 
+        [NotNullWhen(true)] out DirectiveNodeKind? kind)
     {
         EnsureKernelInfoMapIsInitialized();
 
@@ -25,13 +28,13 @@ internal class PolyglotParserConfiguration
             return true;
         }
 
-        if (_topLevelDirectives.Contains(directiveName))
+        if (_topLevelDirectives!.Contains(directiveName))
         {
             kind = DirectiveNodeKind.Action;
             return true;
         }
 
-        if (_kernelInfoByKernelName.TryGetValue(currentKernelName, out var kernelInfo))
+        if (_kernelInfoByKernelName!.TryGetValue(currentKernelName, out var kernelInfo))
         {
             if (kernelInfo.SupportedDirectives.SingleOrDefault(d => d.Name == directiveName) is { } directive)
             {
@@ -56,7 +59,7 @@ internal class PolyglotParserConfiguration
     {
         EnsureKernelInfoMapIsInitialized();
 
-        return _kernelInfoByKernelName.ContainsKey(text);
+        return _kernelInfoByKernelName!.ContainsKey(text);
     }
 
     private void EnsureKernelInfoMapIsInitialized()

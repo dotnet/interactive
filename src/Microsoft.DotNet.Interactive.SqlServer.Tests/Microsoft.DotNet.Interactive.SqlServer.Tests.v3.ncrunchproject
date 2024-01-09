@@ -1,5 +1,10 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <DefaultTestTimeout>15000</DefaultTestTimeout>
+    <IgnoredTests>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.SqlServer.Tests.MsSqlConnectionTests</FixtureName>
+      </FixtureTestSelector>
+    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

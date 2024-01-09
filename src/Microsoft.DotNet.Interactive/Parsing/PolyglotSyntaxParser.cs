@@ -18,7 +18,7 @@ internal class PolyglotSyntaxParser
     private int _currentTokenIndex = 0;
     private IReadOnlyList<SyntaxToken>? _tokens;
     private readonly PolyglotSyntaxTree _syntaxTree;
-    private string _currentKernelName;
+    private string? _currentKernelName;
 
     public static PolyglotSyntaxTree Parse(
         string code,
@@ -56,7 +56,7 @@ internal class PolyglotSyntaxParser
         {
             if (ParseDirective() is { } directiveNode)
             {
-                if (_configuration.IsDirectiveInScope(_currentKernelName, directiveNode.DirectiveName, out var kind))
+                if (_configuration.IsDirectiveInScope(_currentKernelName, directiveNode.DirectiveNameNode!.Text, out var kind))
                 {
                     if (!IsCompilerDirective(directiveNode))
                     {
@@ -65,7 +65,12 @@ internal class PolyglotSyntaxParser
 
                     if (directiveNode is { Kind: DirectiveNodeKind.KernelSelector })
                     {
-                        _currentKernelName = directiveNode.ChildTokens.First(t => t.Kind == TokenKind.Word).Text;
+                        _currentKernelName = directiveNode.ChildNodes
+                                                          .OfType<DirectiveNameNode>()
+                                                          .Single()
+                                                          .ChildTokens
+                                                          .First(t => t is { Kind: TokenKind.Word })
+                                                          .Text;
                     }
 
                     _syntaxTree.RootNode.Add(directiveNode);
@@ -102,13 +107,174 @@ internal class PolyglotSyntaxParser
         return _syntaxTree;
     }
 
+    private DirectiveNode? ParseDirective()
+    {
+        if (IsAtStartOfDirective())
+        {
+            var directiveNode = new DirectiveNode(_currentKernelName!, _sourceText, _syntaxTree);
+
+            var directiveNameNode = ParseDirectiveName();
+
+            directiveNode.Add(directiveNameNode);
+
+            var consumeTrailingWhitespace = false;
+
+            while (MoreTokens())
+            {
+                if (CurrentToken is null)
+                {
+                    break;
+                }
+
+                if (CurrentToken is { Kind: TokenKind.NewLine })
+                {
+                    ConsumeCurrentTokenInto(directiveNode);
+                    consumeTrailingWhitespace = false;
+                    break;
+                }
+
+                if (IsAtStartOfOption())
+                {
+                    if (ParseDirectiveOption() is { } optionNode)
+                    {
+                        directiveNode.Add(optionNode);
+                    }
+                }
+                else
+                {
+                    if (ParseDirectiveArgument() is { } argumentNode)
+                    {
+                        directiveNode.Add(argumentNode);
+                    }
+                }
+            }
+
+            // certain directives might be compiler directives, e.g. #r and #i
+            if (IsCompilerDirective(directiveNode))
+            {
+                directiveNode.Kind = DirectiveNodeKind.CompilerDirective;
+            }
+
+            if (consumeTrailingWhitespace)
+            {
+                return ParseTrailingWhitespace(directiveNode, true);
+            }
+            else
+            {
+                return directiveNode;
+            }
+        }
+
+        return null;
+
+        DirectiveNameNode ParseDirectiveName()
+        {
+            var directiveNameNode = new DirectiveNameNode(_sourceText, _syntaxTree);
+
+            while (CurrentToken is { Kind: TokenKind.Punctuation or TokenKind.Word })
+            {
+                ConsumeCurrentTokenInto(directiveNameNode);
+            }
+
+            return ParseTrailingWhitespace(directiveNameNode, stopBeforeNewLine: true);
+        }
+
+        DirectiveArgumentNode? ParseDirectiveArgument()
+        {
+            var withinQuotes = false;
+
+            DirectiveArgumentNode? argumentNode = null;
+
+            while (MoreTokens())
+            {
+                if (CurrentToken is { Kind: TokenKind.Punctuation, Text: "\"" })
+                {
+                    withinQuotes = !withinQuotes;
+                }
+
+                if (CurrentToken is { Kind: TokenKind.NewLine } ||
+                    CurrentToken is { Kind: TokenKind.Whitespace } && !withinQuotes)
+                {
+                    break;
+                }
+
+                argumentNode ??= new DirectiveArgumentNode(_sourceText, _syntaxTree);
+
+                ConsumeCurrentTokenInto(argumentNode);
+            }
+
+            if (argumentNode is not null)
+            {
+                return ParseTrailingWhitespace(argumentNode, stopBeforeNewLine: true);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        DirectiveOptionNode? ParseDirectiveOption()
+        {
+            DirectiveOptionNode? optionNode = null;
+            DirectiveOptionNameNode? optionNameNode = null;
+
+            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "-" } ||
+                CurrentTokenPlus(-1) is { Kind: TokenKind.Whitespace })
+            {
+                while (MoreTokens())
+                {
+                    if (CurrentToken is { Kind: TokenKind.NewLine } or { Kind: TokenKind.Whitespace })
+                    {
+                        break;
+                    }
+
+                    if (optionNode is null)
+                    {
+                        optionNode = new DirectiveOptionNode(_sourceText, _syntaxTree);
+                        optionNameNode = new DirectiveOptionNameNode(_sourceText, _syntaxTree);
+                    }
+
+                    ConsumeCurrentTokenInto(optionNameNode!);
+                }
+
+                if (optionNode is not null && 
+                    optionNameNode is not null)
+                {
+                    ParseTrailingWhitespace(optionNameNode, stopBeforeNewLine: true);
+
+                    optionNode.Add(optionNameNode);
+
+                    if (ParseDirectiveArgument() is { } argNode)
+                    {
+                        optionNode.Add(argNode);
+                    }
+                }
+            }
+
+            if (optionNode is not null)
+            {
+                return ParseTrailingWhitespace(optionNode, stopBeforeNewLine: true);
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+
+    private bool IsAtStartOfOption()
+    {
+        return CurrentTokenPlus(-1) is { Kind: TokenKind.Whitespace } &&
+               CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "-" };
+    }
+
     private LanguageNode ParseLanguageNode()
     {
-        var node = new LanguageNode(_currentKernelName, _sourceText, _syntaxTree);
+        var node = new LanguageNode(_currentKernelName!, _sourceText, _syntaxTree);
 
         while (MoreTokens())
         {
-            if (IsDirective())
+            if (IsAtStartOfDirective())
             {
                 break;
             }
@@ -119,45 +285,39 @@ internal class PolyglotSyntaxParser
         return node;
     }
 
-    private DirectiveNode ParseDirective()
+    private T ParseTrailingWhitespace<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewLine = false) where T : SyntaxNode
     {
-        if (IsDirective())
+        while (MoreTokens())
         {
-            var directiveNode = new DirectiveNode(_currentKernelName, _sourceText, _syntaxTree);
-
-            while (MoreTokens())
+            if (CurrentToken?.Kind is TokenKind.NewLine)
             {
-                ConsumeCurrentTokenInto(directiveNode);
-
-                if (CurrentToken is null)
+                if (stopBeforeNewLine)
                 {
                     break;
                 }
 
-                if (CurrentToken is { Kind: TokenKind.NewLine })
+                if (stopAfterNewLine)
                 {
-                    ConsumeCurrentTokenInto(directiveNode);
+                    ConsumeCurrentTokenInto(node);
                     break;
                 }
             }
 
-            // certain directives might be compiler directives, e.g. #r and #i
-            if (IsCompilerDirective(directiveNode))
+            if (CurrentToken is not { Kind: TokenKind.Whitespace } and not { Kind: TokenKind.NewLine })
             {
-                directiveNode.Kind = DirectiveNodeKind.CompilerDirective;
+                break;
             }
 
-            return directiveNode;
+            ConsumeCurrentTokenInto(node);
         }
 
-        return null;
+        return node;
     }
 
     private static bool IsCompilerDirective(DirectiveNode node) =>
-        node.ChildNodesAndTokens.Count > 5 && 
-        node.ChildTokens.ElementAt(1) is { Kind: TokenKind.Word } and { Text: "r" or "i" };
+        node.ChildNodes.OfType<DirectiveNameNode>().Any(n => n is { Text: "#r" or "#i" });
 
-    private bool IsDirective()
+    private bool IsAtStartOfDirective()
     {
         if (CurrentToken is not { Text: "#" })
         {
@@ -212,143 +372,7 @@ internal class PolyglotSyntaxParser
             AdvanceToNextToken();
         }
     }
-
-    private void ParseSubmission(PolyglotSubmissionNode rootNode)
-    {
-        var currentKernelName = DefaultKernelName;
-        // FIX: (ParseSubmission) rewrite
-
-        // _subkernelInfoByKernelName.TryGetValue(currentKernelName ?? "", out var currentKernelInfo);
-
-        for (var i = 0; i < _tokens!.Count; i++)
-        {
-            var currentToken = _tokens[i];
-
-            // switch (currentToken)
-            // {
-            //     case DirectiveToken directiveToken:
-            //
-            //         DirectiveNode? directiveNode;
-            //
-            //         if (IsChooseKernelDirective(directiveToken))
-            //         {
-            //             directiveNode =
-            //                 new KernelNameDirectiveNode(_sourceText, rootNode.SyntaxTree);
-            //
-            //             currentKernelName = directiveToken.DirectiveName;
-            //
-            //             if (_subkernelInfoByKernelName.TryGetValue(currentKernelName, out currentKernelInfo))
-            //             {
-            //                 directiveNode.CommandScope = currentKernelInfo.commandScope;
-            //             }
-            //         }
-            //         else
-            //         {
-            //             directiveNode = new ActionDirectiveNode(
-            //                 directiveToken,
-            //                 _sourceText,
-            //                 currentKernelName ?? DefaultLanguage,
-            //                 rootNode.SyntaxTree);
-            //
-            //             directiveNode.AllowValueSharingByInterpolation = AllowsValueSharingByInterpolation(directiveToken);
-            //         }
-            //
-            //         if (_tokens.Count > i + 1 && _tokens[i + 1] is TriviaToken triviaNode)
-            //         {
-            //             i += 1;
-            //             directiveNode.Add(triviaNode);
-            //         }
-            //
-            //         if (_tokens.Count > i + 1 &&
-            //             _tokens[i + 1] is DirectiveArgsNode directiveArgs)
-            //         {
-            //             i += 1;
-            //
-            //             directiveNode.Add(directiveArgs);
-            //         }
-            //
-            //         AssignDirectiveParser(directiveNode);
-            //
-            //         if (directiveToken.Text == "#r")
-            //         {
-            //             var parseResult = directiveNode.GetDirectiveParseResult();
-            //             if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
-            //                     out currentKernelInfo))
-            //             {
-            //                 directiveNode.CommandScope = currentKernelInfo.commandScope;
-            //             }
-            //
-            //             if (parseResult.Errors.Count == 0)
-            //             {
-            //                 var value = parseResult.GetValueForArgument(parseResult.Parser.FindPackageArgument());
-            //
-            //                 if (value?.Value is FileInfo)
-            //                 {
-            //                     // #r <file> is treated as a LanguageNode to be handled by the compiler
-            //                     AppendAsLanguageNode(directiveNode);
-            //
-            //                     break;
-            //                 }
-            //             }
-            //         }
-            //
-            //         rootNode.Add(directiveNode);
-            //
-            //         break;
-            //
-            //     case LanguageToken languageToken:
-            //         AppendAsLanguageNode(languageToken);
-            //         break;
-            //
-            //     default:
-            //         throw new ArgumentOutOfRangeException(nameof(currentToken));
-            // }
-        }
-
-        void AppendAsLanguageNode(SyntaxNodeOrToken nodeOrToken)
-        {
-            // var previousSyntaxNode = rootNode.ChildNodes.LastOrDefault();
-            // var previousLanguageNode = previousSyntaxNode as LanguageNode;
-            // if (previousLanguageNode is { } &&
-            //     previousLanguageNode is not KernelNameDirectiveNode &&
-            //     previousLanguageNode.Name == currentKernelName)
-            // {
-            //     previousLanguageNode.Add(nodeOrToken);
-            //     rootNode.GrowSpan(previousLanguageNode);
-            // }
-            // else
-            // {
-            //     var targetKernelName = currentKernelName ?? DefaultLanguage;
-            //     var languageNode = new LanguageNode(
-            //         _sourceText,
-            //         rootNode.SyntaxTree);
-            //     languageNode.CommandScope = currentKernelInfo.commandScope;
-            //     languageNode.Add(nodeOrToken);
-            //
-            //     rootNode.Add(languageNode);
-            // }
-        }
-
-        // void AssignDirectiveParser(DirectiveNode directiveNode)
-        // {
-        //     var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
-        //
-        //     if (IsDefinedInRootKernel(directiveName))
-        //     {
-        //         directiveNode.DirectiveParser = _rootKernelDirectiveParser;
-        //     }
-        //     else if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
-        //                                                     out var info))
-        //     {
-        //         directiveNode.DirectiveParser = info.getParser();
-        //     }
-        //     else
-        //     {
-        //         directiveNode.DirectiveParser = _rootKernelDirectiveParser;
-        //     }
-        // }
-    }
-
+    
     private bool AllowsValueSharingByInterpolation(DirectiveNode directiveNode) =>
         directiveNode.Text != "set";
 
@@ -388,16 +412,18 @@ internal class PolyglotSyntaxParser
 
                 if (previousTokenKind is { } previousTokenKindValue)
                 {
-                    if (!IsCurrentTokenANewLinePrecededByACarriageReturn(
-                            previousTokenKindValue,
-                            previousCharacter,
-                            currentTokenKind,
-                            currentCharacter) &&
-                        (previousTokenKind != currentTokenKind || currentTokenKind
-                             is TokenKind.NewLine ||
-                         currentTokenKind is TokenKind.Punctuation))
+                    if (previousTokenKind != currentTokenKind ||
+                        currentTokenKind is TokenKind.NewLine ||
+                        currentTokenKind is TokenKind.Punctuation)
                     {
-                        FlushToken(previousTokenKindValue);
+                        if (!IsCurrentTokenANewLinePrecededByACarriageReturn(
+                                previousTokenKindValue,
+                                previousCharacter,
+                                currentTokenKind,
+                                currentCharacter))
+                        {
+                            FlushToken(previousTokenKindValue);
+                        }
                     }
                 }
 
@@ -426,27 +452,6 @@ internal class PolyglotSyntaxParser
             &&
             previousCharacter is '\r' && currentCharacter is '\n';
 
-        private void LexTrivia()
-        {
-            // while (More())
-            // {
-            //     switch (_sourceText[_textWindow.End])
-            //     {
-            //         case ' ':
-            //         case '\t':
-            //         case '\r':
-            //         case '\n':
-            //         case '\v':
-            //             _textWindow.Advance();
-            //             break;
-            //
-            //         default:
-            //             FlushToken(TokenKind.Trivia);
-            //             return;
-            //     }
-            // }
-        }
-
         private bool IsDirective()
         {
             if (GetNextChar() != '#')
@@ -466,7 +471,7 @@ internal class PolyglotSyntaxParser
 
             // look ahead to see if this is a directive
             var textIsLongEnoughToContainDirective =
-                _sourceText.Length >= _textWindow.End + 2;
+                _sourceText.Length >= _textWindow!.End + 2;
 
             if (!textIsLongEnoughToContainDirective)
             {
@@ -532,11 +537,11 @@ internal class PolyglotSyntaxParser
         }
 
         [DebuggerHidden]
-        private char GetNextChar() => _sourceText[_textWindow.End];
+        private char GetNextChar() => _sourceText[_textWindow!.End];
 
         [DebuggerHidden]
         private char GetPreviousChar() =>
-            _textWindow.End switch
+            _textWindow!.End switch
             {
                 0 => default,
                 _ => _sourceText[_textWindow.End - 1]
@@ -545,10 +550,10 @@ internal class PolyglotSyntaxParser
         [DebuggerHidden]
         private bool More()
         {
-            return _textWindow.End < _sourceText.Length;
+            return _textWindow!.End < _sourceText.Length;
         }
 
-        private string CurrentTextWindow => _sourceText.GetSubText(_textWindow.Span).ToString();
+        private string CurrentTextWindow => _sourceText.GetSubText(_textWindow!.Span).ToString();
 
         private class TextWindow
         {
@@ -587,4 +592,3 @@ internal class PolyglotSyntaxParser
         }
     }
 }
-

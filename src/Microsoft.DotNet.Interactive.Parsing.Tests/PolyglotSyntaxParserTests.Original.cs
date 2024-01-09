@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 public partial class PolyglotSyntaxParserTests
 {
     [Fact]
-    public void Pound_r_nuget_is_parsed_as_a_directive_node_in_csharp()
+    public void Pound_r_nuget_is_parsed_as_a_compiler_directive_node_in_csharp()
     {
         var tree = Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx", "csharp");
 
@@ -33,7 +33,7 @@ public partial class PolyglotSyntaxParserTests
     }
 
     [Fact]
-    public void Pound_r_nuget_is_parsed_as_a_directive_node_in_fsharp()
+    public void Pound_r_nuget_is_parsed_as_a_compiler_directive_node_in_fsharp()
     {
         var tree = Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx", "fsharp");
 
@@ -70,8 +70,8 @@ public partial class PolyglotSyntaxParserTests
     [InlineData("var x = 123$$;", typeof(LanguageNode))]
     [InlineData("#!csharp\nvar x = 123$$;", typeof(LanguageNode))]
     [InlineData("#!csharp\nvar x = 123$$;\n", typeof(LanguageNode))]
-    [InlineData("#!csh$$arp\nvar x = 123;", typeof(DirectiveNode))]
-    [InlineData("#!csharp\n#!time a b$$ c", typeof(DirectiveNode))]
+    [InlineData("#!csh$$arp\nvar x = 123;", typeof(DirectiveNameNode))]
+    [InlineData("#!csharp\n#!time a b$$ c", typeof(DirectiveArgumentNode))]
     public void Node_type_is_correctly_identified(
         string markupCode,
         Type expectedNodeType)
@@ -102,8 +102,9 @@ public partial class PolyglotSyntaxParserTests
 
         tree.RootNode
             .FindNode(position.Value)
+            .AncestorsAndSelf()
             .Should()
-            .BeOfType<DirectiveNode>()
+            .ContainSingle<DirectiveNode>()
             .Which
             .Kind
             .ToString()
@@ -240,7 +241,7 @@ let x =
             {
                 var node = tree.RootNode.FindNode(position);
 
-                switch (node)
+                switch (node.Parent)
                 {
                     case DirectiveNode { Kind: DirectiveNodeKind.KernelSelector }:
                         expectedParentLanguage.Should().Be("none");
@@ -277,7 +278,7 @@ let x = 123
             {
                 var node = tree.RootNode.FindNode(position);
 
-                node.Should().BeAssignableTo<DirectiveNode>();
+                node.Should().BeAssignableTo<DirectiveNameNode>();
             }
         }
     }

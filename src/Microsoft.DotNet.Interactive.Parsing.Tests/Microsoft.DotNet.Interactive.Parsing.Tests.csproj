@@ -19,7 +19,11 @@
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="Utility\MarkupTestFile.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\KernelInfo.cs" Link="KernelInfo.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveArgumentNode.cs" Link="Parsing\DirectiveArgumentNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveNameNode.cs" Link="Parsing\DirectiveNameNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveNode.cs" Link="Parsing\DirectiveNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveOptionNameNode.cs" Link="Parsing\DirectiveOptionNameNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveOptionNode.cs" Link="Parsing\DirectiveOptionNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveNodeKind.cs" Link="Parsing\DirectiveNodeKind.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\LanguageNode.cs" Link="Parsing\LanguageNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\PolyglotSubmissionNode.cs" Link="Parsing\PolyglotSubmissionNode.cs" LinkBase="Parsing" />
