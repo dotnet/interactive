@@ -175,6 +175,26 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
         }
     }
 
+    public IEnumerable<SyntaxNode> Ancestors()
+    {
+        var parent = Parent;
+        while (parent is not null)
+        {
+            yield return parent;
+            parent = parent.Parent;
+        }
+    }
+
+    public IEnumerable<SyntaxNode> AncestorsAndSelf()
+    {
+        yield return this;
+
+        foreach (var ancestor in Ancestors())
+        {
+            yield return ancestor;
+        }
+    }
+
     public IEnumerable<SyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()
     {
         yield return this;
