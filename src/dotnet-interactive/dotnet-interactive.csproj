@@ -161,6 +161,10 @@
     <Folder Include="Http\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <LiveUnitTestingTestDependency Include="$(OutputPath)" />
+  </ItemGroup>
+
   <Target Name="CopyKernelSpecificFiles" DependsOnTargets="PrepareKernels;CopyLogoFiles">
     <CreateItem Include="%(KernelFolders.Identity)/**/*.json" AdditionalMetadata="Destination=$([System.IO.Path]::GetFileName(%(KernelFolders.Identity)))">
       <Output TaskParameter="Include" ItemName="KernelSpecificJsonFiles" />
