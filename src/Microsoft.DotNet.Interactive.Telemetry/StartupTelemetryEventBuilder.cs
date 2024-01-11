@@ -274,13 +274,8 @@ public sealed class StartupTelemetryEventBuilder
                 case "jupyter":
                 case "synapse":
                 case "vscode":
+                case "vs":
                     return directive.Key;
-            }
-
-            if (directive.Key.StartsWith("vs") &&
-                int.TryParse(directive.Key.Substring(2), out _)) // VS appends the process id after the "vs" prefix.
-            {
-                return "vs";
             }
         }
 
