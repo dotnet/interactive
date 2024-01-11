@@ -15,13 +15,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public class ConnectJupyterKernelCommand : ConnectKernelCommand
 {
-    private readonly List<IJupyterKernelConnectionOptions> _connectionCreaters = new();
+    private readonly List<IJupyterKernelConnectionOptions> _connectionCreators = new();
     private KeyValuePair<int, IEnumerable<CompletionItem>> _mruKernelSpecSuggestions;
 
     public ConnectJupyterKernelCommand() : base("jupyter",
                                         "Connects to a jupyter kernel. This feature is in preview.")
     {
-        AddOption(KernelSpecName.AddCompletions(ctx => GetKernelSpecsCompletions(ctx)));
+        AddOption(KernelSpecName.AddCompletions(GetKernelSpecsCompletions));
         AddOption(InitScript);
     }
 
@@ -44,7 +44,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
             AddOption(option);
         }
 
-        _connectionCreaters.Add(connectionOptions);
+        _connectionCreators.Add(connectionOptions);
         return this;
     }
 
@@ -60,12 +60,12 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
         var initScript = commandLineContext.ParseResult.GetValueForOption(InitScript);
 
         var connection = GetJupyterConnection(commandLineContext.ParseResult);
-        if (connection == null)
+        if (connection is null)
         {
             throw new InvalidOperationException("No supported connection options were specified");
         }
 
-        JupyterKernelConnector connector = new JupyterKernelConnector(connection, kernelSpecName, initScript);
+        var connector = new JupyterKernelConnector(connection, kernelSpecName, initScript);
 
         var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
 
@@ -79,7 +79,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
 
     private IJupyterConnection GetJupyterConnection(ParseResult parseResult)
     {
-        foreach (var connectionOptions in _connectionCreaters)
+        foreach (var connectionOptions in _connectionCreators)
         {
             var connection = connectionOptions.GetConnection(parseResult);
             if (connection != null)
