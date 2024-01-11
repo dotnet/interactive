@@ -244,7 +244,7 @@ public class StartupTelemetryTests : IDisposable
     {
         await _parser.InvokeAsync(
             """
-            [vs9628] stdio --working-dir D:\Notebooks --kernel-host 9628-5c7e913f-8966-4afe-8d37-cc863292a352
+            [vs] stdio --working-dir D:\Notebooks --kernel-host 9628-5c7e913f-8966-4afe-8d37-cc863292a352
             """,
             _console);
 
