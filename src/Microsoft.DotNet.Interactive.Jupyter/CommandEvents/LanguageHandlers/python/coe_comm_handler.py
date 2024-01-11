@@ -34,7 +34,7 @@ def __get_dotnet_coe_comm_handler():
             
     
     class CommandEventHandler:
-        __exclude_types = ["<class 'module'>"]
+        __exclude_types = ["<class 'module'>", "<class 'builtin_function_or_method'>","<class 'function'>"]
 
         
         def handle_command_or_event(self, data):
