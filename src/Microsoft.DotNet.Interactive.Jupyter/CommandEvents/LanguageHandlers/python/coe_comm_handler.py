@@ -73,12 +73,11 @@ def __get_dotnet_coe_comm_handler():
                 valueType = str(type(variables[x]))
                 if (x in variables and valueType not in self.__exclude_types):
                     try:
-                        formattedValue = FormattedValue.fromValue(variables[x])
+                        formattedValue = FormattedValue('text/plain+summary', f'{variables[x]}')
                         results.append(KernelValueInfo(x, formattedValue, valueType))
                     except Exception as error: 
                         self. __debugLog('failed creating formattedValue for ' +x+ ' of type ' +valueType, error)
                         pass
-
 
             return EventEnvelope(ValueInfosProduced(results), command)
             
