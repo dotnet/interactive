@@ -10,6 +10,12 @@
     <None Remove="CommandEvents\LanguageHandlers\r\coe_comm_handler.r" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Allows to conenct to kernel via Jupyter protocol</PackageDescription>
+    <PackageTags>polyglot notebook dotnet interactive python jupyter</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
   </ItemGroup>
