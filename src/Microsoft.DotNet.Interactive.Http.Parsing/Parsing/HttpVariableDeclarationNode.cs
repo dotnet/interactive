@@ -17,7 +17,7 @@ internal class HttpVariableDeclarationNode : HttpSyntaxNode
     {
     }
 
-    public string VariableName => Text[1..];
+    public string VariableName => Text.Substring(1);
 
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
