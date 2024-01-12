@@ -12,7 +12,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Allows to conenct to kernel via Jupyter protocol</PackageDescription>
+    <PackageDescription>Enables connection to Jupyter kernels as .NET Interactive subkernels</PackageDescription>
     <PackageTags>polyglot notebook dotnet interactive python jupyter</PackageTags>
   </PropertyGroup>
 
