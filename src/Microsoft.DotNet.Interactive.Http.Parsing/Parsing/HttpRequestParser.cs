@@ -194,6 +194,10 @@ internal class HttpRequestParser
                     {
                         ConsumeCurrentTokenInto(node);
                     }
+                    else if(CurrentToken is { Text: "_" })
+                    {
+                        ConsumeCurrentTokenInto(node);
+                    }
                     else
                     {
                         break;

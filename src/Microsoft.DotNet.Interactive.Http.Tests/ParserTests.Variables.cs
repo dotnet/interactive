@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
+using JetBrains.Annotations;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
@@ -192,6 +193,19 @@ public partial class HttpParserTests
 
             var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
             variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
+
+        }
+
+        [Fact]
+        public void underscores_in_variable_declarations_are_supported()
+        {
+            var result = Parse(
+                """
+                @host_name=https://httpbin.org
+                """
+                );
+            var variable = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            variable.Keys.Should().ContainSingle().Which.Should().Be("host_name");
 
         }
     }
