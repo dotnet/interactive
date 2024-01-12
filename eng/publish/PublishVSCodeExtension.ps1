@@ -45,6 +45,7 @@ try {
                 "Microsoft.DotNet.Interactive.FSharp",
                 "Microsoft.DotNet.Interactive.Http,",
                 "Microsoft.DotNet.Interactive.Journey",
+                "Microsoft.DotNet.Interactive.Jupyter",
                 "Microsoft.DotNet.Interactive.Kql",
                 "Microsoft.DotNet.Interactive.Mermaid",
                 "Microsoft.DotNet.Interactive.NamedPipeConnector",
