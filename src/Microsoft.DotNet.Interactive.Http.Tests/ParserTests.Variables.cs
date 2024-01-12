@@ -208,5 +208,21 @@ public partial class HttpParserTests
             variable.Keys.Should().ContainSingle().Which.Should().Be("host_name");
 
         }
+
+        [Fact]
+        public void underscores_in_embedded_expressions_are_supported()
+        {
+            var result = Parse(
+                """
+
+                @host_name=httpbin.org
+                @host=https://{{host_name}}
+                """
+                );
+
+            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
+
+        }
     }
 }
