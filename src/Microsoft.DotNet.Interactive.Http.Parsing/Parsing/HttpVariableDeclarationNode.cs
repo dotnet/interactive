@@ -17,7 +17,7 @@ internal class HttpVariableDeclarationNode : HttpSyntaxNode
     {
     }
 
-    public string VariableName => string.Join("", ChildTokens.Where(t => t.Kind == HttpTokenKind.Word || (t.Kind == HttpTokenKind.Punctuation && t.Text is "_")).Select(t => t.Text)) ?? string.Empty;
+    public string VariableName => Text[1..];
 
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
