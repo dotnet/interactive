@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.AspNetCore.Http;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -287,6 +288,36 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         request.RequestUri.AbsoluteUri.Should().Be("https://example.com/");
+    }
+
+    [Fact]
+    public async Task binding_in_variable_value_is_valid()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @hostname=httpbin.org
+            @host=https://{{hostname}}
+
+            Get {{host}}
+            """;
+        
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        
+        result.Events.Should().NotContainErrors();
+        request.RequestUri.Should().Be($"https://httpbin.org");
+       
+        
     }
 
     [Fact]

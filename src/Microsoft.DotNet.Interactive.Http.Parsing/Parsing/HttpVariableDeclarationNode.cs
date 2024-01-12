@@ -17,7 +17,7 @@ internal class HttpVariableDeclarationNode : HttpSyntaxNode
     {
     }
 
-    public string VariableName => ChildTokens.Where(t => t.Kind == HttpTokenKind.Word).Select(t => t.Text).FirstOrDefault() ?? string.Empty;
+    public string VariableName => Text.Substring(1);
 
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
