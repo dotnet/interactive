@@ -51,8 +51,9 @@ public class TelemetrySender
         _eventsNamespace = eventsNamespace;
         var s = appInsightsConnectionString ?? DefaultAppInsightsConnectionString;
 
-        _enabled = !GetEnvironmentVariableAsBool(TelemetryOptOutEnvironmentVariableName) &&
-                   firstTimeUseNoticeSentinel.Exists();
+        _enabled =
+            !GetEnvironmentVariableAsBool(TelemetryOptOutEnvironmentVariableName) &&
+            (SkipFirstTimeExperience || FirstTimeUseNoticeSentinelExists());
 
         if (_enabled)
         {
@@ -110,7 +111,7 @@ public class TelemetrySender
             _ => DoTrackEvent(eventName, properties, measurements));
     }
 
-    public async Task FlushedAsync() => await _trackEventTask;
+    public Task FlushedAsync() => _trackEventTask ?? Task.CompletedTask;
 
     public void TrackStartupEvent(ParseResult parseResult, StartupTelemetryEventBuilder eventBuilder)
     {
@@ -176,14 +177,13 @@ public class TelemetrySender
         }
     }
 
-    public bool FirstTimeUseNoticeSentinelExists() => 
+    public bool FirstTimeUseNoticeSentinelExists() =>
         _firstTimeUseNoticeSentinel.Exists();
 
-    public void CreateFirstTimeUseNoticeSentinelIfNotExists() => 
+    public void CreateFirstTimeUseNoticeSentinelIfNotExists() =>
         _firstTimeUseNoticeSentinel.CreateIfNotExists();
 
-    public IDisposable SubscribeToPocketLogger(
-        Assembly assembly)
+    public IDisposable SubscribeToPocketLogger(Assembly assembly)
     {
         var logSubscription = LogEvents.Subscribe(
             e =>
@@ -202,12 +202,10 @@ public class TelemetrySender
                     }
                 }
 
-                TrackEvent(
-                    eventName,
-                    properties
-                );
+                TrackEvent(eventName, properties);
             },
-            new[] { assembly });
+            [assembly]);
+
         return logSubscription;
     }
 }
