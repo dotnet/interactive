@@ -240,23 +240,6 @@ public class StartupTelemetryTests : IDisposable
     }
 
     [Fact]
-    public async Task stdio_command_sends_frontend_telemetry_when_frontend_is_VS()
-    {
-        await _parser.InvokeAsync(
-            """
-            [vs] stdio --working-dir D:\Notebooks --kernel-host 9628-5c7e913f-8966-4afe-8d37-cc863292a352
-            """,
-            _console);
-
-        _fakeTelemetrySender.TelemetryEvents.Should().Contain(
-            x => x.EventName == "command" &&
-                 x.Properties.Count == 3 &&
-                 x.Properties["verb"] == "STDIO".ToSha256Hash() &&
-                 x.Properties["frontend"] == "vs" &&
-                 x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
-    }
-
-    [Fact]
     public async Task githubCodeSpaces_is_a_valid_frontend_for_stdio()
     {
         Environment.SetEnvironmentVariable("CODESPACES", "true");
@@ -416,6 +399,67 @@ public class StartupTelemetryTests : IDisposable
         {
             await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
             _console.Out.ToString().Should().NotContain(TelemetrySender.WelcomeMessage);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(environmentVariableName, currentState);
+        }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task stdio_command_sends_frontend_telemetry_when_frontend_is_VS(
+        bool isSkipFirstTimeExperienceEnvironmentVariableSet, bool firstTimeExperienceSentinelExists)
+    {
+        var environmentVariableName = FirstTimeUseNoticeSentinel.SkipFirstTimeExperienceEnvironmentVariableName;
+        var currentState = Environment.GetEnvironmentVariable(environmentVariableName);
+        if (isSkipFirstTimeExperienceEnvironmentVariableSet)
+        {
+            Environment.SetEnvironmentVariable(environmentVariableName, "1");
+        }
+        else
+        {
+            Environment.SetEnvironmentVariable(environmentVariableName, null);
+        }
+
+        try
+        {
+            var telemetrySender =
+                new FakeTelemetrySender(
+                    new FakeFirstTimeUseNoticeSentinel
+                    {
+                        SentinelExists = firstTimeExperienceSentinelExists
+                    });
+
+            var parser = CommandLineParser.Create(
+                new ServiceCollection(),
+                startServer: (options, invocationContext) => { },
+                jupyter: (startupOptions, console, startServer, context) => Task.FromResult(1),
+                startKernelHost: (startupOptions, host, console) => Task.FromResult(1),
+                telemetrySender: telemetrySender);
+
+            await parser.InvokeAsync(
+                $"""
+                [vs] stdio --working-dir {Directory.GetCurrentDirectory()} --kernel-host 9628-5c7e913f-8966-4afe-8d37-cc863292a352
+                """,
+                _console);
+
+            if (isSkipFirstTimeExperienceEnvironmentVariableSet || firstTimeExperienceSentinelExists)
+            {
+                telemetrySender.TelemetryEvents.Should().Contain(
+                    x => x.EventName == "command" &&
+                         x.Properties.Count == 3 &&
+                         x.Properties["verb"] == "STDIO".ToSha256Hash() &&
+                         x.Properties["frontend"] == "vs" &&
+                         x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
+            }
+            else
+            {
+                telemetrySender.TelemetryEvents.Should().BeEmpty();
+            }
         }
         finally
         {
