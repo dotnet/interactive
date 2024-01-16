@@ -87,7 +87,7 @@ public class ConnectMsSqlCommand : ConnectKernelCommand
 #r ""nuget: Microsoft.EntityFrameworkCore.SqlServer, 7.0.13""
 #r ""nuget: Humanizer.Core, 2.14.1""
 #r ""nuget: Humanizer, 2.14.1""
-#r ""nuget: Microsoft.Identity.Client, 4.48.1""
+#r ""nuget: Microsoft.Identity.Client, 4.57.0""
 
             using System;
 using System.Reflection;
