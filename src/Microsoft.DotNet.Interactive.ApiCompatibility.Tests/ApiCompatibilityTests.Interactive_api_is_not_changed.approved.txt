@@ -446,8 +446,9 @@ Microsoft.DotNet.Interactive.Commands
     public System.String Name { get;}
     public System.Object Value { get;}
   public class SubmitCode : KernelCommand, System.IEquatable<KernelCommand>
-    .ctor(System.String code, System.String targetKernelName = null)
+    .ctor(System.String code, System.String targetKernelName = null, System.String[] mimeTypes = null)
     public System.String Code { get;}
+    public System.String[] MimeTypes { get;}
     public System.String ToString()
   public class UpdateDisplayedValue : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.String valueId)
