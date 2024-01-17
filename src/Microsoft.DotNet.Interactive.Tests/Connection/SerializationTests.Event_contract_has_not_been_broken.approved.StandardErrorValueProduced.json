@@ -14,6 +14,7 @@
     "token": "the-token",
     "commandType": "SubmitCode",
     "command": {
+      "mimeTypes": null,
       "code": "123",
       "targetKernelName": null,
       "originUri": null,

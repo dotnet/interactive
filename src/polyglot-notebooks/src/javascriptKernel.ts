@@ -59,9 +59,19 @@ export class JavascriptKernel extends Kernel {
             const evaluator = AsyncFunction("console", "polyglotNotebooks", code);
             result = await evaluator(this.capture, polyglotNotebooksApi);
             if (result !== undefined) {
-                const formattedValue = formatValue(result, 'application/json');
+                var formattedValues = [];
+                if (submitCode.mimeTypes && submitCode.mimeTypes.length > 0) {
+                    for (let mimeType of submitCode.mimeTypes) {
+                        const formattedValue = formatValue(result, mimeType);
+                        formattedValues.push(formattedValue);
+                    }
+                } else {
+                    const formattedValue = formatValue(result, 'application/json');
+                    formattedValues.push(formattedValue);
+                }
+
                 const event: commandsAndEvents.ReturnValueProduced = {
-                    formattedValues: [formattedValue]
+                    formattedValues: formattedValues
                 };
                 const returnValueProducedEvent = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.ReturnValueProducedType, event, invocation.commandEnvelope);
                 invocation.context.publish(returnValueProducedEvent);

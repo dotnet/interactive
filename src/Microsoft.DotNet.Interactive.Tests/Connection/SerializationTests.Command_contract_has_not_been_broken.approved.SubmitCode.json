@@ -2,6 +2,7 @@
   "token": "the-token",
   "commandType": "SubmitCode",
   "command": {
+    "mimeTypes": null,
     "code": "123",
     "targetKernelName": "csharp",
     "originUri": null,

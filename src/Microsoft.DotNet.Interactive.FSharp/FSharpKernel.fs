@@ -216,7 +216,7 @@ type FSharpKernel () as this =
                 match result with
                 | Some(value) when value.ReflectionType <> typeof<unit> ->
                     let value = value.ReflectionValue
-                    let formattedValues = FormattedValue.CreateManyFromObject(value)
+                    let formattedValues = FormattedValue.CreateManyFromObject(value, codeSubmission.MimeTypes)
                     context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
                 | Some _
                 | None -> ()

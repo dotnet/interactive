@@ -64,6 +64,8 @@ public class InterfaceGenerator
 
     private static readonly HashSet<string> OptionalFields = new()
     {
+        $"{nameof(SubmitCode)}.{nameof(SubmitCode.MimeTypes)}",
+
         $"{nameof(CompletionsProduced)}.{nameof(CompletionsProduced.LinePositionSpan)}",
         $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.ValueId)}",
         $"{nameof(DocumentOpened)}.{nameof(DocumentOpened.RegionName)}",
@@ -268,7 +270,7 @@ public class InterfaceGenerator
 
         var isOptional = nullabilityContext.ReadState == NullabilityState.Nullable ||
                          OptionalFields.Contains($"{type.Name}.{propertyInfo.Name}");
-
+        
         var propertyName = propertyInfo.Name.CamelCase();
         return isOptional
             ? propertyName + "?"

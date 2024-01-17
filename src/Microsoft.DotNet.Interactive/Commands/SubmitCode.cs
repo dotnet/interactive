@@ -10,11 +10,15 @@ public class SubmitCode : KernelCommand
 {
     public SubmitCode(
         string code,
-        string targetKernelName = null) : base(targetKernelName)
+        string targetKernelName = null,
+        string[] mimeTypes = null) : base(targetKernelName)
     {
         Code = code ?? throw new ArgumentNullException(nameof(code));
+        MimeTypes = mimeTypes;
     }
-      
+
+    public string[] MimeTypes { get; }
+
     internal SubmitCode(
         LanguageNode languageNode,
         KernelNameDirectiveNode kernelNameDirectiveNode = null)

@@ -5,6 +5,7 @@
     "token": "the-token",
     "commandType": "SubmitCode",
     "command": {
+      "mimeTypes": null,
       "code": "#r \"nuget:package\" ",
       "targetKernelName": null,
       "originUri": null,

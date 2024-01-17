@@ -128,6 +128,7 @@ export interface SendValue extends KernelCommand {
 
 export interface SubmitCode extends KernelCommand {
     code: string;
+    mimeTypes?: Array<string>;
 }
 
 export interface UpdateDisplayedValue extends KernelCommand {

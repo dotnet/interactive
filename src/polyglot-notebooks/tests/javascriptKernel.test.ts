@@ -237,6 +237,29 @@ return command.toJson();`
         expect(events.find(e => e.eventType === commandsAndEvents.ReturnValueProducedType)).to.not.be.undefined;
     });
 
+    it("emits ReturnValueProduced when evaluation return a value and honours mime types", async () => {
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{ code: "return 1+1;", mimeTypes: ["text/plain"] });
+
+        await kernel.send(submitCode);
+
+        const event = events.find(e => e.eventType === commandsAndEvents.ReturnValueProducedType)?.event as commandsAndEvents.ReturnValueProduced;
+        expect(event).to.not.be.undefined;
+        expect(event.formattedValues).to.deep.equal(
+            [
+                {
+                    mimeType: "text/plain",
+                    suppressDisplay: false,
+                    value: "2"
+                }
+            ]);
+    });
+
     it("handles async code", async () => {
         let events: commandsAndEvents.KernelEventEnvelope[] = [];
         const kernel = new JavascriptKernel();

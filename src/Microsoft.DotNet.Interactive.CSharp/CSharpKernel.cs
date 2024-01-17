@@ -336,7 +336,7 @@ public class CSharpKernel :
             {
                 if (ScriptState is not null && HasReturnValue)
                 {
-                    var formattedValues = FormattedValue.CreateManyFromObject(ScriptState.ReturnValue);
+                    var formattedValues = FormattedValue.CreateManyFromObject(ScriptState.ReturnValue, submitCode.MimeTypes);
                     context.Publish(
                         new ReturnValueProduced(
                             ScriptState.ReturnValue,

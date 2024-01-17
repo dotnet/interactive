@@ -865,6 +865,23 @@ $${languageSpecificCode}
             .Be(25);
     }
 
+    [Theory]
+    [InlineData(Language.CSharp, "20")]
+    [InlineData(Language.FSharp, "20")]
+    [InlineData(Language.CSharp, "new int[] {1,2,3}")]
+    [InlineData(Language.FSharp, "[|1;2;3|]")]
+    public async Task it_returns_a_result_with_specified_mimetype(Language language, string expression)
+    {
+        var kernel = CreateKernel(language);
+
+        var command = new SubmitCode(expression, mimeTypes: new []{JsonFormatter.MimeType});
+        await kernel.SendAsync(command);
+
+        var returnedValue =  KernelEvents.Should().ContainSingle<ReturnValueProduced>().Which;
+
+        returnedValue.FormattedValues.Should().ContainSingle(f => f.MimeType == JsonFormatter.MimeType);
+    }
+
 
     [Theory]
     [InlineData(Language.CSharp)]
