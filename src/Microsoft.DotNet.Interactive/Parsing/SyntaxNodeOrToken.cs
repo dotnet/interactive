@@ -47,6 +47,26 @@ internal abstract partial class SyntaxNodeOrToken
         _diagnostics.Add(d);
     }
 
+    public IEnumerable<SyntaxNodeOrToken> Ancestors()
+    {
+        var parent = Parent;
+        while (parent is not null)
+        {
+            yield return parent;
+            parent = parent.Parent;
+        }
+    }
+
+    public IEnumerable<SyntaxNodeOrToken> AncestorsAndSelf()
+    {
+        yield return this;
+
+        foreach (var ancestor in Ancestors())
+        {
+            yield return ancestor;
+        }
+    }
+
     public Microsoft.CodeAnalysis.Diagnostic CreateDiagnostic(DiagnosticInfo diagnosticInfo, Location? location = null)
     {
         if (location is null)

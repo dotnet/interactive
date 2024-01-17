@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
+using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
@@ -21,10 +23,34 @@ internal class DirectiveOptionNode : SyntaxNode
         AddInternal(node);
         OptionNameNode = node;
     }
-    
+
     public void Add(DirectiveArgumentNode node)
     {
         AddInternal(node);
         ArgumentNode = node;
+    }
+
+    public override IEnumerable<CodeAnalysis.Diagnostic> GetDiagnostics()
+    {
+        if (GetKernelScope() is { } targetKernelName)
+        {
+            if (SyntaxTree.ParserConfiguration.KernelInfos.TryGetValue(targetKernelName, out var kernelInfo))
+            {
+                if (kernelInfo.TryGetDirective(OptionNameNode.Text, out var directive))
+                {
+                    // FIX: (GetDiagnostics) 
+                }
+                else
+                {
+                    yield return CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.UnknownDirective,
+                            "Unknown option '{0}'",
+                            DiagnosticSeverity.Error,
+                            Text));
+                }
+            }
+        }
+
+        yield break;
     }
 }

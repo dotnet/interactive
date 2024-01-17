@@ -365,7 +365,7 @@ public class SerializationTests
                     Description = "executes C# code",
                     SupportedDirectives =
                     {
-                        new KernelDirectiveInfo("#r", false),
+                        new KernelActionDirective("#r"),
                     },
                     SupportedKernelCommands =
                     {

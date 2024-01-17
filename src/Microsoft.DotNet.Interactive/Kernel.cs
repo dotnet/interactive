@@ -108,7 +108,11 @@ public abstract partial class Kernel :
     {
         var kernelInfo = new KernelInfo(name);
 
-        var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name, d is ChooseKernelDirective)).ToArray();
+        var supportedDirectives = Directives.Select(d =>
+                                                        d is ChooseKernelDirective
+                                                            ? (KernelDirective)new KernelSpecifierDirective(d.Name)
+                                                            : (KernelDirective)new KernelActionDirective(d.Name))
+                                            .ToArray();
 
         foreach (var commandInfo in _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)))
         {
@@ -291,7 +295,9 @@ public abstract partial class Kernel :
     public void AddDirective(Command command)
     {
         SubmissionParser.AddDirective(command);
-        KernelInfo.SupportedDirectives.Add(new(command.Name, command is ChooseKernelDirective));
+        KernelInfo.SupportedDirectives.Add(command is ChooseKernelDirective
+                                               ? (KernelDirective)new KernelSpecifierDirective(command.Name)
+                                               : (KernelDirective)new KernelActionDirective(command.Name));
     }
 
     public void AddDirective(KernelActionDirective directive, KernelCommandInvocation handler)  

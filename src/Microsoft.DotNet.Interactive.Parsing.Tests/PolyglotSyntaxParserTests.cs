@@ -28,7 +28,7 @@ public partial class PolyglotSyntaxParserTests : IDisposable
 
     private static PolyglotSyntaxTree Parse(string code, string defaultLanguage = "csharp")
     {
-        var syntaxTree = PolyglotSyntaxParser.Parse(code, defaultLanguage, PolyglotParserConfigurationTests.GetDefaultConfiguration());
+        var syntaxTree = PolyglotSyntaxParser.Parse(code, PolyglotParserConfigurationTests.GetDefaultConfiguration(defaultLanguage));
 
         syntaxTree.RootNode.FullText.Should().Be(code);
 

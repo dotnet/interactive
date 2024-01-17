@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
@@ -31,12 +31,13 @@ let x = 123
             var tree = Parse(code, defaultLanguage);
 
             using var _ = new AssertionScope();
-            
-            foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
             {
-                var node = tree.RootNode.FindNode(position);
+                foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
+                {
+                    var node = tree.RootNode.FindNode(position);
 
-                node.Should().BeAssignableTo<DirectiveNameNode>();
+                    node.Should().BeAssignableTo<DirectiveNameNode>();
+                }
             }
         }
 

@@ -24,47 +24,57 @@ public class PolyglotParserConfigurationTests
         config.IsKernelSelectorDirective("#!F#").Should().BeTrue();
     }
 
-    internal static PolyglotParserConfiguration GetDefaultConfiguration() =>
-        new()
+    internal static PolyglotParserConfiguration GetDefaultConfiguration(string defaultKernelName = "") =>
+        new(defaultKernelName)
         {
             KernelInfos =
             {
                 [".NET"] = new KernelInfo(".NET", isComposite: true)
                 {
-                    SupportedDirectives = new[]
+                    SupportedDirectives =
                     {
-                        new KernelDirectiveInfo("#!sql", true),
-                        new("#!kql", true),
-                        new("#!csharp", true),
-                        new("#!fsharp", true),
-                        new("#!pwsh", true),
-                        new("#!html", true),
-                        new("#!value", true),
-                        new("#!mermaid", true),
-                        new("#!http", true),
-                        new("#!lsmagic", false),
-                        new("#!markdown", false),
-                        new("#!time", false),
-                        new("#!about", false),
-                        new("#!import", false),
-                        new("#!connect", false),
-                        new("#!javascript", true),
+                        new KernelActionDirective("#!sql"),
+                        new KernelSpecifierDirective("#!kql"),
+                        new KernelSpecifierDirective("#!csharp"),
+                        new KernelSpecifierDirective("#!fsharp"),
+                        new KernelSpecifierDirective("#!pwsh"),
+                        new KernelSpecifierDirective("#!html"),
+                        new KernelSpecifierDirective("#!value")
+                        {
+                        },
+                        new KernelSpecifierDirective("#!mermaid"),
+                        new KernelSpecifierDirective("#!http"),
+                        new KernelActionDirective("#!lsmagic"),
+                        new KernelActionDirective("#!markdown"),
+                        new KernelActionDirective("#!time"),
+                        new KernelActionDirective("#!about"),
+                        new KernelActionDirective("#!import")
+                        {
+                            new KernelDirectiveParameter("file")
+                        },
+                        new KernelActionDirective("#!connect")
+                        {
+                            new KernelActionDirective("stdio"),
+                            new KernelActionDirective("signalr"),
+                            new KernelActionDirective("jupyter"),
+                        },
+                        new KernelSpecifierDirective("#!javascript"),
                     }
                 },
                 ["csharp"] = new KernelInfo("csharp", new[] { "C#" })
                 {
                     SupportedDirectives = new[]
                     {
-                        new KernelDirectiveInfo("#i", false),
-                        new("#r", false)
+                        new KernelActionDirective("#i"),
+                        new KernelActionDirective("#r")
                     }
                 },
                 ["fsharp"] = new KernelInfo("fsharp", new[] { "F#" })
                 {
                     SupportedDirectives = new[]
                     {
-                        new KernelDirectiveInfo("#i", false),
-                        new("#r", false)
+                        new KernelActionDirective("#i"),
+                        new KernelActionDirective("#r")
                     }
                 },
                 ["pwsh"] = new KernelInfo("pwsh", new[] { "powershell" }),
