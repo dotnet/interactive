@@ -16,5 +16,5 @@ public class SupportedDirectives
 
     public string KernelName { get; }
 
-    public IReadOnlyList<Command> Commands { get; } = new List<Command>();
+    public IReadOnlyList<Command> Commands { get; }
 }

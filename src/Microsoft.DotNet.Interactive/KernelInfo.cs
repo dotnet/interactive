@@ -3,32 +3,18 @@
 
 #nullable enable
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive;
 
-public record KernelCommandInfo(string Name);
-
-public class KernelDirectiveInfo
-{
-    public KernelDirectiveInfo(string Name, bool IsKernelSpecifier)
-    {
-        this.Name = Name;
-        this.IsKernelSpecifier = IsKernelSpecifier;
-    }
-
-    public string Name { get; init; }
-
-    public bool IsKernelSpecifier { get; init; }
-
-}
-
 public class KernelInfo
 {
     private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
-    private readonly HashSet<KernelDirectiveInfo> _supportedDirectives = new();
+    private readonly DirectiveCollection _supportedDirectives = new();
     private string? _displayName;
 
     [JsonConstructor]
@@ -109,7 +95,7 @@ public class KernelInfo
         }
     }
 
-    public ICollection<KernelDirectiveInfo> SupportedDirectives
+    public ICollection<KernelDirective> SupportedDirectives
     {
         get => _supportedDirectives;
         init
@@ -119,14 +105,17 @@ public class KernelInfo
                 return;
             }
 
-            _supportedDirectives.UnionWith(value);
+            foreach (var directive in value)
+            {
+                // _supportedDirectives.Add(directive.Name, directive);
+            }
         }
     }
 
     public override string ToString() => LocalName +
                                          (Uri is { } uri
-                                             ? $" ({uri})"
-                                             : null);
+                                              ? $" ({uri})"
+                                              : null);
 
     internal HashSet<string> NameAndAliases { get; }
 
@@ -135,4 +124,57 @@ public class KernelInfo
 
     internal void UpdateSupportedKernelCommandsFrom(KernelInfo source) =>
         _supportedKernelCommands.UnionWith(source.SupportedKernelCommands);
+
+    internal bool TryGetDirective(string name, [MaybeNullWhen(false)]out KernelDirective directive)
+    {
+
+        directive = null;
+        return false;
+    }
+
+    private class DirectiveCollection : ICollection<KernelDirective>
+    {
+        private readonly List<KernelDirective> _directives = new();
+        private readonly Dictionary<string, KernelDirective> _directivesByName = new();
+
+        public IEnumerator<KernelDirective> GetEnumerator()
+        {
+            return _directives.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _directives.GetEnumerator();
+        }
+
+        public void Add(KernelDirective item)
+        {
+            _directivesByName.Add(item.Name, item);
+            _directives.Add(item);
+        }
+
+        public void Clear()
+        {
+            _directives.Clear();
+        }
+
+        public bool Contains(KernelDirective item)
+        {
+            return _directives.Contains(item);
+        }
+
+        public void CopyTo(KernelDirective[] array, int arrayIndex)
+        {
+            _directives.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(KernelDirective item)
+        {
+            return _directives.Remove(item);
+        }
+
+        public int Count => _directives.Count;
+
+        public bool IsReadOnly => false;
+    }
 }

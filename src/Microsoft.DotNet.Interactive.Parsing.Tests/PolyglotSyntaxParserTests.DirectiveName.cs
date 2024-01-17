@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Linq;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -12,37 +14,55 @@ namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
-    public class DirectiveOptions
+    public class DirectiveName
     {
-        [Fact]
-        public void Words_prefixed_with_hyphens_are_parsed_into_option_name_nodes()
+        [Theory]
+        [InlineData(@"
+[|#!|]", "fsharp")]
+        [InlineData(@"
+let x = 123
+[|#!abc|]", "fsharp")]
+        public void Incomplete_or_unknown_directive_node_is_parsed_as_directive_name_node(
+            string markupCode,
+            string defaultLanguage)
         {
-            var tree = Parse("#!directive --option");
+            MarkupTestFile.GetSpans(markupCode, out var code, out var spans);
 
-            var optionNode = tree.RootNode.DescendantNodesAndTokens()
-                                 .Should().ContainSingle<DirectiveOptionNode>()
-                                 .Which;
+            var tree = Parse(code, defaultLanguage);
 
-            optionNode.OptionNameNode.Text.Should().Be("--option");
+            using var _ = new AssertionScope();
+            {
+                foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
+                {
+                    var node = tree.RootNode.FindNode(position);
+
+                    node.Should().BeAssignableTo<DirectiveNameNode>();
+                }
+            }
         }
 
         [Fact]
-        public void Words_prefixed_with_hyphens_are_parsed_into_argument_nodes()
+        public void Shebang_after_the_end_of_a_line_is_not_a_node_delimiter()
         {
-            var tree = Parse("#!directive --option argument");
+            var code = "Console.WriteLine(\"Hello from C#!\");";
 
-            var argumentNode = tree.RootNode.DescendantNodesAndTokens()
-                                   .Should().ContainSingle<DirectiveArgumentNode>()
-                                   .Which;
+            var tree = Parse(code);
 
-            argumentNode.Text.Should().Be("argument");
+            tree.RootNode
+                .ChildNodes
+                .Should()
+                .ContainSingle<LanguageNode>()
+                .Which
+                .Text
+                .Should()
+                .Be(code);
         }
 
         [Fact]
-        public void Errors_for_unknown_options_are_available_as_diagnostics()
+        public void Errors_for_unknown_directives_are_available_as_diagnostics()
         {
             var markupCode = """
-            #!csharp [|--invalid-option|]
+            [|#!oops|]
             var x = 1;
             """;
 
@@ -62,8 +82,7 @@ public partial class PolyglotSyntaxParserTests
                              .Should()
                              .ContainSingle(d => d.Severity == DiagnosticSeverity.Error)
                              .Which;
-
-            diagnostic.GetMessage().Should().Be("Unknown option '--invalid-option'");
+            diagnostic.GetMessage().Should().Be("Unknown magic command '#!oops'");
 
             diagnostic
                 .Location

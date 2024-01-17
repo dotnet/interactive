@@ -7,12 +7,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
 internal class PolyglotSyntaxParser
 {
+   
     private readonly SourceText _sourceText;
     private readonly PolyglotParserConfiguration _configuration;
     private int _currentTokenIndex = 0;
@@ -22,10 +24,9 @@ internal class PolyglotSyntaxParser
 
     public static PolyglotSyntaxTree Parse(
         string code,
-        string defaultLanguage,
         PolyglotParserConfiguration configuration)
     {
-        var parser = new PolyglotSyntaxParser(SourceText.From(code), defaultLanguage, configuration);
+        var parser = new PolyglotSyntaxParser(SourceText.From(code), configuration);
 
         var tree = parser.Parse();
 
@@ -34,23 +35,17 @@ internal class PolyglotSyntaxParser
 
     internal PolyglotSyntaxParser(
         SourceText sourceText,
-        string? defaultLanguage,
         PolyglotParserConfiguration configuration)
     {
-        DefaultKernelName = defaultLanguage ?? "";
         _sourceText = sourceText;
         _configuration = configuration;
-        _syntaxTree = new(_sourceText, DefaultKernelName);
+        _syntaxTree = new(_sourceText, configuration);
     }
-
-    public string DefaultKernelName { get; }
 
     public PolyglotSyntaxTree Parse()
     {
-        _currentKernelName = DefaultKernelName;
+        _currentKernelName = _configuration.DefaultKernelName;
         _tokens = new PolyglotLexer(_sourceText, _syntaxTree).Lex();
-
-        List<TopLevelSyntaxNode> accumulated = new();
 
         while (MoreTokens())
         {
@@ -72,35 +67,13 @@ internal class PolyglotSyntaxParser
                                                           .First(t => t is { Kind: TokenKind.Word })
                                                           .Text;
                     }
+                }
 
-                    _syntaxTree.RootNode.Add(directiveNode);
-                }
-                else
-                {
-                    accumulated.Add(directiveNode);
-                }
+                _syntaxTree.RootNode.Add(directiveNode);
             }
             else if (ParseLanguageNode() is { } languageNode)
             {
-                if (accumulated.Count > 0)
-                {
-                    foreach (var node in Enumerable.Reverse(accumulated))
-                    {
-                        languageNode.Add(node, addBefore: true);
-                    }
-
-                    accumulated.Clear();
-                }
-
                 _syntaxTree.RootNode.Add(languageNode);
-            }
-        }
-
-        if (accumulated.Count > 0)
-        {
-            foreach (var node in Enumerable.Reverse(accumulated))
-            {
-                _syntaxTree.RootNode.Add(node);
             }
         }
 
@@ -138,6 +111,11 @@ internal class PolyglotSyntaxParser
                     if (ParseDirectiveOption() is { } optionNode)
                     {
                         directiveNode.Add(optionNode);
+
+                        if (!_configuration.IsOptionInScope(optionNode))
+                        {
+                            optionNode.AddDiagnostic(optionNode.CreateDiagnostic(new(ErrorCodes.UnknownOption, "Unrecognized option {0}", DiagnosticSeverity.Error)));
+                        }
                     }
                 }
                 else
@@ -590,5 +568,11 @@ internal class PolyglotSyntaxParser
 
             public override string ToString() => $"[{Start}..{End}]";
         }
+    }
+
+    internal static class ErrorCodes
+    {
+        public const string UnknownDirective = "DNI101";
+        public const string UnknownOption = "DNI103";
     }
 }

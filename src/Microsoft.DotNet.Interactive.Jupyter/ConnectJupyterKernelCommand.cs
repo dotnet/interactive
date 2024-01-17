@@ -18,8 +18,7 @@ public class ConnectJupyterKernelCommand : ConnectKernelCommand
     private readonly List<IJupyterKernelConnectionOptions> _connectionCreators = new();
     private KeyValuePair<int, IEnumerable<CompletionItem>> _mruKernelSpecSuggestions;
 
-    public ConnectJupyterKernelCommand() : base("jupyter",
-                                        "Connects to a jupyter kernel. This feature is in preview.")
+    public ConnectJupyterKernelCommand() : base("jupyter", "Connects a Jupyter kernel as a .NET Interactive subkernel.")
     {
         AddOption(KernelSpecName.AddCompletions(GetKernelSpecsCompletions));
         AddOption(InitScript);

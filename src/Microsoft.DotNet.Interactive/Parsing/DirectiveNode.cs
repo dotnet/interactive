@@ -42,6 +42,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
     {
         if (DirectiveParser is not null)
         {
+            // FIX: (GetDiagnostics) remove
             var parseResult = GetDirectiveParseResult();
 
             foreach (var error in parseResult.Errors)
@@ -54,15 +55,15 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 yield return CreateDiagnostic(descriptor);
             }
         }
-    }
-
-    internal bool IsCompilerDirective
-    {
-        get
+        else
         {
-            var sourceText = SourceText.GetSubText(Span);
-
-            return sourceText[1] != '!';
+            foreach (var node in ChildNodes)
+            {
+                foreach (var diagnostic in node.GetDiagnostics())
+                {
+                    yield return diagnostic;
+                }
+            }
         }
     }
 

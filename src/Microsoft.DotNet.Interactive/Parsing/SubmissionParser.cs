@@ -24,7 +24,6 @@ public class SubmissionParser
     private Parser _directiveParser;
     private RootCommand _rootCommand;
     private Dictionary<Type, string> _customInputTypeHints;
-    private PolyglotParserConfiguration _parserConfiguration;
 
     public SubmissionParser(Kernel kernel)
     {
@@ -33,14 +32,15 @@ public class SubmissionParser
 
     public IReadOnlyList<Command> Directives => _rootCommand?.Subcommands ?? Array.Empty<Command>();
 
-    internal PolyglotSyntaxTree Parse(string code, string language = null)
+    internal PolyglotSyntaxTree Parse(string code, string defaultKernelName = null)
     {
         var sourceText = SourceText.From(code);
 
+        var configuration = new PolyglotParserConfiguration(defaultKernelName ?? DefaultKernelName());
+
         var parser = new PolyglotSyntaxParser(
             sourceText,
-            language ?? DefaultKernelName(),
-            _parserConfiguration);
+            configuration);
 
         return parser.Parse();
     }
@@ -112,7 +112,7 @@ public class SubmissionParser
 
                         if (directiveNode is { Kind: DirectiveNodeKind.Action} adn)
                         {
-                            if (IsUnknownDirective(adn) && (adn.IsCompilerDirective || AcceptUnknownDirective(adn)))
+                            if (IsUnknownDirective(adn) && (IsCompilerDirective(adn) || AcceptUnknownDirective(adn)))
                             {
                                 accept = true;
                             }
@@ -301,8 +301,15 @@ public class SubmissionParser
             return false;
         }
 
-        static bool IsUnknownDirective(DirectiveNode adn) =>
-            adn.GetDirectiveParseResult().Errors.All(e => e.SymbolResult?.Symbol is RootCommand);
+        static bool IsUnknownDirective(DirectiveNode node) =>
+            node.GetDirectiveParseResult().Errors.All(e => e.SymbolResult?.Symbol is RootCommand);
+
+        static bool IsCompilerDirective(DirectiveNode node)
+        {
+            var sourceText = node.SourceText.GetSubText(node.Span);
+
+            return sourceText[1] != '!';
+        }
 
         bool AcceptUnknownDirective(DirectiveNode node)
         {
@@ -376,9 +383,6 @@ public class SubmissionParser
                         });
 
             _directiveParser = commandLineBuilder.Build();
-
-            // FIX: (GetDirectiveParser) 
-            _parserConfiguration = new();
         }
 
         return _directiveParser;

@@ -2,11 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -135,42 +133,6 @@ x
             .BeEquivalentTo(span);
     }
 
-    [Fact]
-    public void Directive_parsing_errors_are_available_as_diagnostics()
-    {
-        var tree = Parse("#!csharp --invalid-option\nvar x = 1;");
-
-        var node = tree.RootNode
-                       .ChildNodes
-                       .Should()
-                       .ContainSingle<DirectiveNode>()
-                       .Which;
-
-        IEnumerable<Diagnostic> diagnostics = node.GetDiagnostics();
-
-        diagnostics
-            .Should()
-            .ContainSingle(d => d.Severity == DiagnosticSeverity.Error)
-            .Which
-            .Location
-            .GetLineSpan()
-            .EndLinePosition
-            .Character
-            .Should()
-            .Be(node.Span.End);
-
-        diagnostics
-            .Should()
-            .ContainSingle(d => d.Severity == DiagnosticSeverity.Error)
-            .Which
-            .Location
-            .GetLineSpan()
-            .StartLinePosition
-            .Character
-            .Should()
-            .Be(node.Span.Start);
-    }
-
     [Theory]
     [InlineData(@"{|csharp:    |}", "csharp")]
     [InlineData(@"{|csharp: var x = abc|}", "csharp")]
@@ -258,53 +220,14 @@ let x =
         }
     }
 
-    [Theory]
-    [InlineData(@"
-[|#!|]", "fsharp")]
-    [InlineData(@"
-let x = 123
-[|#!abc|]", "fsharp")]
-    public void Incomplete_or_unknown_directive_node_is_recognized_as_a_directive_node(
-        string markupCode,
-        string defaultLanguage)
-    {
-        MarkupTestFile.GetSpans(markupCode, out var code, out var spans);
-
-        var tree = Parse(code, defaultLanguage);
-
-        using var _ = new AssertionScope();
-        {
-            foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
-            {
-                var node = tree.RootNode.FindNode(position);
-
-                node.Should().BeAssignableTo<DirectiveNameNode>();
-            }
-        }
-    }
-
-    [Fact]
-    public void Shebang_after_the_end_of_a_line_is_not_a_node_delimiter()
-    {
-        var code = "Console.WriteLine(\"Hello from C#!\");";
-
-        var tree = Parse(code);
-
-        tree.RootNode
-            .ChildNodes
-            .Should()
-            .ContainSingle<LanguageNode>()
-            .Which
-            .Text
-            .Should()
-            .Be(code);
-    }
 
     [Fact]
     public void root_node_span_always_expands_with_child_nodes()
     {
-        var code = @"#r ""path/to/file""
-// language line";
+        var code = """
+            #r "path/to/file"
+            // language line
+            """;
         var tree = Parse(code);
         var root = tree.RootNode;
         var rootSpan = root.Span;

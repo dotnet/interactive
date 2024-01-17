@@ -9,13 +9,13 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 
 internal class PolyglotSyntaxTree : SyntaxTree
 {
-    internal PolyglotSyntaxTree(SourceText sourceText, string defaultLanguage)
+    internal PolyglotSyntaxTree(SourceText sourceText, PolyglotParserConfiguration parserConfiguration)
     {
-        DefaultLanguage = defaultLanguage;
+        ParserConfiguration = parserConfiguration;
         RootNode = new PolyglotSubmissionNode(sourceText, this);
     }
 
-    public string DefaultLanguage { get; }
+    public PolyglotParserConfiguration ParserConfiguration { get; }
 
     public PolyglotSubmissionNode RootNode { get; }
 
