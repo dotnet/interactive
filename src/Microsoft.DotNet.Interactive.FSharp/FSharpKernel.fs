@@ -215,9 +215,13 @@ type FSharpKernel () as this =
             | Ok(result) when not isError ->
                 match result with
                 | Some(value) when value.ReflectionType <> typeof<unit> ->
-                    let value = value.ReflectionValue
-                    let formattedValues = FormattedValue.CreateManyFromObject(value)
-                    context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
+                    let resultValue = value.ReflectionValue
+                    let formattedValues : IReadOnlyList<FormattedValue> = 
+                        match resultValue with
+                        | :? FormattedValue as formattedValue -> Seq.singleton( formattedValue ).ToImmutableList()
+                        | :? IEnumerable<FormattedValue> as formattedValueEnumerable -> formattedValueEnumerable.ToImmutableList()
+                        | _ -> FormattedValue.CreateManyFromObject(resultValue)
+                    context.Publish(ReturnValueProduced(resultValue, codeSubmission, formattedValues))
                 | Some _
                 | None -> ()
             | _ ->

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.Linq;
@@ -863,6 +864,42 @@ $${languageSpecificCode}
             .Value
             .Should()
             .Be(25);
+    }
+
+    [Theory]
+    [InlineData(Language.CSharp, """
+                                 using Microsoft.DotNet.Interactive; 
+                                 FormattedValue.CreateSingleFromObject(1)
+                                 """)]
+    [InlineData(Language.FSharp, """
+                                 open Microsoft.DotNet.Interactive
+                                 FormattedValue.CreateSingleFromObject(1)
+                                 """)]
+                                
+    [InlineData(Language.CSharp, """
+                                 using Microsoft.DotNet.Interactive; 
+                                 FormattedValue.CreateManyFromObject(1, "text/plain","application/json")
+                                 """)]
+    [InlineData(Language.FSharp, """
+                                 open Microsoft.DotNet.Interactive
+                                 FormattedValue.CreateManyFromObject(1, "text/plain","application/json")
+                                 """)]
+                                 
+    public async Task it_returns_formattedValue_without_additional_formatting(Language language, string expression)
+    {
+        var kernel = CreateKernel(language);
+
+        await SubmitCode(kernel, expression);
+
+        var returnValueProduced = KernelEvents.Should().ContainSingle<ReturnValueProduced>().Which;
+
+        var returnedValues = returnValueProduced.Value switch
+        {
+            IEnumerable<FormattedValue> formattedValues => formattedValues,
+            FormattedValue formattedValue => new[] { formattedValue },
+            _ => throw new InvalidOperationException()
+        };
+        returnValueProduced.FormattedValues.Should().BeEquivalentTo(returnedValues);
     }
 
 
