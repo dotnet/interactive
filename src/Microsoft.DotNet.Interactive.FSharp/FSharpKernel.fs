@@ -218,8 +218,8 @@ type FSharpKernel () as this =
                     let resultValue = value.ReflectionValue
                     let formattedValues : IReadOnlyList<FormattedValue> = 
                         match resultValue with
-                        | :? FormattedValue as formattedValue -> new List<FormattedValue>([| formattedValue |])
-                        | :? IEnumerable<FormattedValue> as formattedValues -> formattedValues.ToImmutableList()
+                        | :? FormattedValue as formattedValue -> Seq.singleton( formattedValue ).ToImmutableList()
+                        | :? IEnumerable<FormattedValue> as formattedValueEnumerable -> formattedValueEnumerable.ToImmutableList()
                         | _ -> FormattedValue.CreateManyFromObject(resultValue)
                     context.Publish(ReturnValueProduced(resultValue, codeSubmission, formattedValues))
                 | Some _
