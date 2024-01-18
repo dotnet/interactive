@@ -126,8 +126,6 @@ namespace Microsoft.DotNet.Interactive.Tests
                 LanguageName = csharpKernelInfo.LanguageName,
                 LanguageVersion = csharpKernelInfo.LanguageVersion,
                 RemoteUri = csharpKernelInfo.Uri,
-                SupportedDirectives = csharpKernelInfo.SupportedDirectives,
-                SupportedKernelCommands = csharpKernelInfo.SupportedKernelCommands,
                 Description = """
                               This Kernel can compile and execute C# code and display the results.
                               The language is C# Scripting, a dialect of C# that is used for interactive programming.
@@ -135,6 +133,15 @@ namespace Microsoft.DotNet.Interactive.Tests
                               Can load packages from nuget.org or any other nuget feed.
                               """
             };
+
+            foreach (var directive in csharpKernelInfo.SupportedDirectives)
+            {
+                expectedCSharpKernelInfo.SupportedDirectives.Add(directive);
+            }
+            foreach (var command in csharpKernelInfo.SupportedKernelCommands)
+            {
+                expectedCSharpKernelInfo.SupportedKernelCommands.Add(command);
+            }
 
             var fsharpKernelInfo = kernelInfos.Should().ContainSingle(i => i.LanguageName == "F#").Which;
             using var fsharpProxyKernel = await connector.CreateProxyKernelAsync(remoteInfo: fsharpKernelInfo, localNameOverride: "fsharp2");
@@ -145,14 +152,21 @@ namespace Microsoft.DotNet.Interactive.Tests
                 LanguageName = fsharpKernelInfo.LanguageName,
                 LanguageVersion = fsharpKernelInfo.LanguageVersion,
                 RemoteUri = fsharpKernelInfo.Uri,
-                SupportedDirectives = fsharpKernelInfo.SupportedDirectives,
-                SupportedKernelCommands = fsharpKernelInfo.SupportedKernelCommands,
                 Description = """
                               This Kernel can compile and execute F# code and display the results.
                               
                               Can load packages from nuget.org or any other nuget feed.
                               """
             };
+
+            foreach (var directive in fsharpKernelInfo.SupportedDirectives)
+            {
+                expectedFSharpKernelInfo.SupportedDirectives.Add(directive);
+            }
+            foreach (var command in fsharpKernelInfo.SupportedKernelCommands)
+            {
+                expectedFSharpKernelInfo.SupportedKernelCommands.Add(command);
+            }
 
             csharpProxyKernel.Name.Should().Be(csharpKernelInfo.LocalName);
             csharpProxyKernel.KernelInfo.Should().BeEquivalentTo(expectedCSharpKernelInfo);

@@ -108,4 +108,9 @@ internal class DirectiveNode : TopLevelSyntaxNode
     {
         AddInternal(node);
     }
+
+    public void Add(DirectiveSubcommandNode node)
+    {
+        AddInternal(node);
+    }
 }

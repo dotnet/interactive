@@ -31,13 +31,12 @@ let x = 123
             var tree = Parse(code, defaultLanguage);
 
             using var _ = new AssertionScope();
+            
+            foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
             {
-                foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
-                {
-                    var node = tree.RootNode.FindNode(position);
+                var node = tree.RootNode.FindNode(position);
 
-                    node.Should().BeAssignableTo<DirectiveNameNode>();
-                }
+                node.Should().BeAssignableTo<DirectiveNameNode>();
             }
         }
 

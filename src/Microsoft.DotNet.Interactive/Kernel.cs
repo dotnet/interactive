@@ -104,19 +104,21 @@ public abstract partial class Kernel :
 
     private KernelInfo InitializeKernelInfo(string name)
     {
-        var supportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray();
+        var kernelInfo = new KernelInfo(name);
 
-        var supportedDirectives = Directives.Select(d =>
-                                                        d is ChooseKernelDirective
-                                                            ? (KernelDirective)new KernelSpecifierDirective(d.Name)
-                                                            : (KernelDirective)new KernelActionDirective(d.Name))
-                                            .ToArray();
-
-        return new KernelInfo(name, aliases: null)
+        foreach (var directive in Directives)
         {
-            SupportedKernelCommands = supportedKernelCommands,
-            SupportedDirectives = supportedDirectives,
-        };
+            kernelInfo.SupportedDirectives.Add(directive is ChooseKernelDirective
+                                                   ? new KernelSpecifierDirective(directive.Name)
+                                                   : new KernelActionDirective(directive.Name));
+        }
+
+        foreach (var command in _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)))
+        {
+            kernelInfo.SupportedKernelCommands.Add(command);
+        }
+
+        return kernelInfo;
     }
 
     internal KernelCommandPipeline Pipeline { get; }

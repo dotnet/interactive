@@ -14,7 +14,6 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 
 internal class PolyglotSyntaxParser
 {
-   
     private readonly SourceText _sourceText;
     private readonly PolyglotParserConfiguration _configuration;
     private int _currentTokenIndex = 0;
@@ -92,6 +91,16 @@ internal class PolyglotSyntaxParser
 
             var consumeTrailingWhitespace = false;
 
+            KernelDirective? currentlyScopedDirective = null;
+
+            if (_configuration.KernelInfos.TryGetValue(_currentKernelName, out var kernelInfo))
+            {
+                if (kernelInfo.TryGetDirective(directiveNode.Text, out var directive))
+                {
+                    currentlyScopedDirective = directive;
+                }
+            }
+
             while (MoreTokens())
             {
                 if (CurrentToken is null)
@@ -120,7 +129,16 @@ internal class PolyglotSyntaxParser
                 }
                 else
                 {
-                    if (ParseDirectiveArgument() is { } argumentNode)
+                    if (CurrentToken is { Kind: TokenKind.Word } word &&
+                        currentlyScopedDirective is KernelActionDirective actionDirective &&
+                        actionDirective.TryGetSubcommand(word.Text, out var subcommand))
+                    {
+                        currentlyScopedDirective = subcommand;
+                        var subcommandNode = new DirectiveSubcommandNode(_sourceText, _syntaxTree);
+                        ConsumeCurrentTokenInto(subcommandNode);
+                        directiveNode.Add(subcommandNode);
+                    }
+                    else if (ParseDirectiveArgument() is { } argumentNode)
                     {
                         directiveNode.Add(argumentNode);
                     }
@@ -215,7 +233,7 @@ internal class PolyglotSyntaxParser
                     ConsumeCurrentTokenInto(optionNameNode!);
                 }
 
-                if (optionNode is not null && 
+                if (optionNode is not null &&
                     optionNameNode is not null)
                 {
                     ParseTrailingWhitespace(optionNameNode, stopBeforeNewLine: true);
@@ -350,7 +368,7 @@ internal class PolyglotSyntaxParser
             AdvanceToNextToken();
         }
     }
-    
+
     private bool AllowsValueSharingByInterpolation(DirectiveNode directiveNode) =>
         directiveNode.Text != "set";
 

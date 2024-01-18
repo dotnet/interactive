@@ -197,7 +197,7 @@ internal class HttpRequestParser
 
                 while (MoreTokens())
                 {
-                    if (CurrentToken is { Text: "@" } or { Kind: HttpTokenKind.Word } or { Text: "_" })
+                    if (CurrentToken is { Text: "@" } or { Kind: TokenKind.Word } or { Text: "_" })
                     {
                         ConsumeCurrentTokenInto(node);
                     }

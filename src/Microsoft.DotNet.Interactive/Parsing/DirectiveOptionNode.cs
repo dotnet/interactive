@@ -8,6 +8,15 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
+internal class DirectiveSubcommandNode : SyntaxNode
+{
+    // FIX: (DirectiveSubcommandNode) separate file
+
+    internal DirectiveSubcommandNode(SourceText sourceText, SyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    {
+    }
+}
+
 internal class DirectiveOptionNode : SyntaxNode
 {
     internal DirectiveOptionNode(SourceText sourceText, SyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
@@ -50,7 +59,5 @@ internal class DirectiveOptionNode : SyntaxNode
                 }
             }
         }
-
-        yield break;
     }
 }

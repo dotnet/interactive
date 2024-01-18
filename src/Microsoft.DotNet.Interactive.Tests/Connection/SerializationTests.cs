@@ -323,7 +323,7 @@ public class SerializationTests
                 {
                     LanguageName = "JavaScript",
                     Uri = new Uri("kernel://vscode/javascript"),
-                    SupportedKernelCommands = new[]
+                    SupportedKernelCommands =
                     {
                         new KernelCommandInfo(nameof(SubmitCode))
                     }
@@ -339,7 +339,7 @@ public class SerializationTests
                 {
                     LanguageName = "JavaScript",
                     Uri = new Uri("kernel://vscode/javascript"),
-                    SupportedKernelCommands = new[]
+                    SupportedKernelCommands =
                     {
                         new KernelCommandInfo(nameof(SubmitCode))
                     }
@@ -349,11 +349,11 @@ public class SerializationTests
                     LanguageName = "CSharp",
                     Uri = new Uri("kernel://pid/csharp"),
                     Description = "executes C# code",
-                    SupportedDirectives = new[]
+                    SupportedDirectives =
                     {
-                        new KernelActionDirective("#r"),
+                        new KernelActionDirective("#r")
                     },
-                    SupportedKernelCommands = new[]
+                    SupportedKernelCommands =
                     {
                         new KernelCommandInfo(nameof(SubmitCode))
                     }
