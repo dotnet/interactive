@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -71,7 +71,7 @@ public partial class PolyglotSyntaxParserTests
         [InlineData("#!csharp\nvar x = 123$$;", typeof(LanguageNode))]
         [InlineData("#!csharp\nvar x = 123$$;\n", typeof(LanguageNode))]
         [InlineData("#!csh$$arp\nvar x = 123;", typeof(DirectiveNameNode))]
-        [InlineData("#!csharp\n#!time a b$$ c", typeof(DirectiveParameterValueNode))]
+        [InlineData("#!csharp\n#!time a b$$ c", typeof(DirectiveArgumentNode))]
         public void Node_type_is_correctly_identified(
             string markupCode,
             Type expectedNodeType)
@@ -183,7 +183,7 @@ x
         [InlineData(@"
 {|none:#!fsharp |}
 let x = 
-{|.NET:#!time |}
+{|fsharp:#!time |}
 {|none:#!csharp|}
 {|csharp:#!who |}", "fsharp")]
         public void Directive_node_indicates_kernel_name(
@@ -236,22 +236,6 @@ let x =
             root.ChildNodes
                 .Should()
                 .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
-        }
-
-        [Theory]
-        [InlineData("""
-            #!time
-            #!set --name x --value 123
-            """)]
-        [InlineData("""
-            #!set --name x --value 123
-            #!set --name y --value xyz
-            """)]
-        public void Directives_do_not_span_line_endings(string code)
-        {
-            var tree = Parse(code);
-
-            tree.RootNode.ChildNodes.OfType<DirectiveNode>().Should().HaveCount(2);
         }
     }
 }

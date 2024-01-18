@@ -4,7 +4,6 @@
 using System;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.CodeAnalysis;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
@@ -34,8 +33,13 @@ public partial class PolyglotSyntaxParserTests : IDisposable
 
         return syntaxTree;
     }
+    
+    private static PolyglotSyntaxTree Parse(string code, PolyglotParserConfiguration configuration)
+    {
+        var syntaxTree = PolyglotSyntaxParser.Parse(code, configuration);
 
+        syntaxTree.RootNode.FullText.Should().Be(code);
 
-    private static DiagnosticInfo CreateDiagnosticInfo(string message) =>
-        new(id: "DNI0000", message, DiagnosticSeverity.Error);
+        return syntaxTree;
+    }
 }

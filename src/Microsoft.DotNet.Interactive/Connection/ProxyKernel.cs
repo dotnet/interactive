@@ -270,18 +270,7 @@ public sealed class ProxyKernel : Kernel
         KernelInfo.LanguageName = kernelInfo.LanguageName;
         KernelInfo.LanguageVersion = kernelInfo.LanguageVersion;
         KernelInfo.UpdateSupportedKernelCommandsFrom(kernelInfo);
-
-        var existingDirectives = KernelInfo.SupportedDirectives;
-        var incomingDirectives = kernelInfo.SupportedDirectives;
-
-        foreach (var incomingDirective in incomingDirectives)
-        {
-            if (!existingDirectives.Contains(incomingDirective))
-            {
-                existingDirectives.Add(incomingDirective);
-            }
-        }
-
+        ((HashSet<KernelDirective>)KernelInfo.SupportedDirectives).UnionWith(kernelInfo.SupportedDirectives);
         if (!string.IsNullOrWhiteSpace(kernelInfo.Description))
         {
             KernelInfo.Description = kernelInfo.Description;

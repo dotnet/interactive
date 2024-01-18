@@ -39,9 +39,7 @@ public class PolyglotParserConfigurationTests
                         new KernelSpecifierDirective("#!fsharp"),
                         new KernelSpecifierDirective("#!pwsh"),
                         new KernelSpecifierDirective("#!html"),
-                        new KernelSpecifierDirective("#!value")
-                        {
-                        },
+                        new KernelSpecifierDirective("#!value"),
                         new KernelSpecifierDirective("#!mermaid"),
                         new KernelSpecifierDirective("#!http"),
                         new KernelActionDirective("#!lsmagic"),
@@ -50,20 +48,26 @@ public class PolyglotParserConfigurationTests
                         new KernelActionDirective("#!about"),
                         new KernelActionDirective("#!import")
                         {
-                            new KernelDirectiveParameter("file")
+                            Parameters =
+                            {
+                                new KernelDirectiveParameter("file")
+                            }
                         },
                         new KernelActionDirective("#!connect")
                         {
-                            new KernelActionDirective("stdio"),
-                            new KernelActionDirective("signalr"),
-                            new KernelActionDirective("jupyter"),
+                            Subcommands =
+                            {
+                                new KernelActionDirective("stdio"),
+                                new KernelActionDirective("signalr"),
+                                new KernelActionDirective("jupyter"),
+                            }
                         },
                         new KernelSpecifierDirective("#!javascript"),
                     }
                 },
                 ["csharp"] = new KernelInfo("csharp", new[] { "C#" })
                 {
-                    SupportedDirectives = new[]
+                    SupportedDirectives =
                     {
                         new KernelActionDirective("#i"),
                         new KernelActionDirective("#r")
@@ -71,7 +75,7 @@ public class PolyglotParserConfigurationTests
                 },
                 ["fsharp"] = new KernelInfo("fsharp", new[] { "F#" })
                 {
-                    SupportedDirectives = new[]
+                    SupportedDirectives =
                     {
                         new KernelActionDirective("#i"),
                         new KernelActionDirective("#r")
