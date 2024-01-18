@@ -336,7 +336,12 @@ public class CSharpKernel :
             {
                 if (ScriptState is not null && HasReturnValue)
                 {
-                    var formattedValues = FormattedValue.CreateManyFromObject(ScriptState.ReturnValue);
+                    IReadOnlyList<FormattedValue> formattedValues = ScriptState.ReturnValue switch
+                    {
+                        FormattedValue formattedValue => new[] { formattedValue },
+                        IEnumerable<FormattedValue> formattedValueEnumerable => formattedValueEnumerable.ToArray(),
+                        _ => FormattedValue.CreateManyFromObject(ScriptState.ReturnValue)
+                    };
                     context.Publish(
                         new ReturnValueProduced(
                             ScriptState.ReturnValue,
