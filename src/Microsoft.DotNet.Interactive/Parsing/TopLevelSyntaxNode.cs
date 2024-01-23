@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 
 internal abstract class TopLevelSyntaxNode : SyntaxNode
 {
-    internal TopLevelSyntaxNode(string targetKernelName, SourceText sourceText, SyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal TopLevelSyntaxNode(string targetKernelName, SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
         TargetKernelName = targetKernelName;
         CommandScope = targetKernelName; // FIX: (TopLevelSyntaxNode) are these concepts redundant at this level?

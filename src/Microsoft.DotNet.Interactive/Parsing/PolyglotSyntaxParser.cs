@@ -117,13 +117,13 @@ internal class PolyglotSyntaxParser
 
                 if (IsAtStartOfOption())
                 {
-                    if (ParseDirectiveOption() is { } optionNode)
+                    if (ParseDirectiveOption() is { } namedParameterNode)
                     {
-                        directiveNode.Add(optionNode);
+                        directiveNode.Add(namedParameterNode);
 
-                        if (!_configuration.IsOptionInScope(optionNode))
+                        if (!_configuration.IsOptionInScope(namedParameterNode))
                         {
-                            optionNode.AddDiagnostic(optionNode.CreateDiagnostic(new(ErrorCodes.UnknownOption, "Unrecognized option {0}", DiagnosticSeverity.Error)));
+                            namedParameterNode.AddDiagnostic(namedParameterNode.CreateDiagnostic(new(ErrorCodes.UnknownNamedParameter, "Unrecognized named parameter {0}", DiagnosticSeverity.Error)));
                         }
                     }
                 }
@@ -175,11 +175,11 @@ internal class PolyglotSyntaxParser
             return ParseTrailingWhitespace(directiveNameNode, stopBeforeNewLine: true);
         }
 
-        DirectiveArgumentNode? ParseDirectiveArgument()
+        DirectiveParameterNode? ParseDirectiveArgument()
         {
             var withinQuotes = false;
 
-            DirectiveArgumentNode? argumentNode = null;
+            DirectiveParameterNode? argumentNode = null;
 
             while (MoreTokens())
             {
@@ -194,7 +194,7 @@ internal class PolyglotSyntaxParser
                     break;
                 }
 
-                argumentNode ??= new DirectiveArgumentNode(_sourceText, _syntaxTree);
+                argumentNode ??= new DirectiveParameterNode(_sourceText, _syntaxTree);
 
                 ConsumeCurrentTokenInto(argumentNode);
             }
@@ -209,10 +209,10 @@ internal class PolyglotSyntaxParser
             }
         }
 
-        DirectiveOptionNode? ParseDirectiveOption()
+        DirectiveNamedParameterNode? ParseDirectiveOption()
         {
-            DirectiveOptionNode? optionNode = null;
-            DirectiveOptionNameNode? optionNameNode = null;
+            DirectiveNamedParameterNode? optionNode = null;
+            DirectiveParameterNameNode? optionNameNode = null;
 
             if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "-" } ||
                 CurrentTokenPlus(-1) is { Kind: TokenKind.Whitespace })
@@ -226,8 +226,8 @@ internal class PolyglotSyntaxParser
 
                     if (optionNode is null)
                     {
-                        optionNode = new DirectiveOptionNode(_sourceText, _syntaxTree);
-                        optionNameNode = new DirectiveOptionNameNode(_sourceText, _syntaxTree);
+                        optionNode = new DirectiveNamedParameterNode(_sourceText, _syntaxTree);
+                        optionNameNode = new DirectiveParameterNameNode(_sourceText, _syntaxTree);
                     }
 
                     ConsumeCurrentTokenInto(optionNameNode!);
@@ -591,6 +591,8 @@ internal class PolyglotSyntaxParser
     internal static class ErrorCodes
     {
         public const string UnknownDirective = "DNI101";
-        public const string UnknownOption = "DNI103";
+        public const string UnknownNamedParameter = "DNI103";
+        public const string MissingRequiredNamedParameter = "DNI104";
+        public const string TooManyOccurrencesOfNamedParameter = "DNI105";
     }
 }

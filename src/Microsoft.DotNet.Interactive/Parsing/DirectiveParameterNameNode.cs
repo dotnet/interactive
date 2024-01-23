@@ -2,20 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
-
-using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-[DebuggerStepThrough]
-internal class DirectiveArgsNode : SyntaxNode
+internal class DirectiveParameterNameNode : SyntaxNode
 {
-    internal DirectiveArgsNode(
-        SourceText text,
-        PolyglotSyntaxTree? syntaxTree) : base(text, syntaxTree)
+    internal DirectiveParameterNameNode(SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
-
-    public override bool IsSignificant => true;
 }

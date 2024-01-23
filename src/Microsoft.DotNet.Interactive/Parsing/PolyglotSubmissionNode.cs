@@ -13,7 +13,7 @@ internal class PolyglotSubmissionNode : SyntaxNode
 {
     internal PolyglotSubmissionNode(
         SourceText sourceText,
-        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        PolyglotSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 

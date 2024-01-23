@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -23,6 +24,8 @@ internal class DirectiveNode : TopLevelSyntaxNode
     }
 
     internal bool AllowValueSharingByInterpolation { get; set; }
+
+    public DirectiveNameNode? DirectiveNameNode { get; private set; }
 
     internal Parser? DirectiveParser { get; set; }
 
@@ -64,10 +67,32 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     yield return diagnostic;
                 }
             }
+
+            if (GetKernelInfo() is { } kernelInfo &&
+                DirectiveNameNode is { Text: { } name } &&
+                kernelInfo.TryGetDirective(name, out var directive) &&
+                directive is KernelActionDirective actionDirective)
+            {
+                foreach (var namedParameter in actionDirective.NamedParameters)
+                {
+                    if (namedParameter.Required)
+                    {
+                        var matchingNodes = ChildNodes.OfType<DirectiveNamedParameterNode>()
+                                                      .Where(p => p.NameNode?.Text == namedParameter.Name);
+
+                        if (!matchingNodes.Any())
+                        {
+                            yield return CreateDiagnostic(
+                                new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredNamedParameter,
+                                    "Missing required named parameter '{0}'",
+                                    DiagnosticSeverity.Error,
+                                    namedParameter.Name));
+                        }
+                    }
+                }
+            }
         }
     }
-
-    public DirectiveNameNode? DirectiveNameNode { get; private set; }
 
     internal int GetLine()
     {
@@ -99,12 +124,12 @@ internal class DirectiveNode : TopLevelSyntaxNode
         AddInternal(node);
     }
 
-    public void Add(DirectiveArgumentNode node)
+    public void Add(DirectiveParameterNode node)
     {
         AddInternal(node);
     }
 
-    public void Add(DirectiveOptionNode node)
+    public void Add(DirectiveNamedParameterNode node)
     {
         AddInternal(node);
     }

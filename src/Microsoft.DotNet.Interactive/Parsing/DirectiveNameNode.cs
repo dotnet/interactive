@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 
 internal class DirectiveNameNode : SyntaxNode
 {
-    internal DirectiveNameNode(SourceText sourceText, SyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal DirectiveNameNode(SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 

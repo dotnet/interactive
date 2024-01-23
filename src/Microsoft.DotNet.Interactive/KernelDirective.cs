@@ -23,39 +23,27 @@ public class KernelSpecifierDirective : KernelDirective
     public KernelSpecifierDirective(string name) : base(name)
     {
     }
-
-    public string Name { get; init; }
 }
 
 public class KernelActionDirective : KernelDirective
 {
     private readonly NamedSymbolCollection<KernelDirectiveNamedParameter> _namedParameters = new(directive => directive.Name);
     private readonly NamedSymbolCollection<KernelActionDirective> _subcommands = new(directive => directive.Name);
-    private readonly List<KernelDirectiveParameter> _parameters = new();
+    private readonly NamedSymbolCollection<KernelDirectiveParameter> _parameters = new(parameter => parameter.Name);
 
     public KernelActionDirective(string name) : base(name)
     {
     }
-
-    public void Add(KernelActionDirective command)
-    {
-    }
-
-    public void Add(KernelDirectiveNamedParameter parameter)
-    {
-    }
-
-    public void Add(KernelDirectiveParameter parameter)
-    {
-    }
-
+    
     public ICollection<KernelDirectiveNamedParameter> NamedParameters => _namedParameters;
 
     public ICollection<KernelActionDirective> Subcommands => _subcommands;
 
-    public IList<KernelDirectiveParameter> Parameters => _parameters;
+    public ICollection<KernelDirectiveParameter> Parameters => _parameters;
 
     internal bool TryGetNamedParameter(string name, out KernelDirectiveNamedParameter value) => _namedParameters.TryGetValue(name, out value);
+
+    internal bool TryGetParameter(string name, out KernelDirectiveParameter value) => _parameters.TryGetValue(name, out value);
 
     internal bool TryGetSubcommand(string name, out KernelActionDirective value) => _subcommands.TryGetValue(name, out value);
 }
@@ -68,6 +56,10 @@ public class KernelDirectiveNamedParameter
     }
 
     public string Name { get; }
+    
+    public int MaxOccurrences { get; set; } = 1;
+
+    public bool Required { get; set; } = false;
 }
 
 public class KernelDirectiveParameter
@@ -78,6 +70,8 @@ public class KernelDirectiveParameter
     }
 
     public string Name { get; }
+
+    public int MaxOccurrences { get; set; } = 1;
 }
 
 internal class NamedSymbolCollection<T> : ICollection<T>
