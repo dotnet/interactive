@@ -321,6 +321,70 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task can_bind_guid()
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments HTTP/1.1
+            Content-Type: application/xml
+
+            {
+                "request_id": "{{$guid}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+    }
+
+
+    [Fact]
+    public async Task several_system_variables_in_single_request()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments HTTP/1.1
+            Content-Type: application/xml
+            
+            {
+                "request_id": "{{$guid}}",
+                "updated_at": "{{$timestamp}}",
+                "created_at": "{{$timestamp -1 d}}",
+                "review_count": "{{$randomInt 5 200}}",
+                "custom_date": "{{$datetime 'YYYY-MM-DD'}}",
+                "local_custom_date": "{{$localDatetime 'YYYY-MM-DD'}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+    }
+
+    [Fact]
     public async Task url_in_embedded_expression_is_valid()
     {
         HttpRequestMessage request = null;

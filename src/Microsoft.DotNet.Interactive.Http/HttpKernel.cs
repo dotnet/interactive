@@ -3,9 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -316,8 +319,198 @@ public class HttpKernel :
         if (_variables.TryGetValue(expression, out var value))
         {
             return node.CreateBindingSuccess(value);
+        } else if(MatchExpressionValue(expression, out var expressionResolution))
+        {
+            return node.CreateBindingSuccess(expressionResolution);
         }
 
         return node.CreateBindingFailure(HttpDiagnostics.CannotResolveSymbol(variableName));
     }
+
+    private bool MatchExpressionValue(string expression, out object expressionResolution)
+    {
+        expressionResolution = null;
+
+        var guidPattern = new Regex(@$"\{"$guid"}", RegexOptions.Compiled);
+        var dateTimePattern = new Regex(@$"\{"$datetime"}\s(?<type>rfc1123|iso8601|'.+'|"".+"")(?:\s(?<offset>-?\d+)\s(?<option>y|M|Q|w|d|h|m|s|ms))?", RegexOptions.Compiled);
+        var localDateTimePattern = new Regex(@$"\{"$localDatetime"}\s(?<type>rfc1123|iso8601|'.+'|"".+"")(?:\s(?<offset>-?\d+)\s(?<option>y|M|Q|w|d|h|m|s|ms))?", RegexOptions.Compiled);
+        var randomIntPattern = new Regex(@$"\{"$randomInt"}(?:\s(?<parameters>-?\d+)){{0,2}}", RegexOptions.Compiled);
+        var timestampPattern = new Regex(@$"\{"$timestamp"}(?:\s(?<offset>-?\d+)\s(?<option>y|M|Q|w|d|h|m|s|ms))?", RegexOptions.Compiled);
+
+        var guidMatches = guidPattern.Matches(expression);
+        var dateTimeMatches = dateTimePattern.Matches(expression);
+        var localDateTimeMatches = localDateTimePattern.Matches(expression);
+        var randomIntMatches = randomIntPattern.Matches(expression);
+        var timestampMatches = timestampPattern.Matches(expression);
+
+        if (guidMatches.Count > 0)
+        {
+            expressionResolution = Guid.NewGuid().ToString();
+            return true;
+        } else if(dateTimeMatches.Count > 0)
+        {
+            expressionResolution = ParseDateTime(expression, dateTimeMatches, dateTimePattern);
+            return true;
+        } else if(localDateTimeMatches.Count > 0)
+        {
+            expressionResolution = ParseDateTime(expression, localDateTimeMatches, localDateTimePattern);
+            return true;
+        } else if(randomIntMatches.Count > 0)
+        {
+            expressionResolution = ParseRandInt(expression, randomIntMatches);
+            return true;
+        }else if(timestampMatches.Count > 0)
+        {
+            expressionResolution = ParseTimestamp(expression, timestampMatches);
+            return true;
+        }
+        return false;
+    }
+
+    protected string ParseTimestamp(string expression, MatchCollection matches)
+    {
+        var text = expression;
+        var currentDateTimeOffset = DateTimeOffset.UtcNow;
+        for (int i = matches.Count - 1; i >= 0; i--)
+        {
+            DateTimeOffset dateTimeOffset = currentDateTimeOffset;
+            Match match = matches[i];
+            if (match.Groups.Count == 3)
+            {
+                try
+                {
+                    if (match.Groups["offset"].Success && match.Groups["option"].Success
+                        && int.TryParse(match.Groups["offset"].Value, out int offset)
+                        && offset != 0)
+                    {
+                        dateTimeOffset = dateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
+                    }
+
+                    text = string.Concat(text.Substring(0, match.Index), dateTimeOffset.ToUnixTimeSeconds().ToString(), text.Substring(match.Index + match.Value.Length));
+                }
+                catch (Exception)
+                {
+                    // If we can't parse the offset, just leave the variable in place
+                    // the error will be reported to the parser via "CanParse"
+                }
+            }
+        }
+        return text;
+    }
+
+    protected string ParseDateTime(string expression, MatchCollection matches, Regex pattern)
+    {
+        var text = expression;
+        var currentDateTimeOffset = DateTimeOffset.UtcNow;
+
+        // We just pre-matched the prefix, so we need to re-match the full pattern to get the type, offset, and option
+        matches = pattern.Matches(text);
+
+        for (int i = matches.Count - 1; i >= 0; i--)
+        {
+            string format;
+            DateTimeOffset dateTimeOffset = currentDateTimeOffset;
+            Match match = matches[i];
+            if (match.Groups.Count == 4)
+            {
+                try
+                {
+                    IFormatProvider formatProvider = Thread.CurrentThread.CurrentUICulture;
+
+                    Group type = match.Groups["type"];
+                    if (match.Groups["offset"].Success && match.Groups["option"].Success)
+                    {
+                        if (int.TryParse(match.Groups["offset"].Value, out int offset) && offset != 0)
+                        {
+                            dateTimeOffset = dateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
+                        }
+                    }
+
+                    if (string.Equals(type.Value, "rfc1123", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // For RFC1123, we want to be sure to use the invariant culture,
+                        // since we are potentially overriding the format for local date time
+                        // we should explicitly set the format provider to invariant culture
+                        formatProvider = CultureInfo.InvariantCulture;
+                        format = "r";
+                    }
+                    else if (string.Equals(type.Value, "iso8601", StringComparison.OrdinalIgnoreCase))
+                    {
+                        format = "o";
+                    }
+                    else
+                    {
+                        format = type.Value.Substring(1, type.Value.Length - 2);
+                    }
+
+                    text = string.Concat(text.Substring(0, match.Index), dateTimeOffset.ToString(format, formatProvider), text.Substring(match.Index + match.Value.Length));
+                }
+                catch (Exception)
+                {
+                    // If the format or offset is invalid, just leave the text as-is
+                }
+            }
+        }
+
+        return text;
+    }
+
+    protected string ParseRandInt(string text, MatchCollection matches)
+    {
+
+        Random random = new();
+        for (int i = matches.Count - 1; i >= 0; i--)
+        {
+            Match match = matches[i];
+            (int? Min, int? Max)? parameters = ParseParametersFromMatch(match);
+
+            if (parameters is not null)
+            {
+                int? min = parameters.Value.Min;
+                int? max = parameters.Value.Max;
+
+                if (!min.HasValue && !max.HasValue)
+                {
+                    text = string.Concat(text.Substring(0, match.Index), random.Next().ToString(), text.Substring(match.Index + match.Value.Length));
+                }
+                else if (!min.HasValue && max.HasValue)
+                {
+                    text = string.Concat(text.Substring(0, match.Index), random.Next(max.Value).ToString(), text.Substring(match.Index + match.Value.Length));
+                }
+                else if (min.HasValue && max.HasValue)
+                {
+                    text = string.Concat(text.Substring(0, match.Index), random.Next(min.Value, max.Value).ToString(), text.Substring(match.Index + match.Value.Length));
+                }
+            }
+        }
+
+        return text;
+    }
+
+    internal static (int? min, int? max)? ParseParametersFromMatch(Match match)
+    {
+        if (match.Success)
+        {
+            Group group = match.Groups["parameters"];
+            if (group.Captures.Count == 0)
+            {
+                return (null, null);
+            }
+            else if (group.Captures.Count == 1
+                && int.TryParse(group.Captures[0].Value, out int max))
+            {
+                return (null, max);
+            }
+            else if (group.Captures.Count == 2
+                && int.TryParse(group.Captures[0].Value, out int min)
+                && int.TryParse(group.Captures[1].Value, out max)
+                && min <= max)
+            {
+                return (min, max);
+            }
+        }
+
+        return null;
+    }
+
 }
