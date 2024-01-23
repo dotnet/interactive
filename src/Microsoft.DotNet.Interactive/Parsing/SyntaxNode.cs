@@ -21,7 +21,7 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
 
     private protected SyntaxNode(
         SourceText sourceText,
-        SyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 

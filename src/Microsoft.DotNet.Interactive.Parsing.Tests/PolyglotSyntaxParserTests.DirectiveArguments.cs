@@ -9,6 +9,8 @@ namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
+    // FIX: (PolyglotSyntaxParserTests) combine into (and rename) named parameter tests if this approach pans out
+
     public class DirectiveArguments
     {
         [Theory]
@@ -23,7 +25,7 @@ public partial class PolyglotSyntaxParserTests
             var tree = Parse(code);
 
             var argumentNode = tree.RootNode.DescendantNodesAndTokens()
-                                   .Should().ContainSingle<DirectiveArgumentNode>()
+                                   .Should().ContainSingle<DirectiveParameterNode>()
                                    .Which;
 
             argumentNode.Text.Should().Be("\"this is the argument\"");

@@ -22,9 +22,20 @@ internal abstract partial class SyntaxNodeOrToken
 
     public string? GetKernelScope()
     {
-        if (Ancestors().OfType<TopLevelSyntaxNode>().FirstOrDefault() is { } topLevelParent)
+        if (AncestorsAndSelf().OfType<TopLevelSyntaxNode>().FirstOrDefault() is { } topLevelParent)
         {
             return topLevelParent.TargetKernelName;
+        }
+
+        return null;
+    }
+
+    public KernelInfo? GetKernelInfo()
+    {
+        if (GetKernelScope() is { } targetKernelName &&
+            SyntaxTree.ParserConfiguration.KernelInfos.TryGetValue(targetKernelName, out var kernelInfo))
+        {
+            return kernelInfo;
         }
 
         return null;
