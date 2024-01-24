@@ -319,17 +319,22 @@ public class HttpKernel :
         if (_variables.TryGetValue(expression, out var value))
         {
             return node.CreateBindingSuccess(value);
-        } else if(MatchExpressionValue(expression, out var expressionResolution))
-        {
-            return node.CreateBindingSuccess(expressionResolution);
         }
 
-        return node.CreateBindingFailure(HttpDiagnostics.CannotResolveSymbol(variableName));
+        var bindingResult = MatchExpressionValue(node, expression);
+        if ( bindingResult is not null)
+        {
+            return bindingResult;
+        } else
+        {
+            return node.CreateBindingFailure(HttpDiagnostics.CannotResolveSymbol(variableName));
+        }
+
+        
     }
 
-    private bool MatchExpressionValue(string expression, out object expressionResolution)
+    private HttpBindingResult<object?>? MatchExpressionValue(HttpExpressionNode node, string expression)
     {
-        expressionResolution = null;
 
         var guidPattern = new Regex(@$"\{"$guid"}", RegexOptions.Compiled);
         var dateTimePattern = new Regex(@$"\{"$datetime"}\s(?<type>rfc1123|iso8601|'.+'|"".+"")(?:\s(?<offset>-?\d+)\s(?<option>y|M|Q|w|d|h|m|s|ms))?", RegexOptions.Compiled);
@@ -345,60 +350,56 @@ public class HttpKernel :
 
         if (guidMatches.Count > 0)
         {
-            expressionResolution = Guid.NewGuid().ToString();
-            return true;
+            return node.CreateBindingSuccess(Guid.NewGuid().ToString());
         } else if(dateTimeMatches.Count > 0)
         {
-            expressionResolution = ParseDateTime(expression, dateTimeMatches, dateTimePattern);
-            return true;
+            return GetDateTime(node, expression, dateTimeMatches, dateTimePattern);
         } else if(localDateTimeMatches.Count > 0)
         {
-            expressionResolution = ParseDateTime(expression, localDateTimeMatches, localDateTimePattern);
-            return true;
+            return GetDateTime(node, expression, localDateTimeMatches, localDateTimePattern);
         } else if(randomIntMatches.Count > 0)
         {
-            expressionResolution = ParseRandInt(expression, randomIntMatches);
-            return true;
+            return GetRandInt(node, expression, randomIntMatches);
         }else if(timestampMatches.Count > 0)
         {
-            expressionResolution = ParseTimestamp(expression, timestampMatches);
-            return true;
+            return GetTimestamp(node, expression, timestampMatches);
         }
-        return false;
+        return null;
     }
 
-    protected string ParseTimestamp(string expression, MatchCollection matches)
+    private HttpBindingResult<object?> GetTimestamp(HttpExpressionNode node, string expression, MatchCollection matches)
     {
         var text = expression;
         var currentDateTimeOffset = DateTimeOffset.UtcNow;
-        for (int i = matches.Count - 1; i >= 0; i--)
+        
+        DateTimeOffset dateTimeOffset = currentDateTimeOffset;
+        var match = matches.FirstOrDefault();
+        if (match?.Groups.Count == 3)
         {
-            DateTimeOffset dateTimeOffset = currentDateTimeOffset;
-            Match match = matches[i];
-            if (match.Groups.Count == 3)
+            try
             {
-                try
+                if (match.Groups["offset"].Success && match.Groups["option"].Success
+                    && int.TryParse(match.Groups["offset"].Value, out int offset)
+                    && offset != 0)
                 {
-                    if (match.Groups["offset"].Success && match.Groups["option"].Success
-                        && int.TryParse(match.Groups["offset"].Value, out int offset)
-                        && offset != 0)
-                    {
-                        dateTimeOffset = dateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
-                    }
+                    dateTimeOffset = dateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
+                }
 
-                    text = string.Concat(text.Substring(0, match.Index), dateTimeOffset.ToUnixTimeSeconds().ToString(), text.Substring(match.Index + match.Value.Length));
-                }
-                catch (Exception)
-                {
-                    // If we can't parse the offset, just leave the variable in place
-                    // the error will be reported to the parser via "CanParse"
-                }
+                text = string.Concat(text.Substring(0, match.Index), dateTimeOffset.ToUnixTimeSeconds().ToString(), text.Substring(match.Index + match.Value.Length));
             }
+            catch (ArgumentException e)
+            {
+                return node.CreateBindingFailure(HttpDiagnostics.InvalidOffset(match.Groups["offset"].Value));
+            }
+            return node.CreateBindingSuccess(text);
+        } else
+        {
+            return node.CreateBindingFailure(HttpDiagnostics.TimestampFormatError(expression));
         }
-        return text;
+        
     }
 
-    protected string ParseDateTime(string expression, MatchCollection matches, Regex pattern)
+    private HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string expression, MatchCollection matches, Regex pattern)
     {
         var text = expression;
         var currentDateTimeOffset = DateTimeOffset.UtcNow;
@@ -406,62 +407,70 @@ public class HttpKernel :
         // We just pre-matched the prefix, so we need to re-match the full pattern to get the type, offset, and option
         matches = pattern.Matches(text);
 
-        for (int i = matches.Count - 1; i >= 0; i--)
+        string format;
+        DateTimeOffset dateTimeOffset = currentDateTimeOffset;
+        var match = matches.FirstOrDefault();
+        if (match?.Groups.Count == 4)
         {
-            string format;
-            DateTimeOffset dateTimeOffset = currentDateTimeOffset;
-            Match match = matches[i];
-            if (match.Groups.Count == 4)
+            try
             {
-                try
+                IFormatProvider formatProvider = Thread.CurrentThread.CurrentUICulture;
+
+                Group type = match.Groups["type"];
+                if (match.Groups["offset"].Success && match.Groups["option"].Success)
                 {
-                    IFormatProvider formatProvider = Thread.CurrentThread.CurrentUICulture;
-
-                    Group type = match.Groups["type"];
-                    if (match.Groups["offset"].Success && match.Groups["option"].Success)
+                    if (int.TryParse(match.Groups["offset"].Value, out int offset) && offset != 0)
                     {
-                        if (int.TryParse(match.Groups["offset"].Value, out int offset) && offset != 0)
-                        {
-                            dateTimeOffset = dateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
-                        }
+                        dateTimeOffset = dateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
                     }
-
-                    if (string.Equals(type.Value, "rfc1123", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // For RFC1123, we want to be sure to use the invariant culture,
-                        // since we are potentially overriding the format for local date time
-                        // we should explicitly set the format provider to invariant culture
-                        formatProvider = CultureInfo.InvariantCulture;
-                        format = "r";
-                    }
-                    else if (string.Equals(type.Value, "iso8601", StringComparison.OrdinalIgnoreCase))
-                    {
-                        format = "o";
-                    }
-                    else
-                    {
-                        format = type.Value.Substring(1, type.Value.Length - 2);
-                    }
-
-                    text = string.Concat(text.Substring(0, match.Index), dateTimeOffset.ToString(format, formatProvider), text.Substring(match.Index + match.Value.Length));
                 }
-                catch (Exception)
+
+                if (string.Equals(type.Value, "rfc1123", StringComparison.OrdinalIgnoreCase))
                 {
-                    // If the format or offset is invalid, just leave the text as-is
+                    // For RFC1123, we want to be sure to use the invariant culture,
+                    // since we are potentially overriding the format for local date time
+                    // we should explicitly set the format provider to invariant culture
+                    formatProvider = CultureInfo.InvariantCulture;
+                    format = "r";
+                }
+                else if (string.Equals(type.Value, "iso8601", StringComparison.OrdinalIgnoreCase))
+                {
+                    format = "o";
+                }
+                else
+                {
+                    format = type.Value.Substring(1, type.Value.Length - 2);
+                }
+
+                text = dateTimeOffset.ToString(format, formatProvider);
+
+                if(!DateTimeOffset.TryParse(text, out dateTimeOffset) )
+                {
+                    return node.CreateBindingFailure(HttpDiagnostics.DateTimePatternMatchError(expression));
                 }
             }
-        }
+            catch (ArgumentOutOfRangeException)
+            {
+                return node.CreateBindingFailure(HttpDiagnostics.DateTimePatternMatchError(expression));
+            }
+            return node.CreateBindingSuccess(text);
+        } 
+        else
+        {
+            return node.CreateBindingFailure(HttpDiagnostics.DateTimePatternMatchError(expression));
+        } 
 
-        return text;
+        
     }
 
-    protected string ParseRandInt(string text, MatchCollection matches)
+    private HttpBindingResult<object?> GetRandInt(HttpExpressionNode node, string text, MatchCollection matches)
     {
 
         Random random = new();
-        for (int i = matches.Count - 1; i >= 0; i--)
+        
+        var match = matches.FirstOrDefault();
+        if(match != null)
         {
-            Match match = matches[i];
             (int? Min, int? Max)? parameters = ParseParametersFromMatch(match);
 
             if (parameters is not null)
@@ -482,9 +491,13 @@ public class HttpKernel :
                     text = string.Concat(text.Substring(0, match.Index), random.Next(min.Value, max.Value).ToString(), text.Substring(match.Index + match.Value.Length));
                 }
             }
-        }
 
-        return text;
+            return node.CreateBindingSuccess(text);
+        } else
+        {
+            return node.CreateBindingFailure(HttpDiagnostics.CannotResolveSymbol(text));
+        }
+        
     }
 
     internal static (int? min, int? max)? ParseParametersFromMatch(Match match)

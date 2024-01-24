@@ -19,6 +19,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
+using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
@@ -456,7 +457,7 @@ public class HttpKernelTests
             Content-Type: application/xml
             
             {
-                "custom_date": "{{$datetime 'YYYY-MM-DD'}}"
+                "custom_date": "{{$datetime 'yyyy-MM-dd'}}"
             }
             """;
 
@@ -485,7 +486,7 @@ public class HttpKernelTests
             Content-Type: application/xml
             
             {
-                "local_custom_date": "{{$localDatetime 'YYYY-MM-DD'}}"
+                "local_custom_date": "{{$localDatetime 'yyyy-MM-dd'}}"
             }
             """;
 
@@ -553,6 +554,67 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         request.RequestUri.AbsoluteUri.Should().Be("https://httpbin.org/anything");
+    }
+
+    [Fact] 
+    public async Task incorrect_datetime_syntax_produces_error()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments HTTP/1.1
+            Content-Type: application/xml
+            
+            {
+                "local_custom_date": "{{$localDatetime 'YYYY-NN-DD}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.First().Equals(HttpDiagnostics.CannotResolveSymbol("{{$localDatetime 'YYYY-NN-DD}}"));
+
+    }
+
+
+    [Fact]
+    public async Task incorrect_datetime_produces_error()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments HTTP/1.1
+            Content-Type: application/xml
+            
+            {
+                "local_custom_date": "{{$localDatetime YYYY-MM-DD'}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.First().Equals(HttpDiagnostics.DateTimePatternMatchError("localDatetime YYYY-MM-DD"));
+
     }
 
     [Fact]

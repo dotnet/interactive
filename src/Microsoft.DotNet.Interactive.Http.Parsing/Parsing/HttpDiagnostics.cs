@@ -4,6 +4,8 @@
 #nullable enable
 
 using Microsoft.CodeAnalysis;
+using Microsoft.VisualBasic;
+using System.CommandLine;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -104,4 +106,85 @@ internal static class HttpDiagnostics
         var messageFormat = "Cannot resolve symbol '{0}'.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, symbol);
     }
+
+    internal static HttpDiagnosticInfo DateTimePatternMatchError(string datetime)
+    {
+        var id = $"HTTP0013";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = 
+            """
+            Error in pattern.
+
+            Usage: {{{0} rfc1123|iso8601|"custom format" [offset option]}}
+
+            You can specify a date time relative to the current date like: {{{0} rfc1123 3 M}} to represent 3 months later in RFC1123 format.
+            """;
+        return new HttpDiagnosticInfo(id, messageFormat, severity, datetime);
+    }
+
+    internal static HttpDiagnosticInfo InvalidFormat(string format)
+    {
+        var id = $"HTTP0014";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = "The format string '{0}' is invalid.";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, format);
+    }
+
+    internal static HttpDiagnosticInfo InvalidOffset(string offset)
+    {
+        var id = $"HTTP0015";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = "An error occurred while applying the offset '{0}'.";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, offset);
+    }
+
+    internal static HttpDiagnosticInfo TimestampFormatError(string timestamp)
+    {
+        var id = $"HTTP0016";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = """
+            Error in pattern.
+
+            Usage: {{$timestamp [offset option]}}
+
+            You can specify an offset relative to the current timestamp like: {{$timestamp 3 M}} to represent a timestamp 3 months later.
+            """;
+        return new HttpDiagnosticInfo(id, messageFormat, severity, timestamp);
+    }
+
+    public static HttpDiagnosticInfo RandomIntMustBeGreaterThanOrEqualToZero() {
+        var id = $"HTTP0017";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = """
+            Parameter must be greater than or equal to 0.
+            """;
+        return new HttpDiagnosticInfo(id, messageFormat, severity);
+    }
+    public static HttpDiagnosticInfo RandomIntMustBeIntegerArgument(string value)
+    {
+        var id = $"HTTP0018";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = """
+            The parameter "{0}" must be a valid integer value.
+            """;
+        return new (id, messageFormat, severity, value);
+    } 
+    public static HttpDiagnosticInfo RandomIntInvalidArguments(string max, string min)
+    {
+        var id = $"HTTP0019";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = """
+            The parameter "{0}" must not be greater than the parameter "{1}".
+            """;
+        return new (id, messageFormat, severity, [max, min]);
+    } 
+    public static HttpDiagnosticInfo NoPatternMatch(string text, string pattern) {
+        var id = $"HTTP0020";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = """
+            The text "{0}" did not match the pattern, "{1}".
+            """;
+        return new(id,messageFormat, severity, [text, pattern]);
+    }
+
 }
