@@ -64,7 +64,8 @@ let languageMapping = dynamic(
        "300264028c161bff5835271073e5d5dd5c77a20e74ec800a0eb3117e33b985a8":"SysML",
        "f43b8a78baae3439cc492cbe037fab51052149b029a900a8b4568d2b09f83fbd":"SysML",
        "8ae1251edbc3535c55721fcca5db6361375e90bd2d16c4abfe75aafd60188470":"SysML",
-       "f911b3e79594cd5ec195df509650912fb1a0ee9327f49d9c397847b00602c96f":"dotLang"
+       "f911b3e79594cd5ec195df509650912fb1a0ee9327f49d9c397847b00602c96f":"dotLang",
+       "56d6f32151ad8474f40d7b939c2161ee2bbf10023f4af1dbb3e13260ebdc6342":"HTTP"
   });
  let mapKernel = (sha:string) { 
   let mapped = tostring(languageMapping[sha]);
