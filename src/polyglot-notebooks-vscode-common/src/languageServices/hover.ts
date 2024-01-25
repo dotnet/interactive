@@ -10,13 +10,19 @@ export function provideHover(clientMapper: ClientMapper, language: string, docum
     return debounceAndReject(`hover-${documentUri.toString()}`, languageServiceDelay, async () => {
         const client = await clientMapper.getOrAddClient(documentUri);
         const hoverText = await client.hover(language, documentText, position.line, position.character);
-        const content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];
-        const hoverResult = {
-            contents: content.value,
-            isMarkdown: content.mimeType === 'text/markdown' || content.mimeType === 'text/x-markdown',
-            range: hoverText.linePositionSpan
-        };
-        return hoverResult;
+        if (hoverText.content.length > 0) {
+            const content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];
+            const hoverResult = {
+                contents: content.value,
+                isMarkdown: content.mimeType === 'text/markdown' || content.mimeType === 'text/x-markdown',
+                range: hoverText.linePositionSpan
+            };
+            return hoverResult;
+        } return {
+            contents: "",
+            isMarkdown: false,
+            range: undefined
+        }
     });
 }
 
