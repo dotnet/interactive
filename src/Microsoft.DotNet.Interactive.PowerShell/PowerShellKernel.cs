@@ -341,6 +341,10 @@ public class PowerShellKernel :
             var diagnostics = parseErrors.Select(ToDiagnostic);
             context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
         }
+        else
+        {
+            context.Publish(new DiagnosticsProduced(Array.Empty<Diagnostic>(), requestDiagnostics));
+        }
 
         return Task.CompletedTask;
     }

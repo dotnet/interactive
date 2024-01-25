@@ -265,6 +265,14 @@ public class HttpKernel :
                     command,
                     formattedDiagnostics));
         }
+        else
+        {
+            context.Publish(
+                new DiagnosticsProduced(
+                    Array.Empty<Interactive.Diagnostic>(),
+                    command,
+                    Array.Empty<FormattedValue>()));
+        }
 
         static Interactive.Diagnostic ToSerializedDiagnostic(Diagnostic d)
         {
