@@ -387,7 +387,7 @@ public class HttpKernel :
 
                 text = string.Concat(text.Substring(0, match.Index), dateTimeOffset.ToUnixTimeSeconds().ToString(), text.Substring(match.Index + match.Value.Length));
             }
-            catch (ArgumentException e)
+            catch (ArgumentException)
             {
                 return node.CreateBindingFailure(HttpDiagnostics.InvalidOffset(match.Groups["offset"].Value));
             }

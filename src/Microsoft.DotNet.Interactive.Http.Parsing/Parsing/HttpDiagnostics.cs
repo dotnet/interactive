@@ -4,8 +4,6 @@
 #nullable enable
 
 using Microsoft.CodeAnalysis;
-using Microsoft.VisualBasic;
-using System.CommandLine;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 

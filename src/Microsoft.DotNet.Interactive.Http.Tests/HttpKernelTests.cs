@@ -348,6 +348,11 @@ public class HttpKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var guidString = bodyAsString.Split(":").Last().Trim().Substring(1, 36);
+        Guid.Parse(guidString).Should().NotBeEmpty();
+
     }
 
     [Fact]
@@ -370,13 +375,17 @@ public class HttpKernelTests
             Content-Type: application/xml
             
             {
-                "updated_at": "{{$timestamp}}"
+                "updated_at" : "{{$timestamp}}"
             }
             """;
 
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var unixValueString = bodyAsString.Split(":").Last().Trim().Substring(1, 10);
+        var unixValue = DateTimeOffset.FromUnixTimeSeconds(long.Parse(unixValueString));
+        unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1.0));
     }
 
     [Fact]
@@ -399,13 +408,17 @@ public class HttpKernelTests
             Content-Type: application/xml
             
             {
-                "created_at": "{{$timestamp -1 d}}"
+                "created_at" : "{{$timestamp -1 d}}"
             }
             """;
 
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var unixValueString = bodyAsString.Split(":").Last().Trim().Substring(1, 10);
+        var unixValue = DateTimeOffset.FromUnixTimeSeconds(long.Parse(unixValueString));
+        unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromDays(1.5));
     }
 
     [Fact]
@@ -428,13 +441,21 @@ public class HttpKernelTests
             Content-Type: application/xml
             
             {
-                "review_count": "{{$randomInt 5 200}}"
+                "review_count" : "{{$randomInt 10 99}}"
             }
             """;
 
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var randIntValue = bodyAsString.Split(":").Last().Trim().Substring(1, 2);
+
+
+        int intValueOfRandInt = int.Parse(randIntValue);
+
+        intValueOfRandInt.Should().BeGreaterThanOrEqualTo(10);
+        intValueOfRandInt.Should().BeLessThanOrEqualTo(99);
     }
 
     [Fact]
@@ -457,12 +478,20 @@ public class HttpKernelTests
             Content-Type: application/xml
             
             {
-                "custom_date": "{{$datetime 'yyyy-MM-dd'}}"
+                "custom_date" : "{{$datetime 'yyyy-MM-dd'}}"
             }
             """;
 
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
+
+        var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        bodyAsString.Should().BeExceptingWhitespace($$"""
+            {
+                "custom_date" : "{{currentDate}}"
+            }
+            """);
 
     }
 
@@ -486,13 +515,20 @@ public class HttpKernelTests
             Content-Type: application/xml
             
             {
-                "local_custom_date": "{{$localDatetime 'yyyy-MM-dd'}}"
+                "local_custom_date" : "{{$localDatetime 'yyyy-MM-dd'}}"
             }
             """;
 
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
+        var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        bodyAsString.Should().BeExceptingWhitespace($$"""
+            {
+                "local_custom_date" : "{{currentDate}}"
+            }
+            """);
     }
 
     [Fact]
@@ -519,8 +555,8 @@ public class HttpKernelTests
                 "updated_at": "{{$timestamp}}",
                 "created_at": "{{$timestamp -1 d}}",
                 "review_count": "{{$randomInt 5 200}}",
-                "custom_date": "{{$datetime 'YYYY-MM-DD'}}",
-                "local_custom_date": "{{$localDatetime 'YYYY-MM-DD'}}"
+                "custom_date": "{{$datetime 'yyyy-MM-dd'}}",
+                "local_custom_date": "{{$localDatetime 'yyyy-MM-dd'}}"
             }
             """;
 
