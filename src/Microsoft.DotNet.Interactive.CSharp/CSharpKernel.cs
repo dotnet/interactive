@@ -471,10 +471,9 @@ public class CSharpKernel :
         var document = _workspace.ForkDocumentForLanguageServices(command.Code);
         var semanticModel = await document.GetSemanticModelAsync(context.CancellationToken);
         var diagnostics = semanticModel.GetDiagnostics(cancellationToken: context.CancellationToken);
-        if (diagnostics.Length > 0)
-        {
-            context.Publish(GetDiagnosticsProduced(command, diagnostics));
-        }
+
+        context.Publish(GetDiagnosticsProduced(command, diagnostics));
+
     }
 
     private bool HasReturnValue =>

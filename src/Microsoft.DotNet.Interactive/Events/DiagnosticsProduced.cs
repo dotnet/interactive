@@ -22,10 +22,10 @@ public class DiagnosticsProduced : KernelEvent
             throw new ArgumentNullException(nameof(diagnostics));
         }
 
-        if (!diagnostics.Any())
-        {
-            throw new ArgumentException("At least one diagnostic required.", nameof(diagnostics));
-        }
+        //if (!diagnostics.Any())
+        //{
+        //    throw new ArgumentException("At least one diagnostic required.", nameof(diagnostics));
+        //}
 
         _diagnostics = diagnostics.ToImmutableList();
         FormattedDiagnostics = formattedDiagnostics ?? Array.Empty<FormattedValue>();
