@@ -244,7 +244,7 @@ export class InteractiveClient {
 
     }
 
-    completion(kernelName: string, code: string, line: number, character: number): Promise<CompletionsProduced> {
+    async completion(kernelName: string, code: string, line: number, character: number): Promise<CompletionsProduced> {
 
         const command = new KernelCommandEnvelope(
             RequestCompletionsType,
@@ -257,10 +257,16 @@ export class InteractiveClient {
                 targetKernelName: kernelName
             }
         );
-        return this.submitCommandAndGetResult<CompletionsProduced>(command, CompletionsProducedType);
+        let result = await this.submitCommandAndGetResult<CompletionsProduced>(command, CompletionsProducedType, true);
+        if (result === undefined) {
+            result = {
+                completions: []
+            };
+        }
+        return result!;
     }
 
-    hover(language: string, code: string, line: number, character: number): Promise<HoverTextProduced> {
+    async hover(language: string, code: string, line: number, character: number): Promise<HoverTextProduced> {
         const command = new KernelCommandEnvelope(
             RequestHoverTextType,
             <RequestHoverText>{
@@ -272,10 +278,16 @@ export class InteractiveClient {
                 targetKernelName: language
             }
         );
-        return this.submitCommandAndGetResult<HoverTextProduced>(command, HoverTextProducedType);
+        let result = await this.submitCommandAndGetResult<HoverTextProduced>(command, HoverTextProducedType, true);
+        if (result === undefined) {
+            result = {
+                content: []
+            };
+        }
+        return result!;
     }
 
-    signatureHelp(language: string, code: string, line: number, character: number): Promise<SignatureHelpProduced> {
+    async signatureHelp(language: string, code: string, line: number, character: number): Promise<SignatureHelpProduced> {
         const command = new KernelCommandEnvelope(
             RequestSignatureHelpType,
             <RequestSignatureHelp>{
@@ -287,7 +299,15 @@ export class InteractiveClient {
                 targetKernelName: language
             }
         );
-        return this.submitCommandAndGetResult<SignatureHelpProduced>(command, SignatureHelpProducedType);
+        let result = await this.submitCommandAndGetResult<SignatureHelpProduced>(command, SignatureHelpProducedType, true);
+        if (result === undefined) {
+            result = {
+                activeParameterIndex: 0,
+                activeSignatureIndex: 0,
+                signatures: []
+            };
+        }
+        return result!;
     }
 
     async getDiagnostics(kernelName: string, code: string): Promise<Array<Diagnostic>> {
@@ -299,7 +319,10 @@ export class InteractiveClient {
             }
         );
 
-        const diagsProduced = await this.submitCommandAndGetResult<DiagnosticsProduced>(command, DiagnosticsProducedType);
+        let diagsProduced = await this.submitCommandAndGetResult<DiagnosticsProduced>(command, DiagnosticsProducedType, true);
+        if (diagsProduced === undefined) {
+            return [];
+        }
         return diagsProduced.diagnostics;
     }
 
@@ -318,7 +341,7 @@ export class InteractiveClient {
         return disposable;
     }
 
-    requestValueInfos(kernelName: string): Promise<ValueInfosProduced> {
+    async requestValueInfos(kernelName: string): Promise<ValueInfosProduced> {
         const command = new KernelCommandEnvelope(
             RequestValueInfosType,
             <RequestValueInfos>{
@@ -326,10 +349,11 @@ export class InteractiveClient {
                 mimeType: "text/plain+summary"
             }
         );
-        return this.submitCommandAndGetResult(command, ValueInfosProducedType);
+        const result = await (this.submitCommandAndGetResult<ValueInfosProduced>(command, ValueInfosProducedType));
+        return result!;
     }
 
-    requestValue(valueName: string, kernelName: string): Promise<ValueProduced> {
+    async requestValue(valueName: string, kernelName: string): Promise<ValueProduced> {
         const command = new KernelCommandEnvelope(
             RequestValueType,
             <RequestValue>{
@@ -338,7 +362,8 @@ export class InteractiveClient {
                 targetKernelName: kernelName,
             }
         );
-        return this.submitCommandAndGetResult(command, ValueProducedType);
+        const result = await this.submitCommandAndGetResult<ValueProduced>(command, ValueProducedType);
+        return result!;
     }
 
     cancel(): Promise<void> {
@@ -364,12 +389,12 @@ export class InteractiveClient {
         this.disposables.push(disposable);
     }
 
-    private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommandEnvelope, expectedEventType: KernelEventType): Promise<TEvent> {
-        return new Promise<TEvent>(async (resolve, reject) => {
+    private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommandEnvelope, expectedEventType: KernelEventType, eventIsOptional = false): Promise<TEvent | undefined> {
+        return new Promise<TEvent | undefined>(async (resolve, reject) => {
             let handled = false;
             const token = command.getOrCreateToken();
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
-                if (eventEnvelope.command?.hasSameRootCommandAs(command) && eventEnvelope.eventType === expectedEventType) {
+                if (eventEnvelope.command?.hasSameRootCommandAs(command)) {
                     switch (eventEnvelope.eventType) {
                         case CommandFailedType:
                             if (!handled) {
@@ -383,7 +408,11 @@ export class InteractiveClient {
                             if (!handled) {
                                 handled = true;
                                 disposable.dispose();
-                                reject('Command was handled before reporting expected result.');
+                                if (eventIsOptional) {
+                                    resolve(undefined);
+                                } else {
+                                    reject('Command was handled before reporting expected result.');
+                                }
                             }
                             break;
                         default:
