@@ -97,11 +97,11 @@ internal static class HttpDiagnostics
         return new HttpDiagnosticInfo(id, messageFormat, severity);
     }
 
-    internal static HttpDiagnosticInfo CannotResolveSymbol(string symbol)
+    internal static HttpDiagnosticInfo UnableToEvaluateExpression(string symbol)
     {
         var id = $"HTTP0012";
         var severity = DiagnosticSeverity.Error;
-        var messageFormat = "Cannot resolve symbol '{0}'.";
+        var messageFormat = "Unable to evaluate expression '{0}'.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, symbol);
     }
 
@@ -109,13 +109,9 @@ internal static class HttpDiagnostics
     {
         var id = $"HTTP0013";
         var severity = DiagnosticSeverity.Error;
-        var messageFormat = 
+        var messageFormat =
             """
-            Error in pattern.
-
-            Usage: {{{0} rfc1123|iso8601|"custom format" [offset option]}}
-
-            You can specify a date time relative to the current date like: {{{0} rfc1123 3 M}} to represent 3 months later in RFC1123 format.
+            The supplied argument "xyz" in the expression '{0}' does not follow the correct pattern. The argument should adhere to the following pattern: '{{0} |iso8601|"custom format" [offset option]}}'. See https://aka.ms/http-date-time-format for more details.
             """;
         return new HttpDiagnosticInfo(id, messageFormat, severity, datetime);
     }
@@ -140,25 +136,18 @@ internal static class HttpDiagnostics
     {
         var id = $"HTTP0016";
         var severity = DiagnosticSeverity.Error;
-        var messageFormat = """
-            Error in pattern.
-
-            Usage: {{$timestamp [offset option]}}
-
-            You can specify an offset relative to the current timestamp like: {{$timestamp 3 M}} to represent a timestamp 3 months later.
-            """;
+        var messageFormat = 
+            "The supplied argument in the expression '{0}' does not follow the correct pattern. The argument should adhere to the following pattern '{{$timestamp [offset option]}}'. See https://aka.ms/http-date-time-format for more details.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, timestamp);
     }
 
-    public static HttpDiagnosticInfo RandomIntMustBeGreaterThanOrEqualToZero() {
+    internal static HttpDiagnosticInfo RandomIntMustBeGreaterThanOrEqualToZero() {
         var id = $"HTTP0017";
         var severity = DiagnosticSeverity.Error;
-        var messageFormat = """
-            Parameter must be greater than or equal to 0.
-            """;
+        var messageFormat = "Parameter must be greater than or equal to 0.";
         return new HttpDiagnosticInfo(id, messageFormat, severity);
     }
-    public static HttpDiagnosticInfo RandomIntMustBeIntegerArgument(string value)
+    internal static HttpDiagnosticInfo RandomIntMustBeIntegerArgument(string value)
     {
         var id = $"HTTP0018";
         var severity = DiagnosticSeverity.Error;
@@ -167,19 +156,21 @@ internal static class HttpDiagnostics
             """;
         return new (id, messageFormat, severity, value);
     } 
-    public static HttpDiagnosticInfo RandomIntInvalidArguments(string max, string min)
+    internal static HttpDiagnosticInfo RandomIntInvalidArguments(string max, string min)
     {
         var id = $"HTTP0019";
         var severity = DiagnosticSeverity.Error;
-        var messageFormat = """
+        var messageFormat = 
+            """
             The parameter "{0}" must not be greater than the parameter "{1}".
             """;
         return new (id, messageFormat, severity, [max, min]);
     } 
-    public static HttpDiagnosticInfo NoPatternMatch(string text, string pattern) {
+    internal static HttpDiagnosticInfo NoPatternMatch(string text, string pattern) {
         var id = $"HTTP0020";
         var severity = DiagnosticSeverity.Error;
-        var messageFormat = """
+        var messageFormat = 
+            """
             The text "{0}" did not match the pattern, "{1}".
             """;
         return new(id,messageFormat, severity, [text, pattern]);

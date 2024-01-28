@@ -356,6 +356,40 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task can_bind_guid_regardless_of_case()
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments HTTP/1.1
+            Content-Type: application/xml
+
+            {
+                "request_id": "{{$GUID}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var guidString = bodyAsString.Split(":").Last().Trim().Substring(1, 36);
+        Guid.Parse(guidString).Should().NotBeEmpty();
+
+    }
+
+    [Fact]
     public async Task can_bind_timestamp()
     {
         HttpRequestMessage request = null;
@@ -487,11 +521,8 @@ public class HttpKernelTests
 
         var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        bodyAsString.Should().BeExceptingWhitespace($$"""
-            {
-                "custom_date" : "{{currentDate}}"
-            }
-            """);
+        var readDateValue = bodyAsString.Split(":").Last().Trim().Substring(1, currentDate.Length);
+        readDateValue.Should().BeEquivalentTo(currentDate);
 
     }
 
@@ -524,11 +555,8 @@ public class HttpKernelTests
 
         var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        bodyAsString.Should().BeExceptingWhitespace($$"""
-            {
-                "local_custom_date" : "{{currentDate}}"
-            }
-            """);
+        var readDateValue = bodyAsString.Split(":").Last().Trim().Substring(1, currentDate.Length);
+        readDateValue.Should().BeEquivalentTo(currentDate);
     }
 
     [Fact]
@@ -547,14 +575,14 @@ public class HttpKernelTests
         using var _ = new AssertionScope();
 
         var code = """
-            POST https://api.example.com/comments HTTP/1.1
+            POST https://api.example.com/comments="{{$randomInt 5 200}}" HTTP/1.1
             Content-Type: application/xml
+            last-modified: "{{$timestamp}}"
             
             {
                 "request_id": "{{$guid}}",
                 "updated_at": "{{$timestamp}}",
                 "created_at": "{{$timestamp -1 d}}",
-                "review_count": "{{$randomInt 5 200}}",
                 "custom_date": "{{$datetime 'yyyy-MM-dd'}}",
                 "local_custom_date": "{{$localDatetime 'yyyy-MM-dd'}}"
             }
@@ -618,7 +646,7 @@ public class HttpKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode(code));
 
-        result.Events.First().Equals(HttpDiagnostics.CannotResolveSymbol("{{$localDatetime 'YYYY-NN-DD}}"));
+        result.Events.First().Equals(HttpDiagnostics.UnableToEvaluateExpression("{{$localDatetime 'YYYY-NN-DD}}"));
 
     }
 

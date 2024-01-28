@@ -32,6 +32,8 @@ public class HttpKernel :
 {
     internal const int DefaultResponseDelayThresholdInMilliseconds = 1000;
     internal const int DefaultContentByteLengthThreshold = 500_000;
+    internal const string offsetRegex = "(?:\\s(?<offset>-?\\d+)\\s(?<option>y|M|Q|w|d|h|m|s|ms))?";
+    internal const string optionsRegex = "\\s(?<type>rfc1123|iso8601|'.+'|\".+\")";
 
     private readonly HttpClient _client;
     private readonly int _responseDelayThresholdInMilliseconds;
@@ -313,67 +315,84 @@ public class HttpKernel :
 
     private HttpBindingResult<object?> BindExpressionValues(HttpExpressionNode node)
     {
-        var variableName = node.Text;
-        var expression = variableName;
+        var expression = node.Text;
 
         if (_variables.TryGetValue(expression, out var value))
         {
             return node.CreateBindingSuccess(value);
         }
-
-        var bindingResult = MatchExpressionValue(node, expression);
-        if ( bindingResult is not null)
+        else
         {
-            return bindingResult;
-        } else
-        {
-            return node.CreateBindingFailure(HttpDiagnostics.CannotResolveSymbol(variableName));
+            return MatchExpressionValue(node, expression);
         }
 
-        
+
     }
 
-    private HttpBindingResult<object?>? MatchExpressionValue(HttpExpressionNode node, string expression)
+    private HttpBindingResult<object?> MatchExpressionValue(HttpExpressionNode node, string expression)
     {
 
         var guidPattern = new Regex(@$"\{"$guid"}", RegexOptions.Compiled);
-        var dateTimePattern = new Regex(@$"\{"$datetime"}\s(?<type>rfc1123|iso8601|'.+'|"".+"")(?:\s(?<offset>-?\d+)\s(?<option>y|M|Q|w|d|h|m|s|ms))?", RegexOptions.Compiled);
-        var localDateTimePattern = new Regex(@$"\{"$localDatetime"}\s(?<type>rfc1123|iso8601|'.+'|"".+"")(?:\s(?<offset>-?\d+)\s(?<option>y|M|Q|w|d|h|m|s|ms))?", RegexOptions.Compiled);
+        var dateTimePattern = new Regex(@$"\{"$datetime"}{optionsRegex}{offsetRegex}", RegexOptions.Compiled);
+        var localDateTimePattern = new Regex(@$"\{"$localDatetime"}{optionsRegex}{offsetRegex}", RegexOptions.Compiled);
         var randomIntPattern = new Regex(@$"\{"$randomInt"}(?:\s(?<parameters>-?\d+)){{0,2}}", RegexOptions.Compiled);
-        var timestampPattern = new Regex(@$"\{"$timestamp"}(?:\s(?<offset>-?\d+)\s(?<option>y|M|Q|w|d|h|m|s|ms))?", RegexOptions.Compiled);
+        var timestampPattern = new Regex(@$"\{"$timestamp"}{offsetRegex}", RegexOptions.Compiled);    
 
         var guidMatches = guidPattern.Matches(expression);
-        var dateTimeMatches = dateTimePattern.Matches(expression);
-        var localDateTimeMatches = localDateTimePattern.Matches(expression);
-        var randomIntMatches = randomIntPattern.Matches(expression);
-        var timestampMatches = timestampPattern.Matches(expression);
-
-        if (guidMatches.Count > 0)
+        if (guidMatches.Count == 1)
         {
             return node.CreateBindingSuccess(Guid.NewGuid().ToString());
-        } else if(dateTimeMatches.Count > 0)
+        }
+        else if (guidMatches.Count > 0)
         {
-            return GetDateTime(node, expression, dateTimeMatches, dateTimePattern);
+            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
+        }
+
+        var dateTimeMatches = dateTimePattern.Matches(expression);
+        if (dateTimeMatches.Count == 1)
+        {
+            return GetDateTime(node, expression, dateTimeMatches);
+        }
+        else if (dateTimeMatches.Count > 0)
+        {
+            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
+        }
+
+        var localDateTimeMatches = localDateTimePattern.Matches(expression);
+        if (localDateTimeMatches.Count == 1)
+        {
+            return GetDateTime(node, expression, localDateTimeMatches);
         } else if(localDateTimeMatches.Count > 0)
         {
-            return GetDateTime(node, expression, localDateTimeMatches, localDateTimePattern);
-        } else if(randomIntMatches.Count > 0)
+            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
+        }
+
+        var randomIntMatches = randomIntPattern.Matches(expression);
+        if (randomIntMatches.Count == 1)
         {
             return GetRandInt(node, expression, randomIntMatches);
-        }else if(timestampMatches.Count > 0)
+        } else if (randomIntMatches.Count > 0)
+        {
+            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
+        }
+
+        var timestampMatches = timestampPattern.Matches(expression);
+        if (timestampMatches.Count == 1)
         {
             return GetTimestamp(node, expression, timestampMatches);
-        }
-        return null;
+        } else if(timestampMatches.Count == 1)
+        {
+            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
+        } 
+
+        return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
     }
 
-    private HttpBindingResult<object?> GetTimestamp(HttpExpressionNode node, string expression, MatchCollection matches)
+    private HttpBindingResult<object?> GetTimestamp(HttpExpressionNode node, string expressionText, MatchCollection matches)
     {
-        var text = expression;
         var currentDateTimeOffset = DateTimeOffset.UtcNow;
-        
-        DateTimeOffset dateTimeOffset = currentDateTimeOffset;
-        var match = matches.FirstOrDefault();
+
+        var match = matches.SingleOrDefault();
         if (match?.Groups.Count == 3)
         {
             try
@@ -382,36 +401,32 @@ public class HttpKernel :
                     && int.TryParse(match.Groups["offset"].Value, out int offset)
                     && offset != 0)
                 {
-                    dateTimeOffset = dateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
+                    currentDateTimeOffset = currentDateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
                 }
 
-                text = string.Concat(text.Substring(0, match.Index), dateTimeOffset.ToUnixTimeSeconds().ToString(), text.Substring(match.Index + match.Value.Length));
+                expressionText = currentDateTimeOffset.ToUnixTimeSeconds().ToString();
+                return node.CreateBindingSuccess(expressionText);
             }
             catch (ArgumentException)
             {
                 return node.CreateBindingFailure(HttpDiagnostics.InvalidOffset(match.Groups["offset"].Value));
             }
-            return node.CreateBindingSuccess(text);
         } else
         {
-            return node.CreateBindingFailure(HttpDiagnostics.TimestampFormatError(expression));
+            return node.CreateBindingFailure(HttpDiagnostics.TimestampFormatError(expressionText));
         }
         
     }
 
-    private HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string expression, MatchCollection matches, Regex pattern)
+    private HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string expressionText, MatchCollection matches)
     {
-        var text = expression;
         var currentDateTimeOffset = DateTimeOffset.UtcNow;
 
-        // We just pre-matched the prefix, so we need to re-match the full pattern to get the type, offset, and option
-        matches = pattern.Matches(text);
-
         string format;
-        DateTimeOffset dateTimeOffset = currentDateTimeOffset;
-        var match = matches.FirstOrDefault();
+        var match = matches.SingleOrDefault();
         if (match?.Groups.Count == 4)
         {
+            string? text;
             try
             {
                 IFormatProvider formatProvider = Thread.CurrentThread.CurrentUICulture;
@@ -421,7 +436,7 @@ public class HttpKernel :
                 {
                     if (int.TryParse(match.Groups["offset"].Value, out int offset) && offset != 0)
                     {
-                        dateTimeOffset = dateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
+                        currentDateTimeOffset = currentDateTimeOffset.AddOffset(offset, match.Groups["option"].Value);
                     }
                 }
 
@@ -442,22 +457,23 @@ public class HttpKernel :
                     format = type.Value.Substring(1, type.Value.Length - 2);
                 }
 
-                text = dateTimeOffset.ToString(format, formatProvider);
+                text = currentDateTimeOffset.ToString(format, formatProvider);
 
-                if(!DateTimeOffset.TryParse(text, out dateTimeOffset) )
+                if (!DateTimeOffset.TryParse(text, out currentDateTimeOffset))
                 {
-                    return node.CreateBindingFailure(HttpDiagnostics.DateTimePatternMatchError(expression));
+                    return node.CreateBindingFailure(HttpDiagnostics.InvalidFormat(type.Value));
                 }
+                return node.CreateBindingSuccess(text);
             }
             catch (ArgumentOutOfRangeException)
             {
-                return node.CreateBindingFailure(HttpDiagnostics.DateTimePatternMatchError(expression));
+                return node.CreateBindingFailure(HttpDiagnostics.DateTimePatternMatchError(expressionText));
             }
-            return node.CreateBindingSuccess(text);
+            
         } 
         else
         {
-            return node.CreateBindingFailure(HttpDiagnostics.DateTimePatternMatchError(expression));
+            return node.CreateBindingFailure(HttpDiagnostics.DateTimePatternMatchError(expressionText));
         } 
 
         
@@ -468,10 +484,10 @@ public class HttpKernel :
 
         Random random = new();
         
-        var match = matches.FirstOrDefault();
+        var match = matches.SingleOrDefault();
         if(match != null)
         {
-            (int? Min, int? Max)? parameters = ParseParametersFromMatch(match);
+            (int? Min, int? Max)? parameters = ParseArgumentsFromMatch(match);
 
             if (parameters is not null)
             {
@@ -480,50 +496,55 @@ public class HttpKernel :
 
                 if (!min.HasValue && !max.HasValue)
                 {
-                    text = string.Concat(text.Substring(0, match.Index), random.Next().ToString(), text.Substring(match.Index + match.Value.Length));
+                    text = random.Next().ToString();
                 }
                 else if (!min.HasValue && max.HasValue)
                 {
-                    text = string.Concat(text.Substring(0, match.Index), random.Next(max.Value).ToString(), text.Substring(match.Index + match.Value.Length));
+                    text = random.Next(max.Value).ToString();
                 }
                 else if (min.HasValue && max.HasValue)
                 {
-                    text = string.Concat(text.Substring(0, match.Index), random.Next(min.Value, max.Value).ToString(), text.Substring(match.Index + match.Value.Length));
+                    text = random.Next(min.Value, max.Value).ToString();
+                }
+
+                return node.CreateBindingSuccess(text);
+            } else
+            {
+                return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(text));
+            }
+
+        } else
+        {
+            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(text));
+        }
+
+        (int? min, int? max)? ParseArgumentsFromMatch(Match match)
+        {
+            if (match.Success)
+            {
+                Group group = match.Groups["parameters"];
+                if (group.Captures.Count == 0)
+                {
+                    return (null, null);
+                }
+                else if (group.Captures.Count == 1
+                    && int.TryParse(group.Captures[0].Value, out int max))
+                {
+                    return (null, max);
+                }
+                else if (group.Captures.Count == 2
+                    && int.TryParse(group.Captures[0].Value, out int min)
+                    && int.TryParse(group.Captures[1].Value, out max)
+                    && min <= max)
+                {
+                    return (min, max);
                 }
             }
 
-            return node.CreateBindingSuccess(text);
-        } else
-        {
-            return node.CreateBindingFailure(HttpDiagnostics.CannotResolveSymbol(text));
+            return null;
         }
-        
     }
 
-    internal static (int? min, int? max)? ParseParametersFromMatch(Match match)
-    {
-        if (match.Success)
-        {
-            Group group = match.Groups["parameters"];
-            if (group.Captures.Count == 0)
-            {
-                return (null, null);
-            }
-            else if (group.Captures.Count == 1
-                && int.TryParse(group.Captures[0].Value, out int max))
-            {
-                return (null, max);
-            }
-            else if (group.Captures.Count == 2
-                && int.TryParse(group.Captures[0].Value, out int min)
-                && int.TryParse(group.Captures[1].Value, out max)
-                && min <= max)
-            {
-                return (min, max);
-            }
-        }
-
-        return null;
-    }
+    
 
 }
