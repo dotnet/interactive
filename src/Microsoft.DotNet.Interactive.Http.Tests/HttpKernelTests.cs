@@ -356,7 +356,7 @@ public class HttpKernelTests
     }
 
     [Fact]
-    public async Task can_bind_guid_regardless_of_case()
+    public async Task cant_bind_capital_guid()
     {
         HttpRequestMessage request = null;
 
@@ -381,11 +381,9 @@ public class HttpKernelTests
             """;
 
         var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
 
-        var bodyAsString = await request.Content.ReadAsStringAsync();
-        var guidString = bodyAsString.Split(":").Last().Trim().Substring(1, 36);
-        Guid.Parse(guidString).Should().NotBeEmpty();
+        result.Events.First().Equals(HttpDiagnostics.UnableToEvaluateExpression("{{$GUID}}"));
+
 
     }
 
