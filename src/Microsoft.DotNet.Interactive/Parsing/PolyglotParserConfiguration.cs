@@ -62,17 +62,17 @@ internal class PolyglotParserConfiguration
         return false;
     }
 
-    public bool IsOptionInScope(DirectiveNamedParameterNode namedParameter)
+    public bool IsParameterInScope(DirectiveNamedParameterNode namedParameter)
     {
         EnsureSymbolMapIsInitialized();
 
-        if (namedParameter.Parent is DirectiveNode directive &&
-            directive.ChildNodes.OfType<DirectiveNameNode>().SingleOrDefault() is { } directiveName)
+        if (namedParameter.GetKernelInfo() is { } kernelInfo &&
+            namedParameter.Parent is DirectiveNode { DirectiveNameNode: { } directiveName })
         {
-           
-
-
-
+            if (kernelInfo.TryGetDirective(directiveName.Text, out _))
+            {
+                return true;
+            }
         }
 
         return false;

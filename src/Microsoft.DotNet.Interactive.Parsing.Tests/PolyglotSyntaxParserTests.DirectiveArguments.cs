@@ -25,7 +25,7 @@ public partial class PolyglotSyntaxParserTests
             var tree = Parse(code);
 
             var argumentNode = tree.RootNode.DescendantNodesAndTokens()
-                                   .Should().ContainSingle<DirectiveParameterNode>()
+                                   .Should().ContainSingle<DirectiveParameterValueNode>()
                                    .Which;
 
             argumentNode.Text.Should().Be("\"this is the argument\"");

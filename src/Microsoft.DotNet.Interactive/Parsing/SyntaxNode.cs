@@ -161,7 +161,7 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
 
     public override IEnumerable<Diagnostic> GetDiagnostics()
     {
-        foreach (var child in ChildNodesAndTokens)
+        foreach (var child in ChildNodes)
         {
             foreach (var diagnostic in child.GetDiagnostics())
             {
