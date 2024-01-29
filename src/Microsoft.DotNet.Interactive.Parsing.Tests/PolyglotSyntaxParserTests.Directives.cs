@@ -71,7 +71,7 @@ public partial class PolyglotSyntaxParserTests
         [InlineData("#!csharp\nvar x = 123$$;", typeof(LanguageNode))]
         [InlineData("#!csharp\nvar x = 123$$;\n", typeof(LanguageNode))]
         [InlineData("#!csh$$arp\nvar x = 123;", typeof(DirectiveNameNode))]
-        [InlineData("#!csharp\n#!time a b$$ c", typeof(DirectiveParameterNode))]
+        [InlineData("#!csharp\n#!time a b$$ c", typeof(DirectiveParameterValueNode))]
         public void Node_type_is_correctly_identified(
             string markupCode,
             Type expectedNodeType)
@@ -237,5 +237,6 @@ let x =
                 .Should()
                 .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
         }
+        
     }
 }

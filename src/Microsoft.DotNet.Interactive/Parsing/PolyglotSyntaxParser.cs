@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -85,7 +86,7 @@ internal class PolyglotSyntaxParser
         {
             var directiveNode = new DirectiveNode(_currentKernelName!, _sourceText, _syntaxTree);
 
-            var directiveNameNode = ParseDirectiveName();
+            var directiveNameNode = ParseParameterName();
 
             directiveNode.Add(directiveNameNode);
 
@@ -115,15 +116,20 @@ internal class PolyglotSyntaxParser
                     break;
                 }
 
-                if (IsAtStartOfOption())
+                if (IsAtStartOfParameterName())
                 {
-                    if (ParseDirectiveOption() is { } namedParameterNode)
+                    if (ParseNamedParameter() is { } namedParameterNode)
                     {
                         directiveNode.Add(namedParameterNode);
 
-                        if (!_configuration.IsOptionInScope(namedParameterNode))
+                        if (!_configuration.IsParameterInScope(namedParameterNode))
                         {
-                            namedParameterNode.AddDiagnostic(namedParameterNode.CreateDiagnostic(new(ErrorCodes.UnknownNamedParameter, "Unrecognized named parameter {0}", DiagnosticSeverity.Error)));
+                            var diagnostic = namedParameterNode.CreateDiagnostic(
+                                new(ErrorCodes.UnknownNamedParameter, 
+                                    "Unrecognized named parameter '{0}'",
+                                    DiagnosticSeverity.Error, 
+                                    namedParameterNode.NameNode?.Text ?? ""));
+                            namedParameterNode.AddDiagnostic(diagnostic);
                         }
                     }
                 }
@@ -138,7 +144,7 @@ internal class PolyglotSyntaxParser
                         ConsumeCurrentTokenInto(subcommandNode);
                         directiveNode.Add(subcommandNode);
                     }
-                    else if (ParseDirectiveArgument() is { } argumentNode)
+                    else if (ParseParameterValue() is { } argumentNode)
                     {
                         directiveNode.Add(argumentNode);
                     }
@@ -163,7 +169,7 @@ internal class PolyglotSyntaxParser
 
         return null;
 
-        DirectiveNameNode ParseDirectiveName()
+        DirectiveNameNode ParseParameterName()
         {
             var directiveNameNode = new DirectiveNameNode(_sourceText, _syntaxTree);
 
@@ -175,28 +181,17 @@ internal class PolyglotSyntaxParser
             return ParseTrailingWhitespace(directiveNameNode, stopBeforeNewLine: true);
         }
 
-        DirectiveParameterNode? ParseDirectiveArgument()
+        DirectiveParameterValueNode? ParseParameterValue()
         {
-            var withinQuotes = false;
+            DirectiveParameterValueNode? argumentNode = null;
 
-            DirectiveParameterNode? argumentNode = null;
-
-            while (MoreTokens())
+            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "{" })
             {
-                if (CurrentToken is { Kind: TokenKind.Punctuation, Text: "\"" })
-                {
-                    withinQuotes = !withinQuotes;
-                }
-
-                if (CurrentToken is { Kind: TokenKind.NewLine } ||
-                    CurrentToken is { Kind: TokenKind.Whitespace } && !withinQuotes)
-                {
-                    break;
-                }
-
-                argumentNode ??= new DirectiveParameterNode(_sourceText, _syntaxTree);
-
-                ConsumeCurrentTokenInto(argumentNode);
+                ParseJsonValue();
+            }
+            else
+            {
+                ParsePlainText();
             }
 
             if (argumentNode is not null)
@@ -207,9 +202,96 @@ internal class PolyglotSyntaxParser
             {
                 return null;
             }
+
+            void ParsePlainText()
+            {
+                var withinQuotes = false;
+
+                while (MoreTokens())
+                {
+                    if (CurrentToken is { Kind: TokenKind.NewLine })
+                    {
+                        break;
+                    }
+
+                    if (CurrentToken is { Kind: TokenKind.Punctuation, Text: "\"" })
+                    {
+                        withinQuotes = !withinQuotes;
+                    }
+
+                    if (!withinQuotes &&
+                        CurrentToken is { Kind: TokenKind.Whitespace })
+                    {
+                        break;
+                    }
+
+                    argumentNode ??= new DirectiveParameterValueNode(_sourceText, _syntaxTree);
+
+                    ConsumeCurrentTokenInto(argumentNode);
+                }
+            }
+
+            void ParseJsonValue()
+            {
+                var jsonDepth = 0;
+
+                while (MoreTokens())
+                {
+                    var currentToken = CurrentToken;
+
+                    if (currentToken is { Kind: TokenKind.NewLine })
+                    {
+                        break;
+                    }
+
+                    switch (currentToken)
+                    {
+                        case { Kind: TokenKind.Punctuation } and { Text: "{" }:
+                            jsonDepth++;
+                            break;
+                        case { Kind: TokenKind.Punctuation } and { Text: "}" }:
+                            jsonDepth--;
+                            break;
+                    }
+
+                    argumentNode ??= new DirectiveParameterValueNode(_sourceText, _syntaxTree);
+
+                    ConsumeCurrentTokenInto(argumentNode);
+
+                    if (jsonDepth <= 0)
+                    {
+                        break;
+                    }
+                }
+
+                if (argumentNode?.Text is { } json)
+                {
+                    try
+                    {
+                        JsonDocument.Parse(json);
+                    }
+                    catch (JsonException exception)
+                    {
+                        var positionInLine = (int)exception.BytePositionInLine! + argumentNode.FullSpan.Start ;
+
+                        var location = Location.Create(
+                            filePath: string.Empty, 
+                            new TextSpan(positionInLine, 1), 
+                            new(new(0, positionInLine), new(0, positionInLine + 1)));
+
+                        var diagnostic = argumentNode.CreateDiagnostic(
+                            new(ErrorCodes.InvalidJsonInParameterValue, 
+                                "Invalid JSON: {0}", 
+                                DiagnosticSeverity.Error, 
+                                exception.Message),
+                            location);
+                        argumentNode.AddDiagnostic(diagnostic);
+                    }
+                }
+            }
         }
 
-        DirectiveNamedParameterNode? ParseDirectiveOption()
+        DirectiveNamedParameterNode? ParseNamedParameter()
         {
             DirectiveNamedParameterNode? optionNode = null;
             DirectiveParameterNameNode? optionNameNode = null;
@@ -240,7 +322,7 @@ internal class PolyglotSyntaxParser
 
                     optionNode.Add(optionNameNode);
 
-                    if (ParseDirectiveArgument() is { } argNode)
+                    if (ParseParameterValue() is { } argNode)
                     {
                         optionNode.Add(argNode);
                     }
@@ -258,11 +340,9 @@ internal class PolyglotSyntaxParser
         }
     }
 
-    private bool IsAtStartOfOption()
-    {
-        return CurrentTokenPlus(-1) is { Kind: TokenKind.Whitespace } &&
-               CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "-" };
-    }
+    private bool IsAtStartOfParameterName() =>
+        CurrentTokenPlus(-1) is { Kind: TokenKind.Whitespace } &&
+        CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "-" };
 
     private LanguageNode ParseLanguageNode()
     {
@@ -594,5 +674,6 @@ internal class PolyglotSyntaxParser
         public const string UnknownNamedParameter = "DNI103";
         public const string MissingRequiredNamedParameter = "DNI104";
         public const string TooManyOccurrencesOfNamedParameter = "DNI105";
+        public const string InvalidJsonInParameterValue = "DNI106";
     }
 }
