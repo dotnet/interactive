@@ -35,8 +35,6 @@ public class HttpKernel :
 {
     internal const int DefaultResponseDelayThresholdInMilliseconds = 1000;
     internal const int DefaultContentByteLengthThreshold = 500_000;
-    internal const string offsetRegex = "(?:\\s(?<offset>[-+]?\\d+)\\s(?<option>y|M|Q|w|d|h|m|s|ms))?";
-    internal const string optionsRegex = "\\s(?<type>rfc1123|iso8601|'.+'|\".+\")";
 
     private readonly HttpClient _client;
     private readonly int _responseDelayThresholdInMilliseconds;
@@ -334,12 +332,14 @@ public class HttpKernel :
 
     private HttpBindingResult<object?> MatchExpressionValue(HttpExpressionNode node, string expression)
     {
+        const string OffsetRegex = """(?:\s(?<offset>[-+]?[^\s]+)\s(?<option>[^\s]+))?""";
+        const string OptionsRegex = """\s(?<type>rfc1123|iso8601|'.+'|".+")""";
 
         var guidPattern = new Regex(@$"\{"$guid"}", RegexOptions.Compiled);
-        var dateTimePattern = new Regex(@$"\{"$datetime"}{optionsRegex}{offsetRegex}", RegexOptions.Compiled);
-        var localDateTimePattern = new Regex(@$"\{"$localDatetime"}{optionsRegex}{offsetRegex}", RegexOptions.Compiled);
-        var randomIntPattern = new Regex(@$"\{"$randomInt"}(?:\s(?<arguments>-?\d+)){{0,2}}", RegexOptions.Compiled);
-        var timestampPattern = new Regex(@$"\{"$timestamp"}{offsetRegex}", RegexOptions.Compiled);    
+        var dateTimePattern = new Regex(@$"\{"$datetime"}{OptionsRegex}{OffsetRegex}", RegexOptions.Compiled);
+        var localDateTimePattern = new Regex(@$"\{"$localDatetime"}{OptionsRegex}{OffsetRegex}", RegexOptions.Compiled);
+        var randomIntPattern = new Regex(@$"^\{"$randomInt"}(?:\s(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
+        var timestampPattern = new Regex(@$"\{"$timestamp"}{OffsetRegex}", RegexOptions.Compiled);    
 
         var guidMatches = guidPattern.Matches(expression);
         if (guidMatches.Count == 1)
@@ -354,7 +354,7 @@ public class HttpKernel :
         var dateTimeMatches = dateTimePattern.Matches(expression);
         if (dateTimeMatches.Count == 1)
         {
-            return GetDateTime(node, expression, dateTimeMatches);
+            return GetDateTime(node, expression, dateTimeMatches.Single());
         }
         else if (dateTimeMatches.Count > 0)
         {
@@ -364,7 +364,7 @@ public class HttpKernel :
         var localDateTimeMatches = localDateTimePattern.Matches(expression);
         if (localDateTimeMatches.Count == 1)
         {
-            return GetDateTime(node, expression, localDateTimeMatches);
+            return GetDateTime(node, expression, localDateTimeMatches.Single());
         } else if(localDateTimeMatches.Count > 0)
         {
             return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
@@ -373,7 +373,7 @@ public class HttpKernel :
         var randomIntMatches = randomIntPattern.Matches(expression);
         if (randomIntMatches.Count == 1)
         {
-            return GetRandInt(node, expression, randomIntMatches);
+            return GetRandInt(node, expression, randomIntMatches.Single());
         } else if (randomIntMatches.Count > 0)
         {
             return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
@@ -382,8 +382,8 @@ public class HttpKernel :
         var timestampMatches = timestampPattern.Matches(expression);
         if (timestampMatches.Count == 1)
         {
-            return GetTimestamp(node, expression, timestampMatches);
-        } else if(timestampMatches.Count == 1)
+            return GetTimestamp(node, expression, timestampMatches.Single());
+        } else if(timestampMatches.Count > 0)
         {
             return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
         } 
@@ -391,12 +391,11 @@ public class HttpKernel :
         return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
     }
 
-    private HttpBindingResult<object?> GetTimestamp(HttpExpressionNode node, string expressionText, MatchCollection matches)
+    private HttpBindingResult<object?> GetTimestamp(HttpExpressionNode node, string expressionText, Match match)
     {
         var currentDateTimeOffset = DateTimeOffset.UtcNow;
 
-        var match = matches.SingleOrDefault();
-        if (match?.Groups.Count == 3)
+        if (match.Groups.Count == 3)
         {
             if (string.Equals(expressionText, "$timestamp"))
             {
@@ -438,13 +437,13 @@ public class HttpKernel :
         
     }
 
-    private HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string expressionText, MatchCollection matches)
+    private HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string expressionText, Match match)
     {
         var currentDateTimeOffset = DateTimeOffset.UtcNow;
 
         string format;
-        var match = matches.SingleOrDefault();
-        if (match?.Groups.Count == 4)
+
+        if (match.Groups.Count == 4)
         {
             
             if (match.Groups["offset"].Success && match.Groups["option"].Success)
@@ -510,41 +509,32 @@ public class HttpKernel :
         
     }
 
-    private HttpBindingResult<object?> GetRandInt(HttpExpressionNode node, string text, MatchCollection matches)
+    private HttpBindingResult<object?> GetRandInt(HttpExpressionNode node, string text, Match match)
     {
 
         Random random = new();
         
-        var match = matches.SingleOrDefault();
-        if(match != null)
+        if (TryParseArgumentsFromMatch(text, match, out var min, out var max, out var diagnostic))
         {
-            if (TryParseArgumentsFromMatch(text, match, out var min, out var max, out var diagnostic))
+
+            if (!min.HasValue && !max.HasValue)
             {
-
-                if (!min.HasValue && !max.HasValue)
-                {
-                    text = random.Next().ToString();
-                }
-                else if (!min.HasValue && max.HasValue)
-                {
-                    text = random.Next(max.Value).ToString();
-                }
-                else if (min.HasValue && max.HasValue)
-                {
-                    text = random.Next(min.Value, max.Value).ToString();
-                }
-
-                return node.CreateBindingSuccess(text);
+                text = random.Next().ToString();
             }
-            else
+            else if (!min.HasValue && max.HasValue)
             {
-                return node.CreateBindingFailure(diagnostic);
+                text = random.Next(max.Value).ToString();
+            }
+            else if (min.HasValue && max.HasValue)
+            {
+                text = random.Next(min.Value, max.Value).ToString();
             }
 
-        } 
+            return node.CreateBindingSuccess(text);
+        }
         else
         {
-            return node.CreateBindingFailure(HttpDiagnostics.RandomIntFormatError(text));
+            return node.CreateBindingFailure(diagnostic);
         }
 
         bool TryParseArgumentsFromMatch(string expression, Match match, out int? min, out int? max, [NotNullWhen(false)] out HttpDiagnosticInfo? diagnostic)

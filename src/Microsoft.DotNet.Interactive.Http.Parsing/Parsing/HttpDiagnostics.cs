@@ -133,7 +133,7 @@ internal static class HttpDiagnostics
 
     internal static HttpDiagnosticInfo InvalidOption(string expression, string option)
     {
-        var id = $"HTTP0016";
+        var id = $"HTTP0017";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "The supplied option '{1}' in the expression '{0}' is not supported.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, expression, option);
@@ -141,7 +141,7 @@ internal static class HttpDiagnostics
 
     internal static HttpDiagnosticInfo RandomIntMinMustNotBeGreaterThanMax(string expression, string min, string max)
     {
-        var id = $"HTTP0017";
+        var id = $"HTTP0018";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = 
             """The supplied argument '{1}' in the expression '{0}' must not be greater than the supplied argument '{2}'.""";
@@ -150,7 +150,7 @@ internal static class HttpDiagnostics
 
     internal static HttpDiagnosticInfo InvalidRandomIntArgument(string expression, string argument)
     {
-        var id = $"HTTP0018";
+        var id = $"HTTP0019";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "The supplied argument '{1}' in the expression '{0}' is not a valid integer.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, expression, argument);
@@ -158,7 +158,7 @@ internal static class HttpDiagnostics
 
     internal static HttpDiagnosticInfo RandomIntFormatError(string expression)
     {
-        var id = $"HTTP0019";
+        var id = $"HTTP0020";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
             """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$randomInt minValue maxValue]}}'. See https://aka.ms/http-date-time-format for more details.""";
