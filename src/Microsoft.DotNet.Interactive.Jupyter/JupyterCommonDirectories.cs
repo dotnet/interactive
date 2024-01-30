@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
@@ -48,7 +49,7 @@ internal static class JupyterCommonDirectories
     public static DirectoryInfo GetDataDirectory()
     {
         var directory = GetDefaultDataDirectoryFromEnv();
-        if (directory != null && directory.Exists)
+        if (directory is { Exists: true })
         {
             return directory;
         }
@@ -79,7 +80,11 @@ internal static class JupyterCommonDirectories
                 directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "jupyter"));
                 break;
             case PlatformID.Unix:
-                directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "jupyter"));
+                directory = new DirectoryInfo(Path.Combine("usr","local","conda","share", "jupyter"));
+                if (!directory.Exists || !directory.EnumerateFileSystemInfos().Any())
+                {
+                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "jupyter"));
+                }
                 break;
             case PlatformID.MacOSX:
                 directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Jupyter"));
