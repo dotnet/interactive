@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,9 +10,9 @@ namespace Microsoft.DotNet.Interactive.Http
 
     internal static class DateTimeUtilities
     {
-        public static DateTimeOffset AddOffset(this DateTimeOffset dateTime, int offset, string offsetFormatString)
+        public static bool TryAddOffset(this DateTimeOffset dateTime, int offset, string offsetFormatString, [NotNullWhen(true)] out DateTimeOffset? newDateTime)
         {
-            return offsetFormatString switch
+            newDateTime = offsetFormatString switch
             {
                 "ms" => dateTime.AddMilliseconds(offset),
                 "s" => dateTime.AddSeconds(offset),
@@ -22,8 +23,10 @@ namespace Microsoft.DotNet.Interactive.Http
                 "M" => dateTime.AddMonths(offset),
                 "Q" => dateTime.AddMonths(offset * 3),
                 "y" => dateTime.AddYears(offset),
-                _ => throw new ArgumentException("Invalid offset format string", nameof(offsetFormatString))
+                _ => null
             };
+
+            return newDateTime != null;
         }
     }
 }

@@ -338,8 +338,7 @@ public class HttpKernelTests
         using var _ = new AssertionScope();
 
         var code = """
-            POST https://api.example.com/comments HTTP/1.1
-            Content-Type: application/xml
+            POST https://api.example.com/comments
 
             {
                 "request_id": "{{$guid}}"
@@ -352,6 +351,37 @@ public class HttpKernelTests
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var guidString = bodyAsString.Split(":").Last().Trim().Substring(1, 36);
         Guid.Parse(guidString).Should().NotBeEmpty();
+
+    }
+
+    [Fact]
+    public async Task cant_bind_multiple_guid_in_expression()
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{$guid$guid}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+
+        result.Events.First().Equals(HttpDiagnostics.UnableToEvaluateExpression("{{$guid$guid}}"));
 
     }
 
@@ -372,8 +402,7 @@ public class HttpKernelTests
         using var _ = new AssertionScope();
 
         var code = """
-            POST https://api.example.com/comments HTTP/1.1
-            Content-Type: application/xml
+            POST https://api.example.com/comments
 
             {
                 "request_id": "{{$GUID}}"
@@ -403,8 +432,7 @@ public class HttpKernelTests
         using var _ = new AssertionScope();
 
         var code = """
-            POST https://api.example.com/comments HTTP/1.1
-            Content-Type: application/xml
+            POST https://api.example.com/comments
             
             {
                 "updated_at" : "{{$timestamp}}"
@@ -420,8 +448,12 @@ public class HttpKernelTests
         unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1.0));
     }
 
-    [Fact]
-    public async Task can_bind_timestamp_with_parameters()
+    [Theory]
+    [InlineData("-1")]
+    [InlineData("+1")]
+    [InlineData("0")]
+    [InlineData("4")]
+    public async Task can_bind_timestamp_with_valid_offset(string offsetDays)
     {
         HttpRequestMessage request = null;
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -435,12 +467,11 @@ public class HttpKernelTests
 
         using var _ = new AssertionScope();
 
-        var code = """
-            POST https://api.example.com/comments HTTP/1.1
-            Content-Type: application/xml
+        var code = $$$"""
+            POST https://api.example.com/comments
             
             {
-                "created_at" : "{{$timestamp -1 d}}"
+                "created_at" : "{{$timestamp {{{offsetDays}}} d}}"
             }
             """;
 
@@ -450,7 +481,127 @@ public class HttpKernelTests
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var unixValueString = bodyAsString.Split(":").Last().Trim().Substring(1, 10);
         var unixValue = DateTimeOffset.FromUnixTimeSeconds(long.Parse(unixValueString));
-        unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromDays(1.5));
+        var offsetDaysInteger = int.Parse(offsetDays);
+        var dateTimeOffset = DateTimeOffset.UtcNow.AddDays(offsetDaysInteger);
+        unixValue.Should().BeCloseTo(dateTimeOffset, TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
+    public async Task cant_bind_timestamp_offset_without_option()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$timestamp -1}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied expression '$timestamp -1' does not follow the correct pattern. The expression should adhere to the following pattern: '{$timestamp [offset option]}'. See https://aka.ms/http-date-time-format for more details.");
+    }
+
+    /*[Fact]
+    public async Task cant_bind_timestamp_offset_with_invalid_option()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$timestamp -1 q}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied option 'q' in the expression '$timestamp -1 q' is not supported.");
+    }
+
+    [Fact]
+    public async Task cant_bind_timestamp_offset_with_invalid_offset()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$timestamp hi q}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied offset '{1}' in the expression '{0}' is not a valid integer.");
+    }*/
+
+    [Fact]
+    public async Task cant_bind_timestamp_with_invalid_parameters()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$timestamp ~1 d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.First().Equals(HttpDiagnostics.TimestampFormatError("{{$timestamp ~1 d}}"));
     }
 
     [Fact]
@@ -469,8 +620,7 @@ public class HttpKernelTests
         using var _ = new AssertionScope();
 
         var code = """
-            POST https://api.example.com/comments HTTP/1.1
-            Content-Type: application/xml
+            POST https://api.example.com/comments
             
             {
                 "review_count" : "{{$randomInt 10 99}}"
@@ -491,6 +641,107 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task can_bind_random_int_with_negative_values()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{$randomInt -10 99}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var randIntSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var randIntValue = randIntSubstring.Substring(0, randIntSubstring.IndexOf("\""));
+
+        int intValueOfRandInt = int.Parse(randIntValue);
+
+        intValueOfRandInt.Should().BeGreaterThanOrEqualTo(-10);
+        intValueOfRandInt.Should().BeLessThanOrEqualTo(99);
+    }
+
+    [Fact]
+    public async Task cant_bind_random_int_with_min_greater_than_max()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{$randomInt 99 10}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.First().Equals(HttpDiagnostics.RandomIntMinMustNotBeGreaterThanMax("{{$randomInt 99 10}}", "99", "10"));
+    }
+
+    [Theory]
+    [InlineData("-1")]
+    [InlineData("+1")]
+    [InlineData("0")]
+    [InlineData("4")]
+    public async Task can_bind_datetime_with_valid_offset(string offsetDays)
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$datetime 'yyyy-MM-dd hh:mm:ss' {{{offsetDays}}} d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var dateTimeString = bodyAsString.Split("\"created_at\" : ").Last().Trim(new []{'\r', '\n', '{', '}', '"'});
+        var dateTimeValue = DateTime.Parse(dateTimeString);
+        var offsetDaysInteger = int.Parse(offsetDays);
+        var dateTimeOffset = DateTime.UtcNow.AddDays(offsetDaysInteger);
+        dateTimeValue.Should().BeCloseTo(dateTimeOffset, TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
     public async Task can_bind_datetime_with_parameters()
     {
         HttpRequestMessage request = null;
@@ -506,8 +757,7 @@ public class HttpKernelTests
         using var _ = new AssertionScope();
 
         var code = """
-            POST https://api.example.com/comments HTTP/1.1
-            Content-Type: application/xml
+            POST https://api.example.com/comments
             
             {
                 "custom_date" : "{{$datetime 'yyyy-MM-dd'}}"
@@ -521,6 +771,39 @@ public class HttpKernelTests
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateValue = bodyAsString.Split(":").Last().Trim().Substring(1, currentDate.Length);
         readDateValue.Should().BeEquivalentTo(currentDate);
+
+    }
+
+    [Fact]
+    public async Task can_bind_datetime_with_offset()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+          
+            {
+                "custom_date" : "{{$datetime 'yyyy-MM-dd' -1 d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var offsetDate = DateTime.UtcNow.AddDays(-1.0).ToString("yyyy-MM-dd");
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateValue = bodyAsString.Split(":").Last().Trim().Substring(1, offsetDate.Length);
+        readDateValue.Should().BeEquivalentTo(offsetDate);
 
     }
 
@@ -540,9 +823,8 @@ public class HttpKernelTests
         using var _ = new AssertionScope();
 
         var code = """
-            POST https://api.example.com/comments HTTP/1.1
-            Content-Type: application/xml
-            
+            POST https://api.example.com/comments
+
             {
                 "local_custom_date" : "{{$localDatetime 'yyyy-MM-dd'}}"
             }
@@ -573,9 +855,8 @@ public class HttpKernelTests
         using var _ = new AssertionScope();
 
         var code = """
-            POST https://api.example.com/comments="{{$randomInt 5 200}}" HTTP/1.1
-            Content-Type: application/xml
-            last-modified: "{{$timestamp}}"
+            POST https://api.example.com/comments="{{$randomInt 5 200}}"
+            Current-time: "{{$timestamp}}"
             
             {
                 "request_id": "{{$guid}}",
@@ -675,7 +956,7 @@ public class HttpKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode(code));
 
-        result.Events.First().Equals(HttpDiagnostics.DateTimePatternMatchError("localDatetime YYYY-MM-DD"));
+        result.Events.First().Equals(HttpDiagnostics.DateTimeFormatError("localDatetime YYYY-MM-DD"));
 
     }
 
@@ -692,7 +973,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be("Cannot resolve symbol 'api_endpoint'.");
+        diagnostics.Diagnostics.First().Message.Should().Be("Unable to evaluate expression 'api_endpoint'.");
     }
 
     [Fact]
