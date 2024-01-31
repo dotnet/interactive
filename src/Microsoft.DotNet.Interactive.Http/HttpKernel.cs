@@ -1,9 +1,14 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Http.Parsing;
+using Microsoft.DotNet.Interactive.ValueSharing;
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -12,14 +17,6 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.VisualBasic;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Http.Parsing;
-using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -240,7 +237,7 @@ public class HttpKernel :
             Activity.Current = null;
 
             Activity.Current = new Activity("").Start();
-            
+
             var responseMessage = await _client.SendAsync(requestMessage, cancellationToken);
             response = (await responseMessage.ToHttpResponseAsync(cancellationToken))!;
         }
@@ -339,7 +336,7 @@ public class HttpKernel :
         var dateTimePattern = new Regex(@$"\{"$datetime"}{OptionsRegex}{OffsetRegex}", RegexOptions.Compiled);
         var localDateTimePattern = new Regex(@$"\{"$localDatetime"}{OptionsRegex}{OffsetRegex}", RegexOptions.Compiled);
         var randomIntPattern = new Regex(@$"^\{"$randomInt"}(?:\s(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
-        var timestampPattern = new Regex(@$"\{"$timestamp"}{OffsetRegex}", RegexOptions.Compiled);    
+        var timestampPattern = new Regex(@$"\{"$timestamp"}{OffsetRegex}", RegexOptions.Compiled);
 
         var guidMatches = guidPattern.Matches(expression);
         if (guidMatches.Count == 1)
@@ -365,7 +362,8 @@ public class HttpKernel :
         if (localDateTimeMatches.Count == 1)
         {
             return GetDateTime(node, expression, localDateTimeMatches.Single());
-        } else if(localDateTimeMatches.Count > 0)
+        }
+        else if (localDateTimeMatches.Count > 0)
         {
             return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
         }
@@ -374,7 +372,8 @@ public class HttpKernel :
         if (randomIntMatches.Count == 1)
         {
             return GetRandInt(node, expression, randomIntMatches.Single());
-        } else if (randomIntMatches.Count > 0)
+        }
+        else if (randomIntMatches.Count > 0)
         {
             return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
         }
@@ -383,10 +382,11 @@ public class HttpKernel :
         if (timestampMatches.Count == 1)
         {
             return GetTimestamp(node, expression, timestampMatches.Single());
-        } else if(timestampMatches.Count > 0)
+        }
+        else if (timestampMatches.Count > 0)
         {
             return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
-        } 
+        }
 
         return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
     }
@@ -400,9 +400,9 @@ public class HttpKernel :
             if (string.Equals(expressionText, "$timestamp"))
             {
                 return node.CreateBindingSuccess(currentDateTimeOffset.ToUnixTimeSeconds().ToString());
-            } 
+            }
 
-                if (match.Groups["offset"].Success && match.Groups["option"].Success) 
+            if (match.Groups["offset"].Success && match.Groups["option"].Success)
             {
 
                 var offsetString = match.Groups["offset"].Value;
@@ -427,14 +427,15 @@ public class HttpKernel :
                 }
             }
 
-            return node.CreateBindingFailure(HttpDiagnostics.TimestampFormatError(expressionText));
-        } else
+            return node.CreateBindingFailure(HttpDiagnostics.IncorrectTimestampFormat(expressionText));
+        }
+        else
         {
-            return node.CreateBindingFailure(HttpDiagnostics.TimestampFormatError(expressionText));
+            return node.CreateBindingFailure(HttpDiagnostics.IncorrectTimestampFormat(expressionText));
         }
 
 
-        
+
     }
 
     private HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string expressionText, Match match)
@@ -445,7 +446,7 @@ public class HttpKernel :
 
         if (match.Groups.Count == 4)
         {
-            
+
             if (match.Groups["offset"].Success && match.Groups["option"].Success)
             {
 
@@ -498,22 +499,22 @@ public class HttpKernel :
             }
             else
             {
-                return node.CreateBindingFailure(HttpDiagnostics.DateTimeFormatError(expressionText));
+                return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText));
             }
-        } 
+        }
         else
         {
-            return node.CreateBindingFailure(HttpDiagnostics.DateTimeFormatError(expressionText));
-        } 
+            return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText));
+        }
 
-        
+
     }
 
     private HttpBindingResult<object?> GetRandInt(HttpExpressionNode node, string text, Match match)
     {
 
         Random random = new();
-        
+
         if (TryParseArgumentsFromMatch(text, match, out var min, out var max, out var diagnostic))
         {
 
@@ -569,7 +570,7 @@ public class HttpKernel :
 
                     string maxValueString = group.Captures[1].Value;
 
-                    if(!TryParseInteger(maxValueString, expression, out max, out diagnostic))
+                    if (!TryParseInteger(maxValueString, expression, out max, out diagnostic))
                     {
                         return false;
                     }
@@ -584,21 +585,23 @@ public class HttpKernel :
 
                     return true;
                 }
-           
+
             }
 
             min = null;
             max = null;
-            diagnostic = HttpDiagnostics.RandomIntFormatError(expression);
+            diagnostic = HttpDiagnostics.IncorrectRandomIntFormat(expression);
             return false;
 
             bool TryParseInteger(string valueString, string expression, [NotNullWhen(true)] out int? value, [NotNullWhen(false)] out HttpDiagnosticInfo? diagnostic)
             {
-                if(int.TryParse(valueString, out var result)){
+                if (int.TryParse(valueString, out var result))
+                {
                     value = result;
                     diagnostic = null;
-                ;   return true;
-                } else
+                    ; return true;
+                }
+                else
                 {
                     value = null;
                     diagnostic = HttpDiagnostics.InvalidRandomIntArgument(expression, valueString);
@@ -608,6 +611,6 @@ public class HttpKernel :
         }
     }
 
-    
+
 
 }

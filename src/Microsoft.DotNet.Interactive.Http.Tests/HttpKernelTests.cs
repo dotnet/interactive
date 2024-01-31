@@ -1,27 +1,22 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
-using FluentAssertions.Execution;
-using Microsoft.AspNetCore.Http;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Microsoft.DotNet.Interactive.Http.Parsing;
-using Microsoft.DotNet.Interactive.Tests.Utility;
-using Pocket;
 using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
@@ -312,13 +307,13 @@ public class HttpKernelTests
 
             Get {{host}}
             """;
-        
+
         var result = await kernel.SendAsync(new SubmitCode(code));
-        
+
         result.Events.Should().NotContainErrors();
         request.RequestUri.Should().Be($"https://httpbin.org");
-       
-        
+
+
     }
 
     [Fact]
@@ -334,8 +329,7 @@ public class HttpKernelTests
         });
         var client = new HttpClient(handler);
         using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
+        _ = new AssertionScope();
 
         var code = """
             POST https://api.example.com/comments
@@ -349,8 +343,9 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        var guidString = bodyAsString.Split(":").Last().Trim().Substring(1, 36);
-        Guid.Parse(guidString).Should().NotBeEmpty();
+        var guidSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var guidString = guidSubstring.Substring(0, guidSubstring.IndexOf("\""));
+        _ = Guid.TryParse(guidString, out _).Should().BeTrue();
 
     }
 
@@ -447,9 +442,10 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        var unixValueString = bodyAsString.Split(":").Last().Trim().Substring(1, 10);
+        var unixValueSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var unixValueString = unixValueSubstring.Substring(0, unixValueSubstring.IndexOf("\""));
         var unixValue = DateTimeOffset.FromUnixTimeSeconds(long.Parse(unixValueString));
-        unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1.0));
+        unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(10));
     }
 
     [Theory]
@@ -483,7 +479,8 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        var unixValueString = bodyAsString.Split(":").Last().Trim().Substring(1, 10);
+        var unixValueSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var unixValueString = unixValueSubstring.Substring(0, unixValueSubstring.IndexOf("\""));
         var unixValue = DateTimeOffset.FromUnixTimeSeconds(long.Parse(unixValueString));
         var offsetDaysInteger = int.Parse(offsetDays);
         var dateTimeOffset = DateTimeOffset.UtcNow.AddDays(offsetDaysInteger);
@@ -517,7 +514,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be("The supplied expression '$timestamp -1' does not follow the correct pattern. The expression should adhere to the following pattern: '{$timestamp [offset option]}'. See https://aka.ms/http-date-time-format for more details.");
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied expression '$timestamp -1' does not follow the correct pattern. The expression should adhere to the following pattern: '{$timestamp [offset option]}' where offset is a valid integer and option is one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
     }
 
     [Fact]
@@ -550,7 +547,7 @@ public class HttpKernelTests
         diagnostics.Diagnostics.First().Message.Should().Be("The supplied option 'q' in the expression '$timestamp -1 q' is not supported.");
     }
 
-    
+
 
     [Fact]
     public async Task cant_bind_timestamp_offset_with_invalid_offset()
@@ -637,7 +634,8 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        var randIntValue = bodyAsString.Split(":").Last().Trim().Substring(1, 2);
+        var randIntSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var randIntValue = randIntSubstring.Substring(0, randIntSubstring.IndexOf("\""));
 
 
         int intValueOfRandInt = int.Parse(randIntValue);
@@ -767,7 +765,7 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        var dateTimeString = bodyAsString.Split("\"created_at\" : ").Last().Trim(new []{'\r', '\n', '{', '}', '"'});
+        var dateTimeString = bodyAsString.Split("\"created_at\" : ").Last().Trim(new[] { '\r', '\n', '{', '}', '"' });
         var dateTimeValue = DateTime.Parse(dateTimeString);
         var offsetDaysInteger = int.Parse(offsetDays);
         var dateTimeOffset = DateTime.UtcNow.AddDays(offsetDaysInteger);
@@ -802,7 +800,8 @@ public class HttpKernelTests
 
         var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        var readDateValue = bodyAsString.Split(":").Last().Trim().Substring(1, currentDate.Length);
+        var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
         readDateValue.Should().BeEquivalentTo(currentDate);
 
     }
@@ -835,7 +834,9 @@ public class HttpKernelTests
 
         var offsetDate = DateTime.UtcNow.AddDays(-1.0).ToString("yyyy-MM-dd");
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        var readDateValue = bodyAsString.Split(":").Last().Trim().Substring(1, offsetDate.Length);
+        var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+
         readDateValue.Should().BeEquivalentTo(offsetDate);
 
     }
@@ -868,7 +869,8 @@ public class HttpKernelTests
 
         var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var bodyAsString = await request.Content.ReadAsStringAsync();
-        var readDateValue = bodyAsString.Split(":").Last().Trim().Substring(1, currentDate.Length);
+        var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
         readDateValue.Should().BeEquivalentTo(currentDate);
     }
 
@@ -932,7 +934,7 @@ public class HttpKernelTests
         request.RequestUri.AbsoluteUri.Should().Be("https://httpbin.org/anything");
     }
 
-    [Fact] 
+    [Fact]
     public async Task incorrect_datetime_syntax_produces_error()
     {
         HttpRequestMessage request = null;
@@ -987,7 +989,7 @@ public class HttpKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode(code));
 
-        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied expression '$localDatetime 'YYYY-MM-DD'' does not follow the correct pattern. The expression should adhere to the following pattern: '{$datetime |iso8601|"custom format" [offset option]}'. See https://aka.ms/http-date-time-format for more details.""");
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied expression '$localDatetime 'YYYY-MM-DD'' does not follow the correct pattern. The expression should adhere to the following pattern: '{$datetime |iso8601|"custom format" [offset option]}' where offset is a valid integer and option is one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
 
     }
 
