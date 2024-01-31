@@ -105,13 +105,13 @@ internal static class HttpDiagnostics
         return new HttpDiagnosticInfo(id, messageFormat, severity, symbol);
     }
 
-    internal static HttpDiagnosticInfo IncorrectDateTimeFormat(string expression)
+    internal static HttpDiagnosticInfo IncorrectDateTimeFormat(string expression, string dateTimeType)
     {
         var id = $"HTTP0013";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$datetime |iso8601|"custom format" [offset option]}}' where offset is a valid integer and option is one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, expression);
+            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{{1} |iso8601|"custom format" [offset option]}}' where offset is a valid integer and option is one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, expression, dateTimeType);
     }
 
     internal static HttpDiagnosticInfo IncorrectTimestampFormat(string timestamp)
@@ -119,7 +119,7 @@ internal static class HttpDiagnostics
         var id = $"HTTP0014";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            "The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$timestamp [offset option]}}' where offset is a valid integer and option is one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.";
+            "The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$timestamp [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, timestamp);
     }
 
@@ -144,7 +144,7 @@ internal static class HttpDiagnostics
         var id = $"HTTP0017";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$randomInt min max]}}' where min and max are valid integers.""";
+            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$randomInt [min] [max]]}}' where min and max (if specified) must be valid integers.""";
         return new HttpDiagnosticInfo(id, messageFormat, severity, expression);
     }
 

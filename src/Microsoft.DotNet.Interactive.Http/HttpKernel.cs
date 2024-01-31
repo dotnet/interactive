@@ -329,14 +329,16 @@ public class HttpKernel :
 
     private HttpBindingResult<object?> MatchExpressionValue(HttpExpressionNode node, string expression)
     {
-        const string OffsetRegex = """(?:\s(?<offset>[-+]?[^\s]+)\s(?<option>[^\s]+))?""";
-        const string OptionsRegex = """\s(?<type>rfc1123|iso8601|'.+'|".+")""";
+        const string dateTime = "$datetime";
+        const string localDateTime = "$localDatetime";
+        const string offsetRegex = """(?:\s(?<offset>[-+]?[^\s]+)\s(?<option>[^\s]+))?""";
+        const string typeRegex = """(?:\s(?<type>rfc1123|iso8601|'.+'|".+"))?""";
 
-        var guidPattern = new Regex(@$"\{"$guid"}", RegexOptions.Compiled);
-        var dateTimePattern = new Regex(@$"\{"$datetime"}{OptionsRegex}{OffsetRegex}", RegexOptions.Compiled);
-        var localDateTimePattern = new Regex(@$"\{"$localDatetime"}{OptionsRegex}{OffsetRegex}", RegexOptions.Compiled);
-        var randomIntPattern = new Regex(@$"^\{"$randomInt"}(?:\s(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
-        var timestampPattern = new Regex(@$"\{"$timestamp"}{OffsetRegex}", RegexOptions.Compiled);
+        var guidPattern = new Regex(@$"^\$guid$", RegexOptions.Compiled);
+        var dateTimePattern = new Regex(@$"^\{dateTime}{typeRegex}{offsetRegex}$", RegexOptions.Compiled);
+        var localDateTimePattern = new Regex(@$"^\{localDateTime}{typeRegex}{offsetRegex}$", RegexOptions.Compiled);
+        var randomIntPattern = new Regex(@$"^\$randomInt(?:\s(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
+        var timestampPattern = new Regex(@$"^\$timestamp{offsetRegex}", RegexOptions.Compiled);
 
         var guidMatches = guidPattern.Matches(expression);
         if (guidMatches.Count == 1)
@@ -351,7 +353,7 @@ public class HttpKernel :
         var dateTimeMatches = dateTimePattern.Matches(expression);
         if (dateTimeMatches.Count == 1)
         {
-            return GetDateTime(node, expression, dateTimeMatches.Single());
+            return GetDateTime(node, dateTime, expression, dateTimeMatches.Single());
         }
         else if (dateTimeMatches.Count > 0)
         {
@@ -361,7 +363,7 @@ public class HttpKernel :
         var localDateTimeMatches = localDateTimePattern.Matches(expression);
         if (localDateTimeMatches.Count == 1)
         {
-            return GetDateTime(node, expression, localDateTimeMatches.Single());
+            return GetDateTime(node, localDateTime, expression, localDateTimeMatches.Single());
         }
         else if (localDateTimeMatches.Count > 0)
         {
@@ -438,7 +440,7 @@ public class HttpKernel :
 
     }
 
-    private HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string expressionText, Match match)
+    private HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string dateTimeType, string expressionText, Match match)
     {
         var currentDateTimeOffset = DateTimeOffset.UtcNow;
 
@@ -447,13 +449,16 @@ public class HttpKernel :
         if (match.Groups.Count == 4)
         {
 
-            if (match.Groups["offset"].Success && match.Groups["option"].Success)
+            Group offsetGroup = match.Groups["offset"];
+            Group optionGroup = match.Groups["option"];
+
+            if (offsetGroup.Success && optionGroup.Success)
             {
 
-                var offsetString = match.Groups["offset"].Value;
+                var offsetString = offsetGroup.Value;
                 if (int.TryParse(offsetString, out int offset))
                 {
-                    var optionString = match.Groups["option"].Value;
+                    var optionString = optionGroup.Value;
                     if (currentDateTimeOffset.TryAddOffset(offset, optionString, out var newDateTimeOffset))
                     {
                         currentDateTimeOffset = newDateTimeOffset.Value;
@@ -473,25 +478,34 @@ public class HttpKernel :
 
             var formatProvider = Thread.CurrentThread.CurrentUICulture;
             var type = match.Groups["type"];
-            if (string.Equals(type.Value, "rfc1123", StringComparison.OrdinalIgnoreCase))
+
+            string text;
+            if (string.IsNullOrWhiteSpace(type.Value))
             {
-                // For RFC1123, we want to be sure to use the invariant culture,
-                // since we are potentially overriding the format for local date time
-                // we should explicitly set the format provider to invariant culture
-                formatProvider = CultureInfo.InvariantCulture;
-                format = "r";
-            }
-            else if (string.Equals(type.Value, "iso8601", StringComparison.OrdinalIgnoreCase))
-            {
-                format = "o";
+                text = currentDateTimeOffset.ToString();
             }
             else
             {
-                // This substring exists to strip out the double quotes that are expected in a custom format
-                format = type.Value.Substring(1, type.Value.Length - 2);
-            }
+                if (string.Equals(type.Value, "rfc1123", StringComparison.OrdinalIgnoreCase))
+                {
+                    // For RFC1123, we want to be sure to use the invariant culture,
+                    // since we are potentially overriding the format for local date time
+                    // we should explicitly set the format provider to invariant culture
+                    formatProvider = CultureInfo.InvariantCulture;
+                    format = "r";
+                }
+                else if (string.Equals(type.Value, "iso8601", StringComparison.OrdinalIgnoreCase))
+                {
+                    format = "o";
+                }
+                else
+                {
+                    // This substring exists to strip out the double quotes that are expected in a custom format
+                    format = type.Value.Substring(1, type.Value.Length - 2);
+                }
 
-            var text = currentDateTimeOffset.ToString(format, formatProvider);
+                text = currentDateTimeOffset.ToString(format, formatProvider);
+            }
 
             if (DateTimeOffset.TryParse(text, out _))
             {
@@ -499,12 +513,12 @@ public class HttpKernel :
             }
             else
             {
-                return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText));
+                return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText, dateTimeType));
             }
         }
         else
         {
-            return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText));
+            return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText, dateTimeType));
         }
 
 
