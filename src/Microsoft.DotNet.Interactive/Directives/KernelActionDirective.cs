@@ -9,8 +9,6 @@ namespace Microsoft.DotNet.Interactive.Directives;
 
 public class KernelActionDirective : KernelDirective
 {
-    // FIX: (KernelActionDirective) get rid of parameters vs named parameters distinction
-    private readonly NamedSymbolCollection<KernelDirectiveNamedParameter> _namedParameters = new(directive => directive.Name);
     private readonly NamedSymbolCollection<KernelActionDirective> _subcommands = new(directive => directive.Name);
     private readonly NamedSymbolCollection<KernelDirectiveParameter> _parameters = new(parameter => parameter.Name);
 
@@ -20,13 +18,9 @@ public class KernelActionDirective : KernelDirective
 
     public Type DeserializeAs { get; set; }
 
-    public ICollection<KernelDirectiveNamedParameter> NamedParameters => _namedParameters;
-
     public ICollection<KernelActionDirective> Subcommands => _subcommands;
 
     public ICollection<KernelDirectiveParameter> Parameters => _parameters;
-
-    internal bool TryGetNamedParameter(string name, out KernelDirectiveNamedParameter value) => _namedParameters.TryGetValue(name, out value);
 
     internal bool TryGetParameter(string name, out KernelDirectiveParameter value) => _parameters.TryGetValue(name, out value);
 

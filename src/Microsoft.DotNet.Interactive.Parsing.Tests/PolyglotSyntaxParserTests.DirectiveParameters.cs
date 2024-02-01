@@ -115,7 +115,7 @@ public partial class PolyglotSyntaxParserTests
                         {
                             new KernelActionDirective("#!test")
                             {
-                                NamedParameters =
+                                Parameters =
                                 {
                                     new("--opt")
                                     {
@@ -179,7 +179,7 @@ public partial class PolyglotSyntaxParserTests
                         {
                             new KernelActionDirective("#!test")
                             {
-                                NamedParameters =
+                                Parameters =
                                 {
                                     new("--opt")
                                     {
@@ -230,7 +230,7 @@ public partial class PolyglotSyntaxParserTests
                         {
                             new KernelActionDirective("#!test")
                             {
-                                NamedParameters =
+                                Parameters =
                                 {
                                     new("--opt")
                                     {
@@ -274,7 +274,7 @@ public partial class PolyglotSyntaxParserTests
                         {
                             new KernelActionDirective("#!test")
                             {
-                                NamedParameters =
+                                Parameters =
                                 {
                                     new("--opt")
                                     {

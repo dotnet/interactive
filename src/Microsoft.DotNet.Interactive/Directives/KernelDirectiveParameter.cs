@@ -4,12 +4,16 @@
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Directives;
 
-public abstract class KernelDirective
+public class KernelDirectiveParameter
 {
-    public KernelDirective(string name)
+    public KernelDirectiveParameter(string name)
     {
         Name = name;
     }
 
-    public string Name { get; init; }
+    public string Name { get; }
+    
+    public int MaxOccurrences { get; set; } = 1;
+
+    public bool Required { get; set; } = false;
 }

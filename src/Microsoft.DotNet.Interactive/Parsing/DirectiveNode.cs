@@ -75,7 +75,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 kernelInfo.TryGetDirective(name, out var directive) &&
                 directive is KernelActionDirective actionDirective)
             {
-                foreach (var namedParameter in actionDirective.NamedParameters)
+                foreach (var namedParameter in actionDirective.Parameters)
                 {
                     if (namedParameter.Required)
                     {
