@@ -19,6 +19,7 @@
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="Utility\MarkupTestFile.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelActionDirective.cs" Link="KernelActionDirective.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirective.cs" Link="KernelDirective.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirectiveParameter.cs" Link="KernelDirectiveParameter.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\NamedSymbolCollection{T}.cs" Link="NamedSymbolCollection{T}.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelSpecifierDirective.cs" Link="KernelSpecifierDirective.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\KernelCommandInfo.cs" Link="KernelCommandInfo.cs" LinkBase="Parsing" />

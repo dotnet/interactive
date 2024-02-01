@@ -47,7 +47,7 @@ internal class DirectiveParameterNode : SyntaxNode
                     kernelInfo.TryGetDirective(directiveName, out var directive) &&
                     directive is KernelActionDirective actionDirective)
                 {
-                    if (actionDirective.TryGetNamedParameter(parameterName, out var option))
+                    if (actionDirective.TryGetParameter(parameterName, out var option))
                     {
                         var occurrences = SyntaxTree.RootNode
                                                     .DescendantNodesAndTokensAndSelf()

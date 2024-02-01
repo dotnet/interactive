@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -12,14 +12,8 @@ public class KernelDirectiveParameter
     }
 
     public string Name { get; }
+    
+    public int MaxOccurrences { get; set; } = 1;
 
-    public bool AllowImplicitName { get; init; }
-
-    public int MaxOccurrences { get; init; } = 1;
-
-    public bool Required { get; init; } = false;
-
-    public string TypeHint { get; init; } = "text";
-
-    public bool Flag { get; set; }
+    public bool Required { get; set; } = false;
 }

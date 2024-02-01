@@ -26,26 +26,22 @@ public partial class PolyglotSyntaxParserTests
                             {
                                 new("one")
                                 {
-                                    NamedParameters =
+                                    Parameters =
                                     {
                                         new("--opt-one")
                                     }
                                 },
                                 new("two")
                                 {
-                                    NamedParameters =
+                                    Parameters =
                                     {
                                         new("--opt-two")
                                     }
                                 },
                             },
-                            NamedParameters =
-                            {
-                                new("--opt")
-                            },
                             Parameters =
                             {
-                                new("value")
+                                new("--opt")
                             }
                         }
                     }
