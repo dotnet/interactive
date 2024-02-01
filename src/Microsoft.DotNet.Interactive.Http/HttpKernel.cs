@@ -329,16 +329,16 @@ public class HttpKernel :
 
     private HttpBindingResult<object?> MatchExpressionValue(HttpExpressionNode node, string expression)
     {
-        const string dateTime = "$datetime";
-        const string localDateTime = "$localDatetime";
-        const string offsetRegex = """(?:\s(?<offset>[-+]?[^\s]+)\s(?<option>[^\s]+))?""";
-        const string typeRegex = """(?:\s(?<type>rfc1123|iso8601|'.+'|".+"))?""";
+        const string DateTime = "$datetime";
+        const string LocalDateTime = "$localDatetime";
+        const string OffsetRegex = """(?:\s(?<offset>[-+]?[^\s]+)\s(?<option>[^\s]+))?""";
+        const string TypeRegex = """(?:\s(?<type>rfc1123|iso8601|'.+'|".+"))?""";
 
         var guidPattern = new Regex(@$"^\$guid$", RegexOptions.Compiled);
-        var dateTimePattern = new Regex(@$"^\{dateTime}{typeRegex}{offsetRegex}$", RegexOptions.Compiled);
-        var localDateTimePattern = new Regex(@$"^\{localDateTime}{typeRegex}{offsetRegex}$", RegexOptions.Compiled);
+        var dateTimePattern = new Regex(@$"^\{DateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
+        var localDateTimePattern = new Regex(@$"^\{LocalDateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
         var randomIntPattern = new Regex(@$"^\$randomInt(?:\s(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
-        var timestampPattern = new Regex(@$"^\$timestamp{offsetRegex}", RegexOptions.Compiled);
+        var timestampPattern = new Regex(@$"^\$timestamp{OffsetRegex}$", RegexOptions.Compiled);
 
         var guidMatches = guidPattern.Matches(expression);
         if (guidMatches.Count == 1)
@@ -353,7 +353,7 @@ public class HttpKernel :
         var dateTimeMatches = dateTimePattern.Matches(expression);
         if (dateTimeMatches.Count == 1)
         {
-            return GetDateTime(node, dateTime, expression, dateTimeMatches.Single());
+            return GetDateTime(node, DateTime, expression, dateTimeMatches.Single());
         }
         else if (dateTimeMatches.Count > 0)
         {
@@ -363,7 +363,7 @@ public class HttpKernel :
         var localDateTimeMatches = localDateTimePattern.Matches(expression);
         if (localDateTimeMatches.Count == 1)
         {
-            return GetDateTime(node, localDateTime, expression, localDateTimeMatches.Single());
+            return GetDateTime(node, LocalDateTime, expression, localDateTimeMatches.Single());
         }
         else if (localDateTimeMatches.Count > 0)
         {
@@ -395,10 +395,10 @@ public class HttpKernel :
 
     private HttpBindingResult<object?> GetTimestamp(HttpExpressionNode node, string expressionText, Match match)
     {
-        var currentDateTimeOffset = DateTimeOffset.UtcNow;
-
         if (match.Groups.Count == 3)
         {
+            var currentDateTimeOffset = DateTimeOffset.UtcNow;
+
             if (string.Equals(expressionText, "$timestamp"))
             {
                 return node.CreateBindingSuccess(currentDateTimeOffset.ToUnixTimeSeconds().ToString());
@@ -411,17 +411,16 @@ public class HttpKernel :
                 if (int.TryParse(offsetString, out int offset))
                 {
                     var optionString = match.Groups["option"].Value;
+
                     if (currentDateTimeOffset.TryAddOffset(offset, optionString, out var newDateTimeOffset))
                     {
-                        currentDateTimeOffset = newDateTimeOffset.Value;
+                        expressionText = newDateTimeOffset.Value.ToUnixTimeSeconds().ToString();
+                        return node.CreateBindingSuccess(expressionText);
                     }
                     else
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidOption(expressionText, optionString));
                     }
-                    expressionText = currentDateTimeOffset.ToUnixTimeSeconds().ToString();
-                    return node.CreateBindingSuccess(expressionText);
-
                 }
                 else
                 {
@@ -429,36 +428,22 @@ public class HttpKernel :
                 }
             }
 
-            return node.CreateBindingFailure(HttpDiagnostics.IncorrectTimestampFormat(expressionText));
         }
-        else
-        {
-            return node.CreateBindingFailure(HttpDiagnostics.IncorrectTimestampFormat(expressionText));
-        }
-
-
+        return node.CreateBindingFailure(HttpDiagnostics.IncorrectTimestampFormat(expressionText));
 
     }
 
     private HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string dateTimeType, string expressionText, Match match)
     {
-        var currentDateTimeOffset = DateTimeOffset.UtcNow;
-
-        string format;
-
         if (match.Groups.Count == 4)
         {
-
-            Group offsetGroup = match.Groups["offset"];
-            Group optionGroup = match.Groups["option"];
-
-            if (offsetGroup.Success && optionGroup.Success)
+            var currentDateTimeOffset = DateTimeOffset.UtcNow;
+            if (match.Groups["offset"].Success && match.Groups["option"].Success)
             {
-
-                var offsetString = offsetGroup.Value;
+                var offsetString = match.Groups["offset"].Value;
                 if (int.TryParse(offsetString, out int offset))
                 {
-                    var optionString = optionGroup.Value;
+                    var optionString = match.Groups["option"].Value;
                     if (currentDateTimeOffset.TryAddOffset(offset, optionString, out var newDateTimeOffset))
                     {
                         currentDateTimeOffset = newDateTimeOffset.Value;
@@ -467,15 +452,13 @@ public class HttpKernel :
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidOption(expressionText, optionString));
                     }
-
                 }
                 else
                 {
                     return node.CreateBindingFailure(HttpDiagnostics.InvalidOffset(expressionText, offsetString));
                 }
             }
-
-
+            string format;
             var formatProvider = Thread.CurrentThread.CurrentUICulture;
             var type = match.Groups["type"];
 
@@ -511,27 +494,15 @@ public class HttpKernel :
             {
                 return node.CreateBindingSuccess(text);
             }
-            else
-            {
-                return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText, dateTimeType));
-            }
         }
-        else
-        {
-            return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText, dateTimeType));
-        }
-
-
+        return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText, dateTimeType));
     }
 
     private HttpBindingResult<object?> GetRandInt(HttpExpressionNode node, string text, Match match)
     {
-
-        Random random = new();
-
         if (TryParseArgumentsFromMatch(text, match, out var min, out var max, out var diagnostic))
         {
-
+            Random random = new();
             if (!min.HasValue && !max.HasValue)
             {
                 text = random.Next().ToString();
@@ -586,6 +557,7 @@ public class HttpKernel :
 
                     if (!TryParseInteger(maxValueString, expression, out max, out diagnostic))
                     {
+                        min = null;
                         return false;
                     }
 
@@ -613,7 +585,7 @@ public class HttpKernel :
                 {
                     value = result;
                     diagnostic = null;
-                    ; return true;
+                    return true;
                 }
                 else
                 {
