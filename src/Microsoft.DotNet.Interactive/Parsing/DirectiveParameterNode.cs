@@ -6,18 +6,19 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-internal class DirectiveNamedParameterNode : SyntaxNode
+internal class DirectiveParameterNode : SyntaxNode
 {
-    internal DirectiveNamedParameterNode(SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
+    internal DirectiveParameterNode(SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
     public DirectiveParameterNameNode? NameNode { get; private set; }
 
-    public DirectiveParameterValueNode? ArgumentNode { get; private set; }
+    public DirectiveParameterValueNode? ValueNode { get; private set; }
 
     public void Add(DirectiveParameterNameNode node)
     {
@@ -28,7 +29,7 @@ internal class DirectiveNamedParameterNode : SyntaxNode
     public void Add(DirectiveParameterValueNode valueNode)
     {
         AddInternal(valueNode);
-        ArgumentNode = valueNode;
+        ValueNode = valueNode;
     }
 
     public override IEnumerable<CodeAnalysis.Diagnostic> GetDiagnostics()

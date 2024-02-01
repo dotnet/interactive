@@ -9,9 +9,4 @@ public partial class PolyglotSyntaxParserTests
     {
         // FIX: (DirectiveActions)
     }
-
-    public class InputTokens
-    {
-        // FIX: (InputTokens) 
-    }
 }

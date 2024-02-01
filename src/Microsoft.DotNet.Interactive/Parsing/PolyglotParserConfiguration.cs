@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
@@ -62,7 +63,7 @@ internal class PolyglotParserConfiguration
         return false;
     }
 
-    public bool IsParameterInScope(DirectiveNamedParameterNode namedParameter)
+    public bool IsParameterInScope(DirectiveParameterNode namedParameter)
     {
         EnsureSymbolMapIsInitialized();
 

@@ -1,7 +1,6 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -10,7 +9,6 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
@@ -18,13 +16,6 @@ public partial class PolyglotSyntaxParserTests
 {
     public class DirectiveParameters
     {
-        private readonly ITestOutputHelper _output;
-
-        public DirectiveParameters(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
         [Fact]
         public void Words_prefixed_with_hyphens_are_parsed_into_parameter_name_nodes()
         {
@@ -67,50 +58,6 @@ public partial class PolyglotSyntaxParserTests
             argumentNode.Text.Should().Be("\"this is the argument\"");
         }
 
-        [Theory]
-        [InlineData("#!test --flag --param 123")]
-        [InlineData("#!test --flag 123")] // implicit parameter... but this is really confusing to read
-        public void Flag_does_not_consume_parameter_value(string code)
-        {
-            PolyglotParserConfiguration config = new("csharp")
-            {
-                KernelInfos =
-                {
-                    new("csharp")
-                    {
-                        SupportedDirectives =
-                        {
-                            new KernelActionDirective("#!test")
-                            {
-                                Parameters =
-                                {
-                                    new("--param")
-                                    {
-                                        AllowImplicitName = true
-                                    },
-                                    new("--flag")
-                                    {
-                                        Flag = true
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-
-            var tree = Parse(code, config);
-
-            _output.WriteLine(tree.RootNode.Diagram());
-
-            tree.RootNode.GetDiagnostics().Should().BeEmpty();
-
-            tree.RootNode.DescendantNodesAndTokens()
-                .Should()
-                .ContainSingle<DirectiveParameterNode>(node => node.Text == "--flag" && 
-                                                               node.ValueNode is null);
-        }
-
         [Fact]
         public void Errors_for_unknown_parameter_names_are_available_as_diagnostics()
         {
@@ -136,7 +83,7 @@ public partial class PolyglotSyntaxParserTests
                              .ContainSingle(d => d.Severity == DiagnosticSeverity.Error)
                              .Which;
 
-            diagnostic.GetMessage().Should().Be("Unrecognized parameter name '--invalid-option'");
+            diagnostic.GetMessage().Should().Be("Unrecognized named parameter '--invalid-option'");
 
             diagnostic
                 .Location
@@ -162,13 +109,13 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    new("csharp")
+                    ["csharp"] = new("csharp")
                     {
                         SupportedDirectives =
                         {
                             new KernelActionDirective("#!test")
                             {
-                                Parameters =
+                                NamedParameters =
                                 {
                                     new("--opt")
                                     {
@@ -226,13 +173,13 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    new("csharp")
+                    ["csharp"] = new("csharp")
                     {
                         SupportedDirectives =
                         {
                             new KernelActionDirective("#!test")
                             {
-                                Parameters =
+                                NamedParameters =
                                 {
                                     new("--opt")
                                     {
@@ -251,7 +198,7 @@ public partial class PolyglotSyntaxParserTests
 
             var diagnostic = tree.RootNode.GetDiagnostics().Should().ContainSingle().Which;
 
-            diagnostic.GetMessage().Should().Be("Missing required parameter '--opt'");
+            diagnostic.GetMessage().Should().Be("Missing required named parameter '--opt'");
 
             diagnostic
                 .Location
@@ -277,13 +224,13 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    new("csharp")
+                    ["csharp"] = new("csharp")
                     {
                         SupportedDirectives =
                         {
                             new KernelActionDirective("#!test")
                             {
-                                Parameters =
+                                NamedParameters =
                                 {
                                     new("--opt")
                                     {
@@ -307,7 +254,7 @@ public partial class PolyglotSyntaxParserTests
             tree.RootNode.GetDiagnostics().Should().BeEmpty();
 
             tree.RootNode.DescendantNodesAndTokens()
-                .Should().ContainSingle<DirectiveParameterNode>(where: node => node.NameNode?.Text == "--opt")
+                .Should().ContainSingle<DirectiveParameterNode>()
                 .Which.ChildNodes
                 .Should().ContainSingle<DirectiveParameterValueNode>()
                 .Which.Text
@@ -321,13 +268,13 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    new KernelInfo("csharp")
+                    ["csharp"] = new("csharp")
                     {
                         SupportedDirectives =
                         {
                             new KernelActionDirective("#!test")
                             {
-                                Parameters =
+                                NamedParameters =
                                 {
                                     new("--opt")
                                     {
@@ -368,18 +315,5 @@ public partial class PolyglotSyntaxParserTests
                 .Should()
                 .Be(span.End);
         }
-    }
-
-    [Fact]
-    public void A_parameter_nodes_associated_parameter_can_be_looked_up()
-    {
-        var tree = Parse("#!set --value 123 --name x ");
-
-        var parameterNode = tree.RootNode.DescendantNodesAndTokens().OfType<DirectiveParameterNode>().Last();
-
-        parameterNode.TryGetParameter(out var parameter).Should().BeTrue();
-
-        parameter.Name.Should().Be("--name");
-        parameter.Required.Should().BeTrue();
     }
 }

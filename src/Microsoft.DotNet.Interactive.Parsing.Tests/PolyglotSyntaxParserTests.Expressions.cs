@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
@@ -45,18 +45,20 @@ public partial class PolyglotSyntaxParserTests
                             .Which
                             .ValueNode;
 
-            var expressionTypeNode = valueNode.DescendantNodesAndTokens()
+            var expressionTypeNode = valueNode.ChildNodes
                                               .Should().ContainSingle<DirectiveExpressionTypeNode>()
                                               .Which;
 
             expressionTypeNode.Text.Should().Be("@input:");
             expressionTypeNode.Type.Should().Be("input");
 
-            valueNode.DescendantNodesAndTokens()
+            valueNode.ChildNodes
                      .Should().ContainSingle<DirectiveExpressionParametersNode>()
                      .Which.Text
                      .Should().Be(expectedParameters);
         }
+
+
 
         [Fact]
         public void Diagnostics_are_produced_for_invalid_JSON()
@@ -65,13 +67,13 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    new("csharp")
+                    ["csharp"] = new("csharp")
                     {
                         SupportedDirectives =
                         {
                             new KernelActionDirective("#!test")
                             {
-                                Parameters =
+                                NamedParameters =
                                 {
                                     new("--opt")
                                     {
