@@ -1,7 +1,9 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Directives;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
@@ -60,6 +62,14 @@ public class PolyglotParserConfigurationTests
                                 new KernelActionDirective("stdio"),
                                 new KernelActionDirective("signalr"),
                                 new KernelActionDirective("jupyter"),
+                                new KernelActionDirective("mssql")
+                                {
+                                    Parameters =
+                                    {
+                                        new KernelDirectiveParameter("--connection-string")
+                                    },
+                                    DeserializeAs = typeof(ConnectMsSql)
+                                },
                             }
                         },
                         new KernelSpecifierDirective("#!javascript"),
@@ -84,4 +94,23 @@ public class PolyglotParserConfigurationTests
                 ["pwsh"] = new KernelInfo("pwsh", new[] { "powershell" }),
             }
         };
+}
+
+internal class KernelCommand
+{
+    protected KernelCommand(string targetKernelName = null)
+    {
+        TargetKernelName = targetKernelName;
+    }
+
+    public string TargetKernelName { get; internal set; }
+
+    public Uri OriginUri { get; set; }
+
+    public Uri DestinationUri { get; set; }
+}
+
+internal class ConnectMsSql : KernelCommand
+{
+    public string ConnectionString { get; set; }
 }

@@ -1,11 +1,11 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -14,18 +14,18 @@ namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
-    public class DirectiveNamedParameters
+    public class DirectiveParameters
     {
         [Fact]
         public void Words_prefixed_with_hyphens_are_parsed_into_parameter_name_nodes()
         {
             var tree = Parse("#!directive --option");
 
-            var optionNode = tree.RootNode.DescendantNodesAndTokens()
-                                 .Should().ContainSingle<DirectiveNamedParameterNode>()
-                                 .Which;
+            var parameterNode = tree.RootNode.DescendantNodesAndTokens()
+                                    .Should().ContainSingle<DirectiveParameterNode>()
+                                    .Which;
 
-            optionNode.NameNode.Text.Should().Be("--option");
+            parameterNode.NameNode.Text.Should().Be("--option");
         }
 
         [Fact]
@@ -38,6 +38,24 @@ public partial class PolyglotSyntaxParserTests
                                    .Which;
 
             argumentNode.Text.Should().Be("argument");
+        }
+
+        [Theory]
+        [InlineData("""
+            #!directive --option "this is the argument"
+            """)]
+        [InlineData("""
+            #!directive "this is the argument"
+            """)]
+        public void Quoted_values_can_include_whitespace(string code)
+        {
+            var tree = Parse(code);
+
+            var argumentNode = tree.RootNode.DescendantNodesAndTokens()
+                                   .Should().ContainSingle<DirectiveParameterValueNode>()
+                                   .Which;
+
+            argumentNode.Text.Should().Be("\"this is the argument\"");
         }
 
         [Fact]
@@ -236,7 +254,7 @@ public partial class PolyglotSyntaxParserTests
             tree.RootNode.GetDiagnostics().Should().BeEmpty();
 
             tree.RootNode.DescendantNodesAndTokens()
-                .Should().ContainSingle<DirectiveNamedParameterNode>()
+                .Should().ContainSingle<DirectiveParameterNode>()
                 .Which.ChildNodes
                 .Should().ContainSingle<DirectiveParameterValueNode>()
                 .Which.Text
@@ -279,7 +297,7 @@ public partial class PolyglotSyntaxParserTests
 
             var diagnostic = tree.RootNode.GetDiagnostics().Should().ContainSingle().Which;
 
-            diagnostic.GetMessage().Should().StartWith("Invalid JSON: 'c' is an invalid start of a value.");
+            diagnostic.GetMessage().Should().Be("Invalid JSON: 'c' is an invalid start of a value.");
 
             diagnostic
                 .Location

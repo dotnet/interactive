@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
@@ -20,7 +21,8 @@ internal class PolyglotSyntaxParser
     private int _currentTokenIndex = 0;
     private IReadOnlyList<SyntaxToken>? _tokens;
     private readonly PolyglotSyntaxTree _syntaxTree;
-    private string? _currentKernelName;
+    private string _currentKernelName = "";
+    private readonly KernelInfo? _compositeKernelInfo = null;
 
     public static PolyglotSyntaxTree Parse(
         string code,
@@ -40,6 +42,7 @@ internal class PolyglotSyntaxParser
         _sourceText = sourceText;
         _configuration = configuration;
         _syntaxTree = new(_sourceText, configuration);
+        _compositeKernelInfo = configuration.KernelInfos.Select(p => p.Value).FirstOrDefault(i => i.IsComposite);
     }
 
     public PolyglotSyntaxTree Parse()
@@ -96,7 +99,8 @@ internal class PolyglotSyntaxParser
 
             if (_configuration.KernelInfos.TryGetValue(_currentKernelName, out var kernelInfo))
             {
-                if (kernelInfo.TryGetDirective(directiveNode.Text, out var directive))
+                if (kernelInfo.TryGetDirective(directiveNode.Text, out var directive) ||
+                    _compositeKernelInfo?.TryGetDirective(directiveNode.Text, out directive) == true)
                 {
                     currentlyScopedDirective = directive;
                 }
@@ -142,6 +146,7 @@ internal class PolyglotSyntaxParser
                         currentlyScopedDirective = subcommand;
                         var subcommandNode = new DirectiveSubcommandNode(_sourceText, _syntaxTree);
                         ConsumeCurrentTokenInto(subcommandNode);
+                        ParseTrailingWhitespace(subcommandNode);
                         directiveNode.Add(subcommandNode);
                     }
                     else if (ParseParameterValue() is { } argumentNode)
@@ -181,27 +186,55 @@ internal class PolyglotSyntaxParser
             return ParseTrailingWhitespace(directiveNameNode, stopBeforeNewLine: true);
         }
 
-        DirectiveParameterValueNode? ParseParameterValue()
+        DirectiveParameterValueNode ParseParameterValue()
         {
-            DirectiveParameterValueNode? argumentNode = null;
+            DirectiveParameterValueNode valueNode = new(_sourceText, _syntaxTree);
+            SyntaxNode parseIntoNode = valueNode;
 
             if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "{" })
             {
                 ParseJsonValue();
+            }
+            else if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "@" })
+            {
+                var tokenNameNode = new DirectiveExpressionTypeNode(_sourceText, _syntaxTree);
+
+                ConsumeCurrentTokenInto(tokenNameNode);
+
+                if (CurrentToken is { Kind: TokenKind.Word })
+                {
+                    ConsumeCurrentTokenInto(tokenNameNode);
+                }
+
+                if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: ":" })
+                {
+                    ConsumeCurrentTokenInto(tokenNameNode);
+                }
+
+                valueNode.Add(tokenNameNode);
+
+                var inputParametersNode = new DirectiveExpressionParametersNode(_sourceText, _syntaxTree);
+                parseIntoNode = inputParametersNode;
+
+                if (CurrentToken is { Kind : TokenKind.Punctuation } and ({ Text: "{" } or { Text: "\"" }))
+                {
+                    ParseJsonValue();
+                }
+                else
+                {
+                    ParsePlainText();
+                }
+
+                valueNode.Add(inputParametersNode);
             }
             else
             {
                 ParsePlainText();
             }
 
-            if (argumentNode is not null)
-            {
-                return ParseTrailingWhitespace(argumentNode, stopBeforeNewLine: true);
-            }
-            else
-            {
-                return null;
-            }
+            ParseTrailingWhitespace(parseIntoNode, stopBeforeNewLine: true);
+
+            return valueNode;
 
             void ParsePlainText()
             {
@@ -225,15 +258,14 @@ internal class PolyglotSyntaxParser
                         break;
                     }
 
-                    argumentNode ??= new DirectiveParameterValueNode(_sourceText, _syntaxTree);
-
-                    ConsumeCurrentTokenInto(argumentNode);
+                    ConsumeCurrentTokenInto(parseIntoNode);
                 }
             }
 
             void ParseJsonValue()
             {
                 var jsonDepth = 0;
+                var foundBrace = false;
 
                 while (MoreTokens())
                 {
@@ -247,6 +279,7 @@ internal class PolyglotSyntaxParser
                     switch (currentToken)
                     {
                         case { Kind: TokenKind.Punctuation } and { Text: "{" }:
+                            foundBrace = true;
                             jsonDepth++;
                             break;
                         case { Kind: TokenKind.Punctuation } and { Text: "}" }:
@@ -254,17 +287,15 @@ internal class PolyglotSyntaxParser
                             break;
                     }
 
-                    argumentNode ??= new DirectiveParameterValueNode(_sourceText, _syntaxTree);
+                    ConsumeCurrentTokenInto(parseIntoNode);
 
-                    ConsumeCurrentTokenInto(argumentNode);
-
-                    if (jsonDepth <= 0)
+                    if (foundBrace && jsonDepth <= 0)
                     {
                         break;
                     }
                 }
 
-                if (argumentNode?.Text is { } json)
+                if (parseIntoNode.Text is { } json)
                 {
                     try
                     {
@@ -272,29 +303,38 @@ internal class PolyglotSyntaxParser
                     }
                     catch (JsonException exception)
                     {
-                        var positionInLine = (int)exception.BytePositionInLine! + argumentNode.FullSpan.Start ;
+                        var positionInLine = (int)exception.BytePositionInLine! + parseIntoNode.FullSpan.Start;
 
                         var location = Location.Create(
-                            filePath: string.Empty, 
-                            new TextSpan(positionInLine, 1), 
+                            filePath: string.Empty,
+                            new TextSpan(positionInLine, 1),
                             new(new(0, positionInLine), new(0, positionInLine + 1)));
 
-                        var diagnostic = argumentNode.CreateDiagnostic(
-                            new(ErrorCodes.InvalidJsonInParameterValue, 
-                                "Invalid JSON: {0}", 
-                                DiagnosticSeverity.Error, 
-                                exception.Message),
+                        var message = exception.Message ?? "Invalid JSON";
+
+                        if (message.IndexOf(" LineNumber") is var index and > -1)
+                        {
+                            // Example message to be cleaned up since the character positions won't be accurate for the user's complete text: "Invalid JSON: 'c' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 11." 
+                            message = message.Remove(index);
+                        }
+
+                        var diagnostic = parseIntoNode.CreateDiagnostic(
+                            new(ErrorCodes.InvalidJsonInParameterValue,
+                                "Invalid JSON: {0}",
+                                DiagnosticSeverity.Error,
+                                message),
                             location);
-                        argumentNode.AddDiagnostic(diagnostic);
+
+                        parseIntoNode.AddDiagnostic(diagnostic);
                     }
                 }
             }
         }
 
-        DirectiveNamedParameterNode? ParseNamedParameter()
+        DirectiveParameterNode? ParseNamedParameter()
         {
-            DirectiveNamedParameterNode? optionNode = null;
-            DirectiveParameterNameNode? optionNameNode = null;
+            DirectiveParameterNode? parameterNode = null;
+            DirectiveParameterNameNode? parameterNameNode = null;
 
             if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "-" } ||
                 CurrentTokenPlus(-1) is { Kind: TokenKind.Whitespace })
@@ -306,32 +346,32 @@ internal class PolyglotSyntaxParser
                         break;
                     }
 
-                    if (optionNode is null)
+                    if (parameterNode is null)
                     {
-                        optionNode = new DirectiveNamedParameterNode(_sourceText, _syntaxTree);
-                        optionNameNode = new DirectiveParameterNameNode(_sourceText, _syntaxTree);
+                        parameterNode = new DirectiveParameterNode(_sourceText, _syntaxTree);
+                        parameterNameNode = new DirectiveParameterNameNode(_sourceText, _syntaxTree);
                     }
 
-                    ConsumeCurrentTokenInto(optionNameNode!);
+                    ConsumeCurrentTokenInto(parameterNameNode!);
                 }
 
-                if (optionNode is not null &&
-                    optionNameNode is not null)
+                if (parameterNode is not null &&
+                    parameterNameNode is not null)
                 {
-                    ParseTrailingWhitespace(optionNameNode, stopBeforeNewLine: true);
+                    ParseTrailingWhitespace(parameterNameNode, stopBeforeNewLine: true);
 
-                    optionNode.Add(optionNameNode);
+                    parameterNode.Add(parameterNameNode);
 
                     if (ParseParameterValue() is { } argNode)
                     {
-                        optionNode.Add(argNode);
+                        parameterNode.Add(argNode);
                     }
                 }
             }
 
-            if (optionNode is not null)
+            if (parameterNode is not null)
             {
-                return ParseTrailingWhitespace(optionNode, stopBeforeNewLine: true);
+                return ParseTrailingWhitespace(parameterNode, stopBeforeNewLine: true);
             }
             else
             {

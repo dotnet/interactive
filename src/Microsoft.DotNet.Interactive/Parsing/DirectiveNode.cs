@@ -6,9 +6,14 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
@@ -19,7 +24,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
     internal DirectiveNode(
         string targetKernelName,
         SourceText sourceText,
-        PolyglotSyntaxTree? syntaxTree) : base(targetKernelName, sourceText, syntaxTree)
+        PolyglotSyntaxTree syntaxTree) : base(targetKernelName, sourceText, syntaxTree)
     {
     }
 
@@ -74,7 +79,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 {
                     if (namedParameter.Required)
                     {
-                        var matchingNodes = ChildNodes.OfType<DirectiveNamedParameterNode>()
+                        var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
                                                       .Where(p => p.NameNode?.Text == namedParameter.Name);
 
                         if (!matchingNodes.Any())
@@ -126,7 +131,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
         AddInternal(valueNode);
     }
 
-    public void Add(DirectiveNamedParameterNode node)
+    public void Add(DirectiveParameterNode node)
     {
         AddInternal(node);
     }
@@ -141,9 +146,61 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public DirectiveBindingResult<object?> CreateSuccessfulBindingResult(object? value) =>
         DirectiveBindingResult<object?>.Success(value);
+
+    public async Task <DirectiveBindingResult<string>> TryGetJsonAsync(DirectiveBindingDelegate bind)
+    {
+        var options = new JsonWriterOptions
+        {
+            Indented = true
+        };
+
+        using var stream = new MemoryStream();
+        await using var writer = new Utf8JsonWriter(stream, options);
+
+        writer.WriteStartObject();
+
+        writer.WriteString("commandType", "DirectiveCommand");
+
+        writer.WritePropertyName("command");
+        
+
+
+        writer.WriteStartObject();
+        writer.WriteNumber("temp", 42);
+        
+        
+        
+        
+        
+        writer.WriteEndObject();
+
+
+
+        writer.WriteString("targetKernelName", TargetKernelName);
+
+        writer.WriteEndObject();
+
+
+
+
+
+
+
+
+      await  writer.FlushAsync();
+
+        string json = Encoding.UTF8.GetString(stream.ToArray());
+
+
+
+        // FIX: (TryGetJsonAsync) 
+        return DirectiveBindingResult<string>.Success(json);
+
+
+    }
 }
 
-internal delegate DirectiveBindingResult<object?> DirectiveBindingDelegate(DirectiveNode node);
+internal delegate Task<DirectiveBindingResult<object?>> DirectiveBindingDelegate(DirectiveExpressionParametersNode node);
 
 internal class DirectiveBindingResult<T>
 {

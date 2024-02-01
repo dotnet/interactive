@@ -13,6 +13,7 @@ namespace Microsoft.DotNet.Interactive;
 
 public class ChooseKernelDirective : Command
 {
+    // FIX: (ChooseKernelDirective) move to Directives namespace
     public ChooseKernelDirective(Kernel kernel, string? description = null) :
         base($"#!{kernel.Name}",
             description ?? $"Run the code that follows using the {kernel.Name} kernel.")

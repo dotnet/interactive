@@ -38,3 +38,4 @@ internal class PolyglotSyntaxTree : SyntaxTree
         }
     }
 }
+

@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 internal class HttpExpressionNode : HttpSyntaxNode
 {
-    internal HttpExpressionNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpExpressionNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 

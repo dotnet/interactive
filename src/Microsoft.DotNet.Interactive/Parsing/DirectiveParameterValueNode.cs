@@ -13,4 +13,20 @@ internal class DirectiveParameterValueNode : SyntaxNode
         SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
+
+    public DirectiveExpressionTypeNode? ExpressionType { get; private set; }
+
+    public DirectiveExpressionParametersNode? ExpressionParameters { get; private set; }
+
+    public void Add(DirectiveExpressionTypeNode node)
+    {
+        AddInternal(node);
+        ExpressionType = node;
+    }
+
+    public void Add(DirectiveExpressionParametersNode node)
+    {
+        AddInternal(node);
+        ExpressionParameters = node;
+    }
 }
