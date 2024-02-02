@@ -351,8 +351,8 @@ public class HttpKernelTests
 
     [Theory]
     [InlineData("$guid$guid")]
-    [InlineData("$timestamp$timestamp")]
     [InlineData("$dateTime$dateTime")]
+    [InlineData("$timestamp$timestamp")]
     [InlineData("$localDateTime$localDateTime")]
     [InlineData("$randomInt$randomInt")]
     [InlineData("$randomInt$guid")]
@@ -525,7 +525,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be("The supplied expression '$timestamp -1' does not follow the correct pattern. The expression should adhere to the following pattern: '{$timestamp [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
+        diagnostics.Diagnostics.First().Message.Should().Be("Unable to evaluate expression '$timestamp -1'.");
     }
 
     [Fact]
