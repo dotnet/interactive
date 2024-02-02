@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -21,13 +21,24 @@ internal sealed class DirectiveBindingResult<T>
 
     public T? Value { get; set; }
 
-    public static DirectiveBindingResult<T> Success(T value)
+    public static DirectiveBindingResult<T> Success(T value, params CodeAnalysis.Diagnostic[] diagnostics)
     {
+        if (diagnostics is not null &&
+            diagnostics.Any(d => d.Severity is DiagnosticSeverity.Error))
+        {
+            throw new ArgumentException("Errors must not be present when binding is successful.", nameof(diagnostics));
+        }
+
         var result = new DirectiveBindingResult<T>
         {
             IsSuccessful = true,
             Value = value
         };
+
+        if (diagnostics is not null)
+        {
+            result.Diagnostics.AddRange(diagnostics);
+        }
 
         return result;
     }

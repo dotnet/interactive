@@ -83,7 +83,7 @@ public partial class PolyglotSyntaxParserTests
                              .ContainSingle(d => d.Severity == DiagnosticSeverity.Error)
                              .Which;
 
-            diagnostic.GetMessage().Should().Be("Unrecognized named parameter '--invalid-option'");
+            diagnostic.GetMessage().Should().Be("Unrecognized parameter name '--invalid-option'");
 
             diagnostic
                 .Location
@@ -109,7 +109,7 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    ["csharp"] = new("csharp")
+                    new("csharp")
                     {
                         SupportedDirectives =
                         {
@@ -173,7 +173,7 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    ["csharp"] = new("csharp")
+                    new("csharp")
                     {
                         SupportedDirectives =
                         {
@@ -224,7 +224,7 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    ["csharp"] = new("csharp")
+                    new("csharp")
                     {
                         SupportedDirectives =
                         {
@@ -268,7 +268,7 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    ["csharp"] = new("csharp")
+                    new KernelInfo("csharp")
                     {
                         SupportedDirectives =
                         {

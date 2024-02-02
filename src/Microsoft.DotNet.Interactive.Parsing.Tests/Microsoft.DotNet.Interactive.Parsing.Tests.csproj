@@ -16,15 +16,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="Utility\MarkupTestFile.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\KernelCommandInfo.cs" Link="KernelCommandInfo.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\KernelInfo.cs" Link="KernelInfo.cs" LinkBase="Parsing" />
+
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelActionDirective.cs" Link="KernelActionDirective.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirective.cs" Link="KernelDirective.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirectiveParameter.cs" Link="KernelDirectiveParameter.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\NamedSymbolCollection{T}.cs" Link="NamedSymbolCollection{T}.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelSpecifierDirective.cs" Link="KernelSpecifierDirective.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\KernelCommandInfo.cs" Link="KernelCommandInfo.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\KernelInfo.cs" Link="KernelInfo.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\NamedSymbolCollection{T}.cs" Link="NamedSymbolCollection{T}.cs" LinkBase="Parsing" />
+
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveBindingDelegate.cs" Link="DirectiveBindingDelegate.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveBindingResult{T}.cs" Link="DirectiveBindingResult{T}.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveExpressionParametersNode.cs" Link="Parsing\DirectiveExpressionParametersNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveExpressionTypeNode.cs" Link="Parsing\DirectiveExpressionTypeNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveNameNode.cs" Link="Parsing\DirectiveNameNode.cs" LinkBase="Parsing" />
@@ -46,6 +49,8 @@
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxTree.cs" Link="Parsing\SyntaxTree.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TokenKind.cs" Link="Parsing\TokenKind.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TopLevelSyntaxNode.cs" Link="Parsing\TopLevelSyntaxNode.cs" LinkBase="Parsing" />
+
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="Utility\MarkupTestFile.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -54,6 +59,10 @@
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="JsonDiffPatch.Net" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
   </ItemGroup>
 
   <ItemGroup>

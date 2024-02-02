@@ -11,12 +11,14 @@ namespace Microsoft.DotNet.Interactive.Directives;
 internal class NamedSymbolCollection<T> : ICollection<T>
 {
     private readonly Func<T, string> _getName;
+    private readonly Action<T>? _onAdd;
     private readonly List<T> _items = new();
     private readonly Dictionary<string, T> _itemsByName = new();
 
-    public NamedSymbolCollection(Func<T, string> getName)
+    public NamedSymbolCollection(Func<T, string> getName, Action<T>? onAdd = null)
     {
         _getName = getName;
+        _onAdd = onAdd;
     }
 
     public bool TryGetValue(string name, out T item)
@@ -38,6 +40,7 @@ internal class NamedSymbolCollection<T> : ICollection<T>
     {
         _itemsByName.Add(_getName(item), item);
         _items.Add(item);
+        _onAdd?.Invoke(item);
     }
 
     public void Clear()
