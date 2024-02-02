@@ -84,7 +84,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         if (!matchingNodes.Any())
                         {
                             yield return CreateDiagnostic(
-                                new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredNamedParameter,
+                                new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
                                     "Missing required named parameter '{0}'",
                                     DiagnosticSeverity.Error,
                                     namedParameter.Name));
@@ -196,7 +196,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
     public DirectiveBindingResult<object?> CreateSuccessfulBindingResult(object? value) =>
         DirectiveBindingResult<object?>.Success(value);
 
-    public async Task<DirectiveBindingResult<string>> TryGetJsonAsync(DirectiveBindingDelegate bind = null)
+    public async Task<DirectiveBindingResult<string>> TryGetJsonAsync(DirectiveBindingDelegate? bind = null)
     {
         var options = new JsonWriterOptions
         {
@@ -231,17 +231,33 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         foreach (var parameterNode in DescendantNodesAndTokens().OfType<DirectiveParameterNode>())
         {
-            var name = FromKebabToCamelCase(parameterNode.NameNode?.Text);
-
-            var value = parameterNode.ValueNode?.Text;
-
-            if (value?.StartsWith("\"") is true)
+            if (parameterNode.NameNode?.Text is { } propertyName)
             {
-                value = JsonSerializer.Deserialize<string>(value);
+                propertyName = FromKebabToCamelCase(propertyName);
+
+                if (parameterNode.ValueNode is { } valueNode)
+                {
+                    var value = valueNode.Text;
+
+                    if (value[0] is '{' or '"')
+                    {
+                        writer.WritePropertyName(propertyName);
+                        writer.WriteRawValue(value);
+                    }
+                    else
+                    {
+                        writer.WriteString(propertyName, value);
+                    }
+                }
+                else
+                {
+                    writer.WriteNull(propertyName);
+                }
             }
-
-
-            writer.WriteString(name, value);
+            else
+            {
+                // FIX: (TryGetJsonAsync) implicit property name should be identified and serialized
+            }
         }
 
         writer.WriteString("targetKernelName", TargetKernelName);
@@ -252,12 +268,12 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         await writer.FlushAsync();
 
-        string json = Encoding.UTF8.GetString(stream.ToArray());
+        var json = Encoding.UTF8.GetString(stream.ToArray());
 
         return DirectiveBindingResult<string>.Success(json);
     }
 
-    private string? GetInvokedCommandPath()
+    private string GetInvokedCommandPath()
     {
         var commands = DescendantNodesAndTokensAndSelf()
                        .Where(n => n is DirectiveSubcommandNode or Parsing.DirectiveNameNode)

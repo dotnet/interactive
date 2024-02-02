@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -136,7 +136,7 @@ internal class PolyglotSyntaxParser
                         if (!_configuration.IsParameterInScope(namedParameterNode))
                         {
                             var diagnostic = namedParameterNode.CreateDiagnostic(
-                                new(ErrorCodes.UnknownNamedParameter,
+                                new(ErrorCodes.UnknownParameterName,
                                     "Unrecognized parameter name '{0}'",
                                     DiagnosticSeverity.Error,
                                     namedParameterNode.NameNode?.Text ?? ""));
@@ -196,13 +196,20 @@ internal class PolyglotSyntaxParser
         DirectiveParameterValueNode ParseParameterValue()
         {
             DirectiveParameterValueNode valueNode = new(_sourceText, _syntaxTree);
-            SyntaxNode parseIntoNode = valueNode;
 
             if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "{" or "\"" })
             {
-                ParseJsonValue();
+                ParseJsonValueInto(valueNode);
+
+                ParseTrailingWhitespace(valueNode, stopBeforeNewLine: true);
             }
-            else if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "@" })
+            else if (CurrentToken is not ({ Kind: TokenKind.Punctuation } and { Text: "@" }))
+            {
+                ParsePlainTextInto(valueNode);
+
+                ParseTrailingWhitespace(valueNode, stopBeforeNewLine: true);
+            }
+            else
             {
                 var tokenNameNode = new DirectiveExpressionTypeNode(_sourceText, _syntaxTree);
 
@@ -221,55 +228,38 @@ internal class PolyglotSyntaxParser
                 valueNode.Add(tokenNameNode);
 
                 var inputParametersNode = new DirectiveExpressionParametersNode(_sourceText, _syntaxTree);
-                parseIntoNode = inputParametersNode;
 
                 if (CurrentToken is { Kind : TokenKind.Punctuation } and ({ Text: "{" } or { Text: "\"" }))
                 {
-                    ParseJsonValue();
+                    ParseJsonValueInto(inputParametersNode);
                 }
                 else
                 {
-                    ParsePlainText();
+                    ParsePlainTextInto(inputParametersNode);
                 }
 
                 valueNode.Add(inputParametersNode);
-            }
-            else
-            {
-                ParsePlainText();
-            }
 
-            ParseTrailingWhitespace(parseIntoNode, stopBeforeNewLine: true);
+                ParseTrailingWhitespace(inputParametersNode, stopBeforeNewLine: true);
+            }
 
             return valueNode;
 
-            void ParsePlainText()
+            void ParsePlainTextInto(SyntaxNode node)
             {
-                var withinQuotes = false;
 
                 while (MoreTokens())
                 {
-                    if (CurrentToken is { Kind: TokenKind.NewLine })
+                    if (CurrentToken is { Kind: TokenKind.NewLine } or { Kind: TokenKind.Whitespace })
                     {
                         break;
                     }
-
-                    if (CurrentToken is { Kind: TokenKind.Punctuation, Text: "\"" })
-                    {
-                        withinQuotes = !withinQuotes;
-                    }
-
-                    if (!withinQuotes &&
-                        CurrentToken is { Kind: TokenKind.Whitespace })
-                    {
-                        break;
-                    }
-
-                    ConsumeCurrentTokenInto(parseIntoNode);
+                    
+                    ConsumeCurrentTokenInto(node);
                 }
             }
 
-            void ParseJsonValue()
+            void ParseJsonValueInto(SyntaxNode node)
             {
                 var currentToken = CurrentToken;
 
@@ -298,7 +288,7 @@ internal class PolyglotSyntaxParser
                                 break;
                         }
 
-                        ConsumeCurrentTokenInto(parseIntoNode);
+                        ConsumeCurrentTokenInto(node);
 
                         if (jsonDepth <= 0)
                         {
@@ -328,7 +318,7 @@ internal class PolyglotSyntaxParser
                             }
                         }
 
-                        ConsumeCurrentTokenInto(parseIntoNode);
+                        ConsumeCurrentTokenInto(node);
 
                         if (quoteCount == 2)
                         {
@@ -337,7 +327,7 @@ internal class PolyglotSyntaxParser
                     }
                 }
 
-                if (parseIntoNode.Text is { } json)
+                if (node.Text is { } json)
                 {
                     try
                     {
@@ -345,29 +335,29 @@ internal class PolyglotSyntaxParser
                     }
                     catch (JsonException exception)
                     {
-                        var positionInLine = (int)exception.BytePositionInLine! + parseIntoNode.FullSpan.Start;
+                        var positionInLine = (int)exception.BytePositionInLine! + node.FullSpan.Start;
 
                         var location = Location.Create(
                             filePath: string.Empty,
                             new TextSpan(positionInLine, 1),
                             new(new(0, positionInLine), new(0, positionInLine + 1)));
 
-                        var message = exception.Message ?? "Invalid JSON";
+                        var message = exception.Message;
 
-                        if (message.IndexOf(" LineNumber") is var index and > -1)
+                        if (message.IndexOf(" LineNumber", StringComparison.InvariantCulture) is var index and > -1)
                         {
                             // Example message to be cleaned up since the character positions won't be accurate for the user's complete text: "Invalid JSON: 'c' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 11." 
                             message = message.Remove(index);
                         }
 
-                        var diagnostic = parseIntoNode.CreateDiagnostic(
+                        var diagnostic = node.CreateDiagnostic(
                             new(ErrorCodes.InvalidJsonInParameterValue,
                                 "Invalid JSON: {0}",
                                 DiagnosticSeverity.Error,
                                 message),
                             location);
 
-                        parseIntoNode.AddDiagnostic(diagnostic);
+                        node.AddDiagnostic(diagnostic);
                     }
                 }
             }
@@ -753,9 +743,9 @@ internal class PolyglotSyntaxParser
     internal static class ErrorCodes
     {
         public const string UnknownDirective = "DNI101";
-        public const string UnknownNamedParameter = "DNI103";
-        public const string MissingRequiredNamedParameter = "DNI104";
-        public const string TooManyOccurrencesOfNamedParameter = "DNI105";
+        public const string UnknownParameterName = "DNI103";
+        public const string MissingRequiredParameter = "DNI104";
+        public const string TooManyOccurrencesOfParameter = "DNI105";
         public const string InvalidJsonInParameterValue = "DNI106";
         public const string ParametersMustAppearAfterSubcommands = "DNI107";
 

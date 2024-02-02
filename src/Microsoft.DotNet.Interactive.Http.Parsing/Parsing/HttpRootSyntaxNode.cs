@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 internal class HttpRootSyntaxNode : HttpSyntaxNode
 {
-    internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree? tree) : base(sourceText, tree)
+    internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree tree) : base(sourceText, tree)
     {
     }
 

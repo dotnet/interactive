@@ -58,7 +58,7 @@ internal class DirectiveParameterNode : SyntaxNode
                         if (occurrences.Length > option.MaxOccurrences)
                         {
                             yield return CreateDiagnostic(
-                                new(PolyglotSyntaxParser.ErrorCodes.TooManyOccurrencesOfNamedParameter,
+                                new(PolyglotSyntaxParser.ErrorCodes.TooManyOccurrencesOfParameter,
                                     "A maximum of {0} occurrences are allowed for named parameter '{1}'",
                                     DiagnosticSeverity.Error,
                                     option.MaxOccurrences,

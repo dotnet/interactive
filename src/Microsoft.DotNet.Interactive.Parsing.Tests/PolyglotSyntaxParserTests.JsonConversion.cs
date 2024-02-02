@@ -35,8 +35,6 @@ public partial class PolyglotSyntaxParserTests
 
             result.Should().BeOfType<DirectiveBindingResult<string>>();
 
-            _output.WriteLine(tree.RootNode.Diagram());
-
             result.Diagnostics.Should().BeEmpty();
 
             result.Value.Should().BeEquivalentJsonTo("""
@@ -47,6 +45,41 @@ public partial class PolyglotSyntaxParserTests
                     "kernelName": "sql-adventureworks",
                     "connectionString": "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false",
                     "targetKernelName": ".NET"
+                  }
+                }
+                """);
+        }
+
+        [Fact]
+        public async Task JSON_values_in_parameter_nodes_are_inserted_directly_into_the_serialized_JSON()
+        {
+            var tree = Parse("""
+                #!set --name myVar --value { "one": 1, "many": [1, 2, 3] } 
+                """);
+
+            var directiveNode = tree.RootNode.ChildNodes
+                                    .Should().ContainSingle<DirectiveNode>()
+                                    .Which;
+
+            var result = await directiveNode.TryGetJsonAsync();
+
+            _output.WriteLine(directiveNode.Diagram());
+
+            result.Should().BeOfType<DirectiveBindingResult<string>>();
+
+            result.Diagnostics.Should().BeEmpty();
+
+            result.Value.Should().BeEquivalentJsonTo("""
+                {
+                  "commandType": "SendValue",
+                  "command": {
+                    "name": "myVar",
+                    "value": { 
+                        "one": 1,
+                        "many": [1, 2, 3] 
+                    },
+                    "invokedDirective": "#!set",
+                    "targetKernelName": "csharp"
                   }
                 }
                 """);

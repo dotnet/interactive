@@ -12,7 +12,7 @@ using Diagnostic = CodeAnalysis.Diagnostic;
 
 internal class HttpHeaderValueNode : HttpSyntaxNode
 {
-    internal HttpHeaderValueNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpHeaderValueNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 

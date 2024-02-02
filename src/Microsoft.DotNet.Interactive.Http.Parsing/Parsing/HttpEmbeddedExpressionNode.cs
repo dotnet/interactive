@@ -12,7 +12,7 @@ internal class HttpEmbeddedExpressionNode : HttpSyntaxNode
 {
     internal HttpEmbeddedExpressionNode(
         SourceText sourceText,
-        HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 

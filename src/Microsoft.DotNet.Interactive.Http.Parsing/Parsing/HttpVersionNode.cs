@@ -14,7 +14,7 @@ using Diagnostic = CodeAnalysis.Diagnostic;
 
 internal class HttpVersionNode : HttpSyntaxNode
 {
-    internal HttpVersionNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpVersionNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
