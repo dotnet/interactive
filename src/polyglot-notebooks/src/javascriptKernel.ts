@@ -75,13 +75,22 @@ export class JavascriptKernel extends Kernel {
     }
 
     private handleRequestValueInfos(invocation: IKernelCommandInvocation): Promise<void> {
-        const valueInfos: commandsAndEvents.KernelValueInfo[] = this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).map(v => (
-            {
-                name: v,
-                typeName: getType(this.getLocalVariable(v)),
-                formattedValue: formatValue(this.getLocalVariable(v), "text/plain"),
-                preferredMimeTypes: []
-            }));
+        const valueInfos: commandsAndEvents.KernelValueInfo[] = [];
+
+        this.allLocalVariableNames().filter(v => !this.suppressedLocals.has(v)).forEach(v => {
+            const variableValue = this.getLocalVariable(v);
+            try {
+                const valueInfo = {
+                    name: v,
+                    typeName: getType(variableValue),
+                    formattedValue: formatValue(variableValue, "text/plain"),
+                    preferredMimeTypes: []
+                };
+                valueInfos.push(valueInfo);
+            } catch (e) {
+                Logger.default.error(`error formatting value ${v} : ${e}`);
+            }
+        });
 
         const event: commandsAndEvents.ValueInfosProduced = {
             valueInfos
