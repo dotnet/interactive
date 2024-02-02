@@ -97,11 +97,72 @@ internal static class HttpDiagnostics
         return new HttpDiagnosticInfo(id, messageFormat, severity);
     }
 
-    internal static HttpDiagnosticInfo CannotResolveSymbol(string symbol)
+    internal static HttpDiagnosticInfo UnableToEvaluateExpression(string symbol)
     {
         var id = $"HTTP0012";
         var severity = DiagnosticSeverity.Error;
-        var messageFormat = "Cannot resolve symbol '{0}'.";
+        var messageFormat = "Unable to evaluate expression '{0}'.";
         return new HttpDiagnosticInfo(id, messageFormat, severity, symbol);
     }
+
+    internal static HttpDiagnosticInfo IncorrectDateTimeFormat(string expression, string dateTimeType)
+    {
+        var id = $"HTTP0013";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{{1} [rfc1123|iso8601|"custom format"] [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, expression, dateTimeType);
+    }
+
+    internal static HttpDiagnosticInfo IncorrectTimestampFormat(string timestamp)
+    {
+        var id = $"HTTP0014";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            "The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$timestamp [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, timestamp);
+    }
+
+    internal static HttpDiagnosticInfo InvalidOffset(string expression, string offset)
+    {
+        var id = $"HTTP0015";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = "The supplied offset '{1}' in the expression '{0}' is not a valid integer.";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, expression, offset);
+    }
+
+    internal static HttpDiagnosticInfo InvalidOption(string expression, string option)
+    {
+        var id = $"HTTP0016";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = "The supplied option '{1}' in the expression '{0}' is not supported.";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, expression, option);
+    }
+
+    internal static HttpDiagnosticInfo IncorrectRandomIntFormat(string expression)
+    {
+        var id = $"HTTP0017";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$randomInt [min] [max]]}}' where min and max (if specified) must be valid integers.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, expression);
+    }
+
+    internal static HttpDiagnosticInfo RandomIntMinMustNotBeGreaterThanMax(string expression, string min, string max)
+    {
+        var id = $"HTTP0018";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied argument '{1}' in the expression '{0}' must not be greater than the supplied argument '{2}'.""";
+        return new(id, messageFormat, severity, expression, min, max);
+    }
+
+    internal static HttpDiagnosticInfo InvalidRandomIntArgument(string expression, string argument)
+    {
+        var id = $"HTTP0019";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat = "The supplied argument '{1}' in the expression '{0}' is not a valid integer.";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, expression, argument);
+    }
+
 }

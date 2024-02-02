@@ -1,26 +1,22 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
-using FluentAssertions.Execution;
-using Microsoft.AspNetCore.Http;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Microsoft.DotNet.Interactive.Tests.Utility;
-using Pocket;
 using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
@@ -311,13 +307,881 @@ public class HttpKernelTests
 
             Get {{host}}
             """;
-        
+
         var result = await kernel.SendAsync(new SubmitCode(code));
-        
+
         result.Events.Should().NotContainErrors();
         request.RequestUri.Should().Be($"https://httpbin.org");
-       
-        
+
+
+    }
+
+    [Fact]
+    public async Task can_bind_guid()
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+        _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{$guid}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var guidSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var guidString = guidSubstring.Substring(0, guidSubstring.IndexOf("\""));
+        Guid.TryParse(guidString, out _).Should().BeTrue();
+
+    }
+
+    [Theory]
+    [InlineData("$guid$guid")]
+    [InlineData("$dateTime$dateTime")]
+    [InlineData("$timestamp$timestamp")]
+    [InlineData("$localDateTime$localDateTime")]
+    [InlineData("$randomInt$randomInt")]
+    [InlineData("$randomInt$guid")]
+    public async Task cant_bind_multiples_in_expression(string expression)
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{{{{expression}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($"Unable to evaluate expression '{expression}'.");
+
+    }
+
+    [Theory]
+    [InlineData("$GUID")]
+    [InlineData("$TIMESTAMP")]
+    [InlineData("$DATETIME")]
+    [InlineData("$LOCALDATETIME")]
+    [InlineData("$RANDOMINT")]
+    public async Task cant_bind_capital_versions_of_expressions(string expression)
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{{{{expression}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($"Unable to evaluate expression '{expression}'.");
+
+
+    }
+
+    [Fact]
+    public async Task can_bind_timestamp()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "updated_at" : "{{$timestamp}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var unixValueSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var unixValueString = unixValueSubstring.Substring(0, unixValueSubstring.IndexOf("\""));
+        var unixValue = DateTimeOffset.FromUnixTimeSeconds(long.Parse(unixValueString));
+        unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(10));
+    }
+
+    [Theory]
+    [InlineData("-1")]
+    [InlineData("+1")]
+    [InlineData("0")]
+    [InlineData("4")]
+    public async Task can_bind_timestamp_with_valid_offset(string offsetDays)
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$timestamp {{{offsetDays}}} d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var unixValueSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var unixValueString = unixValueSubstring.Substring(0, unixValueSubstring.IndexOf("\""));
+        var unixValue = DateTimeOffset.FromUnixTimeSeconds(long.Parse(unixValueString));
+        var offsetDaysInteger = int.Parse(offsetDays);
+        var dateTimeOffset = DateTimeOffset.UtcNow.AddDays(offsetDaysInteger);
+        unixValue.Should().BeCloseTo(dateTimeOffset, TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
+    public async Task cant_bind_timestamp_offset_without_option()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$timestamp -1}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be("Unable to evaluate expression '$timestamp -1'.");
+    }
+
+    [Fact]
+    public async Task cant_bind_timestamp_offset_with_invalid_option()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$timestamp -1 q}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied option 'q' in the expression '$timestamp -1 q' is not supported.");
+    }
+
+
+
+    [Fact]
+    public async Task cant_bind_timestamp_offset_with_invalid_offset()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$timestamp 33.2 d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied offset '33.2' in the expression '$timestamp 33.2 d' is not a valid integer.");
+    }
+
+    [Fact]
+    public async Task cant_bind_timestamp_with_invalid_chars_in_the_arguments()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$timestamp ~1 d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied offset '~1' in the expression '$timestamp ~1 d' is not a valid integer.");
+    }
+
+    [Fact]
+    public async Task can_bind_random_int_with_no_arguments()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+        _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{$randomInt}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var randIntSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var randIntValue = randIntSubstring.Substring(0, randIntSubstring.IndexOf("\""));
+
+        int.TryParse(randIntValue, out _).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task can_bind_random_int_with_only_max()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{$randomInt 10}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var randIntSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var randIntValue = randIntSubstring.Substring(0, randIntSubstring.IndexOf("\""));
+
+
+        int intValueOfRandInt = int.Parse(randIntValue);
+
+        intValueOfRandInt.Should().BeLessThanOrEqualTo(10);
+    }
+
+    [Fact]
+    public async Task can_bind_random_int_with_arguments()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{$randomInt 10 99}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var randIntSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var randIntValue = randIntSubstring.Substring(0, randIntSubstring.IndexOf("\""));
+
+
+        int intValueOfRandInt = int.Parse(randIntValue);
+
+        intValueOfRandInt.Should().BeGreaterThanOrEqualTo(10);
+        intValueOfRandInt.Should().BeLessThanOrEqualTo(99);
+    }
+
+    [Fact]
+    public async Task can_bind_random_int_with_negative_values()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{$randomInt -10 99}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var randIntSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var randIntValue = randIntSubstring.Substring(0, randIntSubstring.IndexOf("\""));
+
+        int intValueOfRandInt = int.Parse(randIntValue);
+
+        intValueOfRandInt.Should().BeGreaterThanOrEqualTo(-10);
+        intValueOfRandInt.Should().BeLessThanOrEqualTo(99);
+    }
+
+    [Fact]
+    public async Task cant_bind_random_int_with_min_greater_than_max()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{$randomInt 99 10}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied argument '99' in the expression '$randomInt 99 10' must not be greater than the supplied argument '10'.""");
+    }
+
+    [Fact]
+    public async Task cant_bind_random_int_with_non_integer_max()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{$randomInt 10 99.3}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied argument '99.3' in the expression '$randomInt 10 99.3' is not a valid integer.");
+    }
+
+    [Theory]
+    [InlineData("-1")]
+    [InlineData("+1")]
+    [InlineData("0")]
+    [InlineData("4")]
+    public async Task can_bind_datetime_with_valid_offset(string offsetDays)
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$datetime 'yyyy-MM-dd hh:mm:ss tt' {{{offsetDays}}} d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var dateTimeString = bodyAsString.Split("\"created_at\" : ").Last().Trim(new[] { '\r', '\n', '{', '}', '"' });
+        var dateTimeValue = DateTime.Parse(dateTimeString);
+        var offsetDaysInteger = int.Parse(offsetDays);
+        var dateTimeOffset = DateTime.UtcNow.AddDays(offsetDaysInteger);
+        dateTimeValue.Should().BeCloseTo(dateTimeOffset, TimeSpan.FromSeconds(10));
+    }
+
+    [Theory]
+    [InlineData("h")]
+    [InlineData("y")]
+    [InlineData("ms")]
+    [InlineData("d")]
+    [InlineData("s")]
+    [InlineData("M")]
+    [InlineData("w")]
+    [InlineData("m")]
+    public async Task binding_with_various_datetime_options_doesnt_produce_errors(string option)
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$datetime 'yyyy-MM-dd' -1 {{{option}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+    }
+
+    [Fact]
+    public async Task invalid_option_produces_error()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "created_at" : "{{$datetime 'yyyy-MM-dd' -1 t}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied option 't' in the expression '$datetime 'yyyy-MM-dd' -1 t' is not supported.");
+    }
+
+    [Fact]
+    public async Task can_bind_datetime_with_arguments()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "custom_date" : "{{$datetime 'yyyy-MM-dd'}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+        readDateValue.Should().BeEquivalentTo(currentDate);
+
+    }
+
+    [Fact]
+    public async Task can_bind_datetime_with_offset()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+          
+            {
+                "custom_date" : "{{$datetime 'yyyy-MM-dd' -1 d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var offsetDate = DateTime.UtcNow.AddDays(-1.0).ToString("yyyy-MM-dd");
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+
+        readDateValue.Should().BeEquivalentTo(offsetDate);
+
+    }
+
+    [Fact]
+    public async Task can_bind_datetime_with_no_arguments()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+          
+            {
+                "custom_date" : "{{$datetime}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var offsetDate = DateTime.Now;
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split("\"custom_date\" : ").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+
+        DateTime.Parse(readDateValue).Should().BeCloseTo(offsetDate, TimeSpan.FromSeconds(10));
+
+    }
+
+    [Fact]
+    public async Task can_bind_datetime_with_offset_and_default_format()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+          
+            {
+                "date_offset" : "{{$datetime -1 d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var offsetDate = DateTime.Now.AddDays(-1.0);
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split("\"date_offset\" : ").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+
+        DateTime.Parse(readDateValue).Should().BeCloseTo(offsetDate, TimeSpan.FromSeconds(10));
+
+    }
+
+    [Fact]
+    public async Task can_bind_local_datetime_with_arguments()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+
+            {
+                "local_custom_date" : "{{$localDatetime 'yyyy-MM-dd'}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+        readDateValue.Should().BeEquivalentTo(currentDate);
+    }
+
+    [Fact]
+    public async Task can_bind_local_datetime_with_iso_format()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+
+            {
+                "local_custom_date" : "{{$localDatetime iso8601}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var currentDate = DateTimeOffset.UtcNow;
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+        DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDate, TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
+    public async Task can_bind_local_datetime_with_rfc_format()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+
+            {
+                "local_custom_date" : "{{$localDatetime rfc1123}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var currentDate = DateTimeOffset.UtcNow;
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+        DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDate, TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
+    public async Task several_system_variables_in_single_request()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments="{{$randomInt 5 200}}"
+            Current-time: "{{$timestamp}}"
+            
+            {
+                "request_id": "{{$guid}}",
+                "updated_at": "{{$timestamp}}",
+                "created_at": "{{$timestamp -1 d}}",
+                "custom_date": "{{$datetime 'yyyy-MM-dd'}}",
+                "local_custom_date": "{{$localDatetime 'yyyy-MM-dd'}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
     }
 
     [Fact]
@@ -348,6 +1212,65 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task incorrect_datetime_syntax_produces_error()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "local_custom_date": "{{$localDatetime 'YYYY-NN-DD}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("Unable to evaluate expression '$localDatetime 'YYYY-NN-DD'.");
+
+    }
+
+
+    [Fact]
+    public async Task incorrect_datetime_produces_error()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "local_custom_date": "{{$localDatetime 'YYYY-MM-DD'}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied expression '$localDatetime 'YYYY-MM-DD'' does not follow the correct pattern. The expression should adhere to the following pattern: '{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
+
+    }
+
+    [Fact]
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols_in_URL()
     {
         using var kernel = new HttpKernel();
@@ -360,7 +1283,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be("Cannot resolve symbol 'api_endpoint'.");
+        diagnostics.Diagnostics.First().Message.Should().Be("Unable to evaluate expression 'api_endpoint'.");
     }
 
     [Fact]
