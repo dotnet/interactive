@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive;
 public class KernelInfo
 {
     private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
-    private readonly NamedSymbolCollection<KernelDirective> _supportedDirectives = new(directive => directive.Name);
+    private readonly NamedSymbolCollection<KernelDirective> _supportedDirectives;
     private string? _displayName;
 
     [JsonConstructor]
@@ -38,9 +38,17 @@ public class KernelInfo
         {
             NameAndAliases.UnionWith(aliases);
         }
+
         IsProxy = isProxy;
         IsComposite = isComposite;
         Description = description;
+
+        _supportedDirectives = new NamedSymbolCollection<KernelDirective>(
+            directive => directive.Name,
+            onAdd: directive =>
+            {
+                directive.ParentKernelInfo = this;
+            });
     }
 
     private string CreateDisplayName()

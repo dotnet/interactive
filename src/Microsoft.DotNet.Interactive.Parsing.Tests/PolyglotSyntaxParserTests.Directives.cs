@@ -183,7 +183,7 @@ x
         [InlineData(@"
 {|none:#!fsharp |}
 let x = 
-{|fsharp:#!time |}
+{|.NET:#!time |}
 {|none:#!csharp|}
 {|csharp:#!who |}", "fsharp")]
         public void Directive_node_indicates_kernel_name(

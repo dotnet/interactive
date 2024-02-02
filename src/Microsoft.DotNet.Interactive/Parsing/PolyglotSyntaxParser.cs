@@ -42,7 +42,7 @@ internal class PolyglotSyntaxParser
         _sourceText = sourceText;
         _configuration = configuration;
         _syntaxTree = new(_sourceText, configuration);
-        _compositeKernelInfo = configuration.KernelInfos.Select(p => p.Value).FirstOrDefault(i => i.IsComposite);
+        _compositeKernelInfo = configuration.KernelInfos.FirstOrDefault(i => i.IsComposite);
     }
 
     public PolyglotSyntaxTree Parse()
@@ -87,24 +87,31 @@ internal class PolyglotSyntaxParser
     {
         if (IsAtStartOfDirective())
         {
-            var directiveNode = new DirectiveNode(_currentKernelName!, _sourceText, _syntaxTree);
+            KernelDirective? currentlyScopedDirective = null;
 
             var directiveNameNode = ParseParameterName();
+
+            var targetKernelName = _currentKernelName;
+
+            if (_configuration.TryGetDirective(_currentKernelName, directiveNameNode.Text, out var directive1) ||
+                _compositeKernelInfo?.TryGetDirective(directiveNameNode.Text, out directive1) == true)
+            {
+                currentlyScopedDirective = directive1;
+
+                if (directive1 is not KernelSpecifierDirective)
+                {
+                    if (directive1.ParentKernelInfo is { } parentKernelInfo)
+                    {
+                        targetKernelName = parentKernelInfo.LocalName;
+                    }
+                }
+            }
+
+            var directiveNode = new DirectiveNode(targetKernelName, _sourceText, _syntaxTree);
 
             directiveNode.Add(directiveNameNode);
 
             var consumeTrailingWhitespace = false;
-
-            KernelDirective? currentlyScopedDirective = null;
-
-            if (_configuration.KernelInfos.TryGetValue(_currentKernelName, out var kernelInfo))
-            {
-                if (kernelInfo.TryGetDirective(directiveNode.Text, out var directive) ||
-                    _compositeKernelInfo?.TryGetDirective(directiveNode.Text, out directive) == true)
-                {
-                    currentlyScopedDirective = directive;
-                }
-            }
 
             while (MoreTokens())
             {
@@ -129,9 +136,9 @@ internal class PolyglotSyntaxParser
                         if (!_configuration.IsParameterInScope(namedParameterNode))
                         {
                             var diagnostic = namedParameterNode.CreateDiagnostic(
-                                new(ErrorCodes.UnknownNamedParameter, 
-                                    "Unrecognized named parameter '{0}'",
-                                    DiagnosticSeverity.Error, 
+                                new(ErrorCodes.UnknownNamedParameter,
+                                    "Unrecognized parameter name '{0}'",
+                                    DiagnosticSeverity.Error,
                                     namedParameterNode.NameNode?.Text ?? ""));
                             namedParameterNode.AddDiagnostic(diagnostic);
                         }
@@ -191,7 +198,7 @@ internal class PolyglotSyntaxParser
             DirectiveParameterValueNode valueNode = new(_sourceText, _syntaxTree);
             SyntaxNode parseIntoNode = valueNode;
 
-            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "{" })
+            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "{" or "\"" })
             {
                 ParseJsonValue();
             }
@@ -264,34 +271,69 @@ internal class PolyglotSyntaxParser
 
             void ParseJsonValue()
             {
-                var jsonDepth = 0;
-                var foundBrace = false;
+                var currentToken = CurrentToken;
 
-                while (MoreTokens())
+                if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "{" })
                 {
-                    var currentToken = CurrentToken;
+                    // Parse a JSON object
+                    var jsonDepth = 0;
 
-                    if (currentToken is { Kind: TokenKind.NewLine })
+                    while (MoreTokens())
                     {
-                        break;
-                    }
+                        currentToken = CurrentToken;
 
-                    switch (currentToken)
-                    {
-                        case { Kind: TokenKind.Punctuation } and { Text: "{" }:
-                            foundBrace = true;
-                            jsonDepth++;
+                        if (currentToken is { Kind: TokenKind.NewLine })
+                        {
                             break;
-                        case { Kind: TokenKind.Punctuation } and { Text: "}" }:
-                            jsonDepth--;
+                        }
+
+                        switch (currentToken)
+                        {
+                            case { Kind: TokenKind.Punctuation } and { Text: "{" }:
+                                jsonDepth++;
+                                break;
+
+                            case { Kind: TokenKind.Punctuation } and { Text: "}" }:
+                                jsonDepth--;
+                                break;
+                        }
+
+                        ConsumeCurrentTokenInto(parseIntoNode);
+
+                        if (jsonDepth <= 0)
+                        {
                             break;
+                        }
                     }
+                }
+                else if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "\"" })
+                {
+                    // Parse a JSON string
+                    var quoteCount = 0;
 
-                    ConsumeCurrentTokenInto(parseIntoNode);
-
-                    if (foundBrace && jsonDepth <= 0)
+                    while (MoreTokens())
                     {
-                        break;
+                        currentToken = CurrentToken;
+
+                        if (currentToken is { Kind: TokenKind.NewLine })
+                        {
+                            break;
+                        }
+
+                        if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "\"" })
+                        {
+                            if (CurrentTokenPlus(-1) is not { Text: "\\" })
+                            {
+                                quoteCount++;
+                            }
+                        }
+
+                        ConsumeCurrentTokenInto(parseIntoNode);
+
+                        if (quoteCount == 2)
+                        {
+                            break;
+                        }
                     }
                 }
 
@@ -715,5 +757,8 @@ internal class PolyglotSyntaxParser
         public const string MissingRequiredNamedParameter = "DNI104";
         public const string TooManyOccurrencesOfNamedParameter = "DNI105";
         public const string InvalidJsonInParameterValue = "DNI106";
+        public const string ParametersMustAppearAfterSubcommands = "DNI107";
+
+        public const string MissingSerializationType = "DNI205";
     }
 }

@@ -31,7 +31,7 @@ public class PolyglotParserConfigurationTests
         {
             KernelInfos =
             {
-                [".NET"] = new KernelInfo(".NET", isComposite: true)
+                new KernelInfo(".NET", isComposite: true)
                 {
                     SupportedDirectives =
                     {
@@ -57,6 +57,10 @@ public class PolyglotParserConfigurationTests
                         },
                         new KernelActionDirective("#!connect")
                         {
+                            Parameters =
+                            {
+                                new KernelDirectiveParameter("--kernel-name")
+                            },
                             Subcommands =
                             {
                                 new KernelActionDirective("stdio"),
@@ -66,7 +70,7 @@ public class PolyglotParserConfigurationTests
                                 {
                                     Parameters =
                                     {
-                                        new KernelDirectiveParameter("--connection-string")
+                                        new KernelDirectiveParameter("--connection-string"),
                                     },
                                     DeserializeAs = typeof(ConnectMsSql)
                                 },
@@ -75,7 +79,7 @@ public class PolyglotParserConfigurationTests
                         new KernelSpecifierDirective("#!javascript"),
                     }
                 },
-                ["csharp"] = new KernelInfo("csharp", new[] { "C#" })
+                new KernelInfo("csharp", new[] { "C#" })
                 {
                     SupportedDirectives =
                     {
@@ -83,7 +87,7 @@ public class PolyglotParserConfigurationTests
                         new KernelActionDirective("#r")
                     }
                 },
-                ["fsharp"] = new KernelInfo("fsharp", new[] { "F#" })
+                new KernelInfo("fsharp", new[] { "F#" })
                 {
                     SupportedDirectives =
                     {
@@ -91,7 +95,7 @@ public class PolyglotParserConfigurationTests
                         new KernelActionDirective("#r")
                     }
                 },
-                ["pwsh"] = new KernelInfo("pwsh", new[] { "powershell" }),
+                new KernelInfo("pwsh", new[] { "powershell" }),
             }
         };
 }

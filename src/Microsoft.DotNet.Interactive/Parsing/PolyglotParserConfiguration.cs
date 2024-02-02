@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 
 internal class PolyglotParserConfiguration
 {
-    private Dictionary<string, KernelInfo>? _kernelInfoByKernelName;
+    private Dictionary<string, KernelInfo>? _kernelInfoByKernelSpecifierDirectiveName;
     private HashSet<string>? _topLevelDirectives;
 
     public PolyglotParserConfiguration(string defaultKernelName = "")
@@ -21,7 +21,7 @@ internal class PolyglotParserConfiguration
 
     public string DefaultKernelName { get; }
 
-    public Dictionary<string, KernelInfo> KernelInfos { get; } = new();
+    public NamedSymbolCollection<KernelInfo> KernelInfos { get; } = new(info => info.LocalName);
 
     public bool IsDirectiveInScope(
         string currentKernelName,
@@ -42,7 +42,7 @@ internal class PolyglotParserConfiguration
             return true;
         }
 
-        if (_kernelInfoByKernelName!.TryGetValue(currentKernelName, out var kernelInfo))
+        if (_kernelInfoByKernelSpecifierDirectiveName!.TryGetValue(currentKernelName, out var kernelInfo))
         {
             if (kernelInfo.SupportedDirectives.SingleOrDefault(d => d.Name == directiveName) is { } directive)
             {
@@ -60,6 +60,26 @@ internal class PolyglotParserConfiguration
         }
 
         kind = null;
+        return false;
+    }
+
+    public bool TryGetDirective(
+        string currentKernelName,
+        string directiveName,
+        [MaybeNullWhen(false)] out KernelDirective directive)
+    {
+        EnsureSymbolMapIsInitialized();
+
+        if (KernelInfos.TryGetValue(currentKernelName, out var kernelInfo))
+        {
+            if (kernelInfo.TryGetDirective(directiveName, out var foundDirective))
+            {
+                directive = foundDirective;
+                return true;
+            }
+        }
+
+        directive = null;
         return false;
     }
 
@@ -83,31 +103,31 @@ internal class PolyglotParserConfiguration
     {
         EnsureSymbolMapIsInitialized();
 
-        return _kernelInfoByKernelName!.ContainsKey(text);
+        return _kernelInfoByKernelSpecifierDirectiveName!.ContainsKey(text);
     }
 
     private void EnsureSymbolMapIsInitialized()
     {
-        if (_kernelInfoByKernelName is null)
+        if (_kernelInfoByKernelSpecifierDirectiveName is null)
         {
             HashSet<string> topLevelDirectives = new();
 
             Dictionary<string, KernelInfo> dictionary = new();
 
-            foreach (var pair in KernelInfos)
+            foreach (var kernelInfo in KernelInfos)
             {
-                foreach (var tuple in pair.Value.NameAndAliases.Select(alias => (alias, pair.Value)))
+                foreach (var tuple in kernelInfo.NameAndAliases.Select(alias => (alias, kernelInfo)))
                 {
-                    dictionary.Add("#!" + tuple.alias, tuple.Value);
+                    dictionary.Add("#!" + tuple.alias, tuple.kernelInfo);
 
-                    foreach (var d in tuple.Value.SupportedDirectives.Where(d => d is not KernelSpecifierDirective))
+                    foreach (var d in tuple.kernelInfo.SupportedDirectives.Where(d => d is not KernelSpecifierDirective))
                     {
                         topLevelDirectives.Add(d.Name);
                     }
                 }
             }
 
-            _kernelInfoByKernelName = dictionary;
+            _kernelInfoByKernelSpecifierDirectiveName = dictionary;
             _topLevelDirectives = topLevelDirectives;
         }
     }

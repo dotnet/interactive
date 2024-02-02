@@ -58,8 +58,6 @@ public partial class PolyglotSyntaxParserTests
                      .Should().Be(expectedParameters);
         }
 
-
-
         [Fact]
         public void Diagnostics_are_produced_for_invalid_JSON()
         {
@@ -67,7 +65,7 @@ public partial class PolyglotSyntaxParserTests
             {
                 KernelInfos =
                 {
-                    ["csharp"] = new("csharp")
+                    new("csharp")
                     {
                         SupportedDirectives =
                         {

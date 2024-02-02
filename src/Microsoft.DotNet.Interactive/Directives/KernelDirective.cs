@@ -6,10 +6,12 @@ namespace Microsoft.DotNet.Interactive.Directives;
 
 public abstract class KernelDirective
 {
-    public KernelDirective(string name)
+    protected KernelDirective(string name)
     {
         Name = name;
     }
 
     public string Name { get; init; }
+
+    internal KernelInfo? ParentKernelInfo { get; set; }
 }

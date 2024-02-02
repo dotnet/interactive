@@ -16,7 +16,7 @@ public class KernelActionDirective : KernelDirective
     {
     }
 
-    public Type DeserializeAs { get; set; }
+    public Type? DeserializeAs { get; set; }
 
     public ICollection<KernelActionDirective> Subcommands => _subcommands;
 

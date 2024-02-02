@@ -6,10 +6,12 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -70,10 +72,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 yield return diagnostic;
             }
 
-            if (GetKernelInfo() is { } kernelInfo &&
-                DirectiveNameNode is { Text: { } name } &&
-                kernelInfo.TryGetDirective(name, out var directive) &&
-                directive is KernelActionDirective actionDirective)
+            if (TryGetActionDirective(out var actionDirective))
             {
                 foreach (var namedParameter in actionDirective.Parameters)
                 {
@@ -93,7 +92,57 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     }
                 }
             }
+
+            var foundParameter = false;
+
+            foreach (var childNode in ChildNodes)
+            {
+                if (childNode is DirectiveSubcommandNode)
+                {
+                    if (foundParameter)
+                    {
+                        yield return childNode.CreateDiagnostic(
+                            new(PolyglotSyntaxParser.ErrorCodes.ParametersMustAppearAfterSubcommands,
+                                "Parameters must appear after subcommands.", DiagnosticSeverity.Error));
+                    }
+                }
+                else if (childNode is DirectiveParameterNode)
+                {
+                    foundParameter = true;
+                }
+            }
         }
+    }
+
+    private bool TryGetActionDirective([MaybeNullWhen(false)] out KernelActionDirective actionDirective)
+    {
+        if (GetKernelInfo() is { } kernelInfo)
+        {
+            if (DirectiveNameNode is { Text: { } name } &&
+                kernelInfo.TryGetDirective(name, out var directive) &&
+                directive is KernelActionDirective kernelActionDirective)
+            {
+                actionDirective = kernelActionDirective;
+
+                // drill into subcommands if any
+                var commands = DescendantNodesAndTokens()
+                               .Where(n => n is DirectiveSubcommandNode)
+                               .Select(node => node.Text);
+
+                foreach (var subcommandName in commands)
+                {
+                    if (kernelActionDirective.TryGetSubcommand(subcommandName, out var subcommand))
+                    {
+                         actionDirective = subcommand;
+                    }
+                }
+
+                return true;
+            }
+        }
+
+        actionDirective = null;
+        return false;
     }
 
     internal int GetLine()
@@ -147,119 +196,80 @@ internal class DirectiveNode : TopLevelSyntaxNode
     public DirectiveBindingResult<object?> CreateSuccessfulBindingResult(object? value) =>
         DirectiveBindingResult<object?>.Success(value);
 
-    public async Task <DirectiveBindingResult<string>> TryGetJsonAsync(DirectiveBindingDelegate bind)
+    public async Task<DirectiveBindingResult<string>> TryGetJsonAsync(DirectiveBindingDelegate bind = null)
     {
         var options = new JsonWriterOptions
         {
             Indented = true
         };
 
+        if (!TryGetActionDirective(out var directive))
+        {
+            return DirectiveBindingResult<string>.Failure(
+                CreateDiagnostic(
+                    new(PolyglotSyntaxParser.ErrorCodes.MissingSerializationType,
+                        "No serialization type defined for {0}. Please specify a serialization type using {1}.{2}.",
+                        DiagnosticSeverity.Error,
+                        DirectiveNameNode?.Text ?? ToString(),
+                        typeof(KernelActionDirective),
+                        nameof(KernelActionDirective.DeserializeAs)
+                    )));
+        }
+
         using var stream = new MemoryStream();
         await using var writer = new Utf8JsonWriter(stream, options);
 
         writer.WriteStartObject();
 
-        writer.WriteString("commandType", "DirectiveCommand");
+        writer.WriteString("commandType", directive.DeserializeAs?.Name);
 
         writer.WritePropertyName("command");
-        
-
 
         writer.WriteStartObject();
-        writer.WriteNumber("temp", 42);
-        
-        
-        
-        
-        
-        writer.WriteEndObject();
+
+        writer.WriteString("invokedDirective", GetInvokedCommandPath());
+
+        foreach (var parameterNode in DescendantNodesAndTokens().OfType<DirectiveParameterNode>())
+        {
+            var name = FromKebabToCamelCase(parameterNode.NameNode?.Text);
+
+            var value = parameterNode.ValueNode?.Text;
+
+            if (value?.StartsWith("\"") is true)
+            {
+                value = JsonSerializer.Deserialize<string>(value);
+            }
 
 
+            writer.WriteString(name, value);
+        }
 
         writer.WriteString("targetKernelName", TargetKernelName);
 
         writer.WriteEndObject();
 
+        writer.WriteEndObject();
 
-
-
-
-
-
-
-      await  writer.FlushAsync();
+        await writer.FlushAsync();
 
         string json = Encoding.UTF8.GetString(stream.ToArray());
 
-
-
-        // FIX: (TryGetJsonAsync) 
         return DirectiveBindingResult<string>.Success(json);
-
-
     }
-}
 
-internal delegate Task<DirectiveBindingResult<object?>> DirectiveBindingDelegate(DirectiveExpressionParametersNode node);
-
-internal class DirectiveBindingResult<T>
-{
-    private DirectiveBindingResult()
+    private string? GetInvokedCommandPath()
     {
+        var commands = DescendantNodesAndTokensAndSelf()
+                       .Where(n => n is DirectiveSubcommandNode or Parsing.DirectiveNameNode)
+                       .Select(node => node.Text);
+
+        return string.Join(" ", commands);
     }
 
-    public List<CodeAnalysis.Diagnostic> Diagnostics { get; } = new();
+    private static readonly Regex _kebabCaseRegex = new("-[\\w]", RegexOptions.Compiled);
 
-    public bool IsSuccessful { get; private set; }
-
-    public T? Value { get; set; }
-
-    public static DirectiveBindingResult<T> Success(T value, params CodeAnalysis.Diagnostic[] diagnostics)
-    {
-        if (diagnostics is not null &&
-            diagnostics.Any(d => d.Severity is DiagnosticSeverity.Error))
-        {
-            throw new ArgumentException("Errors must not be present when binding is successful.", nameof(diagnostics));
-        }
-
-        var result = new DirectiveBindingResult<T>
-        {
-            IsSuccessful = true,
-            Value = value
-        };
-
-        if (diagnostics is not null)
-        {
-            result.Diagnostics.AddRange(diagnostics);
-        }
-
-        return result;
-    }
-
-    public static DirectiveBindingResult<T> Failure(params CodeAnalysis.Diagnostic[] diagnostics)
-    {
-        if (diagnostics is null)
-        {
-            throw new ArgumentNullException(nameof(diagnostics));
-        }
-
-        if (diagnostics.Length is 0)
-        {
-            throw new ArgumentException("Value cannot be an empty collection.", nameof(diagnostics));
-        }
-
-        if (!diagnostics.Any(e => e.Severity is DiagnosticSeverity.Error))
-        {
-            throw new ArgumentException("At least one error must be present when binding is unsuccessful.", nameof(diagnostics));
-        }
-
-        var result = new DirectiveBindingResult<T>
-        {
-            IsSuccessful = false
-        };
-
-        result.Diagnostics.AddRange(diagnostics);
-
-        return result;
-    }
+    private static string FromKebabToCamelCase(string value) =>
+        _kebabCaseRegex.Replace(
+            value.TrimStart('-'),
+            m => m.ToString().TrimStart('-').ToUpper());
 }
