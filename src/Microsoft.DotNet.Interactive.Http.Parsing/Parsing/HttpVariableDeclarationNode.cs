@@ -5,7 +5,6 @@
 
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
