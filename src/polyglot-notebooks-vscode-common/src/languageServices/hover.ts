@@ -22,7 +22,7 @@ export function provideHover(clientMapper: ClientMapper, language: string, docum
             contents: "",
             isMarkdown: false,
             range: undefined
-        }
+        };
     });
 }
 
