@@ -350,9 +350,46 @@ public class HttpKernelTests
     }
 
     [Theory]
-    [InlineData("$guid$guid")]
     [InlineData(" $guid")]
     [InlineData("$guid ")]
+    [InlineData(" $datetime")]
+    [InlineData("$datetime ")]
+    [InlineData(" $localDatetime")]
+    [InlineData("$localDatetime ")]
+    [InlineData(" $timestamp")]
+    [InlineData("$timestamp ")]
+    [InlineData(" $randomInt")]
+    [InlineData("$randomInt ")]
+    public async Task can_bind_expression_with_various_spaces(string expression)
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{{{{expression}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+    }
+
+    [Theory]
+    [InlineData("$guid$guid")]
     [InlineData("abc$guid")]
     [InlineData("$guidabc")]
     public async Task cant_bind_invalid_guid_expression(string expression)
@@ -389,8 +426,6 @@ public class HttpKernelTests
 
     [Theory]
     [InlineData("$datetime$datetime")]
-    [InlineData(" $datetime")]
-    [InlineData("$datetime ")]
     [InlineData("abc$datetime")]
     [InlineData("$datetimeabc")]
     public async Task cant_bind_invalid_datetime_expression(string expression)
@@ -427,8 +462,6 @@ public class HttpKernelTests
 
     [Theory]
     [InlineData("$localDatetime$localDatetime")]
-    [InlineData(" $localDatetime")]
-    [InlineData("$localDatetime ")]
     [InlineData("abc$localDatetime")]
     [InlineData("$localDatetimeabc")]
     public async Task cant_bind_invalid_local_datetime_expression(string expression)
@@ -465,8 +498,6 @@ public class HttpKernelTests
 
     [Theory]
     [InlineData("$timestamp$timestamp")]
-    [InlineData(" $timestamp")]
-    [InlineData("$timestamp ")]
     [InlineData("abc$timestamp")]
     [InlineData("$timestampabc")]
     public async Task cant_bind_invalid_timestamp_expression(string expression)
@@ -503,8 +534,6 @@ public class HttpKernelTests
 
     [Theory]
     [InlineData("$randomInt$randomInt")]
-    [InlineData(" $randomInt")]
-    [InlineData("$randomInt ")]
     [InlineData("abc$randomInt")]
     [InlineData("$randomIntabc")]
     public async Task cant_bind_invalid_random_int_expression(string expression)

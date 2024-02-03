@@ -331,13 +331,13 @@ public class HttpKernel :
     {
         const string DateTime = "$datetime";
         const string LocalDateTime = "$localDatetime";
-        const string OffsetRegex = """(?:\s(?<offset>[-+]?[^\s]+)\s(?<option>[^\s]+))?""";
-        const string TypeRegex = """(?:\s(?<type>rfc1123|iso8601|'.+'|".+"))?""";
+        const string OffsetRegex = """(?:\s+(?<offset>[-+]?[^\s]+)\s(?<option>[^\s]+))?""";
+        const string TypeRegex = """(?:\s+(?<type>rfc1123|iso8601|'.+'|".+"))?""";
 
         var guidPattern = new Regex(@$"^\$guid$", RegexOptions.Compiled);
         var dateTimePattern = new Regex(@$"^\{DateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
         var localDateTimePattern = new Regex(@$"^\{LocalDateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
-        var randomIntPattern = new Regex(@$"^\$randomInt(?:\s(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
+        var randomIntPattern = new Regex(@$"^\$randomInt(?:\s+(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
         var timestampPattern = new Regex(@$"^\$timestamp{OffsetRegex}$", RegexOptions.Compiled);
 
 
