@@ -331,7 +331,7 @@ public class HttpKernel :
     {
         const string DateTime = "$datetime";
         const string LocalDateTime = "$localDatetime";
-        const string OffsetRegex = """(?:\s+(?<offset>[-+]?[^\s]+)\s(?<option>[^\s]+))?""";
+        const string OffsetRegex = """(?:\s+(?<offset>[-+]?[^\s]+)\s+(?<option>[^\s]+))?""";
         const string TypeRegex = """(?:\s+(?<type>rfc1123|iso8601|'.+'|".+"))?""";
 
         var guidPattern = new Regex(@$"^\$guid$", RegexOptions.Compiled);

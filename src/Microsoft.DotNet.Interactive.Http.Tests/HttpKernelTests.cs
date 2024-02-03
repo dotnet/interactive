@@ -673,6 +673,39 @@ public class HttpKernelTests
         unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(10));
     }
 
+    [Fact]
+    public async Task can_bind_timestamp_With_additional_spaces()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "updated_at" : "{{       $timestamp         +4       d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var unixValueSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var unixValueString = unixValueSubstring.Substring(0, unixValueSubstring.IndexOf("\""));
+        var unixValue = DateTimeOffset.FromUnixTimeSeconds(long.Parse(unixValueString));
+        unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow.AddDays(4), TimeSpan.FromSeconds(10));
+    }
+
     [Theory]
     [InlineData("-1")]
     [InlineData("+1")]
@@ -938,6 +971,43 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task can_bind_random_int_with_additional_spaces()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{  $randomInt        10                99         }}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var randIntSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var randIntValue = randIntSubstring.Substring(0, randIntSubstring.IndexOf("\""));
+
+
+        int intValueOfRandInt = int.Parse(randIntValue);
+
+        intValueOfRandInt.Should().BeGreaterThanOrEqualTo(10);
+        intValueOfRandInt.Should().BeLessThanOrEqualTo(99);
+    }
+
+    [Fact]
     public async Task can_bind_random_int_with_negative_values()
     {
         HttpRequestMessage request = null;
@@ -1125,6 +1195,40 @@ public class HttpKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied option 't' in the expression '$datetime 'yyyy-MM-dd' -1 t' is not supported.");
+    }
+
+    [Fact]
+    public async Task can_bind_datetime_with_additional_spaces()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "custom_date" : "{{         $datetime    'yyyy-MM-dd'  -1               d       }}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var offsetDate = DateTime.UtcNow.AddDays(-1.0).ToString("yyyy-MM-dd");
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+
+        readDateValue.Should().BeEquivalentTo(offsetDate);
     }
 
     [Fact]
@@ -1326,6 +1430,39 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         var currentDate = DateTimeOffset.UtcNow;
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+        DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDate, TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
+    public async Task can_bind_local_datetime_with_additonal_spaces()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+
+            {
+                "local_custom_date" : "{{  $localDatetime               iso8601   -1    d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var currentDate = DateTimeOffset.UtcNow.AddDays(-1);
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
