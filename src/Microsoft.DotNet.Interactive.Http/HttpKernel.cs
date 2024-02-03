@@ -331,67 +331,69 @@ public class HttpKernel :
     {
         const string DateTime = "$datetime";
         const string LocalDateTime = "$localDatetime";
-        const string OffsetRegex = """(?:\s(?<offset>[-+]?[^\s]+)\s(?<option>[^\s]+))?""";
-        const string TypeRegex = """(?:\s(?<type>rfc1123|iso8601|'.+'|".+"))?""";
+        const string OffsetRegex = """(?:\s+(?<offset>[-+]?[^\s]+)\s+(?<option>[^\s]+))?""";
+        const string TypeRegex = """(?:\s+(?<type>rfc1123|iso8601|'.+'|".+"))?""";
 
         var guidPattern = new Regex(@$"^\$guid$", RegexOptions.Compiled);
         var dateTimePattern = new Regex(@$"^\{DateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
         var localDateTimePattern = new Regex(@$"^\{LocalDateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
-        var randomIntPattern = new Regex(@$"^\$randomInt(?:\s(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
+        var randomIntPattern = new Regex(@$"^\$randomInt(?:\s+(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
         var timestampPattern = new Regex(@$"^\$timestamp{OffsetRegex}$", RegexOptions.Compiled);
+
 
         var guidMatches = guidPattern.Matches(expression);
         if (guidMatches.Count == 1)
         {
             return node.CreateBindingSuccess(Guid.NewGuid().ToString());
         }
-        else if (guidMatches.Count > 0)
+
+        if (expression.Contains(DateTime))
         {
-            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
+            var dateTimeMatches = dateTimePattern.Matches(expression);
+            if (dateTimeMatches.Count == 1)
+            {
+                return GetDateTime(node, DateTime, expression, dateTimeMatches.Single());
+            }
+
+            return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expression, DateTime));
         }
 
-        var dateTimeMatches = dateTimePattern.Matches(expression);
-        if (dateTimeMatches.Count == 1)
+        if (expression.Contains(LocalDateTime))
         {
-            return GetDateTime(node, DateTime, expression, dateTimeMatches.Single());
-        }
-        else if (dateTimeMatches.Count > 0)
-        {
-            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
+            var localDateTimeMatches = localDateTimePattern.Matches(expression);
+            if (localDateTimeMatches.Count == 1)
+            {
+                return GetDateTime(node, LocalDateTime, expression, localDateTimeMatches.Single());
+            }
+
+            return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expression, LocalDateTime));
         }
 
-        var localDateTimeMatches = localDateTimePattern.Matches(expression);
-        if (localDateTimeMatches.Count == 1)
+        if (expression.Contains("$timestamp"))
         {
-            return GetDateTime(node, LocalDateTime, expression, localDateTimeMatches.Single());
-        }
-        else if (localDateTimeMatches.Count > 0)
-        {
-            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
+            var timestampMatches = timestampPattern.Matches(expression);
+            if (timestampMatches.Count == 1)
+            {
+                return GetTimestamp(node, expression, timestampMatches.Single());
+            }
+
+            return node.CreateBindingFailure(HttpDiagnostics.IncorrectTimestampFormat(expression));
         }
 
-        var randomIntMatches = randomIntPattern.Matches(expression);
-        if (randomIntMatches.Count == 1)
+        if (expression.Contains("$randomInt"))
         {
-            return GetRandInt(node, expression, randomIntMatches.Single());
-        }
-        else if (randomIntMatches.Count > 0)
-        {
-            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
-        }
+            var randomIntMatches = randomIntPattern.Matches(expression);
+            if (randomIntMatches.Count == 1)
+            {
+                return GetRandInt(node, expression, randomIntMatches.Single());
+            }
 
-        var timestampMatches = timestampPattern.Matches(expression);
-        if (timestampMatches.Count == 1)
-        {
-            return GetTimestamp(node, expression, timestampMatches.Single());
-        }
-        else if (timestampMatches.Count > 0)
-        {
-            return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
+            return node.CreateBindingFailure(HttpDiagnostics.IncorrectRandomIntFormat(expression));
         }
 
         return node.CreateBindingFailure(HttpDiagnostics.UnableToEvaluateExpression(expression));
     }
+
 
     private HttpBindingResult<object?> GetTimestamp(HttpExpressionNode node, string expressionText, Match match)
     {

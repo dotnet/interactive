@@ -350,13 +350,49 @@ public class HttpKernelTests
     }
 
     [Theory]
+    [InlineData(" $guid")]
+    [InlineData("$guid ")]
+    [InlineData(" $datetime")]
+    [InlineData("$datetime ")]
+    [InlineData(" $localDatetime")]
+    [InlineData("$localDatetime ")]
+    [InlineData(" $timestamp")]
+    [InlineData("$timestamp ")]
+    [InlineData(" $randomInt")]
+    [InlineData("$randomInt ")]
+    public async Task can_bind_expression_with_various_spaces(string expression)
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{{{{expression}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+    }
+
+    [Theory]
     [InlineData("$guid$guid")]
-    [InlineData("$dateTime$dateTime")]
-    [InlineData("$timestamp$timestamp")]
-    [InlineData("$localDateTime$localDateTime")]
-    [InlineData("$randomInt$randomInt")]
-    [InlineData("$randomInt$guid")]
-    public async Task cant_bind_multiples_in_expression(string expression)
+    [InlineData("abc$guid")]
+    [InlineData("$guidabc")]
+    public async Task cant_bind_invalid_guid_expression(string expression)
     {
         HttpRequestMessage request = null;
 
@@ -385,6 +421,184 @@ public class HttpKernelTests
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.First().Message.Should().Be($"Unable to evaluate expression '{expression}'.");
+
+    }
+
+    [Theory]
+    [InlineData("$datetime$datetime")]
+    [InlineData("abc$datetime")]
+    [InlineData("$datetimeabc")]
+    public async Task cant_bind_invalid_datetime_expression(string expression)
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{{{{expression}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{expression}}}' does not follow the correct pattern. The expression should adhere to the following pattern: '{$datetime [rfc1123|iso8601|"custom format"] [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
+
+    }
+
+    [Theory]
+    [InlineData("$localDatetime$localDatetime")]
+    [InlineData("abc$localDatetime")]
+    [InlineData("$localDatetimeabc")]
+    public async Task cant_bind_invalid_local_datetime_expression(string expression)
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{{{{expression}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{expression}}}' does not follow the correct pattern. The expression should adhere to the following pattern: '{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
+
+    }
+
+    [Theory]
+    [InlineData("$timestamp$timestamp")]
+    [InlineData("abc$timestamp")]
+    [InlineData("$timestampabc")]
+    public async Task cant_bind_invalid_timestamp_expression(string expression)
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{{{{expression}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($"The supplied expression '{expression}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$timestamp [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
+
+    }
+
+    [Theory]
+    [InlineData("$randomInt$randomInt")]
+    [InlineData("abc$randomInt")]
+    [InlineData("$randomIntabc")]
+    public async Task cant_bind_invalid_random_int_expression(string expression)
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{{{{expression}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{expression}}}' does not follow the correct pattern. The expression should adhere to the following pattern: '{$randomInt [min] [max]]}' where min and max (if specified) must be valid integers.""");
+
+    }
+
+    [Theory]
+    [InlineData("$randomInt$guid")]
+    [InlineData("$randomInt$dateTime")]
+    [InlineData("$timestamp$localDatetime")]
+    public async Task cant_bind_multiples_in_expression(string expression)
+    {
+        HttpRequestMessage request = null;
+
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = $$$"""
+            POST https://api.example.com/comments
+
+            {
+                "request_id": "{{{{{expression}}}}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>();
 
     }
 
@@ -459,6 +673,39 @@ public class HttpKernelTests
         unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(10));
     }
 
+    [Fact]
+    public async Task can_bind_timestamp_With_additional_spaces()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "updated_at" : "{{       $timestamp         +4       d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var unixValueSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var unixValueString = unixValueSubstring.Substring(0, unixValueSubstring.IndexOf("\""));
+        var unixValue = DateTimeOffset.FromUnixTimeSeconds(long.Parse(unixValueString));
+        unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow.AddDays(4), TimeSpan.FromSeconds(10));
+    }
+
     [Theory]
     [InlineData("-1")]
     [InlineData("+1")]
@@ -525,7 +772,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be("Unable to evaluate expression '$timestamp -1'.");
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied expression '$timestamp -1' does not follow the correct pattern. The expression should adhere to the following pattern: '{$timestamp [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
     }
 
     [Fact]
@@ -706,6 +953,43 @@ public class HttpKernelTests
             
             {
                 "review_count" : "{{$randomInt 10 99}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var randIntSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var randIntValue = randIntSubstring.Substring(0, randIntSubstring.IndexOf("\""));
+
+
+        int intValueOfRandInt = int.Parse(randIntValue);
+
+        intValueOfRandInt.Should().BeGreaterThanOrEqualTo(10);
+        intValueOfRandInt.Should().BeLessThanOrEqualTo(99);
+    }
+
+    [Fact]
+    public async Task can_bind_random_int_with_additional_spaces()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "review_count" : "{{  $randomInt        10                99         }}"
             }
             """;
 
@@ -914,6 +1198,40 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task can_bind_datetime_with_additional_spaces()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+            
+            {
+                "custom_date" : "{{         $datetime    'yyyy-MM-dd'  -1               d       }}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var offsetDate = DateTime.UtcNow.AddDays(-1.0).ToString("yyyy-MM-dd");
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+
+        readDateValue.Should().BeEquivalentTo(offsetDate);
+    }
+
+    [Fact]
     public async Task can_bind_datetime_with_arguments()
     {
         HttpRequestMessage request = null;
@@ -1119,6 +1437,39 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task can_bind_local_datetime_with_additonal_spaces()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+
+            {
+                "local_custom_date" : "{{  $localDatetime               iso8601   -1    d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var currentDate = DateTimeOffset.UtcNow.AddDays(-1);
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+        DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDate, TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
     public async Task can_bind_local_datetime_with_rfc_format()
     {
         HttpRequestMessage request = null;
@@ -1172,6 +1523,7 @@ public class HttpKernelTests
             
             {
                 "request_id": "{{$guid}}",
+                "custom": "{{$guid}}{{$timestamp}}"
                 "updated_at": "{{$timestamp}}",
                 "created_at": "{{$timestamp -1 d}}",
                 "custom_date": "{{$datetime 'yyyy-MM-dd'}}",
@@ -1236,7 +1588,7 @@ public class HttpKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode(code));
 
-        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("Unable to evaluate expression '$localDatetime 'YYYY-NN-DD'.");
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied expression '$localDatetime 'YYYY-NN-DD' does not follow the correct pattern. The expression should adhere to the following pattern: '{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
 
     }
 
