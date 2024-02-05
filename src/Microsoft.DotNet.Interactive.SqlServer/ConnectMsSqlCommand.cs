@@ -83,6 +83,7 @@ public class ConnectMsSqlCommand : ConnectKernelCommand
         context.DisplayAs($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
 
         var submission1 = @$"  
+#r ""nuget: Microsoft.Data.SqlClient, 5.1.5""
 #r ""nuget: Microsoft.EntityFrameworkCore.Design, 7.0.13""
 #r ""nuget: Microsoft.EntityFrameworkCore.SqlServer, 7.0.13""
 #r ""nuget: Humanizer.Core, 2.14.1""
