@@ -802,7 +802,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be("The supplied option 'q' in the expression '$timestamp -1 q' is not supported.");
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied option 'q' in the expression '$timestamp -1 q' is not supported. The following options are supported: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
     }
 
 
@@ -834,7 +834,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be("The supplied offset '33.2' in the expression '$timestamp 33.2 d' is not a valid integer.");
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied offset '33.2' in the expression '$timestamp 33.2 d' is not a valid integer. See https://aka.ms/http-date-time-format for more details.");
     }
 
     [Fact]
@@ -862,7 +862,7 @@ public class HttpKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode(code));
 
-        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied offset '~1' in the expression '$timestamp ~1 d' is not a valid integer.");
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied offset '~1' in the expression '$timestamp ~1 d' is not a valid integer. See https://aka.ms/http-date-time-format for more details.");
     }
 
     [Fact]
@@ -1194,7 +1194,7 @@ public class HttpKernelTests
             """;
 
         var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied option 't' in the expression '$datetime 'yyyy-MM-dd' -1 t' is not supported.");
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied option 't' in the expression '$datetime 'yyyy-MM-dd' -1 t' is not supported. The following options are supported: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
     }
 
     [Fact]
