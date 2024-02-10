@@ -63,7 +63,7 @@ internal class PolyglotParserConfiguration
         return false;
     }
 
-    public bool TryGetDirective(
+    public bool TryGetDirectiveByName(
         string currentKernelName,
         string directiveName,
         [MaybeNullWhen(false)] out KernelDirective directive)
@@ -87,13 +87,26 @@ internal class PolyglotParserConfiguration
     {
         EnsureSymbolMapIsInitialized();
 
-        if (namedParameter.GetKernelInfo() is { } kernelInfo &&
-            namedParameter.Parent is DirectiveNode { DirectiveNameNode: { } directiveName })
+        if (namedParameter.Parent is DirectiveNode directiveNode)
         {
-            if (kernelInfo.TryGetDirective(directiveName.Text, out _))
+            if (directiveNode.TryGetActionDirective(out var actionDirective) &&
+                namedParameter.NameNode is { Text: { } parameterName })
             {
-                return true;
+                if (actionDirective.TryGetParameter(parameterName, out _))
+                {
+                    return true;
+                }
+
+                if (actionDirective.Parent is { } parent)
+                {
+                    if (parent.TryGetParameter(parameterName, out _))
+                    {
+                        return true;
+                    }
+                }
             }
+
+            return false;
         }
 
         return false;

@@ -13,7 +13,9 @@ public class KernelDirectiveParameter
 
     public string Name { get; }
     
-    public int MaxOccurrences { get; set; } = 1;
+    public bool AllowImplicitName { get; init; }
 
-    public bool Required { get; set; } = false;
+    public int MaxOccurrences { get; init; } = 1;
+
+    public bool Required { get; init; } = false;
 }

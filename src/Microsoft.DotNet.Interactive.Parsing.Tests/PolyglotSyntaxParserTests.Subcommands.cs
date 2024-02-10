@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Directives;
@@ -110,6 +111,31 @@ public partial class PolyglotSyntaxParserTests
                 .Character
                 .Should()
                 .Be(span.End);
+        }
+
+        [Fact]
+        public void Parameters_defined_on_parent_command_are_valid_on_subcommand()
+        {
+            var tree = Parse("""
+                #!connect mssql  --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false" --kernel-name sql-adventureworks 
+                """);
+
+            _output.WriteLine(tree.RootNode.Diagram());
+
+            tree.RootNode.DescendantNodesAndTokens()
+                .Should()
+                .ContainSingle<DirectiveParameterNameNode>(where: node => node.Text == "--kernel-name");
+
+            tree.RootNode.GetDiagnostics().Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Multiple_levels_of_subcommands_are_not_supported()
+        {
+            
+
+            // TODO (Multiple_levels_of_subcommands_are_not_supported) write test
+            throw new NotImplementedException();
         }
     }
 }
