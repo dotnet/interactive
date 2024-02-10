@@ -129,7 +129,7 @@ internal static class HttpDiagnostics
         var id = $"HTTP0015";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "The supplied offset '{1}' in the expression '{0}' is not a valid integer. See https://aka.ms/http-date-time-format for more details.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, expression, offset);
+        return new DiagnosticInfo(id, messageFormat, severity, expression, offset);
     }
 
     internal static DiagnosticInfo InvalidOption(string expression, string option)
@@ -137,7 +137,7 @@ internal static class HttpDiagnostics
         var id = $"HTTP0016";
         var severity = DiagnosticSeverity.Error;
         var messageFormat = "The supplied option '{1}' in the expression '{0}' is not supported. The following options are supported: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, expression, option);
+        return new DiagnosticInfo(id, messageFormat, severity, expression, option);
     }
 
     internal static DiagnosticInfo IncorrectRandomIntFormat(string expression)

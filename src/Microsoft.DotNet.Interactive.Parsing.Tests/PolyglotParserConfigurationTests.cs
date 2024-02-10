@@ -156,11 +156,14 @@ internal class SendValue : KernelCommand
     public FormattedValue FormattedValue { get; }
 
     public string Name { get; }
-
-
-
 }
 
+internal class TestCommand : KernelCommand
+{
+    public string StringProperty { get; set; }
+
+    public int IntProperty { get; set; }
+}
 
 public class FormattedValue
 {

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
+    <LangVersion>Latest</LangVersion>
 
     <!-- Assent isn't strongly signed -->
     <NoWarn>$(NoWarn);VSTHRD200;CS8002;CS8509</NoWarn>

@@ -93,7 +93,7 @@ internal class PolyglotSyntaxParser
 
             var targetKernelName = _currentKernelName;
 
-            if (_configuration.TryGetDirective(_currentKernelName, directiveNameNode.Text, out var directive1) ||
+            if (_configuration.TryGetDirectiveByName(_currentKernelName, directiveNameNode.Text, out var directive1) ||
                 _compositeKernelInfo?.TryGetDirective(directiveNameNode.Text, out directive1) == true)
             {
                 currentlyScopedDirective = directive1;
@@ -156,9 +156,11 @@ internal class PolyglotSyntaxParser
                         ParseTrailingWhitespace(subcommandNode);
                         directiveNode.Add(subcommandNode);
                     }
-                    else if (ParseParameterValue() is { } argumentNode)
+                    else if (ParseParameterValue() is { } parameterValueNode)
                     {
-                        directiveNode.Add(argumentNode);
+                        DirectiveParameterNode parameterNode = new(_sourceText, _syntaxTree);
+                        parameterNode.Add(parameterValueNode);
+                        directiveNode.Add(parameterNode);
                     }
                 }
             }
@@ -749,6 +751,7 @@ internal class PolyglotSyntaxParser
         public const string InvalidJsonInParameterValue = "DNI106";
         public const string ParametersMustAppearAfterSubcommands = "DNI107";
 
+        public const string MissingBindingDelegate = "DNI204";
         public const string MissingSerializationType = "DNI205";
     }
 }

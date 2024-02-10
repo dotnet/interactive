@@ -45,7 +45,7 @@ public class KernelInfo
 
         _supportedDirectives = new NamedSymbolCollection<KernelDirective>(
             directive => directive.Name,
-            onAdd: directive =>
+            onAdding: (directive, _) =>
             {
                 directive.ParentKernelInfo = this;
             });

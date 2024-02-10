@@ -114,7 +114,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
         }
     }
 
-    private bool TryGetActionDirective([MaybeNullWhen(false)] out KernelActionDirective actionDirective)
+    public bool TryGetActionDirective([MaybeNullWhen(false)] out KernelActionDirective actionDirective)
     {
         if (GetKernelInfo() is { } kernelInfo)
         {
@@ -216,6 +216,24 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     )));
         }
 
+        if (DescendantNodesAndTokens().OfType<DirectiveExpressionTypeNode>() is { } expressionTypeNodes &&
+            expressionTypeNodes.FirstOrDefault() is { } expressionTypeNode)
+        {
+            if (bind is null)
+            {
+                return DirectiveBindingResult<string>.Failure(
+                    expressionTypeNode.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.MissingBindingDelegate,
+                            $"When bindings are present then a {nameof(DirectiveBindingDelegate)} must be provided.",
+                            DiagnosticSeverity.Error)));
+            }
+        }
+
+        if (GetDiagnostics().FirstOrDefault() is { } diagnostic)
+        {
+            return DirectiveBindingResult<string>.Failure(diagnostic);
+        }
+
         using var stream = new MemoryStream();
         await using var writer = new Utf8JsonWriter(stream, options);
 
@@ -227,39 +245,32 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         writer.WriteStartObject();
 
-        writer.WriteString("invokedDirective", GetInvokedCommandPath());
+        var parameterNodes = DescendantNodesAndTokens().OfType<DirectiveParameterNode>().ToArray();
 
-        foreach (var parameterNode in DescendantNodesAndTokens().OfType<DirectiveParameterNode>())
+        foreach (var parameter in directive.ParametersIncludingAncestors)
         {
-            if (parameterNode.NameNode?.Text is { } propertyName)
-            {
-                propertyName = FromKebabToCamelCase(propertyName);
+            var matchingNodes = parameterNodes.Where(node =>
+                                                         parameter.AllowImplicitName 
+                                                             ? node.NameNode is null 
+                                                             : node.NameNode?.Text == parameter.Name)
+                                              .ToArray();
 
-                if (parameterNode.ValueNode is { } valueNode)
-                {
-                    var value = valueNode.Text;
+            var propertyName = FromKebabToCamelCase(parameter.Name);
 
-                    if (value[0] is '{' or '"')
-                    {
-                        writer.WritePropertyName(propertyName);
-                        writer.WriteRawValue(value);
-                    }
-                    else
-                    {
-                        writer.WriteString(propertyName, value);
-                    }
-                }
-                else
-                {
-                    writer.WriteNull(propertyName);
-                }
-            }
-            else
+            switch (matchingNodes)
             {
-                // FIX: (TryGetJsonAsync) implicit property name should be identified and serialized
+                case [{ } parameterNode]:
+                {
+                    WriteProperty(propertyName, parameterNode.ValueNode);
+
+                    break;
+                }
+
+                // FIX: (TryGetJsonAsync) handle multiple matching nodes for the parameter (write array?)
             }
         }
 
+        writer.WriteString("invokedDirective", GetInvokedCommandPath());
         writer.WriteString("targetKernelName", TargetKernelName);
 
         writer.WriteEndObject();
@@ -271,6 +282,28 @@ internal class DirectiveNode : TopLevelSyntaxNode
         var json = Encoding.UTF8.GetString(stream.ToArray());
 
         return DirectiveBindingResult<string>.Success(json);
+
+        void WriteProperty(string propertyName, DirectiveParameterValueNode? valueNode = null)
+        {
+            if (valueNode is not null)
+            {
+                var value = valueNode.Text;
+
+                if (value[0] is '{' or '"')
+                {
+                    writer.WritePropertyName(propertyName);
+                    writer.WriteRawValue(value);
+                }
+                else
+                {
+                    writer.WriteString(propertyName, value);
+                }
+            }
+            else
+            {
+                writer.WriteNull(propertyName);
+            }
+        }
     }
 
     private string GetInvokedCommandPath()
