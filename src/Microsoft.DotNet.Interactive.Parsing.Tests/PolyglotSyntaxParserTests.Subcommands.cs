@@ -130,12 +130,54 @@ public partial class PolyglotSyntaxParserTests
         }
 
         [Fact]
-        public void Multiple_levels_of_subcommands_are_not_supported()
+        public void Grandchild_subcommands_cannot_be_added()
         {
-            
+            var directive = new KernelActionDirective("#!test");
 
-            // TODO (Multiple_levels_of_subcommands_are_not_supported) write test
-            throw new NotImplementedException();
+            var childDirective = new KernelActionDirective("one");
+            directive.Subcommands.Add(childDirective);
+            var grandchildDirective = new KernelActionDirective("two");
+
+            var addGrandchild = () =>
+                childDirective.Subcommands.Add(grandchildDirective);
+
+            addGrandchild.Should().Throw<ArgumentException>()
+                         .Which.Message
+                         .Should().Be("Only one level of directive subcommands is allowed.");
+        }
+
+        [Fact]
+        public void Directives_with_subcommands_cannot_be_added_to_a_parent_directive()
+        {
+            var childDirective = new KernelActionDirective("one");
+            var grandchildDirective = new KernelActionDirective("two");
+            childDirective.Subcommands.Add(grandchildDirective);
+
+            var parent = new KernelActionDirective("#!test");
+            var addToParent = () =>
+                parent.Subcommands.Add(childDirective);
+
+            addToParent.Should().Throw<ArgumentException>()
+                       .Which.Message
+                       .Should().Be("Only one level of directive subcommands is allowed.");
+        }
+
+        [Fact]
+        public void Commands_cannot_be_reparented()
+        {
+            var directive = new KernelActionDirective("#!test");
+
+            var childDirective = new KernelActionDirective("one");
+            directive.Subcommands.Add(childDirective);
+
+            var newParent = new KernelActionDirective("#!test2");
+
+            var addToNewParent = () =>
+                newParent.Subcommands.Add(childDirective);
+
+            addToNewParent.Should().Throw<ArgumentException>()
+                          .Which.Message
+                          .Should().Be("Directives cannot be reparented.");
         }
     }
 }
