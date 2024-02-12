@@ -25,6 +25,16 @@ public class KernelActionDirective : KernelDirective
                     throw new ArgumentException($"Directive already contains a subcommand named '{adding.Name}'.");
                 }
 
+                if (adding.Parent is not null)
+                {
+                    throw new ArgumentException("Directives cannot be reparented.");
+                }
+
+                if (Parent is not null || adding.Subcommands.Any())
+                {
+                    throw new ArgumentException("Only one level of directive subcommands is allowed.");
+                }
+
                 adding.Parent = this;
             });
 
