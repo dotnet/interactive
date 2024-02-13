@@ -203,15 +203,7 @@ public partial class HttpParserTests
         {
             var result = Parse(
             """
-            @searchTerm=some-search-term
-            @hostname=httpbin.org
-            @host_name=httpbin.org
-            # variable using another variable
-            @host=https://{{hostname}}
-            # variable using "dynamic variables"
             @createdAt = {{$datetime iso8601}}
-            @fakeuser=fakeuser
-            @fakepwd=fakepwd
             @bar={{$guid}}
 
             POST https://httpbin.org/anything
@@ -219,11 +211,7 @@ public partial class HttpParserTests
 
             {
                 "request_id": "{{bar}}",
-                "updated_at": "{{$timestamp}}",
-                "created_at": "{{$timestamp -1 d}}",
-                "review_count": "{{$randomInt 5 200}}",
-                "custom_date": "{{$datetime 'yyyy-MM-dd'}}",
-                "local_custom_date": "{{$localDatetime 'yyyy-MM-dd'}}"
+                "created_at": "{{$createdAt}}"
             }
             """
                 );
@@ -231,8 +219,10 @@ public partial class HttpParserTests
             var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
 
             var barValue = variables.Should().Contain(n => n.Key == "bar").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value;
+            var createAtValue = variables.Should().Contain(n => n.Key == "createdAt").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value;
 
-            Guid.TryParse(barValue, out _).Should().BeTrue();
+            Guid.TryParse(barValue, out var guidResult).Should().BeTrue();
+            DateTime.TryParse(createAtValue, out var dateTimeResult).Should().BeTrue();
         }
 
         [Fact]
