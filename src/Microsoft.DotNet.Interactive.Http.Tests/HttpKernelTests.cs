@@ -317,6 +317,42 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task binding_variable_in_text_is_valid()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        _ = new AssertionScope();
+
+        var code = """
+            @bar={{$guid}}
+
+            POST https://httpbin.org/anything
+            Content-Type: application/json
+
+            {
+                "request_id": "{{bar}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var guidSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var guidString = guidSubstring.Substring(0, guidSubstring.IndexOf("\""));
+        Guid.TryParse(guidString, out _).Should().BeTrue();
+
+    }
+
+    [Fact]
     public async Task can_bind_guid()
     {
         HttpRequestMessage request = null;

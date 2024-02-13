@@ -57,9 +57,10 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                         {
                             return node.CreateBindingSuccess(strinValue);
                         }
+                        
                         else
                         {
-                            return node.CreateBindingFailure(new HttpDiagnosticInfo("1", "invalid variable", CodeAnalysis.DiagnosticSeverity.Error));
+                            return DynamicExpressionUtilites.MatchExpressionValue(node, node.Text);
                         }
 
                     });

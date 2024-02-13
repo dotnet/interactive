@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -10,6 +11,7 @@ using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using static Microsoft.DotNet.Interactive.Http.Tests.HttpParserTests;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
@@ -194,6 +196,43 @@ public partial class HttpParserTests
             var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
             variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
 
+        }
+
+        [Fact]
+        public void declared_variable_with_expression_can_be_parsed()
+        {
+            var result = Parse(
+            """
+            @searchTerm=some-search-term
+            @hostname=httpbin.org
+            @host_name=httpbin.org
+            # variable using another variable
+            @host=https://{{hostname}}
+            # variable using "dynamic variables"
+            @createdAt = {{$datetime iso8601}}
+            @fakeuser=fakeuser
+            @fakepwd=fakepwd
+            @bar={{$guid}}
+
+            POST https://httpbin.org/anything
+            Content-Type: application/json
+
+            {
+                "request_id": "{{bar}}",
+                "updated_at": "{{$timestamp}}",
+                "created_at": "{{$timestamp -1 d}}",
+                "review_count": "{{$randomInt 5 200}}",
+                "custom_date": "{{$datetime 'yyyy-MM-dd'}}",
+                "local_custom_date": "{{$localDatetime 'yyyy-MM-dd'}}"
+            }
+            """
+                );
+
+            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+
+            var barValue = variables.Should().Contain(n => n.Key == "bar").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value;
+
+            Guid.TryParse(barValue, out _).Should().BeTrue();
         }
 
         [Fact]
