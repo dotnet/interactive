@@ -14,4 +14,6 @@ public abstract class KernelDirective
     public string Name { get; init; }
 
     internal KernelInfo? ParentKernelInfo { get; set; }
+
+    public override string ToString() => Name;
 }

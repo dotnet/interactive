@@ -20,11 +20,11 @@ public class SubmissionParserTests
     [InlineData(Language.CSharp, Language.FSharp)]
     [InlineData(Language.FSharp, Language.CSharp)]
     [InlineData(Language.FSharp, Language.FSharp)]
-    public void Pound_i_is_dispatched_to_the_correct_kernel(Language defaultKernel, Language targetKernel)
+    public async Task Pound_i_is_dispatched_to_the_correct_kernel(Language defaultKernel, Language targetKernel)
     {
         var command = new SubmitCode("#i \"nuget: SomeLocation\"", targetKernelName: targetKernel.LanguageName());
 
-        var subCommands = CreateSubmissionParser().SplitSubmission(command);
+        var subCommands = await CreateSubmissionParser().SplitSubmission(command);
 
         subCommands
             .Should()
@@ -51,16 +51,16 @@ public class SubmissionParserTests
         kernel.DefaultKernelName = "csharp";
 
         var csharpCode = @"
-        int x = 123;
-        int y = 456;";
+int x = 123;
+int y = 456;";
 
         await kernel.SubmitCodeAsync(csharpCode);
 
         var fsharpCode = @"
-        #!share --from csharp x
-        #!share --from csharp y
-        Console.WriteLine($""{x} {y}"");";
-        var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(fsharpCode));
+#!share --from csharp x
+#!share --from csharp y
+Console.WriteLine($""{x} {y}"");";
+        var commands = await kernel.SubmissionParser.SplitSubmission(new SubmitCode(fsharpCode));
 
         commands
             .Should()
@@ -88,7 +88,7 @@ var x = 123; // with some intervening code
 #r one.dll
 let x = 123 // with some intervening code
 #r two.dll", "fsharp")]
-    public void Multiple_pound_r_directives_are_submitted_together(
+    public async Task Multiple_pound_r_directives_are_submitted_together(
         string code,
         string defaultKernel)
     {
@@ -100,7 +100,7 @@ let x = 123 // with some intervening code
 
         kernel.DefaultKernelName = defaultKernel;
 
-        var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(code));
+        var commands = await kernel.SubmissionParser.SplitSubmission(new SubmitCode(code));
 
         commands
             .Should()
@@ -112,30 +112,32 @@ let x = 123 // with some intervening code
     }
 
     [Fact]
-    public void RequestDiagnostics_can_be_split_into_separate_commands()
+    public async Task RequestDiagnostics_can_be_split_into_separate_commands()
     {
         var markupCode = @"
 
+// before magic
+
 #!time$$
 
-// language-specific code";
+// after magic";
 
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var _, out var _);
 
         var command = new RequestDiagnostics(code);
-        var commands = new CSharpKernel().UseDefaultMagicCommands().SubmissionParser.SplitSubmission(command);
+        var commands = await new CSharpKernel().UseDefaultMagicCommands().SubmissionParser.SplitSubmission(command);
 
         commands
             .Should()
-            .ContainSingle<RequestDiagnostics>()
-            .Which
-            .Code
+            .ContainSingle<RequestDiagnostics>(c => c.Code.Contains("before magic") && !c.Code.Contains("after magic"));
+        
+        commands
             .Should()
-            .NotContain("#!time");
+            .ContainSingle<RequestDiagnostics>(c => c.Code.Contains("after magic") && !c.Code.Contains("before magic"));
     }
 
     [Fact]
-    public void Whitespace_only_nodes_do_not_generate_separate_SubmitCode_commands()
+    public async Task Whitespace_only_nodes_do_not_generate_separate_SubmitCode_commands()
     {
         using var kernel = new CompositeKernel
         {
@@ -145,40 +147,19 @@ let x = 123 // with some intervening code
 
         kernel.DefaultKernelName = "two";
 
-        var commands = kernel.SubmissionParser.SplitSubmission(
-            new SubmitCode(@"
-        
-        #!one
-        
-        #!two
-        
-        "));
+        var commands = await kernel.SubmissionParser.SplitSubmission(
+            new SubmitCode("""
+                
+                #!one
+                
+                #!two
+                        
+                        
+                """));
 
         commands.Should().NotContain(c => c is SubmitCode);
     }
-
-    [Fact]
-    public void ChooseKernelDirective_parserResults_are_available_in_the_split_commands()
-    {
-        using var kernel = new CompositeKernel
-        {
-            new CSharpKernel()
-        };
-
-        var code = @"
-        #!csharp
-        var a = 12;
-        a.Display();";
-        var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(code));
-
-        commands.Should().ContainSingle<SubmitCode>()
-                .Which
-                .KernelChooserParseResult
-                .CommandResult.Command.Name
-                .Should()
-                .Be("#!csharp");
-    }
-
+    
     private static SubmissionParser CreateSubmissionParser(string defaultLanguage = "csharp")
     {
         using var compositeKernel = new CompositeKernel

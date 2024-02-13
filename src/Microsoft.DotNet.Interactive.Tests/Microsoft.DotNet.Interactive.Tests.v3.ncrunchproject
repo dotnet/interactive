@@ -138,9 +138,28 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests</FixtureName>
       </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests</FixtureName>
-      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
+#r one.dll
+#r two.dll", "csharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
+#r one.dll
+let x = 123 // with some intervening code
+#r two.dll", "fsharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
+#r one.dll
+var x = 123; // with some intervening code
+#r two.dll", "csharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
+#r one.dll
+#r two.dll", "fsharp")</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
