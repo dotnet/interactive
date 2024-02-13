@@ -30,7 +30,7 @@ public static class KernelExtensions
         kernel.AddDirective(r(lazyPackageRestoreContext));
 
         kernel.KernelInfo.Description = $"""
-                                         {@kernel.KernelInfo.Description}
+                                         {kernel.KernelInfo.Description}
 
                                          Can load packages from nuget.org or any other nuget feed.
                                          """;

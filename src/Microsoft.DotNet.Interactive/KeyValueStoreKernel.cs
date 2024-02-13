@@ -8,12 +8,13 @@ using System.Net.Http;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
-using static Microsoft.DotNet.Interactive.ChooseKeyValueStoreKernelDirective;
+using static Microsoft.DotNet.Interactive.Directives.ChooseKeyValueStoreKernelDirective;
 
 namespace Microsoft.DotNet.Interactive;
 

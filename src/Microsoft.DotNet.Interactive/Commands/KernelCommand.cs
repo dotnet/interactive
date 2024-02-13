@@ -130,6 +130,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     [JsonIgnore] 
     internal bool? ShouldPublishCompletionEvent { get; set; }
 
+    [Obsolete]
     [JsonIgnore]
     public ParseResult KernelChooserParseResult { get; internal set; }
 

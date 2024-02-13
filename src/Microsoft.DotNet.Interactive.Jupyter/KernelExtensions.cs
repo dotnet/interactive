@@ -14,6 +14,7 @@ using Markdig.Renderers;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -98,7 +99,6 @@ using static {typeof(TopLevelMethods).FullName};
                             }));
 
                     context.Complete(submitCode);
-
                 }
                     
                 return Task.CompletedTask;
@@ -111,40 +111,34 @@ using static {typeof(TopLevelMethods).FullName};
     private static T UseTime<T>(this T kernel)
         where T : Kernel
     {
-        kernel.AddDirective(time());
+        kernel.AddDirective(
+            new KernelActionDirective("#!time"), 
+            MeasureTime);
 
         return kernel;
 
-        static Command time()
+        static Task MeasureTime(KernelCommand command, KernelInvocationContext context)
         {
-            return new Command("#!time", LocalizationResources.Magics_time_Description())
+            var timer = new Stopwatch();
+            timer.Start();
+
+            context.OnComplete(invocationContext =>
             {
-                Handler = CommandHandler.Create((InvocationContext cmdLineContext) =>
-                {
-                    var context = cmdLineContext.GetService<KernelInvocationContext>();
+                var elapsed = timer.Elapsed;
 
-                    var timer = new Stopwatch();
-                    timer.Start();
+                invocationContext.Publish(
+                    new DisplayedValueProduced(
+                        elapsed,
+                        context.Command,
+                        new[]
+                        {
+                            new FormattedValue(
+                                PlainTextFormatter.MimeType,
+                                $"Wall time: {elapsed.TotalMilliseconds}ms")
+                        }));
+            });
 
-                    context.OnComplete(invocationContext =>
-                    {
-                        var elapsed = timer.Elapsed;
-
-                        invocationContext.Publish(
-                            new DisplayedValueProduced(
-                                elapsed,
-                                context.Command,
-                                new[]
-                                {
-                                    new FormattedValue(
-                                        PlainTextFormatter.MimeType,
-                                        $"Wall time: {elapsed.TotalMilliseconds}ms")
-                                }));
-                    });
-
-                    return Task.CompletedTask;
-                })
-            };
+            return Task.CompletedTask;
         }
     }
 

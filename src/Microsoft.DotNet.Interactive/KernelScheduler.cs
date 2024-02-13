@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
 using Pocket;
@@ -228,9 +229,10 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         }
     }
 
-    private IEnumerable<ScheduledOperation> GetDeferredOperationsToRunBefore(
-        ScheduledOperation operation)
+    private IEnumerable<ScheduledOperation> GetDeferredOperationsToRunBefore(ScheduledOperation operation)
     {
+        List<ScheduledOperation> scheduledOperations = null;
+
         for (var i = 0; i < _deferredOperationSources.Count; i++)
         {
             var source = _deferredOperationSources[i];
@@ -239,20 +241,27 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
                 operation.Value,
                 operation.Scope);
 
-            for (var j = 0; j < deferredOperations.Count; j++)
+            deferredOperations.ContinueWith(task =>
             {
-                var deferred = deferredOperations[j];
+                scheduledOperations ??= new();
 
-                var deferredOperation = new ScheduledOperation(
-                    deferred,
-                    source.OnExecuteAsync,
-                    true,
-                    parentOperation: null,
-                    scope: operation.Scope);
+                for (var j = 0; j < task.Result.Count; j++)
+                {
+                    var deferred = task.Result[j];
 
-                yield return deferredOperation;
-            }
+                    var scheduledOperation = new ScheduledOperation(
+                        deferred,
+                        source.OnExecuteAsync,
+                        true,
+                        parentOperation: null,
+                        scope: operation.Scope);
+
+                    scheduledOperations.Add(scheduledOperation);
+                }
+            }).Wait();
         }
+
+        return (IEnumerable<ScheduledOperation>)scheduledOperations ?? Array.Empty<ScheduledOperation>();
     }
 
     public void RegisterDeferredOperationSource(
@@ -277,7 +286,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         }
     }
 
-    public delegate IReadOnlyList<T> GetDeferredOperationsDelegate(T operationToExecute, string queueName);
+    public delegate Task<IReadOnlyList<T>> GetDeferredOperationsDelegate(T operationToExecute, string queueName);
 
     private class ScheduledOperation
     {

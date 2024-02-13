@@ -99,14 +99,4 @@ internal class MsSqlKernel : ToolsServiceKernel
 
         return true;
     }
-
-    protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
-    {
-        var chooser = ChooseKernelDirective;
-        var name = commandKernelChooserParseResult?.GetValueForOption(chooser.NameOption);
-        if (!string.IsNullOrWhiteSpace(name))
-        {
-            StoreQueryResultSet(name, results);
-        }
-    }
 }

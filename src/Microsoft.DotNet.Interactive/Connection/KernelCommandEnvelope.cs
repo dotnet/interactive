@@ -142,7 +142,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 
         if (string.IsNullOrWhiteSpace(commandTypeJson))
         {
-            return null;
+            throw new ArgumentException($"Command type not specified: {Environment.NewLine}{json}");
         }
 
         var commandType = CommandTypeByName(commandTypeJson);

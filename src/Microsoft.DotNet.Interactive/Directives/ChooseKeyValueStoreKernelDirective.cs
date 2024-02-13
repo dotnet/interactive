@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive;
+namespace Microsoft.DotNet.Interactive.Directives;
 
 internal class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
 {
@@ -38,7 +38,7 @@ internal class ChooseKeyValueStoreKernelDirective : ChooseKernelDirective
                 {
                     return null;
                 }
-                    
+
                 if (SetErrorIfAlsoUsed(FromValueOption, result))
                 {
                     return null;

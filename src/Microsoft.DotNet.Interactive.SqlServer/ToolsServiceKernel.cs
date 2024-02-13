@@ -168,7 +168,8 @@ public abstract class ToolsServiceKernel :
                 finally
                 {
                     // Always store the query results - even if an exception occurred - so we don't end up with stale results
-                    StoreQueryResults(results, command.KernelChooserParseResult);
+                    // FIX: (HandleAsync) query name
+                    StoreQueryResultSet("", results);
                 }
 
                 completion.SetResult(true);
@@ -229,10 +230,6 @@ public abstract class ToolsServiceKernel :
             _queryCompletionHandler = null;
             _queryMessageHandler = null;
         }
-    }
-
-    protected virtual void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
-    {
     }
 
     private static IEnumerable<TabularDataResource> GetTabularDataResources(ColumnInfo[] columnInfos, CellValue[][] rows)

@@ -117,7 +117,7 @@ public class KernelSchedulerTests : IDisposable
 
         using var scheduler = new KernelScheduler<int, int>();
         scheduler.RegisterDeferredOperationSource(
-            (v, _) => Enumerable.Repeat(v * 10, v).ToList(), PerformWork);
+            (v, _) => Yield(Enumerable.Repeat(v * 10, v).ToList()), PerformWork);
 
         for (var i = 1; i <= 3; i++)
         {
@@ -138,7 +138,7 @@ public class KernelSchedulerTests : IDisposable
 
         var deferredOperationsTaskCompletionSource = new TaskCompletionSource<bool>();
         scheduler.RegisterDeferredOperationSource(
-            (_, _) => deferredOperations,
+            (_, _) => Yield(deferredOperations),
             async i =>
             {
                 if (!cts.IsCancellationRequested)
@@ -455,7 +455,7 @@ public class KernelSchedulerTests : IDisposable
 
         using var scheduler = new KernelScheduler<int, int>();
         scheduler.RegisterDeferredOperationSource(
-            (v, scope) => scope == "scope2" ? Enumerable.Repeat(v * 10, v).ToList() : Enumerable.Empty<int>().ToList(), PerformWork);
+            (v, scope) => Yield(scope == "scope2" ? Enumerable.Repeat(v * 10, v).ToList() : Enumerable.Empty<int>().ToList()), PerformWork);
 
         for (var i = 1; i <= 3; i++)
         {
@@ -543,7 +543,7 @@ public class KernelSchedulerTests : IDisposable
             return default;
         });
     }
-    
+
     [Fact]
     public async Task CurrentValue_is_null_once_all_work_is_complete()
     {
@@ -727,7 +727,7 @@ public class KernelSchedulerTests : IDisposable
 
         scheduler.RegisterDeferredOperationSource((execute, name) =>
         {
-            return new[] { 0, 1, 2 };
+            return Yield(new[] { 0, 1, 2 });
         }, async value =>
         {
             AsyncContext.TryEstablish(out var asyncId);
@@ -747,5 +747,11 @@ public class KernelSchedulerTests : IDisposable
             .HaveCount(3)
             .And
             .AllBeEquivalentTo(asyncIdForScheduledWork);
+    }
+
+    private async Task<IReadOnlyList<int>> Yield(IReadOnlyList<int> source)
+    {
+        await Task.Yield();
+        return source;
     }
 }
