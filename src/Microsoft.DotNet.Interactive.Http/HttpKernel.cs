@@ -321,7 +321,7 @@ public class HttpKernel :
         }
         else
         {
-            return DynamicExpressionUtilites.MatchExpressionValue(node, expression);
+            return DynamicExpressionUtilites.ResolveExpressionBinding(node, expression);
         }
 
 

@@ -60,7 +60,7 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                         
                         else
                         {
-                            return DynamicExpressionUtilites.MatchExpressionValue(node, node.Text);
+                            return DynamicExpressionUtilites.ResolveExpressionBinding(node, node.Text);
                         }
 
                     });

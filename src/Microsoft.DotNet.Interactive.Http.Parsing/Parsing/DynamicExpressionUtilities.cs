@@ -11,23 +11,23 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing
 {
-    #nullable enable   
-    internal class DynamicExpressionUtilites
+#nullable enable
+    internal static class DynamicExpressionUtilites
     {
-        internal static HttpBindingResult<object?> MatchExpressionValue(HttpExpressionNode node, string expression)
+
+        const string DateTime = "$datetime";
+        const string LocalDateTime = "$localDatetime";
+        const string OffsetRegex = """(?:\s+(?<offset>[-+]?[^\s]+)\s+(?<option>[^\s]+))?""";
+        const string TypeRegex = """(?:\s+(?<type>rfc1123|iso8601|'.+'|".+"))?""";
+
+        internal static Regex guidPattern = new Regex(@$"^\$guid$", RegexOptions.Compiled);
+        internal static Regex dateTimePattern = new Regex(@$"^\{DateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
+        internal static Regex localDateTimePattern = new Regex(@$"^\{LocalDateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
+        internal static Regex randomIntPattern = new Regex(@$"^\$randomInt(?:\s+(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
+        internal static Regex timestampPattern = new Regex($@"^\$timestamp{OffsetRegex}$", RegexOptions.Compiled);
+
+        internal static HttpBindingResult<object?> ResolveExpressionBinding(HttpExpressionNode node, string expression)
         {
-            const string DateTime = "$datetime";
-            const string LocalDateTime = "$localDatetime";
-            const string OffsetRegex = """(?:\s+(?<offset>[-+]?[^\s]+)\s+(?<option>[^\s]+))?""";
-            const string TypeRegex = """(?:\s+(?<type>rfc1123|iso8601|'.+'|".+"))?""";
-
-            var guidPattern = new Regex(@$"^\$guid$", RegexOptions.Compiled);
-            var dateTimePattern = new Regex(@$"^\{DateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
-            var localDateTimePattern = new Regex(@$"^\{LocalDateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
-            var randomIntPattern = new Regex(@$"^\$randomInt(?:\s+(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
-            var timestampPattern = new Regex(@$"^\$timestamp{OffsetRegex}$", RegexOptions.Compiled);
-
-
             var guidMatches = guidPattern.Matches(expression);
             if (guidMatches.Count == 1)
             {
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 var randomIntMatches = randomIntPattern.Matches(expression);
                 if (randomIntMatches.Count == 1)
                 {
-                    return GetRandInt(node, expression, randomIntMatches[0]);
+                    return GetRandomInt(node, expression, randomIntMatches[0]);
                 }
 
                 return node.CreateBindingFailure(HttpDiagnostics.IncorrectRandomIntFormat(expression));
@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
             return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText, dateTimeType));
         }
 
-        private static HttpBindingResult<object?> GetRandInt(HttpExpressionNode node, string text, Match match)
+        private static HttpBindingResult<object?> GetRandomInt(HttpExpressionNode node, string text, Match match)
         {
             if (TryParseArgumentsFromMatch(text, match, out var min, out var max, out var diagnostic))
             {
@@ -217,50 +217,45 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 if (match.Success)
                 {
                     var group = match.Groups["arguments"];
-                    if (group.Captures.Count == 0)
+                    switch (group.Captures.Count)
                     {
-                        max = null;
-                        min = null;
-                        diagnostic = null;
-                        return true;
-                    }
-                    else if (group.Captures.Count == 1)
-                    {
-                        min = null;
-                        string maxValueString = group.Captures[0].Value;
-                        return TryParseInteger(maxValueString, expression, out max, out diagnostic);
-
-                    }
-
-                    else if (group.Captures.Count == 2)
-                    {
-                        string minValueString = group.Captures[0].Value;
-
-                        if (!TryParseInteger(minValueString, expression, out min, out diagnostic))
-                        {
+                        case 0:
                             max = null;
-                            return false;
-                        }
-
-                        string maxValueString = group.Captures[1].Value;
-
-                        if (!TryParseInteger(maxValueString, expression, out max, out diagnostic))
-                        {
                             min = null;
-                            return false;
-                        }
-
-                        if (min > max)
-                        {
-                            diagnostic = HttpDiagnostics.RandomIntMinMustNotBeGreaterThanMax(expression, min.Value.ToString(), max.Value.ToString());
-                            min = null;
+                            diagnostic = null;
+                            return true;
+                        case 1:
                             max = null;
-                            return false;
-                        }
+                            min = null;
+                            diagnostic = null;
+                            return true;
+                        case 2:
+                            string minValueString = group.Captures[0].Value;
 
-                        return true;
+                            if (!TryParseInteger(minValueString, expression, out min, out diagnostic))
+                            {
+                                max = null;
+                                return false;
+                            }
+
+                            string maxValueString = group.Captures[1].Value;
+
+                            if (!TryParseInteger(maxValueString, expression, out max, out diagnostic))
+                            {
+                                min = null;
+                                return false;
+                            }
+
+                            if (min > max)
+                            {
+                                diagnostic = HttpDiagnostics.RandomIntMinMustNotBeGreaterThanMax(expression, min.Value.ToString(), max.Value.ToString());
+                                min = null;
+                                max = null;
+                                return false;
+                            }
+
+                            return true;
                     }
-
                 }
 
                 min = null;
