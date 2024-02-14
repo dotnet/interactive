@@ -217,46 +217,51 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 if (match.Success)
                 {
                     var group = match.Groups["arguments"];
-                    switch (group.Captures.Count)
+                    if (group.Captures.Count == 0)
                     {
-                        case 0:
-                            max = null;
-                            min = null;
-                            diagnostic = null;
-                            return true;
-                        case 1:
-                            max = null;
-                            min = null;
-                            diagnostic = null;
-                            return true;
-                        case 2:
-                            string minValueString = group.Captures[0].Value;
-
-                            if (!TryParseInteger(minValueString, expression, out min, out diagnostic))
-                            {
-                                max = null;
-                                return false;
-                            }
-
-                            string maxValueString = group.Captures[1].Value;
-
-                            if (!TryParseInteger(maxValueString, expression, out max, out diagnostic))
-                            {
-                                min = null;
-                                return false;
-                            }
-
-                            if (min > max)
-                            {
-                                diagnostic = HttpDiagnostics.RandomIntMinMustNotBeGreaterThanMax(expression, min.Value.ToString(), max.Value.ToString());
-                                min = null;
-                                max = null;
-                                return false;
-                            }
-
-                            return true;
+                        max = null;
+                        min = null;
+                        diagnostic = null;
+                        return true;
                     }
-                }
+                    else if (group.Captures.Count == 1)
+                    {
+                        min = null;
+                        string maxValueString = group.Captures[0].Value;
+                        return TryParseInteger(maxValueString, expression, out max, out diagnostic);
+
+                    }
+
+                    else if (group.Captures.Count == 2)
+                    {
+                        string minValueString = group.Captures[0].Value;
+
+                        if (!TryParseInteger(minValueString, expression, out min, out diagnostic))
+                        {
+                            max = null;
+                            return false;
+                        }
+
+                        string maxValueString = group.Captures[1].Value;
+
+                        if (!TryParseInteger(maxValueString, expression, out max, out diagnostic))
+                        {
+                            min = null;
+                            return false;
+                        }
+
+                        if (min > max)
+                        {
+                            diagnostic = HttpDiagnostics.RandomIntMinMustNotBeGreaterThanMax(expression, min.Value.ToString(), max.Value.ToString());
+                            min = null;
+                            max = null;
+                            return false;
+                        }
+
+                        return true;
+                    }
+                   }
+
 
                 min = null;
                 max = null;
