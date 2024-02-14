@@ -85,7 +85,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         {
                             yield return CreateDiagnostic(
                                 new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
-                                    "Missing required named parameter '{0}'",
+                                    "Missing required parameter '{0}'",
                                     DiagnosticSeverity.Error,
                                     namedParameter.Name));
                         }
@@ -306,7 +306,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
         }
     }
 
-    private string GetInvokedCommandPath()
+    public string GetInvokedCommandPath()
     {
         var commands = DescendantNodesAndTokensAndSelf()
                        .Where(n => n is DirectiveSubcommandNode or Parsing.DirectiveNameNode)

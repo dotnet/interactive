@@ -199,7 +199,7 @@ public partial class PolyglotSyntaxParserTests
 
             var diagnostic = tree.RootNode.GetDiagnostics().Should().ContainSingle().Which;
 
-            diagnostic.GetMessage().Should().Be("Missing required named parameter '--opt'");
+            diagnostic.GetMessage().Should().Be("Missing required parameter '--opt'");
 
             diagnostic
                 .Location

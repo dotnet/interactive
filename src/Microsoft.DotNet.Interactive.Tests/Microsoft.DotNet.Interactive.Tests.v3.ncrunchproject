@@ -16,9 +16,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.StdIoKernelConnectorTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.VariableSharingWithinMagicCommandsTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.VariableSharingTests+ShareMagicCommand</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
@@ -58,9 +55,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests+SubmissionCount</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests+RegisteringCommandHandlers</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
@@ -74,9 +68,6 @@
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForUnparentedKernel</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests</FixtureName>
@@ -94,9 +85,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.JavaScriptKernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.InputsWithinMagicCommandsTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.ImportNotebookTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
@@ -104,9 +92,6 @@
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.EventRoutingSlipTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.DirectiveTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.DataExplorerTests</FixtureName>
@@ -159,6 +144,24 @@ var x = 123; // with some intervening code
         <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
 #r one.dll
 #r two.dll", "fsharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel.It_returns_info_about_unproxied_subkernels_of_remote_composite</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel.It_returns_the_list_of_proxied_kernel_commands_for_a_specified_subkernel</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel.proxyKernel_kernelInfo_is_updated_to_reflect_remote_kernelInfo</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel.When_kernel_info_is_requested_from_proxy_then_ProxyKernel_kernel_info_is_updated</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.DirectiveTests.Directives_can_display_help(".NET")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.DirectiveTests.Directives_can_display_help("csharp")</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>

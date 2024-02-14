@@ -307,28 +307,34 @@ public abstract partial class Kernel :
         KernelInfo.SupportedDirectives.Add(directive);
 
         RegisterDirectiveCommandHandler(directive, handler);
-    }
 
+        SubmissionParser.ResetParser();
+    }
+    
     private void RegisterDirectiveCommandHandler(KernelActionDirective directive, KernelCommandInvocation handler)
     {
-        var commandPath = directive.Parent is {} parent
+        var fullDirectiveName = FullDirectiveName(directive);
+
+        _directiveHandlers[fullDirectiveName] = handler;
+    }
+
+    private static string FullDirectiveName(KernelActionDirective directive) =>
+        directive.Parent is {} parent
             ? $"{parent.Name} {directive.Name}"
             : directive.Name;
 
-        _directiveHandlers[commandPath] = handler;
-    }
-
-    public void AddDirective<T>(KernelActionDirective directive, Func<T, KernelInvocationContext, Task> handler) 
-        where T : KernelCommand 
+    public void AddDirective<TCommand>(KernelActionDirective directive, Func<TCommand, KernelInvocationContext, Task> handler) 
+        where TCommand : KernelCommand 
     {
-        if (directive.DeserializeAs != typeof(T))
+        if (directive.DeserializeAs != typeof(TCommand))
         {
-            throw new ArgumentException($"{nameof(directive)}.{nameof(KernelActionDirective.DeserializeAs)} must be set to {typeof(T)}.");
+            throw new ArgumentException($"{nameof(directive)}.{nameof(KernelActionDirective.DeserializeAs)} must be set to {typeof(TCommand)}.");
         }
 
         KernelInfo.SupportedDirectives.Add(directive);
 
         RegisterCommandHandler(handler);
+        KernelCommandEnvelope.RegisterCommand<TCommand>();
     }
 
     public void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
@@ -341,7 +347,8 @@ public abstract partial class Kernel :
     public void RegisterCommandType<TCommand>()
         where TCommand : KernelCommand
     {
-        // QUESTION: (RegisterCommandType) why is this a separate gesture from RegisterCommand?
+        // FIX: (RegisterCommandType) consider always automatically calling KernelCommandEnvelope.RegisterCommand<TCommand>();
+        // FIX: (RegisterCommandType) why is this a separate gesture from RegisterCommand? Does it even need to be public?
         if (_supportedCommandTypes.Add(typeof(TCommand)))
         {
             var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
@@ -879,6 +886,11 @@ public abstract partial class Kernel :
                 case (Cancel cancel, _):
                     break;
 
+                case (DirectiveCommand directiveCommand, _):
+                    TrySetDirectiveHandler(directiveCommand);
+
+                    break;
+
                 default:
                     // for command types defined outside this assembly, we can dynamically assign the handler
                     if (command.GetType().IsPublic)
@@ -897,6 +909,26 @@ public abstract partial class Kernel :
         }
     }
 
+    private bool TrySetDirectiveHandler(DirectiveCommand command)
+    {
+        var fullDirectiveName = command.DirectiveNode.GetInvokedCommandPath();
+
+        if (_directiveHandlers.TryGetValue(fullDirectiveName, out var handler))
+        {
+            command.Handler = handler;
+            return true;
+        }
+
+        if (ParentKernel is { } parent &&
+            parent._directiveHandlers.TryGetValue(fullDirectiveName, out handler))
+        {
+            command.Handler = handler;
+            return true;
+        }
+
+        return false;
+    }
+
     private bool TrySetDynamicHandler(KernelCommand command)
     {
         if (_dynamicHandlers.TryGetValue(command.GetType(), out var handler))
@@ -904,10 +936,9 @@ public abstract partial class Kernel :
             command.Handler = handler;
             return true;
         }
-        else
-        {
-            return false;
-        }
+
+
+        return false;
     }
 
     private static void SetHandler<T>(T command, IKernelCommandHandler<T> handler)

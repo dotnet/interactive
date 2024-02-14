@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
@@ -93,19 +94,17 @@ public class DirectiveTests : IDisposable
     }
 
     [Fact]
-    public async Task Directive_handlers_are_invoked_in_the_order_in_which_they_occur_in_the_code_submission()
+    public async Task Default_directive_handlers_are_invoked_in_the_order_in_which_they_occur_in_the_code_submission()
     {
         using var kernel = new CSharpKernel();
         var events = kernel.KernelEvents.ToSubscribedList();
 
-        kernel.AddDirective(new Command("#!increment")
-        {
-            Handler = CommandHandler.Create(async (InvocationContext ctx) =>
+        kernel.AddDirective(
+            new KernelActionDirective("#!increment"),
+            async (_, context) =>
             {
-                var context = ctx.GetService<KernelInvocationContext>();
                 await context.HandlingKernel.SubmitCodeAsync("i++;");
-            })
-        });
+            });
 
         await kernel.SubmitCodeAsync(@"
 var i = 0;
@@ -122,27 +121,72 @@ i");
     }
 
     [Fact]
+    public async Task Custom_command_directive_handlers_are_invoked_in_the_order_in_which_they_occur_in_the_code_submission()
+    {
+        using var kernel = new CSharpKernel();
+        var events = kernel.KernelEvents.ToSubscribedList();
+
+        kernel.AddDirective<IncrementCommand>(
+            new KernelActionDirective("#!increment")
+            {
+                DeserializeAs = typeof(IncrementCommand),
+                Parameters =
+                {
+                    new("--variable-name")
+                }
+            },
+            async (increment, context) =>
+            {
+                await context.HandlingKernel.SubmitCodeAsync($"{increment.VariableName}++;");
+            });
+
+        await kernel.SubmitCodeAsync(@"
+var i = 0;
+#!increment --variable-name i
+i");
+
+        events
+            .Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .Be(1);
+    }
+
+    public class IncrementCommand : KernelCommand
+    {
+        public string VariableName { get; set; }
+    }
+
+    [Fact]
     public async Task Directive_parse_errors_are_displayed()
     {
-        var command = new Command("#!oops")
+        var directive = new KernelActionDirective("#!oops")
         {
-            new Argument<string>()
+            Parameters =
+            {
+                new("-x")
+                {
+                    Required = true
+                }
+            }
         };
 
         using var kernel = new CSharpKernel();
 
-        kernel.AddDirective(command);
+        kernel.AddDirective(directive, (command, context) => Task.CompletedTask);
 
         var events = kernel.KernelEvents.ToSubscribedList();
 
         await kernel.SubmitCodeAsync("#!oops");
 
         events.Should()
-            .ContainSingle<CommandFailed>()
-            .Which
-            .Message
-            .Should()
-            .Be("Required argument missing for command: '#!oops'.");
+              .ContainSingle<CommandFailed>()
+              .Which
+              .Message
+              .Should()
+              .Be("(1,1): error DNI104: Missing required parameter '-x'");
     }
 
     [Fact]
@@ -170,10 +214,10 @@ i");
     [InlineData("// first line\n[|#!unknown|]\n123")]
     public async Task Unrecognized_directives_result_in_errors(string markedUpCode)
     {
-        MarkupTestFile.GetPositionAndSpan(markedUpCode, out var code, out var pos, out var span);
+        MarkupTestFile.GetPositionAndSpan(markedUpCode, out var code, out _, out var span);
         MarkupTestFile.GetLine(markedUpCode, span.Value.Start, out var line);
         var startPos = new LinePosition(line, span.Value.Start);
-        var endPos = new LinePosition(line, span.Value.End + 1);
+        var endPos = new LinePosition(line, span.Value.End);
 
         var expectedPos = new LinePositionSpan(startPos, endPos);
 
@@ -185,15 +229,15 @@ i");
 
         events.Should().NotContain(e => e is ReturnValueProduced);
         events.Should()
-            .ContainSingle<DiagnosticsProduced>()
-            .Which
-            .Diagnostics
-            .Should()
-            .ContainSingle()
-            .Which
-            .LinePositionSpan
-            .Should()
-            .BeEquivalentTo(expectedPos);
+              .ContainSingle<DiagnosticsProduced>()
+              .Which
+              .Diagnostics
+              .Should()
+              .ContainSingle()
+              .Which
+              .LinePositionSpan
+              .Should()
+              .BeEquivalentTo(expectedPos);
         events.Last().Should().BeOfType<CommandFailed>();
     }
 
@@ -219,19 +263,11 @@ i");
         var onCompleteWasCalled = false;
         using var kernel = new FakeKernel();
 
-        kernel.AddDirective(new Command("#!wrap")
+        kernel.AddDirective(new KernelActionDirective("#!wrap"), (_, context) =>
         {
-            Handler = CommandHandler.Create((InvocationContext ctx) =>
-            {
-                var c = ctx.GetService<KernelInvocationContext>();
+            context.OnComplete(_ => { onCompleteWasCalled = true; });
 
-                c.OnComplete(context =>
-                {
-                    onCompleteWasCalled = true;
-                });
-
-                return Task.CompletedTask;
-            })
+            return Task.CompletedTask;
         });
 
         await kernel.SubmitCodeAsync("#!wrap");
@@ -244,29 +280,22 @@ i");
     {
         using var kernel = new FakeKernel();
 
-        kernel.AddDirective(new Command("#!wrap")
+        kernel.AddDirective(new KernelActionDirective("#!wrap"), (_, ctx) =>
         {
-            Handler = CommandHandler.Create((InvocationContext ctx) =>
-            {
-                var c = ctx.GetService<KernelInvocationContext>();
-                c.Display("hello!");
+            ctx.Display("hello!");
 
-                c.OnComplete(context =>
-                {
-                    context.Display("goodbye!");
-                });
+            ctx.OnComplete(c => c.Display("goodbye!"));
 
-                return Task.CompletedTask;
-            })
+            return Task.CompletedTask;
         });
 
         var result = await kernel.SubmitCodeAsync("#!wrap");
 
         result.Events
-            .OfType<DisplayedValueProduced>()
-            .Select(e => e.Value)
-            .Should()
-            .BeEquivalentSequenceTo("hello!", "goodbye!");
+              .OfType<DisplayedValueProduced>()
+              .Select(e => e.Value)
+              .Should()
+              .BeEquivalentSequenceTo("hello!", "goodbye!");
     }
 
     [Theory]
@@ -318,19 +347,25 @@ i");
         var oneWasCalled = false;
         var twoWasCalled = false;
 
-        kernel.AddDirective(new Command("#!one")
-        {
-            Handler = CommandHandler.Create(() => oneWasCalled = true)
-        });
+        kernel.AddDirective(new KernelActionDirective("#!one"),
+            (_, _) =>
+            {
+                 oneWasCalled = true;
+                 return Task.CompletedTask;
+            }
+        );
 
         await kernel.SubmitCodeAsync("#!one\n123");
 
         events.Should().NotContainErrors();
 
-        kernel.AddDirective(new Command("#!two")
-        {
-            Handler = CommandHandler.Create(() => twoWasCalled = true)
-        });
+        kernel.AddDirective(new KernelActionDirective("#!two"),
+                            (_, _) =>
+                            {
+                                twoWasCalled = true;
+                                return Task.CompletedTask;
+                            }
+        );
 
         await kernel.SubmitCodeAsync("#!two\n123");
 
@@ -344,17 +379,15 @@ i");
     {
         using var kernel = new FakeKernel();
 
-        kernel.AddDirective(new Command("#!test")
-        {
-            Handler = CommandHandler.Create((InvocationContext ctx) =>
+        kernel.AddDirective(
+            new KernelActionDirective("#!test"),
+            (_, ctx) =>
             {
-                var context = ctx.GetService<KernelInvocationContext>();
-
-                context.Display("goodbye!");
+                ctx.Display("goodbye!");
 
                 return Task.CompletedTask;
-            })
-        });
+            }
+        );
 
         if (kernel is null)
         {
