@@ -1,7 +1,18 @@
 <ProjectConfiguration>
   <Settings>
     <IgnoredTests>
-      <AllTestsSelector />
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Mermaid.Tests.MermaidKernelTests.registers_html_formatter_for_MermaidMarkdown</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Mermaid.Tests.MermaidKernelTests.can_specify_background_color</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Mermaid.Tests.MermaidKernelTests.can_specify_display_dimensions</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Mermaid.Tests.MermaidKernelTests.mermaid_kernel_handles_escaped_strings</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

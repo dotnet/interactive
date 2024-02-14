@@ -5,10 +5,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.DotNet.Interactive.Directives;
 
+[DebuggerStepThrough]
 internal class NamedSymbolCollection<T> : ICollection<T>
 {
     private readonly Func<T, string> _getName;

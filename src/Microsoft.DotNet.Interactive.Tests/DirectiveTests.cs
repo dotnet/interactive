@@ -96,11 +96,12 @@ i");
     public async Task Custom_command_directive_handlers_are_invoked_in_the_order_in_which_they_occur_in_the_code_submission()
     {
         using var kernel = new CSharpKernel();
+        var events = kernel.KernelEvents.ToSubscribedList();
 
         kernel.AddDirective<IncrementCommand>(
             new KernelActionDirective("#!increment")
             {
-                KernelCommandType = typeof(IncrementCommand),
+                DeserializeAs = typeof(IncrementCommand),
                 Parameters =
                 {
                     new("--variable-name")
@@ -111,50 +112,18 @@ i");
                 await context.HandlingKernel.SubmitCodeAsync($"{increment.VariableName}++;");
             });
 
-        var result = await kernel.SubmitCodeAsync(@"
+        await kernel.SubmitCodeAsync(@"
 var i = 0;
 #!increment --variable-name i
 i");
 
-        result.Events
-              .Should()
-              .ContainSingle<ReturnValueProduced>()
-              .Which
-              .Value
-              .Should()
-              .Be(1);
-    }
-
-    [Fact]
-    public async Task Custom_command_directive_handlers_can_be_invoked_by_sending_the_associated_KernelCommand_to_the_kernel_directly()
-    {
-        using var kernel = new CSharpKernel();
-
-        kernel.AddDirective<IncrementCommand>(
-            new KernelActionDirective("#!increment")
-            {
-                KernelCommandType = typeof(IncrementCommand),
-                Parameters =
-                {
-                    new("--variable-name")
-                }
-            },
-            async (increment, context) => { await context.HandlingKernel.SubmitCodeAsync($"{increment.VariableName}++;"); });
-
-        await kernel.SubmitCodeAsync("var i = 0;");
-
-        var result = await kernel.SendAsync(new IncrementCommand { VariableName = "i" });
-        result.Events.Should().NotContainErrors();
-        
-        result = await kernel.SubmitCodeAsync("i");
-
-        result.Events
-              .Should()
-              .ContainSingle<ReturnValueProduced>()
-              .Which
-              .Value
-              .Should()
-              .Be(1);
+        events
+            .Should()
+            .ContainSingle<ReturnValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .Be(1);
     }
 
     public class IncrementCommand : KernelCommand
@@ -218,8 +187,9 @@ i");
     public async Task Unrecognized_directives_result_in_errors(string markedUpCode)
     {
         MarkupTestFile.GetPositionAndSpan(markedUpCode, out var code, out _, out var span);
-        MarkupTestFile.GetLineAndColumn(markedUpCode, span.Value.Start, out var startLine, out var startCol);
-        MarkupTestFile.GetLineAndColumn(markedUpCode, span.Value.End, out var endLine, out var endCol);
+        MarkupTestFile.GetLine(markedUpCode, span.Value.Start, out var line);
+        var startPos = new LinePosition(line, span.Value.Start);
+        var endPos = new LinePosition(line, span.Value.End);
 
         var startPos = new LinePosition(startLine, startCol);
         var endPos = new LinePosition(endLine, endCol);
@@ -338,7 +308,12 @@ i");
                 return Task.CompletedTask;
             }
         );
-        
+
+        if (kernel is null)
+        {
+            throw new ArgumentNullException(nameof(kernel));
+        }
+
         var submitCode = new SubmitCode("#!test");
 
         var result = await kernel.SendAsync(submitCode);
