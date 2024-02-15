@@ -99,7 +99,7 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
     }
 
     async provideDocumentSemanticTokens(document: vscode.TextDocument, _cancellationToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
-        Logger.default.info(`provideDocumentSemanticTokens called for ${document.uri.toString()}`)
+        Logger.default.info(`[documentSemanticTokenProvider] provideDocumentSemanticTokens called for ${document.uri.toString()}`)
         try {
             let tokenCount = 0;
             const tokensBuilder = new vscode.SemanticTokensBuilder(this.semanticTokensLegend);
@@ -125,13 +125,13 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
 
                     if (tokenCount === 0 && text !== '') {
                         // there was text, but nothing was produced
-                        Logger.default.info(`No tokens were produced for cell ${cell.index} of notebook ${notebookDocument.uri.toString()} with text: ${text}`);
+                        Logger.default.info(`[documentSemanticTokenProvider] No tokens were produced for cell ${cell.index} of notebook ${notebookDocument.uri.toString()} with text: ${text}`);
                     }
                 } else {
-                    Logger.default.warn(`No cell found for document ${document.uri.toString()}`);
+                    Logger.default.warn(`[documentSemanticTokenProvider] No cell found for document ${document.uri.toString()}`);
                 }
             } else {
-                Logger.default.warn(`No notebook found for document ${document.uri.toString()}`);
+                Logger.default.warn(`[documentSemanticTokenProvider] No notebook found for document ${document.uri.toString()}`);
             }
 
             // TODO: agument with real semantic tokens?
@@ -139,7 +139,7 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
             const tokens = tokensBuilder.build();
             return tokens;
         } catch (ex) {
-            Logger.default.warn(`Error generating dynamic semantic tokens: ${JSON.stringify(ex)}`);
+            Logger.default.warn(`[documentSemanticTokenProvider] Error generating dynamic semantic tokens: ${JSON.stringify(ex)}`);
             return new vscode.SemanticTokens(new Uint32Array(0));
         }
     }
