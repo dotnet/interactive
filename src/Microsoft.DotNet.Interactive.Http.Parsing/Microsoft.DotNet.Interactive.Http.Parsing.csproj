@@ -20,6 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="NullableAttributes.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
   </ItemGroup>
 

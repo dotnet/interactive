@@ -85,7 +85,7 @@ public partial class HttpParserTests
             variableNodes.Count().Should().Be(4);
 
             variableNodes.Select(n => n.DeclarationNode.Text).Should().BeEquivalentTo(new[] { "@searchTerm", "@hostname", "@host", "@createdAt" });
-            variableNodes.Select(n => n.ValueNode.Text).Should().BeEquivalentTo( new[] { "some-search-term", "httpbin.org", "https://{{hostname}}", "{{$datetime iso8601}}" });
+            variableNodes.Select(n => n.ValueNode.Text).Should().BeEquivalentTo(new[] { "some-search-term", "httpbin.org", "https://{{hostname}}", "{{$datetime iso8601}}" });
 
             variableNodes.Last().DescendantNodesAndTokens().OfType<HttpExpressionNode>().Count().Should().Be(1);
         }

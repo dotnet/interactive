@@ -88,6 +88,7 @@ internal class HttpRequestNode : HttpSyntaxNode
 
     public HttpBindingResult<HttpRequestMessage> TryGetHttpRequestMessage(HttpBindingDelegate bind)
     {
+        var originalBind = bind;
         var declaredVariables = SyntaxTree?.RootNode.GetDeclaredVariables();
         if (declaredVariables?.Count > 0)
         {
@@ -96,8 +97,8 @@ internal class HttpRequestNode : HttpSyntaxNode
                 if (declaredVariables.TryGetValue(node.Text, out var declaredValue))
                 {
                     return HttpBindingResult<object?>.Success(declaredValue.Value);
-                }
-                else { return bind(node); }
+                } 
+                else { return originalBind(node); }
             };
         }
         var request = new HttpRequestMessage();
