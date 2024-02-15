@@ -99,6 +99,7 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
     }
 
     async provideDocumentSemanticTokens(document: vscode.TextDocument, _cancellationToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
+        Logger.default.info(`provideDocumentSemanticTokens called for ${document.uri.toString()}`)
         try {
             let tokenCount = 0;
             const tokensBuilder = new vscode.SemanticTokensBuilder(this.semanticTokensLegend);
@@ -126,7 +127,11 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
                         // there was text, but nothing was produced
                         Logger.default.info(`No tokens were produced for cell ${cell.index} of notebook ${notebookDocument.uri.toString()} with text: ${text}`);
                     }
+                } else {
+                    Logger.default.warn(`No cell found for document ${document.uri.toString()}`);
                 }
+            } else {
+                Logger.default.warn(`No notebook found for document ${document.uri.toString()}`);
             }
 
             // TODO: agument with real semantic tokens?
