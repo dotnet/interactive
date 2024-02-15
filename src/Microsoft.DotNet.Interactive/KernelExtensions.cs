@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -273,6 +274,28 @@ public static class KernelExtensions
 
     private static void ConfigureAndAddSetMagicCommand<T>(T destinationKernel) where T : Kernel
     {
+        var directive = new KernelActionDirective("#!set")
+        {
+            KernelCommandType = typeof(SetDirectiveCommand),
+            Parameters =
+            {
+                new("--name")
+                {
+                    Required = true
+                },
+                new("--value")
+                {
+                    Required = true
+                },
+                new("--byref"),
+                new("--mime-type")
+            }
+        };
+
+        destinationKernel.AddDirective<SetDirectiveCommand>(
+            directive,
+            SetDirectiveCommand.HandleAsync);
+
         var nameOption = new Option<string>(
             "--name",
             description: LocalizationResources.Magics_set_name_Description())
@@ -364,7 +387,7 @@ public static class KernelExtensions
         set.SetHandler(async cmdLineContext =>
                            await HandleSetMagicCommand(destinationKernel, cmdLineContext, nameOption, valueOption, byrefOption));
 
-        destinationKernel.AddDirective(set);
+        // destinationKernel.AddDirective(set);
 
         ValueOptionResult ParseValueOption(ArgumentResult argResult)
         {

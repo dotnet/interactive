@@ -12,10 +12,12 @@ public class KernelDirectiveParameter
     }
 
     public string Name { get; }
-    
+
     public bool AllowImplicitName { get; init; }
 
     public int MaxOccurrences { get; init; } = 1;
 
     public bool Required { get; init; } = false;
+
+    public string TypeHint { get; init; } = "text";
 }

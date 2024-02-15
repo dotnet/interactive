@@ -75,7 +75,7 @@ public class PolyglotParserConfigurationTests
                                     {
                                         new KernelDirectiveParameter("--connection-string"),
                                     },
-                                    DeserializeAs = typeof(ConnectMsSql)
+                                    KernelCommandType = typeof(ConnectMsSql)
                                 },
                             }
                         },
@@ -92,10 +92,16 @@ public class PolyglotParserConfigurationTests
                         {
                             Parameters =
                             {
-                                new("--name"),
-                                new("--value"), 
+                                new("--name")
+                                {
+                                    Required = true
+                                },
+                                new("--value")
+                                {
+                                    Required = true
+                                }, 
                             },
-                            DeserializeAs = typeof(SendValue)
+                            KernelCommandType = typeof(SendValue)
                         }
                     }
                 },

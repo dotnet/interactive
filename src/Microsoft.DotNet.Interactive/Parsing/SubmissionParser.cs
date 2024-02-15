@@ -172,13 +172,14 @@ public class SubmissionParser
                         {
                             case { Kind: DirectiveNodeKind.Action }:
                                 if (directiveNode.TryGetActionDirective(out var directive) &&
-                                    directive.DeserializeAs is { } deserializeAsType)
+                                    directive.KernelCommandType is not null)
                                 {
-                                    var directiveJsonResult = await directiveNode.TryGetJsonAsync();
+                                    var directiveJsonResult = await directiveNode.TryGetJsonAsync(GetValueFromKernelOrRequestInput);
 
                                     var commandEnvelope = KernelCommandEnvelope.Deserialize(directiveJsonResult.Value);
 
                                     directiveCommand = commandEnvelope.Command;
+                                    directiveCommand.TargetKernelName ??= targetKernelName;
                                 }
                                 else
                                 {
@@ -468,6 +469,96 @@ public class SubmissionParser
         return (targetKernelName, valueName);
     }
 
+    private async Task<DirectiveBindingResult<object>> GetValueFromKernelOrRequestInput(DirectiveExpressionNode expressionNode)
+    {
+        object? boundValue = null;
+
+        if (expressionNode.ChildNodes.OfType<DirectiveExpressionTypeNode>().SingleOrDefault() is { } expressionTypeNode)
+        {
+            var expressionType = expressionTypeNode.Type;
+            var parametersNode = expressionNode.ChildNodes.OfType<DirectiveExpressionParametersNode>().SingleOrDefault();
+
+            if (expressionType is "input" or "password")
+            {
+                var parametersNodeText = parametersNode?.Text;
+                
+
+                RequestInput requestInput;
+                if (parametersNodeText?[0] == '{')
+                {
+                    requestInput = JsonSerializer.Deserialize<RequestInput>(parametersNode.Text, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+                else
+                {
+                    if (parametersNodeText?[0] == '"')
+                    {
+                        parametersNodeText = JsonSerializer.Deserialize<string>(parametersNode.Text);
+                    }
+
+                    var valueName = GetValueNameFromNameParameter();
+
+                    if (parametersNodeText?.Contains(" ") == true)
+                    {
+                        requestInput = new(prompt: parametersNodeText,
+                                           valueName: valueName);
+                    }
+                    else
+                    {
+                        requestInput = new(prompt: $"Please enter a value for field \"{parametersNodeText}\".",
+                                           valueName: valueName ?? parametersNodeText);
+                    }
+                }
+
+                if (expressionType is "password")
+                {
+                    requestInput.InputTypeHint = "password";
+                }
+                else if (string.IsNullOrEmpty(requestInput.InputTypeHint))
+                {
+                    if (expressionNode.Parent?.Parent is DirectiveParameterNode parameterValueNode &&
+                        parameterValueNode.TryGetParameter(out var parameter) &&
+                        parameter.TypeHint is { } typeHint)
+                    {
+                        requestInput.InputTypeHint = typeHint;
+                    }
+                }
+
+                var result = await _kernel.SendAsync(requestInput);
+
+                switch (result.Events[^1])
+                {
+                    case CommandSucceeded:
+                        if (result.Events.OfType<InputProduced>().SingleOrDefault() is { } inputProduced)
+                        {
+                            boundValue = inputProduced.Value;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                // FIX: (TryGetJsonAsync) variable sharing
+            }
+        }
+
+        return DirectiveBindingResult<object>.Success(boundValue);
+
+        string GetValueNameFromNameParameter()
+        {
+            if (expressionNode.Ancestors().OfType<DirectiveNode>().FirstOrDefault() is { } directiveNode)
+            {
+                if (directiveNode.ChildNodes.OfType<DirectiveParameterNode>().FirstOrDefault(n => n.NameNode?.Text == "--name") is { } nameParameterNode)
+                {
+                    return nameParameterNode.ValueNode.Text;
+                }
+            }
+
+            return null;
+        }
+    }
+
     private bool InterpolateValueFromKernel(
         string tokenToReplace,
         out IReadOnlyList<string> replacementTokens,
@@ -630,8 +721,6 @@ public class SubmissionParser
                 rawTokenText = rawTokenTextPlusRawTrailingText;
             }
 
-            // FIX: (InterpolateValueFromKernel)    bool persistent = false;
-
             foreach (var annotation in ParseInputProperties(rawTokenText))
             {
                 switch (annotation.key)
@@ -641,9 +730,6 @@ public class SubmissionParser
                         break;
                     case "valueName":
                         valueName ??= annotation.value;
-                        break;
-                    case "save":
-                        // FIX: (InterpolateValueFromKernel) persistent = true;
                         break;
                     case "type":
                         typeHint = annotation.value;
@@ -656,10 +742,7 @@ public class SubmissionParser
             var inputRequest = new RequestInput(
                 valueName: valueName,
                 prompt: prompt,
-                inputTypeHint: typeHint)
-            {
-                // Persistent = persistent
-            };
+                inputTypeHint: typeHint);
 
             var requestInputResult = _kernel.RootKernel.SendAsync(inputRequest).GetAwaiter().GetResult();
 

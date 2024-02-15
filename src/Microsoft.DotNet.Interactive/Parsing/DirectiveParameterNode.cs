@@ -49,11 +49,11 @@ internal class DirectiveParameterNode : SyntaxNode
                 {
                     if (actionDirective.TryGetParameter(parameterName, out var option))
                     {
-                        var occurrences = SyntaxTree.RootNode
-                                                    .DescendantNodesAndTokensAndSelf()
-                                                    .OfType<DirectiveParameterNameNode>()
-                                                    .Where(p => p.Text == parameterName)
-                                                    .ToArray();
+                        var occurrences = Parent
+                                          .DescendantNodesAndTokens()
+                                          .OfType<DirectiveParameterNameNode>()
+                                          .Where(p => p.Text == parameterName)
+                                          .ToArray();
 
                         if (occurrences.Length > option.MaxOccurrences)
                         {
@@ -68,5 +68,25 @@ internal class DirectiveParameterNode : SyntaxNode
                 }
             }
         }
+    }
+
+    public bool TryGetParameter(out KernelDirectiveParameter parameter)
+    {
+        if (Parent is DirectiveNode directiveNode)
+        {
+            if (NameNode is not null)
+            {
+                if (directiveNode.TryGetActionDirective(out var actionDirective))
+                {
+                    if (actionDirective.TryGetParameter(NameNode.Text, out parameter))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        parameter = null!;
+        return false;
     }
 }

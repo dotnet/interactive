@@ -213,6 +213,8 @@ internal class PolyglotSyntaxParser
             }
             else
             {
+                var expressionNode = new DirectiveExpressionNode(_sourceText, _syntaxTree);
+
                 var tokenNameNode = new DirectiveExpressionTypeNode(_sourceText, _syntaxTree);
 
                 ConsumeCurrentTokenInto(tokenNameNode);
@@ -227,7 +229,7 @@ internal class PolyglotSyntaxParser
                     ConsumeCurrentTokenInto(tokenNameNode);
                 }
 
-                valueNode.Add(tokenNameNode);
+                expressionNode.Add(tokenNameNode);
 
                 var inputParametersNode = new DirectiveExpressionParametersNode(_sourceText, _syntaxTree);
 
@@ -240,7 +242,9 @@ internal class PolyglotSyntaxParser
                     ParsePlainTextInto(inputParametersNode);
                 }
 
-                valueNode.Add(inputParametersNode);
+                expressionNode.Add(inputParametersNode);
+
+                valueNode.Add(expressionNode);
 
                 ParseTrailingWhitespace(inputParametersNode, stopBeforeNewLine: true);
             }
@@ -249,7 +253,6 @@ internal class PolyglotSyntaxParser
 
             void ParsePlainTextInto(SyntaxNode node)
             {
-
                 while (MoreTokens())
                 {
                     if (CurrentToken is { Kind: TokenKind.NewLine } or { Kind: TokenKind.Whitespace })

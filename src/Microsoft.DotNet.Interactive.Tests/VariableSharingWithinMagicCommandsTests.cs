@@ -2,12 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -23,16 +23,25 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
     {
         _kernel = CreateKernel();
 
-        Option<string> valueOption = new("--value");
-        Command shim = new("#!shim")
+        KernelActionDirective shim = new("#!shim")
         {
-            valueOption
+            KernelCommandType = typeof(ShimCommand),
+            Parameters =
+            {
+                new KernelDirectiveParameter("--value")
+            }
         };
-        shim.SetHandler(
-            (string value) => receivedValue = value,
-            valueOption);
 
-        _kernel.FindKernelByName("csharp").AddDirective(shim);
+        _kernel.FindKernelByName("csharp").AddDirective<ShimCommand>(shim, (command, context) =>
+        {
+            receivedValue = command.Value;
+            return Task.CompletedTask;
+        });
+    }
+
+    public class ShimCommand : KernelCommand
+    {
+        public string Value { get; set; }
     }
 
     public void Dispose()

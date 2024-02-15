@@ -237,6 +237,21 @@ let x =
                 .Should()
                 .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
         }
-        
+
+        [Theory]
+        [InlineData("""
+            #!time
+            #!set --name x --value 123
+            """)]
+        [InlineData("""
+            #!set --name x --value 123
+            #!set --name y --value xyz
+            """)]
+        public void Directives_do_not_span_line_endings(string code)
+        {
+            var tree = Parse(code);
+
+            tree.RootNode.ChildNodes.OfType<DirectiveNode>().Should().HaveCount(2);
+        }
     }
 }

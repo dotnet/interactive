@@ -6,7 +6,6 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,10 +33,12 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public DirectiveNameNode? DirectiveNameNode { get; private set; }
 
+    [Obsolete]
     internal Parser? DirectiveParser { get; set; }
 
     public DirectiveNodeKind Kind { get; set; }
 
+    [Obsolete]
     public ParseResult GetDirectiveParseResult()
     {
         if (DirectiveParser is null)
@@ -52,7 +53,6 @@ internal class DirectiveNode : TopLevelSyntaxNode
     {
         if (DirectiveParser is not null)
         {
-            // FIX: (GetDiagnostics) remove
             var parseResult = GetDirectiveParseResult();
 
             foreach (var error in parseResult.Errors)
@@ -114,7 +114,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
         }
     }
 
-    public bool TryGetActionDirective([MaybeNullWhen(false)] out KernelActionDirective actionDirective)
+    public bool TryGetActionDirective(out KernelActionDirective actionDirective)
     {
         if (GetKernelInfo() is { } kernelInfo)
         {
@@ -141,7 +141,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
             }
         }
 
-        actionDirective = null;
+        actionDirective = null!;
         return false;
     }
 
@@ -212,20 +212,44 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         DiagnosticSeverity.Error,
                         DirectiveNameNode?.Text ?? ToString(),
                         typeof(KernelActionDirective),
-                        nameof(KernelActionDirective.DeserializeAs)
+                        nameof(KernelActionDirective.KernelCommandType)
                     )));
         }
 
-        if (DescendantNodesAndTokens().OfType<DirectiveExpressionTypeNode>() is { } expressionTypeNodes &&
-            expressionTypeNodes.FirstOrDefault() is { } expressionTypeNode)
+        Dictionary<DirectiveParameterValueNode, object>? boundExpressionValues = null;
+
+        if (DescendantNodesAndTokens().OfType<DirectiveExpressionTypeNode>() is { } expressionTypeNodes)
         {
             if (bind is null)
             {
-                return DirectiveBindingResult<string>.Failure(
-                    expressionTypeNode.CreateDiagnostic(
-                        new(PolyglotSyntaxParser.ErrorCodes.MissingBindingDelegate,
-                            $"When bindings are present then a {nameof(DirectiveBindingDelegate)} must be provided.",
-                            DiagnosticSeverity.Error)));
+                if (expressionTypeNodes.FirstOrDefault() is { } firstExpressionTypeNode)
+                {
+                    return DirectiveBindingResult<string>.Failure(
+                        firstExpressionTypeNode.CreateDiagnostic(
+                            new(PolyglotSyntaxParser.ErrorCodes.MissingBindingDelegate,
+                                $"When bindings are present then a {nameof(DirectiveBindingDelegate)} must be provided.",
+                                DiagnosticSeverity.Error)));
+                }
+            }
+            else
+            {
+                foreach (var expressionNode in DescendantNodesAndTokens().OfType<DirectiveExpressionNode>())
+                {
+                    var bindingResult = await bind(expressionNode);
+
+                    if (bindingResult.IsSuccessful)
+                    {
+                        boundExpressionValues ??= new();
+
+                        boundExpressionValues.Add(
+                            (DirectiveParameterValueNode)expressionNode.Parent, 
+                            bindingResult.Value);
+                    }
+                    else
+                    {
+                        return DirectiveBindingResult<string>.Failure(bindingResult.Diagnostics.ToArray());
+                    }
+                }
             }
         }
 
@@ -239,7 +263,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         writer.WriteStartObject();
 
-        writer.WriteString("commandType", directive.DeserializeAs?.Name);
+        writer.WriteString("commandType", directive.KernelCommandType?.Name);
 
         writer.WritePropertyName("command");
 
@@ -250,8 +274,8 @@ internal class DirectiveNode : TopLevelSyntaxNode
         foreach (var parameter in directive.ParametersIncludingAncestors)
         {
             var matchingNodes = parameterNodes.Where(node =>
-                                                         parameter.AllowImplicitName 
-                                                             ? node.NameNode is null 
+                                                         parameter.AllowImplicitName
+                                                             ? node.NameNode is null
                                                              : node.NameNode?.Text == parameter.Name)
                                               .ToArray();
 
@@ -261,7 +285,16 @@ internal class DirectiveNode : TopLevelSyntaxNode
             {
                 case [{ } parameterNode]:
                 {
-                    WriteProperty(propertyName, parameterNode.ValueNode);
+                    if (boundExpressionValues?.TryGetValue(parameterNode.ValueNode, out var boundValue) is true)
+                    {
+                        writer.WritePropertyName(propertyName);
+
+                        writer.WriteRawValue(JsonSerializer.Serialize(boundValue));
+                    }
+                    else
+                    {
+                        WriteProperty(propertyName, parameterNode.ValueNode);
+                    }
 
                     break;
                 }

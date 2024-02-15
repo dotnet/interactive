@@ -45,14 +45,14 @@ public partial class PolyglotSyntaxParserTests
                             .Which
                             .ValueNode;
 
-            var expressionTypeNode = valueNode.ChildNodes
+            var expressionTypeNode = valueNode.DescendantNodesAndTokens()
                                               .Should().ContainSingle<DirectiveExpressionTypeNode>()
                                               .Which;
 
             expressionTypeNode.Text.Should().Be("@input:");
             expressionTypeNode.Type.Should().Be("input");
 
-            valueNode.ChildNodes
+            valueNode.DescendantNodesAndTokens()
                      .Should().ContainSingle<DirectiveExpressionParametersNode>()
                      .Which.Text
                      .Should().Be(expectedParameters);
