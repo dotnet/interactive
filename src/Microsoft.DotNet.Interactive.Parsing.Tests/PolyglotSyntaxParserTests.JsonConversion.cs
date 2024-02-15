@@ -100,7 +100,7 @@ public partial class PolyglotSyntaxParserTests
                         {
                             new KernelActionDirective("#!test")
                             {
-                                DeserializeAs = typeof(TestCommand),
+                                KernelCommandType = typeof(TestCommand),
                                 Parameters =
                                 {
                                     new("--opt1")
@@ -161,7 +161,7 @@ public partial class PolyglotSyntaxParserTests
                                 {
                                     new("sub")
                                     {
-                                        DeserializeAs = typeof(TestCommand),
+                                        KernelCommandType = typeof(TestCommand),
                                         Parameters =
                                         {
                                             new("--opt2")

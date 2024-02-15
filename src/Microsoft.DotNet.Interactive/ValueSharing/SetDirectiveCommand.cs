@@ -1,142 +1,117 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Directives;
-using Microsoft.DotNet.Interactive.Parsing;
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.ValueSharing;
 
 internal class SetDirectiveCommand : KernelCommand
 {
-    public string DestinationValueName { get; set; }
+    public string Name { get; set; }
 
-    public string SourceKernelName { get; set; }
+    public string Value { get; set; }
 
-    public string SourceValueName { get; set; }
+    [JsonPropertyName("byref")] public bool ShareByRef { get; set; }
 
     public string MimeType { get; set; }
 
-    public bool ShareByRef { get; set; }
-
-    public object ReferenceValue { get; set; }
-
-    public FormattedValue FormattedValue { get; set; }
-
-    public static async Task<KernelCommand> TryParseSetDirectiveCommand(
-        DirectiveNode directiveNode,
-        ExpressionBindingResult bindingResult,
-        Kernel kernel)
+    internal static async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
     {
-        if (!directiveNode.TryGetActionDirective(out var directive))
+        var kernel = context.HandlingKernel;
+        var setCommand = (SetDirectiveCommand)command;
+
+        if (kernel.SupportsCommandType(typeof(SendValue)))
         {
-            return null;
-        }
+            var valueProducedEvents = new List<ValueProduced>();
 
-        var command = new SetDirectiveCommand
-        {
-            TargetKernelName = directiveNode.TargetKernelName
-        };
+            var inputProducedEvents = new List<InputProduced>();
 
-        if (bindingResult.Diagnostics.Length > 0)
-        {
-            return null;
-        }
+            using var subscription = context.KernelEvents
+                                            .Where(e => e is ValueProduced or InputProduced)
+                                            .Subscribe(
+                                                e =>
+                                                {
+                                                    switch (e)
+                                                    {
+                                                        case ValueProduced vp:
+                                                            valueProducedEvents.Add(vp);
+                                                            break;
+                                                        case InputProduced ip:
+                                                            inputProducedEvents.Add(ip);
+                                                            break;
+                                                    }
+                                                });
+            string sourceKernelName = null;
 
-        var parameterValues = directiveNode
-                              .GetParameterValues(
-                                  directive,
-                                  bindingResult.BoundValues)
-                              .ToDictionary(t => t.Name, t => (t.Value, t.ParameterNode));
+            var sourceKernel = Kernel.Root.FindKernelByName(sourceKernelName);
 
-        if (parameterValues.TryGetValue("--byref", out var byRefBinding))
-        {
-            command.ShareByRef = (bool)byRefBinding.Value;
-        }
+            ValueProduced valueProduced = null;
 
-        if (parameterValues.TryGetValue("--mime-type", out var mimeTypeBinding))
-        {
-            command.MimeType = (string)mimeTypeBinding.Value;
-
-            if (command.ShareByRef)
+            if (sourceKernel is not null)
             {
-                directiveNode.AddDiagnostic(
-                    directiveNode.CreateDiagnostic(
-                        new(PolyglotSyntaxParser.ErrorCodes.ByRefAndMimeTypeCannotBeCombined,
-                            LocalizationResources.Magics_set_mime_type_ErrorMessageCannotBeUsed(),
-                            DiagnosticSeverity.Error)));
+                if (sourceKernel.KernelInfo.IsProxy)
+                {
+                    var destinationUri = sourceKernel.KernelInfo.RemoteUri;
+
+                    valueProduced = valueProducedEvents.SingleOrDefault(e =>
+                                                                            e.Name == setCommand.Name && e.Command.DestinationUri == destinationUri);
+                }
+                else
+                {
+                    valueProduced = valueProducedEvents.SingleOrDefault(e =>
+                                                                            e.Name == setCommand.Name && e.Command.TargetKernelName == sourceKernelName);
+                }
             }
-        }
 
-        if (parameterValues.TryGetValue("--name", out var destinationValueNameBinding))
-        {
-            command.DestinationValueName = (string)destinationValueNameBinding.Value;
-        }
-
-        if (bindingResult.InputsProduced?.TryGetValue("--value", out var inputProduced1) is true)
-        {
-            if (((RequestInput)inputProduced1.Command).IsPassword)
+            if (valueProduced is not null)
             {
-                command.ReferenceValue = new PasswordString(inputProduced1.Value);
+                var referenceValue = setCommand.ShareByRef
+                                         ? valueProduced.Value
+                                         : null;
+                var formattedValue = valueProduced.FormattedValue;
+
+                await SendValue(context, kernel, referenceValue, formattedValue, setCommand.Name);
             }
-            else
+
+            if (inputProducedEvents.Count > 0)
             {
-                command.ReferenceValue = inputProduced1.Value;
+                foreach (var inputProduced in inputProducedEvents)
+                {
+                    if (inputProduced.Command is RequestInput requestInput)
+                    {
+                        if (requestInput.IsPassword)
+                        {
+                            await SendValue(context, kernel, new PasswordString(inputProduced.Value), null, requestInput.ValueName);
+                        }
+                        else
+                        {
+                            await SendValue(context, kernel, inputProduced.Value, null, requestInput.ValueName);
+                        }
+                    }
+                }
             }
-        }
-        else if (bindingResult.ValuesProduced?.TryGetValue("--value", out var valueProduced1) is true)
-        {
-            command.SourceValueName = valueProduced1.Name;
-            command.SourceKernelName = (valueProduced1.Command as RequestValue)?.TargetKernelName;
-            command.FormattedValue = valueProduced1.FormattedValue;
-            
-            if (valueProduced1.Value is not null && command.ShareByRef)
+
+            if (sourceKernelName is null)
             {
-                command.ReferenceValue = valueProduced1.Value;
+                if (inputProducedEvents.All(e => ((RequestInput)e.Command).ValueName != setCommand.Name))
+                {
+                    await SendValue(context, kernel, setCommand.Value, null, setCommand.Name);
+                }
             }
-        }
-        else if (parameterValues.TryGetValue("--value", out var parsedLiteralValueBinding))
-        {
-            command.ReferenceValue = parsedLiteralValueBinding.Value;
-        }
-
-
-        var expressionNodes = directiveNode.DescendantNodesAndTokens().OfType<DirectiveExpressionNode>().ToArray();
-
-        foreach (var expressionNode in expressionNodes)
-        {
-            if (command.ShareByRef && kernel.KernelInfo.IsProxy)
-            {
-                var diagnostic = expressionNode.CreateDiagnostic(
-                    new(PolyglotSyntaxParser.ErrorCodes.ByRefNotSupportedWithProxyKernels,
-                        LocalizationResources.Magics_set_ErrorMessageSharingByReference(),
-                        DiagnosticSeverity.Error));
-                directiveNode.AddDiagnostic(diagnostic);
-                return null;
-            }
-        }
-
-        return command;
-    }
-
-    internal static async Task HandleAsync(SetDirectiveCommand command, KernelInvocationContext context)
-    {
-        var destinationKernel = context.HandlingKernel;
-
-        if (destinationKernel.SupportsCommandType(typeof(SendValue)))
-        {
-            await SendValue(context,
-                            destinationKernel,
-                            command.ReferenceValue,
-                            command.FormattedValue,
-                            command.DestinationValueName);
         }
         else
         {
-            context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), destinationKernel));
+            context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
         }
     }
 

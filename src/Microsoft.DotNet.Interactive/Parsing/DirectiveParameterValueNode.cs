@@ -14,19 +14,11 @@ internal class DirectiveParameterValueNode : SyntaxNode
     {
     }
 
-    public DirectiveExpressionTypeNode? ExpressionType { get; private set; }
+    public DirectiveExpressionNode? ExpressionNode { get; private set; }
 
-    public DirectiveExpressionParametersNode? ExpressionParameters { get; private set; }
-
-    public void Add(DirectiveExpressionTypeNode node)
+    public void Add(DirectiveExpressionNode node)
     {
         AddInternal(node);
-        ExpressionType = node;
-    }
-
-    public void Add(DirectiveExpressionParametersNode node)
-    {
-        AddInternal(node);
-        ExpressionParameters = node;
+        ExpressionNode = node;
     }
 }

@@ -6,5 +6,4 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 
 internal abstract class SyntaxTree
 {
-    // FIX: (SyntaxTree) 
 }

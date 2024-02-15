@@ -317,4 +317,17 @@ public partial class PolyglotSyntaxParserTests
                 .Be(span.End);
         }
     }
+
+    [Fact]
+    public void A_parameter_nodes_associated_parameter_can_be_looked_up()
+    {
+        var tree = Parse("#!set --value 123 --name x ");
+
+        var parameterNode = tree.RootNode.DescendantNodesAndTokens().OfType<DirectiveParameterNode>().Last();
+
+        parameterNode.TryGetParameter(out var parameter).Should().BeTrue();
+
+        parameter.Name.Should().Be("--name");
+        parameter.Required.Should().BeTrue();
+    }
 }

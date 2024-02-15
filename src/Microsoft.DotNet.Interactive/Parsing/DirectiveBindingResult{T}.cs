@@ -4,11 +4,13 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
+[DebuggerStepThrough]
 internal sealed class DirectiveBindingResult<T>
 {
     private DirectiveBindingResult()

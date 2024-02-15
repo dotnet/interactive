@@ -6,4 +6,4 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-internal delegate Task<DirectiveBindingResult<object?>> DirectiveBindingDelegate(DirectiveExpressionParametersNode node);
+internal delegate Task<DirectiveBindingResult<object?>> DirectiveBindingDelegate(DirectiveExpressionNode expressionNode);

@@ -11,7 +11,7 @@ internal abstract class TopLevelSyntaxNode : SyntaxNode
     internal TopLevelSyntaxNode(string targetKernelName, SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
         TargetKernelName = targetKernelName;
-        CommandScope = targetKernelName; // FIX: (TopLevelSyntaxNode) are these concepts redundant at this level?
+        CommandScope = targetKernelName; // QUESTION: (TopLevelSyntaxNode) are these concepts redundant at this level?
     }
 
     public string TargetKernelName { get; }

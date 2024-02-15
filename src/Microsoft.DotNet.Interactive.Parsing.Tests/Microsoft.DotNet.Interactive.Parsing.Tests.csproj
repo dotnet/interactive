@@ -29,6 +29,7 @@
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveBindingDelegate.cs" Link="DirectiveBindingDelegate.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveBindingResult{T}.cs" Link="DirectiveBindingResult{T}.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveExpressionNode.cs" Link="Parsing\DirectiveExpressionNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveExpressionParametersNode.cs" Link="Parsing\DirectiveExpressionParametersNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveExpressionTypeNode.cs" Link="Parsing\DirectiveExpressionTypeNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveNameNode.cs" Link="Parsing\DirectiveNameNode.cs" LinkBase="Parsing" />
