@@ -113,6 +113,29 @@ public partial class HttpParserTests
         }
 
         [Fact]
+        public void request_with_forward_slash_at_beginning_of_nodes_works()
+        {
+            var result = Parse(
+                """
+                @host=https://httpbin.org
+                @anything=/anything
+                @anyhost={{host}}{{anything}}
+
+                {{anyhost}}
+                """);
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+            var bindingResult = requestNode.TryGetHttpRequestMessage(node =>
+            {
+                return node.CreateBindingFailure(CreateDiagnosticInfo(""));
+            });
+
+            bindingResult.IsSuccessful.Should().BeTrue();
+            bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/anything");
+        }
+
+        [Fact]
         public void request_node_containing_method_and_url_and_no_variable_expressions_returns_HttpRequestMessage_with_specified_method()
         {
             var result = Parse(
@@ -206,6 +229,39 @@ public partial class HttpParserTests
 
             bindingResult.IsSuccessful.Should().BeTrue();
             bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/anything");
+        }
+
+        [Fact]
+        public void binding_for_variable_in_header_is_correct()
+        {
+            var result = Parse(
+                """             
+                @hostname = httpbin.org
+                @host = https://{{hostname}}      
+                @contentType = application/json
+
+                POST {{host}}/anything HTTP/1.1
+                content-type: {{contentType}}
+
+                {
+                    "name": "sample1",
+                }
+
+                
+                """
+                );
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes
+                                    .Should().ContainSingle<HttpRequestNode>().Which;
+
+            var bindingResult = requestNode.TryGetHttpRequestMessage(node =>
+            {
+                return node.CreateBindingFailure(CreateDiagnosticInfo(""));
+            });
+
+            bindingResult.IsSuccessful.Should().BeTrue();
+            bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/anything");
+            bindingResult.Value.Headers.ToString().Should().Be("");
         }
     }
 }
