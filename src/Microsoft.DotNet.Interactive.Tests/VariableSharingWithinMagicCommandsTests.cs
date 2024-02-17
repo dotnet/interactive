@@ -32,7 +32,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
             }
         };
 
-        _kernel.FindKernelByName("csharp").AddDirective<ShimCommand>(shim, (command, context) =>
+        _kernel.FindKernelByName("csharp").AddDirective<ShimCommand>(shim, (command, _) =>
         {
             receivedValue = command.Value;
             return Task.CompletedTask;

@@ -15,6 +15,19 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.ValueSharing;
 
+internal class ShareDirectiveCommand : KernelCommand
+{
+    public string Name { get; set; }
+    public string As { get; set; }
+    public string From { get; set; }
+
+    public string MimeType { get; set; }
+
+    public static async Task HandleAsync(ShareDirectiveCommand arg1, KernelInvocationContext arg2)
+    {
+    }
+}
+
 internal class SetDirectiveCommand : KernelCommand
 {
     public string Name { get; set; }
