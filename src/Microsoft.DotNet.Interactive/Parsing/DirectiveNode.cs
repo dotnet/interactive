@@ -216,7 +216,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     )));
         }
 
-        Dictionary<DirectiveParameterValueNode, object>? boundExpressionValues = null;
+        Dictionary<DirectiveParameterValueNode, object?>? boundExpressionValues = null;
 
         if (DescendantNodesAndTokens().OfType<DirectiveExpressionTypeNode>() is { } expressionTypeNodes)
         {
@@ -242,7 +242,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         boundExpressionValues ??= new();
 
                         boundExpressionValues.Add(
-                            (DirectiveParameterValueNode)expressionNode.Parent, 
+                            (DirectiveParameterValueNode)expressionNode.Parent!, 
                             bindingResult.Value);
                     }
                     else

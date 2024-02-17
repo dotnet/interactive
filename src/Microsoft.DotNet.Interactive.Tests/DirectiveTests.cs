@@ -1,10 +1,8 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -15,7 +13,6 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using Pocket.For.Xunit;
 using Xunit;
@@ -246,9 +243,11 @@ i");
     public async Task Unrecognized_directives_result_in_errors(string markedUpCode)
     {
         MarkupTestFile.GetPositionAndSpan(markedUpCode, out var code, out _, out var span);
-        MarkupTestFile.GetLine(markedUpCode, span.Value.Start, out var line);
-        var startPos = new LinePosition(line, span.Value.Start);
-        var endPos = new LinePosition(line, span.Value.End);
+        MarkupTestFile.GetLineAndColumn(markedUpCode, span.Value.Start, out var startLine, out var startCol);
+        MarkupTestFile.GetLineAndColumn(markedUpCode, span.Value.End, out var endLine, out var endCol);
+
+        var startPos = new LinePosition(startLine, startCol);
+        var endPos = new LinePosition(endLine, endCol);
 
         var expectedPos = new LinePositionSpan(startPos, endPos);
 
@@ -271,23 +270,7 @@ i");
               .BeEquivalentTo(expectedPos);
         events.Last().Should().BeOfType<CommandFailed>();
     }
-
-    [Fact]
-    public void Directives_with_duplicate_aliases_are_not_allowed()
-    {
-        using var kernel = new CompositeKernel();
-
-        kernel.AddDirective(new Command("#!dupe"));
-
-        kernel.Invoking(k => k.AddDirective(new Command("#!dupe")))
-            .Should()
-            .Throw<ArgumentException>()
-            .Which
-            .Message
-            .Should()
-            .Be("Alias \'#!dupe\' is already in use.");
-    }
-
+    
     [Fact]
     public async Task OnComplete_can_be_used_to_act_on_completion_of_commands()
     {

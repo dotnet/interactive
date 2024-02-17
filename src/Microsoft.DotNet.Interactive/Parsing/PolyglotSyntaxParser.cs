@@ -47,6 +47,11 @@ internal class PolyglotSyntaxParser
 
     public PolyglotSyntaxTree Parse()
     {
+        if (string.IsNullOrWhiteSpace(_configuration.DefaultKernelName))
+        {
+            throw new InvalidOperationException($"Parser configuration must define {nameof(PolyglotParserConfiguration.DefaultKernelName)}.");
+        }
+
         _currentKernelName = _configuration.DefaultKernelName;
         _tokens = new PolyglotLexer(_sourceText, _syntaxTree).Lex();
 
@@ -747,6 +752,7 @@ internal class PolyglotSyntaxParser
 
     internal static class ErrorCodes
     {
+        // parsing errors
         public const string UnknownDirective = "DNI101";
         public const string UnknownParameterName = "DNI103";
         public const string MissingRequiredParameter = "DNI104";
@@ -754,7 +760,12 @@ internal class PolyglotSyntaxParser
         public const string InvalidJsonInParameterValue = "DNI106";
         public const string ParametersMustAppearAfterSubcommands = "DNI107";
 
-        public const string MissingBindingDelegate = "DNI204";
-        public const string MissingSerializationType = "DNI205";
+        // binding errors
+        public const string UnsupportedMimeType = "DNI201";
+        public const string ValueNotFoundInKernel = "DNI202";
+
+        // API usage errors
+        public const string MissingBindingDelegate = "DNI301";
+        public const string MissingSerializationType = "DNI302";
     }
 }

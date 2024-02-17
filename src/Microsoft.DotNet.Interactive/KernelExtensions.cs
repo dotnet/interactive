@@ -172,6 +172,7 @@ public static class KernelExtensions
         Option<bool> byrefOption)
         where T : Kernel
     {
+        // FIX: (HandleSetMagicCommand) delete
         var context = cmdLineContext.GetService<KernelInvocationContext>();
 
         if (kernel.SupportsCommandType(typeof(SendValue)))
@@ -295,6 +296,8 @@ public static class KernelExtensions
         destinationKernel.AddDirective<SetDirectiveCommand>(
             directive,
             SetDirectiveCommand.HandleAsync);
+
+        // FIX: (ConfigureAndAddSetMagicCommand) delete the rest of this
 
         var nameOption = new Option<string>(
             "--name",
@@ -464,6 +467,26 @@ public static class KernelExtensions
 
     private static void ConfigureAndAddShareMagicCommand<T>(T kernel) where T : Kernel
     {
+        var shareDirective = new KernelActionDirective("#!share")
+        {
+            KernelCommandType = typeof(ShareDirectiveCommand),
+            Parameters =
+            {
+                new("--name")
+                {
+                    AllowImplicitName = true
+                },
+                new("--from"),
+                new("--as"),
+                new("--mime-type")
+            }
+        };
+
+        kernel.AddDirective<ShareDirectiveCommand>(
+            shareDirective,
+            ShareDirectiveCommand.HandleAsync);
+
+
         var sourceValueNameArg = new Argument<string>(
             "name",
             LocalizationResources.Magics_share_name_Description());
@@ -552,7 +575,7 @@ public static class KernelExtensions
             }
         });
 
-        kernel.AddDirective(share);
+        // kernel.AddDirective(share);
     }
 
     internal static async Task GetValueAndSendTo(

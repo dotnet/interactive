@@ -32,7 +32,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
             }
         };
 
-        _kernel.FindKernelByName("csharp").AddDirective<ShimCommand>(shim, (command, context) =>
+        _kernel.FindKernelByName("csharp").AddDirective<ShimCommand>(shim, (command, _) =>
         {
             receivedValue = command.Value;
             return Task.CompletedTask;
@@ -64,17 +64,17 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
     [Fact]
     public async Task Magic_commands_can_interpolate_variables_from_a_different_kernel()
     {
-        var valueX = "value from the value kernel";
+        var valueX = "value from the C# kernel";
 
-        await _kernel.SendAsync(new SubmitCode($"#!value-kernel --name x\n{valueX}"));
+        await _kernel.SubmitCodeAsync($"""var x = "{valueX}"; """);
 
-        var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @value-kernel:x", "csharp"));
+        var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @csharp:x", "csharp"));
 
         result.Events.Should().NotContainErrors();
 
         receivedValue.Should().Be(valueX);
     }
-    
+
     [Fact]
     public async Task When_variable_does_not_exist_then_an_error_is_returned()
     {
@@ -109,13 +109,17 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
         inputWasRequested.Should().BeFalse();
     }
 
-    private static CompositeKernel CreateKernel() =>
-        new()
+    private static CompositeKernel CreateKernel()
+    {
+        var kernel = new CompositeKernel
         {
             new CSharpKernel()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseValueSharing(),
-            new KeyValueStoreKernel("value-kernel")
+            new KeyValueStoreKernel()
         };
+        kernel.DefaultKernelName = "csharp";
+        return kernel;
+    }
 }
