@@ -57,7 +57,6 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                         {
                             return node.CreateBindingSuccess(strinValue);
                         }
-                        
                         else
                         {
                             return DynamicExpressionUtilites.ResolveExpressionBinding(node, node.Text);

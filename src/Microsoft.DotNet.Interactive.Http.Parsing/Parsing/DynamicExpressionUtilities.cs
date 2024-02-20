@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
             {
                 var currentDateTimeOffset = DateTimeOffset.UtcNow;
 
-                if (string.Equals(expressionText, "$timestamp"))
+                if (string.Equals(expressionText, "$timestamp", StringComparison.InvariantCulture))
                 {
                     return node.CreateBindingSuccess(currentDateTimeOffset.ToUnixTimeSeconds().ToString());
                 }
@@ -231,7 +231,6 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                         return TryParseInteger(maxValueString, expression, out max, out diagnostic);
 
                     }
-
                     else if (group.Captures.Count == 2)
                     {
                         string minValueString = group.Captures[0].Value;
@@ -260,7 +259,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
 
                         return true;
                     }
-                   }
+                }
 
 
                 min = null;
