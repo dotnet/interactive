@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
-using System;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
@@ -11,11 +10,6 @@ internal abstract class TopLevelSyntaxNode : SyntaxNode
 {
     internal TopLevelSyntaxNode(string targetKernelName, SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
-        if (string.IsNullOrWhiteSpace(targetKernelName))
-        {
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(targetKernelName));
-        }
-
         TargetKernelName = targetKernelName;
         CommandScope = targetKernelName; // QUESTION: (TopLevelSyntaxNode) are these concepts redundant at this level?
     }

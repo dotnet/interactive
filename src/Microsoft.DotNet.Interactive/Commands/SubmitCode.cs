@@ -18,12 +18,13 @@ public class SubmitCode : KernelCommand
       
     internal SubmitCode(
         TopLevelSyntaxNode syntaxNode,
-        DirectiveNode kernelNameDirectiveNode = null)
+        DirectiveNode directiveNode = null)
         : base(syntaxNode.TargetKernelName)
     {
+        // FIX: (SubmitCode) can this constructor be replaced using ISyntaxAwareCommand?
         Code = syntaxNode.Text;
         SyntaxNode = syntaxNode;
-        KernelNameDirectiveNode = kernelNameDirectiveNode;
+        DirectiveNode = directiveNode;
         SchedulingScope = SchedulingScope.Parse(syntaxNode.CommandScope);
 
         if (syntaxNode is DirectiveNode { Kind: DirectiveNodeKind.Action } actionDirectiveNode)
@@ -38,5 +39,5 @@ public class SubmitCode : KernelCommand
 
     internal TopLevelSyntaxNode SyntaxNode { get; }
 
-    internal DirectiveNode KernelNameDirectiveNode { get; }
+    internal DirectiveNode DirectiveNode { get; }
 }

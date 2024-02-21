@@ -18,7 +18,7 @@ using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-internal class DirectiveNode : TopLevelSyntaxNode
+internal partial class DirectiveNode : TopLevelSyntaxNode
 {
     private ParseResult? _parseResult;
 
@@ -196,19 +196,61 @@ internal class DirectiveNode : TopLevelSyntaxNode
     public DirectiveBindingResult<object?> CreateSuccessfulBindingResult(object? value) =>
         DirectiveBindingResult<object?>.Success(value);
 
+    public IEnumerable<(string Name, object Value, DirectiveParameterNode ParameterNode)> GetParameters(
+        KernelActionDirective directive,
+        Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
+    {
+        var parameterNodes = DescendantNodesAndTokens().OfType<DirectiveParameterNode>().ToArray();
+
+        foreach (var parameter in directive.ParametersIncludingAncestors)
+        {
+            var matchingNodes = parameterNodes.Where(node =>
+                                                         parameter.AllowImplicitName
+                                                             ? node.NameNode is null
+                                                             : node.NameNode?.Text == parameter.Name)
+                                              .ToArray();
+
+            switch (matchingNodes)
+            {
+                case [{ } parameterNode]:
+                {
+                    if (parameter.Flag)
+                    {
+                        yield return (propertyName: parameter.Name, true, parameterNode);
+                    }
+                    else if (boundExpressionValues?.TryGetValue(parameterNode.ValueNode, out var boundValue) is true)
+                    {
+                        yield return (propertyName: parameter.Name, boundValue, parameterNode);
+                    }
+                    else
+                    {
+                        yield return (propertyName: parameter.Name, parameterNode.ValueNode.Text, parameterNode);
+                    }
+
+                    break;
+                }
+
+                case []:
+                    if (parameter.Flag)
+                    {
+                        yield return (propertyName: parameter.Name, false, null);
+                    }
+                    break;
+
+                // FIX: (GetParameters) handle multiple matching nodes for the parameter (write array?)
+            }
+        }
+    } 
+
     public async Task<DirectiveBindingResult<string>> TryGetJsonAsync(DirectiveBindingDelegate? bind = null)
     {
-        var options = new JsonWriterOptions
-        {
-            Indented = true
-        };
-
-        if (!TryGetActionDirective(out var directive))
+        if (!TryGetActionDirective(out var directive) && 
+            directive.KernelCommandType is null)
         {
             return DirectiveBindingResult<string>.Failure(
                 CreateDiagnostic(
                     new(PolyglotSyntaxParser.ErrorCodes.MissingSerializationType,
-                        "No serialization type defined for {0}. Please specify a serialization type using {1}.{2}.",
+                        "No kernel command type type defined for {0}. Please specify a kernel command type using {1}.{2}.",
                         DiagnosticSeverity.Error,
                         DirectiveNameNode?.Text ?? ToString(),
                         typeof(KernelActionDirective),
@@ -216,47 +258,22 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     )));
         }
 
-        Dictionary<DirectiveParameterValueNode, object?>? boundExpressionValues = null;
-
-        if (DescendantNodesAndTokens().OfType<DirectiveExpressionTypeNode>() is { } expressionTypeNodes)
-        {
-            if (bind is null)
-            {
-                if (expressionTypeNodes.FirstOrDefault() is { } firstExpressionTypeNode)
-                {
-                    return DirectiveBindingResult<string>.Failure(
-                        firstExpressionTypeNode.CreateDiagnostic(
-                            new(PolyglotSyntaxParser.ErrorCodes.MissingBindingDelegate,
-                                $"When bindings are present then a {nameof(DirectiveBindingDelegate)} must be provided.",
-                                DiagnosticSeverity.Error)));
-                }
-            }
-            else
-            {
-                foreach (var expressionNode in DescendantNodesAndTokens().OfType<DirectiveExpressionNode>())
-                {
-                    var bindingResult = await bind(expressionNode);
-
-                    if (bindingResult.IsSuccessful)
-                    {
-                        boundExpressionValues ??= new();
-
-                        boundExpressionValues.Add(
-                            (DirectiveParameterValueNode)expressionNode.Parent!, 
-                            bindingResult.Value);
-                    }
-                    else
-                    {
-                        return DirectiveBindingResult<string>.Failure(bindingResult.Diagnostics.ToArray());
-                    }
-                }
-            }
-        }
-
         if (GetDiagnostics().FirstOrDefault() is { } diagnostic)
         {
             return DirectiveBindingResult<string>.Failure(diagnostic);
         }
+
+        var (boundExpressionValues, diagnostics) = await TryBindExpressionsAsync(bind);
+
+        if (diagnostics.Length > 0)
+        {
+            return DirectiveBindingResult<string>.Failure(diagnostics);
+        }
+
+        var options = new JsonWriterOptions
+        {
+            Indented = true
+        };
 
         using var stream = new MemoryStream();
         await using var writer = new Utf8JsonWriter(stream, options);
@@ -269,37 +286,28 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         writer.WriteStartObject();
 
-        var parameterNodes = DescendantNodesAndTokens().OfType<DirectiveParameterNode>().ToArray();
-
-        foreach (var parameter in directive.ParametersIncludingAncestors)
+        foreach (var parameter in GetParameters(directive, boundExpressionValues))
         {
-            var matchingNodes = parameterNodes.Where(node =>
-                                                         parameter.AllowImplicitName
-                                                             ? node.NameNode is null
-                                                             : node.NameNode?.Text == parameter.Name)
-                                              .ToArray();
+            var parameterName = FromPosixStyleToCamelCase(parameter.Name);
 
-            var propertyName = FromKebabToCamelCase(parameter.Name);
-
-            switch (matchingNodes)
+            switch (parameter.Value)
             {
-                case [{ } parameterNode]:
-                {
-                    if (boundExpressionValues?.TryGetValue(parameterNode.ValueNode, out var boundValue) is true)
-                    {
-                        writer.WritePropertyName(propertyName);
-
-                        writer.WriteRawValue(JsonSerializer.Serialize(boundValue));
-                    }
-                    else
-                    {
-                        WriteProperty(propertyName, parameterNode.ValueNode);
-                    }
-
+                case bool value:
+                    writer.WriteBoolean(parameterName, value);
                     break;
-                }
+                
+                case string stringValue: 
+                    WriteProperty(parameterName, stringValue);
+                    break;
 
-                // FIX: (TryGetJsonAsync) handle multiple matching nodes for the parameter (write array?)
+                case null:
+                    writer.WriteNull(parameterName);
+                    break;
+
+                default:
+                    writer.WritePropertyName(parameterName);
+                    writer.WriteRawValue(JsonSerializer.Serialize(parameter.Value));
+                    break;
             }
         }
 
@@ -316,27 +324,62 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         return DirectiveBindingResult<string>.Success(json);
 
-        void WriteProperty(string propertyName, DirectiveParameterValueNode? valueNode = null)
+        void WriteProperty(string propertyName, string value)
         {
-            if (valueNode is not null)
+            if (value[0] is '{' or '"')
             {
-                var value = valueNode.Text;
+                writer.WritePropertyName(propertyName);
+                writer.WriteRawValue(value);
+            }
+            else
+            {
+                writer.WriteString(propertyName, value);
+            }
 
-                if (value[0] is '{' or '"')
+        }
+    }
+
+    public async Task<(Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues, CodeAnalysis.Diagnostic[] diagnostics)> TryBindExpressionsAsync(
+        DirectiveBindingDelegate? bind)
+    {
+        Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues = new();
+
+        if (DescendantNodesAndTokens().OfType<DirectiveExpressionTypeNode>() is { } expressionTypeNodes)
+        {
+            if (bind is null)
+            {
+                if (expressionTypeNodes.FirstOrDefault() is { } firstExpressionTypeNode)
                 {
-                    writer.WritePropertyName(propertyName);
-                    writer.WriteRawValue(value);
-                }
-                else
-                {
-                    writer.WriteString(propertyName, value);
+                    var diagnostic = firstExpressionTypeNode.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.MissingBindingDelegate,
+                            $"When bindings are present then a {nameof(DirectiveBindingDelegate)} must be provided.",
+                            DiagnosticSeverity.Error));
+
+                    return (boundExpressionValues, new[] { diagnostic });
                 }
             }
             else
             {
-                writer.WriteNull(propertyName);
+                foreach (var expressionNode in DescendantNodesAndTokens().OfType<DirectiveExpressionNode>())
+                {
+                    var bindingResult = await bind(expressionNode);
+
+                    if (bindingResult.IsSuccessful)
+                    {
+                        boundExpressionValues.Add(
+                            (DirectiveParameterValueNode)expressionNode.Parent!,
+                            bindingResult.Value);
+                    }
+                    else
+                    {
+                        var diagnostics = bindingResult.Diagnostics.ToArray();
+                        return (boundExpressionValues, diagnostics);
+                    }
+                }
             }
         }
+
+        return (boundExpressionValues, Array.Empty<CodeAnalysis.Diagnostic>());
     }
 
     public string GetInvokedCommandPath()
@@ -350,7 +393,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     private static readonly Regex _kebabCaseRegex = new("-[\\w]", RegexOptions.Compiled);
 
-    private static string FromKebabToCamelCase(string value) =>
+    private static string FromPosixStyleToCamelCase(string value) =>
         _kebabCaseRegex.Replace(
             value.TrimStart('-'),
             m => m.ToString().TrimStart('-').ToUpper());

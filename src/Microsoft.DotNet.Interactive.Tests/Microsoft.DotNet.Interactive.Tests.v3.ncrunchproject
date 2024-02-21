@@ -1,7 +1,7 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <CopyReferencedAssembliesToWorkspace>True</CopyReferencedAssembliesToWorkspace>
-    <DefaultTestTimeout>10000</DefaultTestTimeout>
+    <DefaultTestTimeout>7000</DefaultTestTimeout>
     <HiddenComponentWarnings>
       <Value>CopyReferencedAssembliesToWorkspaceIsOn</Value>
     </HiddenComponentWarnings>
@@ -14,12 +14,6 @@
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.StdIoKernelConnectorTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.VariableSharingTests+ShareMagicCommand</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.VariableSharingTests+SetMagicCommand</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.SqlDiscoverabilityKernelTests</FixtureName>

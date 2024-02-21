@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Directives;
 
-public class KernelActionDirective : KernelDirective
+public partial class KernelActionDirective : KernelDirective
 {
     private readonly NamedSymbolCollection<KernelActionDirective> _subcommands;
     private readonly NamedSymbolCollection<KernelDirectiveParameter> _parameters;

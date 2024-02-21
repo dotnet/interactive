@@ -115,9 +115,9 @@ public abstract partial class Kernel :
                                                    : new KernelActionDirective(directive.Name));
         }
 
-        foreach (var command in _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)))
+        foreach (var commandInfo in _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)))
         {
-            kernelInfo.SupportedKernelCommands.Add(command);
+            kernelInfo.SupportedKernelCommands.Add(commandInfo);
         }
 
         return kernelInfo;
@@ -166,7 +166,6 @@ public abstract partial class Kernel :
             case LanguageServiceCommand { SyntaxNode: null } languageServiceCommand:
                 if (!TryAdjustLanguageServiceCommandLinePositions(languageServiceCommand, context, out var adjustedCommand))
                 {
-                    commands = null;
                     return (false, null);
                 }
 

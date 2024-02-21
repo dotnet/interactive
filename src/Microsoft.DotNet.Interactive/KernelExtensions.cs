@@ -278,6 +278,7 @@ public static class KernelExtensions
         var directive = new KernelActionDirective("#!set")
         {
             KernelCommandType = typeof(SetDirectiveCommand),
+            TryParseDirectiveNode = SetDirectiveCommand.TryParseSetDirectiveCommand,
             Parameters =
             {
                 new("--name")
@@ -288,7 +289,10 @@ public static class KernelExtensions
                 {
                     Required = true
                 },
-                new("--byref"),
+                new("--byref")
+                {
+                    Flag = true
+                },
                 new("--mime-type")
             }
         };

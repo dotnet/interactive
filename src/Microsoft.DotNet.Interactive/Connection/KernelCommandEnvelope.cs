@@ -152,7 +152,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             return null;
         }
 
-        var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
+         var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
 
         // restore the command token
         if (json.TryGetProperty(nameof(SerializationModel.token), out var tokenProperty))

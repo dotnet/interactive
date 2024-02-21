@@ -6,7 +6,6 @@ using System.Diagnostics;
 
 namespace Microsoft.DotNet.Interactive;
 
-[DebuggerStepThrough]
 internal class SchedulingScope
 {
     private readonly string _stringValue;

@@ -93,6 +93,8 @@ public partial class VariableSharingTests
             await composite.SendAsync(new SubmitCode("#!set --name x --value @password:input-please"));
             var valueProduced = await kernel.RequestValueAsync("x");
 
+            valueProduced.Value.Should().BeOfType<PasswordString>();
+
             valueProduced.Value.As<PasswordString>().GetClearTextPassword().Should().Be("hello!");
         }
 
@@ -455,7 +457,7 @@ public partial class VariableSharingTests
         }
 
         [Fact]
-        public async Task Byref_sharing_is_not_allowed_when_source_kernel_is_a_proxy()
+        public async Task Byref_sharing_is_not_allowed_when_destination_kernel_is_a_proxy()
         {
             var (compositeKernel, _) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
 
@@ -475,11 +477,11 @@ public partial class VariableSharingTests
                   .Which
                   .Message
                   .Should()
-                  .StartWith("Sharing by reference is not allowed when kernels are remote.");
+                  .Be("(1,15): error DNI203: Sharing by reference is not allowed when kernels are remote.");
         }
 
         [Fact]
-        public async Task Byref_sharing_is_not_allowed_when_destination_kernel_is_a_proxy()
+        public async Task Byref_sharing_is_not_allowed_when_source_kernel_is_a_proxy()
         {
             var (compositeKernel, _) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
 
@@ -497,7 +499,7 @@ public partial class VariableSharingTests
                   .Which
                   .Message
                   .Should()
-                  .Be("Sharing by reference is not allowed when kernels are remote.");
+                  .Be("(1,15): error DNI203: Sharing by reference is not allowed when kernels are remote.");
         }
 
         [Fact]

@@ -18,11 +18,14 @@ internal class PolyglotSyntaxParser
 {
     private readonly SourceText _sourceText;
     private readonly PolyglotParserConfiguration _configuration;
-    private int _currentTokenIndex = 0;
-    private IReadOnlyList<SyntaxToken>? _tokens;
     private readonly PolyglotSyntaxTree _syntaxTree;
-    private string _currentKernelName = "";
     private readonly KernelInfo? _compositeKernelInfo = null;
+
+    private IReadOnlyList<SyntaxToken>? _tokens;
+    private int _currentTokenIndex = 0;
+    private string _currentKernelName = "";
+    private KernelDirective? _currentlyScopedDirective;
+    private KernelDirectiveParameter? _currentlyScopedParameter;
 
     public static PolyglotSyntaxTree Parse(
         string code,
@@ -47,11 +50,6 @@ internal class PolyglotSyntaxParser
 
     public PolyglotSyntaxTree Parse()
     {
-        if (string.IsNullOrWhiteSpace(_configuration.DefaultKernelName))
-        {
-            throw new InvalidOperationException($"Parser configuration must define {nameof(PolyglotParserConfiguration.DefaultKernelName)}.");
-        }
-
         _currentKernelName = _configuration.DefaultKernelName;
         _tokens = new PolyglotLexer(_sourceText, _syntaxTree).Lex();
 
@@ -92,20 +90,18 @@ internal class PolyglotSyntaxParser
     {
         if (IsAtStartOfDirective())
         {
-            KernelDirective? currentlyScopedDirective = null;
-
             var directiveNameNode = ParseParameterName();
 
             var targetKernelName = _currentKernelName;
 
-            if (_configuration.TryGetDirectiveByName(_currentKernelName, directiveNameNode.Text, out var directive1) ||
-                _compositeKernelInfo?.TryGetDirective(directiveNameNode.Text, out directive1) == true)
+            if (_configuration.TryGetDirectiveByName(_currentKernelName, directiveNameNode.Text, out var directive) ||
+                _compositeKernelInfo?.TryGetDirective(directiveNameNode.Text, out directive) == true)
             {
-                currentlyScopedDirective = directive1;
+                _currentlyScopedDirective = directive;
 
-                if (directive1 is not KernelSpecifierDirective)
+                if (directive is not KernelSpecifierDirective)
                 {
-                    if (directive1.ParentKernelInfo is { } parentKernelInfo)
+                    if (directive.ParentKernelInfo is { } parentKernelInfo)
                     {
                         targetKernelName = parentKernelInfo.LocalName;
                     }
@@ -138,7 +134,7 @@ internal class PolyglotSyntaxParser
                     {
                         directiveNode.Add(namedParameterNode);
 
-                        if (!_configuration.IsParameterInScope(namedParameterNode))
+                        if(_currentlyScopedDirective is not KernelActionDirective)
                         {
                             var diagnostic = namedParameterNode.CreateDiagnostic(
                                 new(ErrorCodes.UnknownParameterName,
@@ -149,19 +145,23 @@ internal class PolyglotSyntaxParser
                         }
                     }
                 }
-                else
+                else if (CurrentToken is { Kind: TokenKind.Word } word &&
+                         _currentlyScopedDirective is KernelActionDirective actionDirective &&
+                         actionDirective.TryGetSubcommand(word.Text, out var subcommand))
                 {
-                    if (CurrentToken is { Kind: TokenKind.Word } word &&
-                        currentlyScopedDirective is KernelActionDirective actionDirective &&
-                        actionDirective.TryGetSubcommand(word.Text, out var subcommand))
+                    _currentlyScopedDirective = subcommand;
+                    var subcommandNode = new DirectiveSubcommandNode(_sourceText, _syntaxTree);
+                    ConsumeCurrentTokenInto(subcommandNode);
+                    ParseTrailingWhitespace(subcommandNode);
+                    directiveNode.Add(subcommandNode);
+                }
+                else if (ParseParameterValue() is { } parameterValueNode)
+                {
+                    if (_currentlyScopedParameter?.Flag is true)
                     {
-                        currentlyScopedDirective = subcommand;
-                        var subcommandNode = new DirectiveSubcommandNode(_sourceText, _syntaxTree);
-                        ConsumeCurrentTokenInto(subcommandNode);
-                        ParseTrailingWhitespace(subcommandNode);
-                        directiveNode.Add(subcommandNode);
+                        directiveNode.Add(parameterValueNode);
                     }
-                    else if (ParseParameterValue() is { } parameterValueNode)
+                    else
                     {
                         DirectiveParameterNode parameterNode = new(_sourceText, _syntaxTree);
                         parameterNode.Add(parameterValueNode);
@@ -204,13 +204,19 @@ internal class PolyglotSyntaxParser
         {
             DirectiveParameterValueNode valueNode = new(_sourceText, _syntaxTree);
 
-            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "{" or "\"" })
+            var currentToken = CurrentToken;
+
+            if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "-" } &&
+                CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "-" })
+            {
+            }
+            else if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "{" or "\"" })
             {
                 ParseJsonValueInto(valueNode);
 
                 ParseTrailingWhitespace(valueNode, stopBeforeNewLine: true);
             }
-            else if (CurrentToken is not ({ Kind: TokenKind.Punctuation } and { Text: "@" }))
+            else if (currentToken is not ({ Kind: TokenKind.Punctuation } and { Text: "@" }))
             {
                 ParsePlainTextInto(valueNode);
 
@@ -393,8 +399,16 @@ internal class PolyglotSyntaxParser
                         parameterNode = new DirectiveParameterNode(_sourceText, _syntaxTree);
                         parameterNameNode = new DirectiveParameterNameNode(_sourceText, _syntaxTree);
                     }
-
+                 
                     ConsumeCurrentTokenInto(parameterNameNode!);
+
+                    if (_currentlyScopedDirective is KernelActionDirective actionDirective)
+                    {
+                        if (actionDirective.TryGetParameter(parameterNameNode.Text, out var parameter))
+                        {
+                            _currentlyScopedParameter = parameter;
+                        }
+                    }
                 }
 
                 if (parameterNode is not null &&
@@ -404,9 +418,12 @@ internal class PolyglotSyntaxParser
 
                     parameterNode.Add(parameterNameNode);
 
-                    if (ParseParameterValue() is { } argNode)
+                    if (_currentlyScopedParameter?.Flag is not true)
                     {
-                        parameterNode.Add(argNode);
+                        if (ParseParameterValue() is { } parameterValueNode)
+                        {
+                            parameterNode.Add(parameterValueNode);
+                        }
                     }
                 }
             }
@@ -760,9 +777,11 @@ internal class PolyglotSyntaxParser
         public const string InvalidJsonInParameterValue = "DNI106";
         public const string ParametersMustAppearAfterSubcommands = "DNI107";
 
-        // binding errors
+        // magic command usage errors
         public const string UnsupportedMimeType = "DNI201";
         public const string ValueNotFoundInKernel = "DNI202";
+        public const string ByRefNotSupportedWithProxyKernels = "DNI203";
+        public const string InputNotProvided = "DNI204";
 
         // API usage errors
         public const string MissingBindingDelegate = "DNI301";
