@@ -83,35 +83,27 @@ internal class PolyglotParserConfiguration
         return false;
     }
 
-    public bool IsParameterInScope(DirectiveParameterNode namedParameter)
+    public bool TryGetParameterByName(
+        string currentKernelName,
+        string directiveName,
+        string parameterName,
+        [MaybeNullWhen(false)] out KernelDirectiveParameter parameter)
     {
         EnsureSymbolMapIsInitialized();
 
-        if (namedParameter.Parent is DirectiveNode directiveNode)
+        if (TryGetDirectiveByName(currentKernelName, directiveName, out var directive) &&
+            directive is KernelActionDirective actionDirective)
         {
-            if (directiveNode.TryGetActionDirective(out var actionDirective) &&
-                namedParameter.NameNode is { Text: { } parameterName })
+            if (actionDirective.TryGetParameter(parameterName, out parameter))
             {
-                if (actionDirective.TryGetParameter(parameterName, out _))
-                {
-                    return true;
-                }
-
-                if (actionDirective.Parent is { } parent)
-                {
-                    if (parent.TryGetParameter(parameterName, out _))
-                    {
-                        return true;
-                    }
-                }
+                return true;
             }
-
-            return false;
         }
 
+        parameter = null;
         return false;
     }
-
+    
     public bool IsKernelSelectorDirective(string text)
     {
         EnsureSymbolMapIsInitialized();

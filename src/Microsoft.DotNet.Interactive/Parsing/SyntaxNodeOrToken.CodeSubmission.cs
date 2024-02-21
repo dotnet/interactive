@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 internal abstract partial class SyntaxNodeOrToken
 {
     private const string DiagnosticCategory = "DNI";
+    private KernelInfo? _kernelInfo;
 
     private protected SyntaxNodeOrToken(SourceText sourceText, SyntaxTree syntaxTree)
     {
@@ -32,12 +33,15 @@ internal abstract partial class SyntaxNodeOrToken
 
     public KernelInfo? GetKernelInfo()
     {
-        if (GetKernelScope() is { } targetKernelName &&
-            SyntaxTree.ParserConfiguration.KernelInfos.TryGetValue(targetKernelName, out var kernelInfo))
+        if (_kernelInfo is null)
         {
-            return kernelInfo;
+            if (GetKernelScope() is { } targetKernelName &&
+                SyntaxTree.ParserConfiguration.KernelInfos.TryGetValue(targetKernelName, out var kernelInfo))
+            {
+                _kernelInfo = kernelInfo;
+            }
         }
 
-        return null;
+        return _kernelInfo;
     }
 }   

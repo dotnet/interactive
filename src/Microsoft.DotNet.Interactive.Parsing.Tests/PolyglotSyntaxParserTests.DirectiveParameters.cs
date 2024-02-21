@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
@@ -17,6 +18,13 @@ public partial class PolyglotSyntaxParserTests
 {
     public class DirectiveParameters
     {
+        private readonly ITestOutputHelper _output;
+
+        public DirectiveParameters(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         [Fact]
         public void Words_prefixed_with_hyphens_are_parsed_into_parameter_name_nodes()
         {
@@ -57,6 +65,50 @@ public partial class PolyglotSyntaxParserTests
                                    .Which;
 
             argumentNode.Text.Should().Be("\"this is the argument\"");
+        }
+
+        [Theory]
+        [InlineData("#!test --flag --param 123")]
+        [InlineData("#!test --flag 123")] // implicit parameter... but this is really confusing to read
+        public void Flag_does_not_consume_parameter_value(string code)
+        {
+            PolyglotParserConfiguration config = new("csharp")
+            {
+                KernelInfos =
+                {
+                    new("csharp")
+                    {
+                        SupportedDirectives =
+                        {
+                            new KernelActionDirective("#!test")
+                            {
+                                Parameters =
+                                {
+                                    new("--param")
+                                    {
+                                        AllowImplicitName = true
+                                    },
+                                    new("--flag")
+                                    {
+                                        Flag = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            var tree = Parse(code, config);
+
+            _output.WriteLine(tree.RootNode.Diagram());
+
+            tree.RootNode.GetDiagnostics().Should().BeEmpty();
+
+            tree.RootNode.DescendantNodesAndTokens()
+                .Should()
+                .ContainSingle<DirectiveParameterNode>(node => node.Text == "--flag" && 
+                                                               node.ValueNode is null);
         }
 
         [Fact]

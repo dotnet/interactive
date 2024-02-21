@@ -20,4 +20,6 @@ public class KernelDirectiveParameter
     public bool Required { get; init; } = false;
 
     public string TypeHint { get; init; } = "text";
+
+    public bool Flag { get; set; }
 }

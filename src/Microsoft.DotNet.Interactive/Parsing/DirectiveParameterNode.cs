@@ -38,32 +38,27 @@ internal class DirectiveParameterNode : SyntaxNode
         {
             yield return diagnostic;
         }
-
-        if (GetKernelInfo() is { } kernelInfo)
+        
+        if (NameNode is { Text: { } parameterName })
         {
-            if (NameNode is { Text: { } parameterName })
+            if (Parent is DirectiveNode directiveNode && directiveNode.TryGetActionDirective(out var actionDirective))
             {
-                if (Parent is DirectiveNode { DirectiveNameNode.Text: { } directiveName } &&
-                    kernelInfo.TryGetDirective(directiveName, out var directive) &&
-                    directive is KernelActionDirective actionDirective)
+                if (actionDirective.TryGetParameter(parameterName, out var option))
                 {
-                    if (actionDirective.TryGetParameter(parameterName, out var option))
-                    {
-                        var occurrences = Parent
-                                          .DescendantNodesAndTokens()
-                                          .OfType<DirectiveParameterNameNode>()
-                                          .Where(p => p.Text == parameterName)
-                                          .ToArray();
+                    var occurrences = Parent
+                                      .DescendantNodesAndTokens()
+                                      .OfType<DirectiveParameterNameNode>()
+                                      .Where(p => p.Text == parameterName)
+                                      .ToArray();
 
-                        if (occurrences.Length > option.MaxOccurrences)
-                        {
-                            yield return CreateDiagnostic(
-                                new(PolyglotSyntaxParser.ErrorCodes.TooManyOccurrencesOfParameter,
-                                    "A maximum of {0} occurrences are allowed for named parameter '{1}'",
-                                    DiagnosticSeverity.Error,
-                                    option.MaxOccurrences,
-                                    parameterName));
-                        }
+                    if (occurrences.Length > option.MaxOccurrences)
+                    {
+                        yield return CreateDiagnostic(
+                            new(PolyglotSyntaxParser.ErrorCodes.TooManyOccurrencesOfParameter,
+                                "A maximum of {0} occurrences are allowed for named parameter '{1}'",
+                                DiagnosticSeverity.Error,
+                                option.MaxOccurrences,
+                                parameterName));
                     }
                 }
             }
