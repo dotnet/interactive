@@ -1,0 +1,13 @@
+{
+  "token": "the-token",
+  "commandType": "ClearValues",
+  "command": {
+    "targetKernelName": null,
+    "originUri": null,
+    "destinationUri": null
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName?tag=arrived",
+    "kernel://somelocation/kernelName"
+  ]
+}

@@ -2231,4 +2231,26 @@ Content-Type: {{contentType}}
         // the traceparent format looks like this: 00-d00689882649007396cd32ab75c2611c-59402ab4fd5c55f7-00
         traceparent1.Single()[0..36].Should().NotBe(traceparent2.Single()[0..36]);
     }
+
+    [Fact]
+    public async Task Variables_can_be_cleared()
+    {
+        using var kernel = new HttpKernel().UseValueSharing();
+
+        var result = await kernel.SendAsync(new SendValue("my_host", "my.host.com"));
+        result.Events.Should().NotContainErrors();
+
+        result = await kernel.SendAsync(new ClearValues());
+        result.Events.Should().NotContainErrors();
+
+        result = await kernel.SendAsync(new RequestValueInfos());
+
+        result.Events.Should().NotContainErrors();
+
+        result.Events.Should().ContainSingle<ValueInfosProduced>()
+              .Which
+              .ValueInfos
+              .Should()
+              .BeEmpty();
+    }
 }
