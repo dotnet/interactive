@@ -21,6 +21,11 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
         AddInternal(requestNode);
     }
 
+    public void Add(HttpCommentNode commentNode)
+    {
+        AddInternal(commentNode);
+    } 
+
     public void Add(HttpVariableDeclarationAndAssignmentNode variableNode)
     {
         AddInternal(variableNode);
