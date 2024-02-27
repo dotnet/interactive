@@ -1,4 +1,6 @@
 Microsoft.DotNet.Interactive.Http
+  public class ClearValues : Microsoft.DotNet.Interactive.Commands.KernelCommand, System.IEquatable<Microsoft.DotNet.Interactive.Commands.KernelCommand>
+    .ctor(System.String targetKernelName = null)
   public class EmptyHttpResponse
     .ctor()
   public class HttpContent
@@ -7,8 +9,9 @@ Microsoft.DotNet.Interactive.Http
     public System.String ContentType { get;}
     public System.Collections.Generic.Dictionary<System.String,System.String[]> Headers { get;}
     public System.String Raw { get;}
-  public class HttpKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestDiagnostics>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
+  public class HttpKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestDiagnostics>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, Microsoft.DotNet.Interactive.IKernelCommandHandler<ClearValues>, System.IDisposable
     .ctor(System.String name = null, System.Net.Http.HttpClient client = null, System.Int32 responseDelayThresholdInMilliseconds = 1000, System.Int32 contentByteLengthThreshold = 500000)
+    public System.Threading.Tasks.Task HandleAsync(ClearValues command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public class HttpKernelExtension
     public static System.Void Load(Microsoft.DotNet.Interactive.Kernel kernel, System.Net.Http.HttpClient httpClient = null, System.Int32 responseDelayThresholdInMilliseconds = 1000, System.Int32 contentByteLengthThreshold = 500000)
     .ctor()

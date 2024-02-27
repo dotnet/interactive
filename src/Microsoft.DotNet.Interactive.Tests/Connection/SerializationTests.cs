@@ -14,8 +14,12 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Http;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
@@ -120,11 +124,20 @@ public class SerializationTests
     [Fact]
     public void All_command_types_are_tested_for_round_trip_serialization()
     {
-        var interactiveCommands = typeof(Kernel)
-            .Assembly
-            .ExportedTypes
-            .Concrete()
-            .DerivedFrom(typeof(KernelCommand));
+        var commandTypes = new[]
+                           {
+                               typeof(Kernel),
+                               typeof(CSharpKernel),
+                               typeof(FSharpKernel),
+                               typeof(HttpKernel),
+                               typeof(PowerShellKernel),
+                           }
+                           .Select(t => t.Assembly)
+                           .SelectMany(a => a.ExportedTypes);
+
+        var interactiveCommands = commandTypes
+                                  .Concrete()
+                                  .DerivedFrom(typeof(KernelCommand));
 
         Commands()
             .Select(e => e[0].GetType())
@@ -163,6 +176,8 @@ public class SerializationTests
 
         IEnumerable<KernelCommand> commands()
         {
+            yield return new ClearValues();
+
             yield return new DisplayError("oops!");
 
             yield return new DisplayValue(
