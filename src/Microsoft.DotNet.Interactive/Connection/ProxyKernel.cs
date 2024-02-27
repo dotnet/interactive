@@ -276,7 +276,7 @@ public sealed class ProxyKernel : Kernel
 
         foreach (var incomingDirective in incomingDirectives)
         {
-            if (existingDirectives.Contains(incomingDirective))
+            if (!existingDirectives.Contains(incomingDirective))
             {
                 existingDirectives.Add(incomingDirective);
             }

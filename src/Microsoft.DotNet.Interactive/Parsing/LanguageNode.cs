@@ -14,8 +14,9 @@ internal class LanguageNode : TopLevelSyntaxNode
     internal LanguageNode(
         string targetKernelName,
         SourceText sourceText,
-        PolyglotSyntaxTree? syntaxTree) : base(targetKernelName, sourceText, syntaxTree)
+        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
+        TargetKernelName = targetKernelName;
     }
 
     public override bool IsSignificant => true;

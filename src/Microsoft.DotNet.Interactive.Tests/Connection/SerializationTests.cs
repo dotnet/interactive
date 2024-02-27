@@ -327,6 +327,19 @@ public class SerializationTests
                     SupportedKernelCommands =
                     {
                         new KernelCommandInfo(nameof(SubmitCode))
+                    },
+                    SupportedDirectives =
+                    {
+                        new KernelActionDirective("#!example")
+                        {
+                            Parameters = { new("--opt")
+                            {
+                                Required = true,
+                                TypeHint = "file",
+                                MaxOccurrences = 123
+                            }  }
+                        }
+
                     }
                 },
                 new RequestKernelInfo(new Uri("kernel://webview/javascript"))

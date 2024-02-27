@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -75,27 +76,23 @@ public partial class KernelTests
 
         using var kernel = new FakeKernel
         {
-            Handle = (command, context) =>
+            Handle = (command, _) =>
             {
                 receivedCommands.Add(((SubmitCode)command).Code);
                 return Task.CompletedTask;
             }
         };
 
-        kernel.AddDirective(new Command("#!one")
+        kernel.AddDirective(new KernelActionDirective("#!one"), (_, context) =>
         {
-            Handler = CommandHandler.Create(() =>
-            {
-                receivedCommands.Add("#!one");
-            })
+            receivedCommands.Add("#!one");
+            return Task.CompletedTask;
         });
 
-        kernel.AddDirective(new Command("#!two")
+        kernel.AddDirective(new KernelActionDirective("#!two"), (command, context) =>
         {
-            Handler = CommandHandler.Create(() =>
-            {
-                receivedCommands.Add("#!two");
-            })
+            receivedCommands.Add("#!two");
+            return Task.CompletedTask;
         });
 
         var code1 = "var a = 1";
@@ -257,13 +254,14 @@ public partial class KernelTests
     public async Task it_can_handle_commands_that_submit_commands_that_are_split()
     {
         var subkernel = new FakeKernel();
-        var magicCommand = new Command("#!magic");
+        var magicCommand = new KernelActionDirective("#!magic");
         bool magicWasCalled = false;
-        magicCommand.SetHandler(_ =>
+
+        subkernel.AddDirective(magicCommand, (command, context) =>
         {
             magicWasCalled = true;
+            return Task.CompletedTask;
         });
-        subkernel.AddDirective(magicCommand);
 
         subkernel.Handle = async (command, context) =>
         {

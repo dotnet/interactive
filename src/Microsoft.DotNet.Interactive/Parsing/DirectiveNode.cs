@@ -23,9 +23,8 @@ internal partial class DirectiveNode : TopLevelSyntaxNode
     private ParseResult? _parseResult;
 
     internal DirectiveNode(
-        string targetKernelName,
         SourceText sourceText,
-        PolyglotSyntaxTree syntaxTree) : base(targetKernelName, sourceText, syntaxTree)
+        PolyglotSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 

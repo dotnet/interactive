@@ -8,6 +8,7 @@ namespace Microsoft.DotNet.Interactive;
 
 public abstract class JsonConverter<T> : System.Text.Json.Serialization.JsonConverter<T>
 {
+    // FIX: (JsonConverter) can this be deleted and use Microsoft.DotNet.Interactive.Formatting instead?
     protected void EnsureStartObject(Utf8JsonReader reader, Type typeToConvert)
     {
         if (reader.TokenType != JsonTokenType.StartObject)

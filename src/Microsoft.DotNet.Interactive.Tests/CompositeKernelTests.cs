@@ -3,13 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -88,6 +87,7 @@ new [] {1,2,3}");
 
         await kernel.SendAsync(fsharpCommand);
 
+        events.Should().NotContainErrors();
         events.Should()
             .ContainSingle<CommandSucceeded>(e => e.Command == csharpCommand);
         events.Should()
@@ -108,15 +108,17 @@ new [] {1,2,3}");
         using var compositeKernel = new CompositeKernel();
 
         var fakeKernel1 = new FakeKernel("fake1");
-        fakeKernel1.AddDirective(new Command("#!hi")
+        fakeKernel1.AddDirective(new KernelActionDirective("#!hi"), (_, _) =>
         {
-            Handler = CommandHandler.Create(() => { received.Add("fake1"); })
+            received.Add("fake1");
+            return Task.CompletedTask;
         });
 
         var fakeKernel2 = new FakeKernel("fake2");
-        fakeKernel2.AddDirective(new Command("#!hi")
+        fakeKernel2.AddDirective(new KernelActionDirective("#!hi"), (_, _) =>
         {
-            Handler = CommandHandler.Create(() => { received.Add("fake2"); })
+            received.Add("fake2");
+            return Task.CompletedTask;
         });
 
         compositeKernel.Add(fakeKernel1, new[] { "fake1-alias" });
@@ -170,7 +172,7 @@ new [] {1,2,3}");
             .Which
             .Message
             .Should()
-            .Be("Alias '#!csharp' is already in use.");
+            .Be("The kernel name or alias '#!csharp' is already in use.");
     }
 
     [Fact]
@@ -437,12 +439,13 @@ new [] {1,2,3}");
         {
             subKernel
         };
-        var customDirective = new Command("#!customDirective")
+        var customDirective = new KernelActionDirective("#!customDirective");
+       
+        compositeKernel.AddDirective(customDirective, (_, _) =>
         {
-            Handler = CommandHandler.Create(() => deferredCommandExecuted = true)
-
-        };
-        compositeKernel.AddDirective(customDirective);
+            deferredCommandExecuted = true;
+            return Task.CompletedTask;
+        });
 
         compositeKernel.DefaultKernelName = subKernel.Name;
 

@@ -18,7 +18,12 @@ public class KernelInfo
     private string? _displayName;
 
     [JsonConstructor]
-    public KernelInfo(string localName, string[]? aliases = null, bool isProxy = false, bool isComposite = false, string? description = null)
+    public KernelInfo(
+        string localName, 
+        string[]? aliases = null, 
+        bool isProxy = false, 
+        bool isComposite = false, 
+        string? description = null)
     {
         if (string.IsNullOrWhiteSpace(localName))
         {
@@ -89,9 +94,36 @@ public class KernelInfo
 
     public string? Description { get; set; }
 
-    public ICollection<KernelCommandInfo> SupportedKernelCommands => _supportedKernelCommands;
+    public ICollection<KernelCommandInfo> SupportedKernelCommands
+    {
+        get => _supportedKernelCommands;
+        init
+        {
+            if (value is null)
+            {
+                return;
+            }
 
-    public ICollection<KernelDirective> SupportedDirectives => _supportedDirectives;
+            _supportedKernelCommands.UnionWith(value);
+        }
+    }
+
+    public ICollection<KernelDirective> SupportedDirectives
+    {
+        get => _supportedDirectives;
+        init
+        {
+            if (value is null)
+            {
+                return;
+            }
+
+            foreach (var directive in value)
+            {
+                _supportedDirectives.Add(directive);
+            }
+        }
+    }
 
     public override string ToString() => LocalName +
                                          (Uri is { } uri

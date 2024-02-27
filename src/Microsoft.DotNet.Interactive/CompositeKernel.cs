@@ -67,12 +67,17 @@ public sealed class CompositeKernel :
 
         kernel.SetScheduler(Scheduler);
 
+        AddDirective(new KernelSpecifierDirective($"#!{kernel.Name}", kernel.Name));
+
         if (aliases is not null)
         {
-            kernel.KernelInfo.NameAndAliases.UnionWith(aliases);
-        }
+            foreach (var alias in aliases)
+            {
+                AddDirective(new KernelSpecifierDirective($"#!{alias}", kernel.Name));
 
-        AddChooseKernelDirective(kernel);
+                kernel.KernelInfo.NameAndAliases.Add(alias);
+            }
+        }
 
         _childKernels.Add(kernel);
 
@@ -91,23 +96,23 @@ public sealed class CompositeKernel :
         }
     }
 
+    private void AddDirective(KernelSpecifierDirective directive)
+    {
+        if (KernelInfo.SupportedDirectives.Any(d => d.Name == directive.Name))
+        {
+            throw new ArgumentException($"The kernel name or alias '{directive.Name}' is already in use.");
+        }
+
+        KernelInfo.SupportedDirectives.Add(directive);
+
+        SubmissionParser.ResetParser();
+    }
+
     public void SetDefaultTargetKernelNameForCommand(
         Type commandType,
         string kernelName)
     {
         _defaultKernelNamesByCommandType[commandType] = kernelName;
-    }
-
-    private void AddChooseKernelDirective(Kernel kernel)
-    {
-        var chooseKernelCommand = kernel.ChooseKernelDirective;
-
-        foreach (var alias in kernel.KernelInfo.Aliases)
-        {
-            chooseKernelCommand.AddAlias($"#!{alias}");
-        }
-
-        AddDirective(chooseKernelCommand);
     }
 
     public KernelCollection ChildKernels => _childKernels;

@@ -112,8 +112,8 @@ public partial class VariableSharingTests
             await kernel.SendAsync(new SubmitCode("""
                 let var1 = "one"
                 let var2 = "two"
-                """, targetKernelName:"fsharp"));
-
+                """, targetKernelName: "fsharp"));
+            
             var result = await kernel.SendAsync(new SubmitCode("""
                 #!set --name newVar1 --value @fsharp:var1 --mime-type text/plain
                 #!set --name newVar2 --value @fsharp:var2 --mime-type text/plain
@@ -125,24 +125,24 @@ public partial class VariableSharingTests
             result = await kernel.SendAsync(new RequestValueInfos("csharp"));
 
             var valueInfosProduced = result.Events.Should()
-                .ContainSingle<ValueInfosProduced>()
-                .Which;
+                                           .ContainSingle<ValueInfosProduced>()
+                                           .Which;
 
             valueInfosProduced.ValueInfos.Select(v => v.Name).Should().BeEquivalentTo("newVar1", "newVar2", "newVar3");
 
             var csharpKernel = (CSharpKernel)kernel.FindKernelByName("csharp");
 
-           csharpKernel.TryGetValue("newVar1", out object newVar1)
-                       .Should().BeTrue();
-           newVar1.Should().Be("one");
-           
-           csharpKernel.TryGetValue("newVar2", out object newVar2)
-                       .Should().BeTrue();
-           newVar2.Should().Be("two");
+            csharpKernel.TryGetValue("newVar1", out object newVar1)
+                        .Should().BeTrue();
+            newVar1.Should().Be("one");
 
-           csharpKernel.TryGetValue("newVar3", out object newVar3)
-                       .Should().BeTrue();
-           newVar3.Should().Be("three");
+            csharpKernel.TryGetValue("newVar2", out object newVar2)
+                        .Should().BeTrue();
+            newVar2.Should().Be("two");
+
+            csharpKernel.TryGetValue("newVar3", out object newVar3)
+                        .Should().BeTrue();
+            newVar3.Should().Be("three");
         }
 
         [Fact]
@@ -614,7 +614,7 @@ public partial class VariableSharingTests
             var results = await kernel.SendAsync(new SubmitCode("#!set --value x"));
 
             results.Events.Should().ContainSingle<CommandFailed>()
-                   .Which.Message.Should().Be("Option '--name' is required.");
+                   .Which.Message.Should().Be("(1,1): error DNI104: Missing required parameter '--name'");
         }
 
         [Fact]
@@ -625,7 +625,7 @@ public partial class VariableSharingTests
             var results = await kernel.SendAsync(new SubmitCode("#!set --name x"));
 
             results.Events.Should().ContainSingle<CommandFailed>()
-                   .Which.Message.Should().Be("Option '--value' is required.");
+                   .Which.Message.Should().Be("(1,1): error DNI104: Missing required parameter '--value'");
         }
 
         [Fact]

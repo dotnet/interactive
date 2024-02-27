@@ -39,7 +39,7 @@ public class SubmissionParser
     {
         var sourceText = SourceText.From(code);
 
-        var configuration = GetParserConfiguration(defaultKernelName);
+        var configuration = GetParserConfiguration(defaultKernelName ?? DefaultKernelName());
 
         var parser = new PolyglotSyntaxParser(
             sourceText,
@@ -140,12 +140,28 @@ public class SubmissionParser
 
                             case { Kind: DirectiveNodeKind.KernelSelector } kernelNameNode:
 
+                                if (string.IsNullOrEmpty(kernelNameNode.TargetKernelName))
+                                {
+                                    // FIX: (SplitSubmission) 
+                                }
+                                else
+                                {
+                                    if (targetKernelName is not null &&  kernelNameNode.Text.Contains(targetKernelName))
+                                    {
+                                    }
+                                    else
+                                    {
+                                    }
+                                }
+
                                 targetKernelName = kernelNameNode.TargetKernelName;
                                 lastKernelNameNode = kernelNameNode;
 
+                                // FIX: (SplitSubmission) do we need this?
                                 directiveCommand = new DirectiveCommand(directiveNode)
                                 {
-                                    TargetKernelName = targetKernelName
+                                    TargetKernelName = targetKernelName,
+                                    Handler = (_, _) => Task.CompletedTask
                                 };
 
                                 hoistedCommandsIndex = commands.Count;
@@ -348,7 +364,6 @@ public class SubmissionParser
                 }
                 else
                 {
-                    // FIX: (SplitSubmission) 
                     return command;
                 }
             }
@@ -396,7 +411,7 @@ public class SubmissionParser
 
     private PolyglotParserConfiguration GetParserConfiguration(string defaultKernelName = null)
     {
-        if (_parserConfiguration is null &&
+        if (_parserConfiguration is not null &&
             defaultKernelName is not null &&
             defaultKernelName != DefaultKernelName())
         {

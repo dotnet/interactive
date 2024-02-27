@@ -14,12 +14,12 @@ internal class PolyglotParserConfiguration
     private Dictionary<string, KernelInfo>? _kernelInfoByKernelSpecifierDirectiveName;
     private HashSet<string>? _topLevelDirectives;
 
-    public PolyglotParserConfiguration(string defaultKernelName = "")
+    public PolyglotParserConfiguration(string? defaultKernelName = null)
     {
-        DefaultKernelName = defaultKernelName ?? "";
+        DefaultKernelName = defaultKernelName;
     }
 
-    public string DefaultKernelName { get; }
+    public string? DefaultKernelName { get; }
 
     public NamedSymbolCollection<KernelInfo> KernelInfos { get; } = new(info => info.LocalName);
 

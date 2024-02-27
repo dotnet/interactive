@@ -8,13 +8,11 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 
 internal abstract class TopLevelSyntaxNode : SyntaxNode
 {
-    internal TopLevelSyntaxNode(string targetKernelName, SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
+    internal TopLevelSyntaxNode(SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
-        TargetKernelName = targetKernelName;
-        CommandScope = targetKernelName; // QUESTION: (TopLevelSyntaxNode) are these concepts redundant at this level?
     }
 
-    public string TargetKernelName { get; }
+    public string? TargetKernelName { get; set; }
 
-    internal string CommandScope { get; }
+    internal string? CommandScope => TargetKernelName; // QUESTION: (TopLevelSyntaxNode) are these concepts redundant at this level?
 }

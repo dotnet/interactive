@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -6,6 +6,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing
 {
@@ -227,7 +229,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 return node.CreateBindingFailure(diagnostic);
             }
 
-            bool TryParseArgumentsFromMatch(string expression, Match match, out int? min, out int? max, [NotNullWhen(false)] out HttpDiagnosticInfo? diagnostic)
+            bool TryParseArgumentsFromMatch(string expression, Match match, out int? min, out int? max, [NotNullWhen(false)] out DiagnosticInfo? diagnostic)
             {
                 if (match.Success)
                 {
@@ -282,7 +284,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 diagnostic = HttpDiagnostics.IncorrectRandomIntFormat(expression);
                 return false;
 
-                bool TryParseInteger(string valueString, string expression, [NotNullWhen(true)] out int? value, [NotNullWhen(false)] out HttpDiagnosticInfo? diagnostic)
+                bool TryParseInteger(string valueString, string expression, [NotNullWhen(true)] out int? value, [NotNullWhen(false)] out DiagnosticInfo? diagnostic)
                 {
                     if (int.TryParse(valueString, out var result))
                     {

@@ -23,7 +23,7 @@ internal class PolyglotSyntaxParser
 
     private IReadOnlyList<SyntaxToken>? _tokens;
     private int _currentTokenIndex = 0;
-    private string _currentKernelName = "";
+    private string? _currentKernelName = null;
     private KernelDirective? _currentlyScopedDirective;
     private KernelDirectiveParameter? _currentlyScopedParameter;
 
@@ -57,24 +57,6 @@ internal class PolyglotSyntaxParser
         {
             if (ParseDirective() is { } directiveNode)
             {
-                if (_configuration.IsDirectiveInScope(_currentKernelName, directiveNode.DirectiveNameNode!.Text, out var kind))
-                {
-                    if (!IsCompilerDirective(directiveNode))
-                    {
-                        directiveNode.Kind = kind.Value;
-                    }
-
-                    if (directiveNode is { Kind: DirectiveNodeKind.KernelSelector })
-                    {
-                        _currentKernelName = directiveNode.ChildNodes
-                                                          .OfType<DirectiveNameNode>()
-                                                          .Single()
-                                                          .ChildTokens
-                                                          .First(t => t is { Kind: TokenKind.Word })
-                                                          .Text;
-                    }
-                }
-
                 _syntaxTree.RootNode.Add(directiveNode);
             }
             else if (ParseLanguageNode() is { } languageNode)
@@ -92,27 +74,38 @@ internal class PolyglotSyntaxParser
         {
             var directiveNameNode = ParseParameterName();
 
-            var targetKernelName = _currentKernelName;
+            var targetKernelName = _currentKernelName ?? _compositeKernelInfo?.LocalName;
 
-            if (_configuration.TryGetDirectiveByName(_currentKernelName, directiveNameNode.Text, out var directive) ||
+            var directiveNode = new DirectiveNode(_sourceText, _syntaxTree);
+            directiveNode.TargetKernelName = targetKernelName;
+
+            if (_configuration.TryGetDirectiveByName(targetKernelName, directiveNameNode.Text, out var directive) ||
                 _compositeKernelInfo?.TryGetDirective(directiveNameNode.Text, out directive) == true)
             {
                 _currentlyScopedDirective = directive;
 
-                if (directive is not KernelSpecifierDirective)
+                switch (directive)
                 {
-                    if (directive.ParentKernelInfo is { } parentKernelInfo)
-                    {
-                        targetKernelName = parentKernelInfo.LocalName;
-                    }
+                    case KernelSpecifierDirective kernelSpecifier:
+                        directiveNode.TargetKernelName = kernelSpecifier.KernelName;
+                        directiveNode.Kind = DirectiveNodeKind.KernelSelector;
+                        _currentKernelName = kernelSpecifier.KernelName;
+
+                        break;
+
+                    case KernelActionDirective:
+                        if (directive.ParentKernelInfo is { } parentKernelInfo)
+                        {
+                            directiveNode.TargetKernelName = parentKernelInfo.LocalName;
+                        }
+
+                        directiveNode.Kind = DirectiveNodeKind.Action;
+
+                        break;
                 }
             }
 
-            var directiveNode = new DirectiveNode(targetKernelName, _sourceText, _syntaxTree);
-
             directiveNode.Add(directiveNameNode);
-
-            var consumeTrailingWhitespace = false;
 
             while (MoreTokens())
             {
@@ -124,7 +117,6 @@ internal class PolyglotSyntaxParser
                 if (CurrentToken is { Kind: TokenKind.NewLine })
                 {
                     ConsumeCurrentTokenInto(directiveNode);
-                    consumeTrailingWhitespace = false;
                     break;
                 }
 
@@ -176,14 +168,7 @@ internal class PolyglotSyntaxParser
                 directiveNode.Kind = DirectiveNodeKind.CompilerDirective;
             }
 
-            if (consumeTrailingWhitespace)
-            {
-                return ParseTrailingWhitespace(directiveNode, true);
-            }
-            else
-            {
-                return directiveNode;
-            }
+            return directiveNode;
         }
 
         return null;

@@ -4,6 +4,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
@@ -21,6 +22,7 @@ public static class Serializer
         JsonSerializerOptions.Converters.Add(new DataDictionaryConverter());
         JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         JsonSerializerOptions.Converters.Add(new FileSystemInfoJsonConverter());
+        JsonSerializerOptions.Converters.Add(new KernelDirectiveConverter());
     }
 
     public static JsonSerializerOptions JsonSerializerOptions { get; }

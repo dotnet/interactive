@@ -49,22 +49,13 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests+SubmissionCount</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests</FixtureName>
       </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests</FixtureName>
-      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_pound_r_and_pound_i</TestName>
+      </NamedTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInvocationContextTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForUnparentedKernel</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelExtensionsTests</FixtureName>
@@ -92,12 +83,6 @@
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.ConnectDirectiveTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.CompositeKernelTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.CommandRoutingSlipTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.CancelCommandTests</FixtureName>
@@ -140,22 +125,37 @@ var x = 123; // with some intervening code
 #r two.dll", "fsharp")</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel.It_returns_info_about_unproxied_subkernels_of_remote_composite</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel.It_returns_the_list_of_proxied_kernel_commands_for_a_specified_subkernel</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel.proxyKernel_kernelInfo_is_updated_to_reflect_remote_kernelInfo</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KernelInfoTests+ForCompositeKernel.When_kernel_info_is_requested_from_proxy_then_ProxyKernel_kernel_info_is_updated</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.DirectiveTests.Directives_can_display_help(".NET")</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.DirectiveTests.Directives_can_display_help("csharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_custom_magics</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.When_target_kernel_name_is_not_specified_then_proxyKernel_does_not_split_pound_r_and_pound_i</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.proxy_kernel_can_register_command_types_handled_by_remote</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.events_routing_slip_contains_proxy_kernels_that_have_been_traversed</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.events_routing_slip_contains_kernels_that_have_been_traversed</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.commands_routing_slip_contains_proxy_kernels_that_have_been_traversed</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.commands_routing_slip_contains_kernels_that_have_been_traversed</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.A_default_kernel_name_can_be_specified_to_handle_a_command_type</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.When_target_kernel_name_is_not_specified_then_ProxyKernel_does_not_split_custom_magics</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>
