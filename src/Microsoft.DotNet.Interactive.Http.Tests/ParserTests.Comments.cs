@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Management.Automation.Internal;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
@@ -65,13 +66,38 @@ public partial class HttpParserTests
                   .Which.Text.Should().Be("# This is a comment");
         }
 
-        [Fact]
-        public void Comment_node_without_request_node_does_not_produce_diagnostics()
-        {
-            var code = """
+        [Theory]
+        [InlineData("""
                 # This is a comment
-                """;
+                """)]
+        [InlineData("""
+                # This is a comment
+                # This is the second line of the comment
+                """)]
+        [InlineData("""
+                # This is a comment
+                # This is the second line of the comment
+                # This is the third line of the comment
+                """)]
+        [InlineData("""
+                GET https://example.com
+                # This is a comment
+                # This is the second line of the comment
+                """)]
+        [InlineData("""
+                # This is a comment
 
+                # This is the second line of the comment
+                """)]
+        [InlineData("""
+                # This is a comment
+
+                # This is the second line of the comment
+
+                # This is the third line of the comments
+                """)]
+        public void Comment_node_without_request_node_does_not_produce_diagnostics(string code)
+        {
             var result = Parse(code);
 
             result.GetDiagnostics().Should().BeEmpty();
