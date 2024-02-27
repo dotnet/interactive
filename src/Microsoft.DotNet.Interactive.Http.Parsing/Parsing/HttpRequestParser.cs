@@ -77,6 +77,11 @@ internal class HttpRequestParser
                 }
             }
 
+            foreach (var comment in commentsToPrepend)
+            {
+                _syntaxTree.RootNode.Add(comment);
+            }
+
             return _syntaxTree;
         }
 
@@ -294,7 +299,7 @@ internal class HttpRequestParser
 
         private HttpRequestNode? ParseRequest()
         {
-            if (IsComment())
+            if (!MoreTokens() || IsComment())
             {
                 return null;
             }

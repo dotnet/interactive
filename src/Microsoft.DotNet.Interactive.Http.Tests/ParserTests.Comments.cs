@@ -64,5 +64,18 @@ public partial class HttpParserTests
                   .Should().ContainSingle<HttpCommentNode>()
                   .Which.Text.Should().Be("# This is a comment");
         }
+
+        [Fact]
+        public void Comment_node_without_request_node_does_not_produce_diagnostics()
+        {
+            var code = """
+                # This is a comment
+                """;
+
+            var result = Parse(code);
+
+            result.GetDiagnostics().Should().BeEmpty();
+
+        }
     }
 }
