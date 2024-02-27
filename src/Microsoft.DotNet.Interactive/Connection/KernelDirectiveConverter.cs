@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -74,8 +74,8 @@ public class KernelDirectiveConverter : JsonConverter<KernelDirective>
 
         KernelDirective directive = kind switch
         {
-            "action" => new KernelActionDirective(name),
-            "kernelSpecifier" => new KernelSpecifierDirective(name, kernelName),
+            nameof(KernelActionDirective) => new KernelActionDirective(name),
+            nameof(KernelSpecifierDirective) => new KernelSpecifierDirective(name, kernelName),
             _ => throw new NotSupportedException()
         };
 

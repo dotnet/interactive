@@ -4,13 +4,11 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-[DebuggerStepThrough]
 internal sealed class DirectiveBindingResult<T>
 {
     private DirectiveBindingResult()
@@ -23,24 +21,13 @@ internal sealed class DirectiveBindingResult<T>
 
     public T? Value { get; set; }
 
-    public static DirectiveBindingResult<T> Success(T value, params CodeAnalysis.Diagnostic[] diagnostics)
+    public static DirectiveBindingResult<T> Success(T value)
     {
-        if (diagnostics is not null &&
-            diagnostics.Any(d => d.Severity is DiagnosticSeverity.Error))
-        {
-            throw new ArgumentException("Errors must not be present when binding is successful.", nameof(diagnostics));
-        }
-
         var result = new DirectiveBindingResult<T>
         {
             IsSuccessful = true,
             Value = value
         };
-
-        if (diagnostics is not null)
-        {
-            result.Diagnostics.AddRange(diagnostics);
-        }
 
         return result;
     }

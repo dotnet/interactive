@@ -39,14 +39,14 @@ public class PolyglotParserConfigurationTests
                     SupportedDirectives =
                     {
                         new KernelActionDirective("#!sql"),
-                        new KernelSpecifierDirective("#!kql"),
-                        new KernelSpecifierDirective("#!csharp"),
-                        new KernelSpecifierDirective("#!fsharp"),
-                        new KernelSpecifierDirective("#!pwsh"),
-                        new KernelSpecifierDirective("#!html"),
-                        new KernelSpecifierDirective("#!value"),
-                        new KernelSpecifierDirective("#!mermaid"),
-                        new KernelSpecifierDirective("#!http"),
+                        new KernelSpecifierDirective("#!kql", "kql"),
+                        new KernelSpecifierDirective("#!csharp", "csharp"),
+                        new KernelSpecifierDirective("#!fsharp", "fsharp"),
+                        new KernelSpecifierDirective("#!pwsh", "pwsh"),
+                        new KernelSpecifierDirective("#!html", "html"),
+                        new KernelSpecifierDirective("#!value", "value"),
+                        new KernelSpecifierDirective("#!mermaid", "mermaid"),
+                        new KernelSpecifierDirective("#!http", "http"),
                         new KernelActionDirective("#!lsmagic"),
                         new KernelActionDirective("#!markdown"),
                         new KernelActionDirective("#!time"),
@@ -79,7 +79,7 @@ public class PolyglotParserConfigurationTests
                                 },
                             }
                         },
-                        new KernelSpecifierDirective("#!javascript"),
+                        new KernelSpecifierDirective("#!javascript", "javascript"),
                     }
                 },
                 new KernelInfo("csharp", ["C#"])

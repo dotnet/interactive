@@ -7,7 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
@@ -46,23 +45,28 @@ internal class SetDirectiveCommand : KernelCommand
             TargetKernelName = directiveNode.TargetKernelName
         };
 
-        List<ValueProduced> valuesProduced = null;
+        Dictionary<string, InputProduced> inputsProduced = null;
+        Dictionary<string, ValueProduced> valuesProduced = null;
 
         var (boundExpressionValues, diagnostics) =
             await directiveNode.TryBindExpressionsAsync(
                 async expressionNode =>
                 {
-                    var (bindingResult, valueProduced, inputProduced) = await kernel.SubmissionParser.RequestSingleValueOrInputAsync(expressionNode, directiveNode.TargetKernelName);
+                    var (bindingResult, valueProduced, inputProduced) =
+                        await kernel.SubmissionParser.RequestSingleValueOrInputAsync(expressionNode, directiveNode.TargetKernelName);
+
+                    var parameterName = ((DirectiveParameterNode)expressionNode.Parent.Parent).NameNode.Text;
 
                     if (inputProduced is not null)
                     {
-
+                        inputsProduced ??= new();
+                        inputsProduced.Add(parameterName, inputProduced);
                     }
 
                     if (valueProduced is not null)
                     {
                         valuesProduced ??= new();
-                        valuesProduced.Add(valueProduced);
+                        valuesProduced.Add(parameterName, valueProduced);
                     }
 
                     return bindingResult;
@@ -94,27 +98,27 @@ internal class SetDirectiveCommand : KernelCommand
             command.DestinationValueName = (string)destinationValueNameBinding.Value;
         }
 
-        switch (valuesProduced)
+        if (inputsProduced?.TryGetValue("--value", out var inputProduced1) is true)
         {
-            case null:
-                if (parameterValues.TryGetValue("--value", out var parsedLiteralValueBinding))
-                {
-                    command.ReferenceValue = parsedLiteralValueBinding.Value;
-
-                }
-
-                break;
-
-            case [var singleValue]:
-                command.SourceValueName = singleValue.Name;
-                command.SourceKernelName = (singleValue.Command as RequestValue)?.TargetKernelName;
-                command.FormattedValue = singleValue.FormattedValue;
-                break;
+            if (((RequestInput)inputProduced1.Command).IsPassword)
+            {
+                command.ReferenceValue = new PasswordString(inputProduced1.Value);
+            }
+            else
+            {
+                command.ReferenceValue = inputProduced1.Value;
+            }
         }
-
-        // FIX: (TryParseDirectiveNode) bind
-
-        // FIX: (TryParseDirectiveNode) validate
+        else if (valuesProduced?.TryGetValue("--value", out var valueProduced1) is true)
+        {
+            command.SourceValueName = valueProduced1.Name;
+            command.SourceKernelName = (valueProduced1.Command as RequestValue)?.TargetKernelName;
+            command.FormattedValue = valueProduced1.FormattedValue;
+        }
+        else if (parameterValues.TryGetValue("--value", out var parsedLiteralValueBinding))
+        {
+            command.ReferenceValue = parsedLiteralValueBinding.Value;
+        }
 
         var expressionNodes = directiveNode.DescendantNodesAndTokens().OfType<DirectiveExpressionNode>().ToArray();
 

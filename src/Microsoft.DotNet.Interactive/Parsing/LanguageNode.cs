@@ -15,6 +15,7 @@ internal class LanguageNode : SyntaxNode
         SourceText sourceText,
         PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
     {
+        TargetKernelName = targetKernelName;
     }
 
     public override bool IsSignificant => true;
