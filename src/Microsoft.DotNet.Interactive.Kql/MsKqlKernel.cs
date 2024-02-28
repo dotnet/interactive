@@ -44,6 +44,11 @@ internal class MsKqlKernel : ToolsServiceKernel
 
     protected override string CreateVariableDeclaration(string name, object value)
     {
+        if (value is PasswordString ps)
+        {
+            value = ps.GetClearTextPassword();
+        }
+
         return $"let {name} = {MapToKqlValueDeclaration(value)};";
 
         static string MapToKqlValueDeclaration(object value) =>

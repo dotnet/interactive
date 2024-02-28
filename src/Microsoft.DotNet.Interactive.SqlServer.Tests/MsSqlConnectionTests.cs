@@ -454,6 +454,7 @@ my_data_result");
         };
 
     [MsSqlTheory]
+    [InlineData("var testVar = new Microsoft.DotNet.Interactive.PasswordString(\"pwd\");", "pwd")] // password string
     [InlineData("var testVar = 2;", 2)] // var
     [InlineData("string testVar = \"hi!\";", "hi!")] // string
     [InlineData("string testVar = \"tricky'string\";", "tricky'string")] // string with '

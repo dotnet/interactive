@@ -347,6 +347,7 @@ StormEvents | take 0
     }
 
     [KqlTheory]
+    [InlineData("var testVar = new Microsoft.DotNet.Interactive.PasswordString(\"pwd\");", "pwd")] // password string
     [InlineData("var testVar = 2;", (long)2)] // var
     [InlineData("var testVar = \"hi!\";", "hi!")] // var string
     [InlineData("string testVar = \"hi!\";", "hi!")] // string
