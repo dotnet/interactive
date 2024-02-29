@@ -38,6 +38,11 @@ public class HttpKernel :
 
     private readonly Dictionary<string, object> _variables = new(StringComparer.InvariantCultureIgnoreCase);
 
+    static HttpKernel()
+    {
+        KernelCommandEnvelope.RegisterCommand<ClearValues>();
+    }
+
     public HttpKernel(
         string? name = null,
         HttpClient? client = null,
@@ -53,8 +58,6 @@ public class HttpKernel :
         _client = client ?? new HttpClient();
         _responseDelayThresholdInMilliseconds = responseDelayThresholdInMilliseconds;
         _contentByteLengthThreshold = contentByteLengthThreshold;
-
-        KernelCommandEnvelope.RegisterCommand<ClearValues>();
 
         RegisterForDisposal(_client);
     }
