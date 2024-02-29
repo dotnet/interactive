@@ -3,6 +3,7 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http.Parsing;
@@ -52,6 +53,8 @@ public class HttpKernel :
         _client = client ?? new HttpClient();
         _responseDelayThresholdInMilliseconds = responseDelayThresholdInMilliseconds;
         _contentByteLengthThreshold = contentByteLengthThreshold;
+
+        KernelCommandEnvelope.RegisterCommand<ClearValues>();
 
         RegisterForDisposal(_client);
     }
