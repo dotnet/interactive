@@ -3,6 +3,7 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http.Parsing;
@@ -36,6 +37,11 @@ public class HttpKernel :
     private readonly long _contentByteLengthThreshold;
 
     private readonly Dictionary<string, object> _variables = new(StringComparer.InvariantCultureIgnoreCase);
+
+    static HttpKernel()
+    {
+        KernelCommandEnvelope.RegisterCommand<ClearValues>();
+    }
 
     public HttpKernel(
         string? name = null,
