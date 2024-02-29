@@ -399,7 +399,14 @@ public abstract class ToolsServiceKernel :
 
         foreach (var variableNameAndValue in _variables)
         {
-            var declareStatement = CreateVariableDeclaration(variableNameAndValue.Key, variableNameAndValue.Value);
+            var value = variableNameAndValue.Value;
+
+            if (value is PasswordString ps)
+            {
+                value = ps.GetClearTextPassword();
+            }
+
+            var declareStatement = CreateVariableDeclaration(variableNameAndValue.Key, value);
 
             var displayStatement = declareStatement;
 
@@ -440,6 +447,11 @@ public abstract class ToolsServiceKernel :
             if (value == null)
             {
                 throw new ArgumentNullException(nameof(value), $"Sharing null values is not supported at this time.");
+            }
+
+            if (value is PasswordString ps)
+            {
+                value = ps.GetClearTextPassword();
             }
 
             if (!CanDeclareVariable(name, value, out string msg))

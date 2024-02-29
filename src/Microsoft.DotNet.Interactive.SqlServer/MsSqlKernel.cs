@@ -48,11 +48,6 @@ internal class MsSqlKernel : ToolsServiceKernel
 
     protected override string CreateVariableDeclaration(string name, object value)
     {
-        if (value is PasswordString ps)
-        {
-            value = ps.GetClearTextPassword();
-        }
-
         return $"DECLARE @{name} {MapToSqlDataType(name, value)} = {MapToSqlValueDeclaration(value)};";
 
         static string MapToSqlDataType(string name, object value)
@@ -92,10 +87,6 @@ internal class MsSqlKernel : ToolsServiceKernel
         msg = default;
         try
         {
-            if (value is PasswordString)
-            {
-                return true;
-            }
             SqlMetaData.InferFromValue(
                 value,
                 name);
