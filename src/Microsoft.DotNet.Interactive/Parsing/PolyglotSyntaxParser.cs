@@ -771,5 +771,6 @@ internal class PolyglotSyntaxParser
         // API usage errors
         public const string MissingBindingDelegate = "DNI301";
         public const string MissingSerializationType = "DNI302";
+        public const string ByRefAndMimeTypeCannotBeCombined = "DNI303";
     }
 }

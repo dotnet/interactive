@@ -10,8 +10,9 @@ public class NoSuitableKernelException : Exception
 {
     public NoSuitableKernelException(KernelCommand command) : base($"No kernel found for {command} with target kernel '{command.TargetKernelName}'.")
     {
-        Command = command;
     }
 
-    public KernelCommand Command { get; }
+    public NoSuitableKernelException(string message) : base(message)
+    {
+    }
 }

@@ -301,8 +301,6 @@ public static class KernelExtensions
             directive,
             SetDirectiveCommand.HandleAsync);
 
-        // FIX: (ConfigureAndAddSetMagicCommand) delete the rest of this
-
         var nameOption = new Option<string>(
             "--name",
             description: LocalizationResources.Magics_set_name_Description())
@@ -480,7 +478,10 @@ public static class KernelExtensions
                 {
                     AllowImplicitName = true
                 },
-                new("--from"),
+                new("--from")
+                {
+                    Required = true
+                },
                 new("--as"),
                 new("--mime-type")
             }
@@ -489,7 +490,6 @@ public static class KernelExtensions
         kernel.AddDirective<ShareDirectiveCommand>(
             shareDirective,
             ShareDirectiveCommand.HandleAsync);
-
 
         var sourceValueNameArg = new Argument<string>(
             "name",
@@ -555,31 +555,6 @@ public static class KernelExtensions
             mimeTypeOption,
             asOption
         };
-
-        share.SetHandler(async cmdLineContext =>
-        {
-            var from = cmdLineContext.ParseResult.GetValueForOption(fromKernelOption);
-            var valueName = cmdLineContext.ParseResult.GetValueForArgument(sourceValueNameArg);
-            var context = cmdLineContext.GetService<KernelInvocationContext>();
-            var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
-            var importAsName = cmdLineContext.ParseResult.GetValueForOption(asOption);
-
-            if (kernel.FindKernelByName(from) is { } fromKernel)
-            {
-                await fromKernel.GetValueAndSendTo(
-                    context,
-                    kernel,
-                    valueName,
-                    mimeType,
-                    importAsName);
-            }
-            else
-            {
-                context.Fail(context.Command, message: $"Kernel not found: {from}");
-            }
-        });
-
-        // kernel.AddDirective(share);
     }
 
     internal static async Task GetValueAndSendTo(
@@ -590,39 +565,43 @@ public static class KernelExtensions
         string requestedMimeType,
         string toName)
     {
-        var valueProduced = await GetValue(context, fromKernel, fromName, requestedMimeType);
+        var supportedRequestValue = fromKernel.SupportsCommandType(typeof(RequestValue));
+
+        if (!supportedRequestValue)
+        {
+            throw new InvalidOperationException($"Kernel {fromKernel} does not support command {nameof(RequestValue)}");
+        }
+
+        var requestValue = new RequestValue(fromName, mimeType: requestedMimeType);
+
+        requestValue.SetParent(context.Command, true);
+
+        var requestValueResult = await fromKernel.SendAsync(requestValue);
+        var valueProduced = requestValueResult.Events.OfType<ValueProduced>().SingleOrDefault();
 
         if (valueProduced is not null)
         {
             var declarationName = toName ?? fromName;
 
-            await SendValue(context, toKernel, requestedMimeType is not null, valueProduced, declarationName);
+            bool ignoreReferenceValue = requestedMimeType is not null;
+
+            if (toKernel.SupportsCommandType(typeof(SendValue)))
+            {
+                var value =
+                    ignoreReferenceValue
+                        ? null
+                        : valueProduced.Value;
+
+                await SendValue(context, toKernel, value, valueProduced.FormattedValue, declarationName);
+            }
+            else
+            {
+                throw new CommandNotSupportedException(typeof(SendValue), toKernel);
+            }
         }
     }
 
-    private static async Task SendValue(
-        KernelInvocationContext context,
-        Kernel kernel, 
-        bool ignoreReferenceValue, 
-        ValueProduced valueProduced,
-        string declarationName)
-    {
-        if (kernel.SupportsCommandType(typeof(SendValue)))
-        {
-            var value =
-                ignoreReferenceValue
-                    ? null
-                    : valueProduced.Value;
-
-            await SendValue(context, kernel, value, valueProduced.FormattedValue, declarationName);
-        }
-        else
-        {
-            throw new CommandNotSupportedException(typeof(SendValue), kernel);
-        }
-    }
-
-    private static async Task SendValue(
+    internal static async Task SendValue(
         KernelInvocationContext context,
         Kernel kernel, 
         object value, 
@@ -644,28 +623,6 @@ public static class KernelExtensions
         {
             throw new CommandNotSupportedException(typeof(SendValue), kernel);
         }
-    }
-
-    private static async Task<ValueProduced> GetValue(
-        KernelInvocationContext context,
-        Kernel kernel, 
-        string name, 
-        string requestedMimeType)
-    {
-        var supportedRequestValue = kernel.SupportsCommandType(typeof(RequestValue));
-
-        if (!supportedRequestValue)
-        {
-            throw new InvalidOperationException($"Kernel {kernel} does not support command {nameof(RequestValue)}");
-        }
-
-        var requestValue = new RequestValue(name, mimeType: requestedMimeType);
-
-        requestValue.SetParent(context.Command, true);
-
-        var requestValueResult = await kernel.SendAsync(requestValue);
-
-        return requestValueResult.Events.OfType<ValueProduced>().SingleOrDefault();
     }
 
     public static TKernel UseWho<TKernel>(this TKernel kernel)

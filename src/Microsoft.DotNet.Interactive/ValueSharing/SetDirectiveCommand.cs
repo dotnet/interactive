@@ -1,10 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -91,6 +87,14 @@ internal class SetDirectiveCommand : KernelCommand
         if (parameterValues.TryGetValue("--mime-type", out var mimeTypeBinding))
         {
             command.MimeType = (string)mimeTypeBinding.Value;
+
+            if (command.ShareByRef)
+            {
+                directiveNode.AddDiagnostic(
+                    directiveNode.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.ByRefAndMimeTypeCannotBeCombined,
+                            "The --mime-type and --byref options cannot be used together.", DiagnosticSeverity.Error)));
+            }
         }
 
         if (parameterValues.TryGetValue("--name", out var destinationValueNameBinding))
@@ -120,6 +124,7 @@ internal class SetDirectiveCommand : KernelCommand
             command.ReferenceValue = parsedLiteralValueBinding.Value;
         }
 
+
         var expressionNodes = directiveNode.DescendantNodesAndTokens().OfType<DirectiveExpressionNode>().ToArray();
 
         foreach (var expressionNode in expressionNodes)
@@ -138,14 +143,17 @@ internal class SetDirectiveCommand : KernelCommand
         return command;
     }
 
-    internal static async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
+    internal static async Task HandleAsync(SetDirectiveCommand command, KernelInvocationContext context)
     {
         var destinationKernel = context.HandlingKernel;
-        var setCommand = (SetDirectiveCommand)command;
 
         if (destinationKernel.SupportsCommandType(typeof(SendValue)))
         {
-            await SendValue(context, destinationKernel, setCommand.ReferenceValue, setCommand.FormattedValue, setCommand.DestinationValueName);
+            await SendValue(context,
+                            destinationKernel,
+                            command.ReferenceValue,
+                            command.FormattedValue,
+                            command.DestinationValueName);
         }
         else
         {

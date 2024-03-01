@@ -535,9 +535,15 @@ public partial class VariableSharingTests
         [Fact]
         public async Task the_byref_option_cannot_be_combined_with_the_MIME_type_option()
         {
-            using var kernel = CreateKernel(Language.CSharp);
+            using var kernel = CreateCompositeKernel();
 
-            var result = await kernel.SubmitCodeAsync("#!set --name dir --value @fsharp:dir --byref --mime-type text/plain");
+            await kernel
+                  .FindKernelByName("fsharp")
+                  .SubmitCodeAsync("let x = 123");
+
+            var result = await kernel
+                               .FindKernelByName("csharp")
+                               .SubmitCodeAsync("#!set --name dir --value @fsharp:x --byref --mime-type text/plain");
 
             result.Events
                   .Should()

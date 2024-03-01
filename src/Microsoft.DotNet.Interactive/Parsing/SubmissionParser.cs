@@ -499,27 +499,36 @@ public class SubmissionParser
         }
         else
         {
-            var (bindingResult, valueProduced) = await RequestSingleValueFromKernel(expressionNode, targetKernelName);
+            var (bindingResult, valueProduced) = await RequestSingleValueFromKernel(
+                                                     _kernel,
+                                                     expressionNode,
+                                                     targetKernelName);
             return (bindingResult, valueProduced, null);
         }
     }
 
-    private async Task<(DirectiveBindingResult<object> boundValue, ValueProduced valueProduced)> RequestSingleValueFromKernel(
+    internal static async Task<(DirectiveBindingResult<object> boundValue, ValueProduced valueProduced)> RequestSingleValueFromKernel(
+        Kernel destinationKernel,
         DirectiveExpressionNode expressionNode,
         string targetKernelName)
     {
-        var isByRef = expressionNode
-                      .Ancestors()
-                      .OfType<DirectiveNode>()
-                      .First()
+        if (!(expressionNode
+             .Ancestors()
+             .OfType<DirectiveNode>()
+             .FirstOrDefault() is { } directiveNode))
+        {
+            throw new ArgumentException($"Parameter '{nameof(expressionNode)}' does not have a parent {nameof(DirectiveNode)}");
+        }
+
+        var isByRef = directiveNode
                       .DescendantNodesAndTokens()
                       .OfType<DirectiveParameterNameNode>()
                       .Any(node => node.Text == "--byref");
-
+       
         var (sourceKernelName, sourceValueName) = SplitKernelDesignatorToken(expressionNode.Text, targetKernelName);
 
-        var sourceKernel = _kernel.RootKernel.FindKernelByName(sourceKernelName);
-
+        var sourceKernel = destinationKernel.RootKernel.FindKernelByName(sourceKernelName);
+        
         if (isByRef &&
             sourceKernel is not null &&
             sourceKernel.KernelInfo.IsProxy)
@@ -531,9 +540,27 @@ public class SubmissionParser
             return (DirectiveBindingResult<object>.Failure(diagnostic), null);
         }
 
-        var requestValue = new RequestValue(sourceValueName, mimeType: "application/json", targetKernelName: sourceKernelName);
+        var mimeType =
+            directiveNode
+                .DescendantNodesAndTokens()
+                .OfType<DirectiveParameterNode>()
+                .FirstOrDefault(node => node.NameNode.Text == "--mime-type")?.ValueNode.Text
+            ??
+            "application/json";
 
-        var result = await _kernel.RootKernel.SendAsync(requestValue);
+        return await RequestSingleValueFromKernel(destinationKernel, sourceKernelName, sourceValueName, mimeType, expressionNode);
+    }
+
+    internal static async Task<(DirectiveBindingResult<object> boundValue, ValueProduced valueProduced)> RequestSingleValueFromKernel(
+        Kernel destinationKernel,
+        string sourceKernelName,
+        string sourceValueName,
+        string mimeType,
+        DirectiveExpressionNode expressionNode)
+    {
+        var requestValue = new RequestValue(sourceValueName, mimeType: mimeType, targetKernelName: sourceKernelName);
+
+        var result = await destinationKernel.RootKernel.SendAsync(requestValue);
 
         switch (result.Events[^1])
         {
