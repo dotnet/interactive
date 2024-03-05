@@ -1,13 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -29,6 +28,7 @@ internal class SetDirectiveCommand : KernelCommand
 
     public static async Task<KernelCommand> TryParseSetDirectiveCommand(
         DirectiveNode directiveNode,
+        ExpressionBindingResult bindingResult,
         Kernel kernel)
     {
         if (!directiveNode.TryGetActionDirective(out var directive))
@@ -41,42 +41,15 @@ internal class SetDirectiveCommand : KernelCommand
             TargetKernelName = directiveNode.TargetKernelName
         };
 
-        Dictionary<string, InputProduced> inputsProduced = null;
-        Dictionary<string, ValueProduced> valuesProduced = null;
-
-        var (boundExpressionValues, diagnostics) =
-            await directiveNode.TryBindExpressionsAsync(
-                async expressionNode =>
-                {
-                    var (bindingResult, valueProduced, inputProduced) =
-                        await kernel.SubmissionParser.RequestSingleValueOrInputAsync(expressionNode, directiveNode.TargetKernelName);
-
-                    var parameterName = ((DirectiveParameterNode)expressionNode.Parent.Parent).NameNode.Text;
-
-                    if (inputProduced is not null)
-                    {
-                        inputsProduced ??= new();
-                        inputsProduced.Add(parameterName, inputProduced);
-                    }
-
-                    if (valueProduced is not null)
-                    {
-                        valuesProduced ??= new();
-                        valuesProduced.Add(parameterName, valueProduced);
-                    }
-
-                    return bindingResult;
-                });
-
-        if (diagnostics.Length > 0)
+        if (bindingResult.Diagnostics.Length > 0)
         {
             return null;
         }
 
         var parameterValues = directiveNode
-                              .GetParameters(
+                              .GetParameterValues(
                                   directive,
-                                  boundExpressionValues)
+                                  bindingResult.BoundValues)
                               .ToDictionary(t => t.Name, t => (t.Value, t.ParameterNode));
 
         if (parameterValues.TryGetValue("--byref", out var byRefBinding))
@@ -103,7 +76,7 @@ internal class SetDirectiveCommand : KernelCommand
             command.DestinationValueName = (string)destinationValueNameBinding.Value;
         }
 
-        if (inputsProduced?.TryGetValue("--value", out var inputProduced1) is true)
+        if (bindingResult.InputsProduced?.TryGetValue("--value", out var inputProduced1) is true)
         {
             if (((RequestInput)inputProduced1.Command).IsPassword)
             {
@@ -114,11 +87,16 @@ internal class SetDirectiveCommand : KernelCommand
                 command.ReferenceValue = inputProduced1.Value;
             }
         }
-        else if (valuesProduced?.TryGetValue("--value", out var valueProduced1) is true)
+        else if (bindingResult.ValuesProduced?.TryGetValue("--value", out var valueProduced1) is true)
         {
             command.SourceValueName = valueProduced1.Name;
             command.SourceKernelName = (valueProduced1.Command as RequestValue)?.TargetKernelName;
             command.FormattedValue = valueProduced1.FormattedValue;
+            
+            if (valueProduced1.Value is not null && command.ShareByRef)
+            {
+                command.ReferenceValue = valueProduced1.Value;
+            }
         }
         else if (parameterValues.TryGetValue("--value", out var parsedLiteralValueBinding))
         {

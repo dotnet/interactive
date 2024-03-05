@@ -18,7 +18,7 @@ using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-internal partial class DirectiveNode : TopLevelSyntaxNode
+internal class DirectiveNode : TopLevelSyntaxNode
 {
     private ParseResult? _parseResult;
 
@@ -230,7 +230,7 @@ internal partial class DirectiveNode : TopLevelSyntaxNode
     public DirectiveBindingResult<object?> CreateSuccessfulBindingResult(object? value) =>
         DirectiveBindingResult<object?>.Success(value);
 
-    public IEnumerable<(string Name, object Value, DirectiveParameterNode ParameterNode)> GetParameters(
+    public IEnumerable<(string Name, object Value, DirectiveParameterNode ParameterNode)> GetParameterValues(
         KernelDirective directive,
         Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
     {
@@ -320,7 +320,7 @@ internal partial class DirectiveNode : TopLevelSyntaxNode
 
         writer.WriteStartObject();
 
-        foreach (var parameter in GetParameters(directive, boundExpressionValues))
+        foreach (var parameter in GetParameterValues(directive, boundExpressionValues))
         {
             var parameterName = FromPosixStyleToCamelCase(parameter.Name);
 
@@ -369,7 +369,6 @@ internal partial class DirectiveNode : TopLevelSyntaxNode
             {
                 writer.WriteString(propertyName, value);
             }
-
         }
     }
 

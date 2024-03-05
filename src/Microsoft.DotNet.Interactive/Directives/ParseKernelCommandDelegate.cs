@@ -8,4 +8,7 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Directives;
 
-internal delegate Task<KernelCommand> ParseKernelCommandDelegate(DirectiveNode node, Kernel kernel);
+internal delegate Task<KernelCommand> ParseKernelCommandDelegate(
+    DirectiveNode node,
+    ExpressionBindingResult bindingResult,
+    Kernel kernel);

@@ -44,4 +44,4 @@ internal abstract partial class SyntaxNodeOrToken
 
         return _kernelInfo;
     }
-}   
+}
