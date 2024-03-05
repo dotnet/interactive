@@ -9,8 +9,3 @@ using Microsoft.DotNet.Interactive.Parsing;
 namespace Microsoft.DotNet.Interactive.Directives;
 
 internal delegate Task<KernelCommand> ParseKernelCommandDelegate(DirectiveNode node, Kernel kernel);
-
-public partial class KernelActionDirective : KernelDirective
-{
-    internal ParseKernelCommandDelegate? TryParseDirectiveNode { get; set; }
-}

@@ -71,9 +71,9 @@ internal partial class DirectiveNode : TopLevelSyntaxNode
                 yield return diagnostic;
             }
 
-            if (TryGetActionDirective(out var actionDirective))
+            if (TryGetDirective(out var directive) )
             {
-                foreach (var namedParameter in actionDirective.Parameters)
+                foreach (var namedParameter in directive.Parameters)
                 {
                     if (namedParameter.Required)
                     {
@@ -113,15 +113,15 @@ internal partial class DirectiveNode : TopLevelSyntaxNode
         }
     }
 
-    public bool TryGetActionDirective(out KernelActionDirective actionDirective)
+    public bool TryGetActionDirective(out KernelActionDirective directive)
     {
         if (GetKernelInfo() is { } kernelInfo)
         {
             if (DirectiveNameNode is { Text: { } name } &&
-                kernelInfo.TryGetDirective(name, out var directive) &&
-                directive is KernelActionDirective kernelActionDirective)
+                kernelInfo.TryGetDirective(name, out var d) &&
+                d is KernelActionDirective kernelActionDirective)
             {
-                actionDirective = kernelActionDirective;
+                directive = kernelActionDirective;
 
                 // drill into subcommands if any
                 var commands = DescendantNodesAndTokens()
@@ -132,7 +132,7 @@ internal partial class DirectiveNode : TopLevelSyntaxNode
                 {
                     if (kernelActionDirective.TryGetSubcommand(subcommandName, out var subcommand))
                     {
-                         actionDirective = subcommand;
+                         directive = subcommand;
                     }
                 }
 
@@ -140,7 +140,42 @@ internal partial class DirectiveNode : TopLevelSyntaxNode
             }
         }
 
-        actionDirective = null!;
+        directive = null!;
+        return false;
+    }
+
+    public bool TryGetKernelSpecifierDirective(out KernelSpecifierDirective directive)
+    {
+        if (SyntaxTree.ParserConfiguration.KernelInfos.SingleOrDefault(i => i.IsComposite) is { } compositeKernelInfo)
+        {
+            if (DirectiveNameNode is { Text: { } name } &&
+                compositeKernelInfo.TryGetDirective(name, out var d) &&
+                d is KernelSpecifierDirective kernelSpecifierDirective)
+            {
+                directive = kernelSpecifierDirective;
+                return true;
+            }
+        }
+
+        directive = null!;
+        return false;
+    }
+
+    public bool TryGetDirective(out KernelDirective directive)
+    {
+        if (TryGetActionDirective(out var actionDirective))
+        {
+            directive = actionDirective;
+            return true;
+        }
+
+        if (TryGetKernelSpecifierDirective(out var specifierDirective))
+        {
+            directive = specifierDirective;
+            return true;
+        }
+
+        directive = null!;
         return false;
     }
 
@@ -196,12 +231,12 @@ internal partial class DirectiveNode : TopLevelSyntaxNode
         DirectiveBindingResult<object?>.Success(value);
 
     public IEnumerable<(string Name, object Value, DirectiveParameterNode ParameterNode)> GetParameters(
-        KernelActionDirective directive,
+        KernelDirective directive,
         Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
     {
         var parameterNodes = DescendantNodesAndTokens().OfType<DirectiveParameterNode>().ToArray();
 
-        foreach (var parameter in directive.ParametersIncludingAncestors)
+        foreach (var parameter in directive.BindableParameters)
         {
             var matchingNodes = parameterNodes.Where(node =>
                                                          parameter.AllowImplicitName

@@ -67,15 +67,22 @@ public sealed class CompositeKernel :
 
         kernel.SetScheduler(Scheduler);
 
-        AddDirective(new KernelSpecifierDirective($"#!{kernel.Name}", kernel.Name));
-
-        if (aliases is not null)
+        if (kernel.CreateKernelSpecifierDirective() is { } kernelSpecifierDirective)
         {
-            foreach (var alias in aliases)
-            {
-                AddDirective(new KernelSpecifierDirective($"#!{alias}", kernel.Name));
+            AddDirective(kernelSpecifierDirective);
 
-                kernel.KernelInfo.NameAndAliases.Add(alias);
+            if (aliases is not null)
+            {
+                foreach (var alias in aliases)
+                {
+                    var aliasDirective = new KernelSpecifierDirective($"#!{alias}", kernel.Name);
+
+                    aliasDirective.TryGetKernelCommandAsync = kernelSpecifierDirective.TryGetKernelCommandAsync;
+
+                    AddDirective(aliasDirective);
+
+                    kernel.KernelInfo.NameAndAliases.Add(alias);
+                }
             }
         }
 

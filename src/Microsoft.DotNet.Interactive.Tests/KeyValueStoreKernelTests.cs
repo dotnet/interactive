@@ -135,7 +135,6 @@ public class KeyValueStoreKernelTests
 
         valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "a" && v.TypeName == "text/plain");
 
-
         valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "b" && v.TypeName == "application/json");
     }
 
@@ -254,7 +253,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("The --from-url and --from-file options cannot be used together.");
+            .Be("(1,1): error DNI205: The --from-url and --from-file options cannot be used together.");
     }
 
     [Fact]
@@ -270,7 +269,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("The --from-value and --from-file options cannot be used together.");
+            .Be("(1,1): error DNI207: The --from-value and --from-file options cannot be used together.");
     }
 
     [Fact]
@@ -286,7 +285,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("The --from-url and --from-value options cannot be used together.");
+            .Be("(1,1): error DNI206: The --from-url and --from-value options cannot be used together.");
     }
 
     [Fact]
@@ -407,7 +406,7 @@ public class KeyValueStoreKernelTests
 #!value --name hi 
 // previous content");
 
-        var result = await kernel.SubmitCodeAsync($@"
+        await kernel.SubmitCodeAsync($@"
 #!value --name hi --from-url {url}
 // some content");
 

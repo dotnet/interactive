@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Directives;
 public partial class KernelActionDirective : KernelDirective
 {
     private readonly NamedSymbolCollection<KernelActionDirective> _subcommands;
-    private readonly NamedSymbolCollection<KernelDirectiveParameter> _parameters;
+    private KernelActionDirective? _parent;
 
     public KernelActionDirective(string name) : base(name)
     {
@@ -38,29 +38,13 @@ public partial class KernelActionDirective : KernelDirective
                 adding.Parent = this;
             });
 
-        _parameters = new NamedSymbolCollection<KernelDirectiveParameter>(
-            parameter => parameter.Name,
-            (adding, existing) =>
-            {
-                if (existing.Any(item => item.Name == adding.Name))
-                {
-                    throw new ArgumentException($"Directive already contains a parameter named '{adding.Name}'.");
-                }
-
-                if (adding.AllowImplicitName && existing.Any(item => item.AllowImplicitName))
-                {
-                    throw new ArgumentException($"Only one parameter on a directive can have {nameof(KernelDirectiveParameter.AllowImplicitName)} set to true.");
-                }
-            });
     }
 
     public Type? KernelCommandType { get; set; }
 
     public ICollection<KernelActionDirective> Subcommands => _subcommands;
 
-    public ICollection<KernelDirectiveParameter> Parameters => _parameters;
-
-    public IEnumerable<KernelDirectiveParameter> ParametersIncludingAncestors
+    public override IEnumerable<KernelDirectiveParameter> BindableParameters
     {
         get
         {
@@ -71,7 +55,7 @@ public partial class KernelActionDirective : KernelDirective
 
             if (Parent is not null)
             {
-                foreach (var parentParameter in Parent.ParametersIncludingAncestors)
+                foreach (var parentParameter in Parent.BindableParameters)
                 {
                     yield return parentParameter;
                 }
@@ -79,9 +63,35 @@ public partial class KernelActionDirective : KernelDirective
         }
     }
 
-    public KernelActionDirective? Parent { get; private set; }
+    public KernelActionDirective? Parent
+    {
+        get => _parent;
+        private set
+        {
+            if (_parent is not null)
+            {
+                throw new InvalidOperationException("Parent cannot be changed once it has been set.");
+            }
 
-    internal bool TryGetParameter(string name, [MaybeNullWhen(false)] out KernelDirectiveParameter value) => _parameters.TryGetValue(name, out value);
+            _parent = value;
+        }
+    }
 
-    internal bool TryGetSubcommand(string name, [MaybeNullWhen(false)] out KernelActionDirective value) => _subcommands.TryGetValue(name, out value);
+    internal override bool TryGetParameter(string name, out KernelDirectiveParameter value)
+    {
+        if (base.TryGetParameter(name, out value))
+        {
+            return true;
+        }
+
+        if (Parent is not null)
+        {
+            return Parent.TryGetParameter(name, out value);
+        }
+
+        return false;
+    }
+
+    internal bool TryGetSubcommand(string name, [MaybeNullWhen(false)] out KernelActionDirective value) =>
+        _subcommands.TryGetValue(name, out value);
 }

@@ -125,16 +125,6 @@ internal class PolyglotSyntaxParser
                     if (ParseNamedParameter() is { } namedParameterNode)
                     {
                         directiveNode.Add(namedParameterNode);
-
-                        if(_currentlyScopedDirective is not KernelActionDirective)
-                        {
-                            var diagnostic = namedParameterNode.CreateDiagnostic(
-                                new(ErrorCodes.UnknownParameterName,
-                                    "Unrecognized parameter name '{0}'",
-                                    DiagnosticSeverity.Error,
-                                    namedParameterNode.NameNode?.Text ?? ""));
-                            namedParameterNode.AddDiagnostic(diagnostic);
-                        }
                     }
                 }
                 else if (CurrentToken is { Kind: TokenKind.Word } word &&
@@ -767,6 +757,9 @@ internal class PolyglotSyntaxParser
         public const string ValueNotFoundInKernel = "DNI202";
         public const string ByRefNotSupportedWithProxyKernels = "DNI203";
         public const string InputNotProvided = "DNI204";
+        public const string FromUrlAndFromFileCannotBeUsedTogether = "DNI205";
+        public const string FromUrlAndFromValueCannotBeUsedTogether = "DNI206";
+        public const string FromFileAndFromValueCannotBeUsedTogether = "DNI207";
 
         // API usage errors
         public const string MissingBindingDelegate = "DNI301";

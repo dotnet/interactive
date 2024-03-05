@@ -110,17 +110,22 @@ public class SubmissionParser
 
                     if (diagnostics.Length > 0)
                     {
-                        if (directiveNode is { Kind: DirectiveNodeKind.Action } adn)
+                        switch (directiveNode)
                         {
-                            if (IsUnknownDirective(adn) && (IsCompilerDirective(adn) || AcceptUnknownDirective(adn)))
-                            {
+                            case { Kind: DirectiveNodeKind.Action } adn when IsUnknownDirective(adn) && (IsCompilerDirective(adn) || AcceptUnknownDirective(adn)):
                                 var command = createChildCommand(directiveNode, originalCommand, lastKernelNameNode);
                                 commands.Add(command);
-                            }
-                            else
-                            {
+                                break;
+
+                            case { Kind: DirectiveNodeKind.Action }:
                                 ClearCommandsAndFail(diagnostics[0]);
-                            }
+                                break;
+
+                            case { Kind: DirectiveNodeKind.KernelSelector }:
+
+                               
+
+                                break;
                         }
                     }
                     else
@@ -140,29 +145,30 @@ public class SubmissionParser
 
                             case { Kind: DirectiveNodeKind.KernelSelector } kernelNameNode:
 
-                                if (string.IsNullOrEmpty(kernelNameNode.TargetKernelName))
-                                {
-                                    // FIX: (SplitSubmission) 
-                                }
-                                else
-                                {
-                                    if (targetKernelName is not null &&  kernelNameNode.Text.Contains(targetKernelName))
-                                    {
-                                    }
-                                    else
-                                    {
-                                    }
-                                }
-
                                 targetKernelName = kernelNameNode.TargetKernelName;
                                 lastKernelNameNode = kernelNameNode;
 
-                                // FIX: (SplitSubmission) do we need this?
-                                directiveCommand = new DirectiveCommand(directiveNode)
+                                if (directiveNode.TryGetKernelSpecifierDirective(out var kernelSpecifierDirective) &&
+                                    kernelSpecifierDirective.TryGetKernelCommandAsync is not null)
                                 {
-                                    TargetKernelName = targetKernelName,
-                                    Handler = (_, _) => Task.CompletedTask
-                                };
+                                    directiveCommand = await kernelSpecifierDirective.TryGetKernelCommandAsync(directiveNode, _kernel);
+
+                                    if (directiveCommand is null)
+                                    {
+                                        ClearCommandsAndFail(directiveNode.GetDiagnostics().FirstOrDefault());
+                                        break;
+                                    }
+
+                                    directiveCommand.TargetKernelName = targetKernelName;
+                                }
+                                else
+                                {
+                                    directiveCommand = new DirectiveCommand(directiveNode)
+                                    {
+                                        TargetKernelName = targetKernelName,
+                                        Handler = (_, _) => Task.CompletedTask
+                                    };
+                                }
 
                                 hoistedCommandsIndex = commands.Count;
 
@@ -352,8 +358,8 @@ public class SubmissionParser
                 };
             }
 
-            if (directive.TryParseDirectiveNode is not null && 
-                await directive.TryParseDirectiveNode(directiveNode, _kernel) is { } command)
+            if (directive.TryGetKernelCommandAsync is not null && 
+                await directive.TryGetKernelCommandAsync(directiveNode, _kernel) is { } command)
             {
                 var diagnostics = directiveNode.GetDiagnostics().ToArray();
 

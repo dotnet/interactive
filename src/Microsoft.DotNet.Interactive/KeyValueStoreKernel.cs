@@ -6,11 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -67,9 +68,112 @@ public class KeyValueStoreKernel :
         return Task.CompletedTask;
     }
 
-    // todo: change to ChooseKeyValueStoreKernelDirective after removing NetStandardc2.0 dependency
     public override ChooseKernelDirective ChooseKernelDirective =>
         _chooseKernelDirective ??= new(this);
+
+    public override KernelSpecifierDirective CreateKernelSpecifierDirective()
+    {
+        // FIX: (CreateKernelSpecifierDirective) 
+        var directive = base.CreateKernelSpecifierDirective();
+
+        directive.Parameters.Add(new("--name")
+        {
+            Required = true
+        });
+        directive.Parameters.Add(new("--from-url"));
+        directive.Parameters.Add(new("--from-file"));
+        directive.Parameters.Add(new("--from-value"));
+        directive.Parameters.Add(new("--mime-type"));
+
+        directive.TryGetKernelCommandAsync = async (node, kernel) =>
+        {
+            var boundExpressionValues = new Dictionary<DirectiveParameterValueNode, object>();
+
+            var parameterValues = node
+                                  .GetParameters(
+                                      directive,
+                                      boundExpressionValues)
+                                  .ToDictionary(t => t.Name, t => (t.Value, t.ParameterNode));
+
+            string name = null;
+            string? fromUrl = null;
+            string? fromFile = null;
+            string? fromValue = null;
+            string? mimeType = null;
+            // FIX: (CreateKernelSpecifierDirective) 
+
+            if (parameterValues.TryGetValue("--mime-type", out var mimeTypeResult) &&
+                mimeTypeResult.Value is string mimeTypeValue)
+            {
+                mimeType = mimeTypeValue;
+            }
+
+            if (parameterValues.TryGetValue("--name", out var nameResult) &&
+                nameResult.Value is string nameResultValue)
+            {
+                name = nameResultValue;
+            }
+
+            if (parameterValues.TryGetValue("--from-url", out var fromUrlResult) &&
+                fromUrlResult.Value is string fromUrlValue)
+            {
+                fromUrl = fromUrlValue;
+            }
+
+            if (parameterValues.TryGetValue("--from-file", out var fromFileResult) &&
+                fromFileResult.Value is string fromFileValue)
+            {
+                fromFile = fromFileValue;
+
+                if (fromUrl is not null)
+                {
+                    var diagnostic = node.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromFileCannotBeUsedTogether,
+                            "The --from-url and --from-file options cannot be used together.",
+                            DiagnosticSeverity.Error));
+
+                    node.AddDiagnostic(diagnostic);
+                    return null;
+                }
+            }
+
+            if (parameterValues.TryGetValue("--from-value", out var fromValueResult) &&
+                fromValueResult.Value is string fromValueValue)
+            {
+                if (fromUrl is not null)
+                {
+                    var diagnostic = node.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromValueCannotBeUsedTogether,
+                            "The --from-url and --from-value options cannot be used together.",
+                            DiagnosticSeverity.Error));
+
+                    node.AddDiagnostic(diagnostic);
+                    return null;
+                }
+
+                if (fromFile is not null)
+                {
+                    var diagnostic = node.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.FromFileAndFromValueCannotBeUsedTogether,
+                            "The --from-value and --from-file options cannot be used together.",
+                            DiagnosticSeverity.Error));
+
+                    node.AddDiagnostic(diagnostic);
+                    return null;
+                }
+
+                fromValue = fromValueValue;
+
+                var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, fromValue);
+
+                return new SendValue(name, null, formattedValue, targetKernelName: Name);
+            }
+
+            return null;
+        };
+
+        return directive;
+    }
 
     public IReadOnlyDictionary<string, FormattedValue> Values => _values;
 

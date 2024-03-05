@@ -1,15 +1,11 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.CommandLine.Parsing;
-using System.Threading.Tasks;
-
 using Kusto.Data.Common;
-
-using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.SqlServer;
+using System;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Kql;
 
@@ -41,6 +37,18 @@ internal class MsKqlKernel : ToolsServiceKernel
     }
 
     public override ChooseMsKqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
+
+    public override KernelSpecifierDirective CreateKernelSpecifierDirective()
+    {
+        var directive = base.CreateKernelSpecifierDirective();
+
+        directive.Parameters.Add(new("--name")
+        {
+            Required = true
+        });
+
+        return directive;
+    }
 
     protected override string CreateVariableDeclaration(string name, object value)
     {

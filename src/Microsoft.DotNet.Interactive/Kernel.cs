@@ -311,7 +311,9 @@ public abstract partial class Kernel :
 
         SubmissionParser.ResetParser();
     }
-    
+
+    public virtual KernelSpecifierDirective CreateKernelSpecifierDirective() => new($"#!{Name}", Name);
+
     private void RegisterDirectiveCommandHandler(KernelActionDirective directive, KernelCommandInvocation handler)
     {
         var fullDirectiveName = FullDirectiveName(directive);
