@@ -151,7 +151,10 @@ public class SubmissionParser
                                 if (directiveNode.TryGetKernelSpecifierDirective(out var kernelSpecifierDirective) &&
                                     kernelSpecifierDirective.TryGetKernelCommandAsync is not null)
                                 {
-                                    directiveCommand = await kernelSpecifierDirective.TryGetKernelCommandAsync(directiveNode, _kernel);
+                                    directiveCommand = await kernelSpecifierDirective.TryGetKernelCommandAsync(
+                                                           directiveNode, 
+                                                           await directiveNode.RequestAllInputsAndKernelValues(_kernel),
+                                                           _kernel);
 
                                     if (directiveCommand is null)
                                     {
@@ -358,8 +361,11 @@ public class SubmissionParser
                 };
             }
 
-            if (directive.TryGetKernelCommandAsync is not null && 
-                await directive.TryGetKernelCommandAsync(directiveNode, _kernel) is { } command)
+            if (directive.TryGetKernelCommandAsync is not null &&
+                await directive.TryGetKernelCommandAsync(
+                    directiveNode,
+                    await directiveNode.RequestAllInputsAndKernelValues(_kernel),
+                    _kernel) is { } command)
             {
                 var diagnostics = directiveNode.GetDiagnostics().ToArray();
 
@@ -526,7 +532,7 @@ public class SubmissionParser
             throw new ArgumentException($"Parameter '{nameof(expressionNode)}' does not have a parent {nameof(DirectiveNode)}");
         }
 
-        var isByRef = directiveNode
+        var allowByRef = directiveNode
                       .DescendantNodesAndTokens()
                       .OfType<DirectiveParameterNameNode>()
                       .Any(node => node.Text == "--byref");
@@ -535,7 +541,7 @@ public class SubmissionParser
 
         var sourceKernel = destinationKernel.RootKernel.FindKernelByName(sourceKernelName);
         
-        if (isByRef &&
+        if (allowByRef &&
             sourceKernel is not null &&
             sourceKernel.KernelInfo.IsProxy)
         {
@@ -546,15 +552,22 @@ public class SubmissionParser
             return (DirectiveBindingResult<object>.Failure(diagnostic), null);
         }
 
-        var mimeType =
-            directiveNode
-                .DescendantNodesAndTokens()
-                .OfType<DirectiveParameterNode>()
-                .FirstOrDefault(node => node.NameNode.Text == "--mime-type")?.ValueNode.Text
-            ??
-            "application/json";
+        var mimeType = allowByRef
+                           ? PlainTextFormatter.MimeType
+                           : directiveNode
+                             .DescendantNodesAndTokens()
+                             .OfType<DirectiveParameterNode>()
+                             .FirstOrDefault(node => node.NameNode?.Text == "--mime-type")?.ValueNode?.Text
+                             ??
+                             "application/json";
 
-        return await RequestSingleValueFromKernel(destinationKernel, sourceKernelName, sourceValueName, mimeType, expressionNode);
+        return await RequestSingleValueFromKernel(
+                   destinationKernel, 
+                   sourceKernelName, 
+                   sourceValueName, 
+                   mimeType, 
+                   allowByRef,
+                   expressionNode);
     }
 
     internal static async Task<(DirectiveBindingResult<object> boundValue, ValueProduced valueProduced)> RequestSingleValueFromKernel(
@@ -562,6 +575,7 @@ public class SubmissionParser
         string sourceKernelName,
         string sourceValueName,
         string mimeType,
+        bool allowByRef,
         DirectiveExpressionNode expressionNode)
     {
         var requestValue = new RequestValue(sourceValueName, mimeType: mimeType, targetKernelName: sourceKernelName);
@@ -581,8 +595,15 @@ public class SubmissionParser
 
                 if (valueProduced.Value is { } value)
                 {
-                    // ByRef value.
-                    boundValue = value.ToString();
+                    if (allowByRef)
+                    {
+                        boundValue = value;
+                    }
+                    else
+                    {
+                        // Direct interpolation
+                        boundValue = value.ToString();
+                    }
                 }
                 else
                     // Deserialize formatted value.

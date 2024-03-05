@@ -73,7 +73,6 @@ public class KeyValueStoreKernel :
 
     public override KernelSpecifierDirective CreateKernelSpecifierDirective()
     {
-        // FIX: (CreateKernelSpecifierDirective) 
         var directive = base.CreateKernelSpecifierDirective();
 
         directive.Parameters.Add(new("--name")
@@ -85,94 +84,133 @@ public class KeyValueStoreKernel :
         directive.Parameters.Add(new("--from-value"));
         directive.Parameters.Add(new("--mime-type"));
 
-        directive.TryGetKernelCommandAsync = async (node, kernel) =>
-        {
-            var boundExpressionValues = new Dictionary<DirectiveParameterValueNode, object>();
+        directive.TryGetKernelCommandAsync = DirectiveTryGetKernelCommandAsync;
 
-            var parameterValues = node
-                                  .GetParameters(
-                                      directive,
-                                      boundExpressionValues)
+        return directive;
+
+        async Task<KernelCommand> DirectiveTryGetKernelCommandAsync(
+            DirectiveNode directiveNode,
+            ExpressionBindingResult expressionBindingResult,
+            Kernel kernel)
+        {
+            var parameterValues = directiveNode
+                                  .GetParameterValues(directive, expressionBindingResult.BoundValues)
                                   .ToDictionary(t => t.Name, t => (t.Value, t.ParameterNode));
 
             string name = null;
             string? fromUrl = null;
             string? fromFile = null;
-            string? fromValue = null;
             string? mimeType = null;
-            // FIX: (CreateKernelSpecifierDirective) 
 
-            if (parameterValues.TryGetValue("--mime-type", out var mimeTypeResult) &&
-                mimeTypeResult.Value is string mimeTypeValue)
+            if (parameterValues.TryGetValue("--mime-type", out var mimeTypeResult) && mimeTypeResult.Value is string mimeTypeValue)
             {
                 mimeType = mimeTypeValue;
             }
 
-            if (parameterValues.TryGetValue("--name", out var nameResult) &&
-                nameResult.Value is string nameResultValue)
+            if (parameterValues.TryGetValue("--name", out var nameResult) && nameResult.Value is string nameResultValue)
             {
                 name = nameResultValue;
             }
 
-            if (parameterValues.TryGetValue("--from-url", out var fromUrlResult) &&
-                fromUrlResult.Value is string fromUrlValue)
+            string? cellContentValue = null;
+
+            if (directiveNode.NextNode() is { } nextNode)
             {
-                fromUrl = fromUrlValue;
+                cellContentValue = nextNode.FullText;
             }
 
-            if (parameterValues.TryGetValue("--from-file", out var fromFileResult) &&
-                fromFileResult.Value is string fromFileValue)
+            if (parameterValues.TryGetValue("--from-url", out var fromUrlResult) && fromUrlResult.Value is string fromUrlValue)
+            {
+                fromUrl = fromUrlValue;
+
+                if (cellContentValue is not null)
+                {
+                    AddDiagnostic(
+                        "--from-url",
+                        PolyglotSyntaxParser.ErrorCodes.FromUrlAndCellContentCannotBeUsedTogether,
+                        "The --from-url option cannot be used in combination with a content submission.");
+
+                    return null;
+                }
+            }
+
+            if (parameterValues.TryGetValue("--from-file", out var fromFileResult) && fromFileResult.Value is string fromFileValue)
             {
                 fromFile = fromFileValue;
 
                 if (fromUrl is not null)
                 {
-                    var diagnostic = node.CreateDiagnostic(
-                        new(PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromFileCannotBeUsedTogether,
-                            "The --from-url and --from-file options cannot be used together.",
-                            DiagnosticSeverity.Error));
+                    AddDiagnostic(
+                        "--from-file",
+                        PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromFileCannotBeUsedTogether,
+                        "The --from-url and --from-file options cannot be used together.");
 
-                    node.AddDiagnostic(diagnostic);
+                    return null;
+                }
+
+                if (cellContentValue is not null)
+                {
+                    AddDiagnostic(
+                        "--from-file",
+                        PolyglotSyntaxParser.ErrorCodes.FromFileAndCellContentCannotBeUsedTogether,
+                        "The --from-file option cannot be used in combination with a content submission.");
+
                     return null;
                 }
             }
 
-            if (parameterValues.TryGetValue("--from-value", out var fromValueResult) &&
-                fromValueResult.Value is string fromValueValue)
+            string? inlineValue = null;
+
+            if (parameterValues.TryGetValue("--from-value", out var fromValueResult) && fromValueResult.Value is string fromValueValue)
             {
                 if (fromUrl is not null)
                 {
-                    var diagnostic = node.CreateDiagnostic(
-                        new(PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromValueCannotBeUsedTogether,
-                            "The --from-url and --from-value options cannot be used together.",
-                            DiagnosticSeverity.Error));
+                    AddDiagnostic(
+                        "--from-value",
+                        PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromValueCannotBeUsedTogether,
+                        "The --from-url and --from-value options cannot be used together.");
 
-                    node.AddDiagnostic(diagnostic);
                     return null;
                 }
 
                 if (fromFile is not null)
                 {
-                    var diagnostic = node.CreateDiagnostic(
-                        new(PolyglotSyntaxParser.ErrorCodes.FromFileAndFromValueCannotBeUsedTogether,
-                            "The --from-value and --from-file options cannot be used together.",
-                            DiagnosticSeverity.Error));
+                    AddDiagnostic(
+                        "--from-value",
+                        PolyglotSyntaxParser.ErrorCodes.FromFileAndFromValueCannotBeUsedTogether,
+                        "The --from-value and --from-file options cannot be used together.");
 
-                    node.AddDiagnostic(diagnostic);
                     return null;
                 }
 
-                fromValue = fromValueValue;
+                inlineValue = fromValueValue;
+            }
 
-                var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, fromValue);
+            if (inlineValue is not null || cellContentValue is not null)
+            {
+                var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, inlineValue ?? cellContentValue);
 
                 return new SendValue(name, null, formattedValue, targetKernelName: Name);
             }
 
-            return null;
-        };
+            // FIX: (CreateKernelSpecifierDirective) --from-file and --from-url
 
-        return directive;
+            return null;
+
+            void AddDiagnostic(string parameterName, string errorCode, string message)
+            {
+                var targetNode = (SyntaxNode)directiveNode
+                                             .ChildNodes
+                                             .OfType<DirectiveParameterNode>()
+                                             .FirstOrDefault(node => node.NameNode?.Text == parameterName)
+                                 ??
+                                 directiveNode;
+
+                var diagnostic = targetNode.CreateDiagnostic(new(errorCode, message, DiagnosticSeverity.Error));
+
+                directiveNode.AddDiagnostic(diagnostic);
+            }
+        }
     }
 
     public IReadOnlyDictionary<string, FormattedValue> Values => _values;

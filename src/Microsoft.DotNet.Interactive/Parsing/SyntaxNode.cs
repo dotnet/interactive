@@ -192,6 +192,30 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
             _ => Array.Empty<SyntaxNodeOrToken>()
         });
 
+    public SyntaxNode? NextNode()
+    {
+        if (Parent is null)
+        {
+            return null;
+        }
+
+        var next = false;
+
+        foreach (var sibling in Parent.ChildNodes)
+        {
+            if (next)
+            {
+                return sibling;
+            }
+            else if (sibling == this)
+            {
+                next = true;
+            }
+        }
+
+        return null;
+    }
+
     private static IEnumerable<T> FlattenBreadthFirst<T>(
         IEnumerable<T> source,
         Func<T, IEnumerable<T>> children)

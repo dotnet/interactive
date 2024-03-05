@@ -74,8 +74,8 @@ public class KernelDirectiveConverter : JsonConverter<KernelDirective>
 
         KernelDirective directive = kind switch
         {
-            nameof(KernelActionDirective) => new KernelActionDirective(name),
-            nameof(KernelSpecifierDirective) => new KernelSpecifierDirective(name, kernelName),
+            "action" => new KernelActionDirective(name),
+            "kernelSpecifier" => new KernelSpecifierDirective(name, kernelName),
             _ => throw new NotSupportedException()
         };
 
