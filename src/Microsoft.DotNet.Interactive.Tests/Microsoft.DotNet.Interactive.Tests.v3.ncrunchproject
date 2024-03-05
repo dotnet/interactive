@@ -43,9 +43,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KqlDiscoverabilityKernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KeyValueStoreKernelTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests+SubmissionCount</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
@@ -156,6 +153,9 @@ var x = 123; // with some intervening code
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests.When_target_kernel_name_is_not_specified_then_ProxyKernel_does_not_split_custom_magics</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.KeyValueStoreKernelTests.Completions_show_value_options</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>

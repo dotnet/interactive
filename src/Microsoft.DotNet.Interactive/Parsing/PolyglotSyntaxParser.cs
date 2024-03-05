@@ -594,4 +594,29 @@ internal class PolyglotSyntaxParser
             public override string ToString() => $"[{Start}..{End}]";
         }
     }
+
+    internal static class ErrorCodes
+    {
+        // parsing errors
+        public const string UnknownDirective = "DNI101";
+        public const string UnknownParameterName = "DNI103";
+        public const string MissingRequiredParameter = "DNI104";
+        public const string TooManyOccurrencesOfParameter = "DNI105";
+        public const string InvalidJsonInParameterValue = "DNI106";
+        public const string ParametersMustAppearAfterSubcommands = "DNI107";
+
+        // magic command usage errors
+        public const string UnsupportedMimeType = "DNI201";
+        public const string ValueNotFoundInKernel = "DNI202";
+        public const string ByRefNotSupportedWithProxyKernels = "DNI203";
+        public const string InputNotProvided = "DNI204";
+        public const string FromUrlAndFromFileCannotBeUsedTogether = "DNI205";
+        public const string FromUrlAndFromValueCannotBeUsedTogether = "DNI206";
+        public const string FromFileAndFromValueCannotBeUsedTogether = "DNI207";
+
+        // API usage errors
+        public const string MissingBindingDelegate = "DNI301";
+        public const string MissingSerializationType = "DNI302";
+        public const string ByRefAndMimeTypeCannotBeCombined = "DNI303";
+    }
 }

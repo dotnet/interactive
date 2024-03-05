@@ -39,11 +39,11 @@ internal class DirectiveParameterNode : SyntaxNode
             yield return diagnostic;
         }
         
-        if (NameNode is { Text: { } parameterName })
+        if (NameNode is { Text: { } parameterName } nameNode)
         {
-            if (Parent is DirectiveNode directiveNode && directiveNode.TryGetActionDirective(out var actionDirective))
+            if (Parent is DirectiveNode directiveNode && directiveNode.TryGetDirective(out var directive))
             {
-                if (actionDirective.TryGetParameter(parameterName, out var option))
+                if (directive.TryGetParameter(parameterName, out var option))
                 {
                     var occurrences = Parent
                                       .DescendantNodesAndTokens()
@@ -60,6 +60,15 @@ internal class DirectiveParameterNode : SyntaxNode
                                 option.MaxOccurrences,
                                 parameterName));
                     }
+                }
+                else
+                {
+                    var diagnostic = nameNode.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.UnknownParameterName,
+                            "Unrecognized parameter name '{0}'",
+                            DiagnosticSeverity.Error,
+                            parameterName ?? ""));
+                    yield return diagnostic;
                 }
             }
         }

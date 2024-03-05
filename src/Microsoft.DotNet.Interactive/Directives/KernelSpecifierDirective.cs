@@ -4,7 +4,7 @@
 #nullable enable
 namespace Microsoft.DotNet.Interactive.Directives;
 
-public class KernelSpecifierDirective : KernelDirective
+public partial class KernelSpecifierDirective : KernelDirective
 {
     public KernelSpecifierDirective(string name, string kernelName) : base(name)
     {

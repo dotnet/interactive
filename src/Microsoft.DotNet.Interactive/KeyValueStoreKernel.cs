@@ -73,6 +73,7 @@ public class KeyValueStoreKernel :
 
     public override KernelSpecifierDirective CreateKernelSpecifierDirective()
     {
+        // FIX: (CreateKernelSpecifierDirective) 
         var directive = base.CreateKernelSpecifierDirective();
 
         directive.Parameters.Add(new("--name")
@@ -84,154 +85,94 @@ public class KeyValueStoreKernel :
         directive.Parameters.Add(new("--from-value"));
         directive.Parameters.Add(new("--mime-type"));
 
-        directive.TryGetKernelCommandAsync = TryGetKernelCommandAsync;
-
-        return directive;
-
-        async Task<KernelCommand> TryGetKernelCommandAsync(
-            DirectiveNode directiveNode,
-            ExpressionBindingResult expressionBindingResult,
-            Kernel keyValueStoreKernel)
+        directive.TryGetKernelCommandAsync = async (node, kernel) =>
         {
-            var parameterValues = directiveNode
-                                  .GetParameterValues(directive, expressionBindingResult.BoundValues)
+            var boundExpressionValues = new Dictionary<DirectiveParameterValueNode, object>();
+
+            var parameterValues = node
+                                  .GetParameters(
+                                      directive,
+                                      boundExpressionValues)
                                   .ToDictionary(t => t.Name, t => (t.Value, t.ParameterNode));
 
             string name = null;
             string? fromUrl = null;
             string? fromFile = null;
+            string? fromValue = null;
             string? mimeType = null;
+            // FIX: (CreateKernelSpecifierDirective) 
 
-            if (parameterValues.TryGetValue("--mime-type", out var mimeTypeResult) && mimeTypeResult.Value is string mimeTypeValue)
+            if (parameterValues.TryGetValue("--mime-type", out var mimeTypeResult) &&
+                mimeTypeResult.Value is string mimeTypeValue)
             {
                 mimeType = mimeTypeValue;
             }
 
-            if (parameterValues.TryGetValue("--name", out var nameResult) && nameResult.Value is string nameResultValue)
+            if (parameterValues.TryGetValue("--name", out var nameResult) &&
+                nameResult.Value is string nameResultValue)
             {
                 name = nameResultValue;
             }
 
-            if (parameterValues.TryGetValue("--from-url", out var fromUrlResult) && fromUrlResult.Value is string fromUrlValue)
+            if (parameterValues.TryGetValue("--from-url", out var fromUrlResult) &&
+                fromUrlResult.Value is string fromUrlValue)
             {
                 fromUrl = fromUrlValue;
             }
 
-            if (parameterValues.TryGetValue("--from-file", out var fromFileResult) && fromFileResult.Value is string fromFileValue)
+            if (parameterValues.TryGetValue("--from-file", out var fromFileResult) &&
+                fromFileResult.Value is string fromFileValue)
             {
                 fromFile = fromFileValue;
 
                 if (fromUrl is not null)
                 {
-                    AddDiagnostic(
-                        "--from-file",
-                        PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromFileCannotBeUsedTogether,
-                        "The --from-url and --from-file options cannot be used together.");
+                    var diagnostic = node.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromFileCannotBeUsedTogether,
+                            "The --from-url and --from-file options cannot be used together.",
+                            DiagnosticSeverity.Error));
 
+                    node.AddDiagnostic(diagnostic);
                     return null;
                 }
             }
 
-            string? inlineValue = null;
-
-            if (parameterValues.TryGetValue("--from-value", out var fromValueResult) && fromValueResult.Value is string fromValueValue)
+            if (parameterValues.TryGetValue("--from-value", out var fromValueResult) &&
+                fromValueResult.Value is string fromValueValue)
             {
                 if (fromUrl is not null)
                 {
-                    AddDiagnostic(
-                        "--from-value",
-                        PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromValueCannotBeUsedTogether,
-                        "The --from-url and --from-value options cannot be used together.");
+                    var diagnostic = node.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromValueCannotBeUsedTogether,
+                            "The --from-url and --from-value options cannot be used together.",
+                            DiagnosticSeverity.Error));
 
+                    node.AddDiagnostic(diagnostic);
                     return null;
                 }
 
                 if (fromFile is not null)
                 {
-                    AddDiagnostic(
-                        "--from-value",
-                        PolyglotSyntaxParser.ErrorCodes.FromFileAndFromValueCannotBeUsedTogether,
-                        "The --from-value and --from-file options cannot be used together.");
+                    var diagnostic = node.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.FromFileAndFromValueCannotBeUsedTogether,
+                            "The --from-value and --from-file options cannot be used together.",
+                            DiagnosticSeverity.Error));
 
+                    node.AddDiagnostic(diagnostic);
                     return null;
                 }
 
-                inlineValue = fromValueValue;
-            }
+                fromValue = fromValueValue;
 
-            if (fromFile is not null || fromUrl is not null)
-            {
-                return new AnonymousKernelCommand(async (_, context) =>
-                {
-                    string valueToStore = null;
-
-                    if (fromFile is not null)
-                    {
-                        valueToStore = await GetValueFromFileAsync();
-                    }
-                    else if (fromUrl is not null)
-                    {
-                        valueToStore = await GetValueFromUrlAsync();
-                    }
-                   
-                    var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, valueToStore);
-
-                    var sendValue = new SendValue(name, null, formattedValue, targetKernelName: Name);
-
-                    await keyValueStoreKernel.SendAsync(sendValue);
-
-                    async Task<string> GetValueFromFileAsync()
-                    {
-                        return await IOExtensions.ReadAllTextAsync(fromFile);
-                    }
-
-                    async Task<string> GetValueFromUrlAsync()
-                    {
-                        var client = new HttpClient();
-                        var response = await client.GetAsync(fromUrl, context.CancellationToken);
-                        mimeType ??= response.Content.Headers?.ContentType?.MediaType;
-                        return await response.Content.ReadAsStringAsync();
-                    }
-                });
-            }
-
-            var valueToStore = inlineValue ?? GetCellContent();
-
-            if (valueToStore is not null)
-            {
-                var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, valueToStore);
+                var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, fromValue);
 
                 return new SendValue(name, null, formattedValue, targetKernelName: Name);
             }
 
             return null;
+        };
 
-            void AddDiagnostic(string parameterName, string errorCode, string message)
-            {
-                var targetNode = (SyntaxNode)directiveNode
-                                             .ChildNodes
-                                             .OfType<DirectiveParameterNode>()
-                                             .FirstOrDefault(node => node.NameNode?.Text == parameterName)
-                                 ??
-                                 directiveNode;
-
-                var diagnostic = targetNode.CreateDiagnostic(new(errorCode, message, DiagnosticSeverity.Error));
-
-                directiveNode.AddDiagnostic(diagnostic);
-            }
-
-            string GetCellContent()
-            {
-                if (directiveNode.NextNode() is LanguageNode nextNode)
-                {
-                    return nextNode.FullText;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
+        return directive;
     }
 
     public IReadOnlyDictionary<string, FormattedValue> Values => _values;

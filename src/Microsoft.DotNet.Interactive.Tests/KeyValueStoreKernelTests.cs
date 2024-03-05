@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -255,7 +255,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("(1,46): error DNI205: The --from-url and --from-file options cannot be used together.");
+            .Be("(1,1): error DNI205: The --from-url and --from-file options cannot be used together.");
     }
 
     [Fact]
@@ -271,7 +271,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("(1,44): error DNI207: The --from-value and --from-file options cannot be used together.");
+            .Be("(1,1): error DNI207: The --from-value and --from-file options cannot be used together.");
     }
 
     [Fact]
@@ -287,7 +287,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("(1,46): error DNI206: The --from-url and --from-value options cannot be used together.");
+            .Be("(1,1): error DNI206: The --from-url and --from-value options cannot be used together.");
     }
 
     [Fact]

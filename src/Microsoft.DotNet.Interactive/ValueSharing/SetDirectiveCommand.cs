@@ -93,7 +93,8 @@ internal class SetDirectiveCommand : KernelCommand
                 directiveNode.AddDiagnostic(
                     directiveNode.CreateDiagnostic(
                         new(PolyglotSyntaxParser.ErrorCodes.ByRefAndMimeTypeCannotBeCombined,
-                            "The --mime-type and --byref options cannot be used together.", DiagnosticSeverity.Error)));
+                            LocalizationResources.Magics_set_mime_type_ErrorMessageCannotBeUsed(),
+                            DiagnosticSeverity.Error)));
             }
         }
 

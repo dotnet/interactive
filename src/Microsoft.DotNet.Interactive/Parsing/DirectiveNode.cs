@@ -65,7 +65,45 @@ internal abstract class DirectiveNode : LanguageNode
                 messageFormat: error.Message,
                 severity: DiagnosticSeverity.Error);
 
-            yield return CreateDiagnostic(descriptor);
+            if (TryGetDirective(out var directive) )
+            {
+                foreach (var namedParameter in directive.Parameters)
+                {
+                    if (namedParameter.Required)
+                    {
+                        var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
+                                                      .Where(p => p.NameNode?.Text == namedParameter.Name);
+
+                        if (!matchingNodes.Any())
+                        {
+                            yield return CreateDiagnostic(
+                                new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
+                                    "Missing required parameter '{0}'",
+                                    DiagnosticSeverity.Error,
+                                    namedParameter.Name));
+                        }
+                    }
+                }
+            }
+
+            var foundParameter = false;
+
+            foreach (var childNode in ChildNodes)
+            {
+                if (childNode is DirectiveSubcommandNode)
+                {
+                    if (foundParameter)
+                    {
+                        yield return childNode.CreateDiagnostic(
+                            new(PolyglotSyntaxParser.ErrorCodes.ParametersMustAppearAfterSubcommands,
+                                "Parameters must appear after subcommands.", DiagnosticSeverity.Error));
+                    }
+                }
+                else if (childNode is DirectiveParameterNode)
+                {
+                    foundParameter = true;
+                }
+            }
         }
     }
 
@@ -186,7 +224,7 @@ internal abstract class DirectiveNode : LanguageNode
     public DirectiveBindingResult<object?> CreateSuccessfulBindingResult(object? value) =>
         DirectiveBindingResult<object?>.Success(value);
 
-    public IEnumerable<(string Name, object Value, DirectiveParameterNode ParameterNode)> GetParameterValues(
+    public IEnumerable<(string Name, object Value, DirectiveParameterNode ParameterNode)> GetParameters(
         KernelDirective directive,
         Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
     {
