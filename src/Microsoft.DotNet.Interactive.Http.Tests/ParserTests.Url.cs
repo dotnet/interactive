@@ -145,5 +145,20 @@ public partial class HttpParserTests
             lineSpan.EndLinePosition.Line.Should().Be(0);
             lineSpan.EndLinePosition.Character.Should().Be(12);
         }
+
+
+        [Fact]
+        public void Punctuation_at_url_start_produces_a_diagnostic()
+        {
+            var code = """
+                GET /https://example.com
+                """;
+
+            var result = Parse(code);
+
+            var diagnostic = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpUrlNode>()
+                                   .Which.GetDiagnostics().Should().ContainSingle()
+                                   .Which;
+        }
     }
 }
