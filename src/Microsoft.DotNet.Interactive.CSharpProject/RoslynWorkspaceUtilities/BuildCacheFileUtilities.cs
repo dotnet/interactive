@@ -78,30 +78,40 @@ internal static class BuildCacheFileUtilities
 </Project>
 """;
 
-    internal static async Task<string> BuildAndCreateCacheFileAsync(string csprojFilePath)
+    internal static async Task BuildAndCreateCacheFileAsync(string csprojFilePath)
     {
+        if (string.IsNullOrEmpty(csprojFilePath) || !File.Exists(csprojFilePath))
+        {
+            throw new ArgumentException($"The csproj file path is either null or does not exist: {csprojFilePath}");
+        }
+
         DirectoryInfo directoryInfo = new DirectoryInfo(Path.GetDirectoryName(csprojFilePath));
         FileInfo lastBuildErrorLogFile = new FileInfo(Path.Combine(directoryInfo.FullName, ".net-interactive-builderror"));
 
         CleanObjFolder(directoryInfo);
 
-        string tempDirectoryBuildTarget =
-            Path.Combine(Path.GetDirectoryName(csprojFilePath), DirectoryBuildTargetFilename);
-        File.WriteAllText(tempDirectoryBuildTarget, DirectoryBuildTargetsContent);
+        string tempDirectoryBuildTarget = Path.Combine(Path.GetDirectoryName(csprojFilePath), DirectoryBuildTargetFilename);
 
-        var args = "";
-        if (Path.Exists(csprojFilePath))
+        try
         {
-            args = $@"""{csprojFilePath}"" {args}";
+            File.WriteAllText(tempDirectoryBuildTarget, DirectoryBuildTargetsContent);
         }
+        catch (Exception ex)
+        {
+            throw new IOException($"Failed to write to {tempDirectoryBuildTarget}.", ex);
+        }
+
+        var args = $@"{csprojFilePath}";
 
         var result = await new Dotnet(directoryInfo).Build(args: args);
 
         if (result.ExitCode != 0)
         {
+            var errorMessage = $"Build failed with exit code {result.ExitCode}. See {lastBuildErrorLogFile.FullName} for details.";
             File.WriteAllText(
                 lastBuildErrorLogFile.FullName,
                 string.Join(Environment.NewLine, result.Error));
+            throw new InvalidOperationException(errorMessage);
         }
         else if (lastBuildErrorLogFile.Exists)
         {
@@ -111,9 +121,11 @@ internal static class BuildCacheFileUtilities
         // Clean up the temp project file
         File.Delete(tempDirectoryBuildTarget);
 
-        result.ThrowOnFailure();
-
-        return string.Empty;
+        var cacheFile = FindCacheFile(directoryInfo);
+        if (cacheFile == null || !cacheFile.Exists)
+        {
+            throw new FileNotFoundException($"Cache file not found after build completion in directory: {directoryInfo.FullName}");
+        }
     }
 
     private static void CleanObjFolder(DirectoryInfo directoryInfo)
