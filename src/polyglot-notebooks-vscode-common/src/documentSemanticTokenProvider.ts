@@ -99,7 +99,7 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
     }
 
     async provideDocumentSemanticTokens(document: vscode.TextDocument, _cancellationToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
-        Logger.default.info(`[documentSemanticTokenProvider] provideDocumentSemanticTokens called for ${document.uri.toString()}`)
+        Logger.default.info(`[documentSemanticTokenProvider] provideDocumentSemanticTokens called for ${document.uri.toString()}`);
         try {
             let tokenCount = 0;
             const tokensBuilder = new vscode.SemanticTokensBuilder(this.semanticTokensLegend);
