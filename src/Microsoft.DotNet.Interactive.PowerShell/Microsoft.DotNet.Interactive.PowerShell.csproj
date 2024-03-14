@@ -20,6 +20,7 @@
 
   <!-- PowerShell Module Package References -->
   <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" Version="6.0.4" />
     <PackageReference Include="PackageManagement" Version="1.4.6" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="PowerShellGet" Version="2.2.3" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.Archive" Version="1.2.5" PrivateAssets="all" GeneratePathProperty="true" />
