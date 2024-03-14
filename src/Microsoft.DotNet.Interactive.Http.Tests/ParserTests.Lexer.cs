@@ -46,7 +46,7 @@ public partial class HttpParserTests
         {
             var result = Parse(".!?.:/");
             
-            var requestNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpBodyNode>().Which;
+            var requestNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpUrlNode>().Which;
             requestNode
                   .ChildTokens.Select(t => new { t.Text, t.Kind })
                   .Should().BeEquivalentSequenceTo(
