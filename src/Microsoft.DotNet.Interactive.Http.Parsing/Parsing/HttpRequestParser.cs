@@ -446,11 +446,15 @@ internal class HttpRequestParser
                     else if (IsAtStartOfEmbeddedExpression())
                     {
                         node = new HttpUrlNode(_sourceText, _syntaxTree);
+
+                        ParseLeadingWhitespaceAndComments(node);
                         node.Add(ParseEmbeddedExpression());
                     }
                     else if (CurrentToken is { Kind: HttpTokenKind.Punctuation })
                     {
                         node = new HttpUrlNode(_sourceText, _syntaxTree);
+
+                        ParseLeadingWhitespaceAndComments(node);
                     }
                     else
                     {
