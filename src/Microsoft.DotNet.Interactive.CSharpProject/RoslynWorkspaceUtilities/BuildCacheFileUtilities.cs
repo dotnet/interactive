@@ -80,9 +80,14 @@ internal static class BuildCacheFileUtilities
 
     internal static async Task BuildAndCreateCacheFileAsync(string csprojFilePath)
     {
-        if (string.IsNullOrEmpty(csprojFilePath) || !File.Exists(csprojFilePath))
+        if (string.IsNullOrEmpty(csprojFilePath))
         {
-            throw new ArgumentException($"The csproj file path is either null or does not exist: {csprojFilePath}");
+            throw new ArgumentException($"The csproj file path is null or empty");
+        }
+
+        if (!File.Exists(csprojFilePath))
+        {
+            throw new FileNotFoundException($"The csproj file does not exist: {csprojFilePath}");
         }
 
         DirectoryInfo directoryInfo = new DirectoryInfo(Path.GetDirectoryName(csprojFilePath));
@@ -96,22 +101,22 @@ internal static class BuildCacheFileUtilities
         {
             File.WriteAllText(tempDirectoryBuildTarget, DirectoryBuildTargetsContent);
         }
-        catch (Exception ex)
+        catch (UnauthorizedAccessException ex)
         {
-            throw new IOException($"Failed to write to {tempDirectoryBuildTarget}.", ex);
+            throw new UnauthorizedAccessException($"Failed to create the target file due to unauthorized access: {tempDirectoryBuildTarget}", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new IOException($"Failed to create the target file due to an I/O error: {tempDirectoryBuildTarget}", ex);
         }
 
-        var args = $@"{csprojFilePath}";
+        var args = $@"""{csprojFilePath}""";
 
         var result = await new Dotnet(directoryInfo).Build(args: args);
 
         if (result.ExitCode != 0)
         {
-            var errorMessage = $"Build failed with exit code {result.ExitCode}. See {lastBuildErrorLogFile.FullName} for details.";
-            File.WriteAllText(
-                lastBuildErrorLogFile.FullName,
-                string.Join(Environment.NewLine, result.Error));
-            throw new InvalidOperationException(errorMessage);
+            throw new InvalidOperationException($"Build failed with exit code {result.ExitCode}. See {lastBuildErrorLogFile.FullName} for details.");
         }
         else if (lastBuildErrorLogFile.Exists)
         {
