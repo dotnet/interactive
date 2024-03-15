@@ -131,17 +131,17 @@ internal class HttpRequestParser
             {
                 if (node is null)
                 {
-                    if (CurrentToken is ({ Kind: HttpTokenKind.Word }) or ({ Kind: HttpTokenKind.Punctuation} and { Text: "/"}))
+                    if (CurrentToken is ({ Kind: HttpTokenKind.Word }) or ({ Kind: HttpTokenKind.Punctuation } and { Text: "/" }))
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
 
                         ParseLeadingWhitespaceAndComments(node);
-                    } 
+                    }
                     else if (IsAtStartOfEmbeddedExpression())
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
                         node.Add(ParseEmbeddedExpression());
-                        if(CurrentToken is { Kind: HttpTokenKind.NewLine })
+                        if (CurrentToken is { Kind: HttpTokenKind.NewLine })
                         {
                             break;
                         }
@@ -446,7 +446,15 @@ internal class HttpRequestParser
                     else if (IsAtStartOfEmbeddedExpression())
                     {
                         node = new HttpUrlNode(_sourceText, _syntaxTree);
+
+                        ParseLeadingWhitespaceAndComments(node);
                         node.Add(ParseEmbeddedExpression());
+                    }
+                    else if (CurrentToken is { Kind: HttpTokenKind.Punctuation })
+                    {
+                        node = new HttpUrlNode(_sourceText, _syntaxTree);
+
+                        ParseLeadingWhitespaceAndComments(node);
                     }
                     else
                     {
