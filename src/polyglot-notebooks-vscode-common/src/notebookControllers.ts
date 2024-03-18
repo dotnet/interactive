@@ -297,6 +297,8 @@ function stopTrackingNotebook(notebook: vscode.NotebookDocument) {
 }
 
 async function ensureCellKernelMetadata(cell: vscode.NotebookCell, options: { preferPreviousCellMetadata: boolean }): Promise<void> {
+    // todo: fix custom metadata access
+
     // markdown cells should not have metadata, so if we find it, remove it.
     if (cell.document.languageId === 'markdown') {
         const existingCellMetadata = cell.metadata?.custom?.metadata;
@@ -408,6 +410,8 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
     const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
     const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
     const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, document.metadata, isIpynb);
+
+    // todo: fix custom metadata access
 
     if (isIpynb) {
         if (!rawNotebookDocumentMetadata.custom.metadata.language_info) {

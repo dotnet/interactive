@@ -13,7 +13,7 @@
   "//version": "%description.version%",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.84.0"
+    "vscode": "^1.87.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -219,7 +219,7 @@
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.510102",
+          "default": "1.0.516801",
           "description": "%description.requiredInteractiveToolVersion%"
         }
       }
