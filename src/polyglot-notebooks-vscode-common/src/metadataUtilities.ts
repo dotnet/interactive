@@ -66,6 +66,7 @@ export function getNotebookCellMetadataFromInteractiveDocumentElement(interactiv
 export function getNotebookCellMetadataFromNotebookCellElement(notebookCell: vscodeLike.NotebookCell): NotebookCellMetadata {
     const cellMetadata = createDefaultNotebookCellMetadata();
 
+    // todo: fix custom metadata access
     const metadata = notebookCell.metadata?.custom?.metadata;
 
     if (typeof metadata === 'object') {
@@ -115,6 +116,8 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
     const notebookMetadata = createDefaultNotebookDocumentMetadata();
     let setDefaultKernel = false;
     let setItems = false;
+
+    // todo: fix custom metadata access
 
     // .dib files will have their metadata at the root; .ipynb files will have their metadata a little deeper
     const polyglot_notebook = document.metadata.polyglot_notebook ?? document.metadata?.custom?.metadata?.polyglot_notebook;
@@ -266,6 +269,8 @@ export function getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocume
 export function createNewIpynbMetadataWithNotebookDocumentMetadata(existingMetadata: { [key: string]: any }, notebookDocumentMetadata: NotebookDocumentMetadata): { [key: string]: any } {
     const resultMetadata: { [key: string]: any } = { ...existingMetadata };
 
+    // todo: fix custom metadata access
+
     // kernelspec
     const kernelspec = getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata);
     resultMetadata.custom = resultMetadata.custom ?? {};
@@ -303,6 +308,9 @@ export function getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata
 
     if (createForIpynb) {
         const kernelspec = getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata);
+        
+        // todo: fix custom metadata access
+
         rawMetadata.custom = {
             metadata: {
                 kernelspec,
