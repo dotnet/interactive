@@ -494,9 +494,9 @@ internal class HttpRequestParser
                        : null;
         }
 
-        private HttpSyntaxToken? GetNextSignificantToken(int offset = 0)
+        private HttpSyntaxToken? GetNextSignificantToken()
         {
-            var token = CurrentTokenPlus(offset);
+            var token = CurrentToken;
             int i = 0;
 
             while (MoreTokens())
