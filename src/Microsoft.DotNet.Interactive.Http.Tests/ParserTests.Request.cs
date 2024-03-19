@@ -321,6 +321,7 @@ public partial class HttpParserTests
             var requestNodes = result.SyntaxTree.RootNode.ChildNodes
                                     .OfType<HttpRequestNode>();
 
+            requestNodes.Count().Should().Be(9);
             result.GetDiagnostics().Should().BeEmpty();
         }
     }

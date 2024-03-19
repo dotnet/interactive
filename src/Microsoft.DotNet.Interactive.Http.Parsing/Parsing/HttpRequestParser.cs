@@ -474,11 +474,16 @@ internal class HttpRequestParser
                     }
                 }
 
+                if (!((CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression())))
+                {
+                    break;
+                }
+
                 if (IsAtStartOfEmbeddedExpression())
                 {
                     node.Add(ParseEmbeddedExpression());
                 }
-                else if (!IsRequestSeparator())
+                else
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -818,9 +823,9 @@ internal class HttpRequestParser
         }
 
         private bool IsRequestSeparator() =>
-            GetNextSignificantToken() is { Text: "#" } &&
-            GetNextSignificantToken(1) is { Text: "#" } &&
-            GetNextSignificantToken(2) is { Text: "#" };
+            CurrentToken is { Text: "#" } &&
+            CurrentTokenPlus(1) is { Text: "#" } &&
+            CurrentTokenPlus(2) is { Text: "#" };
 
         private static LinePosition GetLinePositionFromCursorOffset(SourceText code, int cursorOffset)
         {
