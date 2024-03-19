@@ -313,7 +313,34 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
         request.RequestUri.Should().Be($"https://httpbin.org");
 
+    }
 
+    [Fact]
+    public async Task binding_in_variable_value_with_request_separator()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @host=https://microsoft.com
+
+            Post {{host}}
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.Should().NotContainErrors();
+        request.RequestUri.Should().Be($"https://microsoft.com");
     }
 
     [Fact]
