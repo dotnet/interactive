@@ -263,5 +263,65 @@ public partial class HttpParserTests
             bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/anything");
             bindingResult.Value.Headers.ToString().Should().Be("");
         }
+
+        [Fact]
+        public void comments_with_comment_separator_nodes_and_requests()
+        {
+            var result = Parse(
+                """
+                ### Slow Response (Json)
+                GET https://httpbin.org/anything?page=2&pageSize=10
+                ###
+
+                ### Large Response (Json)
+                GET https://dotnetnew-api.azurewebsites.net/api/templatepack
+                ###
+
+                ### Test
+                GET https://www.microsoft.com
+                ###
+
+                ### Content header without content
+                GET https://httpbin.org/anything
+                Content-Type:text/json
+                Content-Length:100
+
+                ###
+
+
+                ###
+                @host = https://www.microsoft.com
+                POST {{host}}
+                ###
+
+                ### Nonexistent
+                GET https://www.sdsdfijj.com
+                ###
+
+                ### Encoding
+                POST http://httpbin.org/anything/anything?id=abáéí?ú?óüÁÉÍ?Ú?ÓÜ
+
+                {
+                  "id":"abáéíőúűóüÁÉÍŐÚŰÓÜ"
+                }
+                ###
+
+                GET https://httpbin.org/anything
+
+                name=value
+
+                ####
+
+                GET https://httpbin.org/anything
+
+                {name=value}
+                """
+                );
+
+            var requestNodes = result.SyntaxTree.RootNode.ChildNodes
+                                    .OfType<HttpRequestNode>();
+
+            result.GetDiagnostics().Should().BeEmpty();
+        }
     }
 }

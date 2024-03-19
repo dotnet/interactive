@@ -396,6 +396,18 @@ internal class HttpRequestParser
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
 
+                while (MoreTokens())
+                {
+                    if (CurrentToken?.Kind is not HttpTokenKind.NewLine)
+                    {
+                        ConsumeCurrentTokenInto(node);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
                 return ParseTrailingWhitespace(node);
             }
 
@@ -466,7 +478,7 @@ internal class HttpRequestParser
                 {
                     node.Add(ParseEmbeddedExpression());
                 }
-                else
+                else if (!IsRequestSeparator())
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -477,9 +489,9 @@ internal class HttpRequestParser
                        : null;
         }
 
-        private HttpSyntaxToken? GetNextSignificantToken()
+        private HttpSyntaxToken? GetNextSignificantToken(int offset = 0)
         {
-            var token = CurrentToken;
+            var token = CurrentTokenPlus(offset);
             int i = 0;
 
             while (MoreTokens())
@@ -806,9 +818,9 @@ internal class HttpRequestParser
         }
 
         private bool IsRequestSeparator() =>
-            CurrentToken is { Text: "#" } &&
-            CurrentTokenPlus(1) is { Text: "#" } &&
-            CurrentTokenPlus(2) is { Text: "#" };
+            GetNextSignificantToken() is { Text: "#" } &&
+            GetNextSignificantToken(1) is { Text: "#" } &&
+            GetNextSignificantToken(2) is { Text: "#" };
 
         private static LinePosition GetLinePositionFromCursorOffset(SourceText code, int cursorOffset)
         {
