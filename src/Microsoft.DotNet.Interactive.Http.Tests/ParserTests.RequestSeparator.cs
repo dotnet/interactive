@@ -4,6 +4,7 @@
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
+using System.Linq;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
@@ -28,5 +29,19 @@ public partial class HttpParserTests
                   .Which.UrlNode.Text.Should().Be("https://example.com");
         }
 
+        [Fact]
+        public void tokens_on_request_separator_nodes_are_parsed_into_request_separator()
+        {
+            var result = Parse(
+                """
+                ### Slow Response (Json)
+                GET https://httpbin.org/anything?page=2&pageSize=10
+                """
+                );
+
+            var requestNodes = result.SyntaxTree.RootNode.ChildNodes
+                                    .Should().ContainSingle<HttpRequestSeparatorNode>()
+                                    .Which.Text.Should().Be("### Slow Response (Json)");
+        }
     }
 }

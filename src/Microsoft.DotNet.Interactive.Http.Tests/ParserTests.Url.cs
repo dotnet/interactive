@@ -160,5 +160,20 @@ public partial class HttpParserTests
                                    .Which.GetDiagnostics().Should().ContainSingle()
                                    .Which;
         }
+
+        [Fact]
+        public void Request_separator_following_embedded_expression_is_parsed_correctly()
+        {
+            var code = """
+                GET {{host}}
+                ###
+                """;
+
+            var result = Parse(code);
+
+            result.GetDiagnostics().Should().BeEmpty();
+
+            result.SyntaxTree.RootNode.ChildNodes.Count().Should().Be(2);
+        }
     }
 }
