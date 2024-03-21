@@ -98,7 +98,7 @@ To get started, you'll need:
 
 1. [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/).
 
-2. [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download).
+2. [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download).
 
 3. The LTS version of [nodejs](https://nodejs.org/en/download/).
 
