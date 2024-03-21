@@ -13,7 +13,7 @@ public class FileLock
 
     public static async Task<IDisposable> TryCreateAsync(FileInfo lockFile)
     {
-        if (lockFile == null)
+        if (lockFile is null)
         {
             throw new ArgumentNullException(nameof(lockFile));
         }
@@ -31,7 +31,6 @@ public class FileLock
             }
             catch (IOException)
             {
-
             }
         } while (attemptCount <= 100);
 
@@ -40,7 +39,7 @@ public class FileLock
 
     public static Task<IDisposable> TryCreateAsync(IDirectoryAccessor directoryAccessor)
     {
-        if (directoryAccessor == null)
+        if (directoryAccessor is null)
         {
             throw new ArgumentNullException(nameof(directoryAccessor));
         }
@@ -49,7 +48,7 @@ public class FileLock
 
     public static Task<IDisposable> TryCreateAsync(DirectoryInfo directory)
     {
-        if (directory == null)
+        if (directory is null)
         {
             throw new ArgumentNullException(nameof(directory));
         }
@@ -59,7 +58,7 @@ public class FileLock
 
     public static bool IsLockFile(FileInfo fileInfo)
     {
-        if (fileInfo == null)
+        if (fileInfo is null)
         {
             throw new ArgumentNullException(nameof(fileInfo));
         }

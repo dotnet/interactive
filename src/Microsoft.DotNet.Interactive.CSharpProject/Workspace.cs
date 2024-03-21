@@ -78,13 +78,4 @@ public class Workspace
             },
             usings: usings);
     }
-
-    public static Workspace FromSources(
-        string workspaceType = null,
-        string language = DefaultLanguage,
-        params (string id, string content, int position)[] sources) =>
-        new Workspace(
-            workspaceType: workspaceType,
-            language: language,
-            buffers: sources.Select(s => new Buffer(BufferId.Parse(s.id), s.content, s.position)).ToArray());
 }

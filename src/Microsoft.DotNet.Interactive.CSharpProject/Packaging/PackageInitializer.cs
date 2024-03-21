@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 
@@ -55,7 +53,7 @@ public class PackageInitializer : IPackageInitializer
                 args: $"--name \"{ProjectName}\" --language \"{Language}\" --output \"{directory.FullName}\"");
         result.ThrowOnFailure($"Error initializing in {directory.FullName}");
 
-        if (afterCreate != null)
+        if (afterCreate is not null)
         {
             await afterCreate(directory);
         }

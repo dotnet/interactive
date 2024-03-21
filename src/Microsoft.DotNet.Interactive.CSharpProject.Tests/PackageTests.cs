@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
 public partial class PackageTests : IDisposable
 {
-    private readonly CompositeDisposable _disposables = new CompositeDisposable();
+    private readonly CompositeDisposable _disposables = new();
 
     public PackageTests(ITestOutputHelper output)
     {
@@ -33,7 +33,7 @@ public partial class PackageTests : IDisposable
             "console",
             "MyProject");
 
-        var package = Create.EmptyWorkspace(initializer: initializer);
+        var package = Create.EmptyPackage(initializer: initializer);
 
         await package.CreateWorkspaceForRunAsync();
         await package.CreateWorkspaceForRunAsync();
@@ -55,7 +55,7 @@ public partial class PackageTests : IDisposable
                 afterCreateCallCount++;
             });
 
-        var package = Create.EmptyWorkspace(initializer: initializer);
+        var package = Create.EmptyPackage(initializer: initializer);
 
         await package.CreateWorkspaceForRunAsync();
         await package.CreateWorkspaceForRunAsync();
@@ -70,7 +70,7 @@ public partial class PackageTests : IDisposable
             "console",
             "MyProject");
 
-        var original = Create.EmptyWorkspace(initializer: initializer);
+        var original = Create.EmptyPackage(initializer: initializer);
 
         await original.CreateWorkspaceForLanguageServicesAsync();
 
@@ -84,7 +84,7 @@ public partial class PackageTests : IDisposable
     [Fact]
     public async Task When_package_contains_simple_console_app_then_IsAspNet_is_false()
     {
-        var package = await Create.ConsoleWorkspaceCopy();
+        var package = await Create.ConsolePackageCopy();
 
         await package.CreateWorkspaceForLanguageServicesAsync();
 
@@ -94,7 +94,7 @@ public partial class PackageTests : IDisposable
     [Fact]
     public async Task When_package_contains_simple_console_app_then_entry_point_dll_is_in_the_build_directory()
     {
-        var package = Create.EmptyWorkspace(initializer: new PackageInitializer("console", "empty"));
+        var package = Create.EmptyPackage(initializer: new PackageInitializer("console", "empty"));
 
         await package.CreateWorkspaceForRunAsync();
 
@@ -116,7 +116,7 @@ public partial class PackageTests : IDisposable
     {
         var buildEvents = new LogEntryList();
         var buildEventsMessages = new List<string>();
-        var package = await Create.ConsoleWorkspaceCopy(isRebuildable: true);
+        var package = await Create.ConsolePackageCopy();
         var barrier = new Barrier(2);
         using (LogEvents.Subscribe(e =>
                {

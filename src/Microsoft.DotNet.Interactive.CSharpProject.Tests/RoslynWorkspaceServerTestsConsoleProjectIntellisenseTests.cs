@@ -689,7 +689,7 @@ namespace FibonacciTest
         #endregion
 
         var (processed, position) = CodeManipulation.ProcessMarkup(generator);
-        var package = await PackageUtilities.Copy(await Default.ConsoleWorkspaceAsync());
+        var package = await PackageUtilities.Copy(await CSharpProjectKernel.CreateConsolePackageAsync());
         var workspace = new Workspace(workspaceType: package.Name, buffers: new[]
         {
             new Buffer("Program.cs", program),

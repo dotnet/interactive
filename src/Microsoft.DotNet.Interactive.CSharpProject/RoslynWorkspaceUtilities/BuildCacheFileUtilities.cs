@@ -1,10 +1,8 @@
-﻿using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
-using Microsoft.DotNet.Interactive.Utility;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 
@@ -14,7 +12,7 @@ internal static class BuildCacheFileUtilities
     internal static string DirectoryBuildTargetFilename = "Directory.Build.Targets";
 
     internal static string DirectoryBuildTargetsContent =
-"""
+        """
 <Project>
   <Target Name="CollectProjectData" AfterTargets="Build">
     <ItemGroup>
@@ -133,7 +131,7 @@ internal static class BuildCacheFileUtilities
         }
     }
 
-    private static void CleanObjFolder(DirectoryInfo directoryInfo)
+    internal static void CleanObjFolder(DirectoryInfo directoryInfo)
     {
         var targets = directoryInfo.GetDirectories("obj");
         foreach (var target in targets)

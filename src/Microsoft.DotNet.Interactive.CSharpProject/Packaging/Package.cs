@@ -29,14 +29,8 @@ using Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
-public abstract class Package :
-    PackageBase,
-    ICreateWorkspaceForLanguageServices,
-    ICreateWorkspaceForRun
+public class Package 
 {
-    internal const string DesignTimeBuildBinlogFileName = "package_designTimeBuild.binlog";
-
-
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> _packageBuildSemaphores = new();
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> _packagePublishSemaphores = new();
 
@@ -63,6 +57,9 @@ public abstract class Package :
         Log.Info("Packages path is {DefaultWorkspacesDirectory}", DefaultPackagesDirectory);
     }
 
+    private readonly AsyncLazy<bool> _lazyCreation;
+    private bool? _canSupportWasm;
+
     private int buildCount = 0;
     private int publishCount = 0;
 
@@ -88,12 +85,17 @@ public abstract class Package :
     private readonly object _fullBuildCompletionSourceLock = new();
     private readonly object _designTimeBuildCompletionSourceLock = new();
 
-    protected Package(
+    public Package(
         string name = null,
         IPackageInitializer initializer = null,
         DirectoryInfo directory = null,
-        IScheduler buildThrottleScheduler = null) : base(name, initializer, directory)
+        IScheduler buildThrottleScheduler = null) 
     {
+        Name = name ?? directory?.Name ?? throw new ArgumentException($"You must specify {nameof(name)}, {nameof(directory)}, or both.");
+        Directory = directory ?? new DirectoryInfo(Path.Combine(DefaultPackagesDirectory.FullName, Name));
+
+        _lazyCreation = new AsyncLazy<bool>(() => Create(Initializer));
+        LastBuildErrorLogFile = new FileInfo(Path.Combine(Directory.FullName, ".net-interactive-builderror"));
         Initializer = initializer ?? new PackageInitializer("console", Name);
 
         _log = new Logger($"{nameof(Package)}:{Name}");
@@ -113,6 +115,33 @@ public abstract class Package :
         _publishSemaphore = _packagePublishSemaphores.GetOrAdd(Name, _ => new SemaphoreSlim(1, 1));
         RoslynWorkspace = null;
     }
+
+    public bool CanSupportWasm
+    {
+        get
+        {
+            // The directory structure for the blazor packages is as follows
+            // project |--> packTarget
+            //         |--> runner-abc 
+            // The packTarget is the project that contains this package
+            //Hence the parent directory must be looked for the blazor runner
+            if (_canSupportWasm is null)
+            {
+                _canSupportWasm = Directory?.Parent?.GetDirectories($"runner-{Name}")?.Length == 1;
+            }
+
+            return _canSupportWasm.Value;
+        }
+    }
+    public IPackageInitializer Initializer { get; protected set; }
+
+    public string Name { get; }
+
+    protected FileInfo LastBuildErrorLogFile { get; }
+    
+    public DirectoryInfo Directory { get; set; }
+
+    protected Task<bool> EnsureCreatedAsync() => _lazyCreation.ValueAsync();
 
     private void TryLoadDesignTimeBuildFromCacheFile()
     {
@@ -167,7 +196,7 @@ public abstract class Package :
     {
         get
         {
-            if (_isWebProject == null && this.GetProjectFile() is FileInfo csproj)
+            if (_isWebProject == null && this.GetProjectFile() is { } csproj)
             {
                 var csprojXml = File.ReadAllText(csproj.FullName);
 
@@ -374,9 +403,11 @@ public abstract class Package :
 
     protected CodeAnalysis.Workspace RoslynWorkspace { get; set; }
 
-    public override async Task EnsureReadyAsync()
+    public async Task EnsureReadyAsync()
     {
-        await base.EnsureReadyAsync();
+        await EnsureCreatedAsync();
+
+        await EnsureBuiltAsync();
 
         if (RequiresPublish)
         {
@@ -384,41 +415,40 @@ public abstract class Package :
         }
     }
 
-    protected override async Task EnsureBuiltAsync([CallerMemberName] string caller = null)
+    protected async Task EnsureBuiltAsync([CallerMemberName] string caller = null)
     {
-        using (var operation = _log.OnEnterAndConfirmOnExit())
+        using var operation = _log.OnEnterAndConfirmOnExit();
+
+        await EnsureCreatedAsync();
+
+        if (ShouldDoFullBuild())
         {
-            await EnsureCreatedAsync();
-
-            if (ShouldDoFullBuild())
-            {
-                await FullBuildAsync();
-            }
-            else
-            {
-                operation.Info("Workspace already built");
-            }
-
-            operation.Succeed();
+            await FullBuildAsync();
         }
+        else
+        {
+            operation.Info("Workspace already built");
+        }
+
+        operation.Succeed();
     }
 
     protected async Task EnsureDesignTimeBuilt([CallerMemberName] string caller = null)
     {
-        await EnsureCreatedAsync();
-        using (var operation = _log.OnEnterAndConfirmOnExit())
-        {
-            if (ShouldDoDesignTimeBuild())
-            {
-                await DesignTimeBuild();
-            }
-            else
-            {
-                operation.Info("Workspace already built");
-            }
+        using var operation = _log.OnEnterAndConfirmOnExit();
 
-            operation.Succeed();
+        await EnsureCreatedAsync();
+
+        if (ShouldDoDesignTimeBuild())
+        {
+            await DesignTimeBuild();
         }
+        else
+        {
+            operation.Info("Workspace already built");
+        }
+
+        operation.Succeed();
     }
 
     public virtual async Task EnsurePublishedAsync()
@@ -437,50 +467,87 @@ public abstract class Package :
 
     public bool RequiresPublish => IsWebProject;
 
-    public override async Task FullBuildAsync()
+    public async Task FullBuildAsync()
     {
-        using (var operation = Log.OnEnterAndConfirmOnExit())
+        using var operation = Log.OnEnterAndConfirmOnExit();
+
+        try
         {
-            try
+            operation.Info("Building package {name}", Name);
+
+            // When a build finishes, buildCount is reset to 0. If, when we increment
+            // the value, we get a value > 1, someone else has already started another
+            // build
+            var buildInProgress = Interlocked.Increment(ref buildCount) > 1;
+
+            await _buildSemaphore.WaitAsync();
+
+            using (Disposable.Create(() => _buildSemaphore.Release()))
             {
-                operation.Info("Building package {name}", Name);
-
-                // When a build finishes, buildCount is reset to 0. If, when we increment
-                // the value, we get a value > 1, someone else has already started another
-                // build
-                var buildInProgress = Interlocked.Increment(ref buildCount) > 1;
-
-                await _buildSemaphore.WaitAsync();
-
-                using (Disposable.Create(() => _buildSemaphore.Release()))
+                if (buildInProgress)
                 {
-                    if (buildInProgress)
-                    {
-                        operation.Info("Skipping build for package {name}", Name);
-                        return;
-                    }
-
-                    using (await FileLock.TryCreateAsync(Directory))
-                    {
-                        await DotnetBuildAsync();
-                    }
+                    operation.Info("Skipping build for package {name}", Name);
+                    return;
                 }
 
-                operation.Info("Workspace built");
-
-                operation.Succeed();
-            }
-            catch (Exception exception)
-            {
-                operation.Error("Exception building workspace", exception);
+                using (await FileLock.TryCreateAsync(Directory))
+                {
+                    await DotnetBuildAsync();
+                }
             }
 
-            var cacheFile = BuildCacheFileUtilities.FindCacheFile(Directory);
-            await cacheFile.WaitForFileAvailable();
-            await LoadDesignTimeBuildDataFromBuildCacheFile(this, cacheFile);
+            operation.Info("Workspace built");
 
-            Interlocked.Exchange(ref buildCount, 0);
+            operation.Succeed();
         }
+        catch (Exception exception)
+        {
+            operation.Error("Exception building workspace", exception);
+        }
+
+        var cacheFile = BuildCacheFileUtilities.FindCacheFile(Directory);
+        await cacheFile.WaitForFileAvailable();
+        await LoadDesignTimeBuildDataFromBuildCacheFile(this, cacheFile);
+
+        Interlocked.Exchange(ref buildCount, 0);
+    }
+
+    protected async Task DotnetBuildAsync()
+    {
+        BuildCacheFileUtilities.CleanObjFolder(Directory);
+
+        var projectFile = this.GetProjectFile();
+
+        string tempDirectoryBuildTargetsFile =
+            Path.Combine(Path.GetDirectoryName(projectFile.FullName), BuildCacheFileUtilities.DirectoryBuildTargetFilename);
+
+        await File.WriteAllTextAsync(tempDirectoryBuildTargetsFile, BuildCacheFileUtilities.DirectoryBuildTargetsContent);
+
+        var args = "";
+        if (projectFile.Exists)
+        {
+            args = $"""
+                "{projectFile.FullName}" {args}
+                """;
+        }
+
+        var result = await new Dotnet(Directory).Build(args: args);
+
+        if (result.ExitCode != 0)
+        {
+            await File.WriteAllTextAsync(
+                LastBuildErrorLogFile.FullName,
+                string.Join(Environment.NewLine, result.Error));
+        }
+        else if (LastBuildErrorLogFile.Exists)
+        {
+            LastBuildErrorLogFile.Delete();
+        }
+
+        // Clean up the temp project file
+        File.Delete(tempDirectoryBuildTargetsFile);
+
+        result.ThrowOnFailure();
     }
 
     protected async Task Publish()
@@ -565,8 +632,6 @@ public abstract class Package :
         {
             await BuildCacheFileUtilities.BuildAndCreateCacheFileAsync(csProj.FullName);
             result = ResultsFromCacheFileUsingProjectFilePath(csProj.FullName);
-            var languageVersion = csProj.SuggestedLanguageVersion();
-            // TODO: analyzer.SetGlobalProperty("langVersion", languageVersion);
         }
 
         DesignTimeBuildResult = result;
@@ -591,4 +656,29 @@ public abstract class Package :
 
     public virtual SyntaxTree GetInstrumentationEmitterSyntaxTree() =>
         CreateInstrumentationEmitterSyntaxTree();
+
+    public async Task<bool> Create(IPackageInitializer initializer)
+    {
+        using var operation = Log.OnEnterAndConfirmOnExit();
+
+        if (!Directory.Exists)
+        {
+            operation.Info("Creating directory {directory}", Directory);
+            Directory.Create();
+            Directory.Refresh();
+        }
+
+        using (await FileLock.TryCreateAsync(Directory))
+        {
+            if (!Directory.GetFiles("*", SearchOption.AllDirectories).Where(f => !FileLock.IsLockFile(f)).Any())
+            {
+                operation.Info("Initializing package using {_initializer} in {directory}", initializer,
+                               Directory);
+                await initializer.InitializeAsync(Directory);
+            }
+        }
+
+        operation.Succeed();
+        return true;
+    }
 }

@@ -16,11 +16,10 @@ public static class PackageUtilities
     public static async Task<Package> Copy(
         Package fromPackage,
         string folderNameStartsWith = null,
-        bool isRebuildable = false,
         IScheduler buildThrottleScheduler = null,
         DirectoryInfo parentDirectory = null)
     {
-        if (fromPackage == null)
+        if (fromPackage is null)
         {
             throw new ArgumentNullException(nameof(fromPackage));
         }
@@ -32,7 +31,7 @@ public static class PackageUtilities
 
         var destination =
             CreateDirectory(folderNameStartsWith,
-                parentDirectory);
+                            parentDirectory);
 
         fromPackage.Directory.CopyTo(destination, info =>
         {
@@ -45,15 +44,7 @@ public static class PackageUtilities
             }
         });
 
-        Package copy;
-        if (isRebuildable)
-        {
-            copy = new RebuildablePackage(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
-        }
-        else
-        {
-            copy = new NonrebuildablePackage(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
-        }
+        var copy = new Package(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
 
         return copy;
     }
@@ -67,7 +58,7 @@ public static class PackageUtilities
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(folderNameStartsWith));
         }
 
-        parentDirectory = parentDirectory ?? Package.DefaultPackagesDirectory;
+        parentDirectory ??= Package.DefaultPackagesDirectory;
 
         DirectoryInfo created;
 

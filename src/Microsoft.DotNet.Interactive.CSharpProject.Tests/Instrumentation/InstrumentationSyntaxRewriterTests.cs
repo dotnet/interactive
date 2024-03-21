@@ -168,7 +168,7 @@ public class InstrumentationSyntaxRewriterTests
     [Fact(Skip = "Needs moved onto Package2")]
     public async void Syntax_Tree_Has_Same_Language_As_Package()
     {
-        var package = await Create.ConsoleWorkspaceCopy();
+        var package = await Create.ConsolePackageCopy();
         var workspace = WorkspaceFactory.CreateWorkspaceFromDirectory(package.Directory, package.Name, includeInstrumentation: true);
         var roslynWorkspaceServer = new RoslynWorkspaceServer(() => Task.FromResult(package));
         Func<Task> run = ()=> roslynWorkspaceServer.RunAsync(new WorkspaceRequest(workspace));

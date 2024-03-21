@@ -19,7 +19,7 @@ internal static class FileInfoExtensions
 
         if (!project.Exists)
         {
-            throw new FileNotFoundException();
+            throw new FileNotFoundException("Project file not found", project.FullName);
         }
 
         var dom = XElement.Parse(File.ReadAllText(project.FullName));
@@ -27,50 +27,9 @@ internal static class FileInfoExtensions
         return targetFramework?.Value ?? string.Empty;
     }
 
-    public static string GetLanguageVersion(this FileInfo project)
-    {
-        if (project == null)
-        {
-            throw new ArgumentNullException(nameof(project));
-        }
-
-        if (!project.Exists)
-        {
-            throw new FileNotFoundException();
-        }
-
-        var dom = XElement.Parse(File.ReadAllText(project.FullName));
-        var languageVersion = dom.XPathSelectElement("//LangVersion");
-        string version;
-        if (languageVersion == null || string.IsNullOrWhiteSpace(languageVersion?.Value))
-        {
-            version = project.SuggestedLanguageVersion();
-        }
-        else
-        {
-            version = languageVersion.Value;
-        }
-        return version;
-    }
-
-    public static string SuggestedLanguageVersion(this FileInfo project)
-    {
-        if (project == null)
-        {
-            throw new ArgumentNullException(nameof(project));
-        }
-
-        if (!project.Exists)
-        {
-            throw new FileNotFoundException();
-        }
-
-        return CSharpLanguageSelector.GetCSharpLanguageVersion(project.GetTargetFramework());
-    }
-
     public static void SetLanguageVersion(this FileInfo project, string version)
     {
-        if (project == null)
+        if (project is null)
         {
             throw new ArgumentNullException(nameof(project));
         }
@@ -94,26 +53,5 @@ internal static class FileInfoExtensions
         }
 
         File.WriteAllText(project.FullName, dom.ToString());
-    }
-
-    public static void TrySetLanguageVersion(this FileInfo project, string version)
-    {
-        if (project == null)
-        {
-            throw new ArgumentNullException(nameof(project));
-        }
-
-        if (!project.Exists)
-        {
-            throw new FileNotFoundException();
-        }
-
-        var supported = CSharpLanguageSelector.GetCSharpLanguageVersion(project.GetTargetFramework());
-
-        var canSet = StringComparer.OrdinalIgnoreCase.Equals(supported, version);
-        if (canSet)
-        {
-            project.SetLanguageVersion(version);
-        }
     }
 }

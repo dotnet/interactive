@@ -7,5 +7,5 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
 public interface IPackageFinder
 {
-    Task<T> Find<T>(PackageDescriptor descriptor) where T : class, IPackage;
+    Task<Package> FindAsync(PackageDescriptor descriptor);
 }

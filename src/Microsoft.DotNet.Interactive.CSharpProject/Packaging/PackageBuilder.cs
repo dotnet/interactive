@@ -11,12 +11,12 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
 public class PackageBuilder
 {
-    private PackageBase _packageBase;
-    private readonly List<Func<PackageBase, Task>> _afterCreateActions = new();
+    private Package _packageBase;
+    private readonly List<Func<Package, Task>> _afterCreateActions = new();
     private readonly List<(string packageName, string packageVersion, string restoreSources)> _addPackages = new();
     private string _languageVersion = "8.0";
 
-    public PackageBuilder(string packageName, IPackageInitializer packageInitializer = null)
+    public PackageBuilder(string packageName)
     {
         if (string.IsNullOrWhiteSpace(packageName))
         {
@@ -24,7 +24,6 @@ public class PackageBuilder
         }
 
         PackageName = packageName;
-        PackageInitializer = packageInitializer;
     }
 
     public string PackageName { get; }
@@ -32,11 +31,7 @@ public class PackageBuilder
     public IPackageInitializer PackageInitializer { get; private set; }
 
     public DirectoryInfo Directory { get; set; }
-
-    public bool CreateRebuildablePackage { get; set; }
-
-    public bool BlazorSupported { get; private set; }
-
+    
     public void CreateUsingDotnet(string template, string projectName = null, string language = null)
     {
         PackageInitializer = new PackageInitializer(
@@ -58,45 +53,23 @@ public class PackageBuilder
             };
 
             await action();
-
         });
     }
-
-    public void SetLanguageVersion(string version)
-    {
-        _languageVersion = version;
-
-        _afterCreateActions.Add(async (package) =>
-        {
-            async Task Action()
-            {
-                await Task.Yield();
-                var projects = package.Directory.GetFiles("*.csproj");
-
-                foreach (var project in projects)
-                {
-                    project.SetLanguageVersion(_languageVersion);
-                }
-            }
-
-            await Action();
-        });
-    }
-
+    
     public void TrySetLanguageVersion(string version)
     {
         _languageVersion = version;
 
-        _afterCreateActions.Add(async (package) =>
+        _afterCreateActions.Add(async package =>
         {
             async Task Action()
             {
                 await Task.Yield();
-                var projects = package.Directory.GetFiles("*.csproj");
+                var projectFiles = package.Directory.GetFiles("*.csproj");
 
-                foreach (var project in projects)
+                foreach (var projectFile in projectFiles)
                 {
-                    project.TrySetLanguageVersion(_languageVersion);
+                    projectFile.SetLanguageVersion(_languageVersion);
                 }
             }
 
@@ -104,54 +77,14 @@ public class PackageBuilder
         });
     }
 
-    public void DeleteFile(string relativePath)
+    public Package GetPackage()
     {
-        _afterCreateActions.Add(async (workspace) =>
+        if (_packageBase is null)
         {
-            await Task.Yield();
-            var filePath = Path.Combine(workspace.Directory.FullName, relativePath);
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-        });
-    }
-
-    public void WriteFile(string relativePath, string content)
-    {
-        _afterCreateActions.Add(async workspace =>
-        {
-            await Task.Yield();
-            var filePath = Path.Combine(workspace.Directory.FullName, relativePath);
-            File.WriteAllText(filePath,content);
-        });
-    }
-
-    public PackageBase GetPackage()
-    {
-        if (_packageBase == null)
-        {
-            if (PackageInitializer is BlazorPackageInitializer)
-            {
-                _packageBase = new BlazorPackage(
-                    PackageName,
-                    PackageInitializer,
-                    Directory);
-            }
-            else if (CreateRebuildablePackage)
-            {
-                _packageBase = new RebuildablePackage(
-                    PackageName,
-                    PackageInitializer,
-                    Directory);
-            }
-            else
-            {
-                _packageBase = new NonrebuildablePackage(
-                    PackageName,
-                    PackageInitializer,
-                    Directory);
-            }
+            _packageBase = new Package(
+                PackageName,
+                PackageInitializer,
+                Directory);
         }
 
         return _packageBase;

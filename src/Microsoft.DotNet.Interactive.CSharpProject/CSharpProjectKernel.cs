@@ -63,7 +63,7 @@ public class CSharpProjectKernel :
 
     async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)
     {
-        _workspaceServer = new RoslynWorkspaceServer(CreateConsoleWorkspacePackage);
+        _workspaceServer = new RoslynWorkspaceServer(CreateConsolePackageAsync);
 
         var extractor = new BufferFromRegionExtractor();
         _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());
@@ -80,7 +80,8 @@ public class CSharpProjectKernel :
     {
         ThrowIfProjectIsNotOpened();
 
-        var file = _workspace.Files.SingleOrDefault(f => string.Compare(f.Name, command.RelativeFilePath, StringComparison.OrdinalIgnoreCase) == 0);
+        var file = _workspace.Files.SingleOrDefault(f => string.Equals(f.Name, command.RelativeFilePath, StringComparison.OrdinalIgnoreCase));
+
         if (file is null)
         {
             // check for a region-less buffer instead
@@ -122,7 +123,7 @@ public class CSharpProjectKernel :
         ThrowIfProjectIsNotOpened();
         ThrowIfDocumentIsNotOpened();
 
-        var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
+        var updatedWorkspace = await AppendCodeToWorkspaceAsync(command.Code);
         _buffer = updatedWorkspace.Buffers.Single(b => b.Id == _buffer.Id);
         _workspace = updatedWorkspace;
     }
@@ -135,7 +136,7 @@ public class CSharpProjectKernel :
         var request = new WorkspaceRequest(_workspace, _buffer.Id);
         var result = await _workspaceServer.CompileAsync(request);
 
-        var diagnostics = GetDiagnostics(_buffer.Content, result);
+        var diagnostics = GetDiagnostics(_buffer.Content, result).ToArray();
         if (diagnostics.Any())
         {
             context.Publish(new DiagnosticsProduced(diagnostics, command));
@@ -156,7 +157,7 @@ public class CSharpProjectKernel :
         ThrowIfDocumentIsNotOpened();
 
         var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
-        var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
+        var updatedWorkspace = await AppendCodeToWorkspaceAsync(command.Code, position);
         var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
         var completionResult = await _workspaceServer.GetCompletionsAsync(request);
         var completionItems = completionResult.Items.Select(item => new CompletionItem(
@@ -175,11 +176,11 @@ public class CSharpProjectKernel :
         ThrowIfProjectIsNotOpened();
         ThrowIfDocumentIsNotOpened();
 
-        var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
+        var updatedWorkspace = await AppendCodeToWorkspaceAsync(command.Code);
         var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
         var result = await _workspaceServer.CompileAsync(request);
 
-        var diagnostics = GetDiagnostics(command.Code, result);
+        var diagnostics = GetDiagnostics(command.Code, result).ToArray();
         if (diagnostics.Any())
         {
             context.Publish(new DiagnosticsProduced(diagnostics, command));
@@ -192,7 +193,7 @@ public class CSharpProjectKernel :
         ThrowIfDocumentIsNotOpened();
 
         var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
-        var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
+        var updatedWorkspace = await AppendCodeToWorkspaceAsync(command.Code, position);
         var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
         var sigHelpResult = await _workspaceServer.GetSignatureHelpAsync(request);
         var sigHelpItems = sigHelpResult.Signatures.Select(s =>
@@ -253,7 +254,7 @@ public class CSharpProjectKernel :
         return new LinePosition(currentLine, currentCharacter);
     }
 
-    private async Task<Workspace> GetWorkspaceWithCode(string code, int position = 0)
+    private async Task<Workspace> AppendCodeToWorkspaceAsync(string code, int position = 0)
     {
         var updatedWorkspace = new Workspace(
             files: _workspace.Files,
@@ -302,14 +303,15 @@ public class CSharpProjectKernel :
         }
     }
 
-    private static async Task<Package> CreateConsoleWorkspacePackage()
+    public static async Task<Package> CreateConsolePackageAsync()
     {
+        // FIX: (CreateConsoleWorkspacePackage) move this to someplace where it can be used at build time to set up the Docker image
         var packageBuilder = new PackageBuilder("console");
         packageBuilder.CreateUsingDotnet("console");
         packageBuilder.TrySetLanguageVersion("11.0");
         packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
-        var package = packageBuilder.GetPackage() as Package;
-        await package!.CreateWorkspaceForRunAsync();
+        var package = (Package)packageBuilder.GetPackage();
+        await package.CreateWorkspaceForRunAsync();
         return package;
     }
 }

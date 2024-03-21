@@ -12,21 +12,15 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
 public static class Create
 {
-    public static async Task<Package> ConsoleWorkspaceCopy([CallerMemberName] string testName = null, bool isRebuildable = false, IScheduler buildThrottleScheduler = null) =>
+    public static async Task<Package> ConsolePackageCopy([CallerMemberName] string testName = null, IScheduler buildThrottleScheduler = null) =>
         await PackageUtilities.Copy(
-            await Default.ConsoleWorkspaceAsync(),
+            await CSharpProjectKernel.CreateConsolePackageAsync(),
             testName,
-            isRebuildable,
             buildThrottleScheduler);
 
-    public static Package EmptyWorkspace([CallerMemberName] string testName = null, IPackageInitializer initializer = null, bool isRebuildablePackage = false)
+    public static Package EmptyPackage([CallerMemberName] string testName = null, IPackageInitializer initializer = null)
     {
-        if (!isRebuildablePackage)
-        {
-            return new NonrebuildablePackage(directory: PackageUtilities.CreateDirectory(testName), initializer: initializer);
-        }
-
-        return new RebuildablePackage(directory: PackageUtilities.CreateDirectory(testName), initializer: initializer);
+        return new Package(directory: PackageUtilities.CreateDirectory(testName), initializer: initializer);
     }
 
     public static string SimpleWorkspaceRequestAsJson(

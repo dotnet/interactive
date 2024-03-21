@@ -9,11 +9,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
 public static class PackageFinder
 {
-    public static Task<T> FindAsync<T>(
+    public static Task<Package> FindAsync(
         this IPackageFinder finder,
-        string packageName)
-        where T : class, IPackage =>
-        finder.Find<T>(new PackageDescriptor(packageName));
+        string packageName) =>
+        finder.FindAsync(new PackageDescriptor(packageName));
 
     public static IPackageFinder Create(Func<Task<Package>> package)
     {
@@ -29,16 +28,9 @@ public static class PackageFinder
             _lazyPackage = new(package);
         }
 
-        public async Task<T> Find<T>(PackageDescriptor descriptor) where T : class, IPackage
+        public async Task<Package> FindAsync(PackageDescriptor descriptor)
         {
-            var package = await _lazyPackage.ValueAsync();
-
-            if (package is T p)
-            {
-                return p;
-            }
-
-            return default;
+            return await _lazyPackage.ValueAsync();
         }
     }
 }

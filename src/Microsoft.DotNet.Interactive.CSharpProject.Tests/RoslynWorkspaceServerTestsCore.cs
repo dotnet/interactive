@@ -12,9 +12,9 @@ public abstract class RoslynWorkspaceServerTestsCore : WorkspaceServerTestsCore
     {
     }
 
-    protected override ILanguageService GetLanguageService() => new RoslynWorkspaceServer(Default.PackageRegistry);
+    protected override ILanguageService GetLanguageService() => new RoslynWorkspaceServer(Default.PackageFinder);
 
-    protected override ICodeCompiler GetCodeCompiler() => new RoslynWorkspaceServer(Default.PackageRegistry);
+    protected override ICodeCompiler GetCodeCompiler() => new RoslynWorkspaceServer(Default.PackageFinder);
 
-    protected override ICodeRunner GetCodeRunner() => new RoslynWorkspaceServer(Default.PackageRegistry);
+    protected override ICodeRunner GetCodeRunner() => new RoslynWorkspaceServer(Default.PackageFinder);
 }

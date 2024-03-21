@@ -2,11 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
@@ -18,16 +16,10 @@ internal static class CompilationUtility
         return workspace?.CurrentSolution?.Projects?.Count() > 0;
     }
 
-    public static IEnumerable<FileInfo> FindBinLogs(this IHaveADirectory package) =>
-        package.Directory
-            .GetFiles("*.binlog")
-            .Where(f => f.FullName.EndsWith(PackageBase.FullBuildBinlogFileName) ||
-                        f.FullName.EndsWith(Package.DesignTimeBuildBinlogFileName));
-
     public static async Task WaitForFileAvailable(
         this FileInfo file)
     {
-        if (file == null)
+        if (file is null)
         {
             throw new ArgumentNullException(nameof(file));
         }
@@ -56,55 +48,23 @@ internal static class CompilationUtility
         }
     }
 
-    public static async Task DoWhenFileAvailable(
-        this FileInfo file, Action action)
+    public static FileInfo GetProjectFile(this Package package) =>
+        package.Directory.GetFiles("*.csproj").FirstOrDefault();
+
+    public static void CleanObjFolder(this Package package)
     {
-        if (file == null)
-        {
-            throw new ArgumentNullException(nameof(file));
-        }
-
-        if (action == null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
-
-        const int waitAmount = 100;
-        var attemptCount = 1;
-        while (file.Exists && attemptCount <= 10)
-        {
-            try
-            {
-                action();
-                break;
-            }
-            catch(IOException){
-                await Task.Delay(waitAmount * attemptCount);
-                attemptCount++;
-            }
-        }
-    }
-
-    public static FileInfo GetProjectFile(this IHaveADirectory packageBase) =>
-        packageBase.Directory.GetFiles("*.csproj").FirstOrDefault();
-
-    public static void CleanObjFolder(this IHaveADirectory packageBase)
-    {
-        var targets = packageBase.Directory.GetDirectories("obj");
+        var targets = package.Directory.GetDirectories("obj");
         foreach (var target in targets)
         {
             target.Delete(true);
         }
     }
 
-    public static FileInfo FindLatestBinLog(this IHaveADirectory package) =>
-        package.FindBinLogs().OrderByDescending(f => f.LastWriteTimeUtc).FirstOrDefault();
-
     internal static FileInfo GetEntryPointAssemblyPath(
-        this IHaveADirectory hasDirectory, 
+        this Package package, 
         bool usePublishDir)
     {
-        var directory = hasDirectory.Directory;
+        var directory = package.Directory;
 
         var depsFile = directory.GetFiles("*.deps.json", SearchOption.AllDirectories)
             .FirstOrDefault();
@@ -121,7 +81,7 @@ internal static class CompilationUtility
                 directory.FullName,
                 "bin",
                 "Debug",
-                GetTargetFramework(hasDirectory));
+                GetTargetFramework(package));
 
         if (usePublishDir)
         {
@@ -131,11 +91,11 @@ internal static class CompilationUtility
         return new FileInfo(Path.Combine(path, entryPointAssemblyName));
     }
 
-    internal static string GetTargetFramework(this IHaveADirectory ihad)
+    internal static string GetTargetFramework(this Package package)
     {
-        var runtimeConfig = ihad.Directory
-            .GetFiles("*.runtimeconfig.json", SearchOption.AllDirectories)
-            .FirstOrDefault();
+        var runtimeConfig = package.Directory
+                                   .GetFiles("*.runtimeconfig.json", SearchOption.AllDirectories)
+                                   .FirstOrDefault();
 
         return runtimeConfig != null ? RuntimeConfig.GetTargetFramework(runtimeConfig) : "netstandard2.0";
     }
