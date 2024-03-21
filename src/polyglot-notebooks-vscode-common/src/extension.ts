@@ -68,6 +68,12 @@ export const DotNetPathManager = new CachedDotNetPathManager();
 const disposables: (() => void)[] = [];
 
 export async function activate(context: vscode.ExtensionContext) {
+    // Wait for ipynb extension to be ready, temporary.
+    const ipynbExtension = vscode.extensions.getExtension('vscode.ipynb');
+    if (ipynbExtension && !ipynbExtension.isActive) {
+        await ipynbExtension.activate();
+    }
+    metadataUtilities.setUseLegacyMetadata(ipynbExtension && !ipynbExtension.exports.dropCustomMetadata ? true : false);
 
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
     const polyglotConfig = vscode.workspace.getConfiguration(constants.PolyglotConfigurationSectionName);

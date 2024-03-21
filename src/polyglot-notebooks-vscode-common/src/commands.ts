@@ -40,6 +40,8 @@ export async function registerAcquisitionCommands(context: vscode.ExtensionConte
             DotNetPathManager.setDotNetPath(installArgs.dotnetPath);
 
             if (cachedInstallArgs) {
+
+                // todo: ask Brett
                 if (installArgs.dotnetPath !== cachedInstallArgs.dotnetPath ||
                     installArgs.toolVersion !== cachedInstallArgs.toolVersion) {
                     // if specified install args are different than what we previously computed, invalidate the acquisition

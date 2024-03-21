@@ -296,18 +296,21 @@ function stopTrackingNotebook(notebook: vscode.NotebookDocument) {
     openedNotebooks.delete(notebook.uri.fsPath);
 }
 
-
-
 async function ensureCellKernelMetadata(cell: vscode.NotebookCell, options: { preferPreviousCellMetadata: boolean }): Promise<void> {
-    // todo: fix custom metadata access
 
     // markdown cells should not have metadata, so if we find it, remove it.
     if (cell.document.languageId === 'markdown') {
         const existingCellMetadata = metadataUtilities.getCellMetadata(cell);
         if (existingCellMetadata?.polyglot_notebook || existingCellMetadata?.dotnet_interactive) {
             const updatedCellMetadata = { ...cell.metadata };
-            delete updatedCellMetadata.custom.metadata.dotnet_interactive;
-            delete updatedCellMetadata.custom.metadata.polyglot_notebook;
+            if (metadataUtilities.useLegacyMetadata()) {
+                delete updatedCellMetadata.custom.metadata.dotnet_interactive;
+                delete updatedCellMetadata.custom.metadata.polyglot_notebook;
+            }
+            else {
+                delete updatedCellMetadata.dotnet_interactive;
+                delete updatedCellMetadata.polyglot_notebook;
+            }
             await vscodeNotebookManagement.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, updatedCellMetadata);
         }
         return;
@@ -413,13 +416,19 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
     const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
     const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, document.metadata, isIpynb);
 
-    // todo: fix custom metadata access
-
     if (isIpynb) {
-        if (!rawNotebookDocumentMetadata.custom.metadata.language_info) {
-            rawNotebookDocumentMetadata.custom.metadata.language_info = { name: "polyglot-notebook" };
+        if (metadataUtilities.useLegacyMetadata()) {
+            if (!rawNotebookDocumentMetadata.custom.metadata.language_info) {
+                rawNotebookDocumentMetadata.custom.metadata.language_info = { name: "polyglot-notebook" };
+            } else {
+                rawNotebookDocumentMetadata.custom.metadata.language_info.name = "polyglot-notebook";
+            }
         } else {
-            rawNotebookDocumentMetadata.custom.metadata.language_info.name = "polyglot-notebook";
+            if (!rawNotebookDocumentMetadata.language_info) {
+                rawNotebookDocumentMetadata.language_info = { name: "polyglot-notebook" };
+            } else {
+                rawNotebookDocumentMetadata.language_info.name = "polyglot-notebook";
+            }
         }
     }
     await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, rawNotebookDocumentMetadata);

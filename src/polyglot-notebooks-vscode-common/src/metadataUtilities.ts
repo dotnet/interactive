@@ -63,16 +63,11 @@ export function getNotebookCellMetadataFromInteractiveDocumentElement(interactiv
     return cellMetadata;
 }
 
-export function getCellMetadata(cell: vscodeLike.NotebookCell) {
-    const legacyCellMetadata = cell.metadata?.custom?.metadata;
 
-    return legacyCellMetadata;
-}
 
 export function getNotebookCellMetadataFromNotebookCellElement(notebookCell: vscodeLike.NotebookCell): NotebookCellMetadata {
     const cellMetadata = createDefaultNotebookCellMetadata();
 
-    // todo: fix custom metadata access
     const metadata = getCellMetadata(notebookCell);
 
     if (typeof metadata === 'object') {
@@ -118,15 +113,37 @@ export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDo
     return notebookMetadata;
 }
 
+let _useLegacyMetadata = true;
+export function useLegacyMetadata() {
+    return _useLegacyMetadata;
+}
+
+export function setUseLegacyMetadata(value: boolean) {
+    _useLegacyMetadata = value;
+}
+
+export function getCellMetadata(cell: vscodeLike.NotebookCell) {
+    return (useLegacyMetadata() ? cell.metadata?.custom?.metadata : cell.metadata?.metadata) || {};
+}
+
+export function getDocumentMetadata(document: vscodeLike.NotebookDocument) {
+    const ipynbMetadata = (useLegacyMetadata() ? document.metadata?.custom?.metadata?.polyglot_notebook : document.metadata?.metadata?.polyglot_notebook) ?? {};
+    const metadata = document.metadata.polyglot_notebook ?? {};
+
+    const merged = { ...ipynbMetadata, ...metadata };
+
+    return merged;
+}
+
 export function getNotebookDocumentMetadataFromNotebookDocument(document: vscodeLike.NotebookDocument): NotebookDocumentMetadata {
     const notebookMetadata = createDefaultNotebookDocumentMetadata();
     let setDefaultKernel = false;
     let setItems = false;
 
-    // todo: fix custom metadata access
 
     // .dib files will have their metadata at the root; .ipynb files will have their metadata a little deeper
-    const polyglot_notebook = document.metadata.polyglot_notebook ?? document.metadata?.custom?.metadata?.polyglot_notebook;
+    const polyglot_notebook = getDocumentMetadata(document);
+
     if (typeof polyglot_notebook === 'object') {
         const kernelInfo = polyglot_notebook.kernelInfo;
         if (typeof kernelInfo === 'object') {
@@ -196,26 +213,24 @@ export function getKernelspecMetadataFromIpynbNotebookDocument(notebook: vscodeL
         name: ''
     };
 
-    const custom = notebook.metadata.custom;
-    if (typeof custom === 'object') {
-        const metadata = custom.metadata;
-        if (typeof metadata === 'object') {
-            const kernelspec = metadata.kernelspec;
-            if (typeof kernelspec === 'object') {
-                const display_name = kernelspec.display_name;
-                if (typeof display_name === 'string') {
-                    kernelspecMetadata.display_name = display_name;
-                }
+    const metadata = useLegacyMetadata() ? notebook.metadata.custom?.medata : notebook.metadata.metadata;
 
-                const language = kernelspec.language;
-                if (typeof language === 'string') {
-                    kernelspecMetadata.language = language;
-                }
+    if (typeof metadata === 'object') {
+        const kernelspec = metadata.kernelspec;
+        if (typeof kernelspec === 'object') {
+            const display_name = kernelspec.display_name;
+            if (typeof display_name === 'string') {
+                kernelspecMetadata.display_name = display_name;
+            }
 
-                const name = kernelspec.name;
-                if (typeof name === 'string') {
-                    kernelspecMetadata.name = name;
-                }
+            const language = kernelspec.language;
+            if (typeof language === 'string') {
+                kernelspecMetadata.language = language;
+            }
+
+            const name = kernelspec.name;
+            if (typeof name === 'string') {
+                kernelspecMetadata.name = name;
             }
         }
     }
@@ -275,14 +290,18 @@ export function getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocume
 export function createNewIpynbMetadataWithNotebookDocumentMetadata(existingMetadata: { [key: string]: any }, notebookDocumentMetadata: NotebookDocumentMetadata): { [key: string]: any } {
     const resultMetadata: { [key: string]: any } = { ...existingMetadata };
 
-    // todo: fix custom metadata access
-
     // kernelspec
     const kernelspec = getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata);
-    resultMetadata.custom = resultMetadata.custom ?? {};
-    resultMetadata.custom.metadata = resultMetadata.custom.metadata ?? {};
-    resultMetadata.custom.metadata.kernelspec = kernelspec;
-    resultMetadata.custom.metadata.polyglot_notebook = notebookDocumentMetadata;
+    if (useLegacyMetadata()) {
+        resultMetadata.custom = resultMetadata.custom ?? {};
+        resultMetadata.custom.metadata = resultMetadata.custom.metadata ?? {};
+        resultMetadata.custom.metadata.kernelspec = kernelspec;
+        resultMetadata.custom.metadata.polyglot_notebook = notebookDocumentMetadata;
+    } else {
+        resultMetadata.metadata = resultMetadata.metadata ?? {};
+        resultMetadata.metadata.kernelspec = kernelspec;
+        resultMetadata.metadata.polyglot_notebook = notebookDocumentMetadata;
+    }
     return resultMetadata;
 }
 
@@ -291,8 +310,21 @@ export function getRawInteractiveDocumentElementMetadataFromNotebookCellMetadata
 }
 
 export function getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata: NotebookCellMetadata): { [key: string]: any } {
-    return {
-        custom: {
+    if (useLegacyMetadata()) {
+        return {
+            custom: {
+                metadata: {
+                    // this is the canonical metadata
+                    polyglot_notebook: notebookCellMetadata,
+                    // this is to maintain backwards compatibility for a while
+                    dotnet_interactive: {
+                        language: notebookCellMetadata.kernelName
+                    }
+                }
+            }
+        };
+    } else {
+        return {
             metadata: {
                 // this is the canonical metadata
                 polyglot_notebook: notebookCellMetadata,
@@ -301,8 +333,8 @@ export function getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellM
                     language: notebookCellMetadata.kernelName
                 }
             }
-        }
-    };
+        };
+    }
 }
 
 export function getRawInteractiveDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata): { [key: string]: any } {
@@ -315,14 +347,19 @@ export function getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata
     if (createForIpynb) {
         const kernelspec = getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata);
 
-        // todo: fix custom metadata access
-
-        rawMetadata.custom = {
-            metadata: {
+        if (useLegacyMetadata()) {
+            rawMetadata.custom = {
+                metadata: {
+                    kernelspec,
+                    polyglot_notebook: notebookDocumentMetadata
+                },
+            };
+        } else {
+            rawMetadata.metadata = {
                 kernelspec,
                 polyglot_notebook: notebookDocumentMetadata
-            },
-        };
+            };
+        }
     } else {
         rawMetadata.polyglot_notebook = notebookDocumentMetadata;
     }
