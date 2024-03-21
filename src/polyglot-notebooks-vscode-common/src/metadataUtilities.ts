@@ -63,11 +63,17 @@ export function getNotebookCellMetadataFromInteractiveDocumentElement(interactiv
     return cellMetadata;
 }
 
+export function getCellMetadata(cell: vscodeLike.NotebookCell) {
+    const legacyCellMetadata = cell.metadata?.custom?.metadata;
+
+    return legacyCellMetadata;
+}
+
 export function getNotebookCellMetadataFromNotebookCellElement(notebookCell: vscodeLike.NotebookCell): NotebookCellMetadata {
     const cellMetadata = createDefaultNotebookCellMetadata();
 
     // todo: fix custom metadata access
-    const metadata = notebookCell.metadata?.custom?.metadata;
+    const metadata = getCellMetadata(notebookCell);
 
     if (typeof metadata === 'object') {
         // first try to get the old `dotnet_interactive` value...
@@ -308,7 +314,7 @@ export function getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata
 
     if (createForIpynb) {
         const kernelspec = getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata);
-        
+
         // todo: fix custom metadata access
 
         rawMetadata.custom = {

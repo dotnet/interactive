@@ -296,12 +296,14 @@ function stopTrackingNotebook(notebook: vscode.NotebookDocument) {
     openedNotebooks.delete(notebook.uri.fsPath);
 }
 
+
+
 async function ensureCellKernelMetadata(cell: vscode.NotebookCell, options: { preferPreviousCellMetadata: boolean }): Promise<void> {
     // todo: fix custom metadata access
 
     // markdown cells should not have metadata, so if we find it, remove it.
     if (cell.document.languageId === 'markdown') {
-        const existingCellMetadata = cell.metadata?.custom?.metadata;
+        const existingCellMetadata = metadataUtilities.getCellMetadata(cell);
         if (existingCellMetadata?.polyglot_notebook || existingCellMetadata?.dotnet_interactive) {
             const updatedCellMetadata = { ...cell.metadata };
             delete updatedCellMetadata.custom.metadata.dotnet_interactive;
