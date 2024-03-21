@@ -21,10 +21,10 @@ public class SubmitCode : KernelCommand
         DirectiveNode directiveNode = null)
         : base(syntaxNode.TargetKernelName)
     {
-        Code = languageNode.Text;
-        LanguageNode = languageNode;
-        KernelNameDirectiveNode = kernelNameDirectiveNode;
-        SchedulingScope = SchedulingScope.Parse(languageNode.CommandScope);
+        Code = syntaxNode.Text;
+        SyntaxNode = syntaxNode;
+        DirectiveNode = directiveNode;
+        SchedulingScope = SchedulingScope.Parse(syntaxNode.CommandScope);
 
         if (syntaxNode is DirectiveNode { Kind: DirectiveNodeKind.Action } actionDirectiveNode)
         {
