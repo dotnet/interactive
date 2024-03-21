@@ -338,6 +338,12 @@ public class SubmissionParser
         {
             commands.Clear();
 
+            // FIX: (SplitSubmission) 
+            if (diagnostic is null)
+            {
+                
+            }
+
             commands.Add(
                 new AnonymousKernelCommand((_, context) =>
                 {

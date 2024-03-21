@@ -21,7 +21,6 @@ public class SubmitCode : KernelCommand
         DirectiveNode directiveNode = null)
         : base(syntaxNode.TargetKernelName)
     {
-        // FIX: (SubmitCode) can this constructor be replaced using ISyntaxAwareCommand?
         Code = syntaxNode.Text;
         SyntaxNode = syntaxNode;
         DirectiveNode = directiveNode;

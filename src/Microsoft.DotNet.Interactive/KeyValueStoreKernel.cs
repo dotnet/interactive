@@ -84,14 +84,14 @@ public class KeyValueStoreKernel :
         directive.Parameters.Add(new("--from-value"));
         directive.Parameters.Add(new("--mime-type"));
 
-        directive.TryGetKernelCommandAsync = DirectiveTryGetKernelCommandAsync;
+        directive.TryGetKernelCommandAsync = TryGetKernelCommandAsync;
 
         return directive;
 
-        async Task<KernelCommand> DirectiveTryGetKernelCommandAsync(
+        async Task<KernelCommand> TryGetKernelCommandAsync(
             DirectiveNode directiveNode,
             ExpressionBindingResult expressionBindingResult,
-            Kernel kernel)
+            Kernel keyValueStoreKernel)
         {
             var parameterValues = directiveNode
                                   .GetParameterValues(directive, expressionBindingResult.BoundValues)
@@ -112,26 +112,9 @@ public class KeyValueStoreKernel :
                 name = nameResultValue;
             }
 
-            string? cellContentValue = null;
-
-            if (directiveNode.NextNode() is { } nextNode)
-            {
-                cellContentValue = nextNode.FullText;
-            }
-
             if (parameterValues.TryGetValue("--from-url", out var fromUrlResult) && fromUrlResult.Value is string fromUrlValue)
             {
                 fromUrl = fromUrlValue;
-
-                if (cellContentValue is not null)
-                {
-                    AddDiagnostic(
-                        "--from-url",
-                        PolyglotSyntaxParser.ErrorCodes.FromUrlAndCellContentCannotBeUsedTogether,
-                        "The --from-url option cannot be used in combination with a content submission.");
-
-                    return null;
-                }
             }
 
             if (parameterValues.TryGetValue("--from-file", out var fromFileResult) && fromFileResult.Value is string fromFileValue)
@@ -144,16 +127,6 @@ public class KeyValueStoreKernel :
                         "--from-file",
                         PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromFileCannotBeUsedTogether,
                         "The --from-url and --from-file options cannot be used together.");
-
-                    return null;
-                }
-
-                if (cellContentValue is not null)
-                {
-                    AddDiagnostic(
-                        "--from-file",
-                        PolyglotSyntaxParser.ErrorCodes.FromFileAndCellContentCannotBeUsedTogether,
-                        "The --from-file option cannot be used in combination with a content submission.");
 
                     return null;
                 }
@@ -186,14 +159,50 @@ public class KeyValueStoreKernel :
                 inlineValue = fromValueValue;
             }
 
-            if (inlineValue is not null || cellContentValue is not null)
+            if (fromFile is not null || fromUrl is not null)
             {
-                var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, inlineValue ?? cellContentValue);
+                return new AnonymousKernelCommand(async (_, context) =>
+                {
+                    string valueToStore = null;
+
+                    if (fromFile is not null)
+                    {
+                        valueToStore = await GetValueFromFileAsync();
+                    }
+                    else if (fromUrl is not null)
+                    {
+                        valueToStore = await GetValueFromUrlAsync();
+                    }
+                   
+                    var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, valueToStore);
+
+                    var sendValue = new SendValue(name, null, formattedValue, targetKernelName: Name);
+
+                    await keyValueStoreKernel.SendAsync(sendValue);
+
+                    async Task<string> GetValueFromFileAsync()
+                    {
+                        return await IOExtensions.ReadAllTextAsync(fromFile);
+                    }
+
+                    async Task<string> GetValueFromUrlAsync()
+                    {
+                        var client = new HttpClient();
+                        var response = await client.GetAsync(fromUrl, context.CancellationToken);
+                        mimeType ??= response.Content.Headers?.ContentType?.MediaType;
+                        return await response.Content.ReadAsStringAsync();
+                    }
+                });
+            }
+
+            var valueToStore = inlineValue ?? GetCellContent();
+
+            if (valueToStore is not null)
+            {
+                var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, valueToStore);
 
                 return new SendValue(name, null, formattedValue, targetKernelName: Name);
             }
-
-            // FIX: (CreateKernelSpecifierDirective) --from-file and --from-url
 
             return null;
 
@@ -210,6 +219,18 @@ public class KeyValueStoreKernel :
 
                 directiveNode.AddDiagnostic(diagnostic);
             }
+
+            string GetCellContent()
+            {
+                if (directiveNode.NextNode() is LanguageNode nextNode)
+                {
+                    return nextNode.FullText;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
     }
 
@@ -219,13 +240,8 @@ public class KeyValueStoreKernel :
         SubmitCode command,
         KernelInvocationContext context)
     {
-        var parseResult = command.KernelChooserParseResult;
-
-        var value = command.SyntaxNode.Text.Trim();
-
-        var options = ValueDirectiveOptions.Create(parseResult, _chooseKernelDirective);
-
-        await StoreValueAsync(command, context, options, value);
+        // FIX: (HandleAsync) 
+      
     }
 
     internal override bool AcceptsUnknownDirectives => true;
