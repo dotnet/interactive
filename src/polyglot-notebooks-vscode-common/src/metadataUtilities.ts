@@ -29,7 +29,7 @@ export function isDotNetNotebook(notebook: vscodeLike.NotebookDocument): boolean
         return true;
     }
 
-    const kernelspecMetadata = getKernelspecMetadataFromIpynbNotebookDocument(notebook);
+    const kernelspecMetadata = getKernelspecMetadataFromIpynbNotebookDocument(notebook); //?
     if (kernelspecMetadata.name.startsWith('.net-')) {
         return true;
     }
@@ -115,7 +115,7 @@ export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDo
 
 let _useLegacyMetadata = true;
 export function useLegacyMetadata() {
-    return _useLegacyMetadata;
+    return _useLegacyMetadata;//?
 }
 
 export function setUseLegacyMetadata(value: boolean) {
@@ -213,7 +213,8 @@ export function getKernelspecMetadataFromIpynbNotebookDocument(notebook: vscodeL
         name: ''
     };
 
-    const metadata = useLegacyMetadata() ? notebook.metadata.custom?.medata : notebook.metadata.metadata;
+    const metadata = useLegacyMetadata() ? notebook.metadata.custom?.metadata : notebook.metadata.metadata; //?
+
 
     if (typeof metadata === 'object') {
         const kernelspec = metadata.kernelspec;
