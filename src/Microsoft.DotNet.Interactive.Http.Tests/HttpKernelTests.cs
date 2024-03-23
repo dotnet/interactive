@@ -313,7 +313,34 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
         request.RequestUri.Should().Be($"https://httpbin.org");
 
+    }
 
+    [Fact]
+    public async Task binding_in_variable_value_with_request_separator()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @host=https://microsoft.com
+
+            Post {{host}}
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.Should().NotContainErrors();
+        request.RequestUri.Should().Be($"https://microsoft.com");
     }
 
     [Fact]
@@ -1328,6 +1355,41 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         var offsetDate = DateTime.UtcNow.AddDays(-1.0).ToString("yyyy-MM-dd");
+        var bodyAsString = await request.Content.ReadAsStringAsync();
+        var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
+        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
+
+        readDateValue.Should().BeEquivalentTo(offsetDate);
+
+    }
+
+    [Fact]
+    public async Task can_bind_datetime_with_positive_offset_and_no_plus()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            POST https://api.example.com/comments
+          
+            {
+                "custom_date" : "{{$datetime 'yyyy-MM-dd' 1 d}}"
+            }
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var offsetDate = DateTime.UtcNow.AddDays(1.0).ToString("yyyy-MM-dd");
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));

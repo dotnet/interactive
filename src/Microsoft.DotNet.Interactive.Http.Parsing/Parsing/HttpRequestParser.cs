@@ -396,6 +396,18 @@ internal class HttpRequestParser
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
 
+                while (MoreTokens())
+                {
+                    if (CurrentToken?.Kind is not HttpTokenKind.NewLine)
+                    {
+                        ConsumeCurrentTokenInto(node);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
                 return ParseTrailingWhitespace(node);
             }
 
@@ -460,6 +472,11 @@ internal class HttpRequestParser
                     {
                         break;
                     }
+                }
+
+                if (!((CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression())))
+                {
+                    break;
                 }
 
                 if (IsAtStartOfEmbeddedExpression())
@@ -742,7 +759,7 @@ internal class HttpRequestParser
 
         private HttpCommentBodyNode? ParseCommentBody()
         {
-            if (!MoreTokens())
+            if (!MoreTokens() || CurrentToken is { Kind: HttpTokenKind.NewLine })
             {
                 return null;
             }
@@ -767,7 +784,7 @@ internal class HttpRequestParser
             {
                 var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
                 ConsumeCurrentTokenInto(node);
-                return ParseTrailingWhitespace(node);
+                return ParseTrailingWhitespace(node, stopBeforeNewLine: true);
             }
 
             if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
@@ -777,7 +794,7 @@ internal class HttpRequestParser
 
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
-                return ParseTrailingWhitespace(node);
+                return ParseTrailingWhitespace(node, stopBeforeNewLine: true);
             }
 
             return null;

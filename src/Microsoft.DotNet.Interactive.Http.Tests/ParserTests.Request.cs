@@ -136,6 +136,29 @@ public partial class HttpParserTests
         }
 
         [Fact]
+        public void single_request_with_comment_and_request_separator_parsed_correctly()
+        {
+            var result = Parse(
+                """
+                #
+                @host=https://httpbin.org
+
+                Post {{host}}
+                ###
+                """);
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which;
+
+            var bindingResult = requestNode.TryGetHttpRequestMessage(node =>
+            {
+                return node.CreateBindingFailure(CreateDiagnosticInfo(""));
+            });
+
+            bindingResult.IsSuccessful.Should().BeTrue();
+            bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/");
+        }
+
+        [Fact]
         public void request_node_containing_method_and_url_and_no_variable_expressions_returns_HttpRequestMessage_with_specified_method()
         {
             var result = Parse(
