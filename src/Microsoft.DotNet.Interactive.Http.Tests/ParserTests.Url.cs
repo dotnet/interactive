@@ -173,7 +173,20 @@ public partial class HttpParserTests
 
             result.GetDiagnostics().Should().BeEmpty();
 
-            result.SyntaxTree.RootNode.ChildNodes.Count().Should().Be(2);
+            var children = result.SyntaxTree.RootNode.ChildNodes;
+
+            var requestNode = children.OfType<HttpRequestNode>();
+            var requestSeparator = children.OfType<HttpRequestSeparatorNode>();
+
+            requestNode.Should().HaveCount(1);
+            requestSeparator.Should().HaveCount(1);
+
+            children.Count().Should().Be(2);
+
+            requestNode.Single().Span.Should().BeLessThan(requestSeparator.Single().Span);
+
+
+
         }
     }
 }
