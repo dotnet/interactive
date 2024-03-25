@@ -4,7 +4,7 @@
 using System;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
+namespace Microsoft.DotNet.Interactive.CSharpProject;
 
 public class Viewport
 {
@@ -24,5 +24,4 @@ public class Viewport
     public TextSpan Region { get; }
 
     public SourceFile Destination { get; }
-
 }

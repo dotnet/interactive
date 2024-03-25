@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 

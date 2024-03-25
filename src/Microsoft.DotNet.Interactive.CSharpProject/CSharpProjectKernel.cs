@@ -28,6 +28,7 @@ public class CSharpProjectKernel :
     private RoslynWorkspaceServer _workspaceServer;
     private Workspace _workspace;
     private Buffer _buffer;
+    private readonly bool _enableBuild;
 
     public static void RegisterEventsAndCommands()
     {
@@ -63,7 +64,7 @@ public class CSharpProjectKernel :
 
     async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)
     {
-        _workspaceServer = new RoslynWorkspaceServer(CreateConsolePackageAsync);
+        _workspaceServer = new RoslynWorkspaceServer(() => Package.GetOrCreateConsolePackageAsync(_enableBuild));
 
         var extractor = new BufferFromRegionExtractor();
         _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());
@@ -301,17 +302,5 @@ public class CSharpProjectKernel :
         {
             throw new InvalidOperationException($"Document must be opened, send the command '{nameof(OpenDocument)}' first.");
         }
-    }
-
-    public static async Task<Package> CreateConsolePackageAsync()
-    {
-        // FIX: (CreateConsoleWorkspacePackage) move this to someplace where it can be used at build time to set up the Docker image
-        var packageBuilder = new PackageBuilder("console");
-        packageBuilder.CreateUsingDotnet("console");
-        packageBuilder.TrySetLanguageVersion("11.0");
-        packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
-        var package = (Package)packageBuilder.GetPackage();
-        await package.CreateWorkspaceForRunAsync();
-        return package;
     }
 }

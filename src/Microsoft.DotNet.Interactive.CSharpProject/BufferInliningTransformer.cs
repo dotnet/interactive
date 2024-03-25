@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using File = System.IO.File;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;

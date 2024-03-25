@@ -165,13 +165,13 @@ public class InstrumentationSyntaxRewriterTests
         Assert.Contains("\\\"name\\\":\\\"args\\\"", treeString);
     }
 
-    [Fact(Skip = "Needs moved onto Package2")]
+    [Fact]
     public async void Syntax_Tree_Has_Same_Language_As_Package()
     {
-        var package = await Create.ConsolePackageCopy();
+        var package = await Create.BuildableConsolePackageCopy();
         var workspace = WorkspaceFactory.CreateWorkspaceFromDirectory(package.Directory, package.Name, includeInstrumentation: true);
         var roslynWorkspaceServer = new RoslynWorkspaceServer(() => Task.FromResult(package));
-        Func<Task> run = ()=> roslynWorkspaceServer.RunAsync(new WorkspaceRequest(workspace));
+        Func<Task> run = () => roslynWorkspaceServer.RunAsync(new WorkspaceRequest(workspace));
         await run.Should().NotThrowAsync();
     }
 }

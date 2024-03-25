@@ -17,7 +17,6 @@ using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
 using Microsoft.DotNet.Interactive.CSharpProject.Transformations;
 using Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
-using Microsoft.DotNet.Interactive.CSharpProject.WorkspaceFeatures;
 using Pocket;
 using static Pocket.Logger;
 using Package = Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package;
@@ -30,11 +29,9 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
     private static readonly ConcurrentDictionary<string, AsyncLock> locks = new();
 
-    private static readonly string UserCodeCompleted = nameof(UserCodeCompleted);
-
     static RoslynWorkspaceServer()
     {
-        TaskScheduler.UnobservedTaskException += (sender, args) =>
+        TaskScheduler.UnobservedTaskException += (_, args) =>
         {
             Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
             args.SetObserved();
@@ -148,7 +145,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
         var tree = await selectedDocument.GetSyntaxTreeAsync();
 
-        var absolutePosition = workspace.GetAbsolutePositionForGetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne(request.ActiveBufferId);
+        var absolutePosition = workspace.GetAbsolutePositionForBufferByIdOrSingleBufferIfThereIsOnlyOne(request.ActiveBufferId);
 
         var syntaxNode = tree.GetRoot().FindToken(absolutePosition).Parent;
 
@@ -194,9 +191,9 @@ public class RoslynWorkspaceServer : IWorkspaceServer
     {
         var workspace = request.Workspace;
 
-        using (await locks.GetOrAdd(workspace.WorkspaceType, s => new AsyncLock()).LockAsync())
+        using (await locks.GetOrAdd(workspace.WorkspaceType, _ => new AsyncLock()).LockAsync())
         {
-            var result = await CompileWorker(request.Workspace, request.ActiveBufferId);
+            var result = await GetCompilationAsync(request.Workspace, request.ActiveBufferId);
 
             if (result.DiagnosticsWithinBuffers.ContainsError())
             {
@@ -236,7 +233,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         {
             var package = await _packageFinder.FindAsync(workspace.WorkspaceType);
 
-            var result = await CompileWorker(request.Workspace, request.ActiveBufferId);
+            var result = await GetCompilationAsync(request.Workspace, request.ActiveBufferId);
 
             if (result.ProjectDiagnostics.ContainsError())
             {
@@ -257,16 +254,6 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
             await EmitCompilationAsync(result.Compilation, package);
 
-            if (package.IsWebProject)
-            {
-                return RunWebRequest(package, request.RequestId);
-            }
-
-            if (package.IsUnitTestProject)
-            {
-                return await RunUnitTestsAsync(package, result.DiagnosticsWithinBuffers, request.RequestId);
-            }
-
             return await RunConsoleAsync(
                 package,
                 result.DiagnosticsWithinBuffers,
@@ -278,29 +265,27 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
     private static async Task EmitCompilationAsync(Compilation compilation, Package package)
     {
-        if (package == null)
+        if (package is null)
         {
             throw new ArgumentNullException(nameof(package));
         }
 
+        var numberOfAttempts = 100;
+        for (var attempt = 1; attempt < numberOfAttempts; attempt++)
         {
-            var numberOfAttempts = 100;
-            for (var attempt = 1; attempt < numberOfAttempts; attempt++)
+            try
             {
-                try
+                compilation.Emit(package.EntryPointAssemblyPath.FullName);
+                break;
+            }
+            catch (IOException)
+            {
+                if (attempt == numberOfAttempts - 1)
                 {
-                    compilation.Emit(package.EntryPointAssemblyPath.FullName);
-                    break;
+                    throw;
                 }
-                catch (IOException)
-                {
-                    if (attempt == numberOfAttempts - 1)
-                    {
-                        throw;
-                    }
 
-                    await Task.Delay(10);
-                }
+                await Task.Delay(10);
             }
         }
     }
@@ -347,58 +332,8 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
         return runResult;
     }
-
-    private static async Task<RunResult> RunUnitTestsAsync(
-        Package package, 
-        IEnumerable<SerializableDiagnostic> diagnostics, 
-        string requestId)
-    {
-        var dotnet = new Dotnet(package.Directory);
-
-        var commandLineResult = await dotnet.VSTest(
-            $@"--logger:trx ""{package.EntryPointAssemblyPath}""");
-
-        if (commandLineResult.ExitCode == 124)
-        {
-            throw new TimeoutException();
-        }
-
-        var trex = new FileInfo(
-            Path.Combine(
-                Paths.DotnetToolsPath,
-                "t-rex".ExecutableName()));
-
-        if (!trex.Exists)
-        {
-            throw new InvalidOperationException($"t-rex not found in at location {trex}");
-        }
-
-        var tRexResult = await CommandLine.Execute(
-            trex,
-            "",
-            workingDir: package.Directory);
-
-        var result = new RunResult(
-            commandLineResult.ExitCode == 0,
-            tRexResult.Output,
-            diagnostics: diagnostics,
-            requestId: requestId);
-
-        result.AddFeature(new UnitTestRun(new[]
-        {
-            new UnitTestResult()
-        }));
-
-        return result;
-    }
-
-    private static RunResult RunWebRequest(Package package, string requestId)
-    {
-        var runResult = new RunResult(succeeded: true, requestId: requestId);
-        return runResult;
-    }
-
-    private async Task<CompileWorkerResult> CompileWorker(
+    
+    private async Task<CompilationResult> GetCompilationAsync(
         Workspace workspace,
         BufferId activeBufferId)
     {
@@ -406,17 +341,16 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         workspace = await workspace.InlineBuffersAsync();
         var sources = workspace.GetSourceFiles();
         var (compilation, project) = await package.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => package.CreateWorkspaceAsync());
-        var documents = project.Documents.ToList();
         var (diagnosticsInActiveBuffer, allDiagnostics) = workspace.MapDiagnostics(activeBufferId, compilation.GetDiagnostics());
-        return new CompileWorkerResult(
+        return new CompilationResult(
             compilation,
             diagnosticsInActiveBuffer,
             allDiagnostics);
     }
 
-    private class CompileWorkerResult
+    private class CompilationResult
     {
-        public CompileWorkerResult(
+        public CompilationResult(
             Compilation compilation,
             IReadOnlyCollection<SerializableDiagnostic> diagnosticsInActiveBuffer,
             IReadOnlyCollection<SerializableDiagnostic> allDiagnostics)

@@ -11,15 +11,26 @@ using Microsoft.DotNet.Interactive.CSharpProject.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject.Events;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
+using Xunit.Abstractions;
+using static Pocket.Logger;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[LogToPocketLogger]
 public class CSharpProjectKernelTests
 {
-    public CSharpProjectKernelTests()
+    private readonly ITestOutputHelper _output;
+    private readonly CompositeDisposable _disposables = new();
+
+    public CSharpProjectKernelTests(ITestOutputHelper output)
     {
         CSharpProjectKernel.RegisterEventsAndCommands();
+
+        _output = output;
+        _disposables.Add(_output.SubscribeToPocketLogger());
     }
 
     [Fact]
@@ -720,5 +731,49 @@ namespace Program
                     .Value
                     .Should()
                     .NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task PERF_INVESTIGATION()
+    {
+        using (Log.OnEnterAndExit("first"))
+        using (var kernel1 = new CSharpProjectKernel())
+        {
+            await RequestSignatureHelpAsync(kernel1);
+        }
+
+        using (Log.OnEnterAndExit("second"))
+        using (var kernel2 = new CSharpProjectKernel())
+        {
+            await RequestSignatureHelpAsync(kernel2);
+        }
+
+        // TODO (PERF_INVESTIGATION) write test
+        throw new NotImplementedException();
+
+
+
+        static async Task RequestSignatureHelpAsync(CSharpProjectKernel kernel)
+        {
+            await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"// content will be replaced") })));
+            await kernel.SendAsync(new OpenDocument("Program.cs"));
+
+            var code = """
+            
+            public class Program
+            {
+                public static void Main(string[] args)
+                {
+                    var fileInfo = new System.IO.FileInfo("test.file");
+                    fileInfo.CopyTo(
+                }
+            }
+
+            """;
+
+            var events = await kernel.SendAsync(new RequestSignatureHelp(code, new LinePosition(6, 24)));
+
+
+        }
     }
 }

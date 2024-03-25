@@ -11,8 +11,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
-using System.Xml.XPath;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -41,7 +39,7 @@ public class Package
         var environmentVariable = Environment.GetEnvironmentVariable(workspacesPathEnvironmentVariableName);
 
         DefaultPackagesDirectory =
-            environmentVariable != null
+            environmentVariable is not null
                 ? new DirectoryInfo(environmentVariable)
                 : new DirectoryInfo(
                     Path.Combine(
@@ -54,21 +52,22 @@ public class Package
             DefaultPackagesDirectory.Create();
         }
 
-        Log.Info("Packages path is {DefaultWorkspacesDirectory}", DefaultPackagesDirectory);
+        Log.Info("Prebuild packages path is {DefaultWorkspacesDirectory}", DefaultPackagesDirectory);
     }
 
     private readonly AsyncLazy<bool> _lazyCreation;
     private bool? _canSupportWasm;
+    private readonly IPackageInitializer _packageInitializer;
 
     private int buildCount = 0;
     private int publishCount = 0;
 
-    private bool? _isWebProject;
-    private bool? _isUnitTestProject;
     private FileInfo _entryPointAssemblyPath;
     private static string _targetFramework;
     private readonly Logger _log;
     private readonly Subject<Unit> _fullBuildRequestChannel;
+
+    protected CodeAnalysis.Workspace _roslynWorkspace;
 
     private readonly IScheduler _buildThrottleScheduler;
     private readonly SerialDisposable _fullBuildThrottlerSubscription;
@@ -78,6 +77,11 @@ public class Package
 
     private readonly Subject<Unit> _designTimeBuildRequestChannel;
     private readonly SerialDisposable _designTimeBuildThrottlerSubscription;
+    private BuildDataResults _designTimeBuildResult;
+
+    private DateTimeOffset? _lastDesignTimeBuildTime;
+    private DateTimeOffset? _lastSuccessfulBuildTime;
+    private readonly FileInfo _lastBuildErrorLogFile;
 
     private TaskCompletionSource<CodeAnalysis.Workspace> _fullBuildCompletionSource = new();
     private TaskCompletionSource<CodeAnalysis.Workspace> _designTimeBuildCompletionSource = new();
@@ -86,20 +90,21 @@ public class Package
     private readonly object _designTimeBuildCompletionSourceLock = new();
 
     public Package(
-        string name = null,
+        string name,
         IPackageInitializer initializer = null,
         DirectoryInfo directory = null,
-        IScheduler buildThrottleScheduler = null) 
+        bool enableBuild = false)
     {
-        Name = name ?? directory?.Name ?? throw new ArgumentException($"You must specify {nameof(name)}, {nameof(directory)}, or both.");
+        Name = name;
+        EnableBuild = enableBuild;
         Directory = directory ?? new DirectoryInfo(Path.Combine(DefaultPackagesDirectory.FullName, Name));
+        _packageInitializer = initializer ?? new PackageInitializer("console", Name);
 
-        _lazyCreation = new AsyncLazy<bool>(() => Create(Initializer));
-        LastBuildErrorLogFile = new FileInfo(Path.Combine(Directory.FullName, ".net-interactive-builderror"));
-        Initializer = initializer ?? new PackageInitializer("console", Name);
+        _lazyCreation = new AsyncLazy<bool>(() => Create(_packageInitializer));
+        _lastBuildErrorLogFile = new FileInfo(Path.Combine(Directory.FullName, ".net-interactive-builderror"));
 
         _log = new Logger($"{nameof(Package)}:{Name}");
-        _buildThrottleScheduler = buildThrottleScheduler ?? TaskPoolScheduler.Default;
+        _buildThrottleScheduler = TaskPoolScheduler.Default;
 
         _fullBuildRequestChannel = new Subject<Unit>();
         _fullBuildThrottlerSubscription = new SerialDisposable();
@@ -107,13 +112,20 @@ public class Package
         _designTimeBuildRequestChannel = new Subject<Unit>();
         _designTimeBuildThrottlerSubscription = new SerialDisposable();
 
-        SetupWorkspaceCreationFromBuildChannel();
-        SetupWorkspaceCreationFromDesignTimeBuildChannel();
-        TryLoadDesignTimeBuildFromCacheFile();
+        InitializeFullBuildChannel();
+        InitializeDesignTimeBuildChannel();
 
+        if (!TryLoadDesignTimeBuildFromCacheFile())
+        {
+            if (!EnableBuild)
+            {
+                throw new InvalidOperationException($"Prebuild package not found at {Directory} and build-on-demand is disabled.");
+            }
+        }
+
+        // FIX: (Package) ever-growing collections
         _buildSemaphore = _packageBuildSemaphores.GetOrAdd(Name, _ => new SemaphoreSlim(1, 1));
         _publishSemaphore = _packagePublishSemaphores.GetOrAdd(Name, _ => new SemaphoreSlim(1, 1));
-        RoslynWorkspace = null;
     }
 
     public bool CanSupportWasm
@@ -127,41 +139,53 @@ public class Package
             //Hence the parent directory must be looked for the blazor runner
             if (_canSupportWasm is null)
             {
-                _canSupportWasm = Directory?.Parent?.GetDirectories($"runner-{Name}")?.Length == 1;
+                _canSupportWasm = Directory?.Parent?.GetDirectories($"runner-{Name}").Length == 1;
             }
 
             return _canSupportWasm.Value;
         }
     }
-    public IPackageInitializer Initializer { get; protected set; }
+
+    public bool EnableBuild { get; }
+
+    public DirectoryInfo Directory { get; }
 
     public string Name { get; }
 
-    protected FileInfo LastBuildErrorLogFile { get; }
-    
-    public DirectoryInfo Directory { get; set; }
+    private Task<bool> EnsureCreatedAsync()
+    {
+        if (!EnableBuild)
+        {
+            return Task.FromResult(false);
+        }
 
-    protected Task<bool> EnsureCreatedAsync() => _lazyCreation.ValueAsync();
+        return _lazyCreation.ValueAsync();
+    }
 
-    private void TryLoadDesignTimeBuildFromCacheFile()
+    private bool TryLoadDesignTimeBuildFromCacheFile()
     {
         if (Directory.Exists)
         {
-            var cacheFile = BuildCacheFileUtilities.FindCacheFile(Directory);
+            var cacheFile = FindCacheFile(Directory);
             if (cacheFile is not null)
             {
-                LoadDesignTimeBuildDataFromBuildCacheFile(this, cacheFile).Wait();
+                LoadDesignTimeBuildDataFromBuildCacheFile(cacheFile).Wait();
+                return true;
             }
         }
+
+        return false;
     }
-    private static async Task LoadDesignTimeBuildDataFromBuildCacheFile(Package package, FileSystemInfo cacheFile)
+
+    private async Task LoadDesignTimeBuildDataFromBuildCacheFile(FileSystemInfo cacheFile)
     {
-        var projectFile = package.GetProjectFile();
-        if (projectFile != null &&
+        var projectFile = GetProjectFile();
+
+        if (projectFile is not null &&
             cacheFile.LastWriteTimeUtc >= projectFile.LastWriteTimeUtc)
         {
             BuildDataResults result;
-            using (await FileLock.TryCreateAsync(package.Directory))
+            using (await FileLock.TryCreateAsync(Directory))
             {
                 result = GetResultsFromCacheFile(cacheFile.FullName);
             }
@@ -171,55 +195,26 @@ public class Package
                 throw new InvalidOperationException("The cache file seems to contain no solutions or projects");
             }
 
-            package.RoslynWorkspace = null;
-            package.DesignTimeBuildResult = result;
-            package.LastDesignTimeBuild = cacheFile.LastWriteTimeUtc;
+            _roslynWorkspace = null;
+            _designTimeBuildResult = result;
+            _lastDesignTimeBuildTime = cacheFile.LastWriteTimeUtc;
+
             if (result.Succeeded && !cacheFile.Name.EndsWith(BuildCacheFileUtilities.cacheFilenameSuffix))
             {
-                package.LastSuccessfulBuildTime = cacheFile.LastWriteTimeUtc;
-                package.RoslynWorkspace = package.DesignTimeBuildResult.Workspace;
+                _lastSuccessfulBuildTime = cacheFile.LastWriteTimeUtc;
+                _roslynWorkspace = _designTimeBuildResult.Workspace;
             }
         }
     }
 
-    private DateTimeOffset? LastDesignTimeBuild { get; set; }
-
-    private DateTimeOffset? LastSuccessfulBuildTime { get; set; }
+    private FileInfo GetProjectFile() => Directory.GetFiles("*.csproj").FirstOrDefault();
 
     public DateTimeOffset? PublicationTime { get; private set; }
-
-    public bool IsUnitTestProject =>
-        _isUnitTestProject ??
-        (_isUnitTestProject = Directory.GetFiles("*.testadapter.dll", SearchOption.AllDirectories).Any()).Value;
-
-    public bool IsWebProject
-    {
-        get
-        {
-            if (_isWebProject == null && this.GetProjectFile() is { } csproj)
-            {
-                var csprojXml = File.ReadAllText(csproj.FullName);
-
-                var xml = XElement.Parse(csprojXml);
-
-                var isAspNetCore2 = xml.XPathSelectElement("//ItemGroup/PackageReference[@Include='Microsoft.AspNetCore.App']") != null;
-
-                var isAspNetCore3 = xml.DescendantsAndSelf()
-                    .FirstOrDefault(n => n.Name == "Project")
-                    ?.Attribute("Sdk")
-                    ?.Value == "Microsoft.NET.Sdk.Web";
-
-                _isWebProject = isAspNetCore2 || isAspNetCore3;
-            }
-
-            return _isWebProject ?? false;
-        }
-    }
 
     public static DirectoryInfo DefaultPackagesDirectory { get; }
 
     public FileInfo EntryPointAssemblyPath => 
-        _entryPointAssemblyPath ??= this.GetEntryPointAssemblyPath(IsWebProject);
+        _entryPointAssemblyPath ??= this.GetEntryPointAssemblyPath();
 
     public string TargetFramework => 
         _targetFramework ??= this.GetTargetFramework();
@@ -236,16 +231,21 @@ public class Package
     public Task<CodeAnalysis.Workspace> CreateWorkspaceForLanguageServicesAsync()
     {
         var shouldBuild = ShouldDoDesignTimeBuild();
+
         if (!shouldBuild)
         {
-            var ws = RoslynWorkspace ?? CreateRoslynWorkspace();
-            if (ws != null)
+            var ws = _roslynWorkspace ?? CreateRoslynWorkspace();
+            if (ws is not null)
             {
                 return Task.FromResult(ws);
             }
         }
 
-        return RequestDesignTimeBuildAsync();
+        CreateCompletionSourceIfNeeded(ref _designTimeBuildCompletionSource, _designTimeBuildCompletionSourceLock);
+
+        _designTimeBuildRequestChannel.OnNext(Unit.Default);
+
+        return _designTimeBuildCompletionSource.Task;
     }
 
     private void CreateCompletionSourceIfNeeded(ref TaskCompletionSource<CodeAnalysis.Workspace> completionSource, object lockObject)
@@ -297,21 +297,13 @@ public class Package
         }
     }
 
-    private Task<CodeAnalysis.Workspace> RequestDesignTimeBuildAsync()
-    {
-        CreateCompletionSourceIfNeeded(ref _designTimeBuildCompletionSource, _designTimeBuildCompletionSourceLock);
-
-        _designTimeBuildRequestChannel.OnNext(Unit.Default);
-        return _designTimeBuildCompletionSource.Task;
-    }
-
-    private void SetupWorkspaceCreationFromBuildChannel()
+    private void InitializeFullBuildChannel()
     {
         _fullBuildThrottlerSubscription.Disposable = _fullBuildRequestChannel
             .Throttle(TimeSpan.FromSeconds(0.5), _buildThrottleScheduler)
             .ObserveOn(TaskPoolScheduler.Default)
             .Subscribe(
-                async (budget) =>
+                async (_) =>
                 {
                     try
                     {
@@ -325,17 +317,17 @@ public class Package
                 error =>
                 {
                     SetCompletionSourceException(_fullBuildCompletionSource, error, _fullBuildCompletionSourceLock);
-                    SetupWorkspaceCreationFromBuildChannel();
+                    InitializeFullBuildChannel();
                 });
     }
 
-    private void SetupWorkspaceCreationFromDesignTimeBuildChannel()
+    private void InitializeDesignTimeBuildChannel()
     {
         _designTimeBuildThrottlerSubscription.Disposable = _designTimeBuildRequestChannel
             .Throttle(TimeSpan.FromSeconds(0.5), _buildThrottleScheduler)
             .ObserveOn(TaskPoolScheduler.Default)
             .Subscribe(
-                async (budget) =>
+                async (_) =>
                 {
                     try
                     {
@@ -349,7 +341,7 @@ public class Package
                 error =>
                 {
                     SetCompletionSourceException(_designTimeBuildCompletionSource, error, _designTimeBuildCompletionSourceLock);
-                    SetupWorkspaceCreationFromDesignTimeBuildChannel();
+                    InitializeDesignTimeBuildChannel();
                 });
     }
 
@@ -358,10 +350,6 @@ public class Package
         await EnsureCreatedAsync();
         await EnsureBuiltAsync();
         var ws = CreateRoslynWorkspace();
-        if (IsWebProject)
-        {
-            await EnsurePublishedAsync();
-        }
         SetCompletionSourceResult(_fullBuildCompletionSource, ws, _fullBuildCompletionSourceLock);
     }
 
@@ -375,8 +363,9 @@ public class Package
 
     private CodeAnalysis.Workspace CreateRoslynWorkspace()
     {
-        var build = DesignTimeBuildResult;
-        if (build == null)
+        var build = _designTimeBuildResult;
+
+        if (build is null)
         {
             throw new InvalidOperationException("No design time or full build available");
         }
@@ -385,9 +374,9 @@ public class Package
 
         if (!ws.CanBeUsedToGenerateCompilation())
         {
-            RoslynWorkspace = null;
-            DesignTimeBuildResult = null;
-            LastDesignTimeBuild = null;
+            _roslynWorkspace = null;
+            _designTimeBuildResult = null;
+            _lastDesignTimeBuildTime = null;
             throw new InvalidOperationException("The roslyn workspace cannot be used to generate a compilation");
         }
 
@@ -397,22 +386,15 @@ public class Package
         var solution = ws.CurrentSolution;
         solution = solution.WithProjectMetadataReferences(projectId, metadataReferences);
         ws.TryApplyChanges(solution);
-        RoslynWorkspace = ws;
+        _roslynWorkspace = ws;
         return ws;
     }
-
-    protected CodeAnalysis.Workspace RoslynWorkspace { get; set; }
 
     public async Task EnsureReadyAsync()
     {
         await EnsureCreatedAsync();
 
         await EnsureBuiltAsync();
-
-        if (RequiresPublish)
-        {
-            await EnsurePublishedAsync();
-        }
     }
 
     protected async Task EnsureBuiltAsync([CallerMemberName] string caller = null)
@@ -421,9 +403,9 @@ public class Package
 
         await EnsureCreatedAsync();
 
-        if (ShouldDoFullBuild())
+        if (IsFullBuildNeeded())
         {
-            await FullBuildAsync();
+            await DoFullBuildAsync();
         }
         else
         {
@@ -441,7 +423,7 @@ public class Package
 
         if (ShouldDoDesignTimeBuild())
         {
-            await DesignTimeBuild();
+            await DoDesignTimeBuildAsync();
         }
         else
         {
@@ -457,18 +439,22 @@ public class Package
             
         using var operation = _log.OnEnterAndConfirmOnExit();
             
-        if (PublicationTime == null || PublicationTime < LastSuccessfulBuildTime)
+        if (PublicationTime == null || PublicationTime < _lastSuccessfulBuildTime)
         {
             await Publish();
         }
 
         operation.Succeed();
     }
-
-    public bool RequiresPublish => IsWebProject;
-
-    public async Task FullBuildAsync()
+    
+    public async Task DoFullBuildAsync()
     {
+        if (!EnableBuild)
+        {
+            // FIX: (DoFullBuildAsync) 
+            throw new InvalidOperationException($"Full build is disabled for package {Name}");
+        }
+
         using var operation = Log.OnEnterAndConfirmOnExit();
 
         try
@@ -505,9 +491,10 @@ public class Package
             operation.Error("Exception building workspace", exception);
         }
 
-        var cacheFile = BuildCacheFileUtilities.FindCacheFile(Directory);
-        await cacheFile.WaitForFileAvailable();
-        await LoadDesignTimeBuildDataFromBuildCacheFile(this, cacheFile);
+        var cacheFile = FindCacheFile(Directory);
+
+        await cacheFile.WaitForFileAvailableAsync();
+        await LoadDesignTimeBuildDataFromBuildCacheFile(cacheFile);
 
         Interlocked.Exchange(ref buildCount, 0);
     }
@@ -536,12 +523,12 @@ public class Package
         if (result.ExitCode != 0)
         {
             await File.WriteAllTextAsync(
-                LastBuildErrorLogFile.FullName,
+                _lastBuildErrorLogFile.FullName,
                 string.Join(Environment.NewLine, result.Error));
         }
-        else if (LastBuildErrorLogFile.Exists)
+        else if (_lastBuildErrorLogFile.Exists)
         {
-            LastBuildErrorLogFile.Delete();
+            _lastBuildErrorLogFile.Delete();
         }
 
         // Clean up the temp project file
@@ -602,30 +589,28 @@ public class Package
         {
             var source = reader.ReadToEnd();
 
-            var parseOptions = DesignTimeBuildResult.CSharpParseOptions;
+            var parseOptions = _designTimeBuildResult.CSharpParseOptions;
             var syntaxTree = CSharpSyntaxTree.ParseText(SourceText.From(source), parseOptions);
 
             return syntaxTree;
         }
     }
 
-    private protected BuildDataResults DesignTimeBuildResult { get; set; }
-
-    protected virtual bool ShouldDoFullBuild() =>
-        LastSuccessfulBuildTime is null ||
-        ShouldDoDesignTimeBuild() || 
-        LastDesignTimeBuild > LastSuccessfulBuildTime;
+    protected virtual bool IsFullBuildNeeded()
+    {
+        return _roslynWorkspace is not null;
+    }
 
     protected virtual bool ShouldDoDesignTimeBuild() =>
-        DesignTimeBuildResult is null || 
-        DesignTimeBuildResult.Succeeded == false;
+        _designTimeBuildResult is null || 
+        _designTimeBuildResult.Succeeded == false;
 
-    private protected async Task<BuildDataResults> DesignTimeBuild()
+    private protected async Task<BuildDataResults> DoDesignTimeBuildAsync()
     {
         using var operation = _log.OnEnterAndConfirmOnExit();
 
         BuildDataResults result;
-        var csProj = this.GetProjectFile();
+        var csProj = GetProjectFile();
         var logWriter = new StringWriter();
 
         using (await FileLock.TryCreateAsync(Directory))
@@ -634,19 +619,19 @@ public class Package
             result = ResultsFromCacheFileUsingProjectFilePath(csProj.FullName);
         }
 
-        DesignTimeBuildResult = result;
-        LastDesignTimeBuild = DateTimeOffset.Now;
+        _designTimeBuildResult = result;
+        _lastDesignTimeBuildTime = DateTimeOffset.Now;
 
         if (result?.Succeeded == false)
         {
             var logData = logWriter.ToString();
             File.WriteAllText(
-                LastBuildErrorLogFile.FullName,
+                _lastBuildErrorLogFile.FullName,
                 string.Join(Environment.NewLine, "Design Time Build Error", logData));
         }
-        else if (LastBuildErrorLogFile.Exists)
+        else if (_lastBuildErrorLogFile.Exists)
         {
-            LastBuildErrorLogFile.Delete();
+            _lastBuildErrorLogFile.Delete();
         }
 
         operation.Succeed();
@@ -654,7 +639,7 @@ public class Package
         return result;
     }
 
-    public virtual SyntaxTree GetInstrumentationEmitterSyntaxTree() =>
+    internal virtual SyntaxTree GetInstrumentationEmitterSyntaxTree() =>
         CreateInstrumentationEmitterSyntaxTree();
 
     public async Task<bool> Create(IPackageInitializer initializer)
@@ -679,6 +664,30 @@ public class Package
         }
 
         operation.Succeed();
+
         return true;
     }
+
+    public static async Task<Package> GetOrCreateConsolePackageAsync(bool enableBuild)
+    {
+        var packageBuilder = new PackageBuilder("console");
+        packageBuilder.UseTemplate("console");
+        packageBuilder.UseLanguageVersion("latest");
+        packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
+        packageBuilder.EnableBuild = enableBuild;
+        var package = packageBuilder.GetPackage();
+
+        if (package.EnableBuild)
+        {
+            await package.CreateWorkspaceForRunAsync();
+        }
+        else
+        {
+            // FIX: (GetOrCreateConsolePackageAsync) keep immutable instance in memory
+        }
+      
+        return package;
+    }
+
+    internal static FileInfo FindCacheFile(DirectoryInfo directoryInfo) => directoryInfo.GetFiles("*" + BuildCacheFileUtilities.cacheFilenameSuffix).FirstOrDefault();
 }

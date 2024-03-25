@@ -1,10 +1,8 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
-using System;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities.RoslynWorkspaceUtilities;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 
@@ -23,5 +21,5 @@ internal class BuildDataResults
     // TODO: Set this value
     internal string ProjectFilePath { get; init; }
 
-    internal Dictionary<string, BuildDataProjectItem[]> Items { get; } = new Dictionary<string, BuildDataProjectItem[]>();
+    internal Dictionary<string, BuildDataProjectItem[]> Items { get; } = new();
 }

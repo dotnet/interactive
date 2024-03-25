@@ -44,7 +44,7 @@ public static class PackageUtilities
             }
         });
 
-        var copy = new Package(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
+        var copy = new Package(directory: destination, name: destination.Name);
 
         return copy;
     }

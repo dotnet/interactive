@@ -1,7 +1,10 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
@@ -124,8 +127,8 @@ internal static class BuildCacheFileUtilities
         // Clean up the temp project file
         File.Delete(tempDirectoryBuildTarget);
 
-        var cacheFile = FindCacheFile(directoryInfo);
-        if (cacheFile == null || !cacheFile.Exists)
+        var cacheFile = Package.FindCacheFile(directoryInfo);
+        if (cacheFile is not { Exists: true })
         {
             throw new FileNotFoundException($"Cache file not found after build completion in directory: {directoryInfo.FullName}");
         }
@@ -139,6 +142,4 @@ internal static class BuildCacheFileUtilities
             target.Delete(true);
         }
     }
-
-    public static FileInfo FindCacheFile(DirectoryInfo directoryInfo) => directoryInfo.GetFiles("*" + cacheFilenameSuffix).FirstOrDefault();
 }

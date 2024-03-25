@@ -11,28 +11,41 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
 public class PackageBuilder
 {
-    private Package _packageBase;
+    private Package _package;
     private readonly List<Func<Package, Task>> _afterCreateActions = new();
     private readonly List<(string packageName, string packageVersion, string restoreSources)> _addPackages = new();
-    private string _languageVersion = "8.0";
+    private string _languageVersion = "latest";
 
-    public PackageBuilder(string packageName)
+    public PackageBuilder(string packageName, DirectoryInfo directory = null)
     {
+        // FIX: (PackageBuilder) 
+        if (directory is null)
+        {
+            
+        }
+        else
+        {
+
+        }
+
         if (string.IsNullOrWhiteSpace(packageName))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(packageName));
         }
 
         PackageName = packageName;
+        Directory = directory;
     }
+
+    public bool EnableBuild { get; set; }
 
     public string PackageName { get; }
 
     public IPackageInitializer PackageInitializer { get; private set; }
 
-    public DirectoryInfo Directory { get; set; }
-    
-    public void CreateUsingDotnet(string template, string projectName = null, string language = null)
+    public DirectoryInfo Directory { get; }
+
+    public void UseTemplate(string template, string projectName = null, string language = null)
     {
         PackageInitializer = new PackageInitializer(
             template,
@@ -55,46 +68,41 @@ public class PackageBuilder
             await action();
         });
     }
-    
-    public void TrySetLanguageVersion(string version)
+
+    public void UseLanguageVersion(string version)
     {
         _languageVersion = version;
 
         _afterCreateActions.Add(async package =>
         {
-            async Task Action()
+            var projectFiles = package.Directory.GetFiles("*.csproj");
+
+            foreach (var projectFile in projectFiles)
             {
-                await Task.Yield();
-                var projectFiles = package.Directory.GetFiles("*.csproj");
-
-                foreach (var projectFile in projectFiles)
-                {
-                    projectFile.SetLanguageVersion(_languageVersion);
-                }
+                projectFile.SetLanguageVersion(_languageVersion);
             }
-
-            await Action();
         });
     }
 
     public Package GetPackage()
     {
-        if (_packageBase is null)
+        if (_package is null)
         {
-            _packageBase = new Package(
+            _package = new Package(
                 PackageName,
                 PackageInitializer,
-                Directory);
+                Directory,
+                enableBuild: EnableBuild);
         }
 
-        return _packageBase;
+        return _package;
     }
 
     private async Task RunAfterCreateActionsAsync(DirectoryInfo directoryInfo)
     {
         foreach (var action in _afterCreateActions)
         {
-            await action(_packageBase);
+            await action(_package);
         }
     }
 }

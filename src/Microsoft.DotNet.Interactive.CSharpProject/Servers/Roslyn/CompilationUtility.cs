@@ -16,8 +16,7 @@ internal static class CompilationUtility
         return workspace?.CurrentSolution?.Projects?.Count() > 0;
     }
 
-    public static async Task WaitForFileAvailable(
-        this FileInfo file)
+    public static async Task WaitForFileAvailableAsync(this FileInfo file)
     {
         if (file is null)
         {
@@ -48,21 +47,9 @@ internal static class CompilationUtility
         }
     }
 
-    public static FileInfo GetProjectFile(this Package package) =>
-        package.Directory.GetFiles("*.csproj").FirstOrDefault();
-
-    public static void CleanObjFolder(this Package package)
-    {
-        var targets = package.Directory.GetDirectories("obj");
-        foreach (var target in targets)
-        {
-            target.Delete(true);
-        }
-    }
-
     internal static FileInfo GetEntryPointAssemblyPath(
         this Package package, 
-        bool usePublishDir)
+        bool usePublishDir = false)
     {
         var directory = package.Directory;
 
@@ -97,6 +84,8 @@ internal static class CompilationUtility
                                    .GetFiles("*.runtimeconfig.json", SearchOption.AllDirectories)
                                    .FirstOrDefault();
 
-        return runtimeConfig != null ? RuntimeConfig.GetTargetFramework(runtimeConfig) : "netstandard2.0";
+        return runtimeConfig is not null 
+                   ? RuntimeConfig.GetTargetFramework(runtimeConfig) 
+                   : "netstandard2.0";
     }
 }

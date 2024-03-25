@@ -19,7 +19,7 @@ public static class WorkspaceExtensions
         return workspace.Files.FirstOrDefault(f => f.Name == bufferId.FileName);
     }
 
-    public static int GetAbsolutePositionForGetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne(
+    public static int GetAbsolutePositionForBufferByIdOrSingleBufferIfThereIsOnlyOne(
         this Workspace workspace,
         BufferId bufferId = null)
     {
@@ -30,14 +30,12 @@ public static class WorkspaceExtensions
         return buffer.AbsolutePosition;
     }
 
-
-
     internal static (int line, int column, int absolutePosition) GetTextLocation(
         this Workspace workspace,
         BufferId bufferId)
     {
         var fileContent = workspace.GetContentFromBufferId(bufferId);
-        var absolutePosition = GetAbsolutePositionForGetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne(workspace, bufferId);
+        var absolutePosition = GetAbsolutePositionForBufferByIdOrSingleBufferIfThereIsOnlyOne(workspace, bufferId);
 
         var src = SourceText.From(fileContent.Text);
         var line = src.Lines.GetLineFromPosition(absolutePosition);

@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Transformations;
 
@@ -20,12 +19,12 @@ public static class DiagnosticTransformer
         BufferId activeBufferId,
         IReadOnlyCollection<Diagnostic> diagnostics)
     {
-        if (workspace == null)
+        if (workspace is null)
         {
             throw new ArgumentNullException(nameof(workspace));
         }
 
-        if (diagnostics == null || diagnostics.Count == 0)
+        if (diagnostics is null || diagnostics.Count == 0)
         {
             return (Array.Empty<SerializableDiagnostic>(), Array.Empty<SerializableDiagnostic>());
         }
@@ -85,7 +84,7 @@ public static class DiagnosticTransformer
                     var target = targetViewports
                         .FirstOrDefault(e => e.Region.Contains(diagnostic.Location.SourceSpan.Start));
 
-                    if (target != null && !target.Region.IsEmpty)
+                    if (target is { Region.IsEmpty: false })
                     {
                         var processedDiagnostic = AlignDiagnosticLocation(target, diagnostic, paddingSize);
                         if (processedDiagnostic != null)

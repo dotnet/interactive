@@ -10,8 +10,27 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 public class FileLock
 {
     private const string LockFileName = ".trydotnet-lock";
+    
+    public static Task<IDisposable> TryCreateAsync(DirectoryInfo directory)
+    {
+        if (directory is null)
+        {
+            throw new ArgumentNullException(nameof(directory));
+        }
+        var lockFile = new FileInfo(Path.Combine(directory.FullName, LockFileName));
+        return TryCreateAsync(lockFile);
+    }
 
-    public static async Task<IDisposable> TryCreateAsync(FileInfo lockFile)
+    public static bool IsLockFile(FileInfo fileInfo)
+    {
+        if (fileInfo is null)
+        {
+            throw new ArgumentNullException(nameof(fileInfo));
+        }
+        return fileInfo.Name == LockFileName;
+    }
+
+    private static async Task<IDisposable> TryCreateAsync(FileInfo lockFile)
     {
         if (lockFile is null)
         {
@@ -35,33 +54,5 @@ public class FileLock
         } while (attemptCount <= 100);
 
         throw new IOException($"Cannot acquire file lock {lockFile.FullName}");
-    }
-
-    public static Task<IDisposable> TryCreateAsync(IDirectoryAccessor directoryAccessor)
-    {
-        if (directoryAccessor is null)
-        {
-            throw new ArgumentNullException(nameof(directoryAccessor));
-        }
-        return TryCreateAsync(directoryAccessor.GetFullyQualifiedFilePath(LockFileName));
-    }
-
-    public static Task<IDisposable> TryCreateAsync(DirectoryInfo directory)
-    {
-        if (directory is null)
-        {
-            throw new ArgumentNullException(nameof(directory));
-        }
-        var lockFile = new FileInfo(Path.Combine(directory.FullName, LockFileName));
-        return TryCreateAsync(lockFile);
-    }
-
-    public static bool IsLockFile(FileInfo fileInfo)
-    {
-        if (fileInfo is null)
-        {
-            throw new ArgumentNullException(nameof(fileInfo));
-        }
-        return fileInfo.Name == LockFileName;
     }
 }

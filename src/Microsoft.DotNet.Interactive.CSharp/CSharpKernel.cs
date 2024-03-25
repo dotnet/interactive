@@ -230,7 +230,7 @@ public class CSharpKernel :
 
         var document = _workspace.ForkDocumentForLanguageServices(command.Code);
         var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command, context.CancellationToken);
-        if (signatureHelp is { })
+        if (signatureHelp is not null)
         {
             context.Publish(signatureHelp);
         }

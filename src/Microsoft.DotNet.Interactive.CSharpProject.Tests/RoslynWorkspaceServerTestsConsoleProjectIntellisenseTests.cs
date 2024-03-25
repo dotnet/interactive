@@ -4,6 +4,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -689,7 +690,7 @@ namespace FibonacciTest
         #endregion
 
         var (processed, position) = CodeManipulation.ProcessMarkup(generator);
-        var package = await PackageUtilities.Copy(await CSharpProjectKernel.CreateConsolePackageAsync());
+        var package = await PackageUtilities.Copy(await Package.GetOrCreateConsolePackageAsync(false));
         var workspace = new Workspace(workspaceType: package.Name, buffers: new[]
         {
             new Buffer("Program.cs", program),

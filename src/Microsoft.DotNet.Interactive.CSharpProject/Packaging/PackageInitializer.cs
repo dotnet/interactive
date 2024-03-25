@@ -12,12 +12,6 @@ public class PackageInitializer : IPackageInitializer
 {
     private readonly Func<DirectoryInfo, Task> afterCreate;
 
-    public string Template { get; }
-
-    public string Language { get; }
-
-    public string ProjectName { get; }
-
     public PackageInitializer(
         string template,
         string projectName,
@@ -41,8 +35,13 @@ public class PackageInitializer : IPackageInitializer
         Language = language ?? GetLanguageFromProjectName(ProjectName);
     }
 
-    public virtual async Task InitializeAsync(
-        DirectoryInfo directory)
+    public string Template { get; }
+
+    public string Language { get; }
+
+    public string ProjectName { get; }
+
+    public virtual async Task InitializeAsync(DirectoryInfo directory)
     {
         var dotnet = new Dotnet(directory);
 
