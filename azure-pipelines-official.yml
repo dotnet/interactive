@@ -23,30 +23,6 @@ trigger:
     - '*.txt'
     - '*.github-issues'
 
-pr:
-  branches:
-    include:
-    - main
-    - feature/*
-    - hotfix/*
-    - release/*
-  paths:
-    include:
-    - '*'
-    exclude:
-    - '**/*.md'
-    - .config/*
-    - .devcontainer/*
-    - .github/*
-    - .vscode/*
-    - assets/*
-    - docs/*
-    - images/*
-    - .editorconfig
-    - .gitignore
-    - '*.txt'
-    - '*.github-issues'
-
 # Scheduled trigger that will run at 8:00 AM every Monday and Wednesday
 schedules:
 - cron: "0 8 * * Mon"
@@ -81,45 +57,48 @@ variables:
   value: ${{ eq(variables['Build.Reason'], 'Schedule') }}
 - name: Codeql.Enabled
   value: true
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - name: _DotNetValidationArtifactsCategory
-    value: .NETCoreValidation
-  - group: DotNet-Interactive-SDLValidation-Params
+- name: _DotNetValidationArtifactsCategory
+  value: .NETCoreValidation
+- group: DotNet-Interactive-SDLValidation-Params
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
 
 resources:
   repositories:
-  - repository: MicroBuildTemplate
+  - repository: 1esPipelines
     type: git
-    name: 1ESPipelineTemplates/MicroBuildTemplate
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
     ref: refs/tags/release
 
 extends:
-  template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
+  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
   parameters:
     sdl:
       sourceAnalysisPool: 
-        name: AzurePipelines-EO
-        image: 1ESPT-Windows2022
-    pool:
-      name: AzurePipelines-EO
-      image: AzurePipelinesWindows2022compliantGPT
-      os: windows
-    customBuildTags:
-    - ES365AIMigrationTooling
+        name: $(DncEngInternalBuildPool)
+        image: 1es-windows-2022-pt
+        os: windows
+      binskim:
+        enabled: true
+        scanOutputDirectoryOnly: true
+      policheck:
+        enabled: true
+      apiScan:
+        break: false
+        severity: error
+      sbom:
+        enabled: false
     stages:
     - stage: build
       displayName: Build and Test
       jobs:
-      - ${{ if ne(variables['System.TeamProject'], 'public') }}:
-        - template: /eng/common/templates-official/job/onelocbuild.yml@self
-          parameters:
-            MirrorRepo: interactive
-            MirrorBranch: main
-            SkipLocProjectJsonGeneration: true
-            LclSource: lclFilesfromPackage
-            LclPackageId: 'LCL-JUNO-PROD-INTERACTIVE'
-            CreatePr: $(LocPRCreationEnabled)
+      - template: /eng/common/templates-official/job/onelocbuild.yml@self
+        parameters:
+          MirrorRepo: interactive
+          MirrorBranch: main
+          SkipLocProjectJsonGeneration: true
+          LclSource: lclFilesfromPackage
+          LclPackageId: 'LCL-JUNO-PROD-INTERACTIVE'
+          CreatePr: $(LocPRCreationEnabled)
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:
           enableMicrobuild: true
@@ -130,12 +109,9 @@ extends:
           jobs:
           - job: Windows_NT
             pool:
-              ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngPublicBuildPool)
-                demands: ImageOverride -equals windows.vs2022.amd64.open
-              ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngInternalBuildPool)
-                demands: ImageOverride -equals windows.vs2022.amd64
+              name: $(DncEngInternalBuildPool)
+              demands: ImageOverride -equals 1es-windows-2022-pt
+              os: windows
             timeoutInMinutes: 90
             variables:
               - group: DotNet-Symbol-Server-Pats
@@ -257,12 +233,9 @@ extends:
           jobs:
           - job: Linux
             pool:
-              ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngPublicBuildPool)
-                demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
-              ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngInternalBuildPool)
-                demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
+              name: $(DncEngInternalBuildPool)
+              os: linux
+              demands: ImageOverride -equals 1es-ubuntu-2204
             
             outputs:
               - output: pipelineArtifact
@@ -329,36 +302,35 @@ extends:
     #---------------------------------------------------------------------------------------------------------------------#
     #                                                    Post Build                                                       #
     #---------------------------------------------------------------------------------------------------------------------#
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - template: /eng/common/templates-official/post-build/post-build.yml@self
-        parameters:
-          publishingInfraVersion: 3
-          # signing validation currently has issues with dotnet 7; disabling as per internal guidance
-          enableSigningValidation: false
-          # Symbol validation is not entirely reliable as of yet, so should be turned off until https://github.com/dotnet/arcade/issues/2871 is resolved.
-          enableSymbolValidation: false
-          # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
-          enableSourceLinkValidation: false
-          # Enable SDL validation, passing through values from the 'DotNet-FSharp-SDLValidation-Params' group.
-          SDLValidationParameters:
-            enable: true
-            params: >-
-              -SourceToolsList @("policheck","credscan")
-              -TsaInstanceURL $(_TsaInstanceURL)
-              -TsaProjectName $(_TsaProjectName)
-              -TsaNotificationEmail $(_TsaNotificationEmail)
-              -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
-              -TsaBugAreaPath $(_TsaBugAreaPath)
-              -TsaIterationPath $(_TsaIterationPath)
-              -TsaRepositoryName "Interactive"
-              -TsaCodebaseName "Interactive-GitHub"
-              -TsaPublish $True
-              -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/policheck_exclusions.xml")
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - template: /eng/publish/publish-npm.yml@self
-        parameters:
-          packageName: microsoft-polyglot-notebooks-*.tgz
-          registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
-          registryUser: dnceng
-          registryEmail: dnceng@microsoft.com
-          publishingBranch: main
+    - template: /eng/common/templates-official/post-build/post-build.yml@self
+      parameters:
+        publishingInfraVersion: 3
+        # signing validation currently has issues with dotnet 7; disabling as per internal guidance
+        enableSigningValidation: false
+        # Symbol validation is not entirely reliable as of yet, so should be turned off until https://github.com/dotnet/arcade/issues/2871 is resolved.
+        enableSymbolValidation: false
+        # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
+        enableSourceLinkValidation: false
+        # Enable SDL validation, passing through values from the 'DotNet-FSharp-SDLValidation-Params' group.
+        SDLValidationParameters:
+          enable: true
+          params: >-
+            -SourceToolsList @("policheck","credscan")
+            -TsaInstanceURL $(_TsaInstanceURL)
+            -TsaProjectName $(_TsaProjectName)
+            -TsaNotificationEmail $(_TsaNotificationEmail)
+            -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+            -TsaBugAreaPath $(_TsaBugAreaPath)
+            -TsaIterationPath $(_TsaIterationPath)
+            -TsaRepositoryName "Interactive"
+            -TsaCodebaseName "Interactive-GitHub"
+            -TsaPublish $True
+            -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/policheck_exclusions.xml")
+  
+    - template: /eng/publish/publish-npm.yml@self
+      parameters:
+        packageName: microsoft-polyglot-notebooks-*.tgz
+        registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
+        registryUser: dnceng
+        registryEmail: dnceng@microsoft.com
+        publishingBranch: main
