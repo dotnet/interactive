@@ -14,7 +14,7 @@ using Microsoft.DotNet.Interactive.CSharpProject.Models.SignatureHelp;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
 
-public class SignatureHelpService
+internal class SignatureHelpService
 {
     public static async Task<SignatureHelpResult> GetSignatureHelpAsync(Func<Task<SemanticModel>> getSemanticModel, SyntaxNode node, int position)
     {
@@ -26,10 +26,11 @@ public class SignatureHelpService
     {
         var response = new SignatureHelpResult();
 
-        if (invocation == null)
+        if (invocation is null)
         {
             return response;
         }
+
         // define active parameter by position
         foreach (var comma in invocation.Separators)
         {

@@ -20,7 +20,7 @@ public class WorkspaceExtensionsTests
                 new Buffer(BufferId.Parse(""), "content", 123)
             });
 
-        workspace.GetAbsolutePositionForGetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne().Should().Be(123);
+        workspace.GetAbsolutePositionForBufferByIdOrSingleBufferIfThereIsOnlyOne().Should().Be(123);
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class WorkspaceExtensionsTests
                 new Buffer(BufferId.Parse("nonexistent.cs"), "content", 123)
             });
 
-        workspace.GetAbsolutePositionForGetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne().Should().Be(123);
+        workspace.GetAbsolutePositionForBufferByIdOrSingleBufferIfThereIsOnlyOne().Should().Be(123);
     }
 
     [Fact]

@@ -4,8 +4,9 @@
 using System;
 using System.IO;
 using System.Reactive.Concurrency;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
@@ -13,14 +14,13 @@ public static class PackageUtilities
 {
     private static readonly object CreateDirectoryLock = new();
 
-    public static async Task<Package> Copy(
-        Package fromPackage,
+    public static async Task<Package> CreateBuildableCopy(
+        this Package fromPackage,
         string folderNameStartsWith = null,
-        bool isRebuildable = false,
         IScheduler buildThrottleScheduler = null,
         DirectoryInfo parentDirectory = null)
     {
-        if (fromPackage == null)
+        if (fromPackage is null)
         {
             throw new ArgumentNullException(nameof(fromPackage));
         }
@@ -32,7 +32,7 @@ public static class PackageUtilities
 
         var destination =
             CreateDirectory(folderNameStartsWith,
-                parentDirectory);
+                            parentDirectory);
 
         fromPackage.Directory.CopyTo(destination, info =>
         {
@@ -45,15 +45,7 @@ public static class PackageUtilities
             }
         });
 
-        Package copy;
-        if (isRebuildable)
-        {
-            copy = new RebuildablePackage(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
-        }
-        else
-        {
-            copy = new NonrebuildablePackage(directory: destination, name: destination.Name, buildThrottleScheduler: buildThrottleScheduler);
-        }
+        var copy = new Package(directory: destination, name: destination.Name, enableBuild: true);
 
         return copy;
     }
@@ -67,7 +59,7 @@ public static class PackageUtilities
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(folderNameStartsWith));
         }
 
-        parentDirectory = parentDirectory ?? Package.DefaultPackagesDirectory;
+        parentDirectory ??= Package.DefaultPackagesDirectory;
 
         DirectoryInfo created;
 
@@ -84,5 +76,24 @@ public static class PackageUtilities
         }
 
         return created;
+    }
+
+    public static async Task<Package> CreateBuildableConsolePackageCopy(
+        [CallerMemberName] string testName = null,
+        IScheduler buildThrottleScheduler = null)
+    {
+        var consolePackage = await Package.GetOrCreateConsolePackageAsync(true);
+        return await consolePackage.CreateBuildableCopy(testName, buildThrottleScheduler);
+    }
+
+    public static Package CreateEmptyBuildablePackage(
+        [CallerMemberName] string testName = null,
+        IPackageInitializer initializer = null)
+    {
+        return new Package(
+            name: testName,
+            directory: CreateDirectory(testName),
+            initializer: initializer,
+            enableBuild: true);
     }
 }

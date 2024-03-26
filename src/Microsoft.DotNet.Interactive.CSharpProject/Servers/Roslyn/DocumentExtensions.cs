@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
-public static class DocumentExtensions
+internal static class DocumentExtensions
 {
     public static bool IsMatch(this Document doc, ProjectFileContent fileContent) => 
         doc.IsMatch(fileContent.Name);

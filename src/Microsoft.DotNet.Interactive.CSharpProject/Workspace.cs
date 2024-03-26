@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -79,12 +80,25 @@ public class Workspace
             usings: usings);
     }
 
-    public static Workspace FromSources(
-        string workspaceType = null,
-        string language = DefaultLanguage,
-        params (string id, string content, int position)[] sources) =>
-        new Workspace(
+    public static Workspace FromDirectory(
+        DirectoryInfo directory,
+        string workspaceType,
+        bool includeInstrumentation = false)
+    {
+        var filesOnDisk = directory.GetFiles("*.cs", SearchOption.AllDirectories)
+                                   .Where(f => !f.IsBuildOutput())
+                                   .ToArray();
+
+        var files = filesOnDisk.Select(file => new ProjectFileContent(file.Name, file.Read())).ToList();
+
+        return new Workspace(
+            files: files.ToArray(),
+            buffers: files.Select(f => new Buffer(
+                                      f.Name,
+                                      filesOnDisk.Single(fod => fod.Name == f.Name)
+                                                 .Read()))
+                          .ToArray(),
             workspaceType: workspaceType,
-            language: language,
-            buffers: sources.Select(s => new Buffer(BufferId.Parse(s.id), s.content, s.position)).ToArray());
+            includeInstrumentation: includeInstrumentation);
+    }
 }

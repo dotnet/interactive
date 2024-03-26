@@ -198,7 +198,6 @@ public class KeyValueStoreKernel :
         string mimeType,
         bool shouldDisplayValue,
         KernelInvocationContext context)
-
     {
         _values[key] = new FormattedValue(mimeType, value);
 

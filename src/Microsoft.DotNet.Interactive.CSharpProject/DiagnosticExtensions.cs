@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject;
 
 using Diagnostic = CodeAnalysis.Diagnostic;
 
-public static class DiagnosticExtensions
+internal static class DiagnosticExtensions
 {
     public static bool IsError(this Diagnostic diagnostic)
     {

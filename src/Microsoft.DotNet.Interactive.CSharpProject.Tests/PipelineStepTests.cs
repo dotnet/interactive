@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
@@ -121,7 +121,7 @@ public class PipelineStepTests
         values.Should().HaveCount(3).And.OnlyContain(i => i == 1);
     }
 
-    [Fact(Skip="flaky")]
+    [Fact(Skip = "flaky")]
     public async Task When_invalidated_while_producing_a_value_the_consumer_waiting_will_wait_for_latest_production_to_be_finished()
     {
         var seed = 0;
@@ -140,19 +140,11 @@ public class PipelineStepTests
             return Task.FromResult(Interlocked.Increment(ref seed));
         });
 
+        var values = await Task.WhenAll(
+                         producer.GetLatestAsync(),
+                         producer.GetLatestAsync());
 
-
-        var values=  await Task.WhenAll(
-            producer.GetLatestAsync(),
-            producer.GetLatestAsync());
-
-
-
-        values.Should().BeEquivalentTo(new []{2, 2});
-
-        // var values = await Task.WhenAll(firstConsumer, secondConsumer);
-        // values.Should().HaveCount(2).And.OnlyContain(i => i == 2);
-
+        values.Should().BeEquivalentTo(new[] { 2, 2 });
     }
 
     [Fact]

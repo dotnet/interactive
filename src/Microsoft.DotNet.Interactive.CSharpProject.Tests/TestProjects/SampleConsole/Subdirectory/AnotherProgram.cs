@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MLS.Agent.Tests.TestProjects.BasicConsoleApp.Subdirectory
+namespace TestProjects.BasicConsoleApp.Subdirectory
 {
     class AnotherPorgram
     {

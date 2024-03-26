@@ -12,7 +12,7 @@ using RoslynCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
 
-public static class CompletionExtensions
+internal static class CompletionExtensions
 {
     private static readonly string SymbolCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.SymbolCompletionProvider";
     private static readonly string Provider = nameof(Provider);
@@ -83,7 +83,7 @@ public static class CompletionExtensions
     {
         var symbol = GetCompletionSymbolAsync(item, recommendedSymbols, document);
             
-        if (symbol is { })
+        if (symbol is not null)
         {
             return DocumentationConverter.GetDocumentation(symbol, "\n");
         }

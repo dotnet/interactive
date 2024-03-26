@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 using File = System.IO.File;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;
@@ -112,7 +111,7 @@ public class BufferInliningTransformer : IWorkspaceTransformer
         return new TextSpan(viewPortRegion.Start, 0);
     }
 
-    protected virtual async Task InjectBufferAtSpan(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files, TextSpan span)
+    private async Task InjectBufferAtSpan(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files, TextSpan span)
     {
         var tree = CSharpSyntaxTree.ParseText(viewPort.Destination.Text.ToString());
         var textChange = new TextChange(

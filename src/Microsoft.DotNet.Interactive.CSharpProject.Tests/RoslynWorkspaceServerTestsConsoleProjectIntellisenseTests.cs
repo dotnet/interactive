@@ -4,6 +4,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -141,7 +142,6 @@ namespace FibonacciTest
     [Fact]
     public async Task Get_documentation_with_autocompletion_of_console_methods()
     {
-            
         #region bufferSources
 
         var program = @"using System;
@@ -689,7 +689,7 @@ namespace FibonacciTest
         #endregion
 
         var (processed, position) = CodeManipulation.ProcessMarkup(generator);
-        var package = await PackageUtilities.Copy(await Default.ConsoleWorkspaceAsync());
+        var package = await PackageUtilities.CreateBuildableCopy(await Package.GetOrCreateConsolePackageAsync(false));
         var workspace = new Workspace(workspaceType: package.Name, buffers: new[]
         {
             new Buffer("Program.cs", program),

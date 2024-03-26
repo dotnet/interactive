@@ -4,11 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Interactive.CSharpProject.MLS.Project;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;
 
-public static class FileExtensions
+internal static class FileExtensions
 {
     public static SourceFile ToSourceFile(this ProjectFileContent file)
     {

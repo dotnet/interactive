@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
-using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
-public partial class PackageTests : IDisposable
+public class PackageTests : IDisposable
 {
-    private readonly CompositeDisposable _disposables = new CompositeDisposable();
+    private readonly CompositeDisposable _disposables = new();
 
     public PackageTests(ITestOutputHelper output)
     {
@@ -33,10 +33,10 @@ public partial class PackageTests : IDisposable
             "console",
             "MyProject");
 
-        var package = Create.EmptyWorkspace(initializer: initializer);
+        var package = PackageUtilities.CreateEmptyBuildablePackage(initializer: initializer);
 
-        await package.CreateWorkspaceForRunAsync();
-        await package.CreateWorkspaceForRunAsync();
+        await package.GetOrCreateWorkspaceAsync();
+        await package.GetOrCreateWorkspaceAsync();
 
         initializer.InitializeCount.Should().Be(1);
     }
@@ -55,10 +55,10 @@ public partial class PackageTests : IDisposable
                 afterCreateCallCount++;
             });
 
-        var package = Create.EmptyWorkspace(initializer: initializer);
+        var package = PackageUtilities.CreateEmptyBuildablePackage(initializer: initializer);
 
-        await package.CreateWorkspaceForRunAsync();
-        await package.CreateWorkspaceForRunAsync();
+        await package.GetOrCreateWorkspaceAsync();
+        await package.GetOrCreateWorkspaceAsync();
 
         afterCreateCallCount.Should().Be(1);
     }
@@ -70,33 +70,23 @@ public partial class PackageTests : IDisposable
             "console",
             "MyProject");
 
-        var original = Create.EmptyWorkspace(initializer: initializer);
+        var original = PackageUtilities.CreateEmptyBuildablePackage(initializer: initializer);
 
-        await original.CreateWorkspaceForLanguageServicesAsync();
+        await original.GetOrCreateWorkspaceAsync();
 
-        var copy = await PackageUtilities.Copy(original);
+        var copy = await original.CreateBuildableCopy();
 
-        await copy.CreateWorkspaceForLanguageServicesAsync();
+        await copy.GetOrCreateWorkspaceAsync();
 
         initializer.InitializeCount.Should().Be(1);
     }
-
-    [Fact]
-    public async Task When_package_contains_simple_console_app_then_IsAspNet_is_false()
-    {
-        var package = await Create.ConsoleWorkspaceCopy();
-
-        await package.CreateWorkspaceForLanguageServicesAsync();
-
-        package.IsWebProject.Should().BeFalse();
-    }
-
+    
     [Fact]
     public async Task When_package_contains_simple_console_app_then_entry_point_dll_is_in_the_build_directory()
     {
-        var package = Create.EmptyWorkspace(initializer: new PackageInitializer("console", "empty"));
+        var package = PackageUtilities.CreateEmptyBuildablePackage(initializer: new PackageInitializer("console", "empty"));
 
-        await package.CreateWorkspaceForRunAsync();
+        await package.GetOrCreateWorkspaceAsync();
 
         package.EntryPointAssemblyPath.Exists.Should().BeTrue();
 
@@ -112,32 +102,35 @@ public partial class PackageTests : IDisposable
     }
 
     [Fact]
-    public async Task If_a_build_is_in_fly_the_second_one_will_wait_and_do_not_continue()
+    public async Task If_a_build_is_in_flight_then_the_second_one_will_wait_on_it_to_complete()
     {
         var buildEvents = new LogEntryList();
         var buildEventsMessages = new List<string>();
-        var package = await Create.ConsoleWorkspaceCopy(isRebuildable: true);
+        var package = await PackageUtilities.CreateBuildableConsolePackageCopy();
         var barrier = new Barrier(2);
-        using (LogEvents.Subscribe(e =>
-               {
-                   buildEvents.Add(e);
-                   buildEventsMessages.Add(e.Evaluate().Message);
-                   if (e.Evaluate().Message.StartsWith("Building package "))
-                   {
-                       barrier.SignalAndWait(30.Seconds());
-                   }
-               }, searchInAssemblies: 
-               new[] {typeof(LogEvents).Assembly,
-                   typeof(ICodeRunner).Assembly}))
-        {
-            await Task.WhenAll(
-                Task.Run(() => package.FullBuildAsync()),
-                Task.Run(() => package.FullBuildAsync()));
-        }
+        LogEvents.Subscribe(
+            e =>
+            {
+                buildEvents.Add(e);
+                buildEventsMessages.Add(e.Evaluate().Message);
+                if (e.Evaluate().Message.StartsWith("Building package "))
+                {
+                    barrier.SignalAndWait(30.Seconds());
+                }
+            }, searchInAssemblies:
+            new[]
+            {
+                typeof(LogEvents).Assembly,
+                typeof(ICodeRunner).Assembly
+            });
+
+        await Task.WhenAll(
+            Task.Run(() => package.DoFullBuildAsync()),
+            Task.Run(() => package.DoFullBuildAsync()));
 
         buildEventsMessages.Should()
-            .Contain(e => e.StartsWith("Building package "+package.Name))
-            .And
-            .Contain(e => e.StartsWith("Skipping build for package "+package.Name));
+                           .Contain(e => e.StartsWith("Building package " + package.Name))
+                           .And
+                           .Contain(e => e.StartsWith("Skipping build for package " + package.Name));
     }
 }

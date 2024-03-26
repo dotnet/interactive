@@ -9,7 +9,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharpProject.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject.Events;
-using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -25,6 +25,7 @@ public class CSharpProjectKernel :
     IKernelCommandHandler<RequestSignatureHelp>,
     IKernelCommandHandler<SubmitCode>
 {
+    private readonly IPackageFinder _packageFinder;
     private RoslynWorkspaceServer _workspaceServer;
     private Workspace _workspace;
     private Buffer _buffer;
@@ -55,32 +56,40 @@ public class CSharpProjectKernel :
         }
     }
 
-    public CSharpProjectKernel(string name = "csharp") : base(name)
+    public CSharpProjectKernel(string name = "csharp", IPackageFinder packageFinder = null) : base(name)
     {
+        _packageFinder = packageFinder;
         KernelInfo.LanguageName = "C#";
         KernelInfo.LanguageVersion = "11.0";
     }
 
     async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)
     {
-        _workspaceServer = new RoslynWorkspaceServer(CreateConsoleWorkspacePackage);
+        _workspaceServer = new RoslynWorkspaceServer(_packageFinder ?? PackageFinder.Create(() => Package.GetOrCreateConsolePackageAsync(enableBuild: false)));
 
         var extractor = new BufferFromRegionExtractor();
         _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());
 
-        context.Publish(new ProjectOpened(command, _workspace.Buffers.GroupBy(b => b.Id.FileName)
-            .OrderBy(g => g.Key).Select(g => new ProjectItem(
-                g.Key,
-                g.Select(r => r.Id.RegionName).Where(r => r != null).OrderBy(r => r).ToList(),
-                g.Where(r => r is not null && !string.IsNullOrWhiteSpace(r.Id.RegionName)).ToDictionary(r => r.Id.RegionName, b => b.Content)))
-            .ToList()));
+        var projectOpened = new ProjectOpened(
+            command,
+            _workspace.Buffers
+                      .GroupBy(b => b.Id.FileName)
+                      .OrderBy(g => g.Key)
+                      .Select(g => new ProjectItem(
+                                  g.Key,
+                                  g.Select(r => r.Id.RegionName).Where(r => r != null).OrderBy(r => r).ToList(),
+                                  g.Where(r => r is not null && !string.IsNullOrWhiteSpace(r.Id.RegionName))
+                                   .ToDictionary(r => r.Id.RegionName, b => b.Content)))
+                      .ToList());
+        context.Publish(projectOpened);
     }
 
     async Task IKernelCommandHandler<OpenDocument>.HandleAsync(OpenDocument command, KernelInvocationContext context)
     {
         ThrowIfProjectIsNotOpened();
 
-        var file = _workspace.Files.SingleOrDefault(f => string.Compare(f.Name, command.RelativeFilePath, StringComparison.OrdinalIgnoreCase) == 0);
+        var file = _workspace.Files.SingleOrDefault(f => string.Equals(f.Name, command.RelativeFilePath, StringComparison.OrdinalIgnoreCase));
+
         if (file is null)
         {
             // check for a region-less buffer instead
@@ -122,7 +131,7 @@ public class CSharpProjectKernel :
         ThrowIfProjectIsNotOpened();
         ThrowIfDocumentIsNotOpened();
 
-        var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
+        var updatedWorkspace = await AppendCodeToWorkspaceAsync(command.Code);
         _buffer = updatedWorkspace.Buffers.Single(b => b.Id == _buffer.Id);
         _workspace = updatedWorkspace;
     }
@@ -135,7 +144,7 @@ public class CSharpProjectKernel :
         var request = new WorkspaceRequest(_workspace, _buffer.Id);
         var result = await _workspaceServer.CompileAsync(request);
 
-        var diagnostics = GetDiagnostics(_buffer.Content, result);
+        var diagnostics = GetDiagnostics(_buffer.Content, result).ToArray();
         if (diagnostics.Any())
         {
             context.Publish(new DiagnosticsProduced(diagnostics, command));
@@ -156,7 +165,7 @@ public class CSharpProjectKernel :
         ThrowIfDocumentIsNotOpened();
 
         var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
-        var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
+        var updatedWorkspace = await AppendCodeToWorkspaceAsync(command.Code, position);
         var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
         var completionResult = await _workspaceServer.GetCompletionsAsync(request);
         var completionItems = completionResult.Items.Select(item => new CompletionItem(
@@ -175,11 +184,11 @@ public class CSharpProjectKernel :
         ThrowIfProjectIsNotOpened();
         ThrowIfDocumentIsNotOpened();
 
-        var updatedWorkspace = await GetWorkspaceWithCode(command.Code);
+        var updatedWorkspace = await AppendCodeToWorkspaceAsync(command.Code);
         var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
         var result = await _workspaceServer.CompileAsync(request);
 
-        var diagnostics = GetDiagnostics(command.Code, result);
+        var diagnostics = GetDiagnostics(command.Code, result).ToArray();
         if (diagnostics.Any())
         {
             context.Publish(new DiagnosticsProduced(diagnostics, command));
@@ -192,7 +201,7 @@ public class CSharpProjectKernel :
         ThrowIfDocumentIsNotOpened();
 
         var position = GetPositionFromLinePosition(command.Code, command.LinePosition);
-        var updatedWorkspace = await GetWorkspaceWithCode(command.Code, position);
+        var updatedWorkspace = await AppendCodeToWorkspaceAsync(command.Code, position);
         var request = new WorkspaceRequest(updatedWorkspace, _buffer.Id);
         var sigHelpResult = await _workspaceServer.GetSignatureHelpAsync(request);
         var sigHelpItems = sigHelpResult.Signatures.Select(s =>
@@ -219,7 +228,7 @@ public class CSharpProjectKernel :
 
             position++;
             currentCharacter++;
-            if (c == '\n')
+            if (c is '\n')
             {
                 currentLine++;
                 currentCharacter = 0;
@@ -243,7 +252,7 @@ public class CSharpProjectKernel :
 
             currentPosition++;
             currentCharacter++;
-            if (c == '\n')
+            if (c is '\n')
             {
                 currentLine++;
                 currentCharacter = 0;
@@ -253,7 +262,7 @@ public class CSharpProjectKernel :
         return new LinePosition(currentLine, currentCharacter);
     }
 
-    private async Task<Workspace> GetWorkspaceWithCode(string code, int position = 0)
+    private async Task<Workspace> AppendCodeToWorkspaceAsync(string code, int position = 0)
     {
         var updatedWorkspace = new Workspace(
             files: _workspace.Files,
@@ -300,16 +309,5 @@ public class CSharpProjectKernel :
         {
             throw new InvalidOperationException($"Document must be opened, send the command '{nameof(OpenDocument)}' first.");
         }
-    }
-
-    private static async Task<Package> CreateConsoleWorkspacePackage()
-    {
-        var packageBuilder = new PackageBuilder("console");
-        packageBuilder.CreateUsingDotnet("console");
-        packageBuilder.TrySetLanguageVersion("11.0");
-        packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
-        var package = packageBuilder.GetPackage() as Package;
-        await package!.CreateWorkspaceForRunAsync();
-        return package;
     }
 }

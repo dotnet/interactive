@@ -9,11 +9,10 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Events;
 
 public class AssemblyProduced : KernelEvent
 {
-    public Base64EncodedAssembly Assembly { get; }
-
-    public AssemblyProduced(CompileProject command, Base64EncodedAssembly assembly)
-        : base(command)
+    public AssemblyProduced(CompileProject command, Base64EncodedAssembly assembly) : base(command)
     {
         Assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
     }
+
+    public Base64EncodedAssembly Assembly { get; }
 }

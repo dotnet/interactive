@@ -11,7 +11,7 @@ public static class WorkspaceExtensions
 {
     public static ProjectFileContent GetContentFromBufferId(this Workspace workspace, BufferId bufferId)
     {
-        if (bufferId == null)
+        if (bufferId is null)
         {
             throw new ArgumentNullException(nameof(bufferId));
         }
@@ -19,7 +19,7 @@ public static class WorkspaceExtensions
         return workspace.Files.FirstOrDefault(f => f.Name == bufferId.FileName);
     }
 
-    public static int GetAbsolutePositionForGetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne(
+    public static int GetAbsolutePositionForBufferByIdOrSingleBufferIfThereIsOnlyOne(
         this Workspace workspace,
         BufferId bufferId = null)
     {
@@ -30,77 +30,16 @@ public static class WorkspaceExtensions
         return buffer.AbsolutePosition;
     }
 
-
-
     internal static (int line, int column, int absolutePosition) GetTextLocation(
         this Workspace workspace,
         BufferId bufferId)
     {
         var fileContent = workspace.GetContentFromBufferId(bufferId);
-        var absolutePosition = GetAbsolutePositionForGetBufferWithSpecifiedIdOrSingleBufferIfThereIsOnlyOne(workspace, bufferId);
+        var absolutePosition = GetAbsolutePositionForBufferByIdOrSingleBufferIfThereIsOnlyOne(workspace, bufferId);
 
         var src = SourceText.From(fileContent.Text);
         var line = src.Lines.GetLineFromPosition(absolutePosition);
 
         return (line: line.LineNumber, column: absolutePosition - line.Start, absolutePosition);
     }
-
-    public static Workspace AddBuffer(
-        this Workspace workspace,
-        string id,
-        string text) =>
-        new Workspace(
-            workspace.Usings,
-            workspace.Files,
-            workspace.Buffers.Concat(new[] { new Buffer(BufferId.Parse(id), text) }).ToArray(),
-            workspace.WorkspaceType,
-            workspace.Language,
-            workspace.IncludeInstrumentation);
-
-    public static Workspace RemoveBuffer(
-        this Workspace workspace,
-        string id) =>
-        new Workspace(
-            workspace.Usings,
-            workspace.Files,
-            workspace.Buffers.Where(b => b.Id.ToString() != id).ToArray(),
-            workspace.WorkspaceType,
-            workspace.Language,
-            workspace.IncludeInstrumentation);
-
-    public static Workspace ReplaceBuffer(
-        this Workspace workspace,
-        string id,
-        string text) =>
-        workspace.RemoveBuffer(id).AddBuffer(id, text);
-
-    public static Workspace AddFile(
-        this Workspace workspace,
-        string name,
-        string text) =>
-        new Workspace(
-            workspace.Usings,
-            workspace.Files
-                .Concat(new[] { new ProjectFileContent(name, text) })
-                .ToArray(),
-            workspace.Buffers,
-            workspace.WorkspaceType,
-            workspace.Language,
-            workspace.IncludeInstrumentation);
-
-    public static Workspace ReplaceFile(
-        this Workspace workspace,
-        string name,
-        string text) =>
-        new Workspace(
-            workspace.Usings,
-            workspace.Files
-                .Where(f => f.Name != name)
-                .Concat(new[] { new ProjectFileContent(name, text) })
-                .ToArray(),
-            workspace.Buffers,
-            workspace.WorkspaceType,
-            workspace.Language,
-            workspace.IncludeInstrumentation);
-
 }

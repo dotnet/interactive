@@ -13,7 +13,6 @@ public abstract class FeatureContainer : IDisposable
     private readonly Dictionary<string, object> _features = new(StringComparer.OrdinalIgnoreCase);
     private List<(string, object)> _featureProperties;
 
-
     public IReadOnlyDictionary<string, object> Features => _features;
 
     public void Dispose() => _disposables.Dispose();

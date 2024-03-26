@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
