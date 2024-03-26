@@ -335,6 +335,8 @@ public class Package
 
         try
         {
+            await EnsureCreatedAsync();
+
             operation.Info("Building package {name}", Name);
 
             // When a build finishes, buildCount is reset to 0. If, when we increment

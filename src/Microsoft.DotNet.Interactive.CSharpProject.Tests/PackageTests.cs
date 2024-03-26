@@ -133,4 +133,16 @@ public class PackageTests : IDisposable
                            .And
                            .Contain(e => e.StartsWith("Skipping build for package " + package.Name));
     }
+
+    [Fact]
+    public async Task Directory_is_created_on_demand_during_build()
+    {
+        DirectoryInfo directory = new(Path.Combine(Package.DefaultPackagesDirectory.FullName, Guid.NewGuid().ToString("N")));
+
+        var package = new Package("console", enableBuild: true, directory: directory);
+
+        await package.DoFullBuildAsync();
+
+        directory.Exists.Should().BeTrue();
+    }
 }
