@@ -57,7 +57,7 @@ public class Package
     private FileInfo _entryPointAssemblyPath;
     private static string _targetFramework;
     private readonly Logger _log;
-    private readonly Subject<Unit> _fullBuildRequestChannel;
+    private readonly Subject<Unit> _buildRequestChannel;
 
     protected CodeAnalysis.Workspace _roslynWorkspace;
 
@@ -89,10 +89,10 @@ public class Package
         _log = new Logger($"{nameof(Package)}:{Name}");
         _buildThrottleScheduler = TaskPoolScheduler.Default;
 
-        _fullBuildRequestChannel = new Subject<Unit>();
+        _buildRequestChannel = new Subject<Unit>();
         _buildThrottleSubscription = new SerialDisposable();
         
-        InitializeFullBuildChannel();
+        InitializeBuildChannel();
 
         if (!TryLoadWorkspaceFromCache())
         {
@@ -181,7 +181,7 @@ public class Package
         
         CreateCompletionSourceIfNeeded(ref _buildCompletionSource, _buildCompletionSourceLock);
 
-        _fullBuildRequestChannel.OnNext(Unit.Default);
+        _buildRequestChannel.OnNext(Unit.Default);
 
         var newWorkspace = await _buildCompletionSource.Task;
 
@@ -237,9 +237,9 @@ public class Package
         }
     }
 
-    private void InitializeFullBuildChannel()
+    private void InitializeBuildChannel()
     {
-        _buildThrottleSubscription.Disposable = _fullBuildRequestChannel
+        _buildThrottleSubscription.Disposable = _buildRequestChannel
             .Throttle(TimeSpan.FromSeconds(0.5), _buildThrottleScheduler)
             .ObserveOn(TaskPoolScheduler.Default)
             .Subscribe(
@@ -247,7 +247,7 @@ public class Package
                 {
                     try
                     {
-                        await ProcessFullBuildRequest();
+                        await ProcessBuildRequest();
                     }
                     catch (Exception e)
                     {
@@ -257,11 +257,11 @@ public class Package
                 error =>
                 {
                     SetCompletionSourceException(_buildCompletionSource, error, _buildCompletionSourceLock);
-                    InitializeFullBuildChannel();
+                    InitializeBuildChannel();
                 });
     }
 
-    private async Task ProcessFullBuildRequest()
+    private async Task ProcessBuildRequest()
     {
         await EnsureCreatedAsync();
         await EnsureBuiltAsync();
@@ -312,7 +312,7 @@ public class Package
 
         if (IsBuildNeeded())
         {
-            await DoFullBuildAsync();
+            await BuildAsync();
         }
         else
         {
@@ -322,7 +322,7 @@ public class Package
         operation.Succeed();
     }
 
-    public async Task DoFullBuildAsync()
+    public async Task BuildAsync()
     {
         if (!EnableBuild)
         {

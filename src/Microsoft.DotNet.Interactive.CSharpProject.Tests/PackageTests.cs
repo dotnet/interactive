@@ -125,8 +125,8 @@ public class PackageTests : IDisposable
             });
 
         await Task.WhenAll(
-            Task.Run(() => package.DoFullBuildAsync()),
-            Task.Run(() => package.DoFullBuildAsync()));
+            Task.Run(() => package.BuildAsync()),
+            Task.Run(() => package.BuildAsync()));
 
         buildEventsMessages.Should()
                            .Contain(e => e.StartsWith("Building package " + package.Name))
@@ -141,7 +141,7 @@ public class PackageTests : IDisposable
 
         var package = new Package("console", enableBuild: true, directory: directory);
 
-        await package.DoFullBuildAsync();
+        await package.BuildAsync();
 
         directory.Exists.Should().BeTrue();
     }
