@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;
 
-public static class FileExtensions
+internal static class FileExtensions
 {
     public static SourceFile ToSourceFile(this ProjectFileContent file)
     {

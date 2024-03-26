@@ -13,13 +13,11 @@ using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.DotNet.Interactive.Utility;
 using Recipes;
 using Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
-using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn.Instrumentation;
-using Microsoft.DotNet.Interactive.CSharpProject.Transformations;
 using Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
-using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Pocket;
 using static Pocket.Logger;
-using Package = Microsoft.DotNet.Interactive.CSharpProject.Packaging.Package;
+using Package = Microsoft.DotNet.Interactive.CSharpProject.Build.Package;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
@@ -299,11 +297,11 @@ public class RoslynWorkspaceServer : IWorkspaceServer
     {
         var dotnet = new Dotnet(package.Directory);
 
-        var commandName = $@"""{package.EntryPointAssemblyPath.FullName}""";
+        var commandName = package.EntryPointAssemblyPath.FullName;
         var commandLineResult = await dotnet.Execute(
             commandName.AppendArgs(commandLineArgs));
 
-        var output = InstrumentedOutputExtractor.ExtractOutput(commandLineResult.Output);
+        var output = commandLineResult.Output;
 
         if (commandLineResult.ExitCode == 124)
         {
@@ -319,16 +317,10 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
         var runResult = new RunResult(
             succeeded: true,
-            output: output.StdOut,
+            output: output,
             exception: exceptionMessage,
             diagnostics: diagnostics,
             requestId: requestId);
-
-        if (includeInstrumentation)
-        {
-            runResult.AddFeature(output.ProgramStatesArray);
-            runResult.AddFeature(output.ProgramDescriptor);
-        }
 
         return runResult;
     }

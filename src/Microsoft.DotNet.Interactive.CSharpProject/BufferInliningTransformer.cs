@@ -111,7 +111,7 @@ public class BufferInliningTransformer : IWorkspaceTransformer
         return new TextSpan(viewPortRegion.Start, 0);
     }
 
-    protected virtual async Task InjectBufferAtSpan(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files, TextSpan span)
+    private async Task InjectBufferAtSpan(Viewport viewPort, Buffer sourceBuffer, ICollection<Buffer> buffers, IDictionary<string, SourceFile> files, TextSpan span)
     {
         var tree = CSharpSyntaxTree.ParseText(viewPort.Destination.Text.ToString());
         var textChange = new TextChange(

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
-using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;

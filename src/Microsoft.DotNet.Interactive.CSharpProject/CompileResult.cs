@@ -35,7 +35,7 @@ public class CompileResult : FeatureContainer
     {
         protected override void AddProperties(CompileResult result, JObject o)
         {
-            if (result.RequestId != null)
+            if (result.RequestId is not null)
             {
                 o.Add(new JProperty("requestId", result.RequestId));
             }
