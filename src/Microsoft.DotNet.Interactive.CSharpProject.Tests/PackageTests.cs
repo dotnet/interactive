@@ -125,12 +125,24 @@ public class PackageTests : IDisposable
             });
 
         await Task.WhenAll(
-            Task.Run(() => package.DoFullBuildAsync()),
-            Task.Run(() => package.DoFullBuildAsync()));
+            Task.Run(() => package.BuildAsync()),
+            Task.Run(() => package.BuildAsync()));
 
         buildEventsMessages.Should()
                            .Contain(e => e.StartsWith("Building package " + package.Name))
                            .And
                            .Contain(e => e.StartsWith("Skipping build for package " + package.Name));
+    }
+
+    [Fact]
+    public async Task Directory_is_created_on_demand_during_build()
+    {
+        DirectoryInfo directory = new(Path.Combine(Package.DefaultPackagesDirectory.FullName, Guid.NewGuid().ToString("N")));
+
+        var package = new Package("console", enableBuild: true, directory: directory);
+
+        await package.BuildAsync();
+
+        directory.Exists.Should().BeTrue();
     }
 }
