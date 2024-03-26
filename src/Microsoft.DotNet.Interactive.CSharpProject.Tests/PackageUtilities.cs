@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Reactive.Concurrency;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
@@ -13,8 +14,8 @@ public static class PackageUtilities
 {
     private static readonly object CreateDirectoryLock = new();
 
-    public static async Task<Package> Copy(
-        Package fromPackage,
+    public static async Task<Package> CreateBuildableCopy(
+        this Package fromPackage,
         string folderNameStartsWith = null,
         IScheduler buildThrottleScheduler = null,
         DirectoryInfo parentDirectory = null)
@@ -44,7 +45,7 @@ public static class PackageUtilities
             }
         });
 
-        var copy = new Package(directory: destination, name: destination.Name);
+        var copy = new Package(directory: destination, name: destination.Name, enableBuild: true);
 
         return copy;
     }
@@ -75,5 +76,24 @@ public static class PackageUtilities
         }
 
         return created;
+    }
+
+    public static async Task<Package> CreateBuildableConsolePackageCopy(
+        [CallerMemberName] string testName = null,
+        IScheduler buildThrottleScheduler = null)
+    {
+        var consolePackage = await Package.GetOrCreateConsolePackageAsync(true);
+        return await consolePackage.CreateBuildableCopy(testName, buildThrottleScheduler);
+    }
+
+    public static Package CreateEmptyBuildablePackage(
+        [CallerMemberName] string testName = null,
+        IPackageInitializer initializer = null)
+    {
+        return new Package(
+            name: testName,
+            directory: CreateDirectory(testName),
+            initializer: initializer,
+            enableBuild: true);
     }
 }

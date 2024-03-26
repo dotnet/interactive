@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharpProject;
 using Xunit.Abstractions;
 
@@ -15,6 +16,7 @@ internal partial class LogEvents
             new[]
             {
                 typeof(LogEvents).Assembly,
-                typeof(ICodeRunner).Assembly
+                typeof(CSharpProjectKernel).Assembly,
+                typeof(Kernel).Assembly
             });
 }

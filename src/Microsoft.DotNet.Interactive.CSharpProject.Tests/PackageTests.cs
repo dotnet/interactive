@@ -33,10 +33,10 @@ public class PackageTests : IDisposable
             "console",
             "MyProject");
 
-        var package = Create.EmptyBuildablePackage(initializer: initializer);
+        var package = PackageUtilities.CreateEmptyBuildablePackage(initializer: initializer);
 
-        await package.CreateWorkspaceForRunAsync();
-        await package.CreateWorkspaceForRunAsync();
+        await package.GetOrCreateWorkspaceAsync();
+        await package.GetOrCreateWorkspaceAsync();
 
         initializer.InitializeCount.Should().Be(1);
     }
@@ -55,10 +55,10 @@ public class PackageTests : IDisposable
                 afterCreateCallCount++;
             });
 
-        var package = Create.EmptyBuildablePackage(initializer: initializer);
+        var package = PackageUtilities.CreateEmptyBuildablePackage(initializer: initializer);
 
-        await package.CreateWorkspaceForRunAsync();
-        await package.CreateWorkspaceForRunAsync();
+        await package.GetOrCreateWorkspaceAsync();
+        await package.GetOrCreateWorkspaceAsync();
 
         afterCreateCallCount.Should().Be(1);
     }
@@ -70,13 +70,13 @@ public class PackageTests : IDisposable
             "console",
             "MyProject");
 
-        var original = Create.EmptyBuildablePackage(initializer: initializer);
+        var original = PackageUtilities.CreateEmptyBuildablePackage(initializer: initializer);
 
-        await original.CreateWorkspaceForLanguageServicesAsync();
+        await original.GetOrCreateWorkspaceAsync();
 
-        var copy = await PackageUtilities.Copy(original);
+        var copy = await original.CreateBuildableCopy();
 
-        await copy.CreateWorkspaceForLanguageServicesAsync();
+        await copy.GetOrCreateWorkspaceAsync();
 
         initializer.InitializeCount.Should().Be(1);
     }
@@ -84,9 +84,9 @@ public class PackageTests : IDisposable
     [Fact]
     public async Task When_package_contains_simple_console_app_then_entry_point_dll_is_in_the_build_directory()
     {
-        var package = Create.EmptyBuildablePackage(initializer: new PackageInitializer("console", "empty"));
+        var package = PackageUtilities.CreateEmptyBuildablePackage(initializer: new PackageInitializer("console", "empty"));
 
-        await package.CreateWorkspaceForRunAsync();
+        await package.GetOrCreateWorkspaceAsync();
 
         package.EntryPointAssemblyPath.Exists.Should().BeTrue();
 
@@ -106,7 +106,7 @@ public class PackageTests : IDisposable
     {
         var buildEvents = new LogEntryList();
         var buildEventsMessages = new List<string>();
-        var package = await Create.BuildableConsolePackageCopy();
+        var package = await PackageUtilities.CreateBuildableConsolePackageCopy();
         var barrier = new Barrier(2);
         LogEvents.Subscribe(
             e =>

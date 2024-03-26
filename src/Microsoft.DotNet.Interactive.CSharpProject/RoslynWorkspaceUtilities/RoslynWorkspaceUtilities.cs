@@ -19,35 +19,28 @@ internal static class RoslynWorkspaceUtilities
 {
     internal static BuildDataResults GetResultsFromCacheFile(string cacheFilePath)
     {
-        try
-        {
-            if (!File.Exists(cacheFilePath))
-            {
-                return null;
-            }
-
-            string fileContent = File.ReadAllText(cacheFilePath);
-
-            PopulateBuildProjectData(fileContent, out var buildProjectData);
-
-            var workspace = GetWorkspace(buildProjectData);
-
-            var cSharpParseOptions = CreateCSharpParseOptions(buildProjectData);
-
-            return new BuildDataResults
-            {
-                BuildProjectData = buildProjectData,
-                ProjectFilePath = cacheFilePath,
-                CacheFilePath = cacheFilePath + cacheFilenameSuffix,
-                Workspace = workspace,
-                Succeeded = true,
-                CSharpParseOptions = cSharpParseOptions
-            };
-        }
-        catch (ArgumentNullException)
+        if (!File.Exists(cacheFilePath))
         {
             return null;
         }
+
+        string fileContent = File.ReadAllText(cacheFilePath);
+
+        PopulateBuildProjectData(fileContent, out var buildProjectData);
+
+        var workspace = GetWorkspace(buildProjectData);
+
+        var cSharpParseOptions = CreateCSharpParseOptions(buildProjectData);
+
+        return new BuildDataResults
+        {
+            BuildProjectData = buildProjectData,
+            ProjectFilePath = buildProjectData.ProjectFilePath,
+            CacheFilePath = cacheFilePath,
+            Workspace = workspace,
+            Succeeded = true,
+            CSharpParseOptions = cSharpParseOptions
+        };
     }
 
     internal static BuildDataResults ResultsFromCacheFileUsingProjectFilePath(string csprojFilePath)

@@ -340,7 +340,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         var package = await _packageFinder.FindAsync(workspace.WorkspaceType);
         workspace = await workspace.InlineBuffersAsync();
         var sources = workspace.GetSourceFiles();
-        var (compilation, project) = await package.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => package.CreateWorkspaceAsync());
+        var (compilation, project) = await package.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => package.GetOrCreateWorkspaceAsync());
         var (diagnosticsInActiveBuffer, allDiagnostics) = workspace.MapDiagnostics(activeBufferId, compilation.GetDiagnostics());
         return new CompilationResult(
             compilation,

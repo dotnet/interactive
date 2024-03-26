@@ -25,10 +25,10 @@ public class CSharpProjectKernel :
     IKernelCommandHandler<RequestSignatureHelp>,
     IKernelCommandHandler<SubmitCode>
 {
+    private readonly IPackageFinder _packageFinder;
     private RoslynWorkspaceServer _workspaceServer;
     private Workspace _workspace;
     private Buffer _buffer;
-    private readonly bool _enableBuild;
 
     public static void RegisterEventsAndCommands()
     {
@@ -56,25 +56,32 @@ public class CSharpProjectKernel :
         }
     }
 
-    public CSharpProjectKernel(string name = "csharp") : base(name)
+    public CSharpProjectKernel(string name = "csharp", IPackageFinder packageFinder = null) : base(name)
     {
+        _packageFinder = packageFinder;
         KernelInfo.LanguageName = "C#";
         KernelInfo.LanguageVersion = "11.0";
     }
 
     async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)
     {
-        _workspaceServer = new RoslynWorkspaceServer(() => Package.GetOrCreateConsolePackageAsync(_enableBuild));
+        _workspaceServer = new RoslynWorkspaceServer(_packageFinder ?? PackageFinder.Create(() => Package.GetOrCreateConsolePackageAsync(enableBuild: false)));
 
         var extractor = new BufferFromRegionExtractor();
         _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());
 
-        context.Publish(new ProjectOpened(command, _workspace.Buffers.GroupBy(b => b.Id.FileName)
-            .OrderBy(g => g.Key).Select(g => new ProjectItem(
-                g.Key,
-                g.Select(r => r.Id.RegionName).Where(r => r != null).OrderBy(r => r).ToList(),
-                g.Where(r => r is not null && !string.IsNullOrWhiteSpace(r.Id.RegionName)).ToDictionary(r => r.Id.RegionName, b => b.Content)))
-            .ToList()));
+        var projectOpened = new ProjectOpened(
+            command,
+            _workspace.Buffers
+                      .GroupBy(b => b.Id.FileName)
+                      .OrderBy(g => g.Key)
+                      .Select(g => new ProjectItem(
+                                  g.Key,
+                                  g.Select(r => r.Id.RegionName).Where(r => r != null).OrderBy(r => r).ToList(),
+                                  g.Where(r => r is not null && !string.IsNullOrWhiteSpace(r.Id.RegionName))
+                                   .ToDictionary(r => r.Id.RegionName, b => b.Content)))
+                      .ToList());
+        context.Publish(projectOpened);
     }
 
     async Task IKernelCommandHandler<OpenDocument>.HandleAsync(OpenDocument command, KernelInvocationContext context)
@@ -221,7 +228,7 @@ public class CSharpProjectKernel :
 
             position++;
             currentCharacter++;
-            if (c == '\n')
+            if (c is '\n')
             {
                 currentLine++;
                 currentCharacter = 0;
@@ -245,7 +252,7 @@ public class CSharpProjectKernel :
 
             currentPosition++;
             currentCharacter++;
-            if (c == '\n')
+            if (c is '\n')
             {
                 currentLine++;
                 currentCharacter = 0;

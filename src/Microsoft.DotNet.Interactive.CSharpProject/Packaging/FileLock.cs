@@ -2,11 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Packaging;
 
+[DebuggerStepThrough]
 public class FileLock
 {
     private const string LockFileName = ".trydotnet-lock";
@@ -27,6 +30,7 @@ public class FileLock
         {
             throw new ArgumentNullException(nameof(fileInfo));
         }
+
         return fileInfo.Name == LockFileName;
     }
 
@@ -39,11 +43,9 @@ public class FileLock
 
         const int waitAmount = 100;
         var attemptCount = 1;
-        do
-        {
-            await Task.Delay(waitAmount * attemptCount);
-            attemptCount++;
 
+        while (attemptCount <= 100)
+        {
             try
             {
                 return File.Create(lockFile.FullName, 1, FileOptions.DeleteOnClose);
@@ -51,7 +53,15 @@ public class FileLock
             catch (IOException)
             {
             }
-        } while (attemptCount <= 100);
+
+            await Task.Delay(waitAmount);
+            attemptCount++;
+
+            if (attemptCount % 10 == 0)
+            {
+                Logger.Log.Info($"Waiting on {nameof(FileLock)} for {attemptCount / 10} seconds");
+            }
+        }
 
         throw new IOException($"Cannot acquire file lock {lockFile.FullName}");
     }

@@ -30,6 +30,7 @@ public class SignatureHelpService
         {
             return response;
         }
+
         // define active parameter by position
         foreach (var comma in invocation.Separators)
         {

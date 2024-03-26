@@ -83,7 +83,7 @@ public static class CompletionExtensions
     {
         var symbol = GetCompletionSymbolAsync(item, recommendedSymbols, document);
             
-        if (symbol is { })
+        if (symbol is not null)
         {
             return DocumentationConverter.GetDocumentation(symbol, "\n");
         }
