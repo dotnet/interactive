@@ -18,16 +18,6 @@ public class PackageBuilder
 
     public PackageBuilder(string packageName, DirectoryInfo directory = null)
     {
-        // FIX: (PackageBuilder) 
-        if (directory is null)
-        {
-            
-        }
-        else
-        {
-
-        }
-
         if (string.IsNullOrWhiteSpace(packageName))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(packageName));
