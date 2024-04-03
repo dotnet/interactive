@@ -1,30 +1,48 @@
-﻿using Microsoft.DotNet.Interactive.Http;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing
 {
 #nullable enable
     internal static class DynamicExpressionUtilites
     {
-
-        const string DateTime = "$datetime";
-        const string LocalDateTime = "$localDatetime";
+        const string DateTimeMacroName = "$datetime";
+        const string LocalDateTimeMacroName = "$localDatetime";
         const string OffsetRegex = """(?:\s+(?<offset>[-+]?[^\s]+)\s+(?<option>[^\s]+))?""";
         const string TypeRegex = """(?:\s+(?<type>rfc1123|iso8601|'.+'|".+"))?""";
 
         internal static Regex guidPattern = new Regex(@$"^\$guid$", RegexOptions.Compiled);
-        internal static Regex dateTimePattern = new Regex(@$"^\{DateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
-        internal static Regex localDateTimePattern = new Regex(@$"^\{LocalDateTime}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
+        internal static Regex dateTimePattern = new Regex(@$"^\{DateTimeMacroName}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
+        internal static Regex localDateTimePattern = new Regex(@$"^\{LocalDateTimeMacroName}{TypeRegex}{OffsetRegex}$", RegexOptions.Compiled);
         internal static Regex randomIntPattern = new Regex(@$"^\$randomInt(?:\s+(?<arguments>-?[^\s]+)){{0,2}}$", RegexOptions.Compiled);
         internal static Regex timestampPattern = new Regex($@"^\$timestamp{OffsetRegex}$", RegexOptions.Compiled);
+
+        private static Func<bool, DateTimeOffset> GetDateTimeFunc = DefaultGetDateTime;
+
+        private static DateTimeOffset DefaultGetDateTime(bool isLocal)
+        {
+            return isLocal ? DateTimeOffset.Now : DateTimeOffset.UtcNow;
+        }
+
+        // For Unit Tests, pass in a known date time, use it for all time related funcs, and then reset to default time handling
+        internal static HttpBindingResult<object?> ResolveExpressionBinding(HttpExpressionNode node, Func<DateTimeOffset> dateTimeFunc, string expression)
+        {
+            try
+            {
+                GetDateTimeFunc = delegate (bool _) { return dateTimeFunc(); };
+                return ResolveExpressionBinding(node, expression);
+            }
+            finally
+            {
+                GetDateTimeFunc = DefaultGetDateTime;
+            }
+        }
 
         internal static HttpBindingResult<object?> ResolveExpressionBinding(HttpExpressionNode node, string expression)
         {
@@ -34,26 +52,26 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 return node.CreateBindingSuccess(Guid.NewGuid().ToString());
             }
 
-            if (expression.Contains(DateTime))
+            if (expression.Contains(DateTimeMacroName))
             {
                 var dateTimeMatches = dateTimePattern.Matches(expression);
                 if (dateTimeMatches.Count == 1)
                 {
-                    return GetDateTime(node, DateTime, expression, dateTimeMatches[0]);
+                    return GetDateTime(node, DateTimeMacroName, GetDateTimeFunc(false /* isLocal */), expression, dateTimeMatches[0]);
                 }
 
-                return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expression, DateTime));
+                return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expression, DateTimeMacroName));
             }
 
-            if (expression.Contains(LocalDateTime))
+            if (expression.Contains(LocalDateTimeMacroName))
             {
                 var localDateTimeMatches = localDateTimePattern.Matches(expression);
                 if (localDateTimeMatches.Count == 1)
                 {
-                    return GetDateTime(node, LocalDateTime, expression, localDateTimeMatches[0]);
+                    return GetDateTime(node, LocalDateTimeMacroName, GetDateTimeFunc(true /* isLocal */), expression, localDateTimeMatches[0]);
                 }
 
-                return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expression, LocalDateTime));
+                return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expression, LocalDateTimeMacroName));
             }
 
             if (expression.Contains("$timestamp"))
@@ -61,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 var timestampMatches = timestampPattern.Matches(expression);
                 if (timestampMatches.Count == 1)
                 {
-                    return GetTimestamp(node, expression, timestampMatches[0]);
+                    return GetTimestamp(node, GetDateTimeFunc(false /* isLocal */), expression, timestampMatches[0]);
                 }
 
                 return node.CreateBindingFailure(HttpDiagnostics.IncorrectTimestampFormat(expression));
@@ -82,12 +100,10 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
         }
 
 
-        private static HttpBindingResult<object?> GetTimestamp(HttpExpressionNode node, string expressionText, Match match)
+        private static HttpBindingResult<object?> GetTimestamp(HttpExpressionNode node, DateTimeOffset currentDateTimeOffset, string expressionText, Match match)
         {
             if (match.Groups.Count == 3)
             {
-                var currentDateTimeOffset = DateTimeOffset.UtcNow;
-
                 if (string.Equals(expressionText, "$timestamp", StringComparison.InvariantCulture))
                 {
                     return node.CreateBindingSuccess(currentDateTimeOffset.ToUnixTimeSeconds().ToString());
@@ -119,14 +135,12 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
 
             }
             return node.CreateBindingFailure(HttpDiagnostics.IncorrectTimestampFormat(expressionText));
-
         }
 
-        private static HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string dateTimeType, string expressionText, Match match)
+        private static HttpBindingResult<object?> GetDateTime(HttpExpressionNode node, string dateTimeType, DateTimeOffset currentDateTimeOffset, string expressionText, Match match)
         {
             if (match.Groups.Count == 4)
             {
-                var currentDateTimeOffset = DateTimeOffset.UtcNow;
                 if (match.Groups["offset"].Success && match.Groups["option"].Success)
                 {
                     var offsetString = match.Groups["offset"].Value;
@@ -176,13 +190,18 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                         format = type.Value.Substring(1, type.Value.Length - 2);
                     }
 
-                    text = currentDateTimeOffset.ToString(format, formatProvider);
+                    try
+                    {
+                        text = currentDateTimeOffset.ToString(format, formatProvider);
+                    }
+                    catch(FormatException)
+                    {
+                        return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeCustomFormat(format));
+                    }
                 }
 
-                if (DateTimeOffset.TryParse(text, out _))
-                {
-                    return node.CreateBindingSuccess(text);
-                }
+                return node.CreateBindingSuccess(text);
+
             }
             return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText, dateTimeType));
         }

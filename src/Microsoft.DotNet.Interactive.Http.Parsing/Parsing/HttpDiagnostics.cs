@@ -165,4 +165,12 @@ internal static class HttpDiagnostics
         return new HttpDiagnosticInfo(id, messageFormat, severity, expression, argument);
     }
 
+    internal static HttpDiagnosticInfo IncorrectDateTimeCustomFormat(string format)
+    {
+        var id = $"HTTP0020";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied format '{0}' is invalid.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, format);
+    }
 }
