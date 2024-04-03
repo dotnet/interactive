@@ -15,7 +15,7 @@ public class MsSqlKernelExtension
         if (kernel is CompositeKernel compositeKernel)
         {
             var sqlToolName = "MicrosoftSqlToolsServiceLayer";
-            await Utils.CheckAndInstallGlobalToolAsync(sqlToolName, "1.3.0", "Microsoft.SqlServer.SqlToolsServiceLayer.Tool");
+            await Utils.CheckAndInstallGlobalToolAsync(sqlToolName, "2.0.0", "Microsoft.SqlServer.SqlToolsServiceLayer.Tool");
 
             var sqlToolPath = Path.Combine(Paths.DotnetToolsPath, sqlToolName);
             compositeKernel
