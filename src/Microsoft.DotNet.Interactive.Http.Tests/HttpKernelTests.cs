@@ -415,10 +415,10 @@ public class HttpKernelTests
     [Theory]
     [InlineData(" $guid")]
     [InlineData("$guid ")]
-    [InlineData(" $datetime")]
-    [InlineData("$datetime ")]
-    [InlineData(" $localDatetime")]
-    [InlineData("$localDatetime ")]
+    [InlineData(" $datetime 'yyyy-MM-dd'")]
+    [InlineData("$datetime 'yyyy-MM-dd' ")]
+    [InlineData(" $localDatetime 'yyyy-MM-dd'")]
+    [InlineData("$localDatetime 'yyyy-MM-dd' ")]
     [InlineData(" $timestamp")]
     [InlineData("$timestamp ")]
     [InlineData(" $randomInt")]
@@ -519,7 +519,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{expression}}}' does not follow the correct pattern. The expression should adhere to the following pattern: '{$datetime [rfc1123|iso8601|"custom format"] [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{expression}}}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$datetime [rfc1123|iso8601|"custom format"] [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
 
     }
 
@@ -555,7 +555,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{expression}}}' does not follow the correct pattern. The expression should adhere to the following pattern: '{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{expression}}}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
 
     }
 
@@ -591,7 +591,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be($"The supplied expression '{expression}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$timestamp [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
+        diagnostics.Diagnostics.First().Message.Should().Be($"The supplied expression '{expression}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{{{$timestamp [offset option]}}}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
 
     }
 
@@ -627,7 +627,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{expression}}}' does not follow the correct pattern. The expression should adhere to the following pattern: '{$randomInt [min] [max]]}' where min and max (if specified) must be valid integers.""");
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{expression}}}' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$randomInt [min] [max]]}}' where min and max (if specified) must be valid integers.""");
 
     }
 
@@ -835,7 +835,7 @@ public class HttpKernelTests
 
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-        diagnostics.Diagnostics.First().Message.Should().Be("The supplied expression '$timestamp -1' does not follow the correct pattern. The expression should adhere to the following pattern: '{$timestamp [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
+        diagnostics.Diagnostics.First().Message.Should().Be("The supplied expression '$timestamp -1' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$timestamp [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
     }
 
     [Fact]
@@ -1395,76 +1395,6 @@ public class HttpKernelTests
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
 
         readDateValue.Should().BeEquivalentTo(offsetDate);
-
-    }
-
-    [Fact]
-    public async Task can_bind_datetime_with_no_arguments()
-    {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            request = message;
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            return Task.FromResult(response);
-        });
-        var client = new HttpClient(handler);
-        using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
-
-        var code = """
-            POST https://api.example.com/comments
-          
-            {
-                "custom_date" : "{{$datetime}}"
-            }
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var offsetDate = DateTime.Now;
-        var bodyAsString = await request.Content.ReadAsStringAsync();
-        var readDateSubstring = bodyAsString.Split("\"custom_date\" : ").Last().Trim().Substring(1);
-        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
-
-        DateTime.Parse(readDateValue).Should().BeCloseTo(offsetDate, TimeSpan.FromSeconds(10));
-
-    }
-
-    [Fact]
-    public async Task can_bind_datetime_with_offset_and_default_format()
-    {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            request = message;
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            return Task.FromResult(response);
-        });
-        var client = new HttpClient(handler);
-        using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
-
-        var code = """
-            POST https://api.example.com/comments
-          
-            {
-                "date_offset" : "{{$datetime -1 d}}"
-            }
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var offsetDate = DateTime.Now.AddDays(-1.0);
-        var bodyAsString = await request.Content.ReadAsStringAsync();
-        var readDateSubstring = bodyAsString.Split("\"date_offset\" : ").Last().Trim().Substring(1);
-        var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
-
-        DateTime.Parse(readDateValue).Should().BeCloseTo(offsetDate, TimeSpan.FromSeconds(10));
 
     }
 

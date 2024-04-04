@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
 
                 // $datetime and $localDatetime MUST have either rfc1123, iso8601 or some other parameter.
                 // $datetime or $localDatetime alone should result in a binding error.
-                if (!string.IsNullOrWhiteSpace(type.Value))
+                if (type is not null && !string.IsNullOrWhiteSpace(type.Value))
                 {
                     if (string.Equals(type.Value, "rfc1123", StringComparison.OrdinalIgnoreCase))
                     {
