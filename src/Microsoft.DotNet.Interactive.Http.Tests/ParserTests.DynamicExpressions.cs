@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Http.Parsing;
@@ -16,7 +15,7 @@ public partial class HttpParserTests
     public class DynamicExpressions
     {
         [Fact]
-        public async Task can_bind_datetime_with_custom_format()
+        public void can_bind_datetime_with_custom_format()
         {
             using var _ = new AssertionScope();
 
@@ -32,7 +31,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_datetime_with_iso8601_format()
+        public void can_bind_datetime_with_iso8601_format()
         {
             using var _ = new AssertionScope();
 
@@ -48,7 +47,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_datetime_with_iso8601_format_with_offset()
+        public void can_bind_datetime_with_iso8601_format_with_offset()
         {
             using var _ = new AssertionScope();
 
@@ -64,7 +63,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_datetime_with_rfc1123_format()
+        public void can_bind_datetime_with_rfc1123_format()
         {
             using var _ = new AssertionScope();
 
@@ -80,7 +79,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_datetime_with_rfc1123_format_with_offset()
+        public void can_bind_datetime_with_rfc1123_format_with_offset()
         {
             using var _ = new AssertionScope();
 
@@ -96,7 +95,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_local_datetime_with_custom_format()
+        public void can_bind_local_datetime_with_custom_format()
         {
             using var _ = new AssertionScope();
 
@@ -112,7 +111,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_local_datetime_with_iso8601_format()
+        public void can_bind_local_datetime_with_iso8601_format()
         {
             using var _ = new AssertionScope();
 
@@ -128,7 +127,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_local_datetime_with_iso8601_format_with_offset()
+        public void can_bind_local_datetime_with_iso8601_format_with_offset()
         {
             using var _ = new AssertionScope();
 
@@ -144,7 +143,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_local_datetime_with_rfc1123_format()
+        public void can_bind_local_datetime_with_rfc1123_format()
         {
             using var _ = new AssertionScope();
 
@@ -160,7 +159,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_timestamp()
+        public void can_bind_timestamp()
         {
             using var _ = new AssertionScope();
 
@@ -176,7 +175,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_timestamp_with_offset()
+        public void can_bind_timestamp_with_offset()
         {
             using var _ = new AssertionScope();
 
@@ -192,7 +191,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_randomInt_2_10()
+        public void can_bind_randomInt_2_10()
         {
             using var _ = new AssertionScope();
 
@@ -210,7 +209,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_randomInt_3()
+        public void can_bind_randomInt_3()
         {
             using var _ = new AssertionScope();
 
@@ -228,7 +227,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_randomInt()
+        public void can_bind_randomInt()
         {
             using var _ = new AssertionScope();
 
@@ -246,7 +245,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public async Task can_bind_guid()
+        public void can_bind_guid()
         {
             using var _ = new AssertionScope();
 
