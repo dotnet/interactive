@@ -166,12 +166,9 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 var formatProvider = Thread.CurrentThread.CurrentUICulture;
                 var type = match.Groups["type"];
 
-                string text;
-                if (string.IsNullOrWhiteSpace(type.Value))
-                {
-                    text = currentDateTimeOffset.ToString();
-                }
-                else
+                // $datetime and $localDatetime MUST have either rfc1123, iso8601 or some other parameter.
+                // $datetime or $localDatetime alone should result in a binding error.
+                if (!string.IsNullOrWhiteSpace(type.Value))
                 {
                     if (string.Equals(type.Value, "rfc1123", StringComparison.OrdinalIgnoreCase))
                     {
@@ -193,16 +190,14 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
 
                     try
                     {
-                        text = currentDateTimeOffset.ToString(format, formatProvider);
+                        string text = currentDateTimeOffset.ToString(format, formatProvider);
+                        return node.CreateBindingSuccess(text);
                     }
                     catch(FormatException)
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeCustomFormat(format));
                     }
                 }
-
-                return node.CreateBindingSuccess(text);
-
             }
             return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expressionText, dateTimeType));
         }

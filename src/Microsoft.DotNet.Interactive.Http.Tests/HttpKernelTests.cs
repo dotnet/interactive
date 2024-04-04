@@ -1686,8 +1686,7 @@ public class HttpKernelTests
 
         var result = await kernel.SendAsync(new SubmitCode(code));
 
-        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied expression '$localDatetime 'YYYY-NN-DD' does not follow the correct pattern. The expression should adhere to the following pattern: '{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
-
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied expression '$localDatetime 'YYYY-NN-DD' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
     }
 
 
@@ -1710,14 +1709,13 @@ public class HttpKernelTests
             POST https://api.example.com/comments
             
             {
-                "local_custom_date": "{{$localDatetime 'YYYY-MM-DD'}}"
+                "local_custom_date": "{{$localDatetime}}"
             }
             """;
 
         var result = await kernel.SendAsync(new SubmitCode(code));
 
-        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied expression '$localDatetime 'YYYY-MM-DD'' does not follow the correct pattern. The expression should adhere to the following pattern: '{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
-
+        result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied expression '$localDatetime' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
     }
 
     [Fact]
