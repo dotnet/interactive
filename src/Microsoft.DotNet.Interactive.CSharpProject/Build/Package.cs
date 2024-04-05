@@ -14,7 +14,6 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using static Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities.RoslynWorkspaceUtilities;
@@ -263,8 +262,7 @@ public class Package
 
     private async Task ProcessBuildRequest()
     {
-        await EnsureCreatedAsync();
-        await EnsureBuiltAsync();
+        await EnsureReadyAsync();
         var ws = CreateRoslynWorkspace();
         SetCompletionSourceResult(_buildCompletionSource, ws, _buildCompletionSourceLock);
     }
@@ -299,12 +297,18 @@ public class Package
 
     public async Task EnsureReadyAsync()
     {
+        if (_roslynWorkspace is not null)
+        {
+            Log.Info("Workspace already loaded for package {name}.", Name);
+            return;
+        }
+
         await EnsureCreatedAsync();
 
         await EnsureBuiltAsync();
     }
 
-    protected async Task EnsureBuiltAsync([CallerMemberName] string caller = null)
+    protected async Task EnsureBuiltAsync()
     {
         using var operation = _log.OnEnterAndConfirmOnExit();
 
