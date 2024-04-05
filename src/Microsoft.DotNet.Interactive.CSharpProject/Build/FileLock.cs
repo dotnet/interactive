@@ -41,7 +41,6 @@ public class FileLock
             throw new ArgumentNullException(nameof(lockFile));
         }
 
-        const int waitAmount = 100;
         var attemptCount = 1;
 
         while (attemptCount <= 100)
@@ -54,7 +53,7 @@ public class FileLock
             {
             }
 
-            await Task.Delay(waitAmount);
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
             attemptCount++;
 
             if (attemptCount % 10 == 0)
@@ -63,6 +62,6 @@ public class FileLock
             }
         }
 
-        throw new IOException($"Cannot acquire file lock {lockFile.FullName}");
+        throw new IOException($"Cannot acquire file lock {lockFile.FullName} after {attemptCount} attempts.");
     }
 }
