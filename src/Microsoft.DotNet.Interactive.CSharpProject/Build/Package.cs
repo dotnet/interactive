@@ -108,15 +108,7 @@ public class Package
 
     public string Name { get; }
 
-    private Task<bool> EnsureCreatedAsync()
-    {
-        if (!EnableBuild)
-        {
-            return Task.FromResult(false);
-        }
-
-        return _lazyCreation.ValueAsync();
-    }
+    private Task<bool> EnsureCreatedAsync() => _lazyCreation.ValueAsync();
 
     private bool TryLoadWorkspaceFromCache()
     {
@@ -425,6 +417,11 @@ public class Package
     
     public async Task<bool> CreatePackage(IPackageInitializer initializer)
     {
+        if (!EnableBuild)
+        {
+            throw new InvalidOperationException($"Full build is disabled for package {this}");
+        }
+
         using var operation = Log.OnEnterAndConfirmOnExit();
 
         if (!Directory.Exists)
@@ -436,12 +433,8 @@ public class Package
 
         using (await FileLock.TryCreateAsync(Directory))
         {
-            if (!Directory.GetFiles("*", SearchOption.AllDirectories).Where(f => !FileLock.IsLockFile(f)).Any())
-            {
-                operation.Info("Initializing package using {_initializer} in {directory}", initializer,
-                               Directory);
-                await initializer.InitializeAsync(Directory);
-            }
+            operation.Info("Initializing package using {_initializer} in {directory}", initializer, Directory);
+            await initializer.InitializeAsync(Directory);
         }
 
         operation.Succeed();
@@ -454,7 +447,7 @@ public class Package
         var packageBuilder = new PackageBuilder("console");
         packageBuilder.UseTemplate("console");
         packageBuilder.UseLanguageVersion("latest");
-        packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.1");
+        packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.3");
         packageBuilder.EnableBuild = enableBuild;
         var package = packageBuilder.GetPackage();
         return package;
