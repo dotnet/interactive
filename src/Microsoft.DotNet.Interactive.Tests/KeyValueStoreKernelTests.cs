@@ -25,17 +25,18 @@ public class KeyValueStoreKernelTests
         var storedValue = "1,2,3";
 
         var result = await kernel.SubmitCodeAsync(
-            @$"
-#!value
-{storedValue}
-");
+                         $"""
+                          #!value
+                          {storedValue}
+
+                          """);
 
         result.Events.Should()
               .ContainSingle<CommandFailed>()
               .Which
               .Message
               .Should()
-              .Be("Option '--name' is required.");
+              .Be("(1,1): error DNI104: Missing required parameter '--name'");
     }
 
     [Fact]
@@ -67,10 +68,10 @@ public class KeyValueStoreKernelTests
         var storedValue = "1,2,3";
 
         var result = await kernel.SubmitCodeAsync(
-            @$"
-#!value --name hello --mime-type text/test-stuff
-{storedValue}
-");
+                         $"""
+                          #!value --name hello --mime-type text/test-stuff
+                          {storedValue}
+                          """);
 
         result.Events
               .Should()
@@ -445,7 +446,7 @@ public class KeyValueStoreKernelTests
     private static CompositeKernel CreateKernel() =>
         new()
         {
-            new KeyValueStoreKernel(),
+            new KeyValueStoreKernel().UseValueSharing(),
             new FakeKernel("fake")
         };
 }

@@ -65,6 +65,9 @@ public class KeyValueStoreKernel :
     Task IKernelCommandHandler<SendValue>.HandleAsync(SendValue command, KernelInvocationContext context)
     {
         _values[command.Name] = command.FormattedValue;
+
+        context.Publish(new DisplayedValueProduced(command.FormattedValue.Value, command, [command.FormattedValue]));
+
         return Task.CompletedTask;
     }
 
@@ -159,6 +162,29 @@ public class KeyValueStoreKernel :
                 inlineValue = fromValueValue;
             }
 
+            var cellContent = GetCellContent();
+
+            if (fromFile is not null)
+            {
+                if (cellContent is not null)
+                {
+                    AddDiagnostic("--from-file",
+                                  PolyglotSyntaxParser.ErrorCodes.FromFileAndCellContentCannotBeUsedTogether,
+                                  "The --from-file option cannot be used in combination with a content submission.");
+                    return null;
+                }
+            }
+            else if (fromUrl is not null)
+            {
+                if (cellContent is not null)
+                {
+                    AddDiagnostic("--from-url",
+                                  PolyglotSyntaxParser.ErrorCodes.FromUrlAndCellContentCannotBeUsedTogether,
+                                  "The --from-url option cannot be used in combination with a content submission.");
+                    return null;
+                }
+            }
+
             if (fromFile is not null || fromUrl is not null)
             {
                 return new AnonymousKernelCommand(async (_, context) =>
@@ -173,7 +199,7 @@ public class KeyValueStoreKernel :
                     {
                         valueToStore = await GetValueFromUrlAsync();
                     }
-                   
+
                     var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, valueToStore);
 
                     var sendValue = new SendValue(name, null, formattedValue, targetKernelName: Name);
@@ -195,7 +221,7 @@ public class KeyValueStoreKernel :
                 });
             }
 
-            var valueToStore = inlineValue ?? GetCellContent();
+            var valueToStore = inlineValue ?? cellContent;
 
             if (valueToStore is not null)
             {

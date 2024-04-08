@@ -122,9 +122,7 @@ public class SubmissionParser
                                 break;
 
                             case { Kind: DirectiveNodeKind.KernelSelector }:
-
-                               
-
+                                ClearCommandsAndFail(diagnostics[0]);
                                 break;
                         }
                     }
@@ -336,18 +334,17 @@ public class SubmissionParser
 
         void ClearCommandsAndFail(CodeAnalysis.Diagnostic diagnostic)
         {
-            commands.Clear();
-
-            // FIX: (SplitSubmission) 
             if (diagnostic is null)
             {
-                
+                throw new ArgumentNullException(nameof(diagnostic));
             }
+
+            commands.Clear();
 
             commands.Add(
                 new AnonymousKernelCommand((_, context) =>
                 {
-                    var diagnosticsProduced = new DiagnosticsProduced(new[] { Diagnostic.FromCodeAnalysisDiagnostic  (diagnostic) }, originalCommand);
+                    var diagnosticsProduced = new DiagnosticsProduced([Diagnostic.FromCodeAnalysisDiagnostic(diagnostic)], originalCommand);
                     context.Publish(diagnosticsProduced);
 
                     context.Fail(originalCommand, message: diagnostic.ToString());
