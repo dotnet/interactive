@@ -115,6 +115,7 @@ public class Package
         if (Directory.Exists)
         {
             var cacheFile = FindCacheFile(Directory);
+            
             if (cacheFile is not null)
             {
                 LoadRoslynWorkspaceFromCache(cacheFile).Wait();
@@ -367,6 +368,11 @@ public class Package
 
         var cacheFile = FindCacheFile(Directory);
 
+        if (cacheFile is not {Exists: true})
+        {
+            throw new FileNotFoundException($"Cache file *.{BuildCacheFileUtilities.CacheFilenameSuffix} not found in {Directory}.");
+        }
+
         await cacheFile.WaitForFileAvailableAsync();
         await LoadRoslynWorkspaceFromCache(cacheFile);
 
@@ -453,5 +459,5 @@ public class Package
         return package;
     }
 
-    internal static FileInfo FindCacheFile(DirectoryInfo directoryInfo) => directoryInfo.GetFiles("*" + BuildCacheFileUtilities.cacheFilenameSuffix).FirstOrDefault();
+    internal static FileInfo FindCacheFile(DirectoryInfo directoryInfo) => directoryInfo.GetFiles("*" + BuildCacheFileUtilities.CacheFilenameSuffix).FirstOrDefault();
 }

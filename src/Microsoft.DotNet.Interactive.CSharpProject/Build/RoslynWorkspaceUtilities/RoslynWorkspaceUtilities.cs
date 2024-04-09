@@ -50,7 +50,7 @@ internal static class RoslynWorkspaceUtilities
             throw new ArgumentException($"project file does not exist : {csprojFilePath}");
         }
 
-        var cacheFilePath = csprojFilePath + cacheFilenameSuffix;
+        var cacheFilePath = csprojFilePath + CacheFilenameSuffix;
 
         return GetResultsFromCacheFile(cacheFilePath);
     }

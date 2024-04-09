@@ -27,7 +27,7 @@ public class CommandLineResult
 
     public void ThrowOnFailure(string message = null)
     {
-        if (ExitCode != 0)
+        if (ExitCode is not 0)
         {
             throw new CommandLineInvocationException(
                 this,
