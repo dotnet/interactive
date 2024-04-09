@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 
 internal static class BuildCacheFileUtilities
 {
-    internal static string cacheFilenameSuffix = ".interactive.workspaceData.cache";
+    internal static string CacheFilenameSuffix = ".interactive.workspaceData.cache";
     internal static string DirectoryBuildTargetFilename = "Directory.Build.Targets";
 
     internal static string DirectoryBuildTargetsContent =
@@ -128,6 +128,7 @@ internal static class BuildCacheFileUtilities
         File.Delete(tempDirectoryBuildTarget);
 
         var cacheFile = Package.FindCacheFile(directoryInfo);
+
         if (cacheFile is not { Exists: true })
         {
             throw new FileNotFoundException($"Cache file not found after build completion in directory: {directoryInfo.FullName}");

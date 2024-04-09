@@ -45,11 +45,11 @@ public class PackageInitializer : IPackageInitializer
     {
         var dotnet = new Dotnet(directory);
 
-        await dotnet.New("globaljson");
+        await dotnet.New("globaljson", "--force");
 
         var result = await dotnet
             .New(Template,
-                args: $"--name \"{ProjectName}\" --language \"{Language}\" --output \"{directory.FullName}\"");
+                args: $"--name \"{ProjectName}\" --language \"{Language}\" --output \"{directory.FullName}\" --force");
         result.ThrowOnFailure($"Error initializing in {directory.FullName}");
 
         if (afterCreate is not null)
