@@ -15,6 +15,10 @@ public abstract class WorkspaceServerTests : WorkspaceServerTestsCore
 {
     protected abstract Workspace CreateWorkspaceWithMainContaining(string text);
 
+    protected WorkspaceServerTests(ITestOutputHelper output) : base(output)
+    {
+    }
+
     [Fact]
     public async Task Diagnostic_logs_do_not_show_up_in_captured_console_output()
     {
@@ -34,10 +38,6 @@ public abstract class WorkspaceServerTests : WorkspaceServerTestsCore
                     new[] { "hi!", "" },
                     options => options.WithStrictOrdering());
         }
-    }
-
-    protected WorkspaceServerTests(ITestOutputHelper output) : base(output)
-    {
     }
 
     [Fact]

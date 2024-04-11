@@ -16,7 +16,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using static Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities.RoslynWorkspaceUtilities;
+using static Microsoft.DotNet.Interactive.CSharpProject.Build.RoslynWorkspaceUtilities.RoslynWorkspaceUtilities;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Build.Prebuild>;
 using Disposable = System.Reactive.Disposables.Disposable;
 
@@ -370,7 +370,7 @@ public class Prebuild
 
         if (cacheFile is not { Exists: true })
         {
-            throw new FileNotFoundException($"Cache file *.{BuildCacheFileUtilities.CacheFilenameSuffix} not found in {Directory}.");
+            throw new FileNotFoundException($"Cache file *.{CacheFilenameSuffix} not found in {Directory}.");
         }
 
         await cacheFile.WaitForFileAvailableAsync();
@@ -381,14 +381,9 @@ public class Prebuild
 
     private async Task DotnetBuildAsync()
     {
-        BuildCacheFileUtilities.CleanObjFolder(Directory);
+        CleanObjFolder(Directory);
 
         var projectFile = GetProjectFile();
-
-        string tempDirectoryBuildTargetsFile =
-            Path.Combine(Path.GetDirectoryName(projectFile.FullName), BuildCacheFileUtilities.DirectoryBuildTargetFilename);
-
-        await File.WriteAllTextAsync(tempDirectoryBuildTargetsFile, BuildCacheFileUtilities.DirectoryBuildTargetsContent);
 
         var args = "";
         if (projectFile.Exists)
@@ -410,9 +405,6 @@ public class Prebuild
         {
             _lastBuildErrorLogFile.Delete();
         }
-
-        // Clean up the temp project file
-        File.Delete(tempDirectoryBuildTargetsFile);
 
         result.ThrowOnFailure();
     }
@@ -458,5 +450,83 @@ public class Prebuild
         return builder.GetPrebuild();
     }
 
-    internal static FileInfo FindCacheFile(DirectoryInfo directoryInfo) => directoryInfo.GetFiles("*" + BuildCacheFileUtilities.CacheFilenameSuffix).FirstOrDefault();
+    internal static FileInfo FindCacheFile(DirectoryInfo directoryInfo) => directoryInfo.GetFiles("*" + CacheFilenameSuffix).FirstOrDefault();
+
+    internal const string CacheFilenameSuffix = ".interactive.workspaceData.cache";
+
+    internal const string DirectoryBuildTargetFilename = "Directory.Build.targets";
+
+    internal const string DirectoryBuildTargetsContent =
+        """
+        <Project>
+          <Target Name="CollectProjectData" AfterTargets="Build">
+            <ItemGroup>
+              <ProjectData Include="ProjectGuid=$(ProjectGuid)">
+                <Type>String</Type>
+              </ProjectData>
+              <ProjectData Include="%(ProjectReference.Identity)">
+                <Prefix>ProjectReferences=</Prefix>
+                <Type>Array</Type>
+              </ProjectData>
+              <ProjectData Include="ProjectFilePath=$(MSBuildProjectFullPath)">
+                <Type>String</Type>
+              </ProjectData>
+              <ProjectData Include="LanguageName=C#">
+                <Type>String</Type>
+              </ProjectData>
+              <ProjectData Include="PropertyTargetPath=$(TargetPath)">
+                <Type>String</Type>
+              </ProjectData>
+              <ProjectData Include="%(Compile.FullPath)" Condition="!$([System.String]::new('%(Compile.Identity)').Contains('obj\'))">
+                <Prefix>SourceFiles=</Prefix>
+                <Type>Array</Type>
+              </ProjectData>
+              <ProjectData Include="%(ReferencePath.Identity)">
+                <Prefix>References=</Prefix>
+                <Type>Array</Type>
+              </ProjectData>
+              <ProjectData Include="%(Analyzer.Identity)">
+                <Prefix>AnalyzerReferences=</Prefix>
+                <Type>Array</Type>
+              </ProjectData>
+              <ProjectData Include="$(DefineConstants)">
+                <Prefix>PreprocessorSymbols=</Prefix>
+                <Type>String</Type>
+              </ProjectData>
+              <ProjectData Include="PropertyLangVersion=$(LangVersion)">
+                <Type>String</Type>
+              </ProjectData>
+              <ProjectData Include="PropertyOutputType=$(OutputType)">
+                <Type>String</Type>
+              </ProjectData>
+            </ItemGroup>
+        
+            <!-- Split PreprocessorSymbols into individual items -->
+            <ItemGroup>
+              <PreprocessorSymbolItems Include="$(DefineConstants.Split(';'))" />
+            </ItemGroup>
+        
+            <!-- Transform the ProjectData and PreprocessorSymbolItems to include the prefix -->
+            <ItemGroup>
+              <ProjectDataLines Include="$([System.String]::Format('{0}{1}', %(ProjectData.Prefix), %(ProjectData.Identity)))" />
+              <ProjectDataLines Include="$([System.String]::Format('PreprocessorSymbols={0}', %(PreprocessorSymbolItems.Identity)))" />
+            </ItemGroup>
+        
+            <!-- Write collected project data to a file -->
+            <WriteLinesToFile Lines="@(ProjectDataLines)"
+                              File="$(MSBuildProjectFullPath).interactive.workspaceData.cache"
+                              Overwrite="True"
+                              WriteOnlyWhenDifferent="True" />
+          </Target>
+        </Project>
+        """;
+
+    internal static void CleanObjFolder(DirectoryInfo directoryInfo)
+    {
+        var targets = directoryInfo.GetDirectories("obj");
+        foreach (var target in targets)
+        {
+            target.Delete(true);
+        }
+    }
 }
