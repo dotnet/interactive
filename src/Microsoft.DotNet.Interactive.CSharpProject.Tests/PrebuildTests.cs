@@ -15,11 +15,11 @@ using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
-public class PackageTests : IDisposable
+public class PrebuildTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public PackageTests(ITestOutputHelper output)
+    public PrebuildTests(ITestOutputHelper output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
@@ -27,26 +27,26 @@ public class PackageTests : IDisposable
     public void Dispose() => _disposables.Dispose();
 
     [Fact]
-    public async Task A_package_is_not_initialized_more_than_once()
+    public async Task A_prebuild_is_not_initialized_more_than_once()
     {
-        var initializer = new TestPackageInitializer(
+        var initializer = new TestPrebuildInitializer(
             "console",
             "MyProject");
 
-        var package = PackageUtilities.CreateEmptyBuildablePackage(initializer: initializer);
+        var prebuild = PrebuildUtilities.CreateEmptyBuildablePrebuild(initializer: initializer);
 
-        await package.GetOrCreateWorkspaceAsync();
-        await package.GetOrCreateWorkspaceAsync();
+        await prebuild.GetOrCreateWorkspaceAsync();
+        await prebuild.GetOrCreateWorkspaceAsync();
 
         initializer.InitializeCount.Should().Be(1);
     }
 
     [Fact]
-    public async Task Package_after_create_actions_are_not_run_more_than_once()
+    public async Task Prebuild_after_create_actions_are_not_run_more_than_once()
     {
         var afterCreateCallCount = 0;
 
-        var initializer = new PackageInitializer(
+        var initializer = new PrebuildInitializer(
             "console",
             "test",
             afterCreate: async _ =>
@@ -55,22 +55,22 @@ public class PackageTests : IDisposable
                 afterCreateCallCount++;
             });
 
-        var package = PackageUtilities.CreateEmptyBuildablePackage(initializer: initializer);
+        var prebuild = PrebuildUtilities.CreateEmptyBuildablePrebuild(initializer: initializer);
 
-        await package.GetOrCreateWorkspaceAsync();
-        await package.GetOrCreateWorkspaceAsync();
+        await prebuild.GetOrCreateWorkspaceAsync();
+        await prebuild.GetOrCreateWorkspaceAsync();
 
         afterCreateCallCount.Should().Be(1);
     }
 
     [Fact]
-    public async Task A_package_copy_is_not_reinitialized_if_the_source_was_already_initialized()
+    public async Task A_prebuild_copy_is_not_reinitialized_if_the_source_was_already_initialized()
     {
-        var initializer = new TestPackageInitializer(
+        var initializer = new TestPrebuildInitializer(
             "console",
             "MyProject");
 
-        var original = PackageUtilities.CreateEmptyBuildablePackage(initializer: initializer);
+        var original = PrebuildUtilities.CreateEmptyBuildablePrebuild(initializer: initializer);
 
         await original.GetOrCreateWorkspaceAsync();
 
@@ -82,22 +82,22 @@ public class PackageTests : IDisposable
     }
     
     [Fact]
-    public async Task When_package_contains_simple_console_app_then_entry_point_dll_is_in_the_build_directory()
+    public async Task When_prebuild_contains_simple_console_app_then_entry_point_dll_is_in_the_build_directory()
     {
-        var package = PackageUtilities.CreateEmptyBuildablePackage(initializer: new PackageInitializer("console", "empty"));
+        var prebuild = PrebuildUtilities.CreateEmptyBuildablePrebuild(initializer: new PrebuildInitializer("console", "empty"));
 
-        await package.GetOrCreateWorkspaceAsync();
+        await prebuild.GetOrCreateWorkspaceAsync();
 
-        package.EntryPointAssemblyPath.Exists.Should().BeTrue();
+        prebuild.EntryPointAssemblyPath.Exists.Should().BeTrue();
 
-        package.EntryPointAssemblyPath
+        prebuild.EntryPointAssemblyPath
             .FullName
             .Should()
             .Be(Path.Combine(
-                package.Directory.FullName,
+                prebuild.Directory.FullName,
                 "bin",
                 "Debug",
-                package.TargetFramework,
+                prebuild.TargetFramework,
                 "empty.dll"));
     }
 
@@ -106,14 +106,14 @@ public class PackageTests : IDisposable
     {
         var buildEvents = new LogEntryList();
         var buildEventsMessages = new List<string>();
-        var package = await PackageUtilities.CreateBuildableConsolePackageCopy();
+        var prebuild = await PrebuildUtilities.CreateBuildableConsolePrebuildCopy();
         var barrier = new Barrier(2);
         LogEvents.Subscribe(
             e =>
             {
                 buildEvents.Add(e);
                 buildEventsMessages.Add(e.Evaluate().Message);
-                if (e.Evaluate().Message.StartsWith("Building package "))
+                if (e.Evaluate().Message.StartsWith("Building prebuild "))
                 {
                     barrier.SignalAndWait(30.Seconds());
                 }
@@ -125,23 +125,23 @@ public class PackageTests : IDisposable
             });
 
         await Task.WhenAll(
-            Task.Run(() => package.BuildAsync()),
-            Task.Run(() => package.BuildAsync()));
+            Task.Run(() => prebuild.BuildAsync()),
+            Task.Run(() => prebuild.BuildAsync()));
 
         buildEventsMessages.Should()
-                           .Contain(e => e.StartsWith("Building package " + package.Name))
+                           .Contain(e => e.StartsWith($"Building prebuild '{prebuild.Name}'"))
                            .And
-                           .Contain(e => e.StartsWith("Skipping build for package " + package.Name));
+                           .Contain(e => e.StartsWith($"Skipping build for prebuild '{prebuild.Name}'"));
     }
 
     [Fact]
     public async Task Directory_is_created_on_demand_during_build()
     {
-        DirectoryInfo directory = new(Path.Combine(Package.DefaultPackagesDirectory.FullName, Guid.NewGuid().ToString("N")));
+        DirectoryInfo directory = new(Path.Combine(Prebuild.DefaultPrebuildsDirectory.FullName, Guid.NewGuid().ToString("N")));
 
-        var package = new Package("console", enableBuild: true, directory: directory);
+        var prebuild = new Prebuild("console", enableBuild: true, directory: directory);
 
-        await package.BuildAsync();
+        await prebuild.BuildAsync();
 
         directory.Exists.Should().BeTrue();
     }

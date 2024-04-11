@@ -9,13 +9,13 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers;
 
 public class WorkspaceServerMultiplexer : IWorkspaceServer
 {
-    private IPackageFinder _packageFinder;
+    private IPrebuildFinder _prebuildFinder;
     private readonly IWorkspaceServer _roslynWorkspaceServer;
 
-    public WorkspaceServerMultiplexer(IPackageFinder packageFinder)
+    public WorkspaceServerMultiplexer(IPrebuildFinder prebuildFinder)
     {
-        _packageFinder = packageFinder;
-        _roslynWorkspaceServer = new RoslynWorkspaceServer(packageFinder);
+        _prebuildFinder = prebuildFinder;
+        _roslynWorkspaceServer = new RoslynWorkspaceServer(prebuildFinder);
     }
 
     public Task<CompileResult> CompileAsync(WorkspaceRequest request)

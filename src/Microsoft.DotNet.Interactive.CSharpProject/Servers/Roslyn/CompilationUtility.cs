@@ -48,10 +48,10 @@ internal static class CompilationUtility
     }
 
     internal static FileInfo GetEntryPointAssemblyPath(
-        this Package package, 
+        this Prebuild prebuild, 
         bool usePublishDir = false)
     {
-        var directory = package.Directory;
+        var directory = prebuild.Directory;
 
         var depsFile = directory.GetFiles("*.deps.json", SearchOption.AllDirectories)
             .FirstOrDefault();
@@ -68,7 +68,7 @@ internal static class CompilationUtility
                 directory.FullName,
                 "bin",
                 "Debug",
-                GetTargetFramework(package));
+                GetTargetFramework(prebuild));
 
         if (usePublishDir)
         {
@@ -78,9 +78,9 @@ internal static class CompilationUtility
         return new FileInfo(Path.Combine(path, entryPointAssemblyName));
     }
 
-    internal static string GetTargetFramework(this Package package)
+    internal static string GetTargetFramework(this Prebuild prebuild)
     {
-        var runtimeConfig = package.Directory
+        var runtimeConfig = prebuild.Directory
                                    .GetFiles("*.runtimeconfig.json", SearchOption.AllDirectories)
                                    .FirstOrDefault();
 

@@ -9,37 +9,37 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 
-public class PackageBuilder
+public class PrebuildBuilder
 {
-    private Package _package;
-    private readonly List<Func<Package, Task>> _afterCreateActions = new();
+    private Prebuild _prebuild;
+    private readonly List<Func<Prebuild, Task>> _afterCreateActions = new();
     private readonly List<(string packageName, string packageVersion, string restoreSources)> _addPackages = new();
     private string _languageVersion = "latest";
 
-    public PackageBuilder(string packageName, DirectoryInfo directory = null)
+    public PrebuildBuilder(string prebuildName, DirectoryInfo directory = null)
     {
-        if (string.IsNullOrWhiteSpace(packageName))
+        if (string.IsNullOrWhiteSpace(prebuildName))
         {
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(packageName));
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(prebuildName));
         }
 
-        PackageName = packageName;
+        PrebuildName = prebuildName;
         Directory = directory;
     }
 
     public bool EnableBuild { get; set; }
 
-    public string PackageName { get; }
+    public string PrebuildName { get; }
 
-    public IPackageInitializer PackageInitializer { get; private set; }
+    public IPrebuildInitializer PrebuildInitializer { get; private set; }
 
     public DirectoryInfo Directory { get; }
 
     public void UseTemplate(string template, string projectName = null, string language = null)
     {
-        PackageInitializer = new PackageInitializer(
+        PrebuildInitializer = new PrebuildInitializer(
             template,
-            projectName ?? PackageName,
+            projectName ?? PrebuildName,
             language,
             RunAfterCreateActionsAsync);
     }
@@ -47,11 +47,11 @@ public class PackageBuilder
     public void AddPackageReference(string packageId, string version = null, string restoreSources = null)
     {
         _addPackages.Add((packageId, version, restoreSources));
-        _afterCreateActions.Add(async package =>
+        _afterCreateActions.Add(async prebuild =>
         {
             Func<Task> action = async () =>
             {
-                var dotnet = new Dotnet(package.Directory);
+                var dotnet = new Dotnet(prebuild.Directory);
                 await dotnet.AddPackage(packageId, version);
             };
 
@@ -63,9 +63,9 @@ public class PackageBuilder
     {
         _languageVersion = version;
 
-        _afterCreateActions.Add(async package =>
+        _afterCreateActions.Add(async prebuild =>
         {
-            var projectFiles = package.Directory.GetFiles("*.csproj");
+            var projectFiles = prebuild.Directory.GetFiles("*.csproj");
 
             foreach (var projectFile in projectFiles)
             {
@@ -74,25 +74,25 @@ public class PackageBuilder
         });
     }
 
-    public Package GetPackage()
+    public Prebuild GetPrebuild()
     {
-        if (_package is null)
+        if (_prebuild is null)
         {
-            _package = new Package(
-                PackageName,
-                PackageInitializer,
+            _prebuild = new Prebuild(
+                PrebuildName,
+                PrebuildInitializer,
                 Directory,
                 enableBuild: EnableBuild);
         }
 
-        return _package;
+        return _prebuild;
     }
 
     private async Task RunAfterCreateActionsAsync(DirectoryInfo directoryInfo)
     {
         foreach (var action in _afterCreateActions)
         {
-            await action(_package);
+            await action(_prebuild);
         }
     }
 }

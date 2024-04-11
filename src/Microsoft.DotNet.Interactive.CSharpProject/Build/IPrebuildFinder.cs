@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 
-public interface IPackageFinder
+public interface IPrebuildFinder
 {
-    Task<Package> FindAsync(PackageDescriptor descriptor);
+    Task<Prebuild> FindAsync(PrebuildDescriptor descriptor);
 }

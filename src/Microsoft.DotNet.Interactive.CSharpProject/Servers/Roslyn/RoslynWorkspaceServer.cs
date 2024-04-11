@@ -17,13 +17,12 @@ using Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Pocket;
 using static Pocket.Logger;
-using Package = Microsoft.DotNet.Interactive.CSharpProject.Build.Package;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
 public class RoslynWorkspaceServer : IWorkspaceServer
 {
-    private readonly IPackageFinder _packageFinder;
+    private readonly IPrebuildFinder _prebuildFinder;
 
     private static readonly ConcurrentDictionary<string, AsyncLock> locks = new();
 
@@ -36,25 +35,25 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         };
     }
 
-    public RoslynWorkspaceServer(Func<Task<Package>> package)
+    public RoslynWorkspaceServer(Func<Task<Prebuild>> getPrebuildAsync)
     {
-        _packageFinder = PackageFinder.Create(package);
+        _prebuildFinder = PrebuildFinder.Create(getPrebuildAsync);
     }
 
-    public RoslynWorkspaceServer(IPackageFinder packageRegistry)
+    public RoslynWorkspaceServer(IPrebuildFinder prebuildRegistry)
     {
-        _packageFinder = packageRegistry ?? throw new ArgumentNullException(nameof(packageRegistry));
+        _prebuildFinder = prebuildRegistry ?? throw new ArgumentNullException(nameof(prebuildRegistry));
     }
 
     public async Task<CompletionResult> GetCompletionsAsync(WorkspaceRequest request)
     {
-        var package = await _packageFinder.FindAsync(request.Workspace.WorkspaceType);
+        var prebuild = await _prebuildFinder.FindAsync(request.Workspace.WorkspaceType);
 
         var workspace = await request.Workspace.InlineBuffersAsync();
         var sourceFiles = workspace.GetSourceFiles();
 
         // get project and ensure the solution is up-to-date
-        var (_, project) = await package.GetCompilationForLanguageServices(
+        var (_, project) = await prebuild.GetCompilationForLanguageServices(
             sourceFiles,
             GetSourceCodeKind(request),
             GetUsings(request.Workspace));
@@ -122,12 +121,12 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
     public async Task<SignatureHelpResult> GetSignatureHelpAsync(WorkspaceRequest request)
     {
-        var package = await _packageFinder.FindAsync(request.Workspace.WorkspaceType);
+        var prebuild = await _prebuildFinder.FindAsync(request.Workspace.WorkspaceType);
 
         var workspace = await request.Workspace.InlineBuffersAsync();
 
         var sourceFiles = workspace.GetSourceFiles();
-        var (compilation, project) = await package.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace));
+        var (compilation, project) = await prebuild.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace));
         var documents = project.Documents.ToList();
 
         var selectedDocument = documents.FirstOrDefault(doc => doc.IsMatch(request.ActiveBufferId.FileName))
@@ -162,12 +161,12 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
     public async Task<DiagnosticResult> GetDiagnosticsAsync(WorkspaceRequest request)
     {
-        var package = await _packageFinder.FindAsync(request.Workspace.WorkspaceType);
+        var prebuild = await _prebuildFinder.FindAsync(request.Workspace.WorkspaceType);
 
         var workspace = await request.Workspace.InlineBuffersAsync();
 
         var sourceFiles = workspace.GetSourceFiles();
-        var (_, project) = await package.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace));
+        var (_, project) = await prebuild.GetCompilationForLanguageServices(sourceFiles, GetSourceCodeKind(request), GetUsings(request.Workspace));
         var documents = project.Documents.ToList();
 
         var selectedDocument = documents.FirstOrDefault(doc => doc.IsMatch( request.ActiveBufferId.FileName))
@@ -229,7 +228,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
         using (await locks.GetOrAdd(workspace.WorkspaceType, s => new AsyncLock()).LockAsync())
         {
-            var package = await _packageFinder.FindAsync(workspace.WorkspaceType);
+            var prebuild = await _prebuildFinder.FindAsync(workspace.WorkspaceType);
 
             var result = await GetCompilationAsync(request.Workspace, request.ActiveBufferId);
 
@@ -250,10 +249,10 @@ public class RoslynWorkspaceServer : IWorkspaceServer
                 return runResult;
             }
 
-            await EmitCompilationAsync(result.Compilation, package);
+            await EmitCompilationAsync(result.Compilation, prebuild);
 
             return await RunConsoleAsync(
-                package,
+                prebuild,
                 result.DiagnosticsWithinBuffers,
                 request.RequestId,
                 workspace.IncludeInstrumentation,
@@ -261,11 +260,11 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         }
     }
 
-    private static async Task EmitCompilationAsync(Compilation compilation, Package package)
+    private static async Task EmitCompilationAsync(Compilation compilation, Prebuild prebuild)
     {
-        if (package is null)
+        if (prebuild is null)
         {
-            throw new ArgumentNullException(nameof(package));
+            throw new ArgumentNullException(nameof(prebuild));
         }
 
         var numberOfAttempts = 100;
@@ -273,7 +272,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         {
             try
             {
-                compilation.Emit(package.EntryPointAssemblyPath.FullName);
+                compilation.Emit(prebuild.EntryPointAssemblyPath.FullName);
                 break;
             }
             catch (IOException)
@@ -289,15 +288,15 @@ public class RoslynWorkspaceServer : IWorkspaceServer
     }
 
     internal static async Task<RunResult> RunConsoleAsync(
-        Package package,
+        Prebuild prebuild,
         IEnumerable<SerializableDiagnostic> diagnostics,
         string requestId,
         bool includeInstrumentation,
         string commandLineArgs)
     {
-        var dotnet = new Dotnet(package.Directory);
+        var dotnet = new Dotnet(prebuild.Directory);
 
-        var commandName = package.EntryPointAssemblyPath.FullName;
+        var commandName = prebuild.EntryPointAssemblyPath.FullName;
         var commandLineResult = await dotnet.Execute(
             commandName.AppendArgs(commandLineArgs));
 
@@ -329,10 +328,10 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         Workspace workspace,
         BufferId activeBufferId)
     {
-        var package = await _packageFinder.FindAsync(workspace.WorkspaceType);
+        var prebuild = await _prebuildFinder.FindAsync(workspace.WorkspaceType);
         workspace = await workspace.InlineBuffersAsync();
         var sources = workspace.GetSourceFiles();
-        var (compilation, project) = await package.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => package.GetOrCreateWorkspaceAsync());
+        var (compilation, project) = await prebuild.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => prebuild.GetOrCreateWorkspaceAsync());
         var (diagnosticsInActiveBuffer, allDiagnostics) = workspace.MapDiagnostics(activeBufferId, compilation.GetDiagnostics());
         return new CompilationResult(
             compilation,
