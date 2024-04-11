@@ -25,7 +25,7 @@ public class CSharpProjectKernel :
     IKernelCommandHandler<RequestSignatureHelp>,
     IKernelCommandHandler<SubmitCode>
 {
-    private readonly IPackageFinder _packageFinder;
+    private readonly IPrebuildFinder _prebuildFinder;
     private RoslynWorkspaceServer _workspaceServer;
     private Workspace _workspace;
     private Buffer _buffer;
@@ -56,16 +56,16 @@ public class CSharpProjectKernel :
         }
     }
 
-    public CSharpProjectKernel(string name = "csharp", IPackageFinder packageFinder = null) : base(name)
+    public CSharpProjectKernel(string name = "csharp", IPrebuildFinder prebuildFinder = null) : base(name)
     {
-        _packageFinder = packageFinder;
+        _prebuildFinder = prebuildFinder;
         KernelInfo.LanguageName = "C#";
         KernelInfo.LanguageVersion = "11.0";
     }
 
     async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)
     {
-        _workspaceServer = new RoslynWorkspaceServer(_packageFinder ?? PackageFinder.Create(() => Package.GetOrCreateConsolePackageAsync(enableBuild: false)));
+        _workspaceServer = new RoslynWorkspaceServer(_prebuildFinder ?? PrebuildFinder.Create(() => Prebuild.GetOrCreateConsolePrebuildAsync(enableBuild: false)));
 
         var extractor = new BufferFromRegionExtractor();
         _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());

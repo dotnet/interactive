@@ -11,17 +11,17 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 
-internal static class PackageExtensions
+internal static class PrebuildExtensions
 {
     public static Task<(Compilation compilation, CodeAnalysis.Project project)> GetCompilationForLanguageServices(
-        this Package package,
+        this Prebuild prebuild,
         IReadOnlyCollection<SourceFile> sources,
         SourceCodeKind sourceCodeKind,
         IEnumerable<string> defaultUsings) =>
-        package.GetCompilationAsync(sources, sourceCodeKind, defaultUsings, package.GetOrCreateWorkspaceAsync);
+        prebuild.GetCompilationAsync(sources, sourceCodeKind, defaultUsings, prebuild.GetOrCreateWorkspaceAsync);
 
     public static async Task<(Compilation compilation, CodeAnalysis.Project project)> GetCompilationAsync(
-        this Package package,
+        this Prebuild prebuild,
         IReadOnlyCollection<SourceFile> sources,
         SourceCodeKind sourceCodeKind,
         IEnumerable<string> defaultUsings,
@@ -45,7 +45,7 @@ internal static class PackageExtensions
             }
             else
             {
-                var docId = DocumentId.CreateNewId(projectId, $"{package.Name}.Document");
+                var docId = DocumentId.CreateNewId(projectId, $"{prebuild.Name}.Document");
 
                 currentSolution = currentSolution.AddDocument(docId, source.Name, source.Text);
                 currentSolution = currentSolution.WithDocumentSourceCodeKind(docId, sourceCodeKind);

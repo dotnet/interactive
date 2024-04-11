@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 
-public interface IPackageInitializer
+public interface IPrebuildInitializer
 {
     Task InitializeAsync(DirectoryInfo directory);
 }

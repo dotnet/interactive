@@ -17,36 +17,36 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using static Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities.RoslynWorkspaceUtilities;
-using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Build.Package>;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Build.Prebuild>;
 using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 
-public class Package 
+public class Prebuild 
 {
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> _buildSemaphores = new();
 
-    static Package()
+    static Prebuild()
     {
-        const string workspacesPathEnvironmentVariableName = "TRYDOTNET_PACKAGES_PATH";
+        const string PrebuildPathEnvironmentVariableName = "TRYDOTNET_PREBUILDS_PATH";
 
-        var environmentVariable = Environment.GetEnvironmentVariable(workspacesPathEnvironmentVariableName);
+        var environmentVariable = Environment.GetEnvironmentVariable(PrebuildPathEnvironmentVariableName);
 
-        DefaultPackagesDirectory =
+        DefaultPrebuildsDirectory =
             environmentVariable is not null
                 ? new DirectoryInfo(environmentVariable)
                 : new DirectoryInfo(
                     Path.Combine(
                         Paths.UserProfile,
                         ".trydotnet",
-                        "packages"));
+                        "prebuilds"));
 
-        if (!DefaultPackagesDirectory.Exists)
+        if (!DefaultPrebuildsDirectory.Exists)
         {
-            DefaultPackagesDirectory.Create();
+            DefaultPrebuildsDirectory.Create();
         }
 
-        Log.Info("Prebuild packages path is {DefaultWorkspacesDirectory}", DefaultPackagesDirectory);
+        Log.Info("Prebuilds path is {DefaultWorkspacesDirectory}", DefaultPrebuildsDirectory);
     }
 
     private readonly AsyncLazy<bool> _lazyCreation;
@@ -71,21 +71,21 @@ public class Package
 
     private readonly object _buildCompletionSourceLock = new();
 
-    public Package(
+    public Prebuild(
         string name,
-        IPackageInitializer initializer = null,
+        IPrebuildInitializer initializer = null,
         DirectoryInfo directory = null,
         bool enableBuild = false)
     {
         Name = name;
         EnableBuild = enableBuild;
-        Directory = directory ?? new DirectoryInfo(Path.Combine(DefaultPackagesDirectory.FullName, Name));
-        var packageInitializer = initializer ?? new PackageInitializer("console", Name);
+        Directory = directory ?? new DirectoryInfo(Path.Combine(DefaultPrebuildsDirectory.FullName, Name));
+        var prebuildInitializer = initializer ?? new PrebuildInitializer("console", Name);
 
-        _lazyCreation = new AsyncLazy<bool>(() => CreatePackage(packageInitializer));
+        _lazyCreation = new AsyncLazy<bool>(() => CreatePrebuildAsync(prebuildInitializer));
         _lastBuildErrorLogFile = new FileInfo(Path.Combine(Directory.FullName, ".net-interactive-builderror"));
 
-        _log = new Logger($"{nameof(Package)}:{Name}");
+        _log = new Logger($"{nameof(Prebuild)}:{Name}");
         _buildThrottleScheduler = TaskPoolScheduler.Default;
 
         _buildRequestChannel = new Subject<Unit>();
@@ -97,7 +97,7 @@ public class Package
         {
             if (!EnableBuild)
             {
-                throw new InvalidOperationException($"Prebuild package not found at {Directory} and build-on-demand is disabled.");
+                throw new InvalidOperationException($"Prebuild not found at {Directory} and build-on-demand is disabled.");
             }
         }
     }
@@ -156,7 +156,7 @@ public class Package
 
     private FileInfo GetProjectFile() => Directory.GetFiles("*.csproj").FirstOrDefault();
     
-    public static DirectoryInfo DefaultPackagesDirectory { get; }
+    public static DirectoryInfo DefaultPrebuildsDirectory { get; }
 
     public FileInfo EntryPointAssemblyPath => 
         _entryPointAssemblyPath ??= this.GetEntryPointAssemblyPath();
@@ -292,7 +292,7 @@ public class Package
     {
         if (_roslynWorkspace is not null)
         {
-            Log.Info("Workspace already loaded for package {name}.", Name);
+            Log.Info("Workspace already loaded for prebuild {name}.", Name);
             return;
         }
 
@@ -313,7 +313,7 @@ public class Package
         }
         else
         {
-            operation.Info("Workspace already built");
+            operation.Info("Prebuild already built");
         }
 
         operation.Succeed();
@@ -321,12 +321,12 @@ public class Package
 
     public async Task BuildAsync()
     {
+        using var operation = Log.OnEnterAndConfirmOnExit();
+
         if (!EnableBuild)
         {
-            throw new InvalidOperationException($"Full build is disabled for package {this}");
+            throw new InvalidOperationException($"Full build is disabled for prebuild '{this}'");
         }
-
-        using var operation = Log.OnEnterAndConfirmOnExit();
 
         var buildSemaphore = _buildSemaphores.GetOrAdd(Name, _ => new SemaphoreSlim(1, 1));
 
@@ -334,7 +334,7 @@ public class Package
         {
             await EnsureCreatedAsync();
 
-            operation.Info("Building package {name}", Name);
+            operation.Info("Building prebuild '{name}'", Name);
 
             // When a build finishes, buildCount is reset to 0. If, when we increment
             // the value, we get a value > 1, someone else has already started another
@@ -347,7 +347,7 @@ public class Package
             {
                 if (buildInProgress)
                 {
-                    operation.Info("Skipping build for package {name}", Name);
+                    operation.Info("Skipping build for prebuild '{name}'", Name);
                     return;
                 }
 
@@ -357,18 +357,18 @@ public class Package
                 }
             }
 
-            operation.Info("Workspace built");
+            operation.Info("Prebuild built");
 
             operation.Succeed();
         }
         catch (Exception exception)
         {
-            operation.Error("Exception building workspace", exception);
+            operation.Error($"Exception building prebuild: {this}", exception);
         }
 
         var cacheFile = FindCacheFile(Directory);
 
-        if (cacheFile is not {Exists: true})
+        if (cacheFile is not { Exists: true })
         {
             throw new FileNotFoundException($"Cache file *.{BuildCacheFileUtilities.CacheFilenameSuffix} not found in {Directory}.");
         }
@@ -400,7 +400,7 @@ public class Package
 
         var result = await new Dotnet(Directory).Build(args: args);
 
-        if (result.ExitCode != 0)
+        if (result.ExitCode is not 0)
         {
             await File.WriteAllTextAsync(
                 _lastBuildErrorLogFile.FullName,
@@ -421,14 +421,14 @@ public class Package
 
     protected virtual bool IsBuildNeeded() => _roslynWorkspace is null;
     
-    public async Task<bool> CreatePackage(IPackageInitializer initializer)
+    public async Task<bool> CreatePrebuildAsync(IPrebuildInitializer initializer)
     {
+        using var operation = Log.OnEnterAndConfirmOnExit();
+
         if (!EnableBuild)
         {
-            throw new InvalidOperationException($"Full build is disabled for package {this}");
+            throw new InvalidOperationException($"Full build is disabled for prebuild '{this}'");
         }
-
-        using var operation = Log.OnEnterAndConfirmOnExit();
 
         if (!Directory.Exists)
         {
@@ -439,7 +439,7 @@ public class Package
 
         using (await FileLock.TryCreateAsync(Directory))
         {
-            operation.Info("Initializing package using {_initializer} in {directory}", initializer, Directory);
+            operation.Info("Initializing prebuild using {_initializer} in {directory}", initializer, Directory);
             await initializer.InitializeAsync(Directory);
         }
 
@@ -448,15 +448,14 @@ public class Package
         return true;
     }
 
-    public static async Task<Package> GetOrCreateConsolePackageAsync(bool enableBuild = false)
+    public static async Task<Prebuild> GetOrCreateConsolePrebuildAsync(bool enableBuild = false)
     {
-        var packageBuilder = new PackageBuilder("console");
-        packageBuilder.UseTemplate("console");
-        packageBuilder.UseLanguageVersion("latest");
-        packageBuilder.AddPackageReference("Newtonsoft.Json", "13.0.3");
-        packageBuilder.EnableBuild = enableBuild;
-        var package = packageBuilder.GetPackage();
-        return package;
+        var builder = new PrebuildBuilder("console");
+        builder.UseTemplate("console");
+        builder.UseLanguageVersion("latest");
+        builder.AddPackageReference("Newtonsoft.Json", "13.0.3");
+        builder.EnableBuild = enableBuild;
+        return builder.GetPrebuild();
     }
 
     internal static FileInfo FindCacheFile(DirectoryInfo directoryInfo) => directoryInfo.GetFiles("*" + BuildCacheFileUtilities.CacheFilenameSuffix).FirstOrDefault();

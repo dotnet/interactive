@@ -8,11 +8,11 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 
-public class PackageInitializer : IPackageInitializer
+public class PrebuildInitializer : IPrebuildInitializer
 {
     private readonly Func<DirectoryInfo, Task> afterCreate;
 
-    public PackageInitializer(
+    public PrebuildInitializer(
         string template,
         string projectName,
         string language = null,

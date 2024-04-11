@@ -13,9 +13,9 @@ public abstract class RoslynWorkspaceServerTestsCore : WorkspaceServerTestsCore
     {
     }
 
-    protected override ILanguageService GetLanguageService() => new RoslynWorkspaceServer(PackageFinder.Create(() => Package.GetOrCreateConsolePackageAsync(false)));
+    protected override ILanguageService GetLanguageService() => new RoslynWorkspaceServer(PrebuildFinder.Create(() => Prebuild.GetOrCreateConsolePrebuildAsync(false)));
 
-    protected override ICodeCompiler GetCodeCompiler() => new RoslynWorkspaceServer(PackageFinder.Create(() => Package.GetOrCreateConsolePackageAsync(false)));
+    protected override ICodeCompiler GetCodeCompiler() => new RoslynWorkspaceServer(PrebuildFinder.Create(() => Prebuild.GetOrCreateConsolePrebuildAsync(false)));
 
-    protected override ICodeRunner GetCodeRunner() => new RoslynWorkspaceServer(PackageFinder.Create(() => Package.GetOrCreateConsolePackageAsync(false)));
+    protected override ICodeRunner GetCodeRunner() => new RoslynWorkspaceServer(PrebuildFinder.Create(() => Prebuild.GetOrCreateConsolePrebuildAsync(false)));
 }

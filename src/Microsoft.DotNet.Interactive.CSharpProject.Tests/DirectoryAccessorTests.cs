@@ -256,7 +256,7 @@ public class FileSystemDirectoryAccessorTests : DirectoryAccessorTests
 {
     public override IDirectoryAccessor CreateDirectory([CallerMemberName]string testName = null)
     {
-        var directory = PackageUtilities.CreateDirectory(testName);
+        var directory = PrebuildUtilities.CreateDirectory(testName);
 
         return new FileSystemDirectoryAccessor(directory);
     }

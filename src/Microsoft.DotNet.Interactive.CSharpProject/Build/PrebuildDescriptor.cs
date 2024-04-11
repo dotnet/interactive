@@ -6,9 +6,9 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 
-public class PackageDescriptor
+public class PrebuildDescriptor
 {
-    public PackageDescriptor(
+    public PrebuildDescriptor(
         string name, 
         string version = null)
     {
@@ -30,7 +30,7 @@ public class PackageDescriptor
 
     public override bool Equals(object obj)
     {
-        return obj is PackageDescriptor descriptor &&
+        return obj is PrebuildDescriptor descriptor &&
                Name == descriptor.Name &&
                Version == descriptor.Version &&
                IsPathSpecified == descriptor.IsPathSpecified;

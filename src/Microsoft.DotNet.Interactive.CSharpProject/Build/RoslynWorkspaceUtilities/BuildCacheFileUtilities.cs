@@ -127,7 +127,7 @@ internal static class BuildCacheFileUtilities
         // Clean up the temp project file
         File.Delete(tempDirectoryBuildTarget);
 
-        var cacheFile = Package.FindCacheFile(directoryInfo);
+        var cacheFile = Prebuild.FindCacheFile(directoryInfo);
 
         if (cacheFile is not { Exists: true })
         {
