@@ -1,19 +1,19 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Host;
-using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using static Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities.BuildCacheFileUtilities;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Host;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
+namespace Microsoft.DotNet.Interactive.CSharpProject.Build.RoslynWorkspaceUtilities;
 
 internal static class RoslynWorkspaceUtilities
 {
@@ -41,18 +41,6 @@ internal static class RoslynWorkspaceUtilities
             Succeeded = true,
             CSharpParseOptions = cSharpParseOptions
         };
-    }
-
-    internal static BuildDataResults ResultsFromCacheFileUsingProjectFilePath(string csprojFilePath)
-    {
-        if (!File.Exists(csprojFilePath))
-        {
-            throw new ArgumentException($"project file does not exist : {csprojFilePath}");
-        }
-
-        var cacheFilePath = csprojFilePath + CacheFilenameSuffix;
-
-        return GetResultsFromCacheFile(cacheFilePath);
     }
 
     internal static void PopulateBuildProjectData(string fileContent, out BuildProjectData buildProjectData)
