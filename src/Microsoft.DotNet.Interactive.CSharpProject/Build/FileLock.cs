@@ -13,37 +13,20 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 public class FileLock
 {
     private const string LockFileName = ".trydotnet-lock";
-    
-    public static Task<IDisposable> TryCreateAsync(DirectoryInfo directory)
+
+    public static async Task<IDisposable> TryCreateAsync(DirectoryInfo directory, int timeoutInMs = 30000)
     {
         if (directory is null)
         {
             throw new ArgumentNullException(nameof(directory));
         }
+
         var lockFile = new FileInfo(Path.Combine(directory.FullName, LockFileName));
-        return TryCreateAsync(lockFile);
-    }
-
-    public static bool IsLockFile(FileInfo fileInfo)
-    {
-        if (fileInfo is null)
-        {
-            throw new ArgumentNullException(nameof(fileInfo));
-        }
-
-        return fileInfo.Name == LockFileName;
-    }
-
-    private static async Task<IDisposable> TryCreateAsync(FileInfo lockFile)
-    {
-        if (lockFile is null)
-        {
-            throw new ArgumentNullException(nameof(lockFile));
-        }
 
         var attemptCount = 1;
+        var remainingTimeInMs = timeoutInMs;
 
-        while (attemptCount <= 100)
+        while (remainingTimeInMs > 0)
         {
             try
             {
@@ -54,6 +37,8 @@ public class FileLock
             }
 
             await Task.Delay(TimeSpan.FromMilliseconds(100));
+            remainingTimeInMs -= 100;
+
             attemptCount++;
 
             if (attemptCount % 10 == 0)
@@ -62,6 +47,16 @@ public class FileLock
             }
         }
 
-        throw new IOException($"Cannot acquire file lock {lockFile.FullName} after {attemptCount} attempts.");
+        throw new IOException($"Cannot acquire file lock {lockFile.FullName} after {attemptCount} attempts in {timeoutInMs / 1000}s.");
+    }
+
+    public static bool IsLockFile(FileInfo fileInfo)
+    {
+        if (fileInfo is null)
+        {
+            throw new ArgumentNullException(nameof(fileInfo));
+        }
+
+        return fileInfo.Name == LockFileName;
     }
 }
