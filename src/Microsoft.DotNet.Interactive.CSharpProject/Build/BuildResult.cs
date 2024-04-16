@@ -11,41 +11,47 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.Build.RoslynWorkspaceUtilities;
+namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 
-internal static class RoslynWorkspaceUtilities
+internal class BuildResult
 {
-    internal static BuildDataResults GetResultsFromCacheFile(string cacheFilePath)
+    internal ProjectBuildInfo ProjectBuildInfo { get; init; }
+
+    internal bool Succeeded { get; init; }
+
+    internal string CacheFilePath { get; init; }
+
+    internal CSharpParseOptions CSharpParseOptions { get; init; }
+
+    internal string ProjectFilePath { get; init; }
+
+    internal static BuildResult FromCacheFile(string cacheFilePath)
     {
         if (!File.Exists(cacheFilePath))
         {
             return null;
         }
 
-        string fileContent = File.ReadAllText(cacheFilePath);
+        var fileContent = File.ReadAllText(cacheFilePath);
 
         PopulateBuildProjectData(fileContent, out var buildProjectData);
 
-        var workspace = GetWorkspace(buildProjectData);
-
         var cSharpParseOptions = CreateCSharpParseOptions(buildProjectData);
 
-        return new BuildDataResults
+        return new BuildResult
         {
-            BuildProjectData = buildProjectData,
+            ProjectBuildInfo = buildProjectData,
             ProjectFilePath = buildProjectData.ProjectFilePath,
             CacheFilePath = cacheFilePath,
-            Workspace = workspace,
             Succeeded = true,
             CSharpParseOptions = cSharpParseOptions
         };
     }
 
-    internal static void PopulateBuildProjectData(string fileContent, out BuildProjectData buildProjectData)
+    internal static void PopulateBuildProjectData(string fileContent, out ProjectBuildInfo projectBuildInfo)
     {
-        buildProjectData = new BuildProjectData();
+        projectBuildInfo = new ProjectBuildInfo();
 
         string[] lines = fileContent.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
@@ -68,26 +74,26 @@ internal static class RoslynWorkspaceUtilities
                     case "ProjectGuid":
                         if (Guid.TryParse(value, out var projectGuid))
                         {
-                            buildProjectData.ProjectGuid = projectGuid;
+                            projectBuildInfo.ProjectGuid = projectGuid;
                         }
                         else
                         {
                             // Net Core projects do not provide a project guid, so lets create one.
                             // Project guid is not relevant for build.
-                            buildProjectData.ProjectGuid = Guid.NewGuid();
+                            projectBuildInfo.ProjectGuid = Guid.NewGuid();
                         }
                         break;
                     case "ProjectReferences":
                         projectReferencesList.Add(value);
                         break;
                     case "ProjectFilePath":
-                        buildProjectData.ProjectFilePath = value;
+                        projectBuildInfo.ProjectFilePath = value;
                         break;
                     case "LanguageName":
-                        buildProjectData.LanguageName = value;
+                        projectBuildInfo.LanguageName = value;
                         break;
                     case "PropertyTargetPath":
-                        buildProjectData.TargetPath = value;
+                        projectBuildInfo.TargetPath = value;
                         break;
                     case "SourceFiles":
                         sourceFilesList.Add(value);
@@ -102,10 +108,10 @@ internal static class RoslynWorkspaceUtilities
                         preprocessorSymbolsList.Add(value);
                         break;
                     case "PropertyLangVersion":
-                        buildProjectData.LangVersion = value;
+                        projectBuildInfo.LangVersion = value;
                         break;
                     case "PropertyOutputType":
-                        buildProjectData.OutputType = value;
+                        projectBuildInfo.OutputType = value;
                         break;
                     default:
                         break;
@@ -113,31 +119,23 @@ internal static class RoslynWorkspaceUtilities
             }
         }
 
-        buildProjectData.References = referencesList.ToArray();
-        buildProjectData.ProjectReferences = projectReferencesList.ToArray();
-        buildProjectData.AnalyzerReferences = analyzerReferencesList.ToArray();
-        buildProjectData.PreprocessorSymbols = preprocessorSymbolsList.ToArray();
-        buildProjectData.SourceFiles = sourceFilesList.ToArray();
+        projectBuildInfo.References = referencesList.ToArray();
+        projectBuildInfo.ProjectReferences = projectReferencesList.ToArray();
+        projectBuildInfo.AnalyzerReferences = analyzerReferencesList.ToArray();
+        projectBuildInfo.PreprocessorSymbols = preprocessorSymbolsList.ToArray();
+        projectBuildInfo.SourceFiles = sourceFilesList.ToArray();
     }
 
-    public static AdhocWorkspace GetWorkspace(BuildProjectData buildProjectData)
+    public AdhocWorkspace CreateWorkspace()
     {
-        if (buildProjectData is null)
-        {
-            throw new ArgumentNullException(nameof(buildProjectData));
-        }
-
-        if (buildProjectData is null)
-        {
-            throw new ArgumentNullException(nameof(buildProjectData));
-        }
+        var projectBuildInfo = ProjectBuildInfo;
 
         var workspace = new AdhocWorkspace();
 
-        var projectId = ProjectId.CreateFromSerialized(buildProjectData.ProjectGuid);
+        var projectId = ProjectId.CreateFromSerialized(projectBuildInfo.ProjectGuid);
 
-        var projectInfo = CreateProjectInfo(buildProjectData, workspace, projectId);
-      
+        var projectInfo = CreateProjectInfo(projectBuildInfo, workspace, projectId);
+
         var solution = workspace.CurrentSolution.AddProject(projectInfo);
 
         if (!workspace.TryApplyChanges(solution))
@@ -150,9 +148,9 @@ internal static class RoslynWorkspaceUtilities
         return workspace;
     }
 
-    private static ProjectInfo CreateProjectInfo(BuildProjectData buildProjectData, CodeAnalysis.Workspace workspace, ProjectId projectId)
+    private static ProjectInfo CreateProjectInfo(ProjectBuildInfo projectBuildInfo, CodeAnalysis.Workspace workspace, ProjectId projectId)
     {
-        string projectName = Path.GetFileNameWithoutExtension(buildProjectData.ProjectFilePath);
+        string projectName = Path.GetFileNameWithoutExtension(projectBuildInfo.ProjectFilePath);
 
         return ProjectInfo.Create(
             projectId,
@@ -160,20 +158,20 @@ internal static class RoslynWorkspaceUtilities
             projectName,
             projectName,
             LanguageNames.CSharp,
-            filePath: buildProjectData.ProjectFilePath,
-            outputFilePath: buildProjectData.TargetPath,
-            documents: GetDocuments(buildProjectData, projectId),
-            projectReferences: GetExistingProjectReferences(buildProjectData, workspace),
-            metadataReferences: GetMetadataReferences(buildProjectData),
-            analyzerReferences: GetAnalyzerReferences(buildProjectData, workspace),
-            parseOptions: CreateParseOptions(buildProjectData),
-            compilationOptions: CreateCompilationOptions(buildProjectData));
+            filePath: projectBuildInfo.ProjectFilePath,
+            outputFilePath: projectBuildInfo.TargetPath,
+            documents: GetDocuments(projectBuildInfo, projectId),
+            projectReferences: GetExistingProjectReferences(projectBuildInfo, workspace),
+            metadataReferences: GetMetadataReferences(projectBuildInfo),
+            analyzerReferences: GetAnalyzerReferences(projectBuildInfo, workspace),
+            parseOptions: CreateParseOptions(projectBuildInfo),
+            compilationOptions: CreateCompilationOptions(projectBuildInfo));
     }
 
-    private static IReadOnlyList<DocumentInfo> GetDocuments(BuildProjectData buildProjectData, ProjectId projectId) =>
-        buildProjectData.SourceFiles is null
+    private static IReadOnlyList<DocumentInfo> GetDocuments(ProjectBuildInfo projectBuildInfo, ProjectId projectId) =>
+        projectBuildInfo.SourceFiles is null
             ? Array.Empty<DocumentInfo>()
-            : buildProjectData.SourceFiles
+            : projectBuildInfo.SourceFiles
                               .Where(File.Exists)
                               .Select(x => DocumentInfo.Create(
                                           DocumentId.CreateNewId(projectId),
@@ -183,38 +181,38 @@ internal static class RoslynWorkspaceUtilities
                                                   SourceText.From(File.ReadAllText(x), Encoding.Unicode), VersionStamp.Create())),
                                           filePath: x)).ToList();
 
-    private static IReadOnlyList<ProjectReference> GetExistingProjectReferences(BuildProjectData buildProjectData, CodeAnalysis.Workspace workspace) =>
-        buildProjectData.ProjectReferences
+    private static IReadOnlyList<ProjectReference> GetExistingProjectReferences(ProjectBuildInfo projectBuildInfo, CodeAnalysis.Workspace workspace) =>
+        projectBuildInfo.ProjectReferences
                         .Select(x => workspace.CurrentSolution.Projects.FirstOrDefault(y => y.FilePath.Equals(x, StringComparison.OrdinalIgnoreCase)))
                         .Where(x => x != null)
                         .Select(x => new ProjectReference(x.Id)).ToList();
 
-    private static IReadOnlyList<MetadataReference> GetMetadataReferences(BuildProjectData buildProjectData) =>
-        buildProjectData
+    private static IReadOnlyList<MetadataReference> GetMetadataReferences(ProjectBuildInfo projectBuildInfo) =>
+        projectBuildInfo
             .References?.Where(File.Exists)
             .Select(x => MetadataReference.CreateFromFile(x)).ToList();
 
-    private static IReadOnlyList<AnalyzerReference> GetAnalyzerReferences(BuildProjectData buildProjectData, CodeAnalysis.Workspace workspace)
+    private static IReadOnlyList<AnalyzerReference> GetAnalyzerReferences(ProjectBuildInfo projectBuildInfo, CodeAnalysis.Workspace workspace)
     {
         IAnalyzerAssemblyLoader loader = workspace.Services.GetRequiredService<IAnalyzerService>().GetLoader();
 
-        return buildProjectData.AnalyzerReferences is null
+        return projectBuildInfo.AnalyzerReferences is null
                    ? Array.Empty<AnalyzerReference>()
-                   : buildProjectData.AnalyzerReferences?
+                   : projectBuildInfo.AnalyzerReferences?
                                      .Where(File.Exists)
                                      .Select(x => new AnalyzerFileReference(x, loader)).ToList();
     }
 
-    private static ParseOptions CreateParseOptions(BuildProjectData buildProjectData) => CreateCSharpParseOptions(buildProjectData);
+    private static ParseOptions CreateParseOptions(ProjectBuildInfo projectBuildInfo) => CreateCSharpParseOptions(projectBuildInfo);
 
-    private static CSharpParseOptions CreateCSharpParseOptions(BuildProjectData buildProjectData)
+    private static CSharpParseOptions CreateCSharpParseOptions(ProjectBuildInfo projectBuildInfo)
     {
         var parseOptions = new CSharpParseOptions();
 
-        parseOptions = parseOptions.WithPreprocessorSymbols(buildProjectData.PreprocessorSymbols);
+        parseOptions = parseOptions.WithPreprocessorSymbols(projectBuildInfo.PreprocessorSymbols);
 
-        if (!string.IsNullOrWhiteSpace(buildProjectData.LangVersion) &&
-            LanguageVersionFacts.TryParse(buildProjectData.LangVersion, out var languageVersion))
+        if (!string.IsNullOrWhiteSpace(projectBuildInfo.LangVersion) &&
+            LanguageVersionFacts.TryParse(projectBuildInfo.LangVersion, out var languageVersion))
         {
             parseOptions = parseOptions.WithLanguageVersion(languageVersion);
         }
@@ -222,9 +220,9 @@ internal static class RoslynWorkspaceUtilities
         return parseOptions;
     }
 
-    private static CompilationOptions CreateCompilationOptions(BuildProjectData buildProjectData)
+    private static CompilationOptions CreateCompilationOptions(ProjectBuildInfo projectBuildInfo)
     {
-        string outputType = buildProjectData.OutputType;
+        string outputType = projectBuildInfo.OutputType;
         OutputKind? kind = null;
 
         switch (outputType)
@@ -245,4 +243,9 @@ internal static class RoslynWorkspaceUtilities
 
         return new CSharpCompilationOptions(kind.Value);
     }
+
+
+
+
+
 }

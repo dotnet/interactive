@@ -35,8 +35,8 @@ public class PrebuildTests : IDisposable
 
         var prebuild = PrebuildUtilities.CreateEmptyBuildablePrebuild(initializer: initializer);
 
-        await prebuild.GetOrCreateWorkspaceAsync();
-        await prebuild.GetOrCreateWorkspaceAsync();
+        await prebuild.CreateWorkspaceAsync();
+        await prebuild.CreateWorkspaceAsync();
 
         initializer.InitializeCount.Should().Be(1);
     }
@@ -57,8 +57,8 @@ public class PrebuildTests : IDisposable
 
         var prebuild = PrebuildUtilities.CreateEmptyBuildablePrebuild(initializer: initializer);
 
-        await prebuild.GetOrCreateWorkspaceAsync();
-        await prebuild.GetOrCreateWorkspaceAsync();
+        await prebuild.CreateWorkspaceAsync();
+        await prebuild.CreateWorkspaceAsync();
 
         afterCreateCallCount.Should().Be(1);
     }
@@ -72,11 +72,11 @@ public class PrebuildTests : IDisposable
 
         var original = PrebuildUtilities.CreateEmptyBuildablePrebuild(initializer: initializer);
 
-        await original.GetOrCreateWorkspaceAsync();
+        await original.CreateWorkspaceAsync();
 
         var copy = await original.CreateBuildableCopy();
 
-        await copy.GetOrCreateWorkspaceAsync();
+        await copy.CreateWorkspaceAsync();
 
         initializer.InitializeCount.Should().Be(1);
     }
@@ -86,7 +86,7 @@ public class PrebuildTests : IDisposable
     {
         var prebuild = PrebuildUtilities.CreateEmptyBuildablePrebuild(initializer: new PrebuildInitializer("console", "empty"));
 
-        await prebuild.GetOrCreateWorkspaceAsync();
+        await prebuild.CreateWorkspaceAsync();
 
         prebuild.EntryPointAssemblyPath.Exists.Should().BeTrue();
 

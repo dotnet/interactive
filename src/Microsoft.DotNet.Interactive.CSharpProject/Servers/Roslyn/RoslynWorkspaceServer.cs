@@ -331,7 +331,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         var prebuild = await _prebuildFinder.FindAsync(workspace.WorkspaceType);
         workspace = await workspace.InlineBuffersAsync();
         var sources = workspace.GetSourceFiles();
-        var (compilation, project) = await prebuild.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => prebuild.GetOrCreateWorkspaceAsync());
+        var (compilation, project) = await prebuild.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => prebuild.CreateWorkspaceAsync());
         var (diagnosticsInActiveBuffer, allDiagnostics) = workspace.MapDiagnostics(activeBufferId, compilation.GetDiagnostics());
         return new CompilationResult(
             compilation,

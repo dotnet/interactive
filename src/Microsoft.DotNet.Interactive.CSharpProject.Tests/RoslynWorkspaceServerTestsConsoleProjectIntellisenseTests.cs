@@ -10,9 +10,9 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
-public class RoslynWorkspaceServerTestsConsoleProjectIntellisenseTests : RoslynWorkspaceServerTestsCore
+public class RoslynWorkspaceServerTestsConsoleProjectIntellisenseTests : WorkspaceServerTestsCore
 {
-    public RoslynWorkspaceServerTestsConsoleProjectIntellisenseTests(ITestOutputHelper output) : base(output)
+    public RoslynWorkspaceServerTestsConsoleProjectIntellisenseTests(PrebuildFixture prebuildFixture, ITestOutputHelper output) : base(prebuildFixture, output)
     {
     }
 

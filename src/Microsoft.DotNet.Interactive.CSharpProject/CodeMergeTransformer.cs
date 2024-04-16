@@ -16,7 +16,7 @@ public class CodeMergeTransformer : IWorkspaceTransformer
 
     public Task<Workspace> TransformAsync(Workspace source)
     {
-        if (source == null)
+        if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
         }

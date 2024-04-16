@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
+namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
 
-internal class BuildProjectData
+internal class ProjectBuildInfo
 {
     public Guid ProjectGuid { get; set; } = Guid.Empty;
     public IReadOnlyList<string> ProjectReferences { get; set; } = new List<string>();
