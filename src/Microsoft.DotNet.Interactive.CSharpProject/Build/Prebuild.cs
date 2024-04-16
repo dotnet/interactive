@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.CSharpProject.RoslynWorkspaceUtilities;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
@@ -16,7 +15,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using static Microsoft.DotNet.Interactive.CSharpProject.Build.RoslynWorkspaceUtilities.RoslynWorkspaceUtilities;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.CSharpProject.Build.Prebuild>;
 using Disposable = System.Reactive.Disposables.Disposable;
 
@@ -49,7 +47,8 @@ public class Prebuild
         Log.Info("Prebuilds path is {DefaultWorkspacesDirectory}", DefaultPrebuildsDirectory);
     }
 
-    private readonly AsyncLazy<bool> _lazyCreation;
+    private readonly AsyncLazy<bool> _lazyInitialization;
+    private bool? _isInitialized = null;
 
     private int buildCount = 0;
 
@@ -58,12 +57,10 @@ public class Prebuild
     private readonly Logger _log;
     private readonly Subject<Unit> _buildRequestChannel;
 
-    protected CodeAnalysis.Workspace _roslynWorkspace;
-
     private readonly IScheduler _buildThrottleScheduler;
     private readonly SerialDisposable _buildThrottleSubscription;
 
-    private BuildDataResults _lastBuildResult;
+    private BuildResult _buildResult;
 
     private readonly FileInfo _lastBuildErrorLogFile;
 
@@ -82,7 +79,7 @@ public class Prebuild
         Directory = directory ?? new DirectoryInfo(Path.Combine(DefaultPrebuildsDirectory.FullName, Name));
         var prebuildInitializer = initializer ?? new PrebuildInitializer("console", Name);
 
-        _lazyCreation = new AsyncLazy<bool>(() => CreatePrebuildAsync(prebuildInitializer));
+        _lazyInitialization = new AsyncLazy<bool>(() => InitializeAsync(prebuildInitializer));
         _lastBuildErrorLogFile = new FileInfo(Path.Combine(Directory.FullName, ".net-interactive-builderror"));
 
         _log = new Logger($"{nameof(Prebuild)}:{Name}");
@@ -108,7 +105,7 @@ public class Prebuild
 
     public string Name { get; }
 
-    private Task<bool> EnsureCreatedAsync() => _lazyCreation.ValueAsync();
+    private Task<bool> EnsureInitializedAsync() => _lazyInitialization.ValueAsync();
 
     private bool TryLoadWorkspaceFromCache()
     {
@@ -116,9 +113,9 @@ public class Prebuild
         {
             var cacheFile = FindCacheFile(Directory);
             
-            if (cacheFile is not null)
+            if (cacheFile is { Exists: true })
             {
-                LoadRoslynWorkspaceFromCache(cacheFile).Wait();
+                LoadRoslynWorkspaceFromCache(cacheFile);
                 return true;
             }
         }
@@ -126,31 +123,31 @@ public class Prebuild
         return false;
     }
 
-    private async Task LoadRoslynWorkspaceFromCache(FileSystemInfo cacheFile)
+    private CodeAnalysis.Workspace LoadRoslynWorkspaceFromCache(FileSystemInfo cacheFile)
     {
         var projectFile = GetProjectFile();
 
-        if (projectFile is not null &&
-            cacheFile.LastWriteTimeUtc >= projectFile.LastWriteTimeUtc)
+        if (projectFile is null)
         {
-            BuildDataResults result;
-            using (await FileLock.TryCreateAsync(Directory))
-            {
-                result = GetResultsFromCacheFile(cacheFile.FullName);
-            }
+            throw new InvalidOperationException($"Project file not found for prebuild: {this}");
+        }
 
-            if (result is null)
-            {
-                throw new InvalidOperationException("The cache file contains no solutions or projects");
-            }
+        var result = BuildResult.FromCacheFile(cacheFile.FullName);
 
-            _roslynWorkspace = null;
-            _lastBuildResult = result;
+        if (result is null)
+        {
+            throw new InvalidOperationException("The cache file contains no solutions or projects");
+        }
 
-            if (result.Succeeded)
-            {
-                _roslynWorkspace = CreateRoslynWorkspace();
-            }
+        _buildResult = result;
+
+        if (result.Succeeded)
+        {
+            return CreateRoslynWorkspace(_buildResult);
+        }
+        else
+        {
+            throw new InvalidOperationException("Build failed.");
         }
     }
 
@@ -158,28 +155,51 @@ public class Prebuild
     
     public static DirectoryInfo DefaultPrebuildsDirectory { get; }
 
-    public FileInfo EntryPointAssemblyPath => 
+    public FileInfo EntryPointAssemblyPath =>
         _entryPointAssemblyPath ??= this.GetEntryPointAssemblyPath();
 
-    public string TargetFramework => 
+    public string TargetFramework =>
         _targetFramework ??= this.GetTargetFramework();
 
-    public async Task<CodeAnalysis.Workspace> GetOrCreateWorkspaceAsync()
+    private static CodeAnalysis.Workspace CreateRoslynWorkspace(BuildResult buildResult)
     {
-        if (_roslynWorkspace is { } ws)
+        if (buildResult is null)
         {
-             return ws;
+            throw new InvalidOperationException("No build available");
         }
-        
-        CreateCompletionSourceIfNeeded(ref _buildCompletionSource, _buildCompletionSourceLock);
 
-        _buildRequestChannel.OnNext(Unit.Default);
+        var workspace = buildResult.CreateWorkspace();
 
-        var newWorkspace = await _buildCompletionSource.Task;
+        var projectId = workspace.CurrentSolution.ProjectIds.FirstOrDefault();
+        var references = buildResult.ProjectBuildInfo.References;
+        var metadataReferences = references.GetMetadataReferences();
+        var solution = workspace.CurrentSolution;
+        solution = solution.WithProjectMetadataReferences(projectId, metadataReferences);
+        workspace.TryApplyChanges(solution);
 
-        return newWorkspace;
+        return workspace;
     }
-    
+
+    public async Task<CodeAnalysis.Workspace> CreateWorkspaceAsync()
+    {
+        if (_buildResult is { } buildResult)
+        {
+            return CreateRoslynWorkspace(buildResult);
+        }
+
+        // FIX: (GetOrCreateWorkspaceAsync) mutability is a problem here
+        if (_buildResult is not { } ws)
+        {
+            CreateCompletionSourceIfNeeded(ref _buildCompletionSource, _buildCompletionSourceLock);
+
+            _buildRequestChannel.OnNext(Unit.Default);
+
+            return await _buildCompletionSource.Task;
+        }
+
+        return null;
+    }
+
     private void CreateCompletionSourceIfNeeded(ref TaskCompletionSource<CodeAnalysis.Workspace> completionSource, object lockObject)
     {
         lock (lockObject)
@@ -256,47 +276,19 @@ public class Prebuild
     private async Task ProcessBuildRequest()
     {
         await EnsureReadyAsync();
-        var ws = CreateRoslynWorkspace();
+        var ws = CreateRoslynWorkspace(_buildResult);
         SetCompletionSourceResult(_buildCompletionSource, ws, _buildCompletionSourceLock);
-    }
-
-    private CodeAnalysis.Workspace CreateRoslynWorkspace()
-    {
-        var build = _lastBuildResult;
-
-        if (build is null)
-        {
-            throw new InvalidOperationException("No design time or full build available");
-        }
-
-        var ws = build.Workspace;
-
-        if (!ws.CanBeUsedToGenerateCompilation())
-        {
-            _roslynWorkspace = null;
-            _lastBuildResult = null;
-            throw new InvalidOperationException("The Roslyn workspace cannot be used to generate a compilation");
-        }
-
-        var projectId = ws.CurrentSolution.ProjectIds.FirstOrDefault();
-        var references = build.BuildProjectData.References;
-        var metadataReferences = references.GetMetadataReferences();
-        var solution = ws.CurrentSolution;
-        solution = solution.WithProjectMetadataReferences(projectId, metadataReferences);
-        ws.TryApplyChanges(solution);
-        _roslynWorkspace = ws;
-        return ws;
     }
 
     public async Task EnsureReadyAsync()
     {
-        if (_roslynWorkspace is not null)
+        if (_buildResult is not null)
         {
-            Log.Info("Workspace already loaded for prebuild {name}.", Name);
+            Log.Info("Build result already loaded for prebuild {name}.", Name);
             return;
         }
 
-        await EnsureCreatedAsync();
+        await EnsureInitializedAsync();
 
         await EnsureBuiltAsync();
     }
@@ -305,9 +297,9 @@ public class Prebuild
     {
         using var operation = _log.OnEnterAndConfirmOnExit();
 
-        await EnsureCreatedAsync();
+        await EnsureInitializedAsync();
 
-        if (IsBuildNeeded())
+        if (_buildResult is null)
         {
             await BuildAsync();
         }
@@ -325,14 +317,14 @@ public class Prebuild
 
         if (!EnableBuild)
         {
-            throw new InvalidOperationException($"Full build is disabled for prebuild '{this}'");
+            throw new InvalidOperationException($"Build is disabled for prebuild: {this}");
         }
 
         var buildSemaphore = _buildSemaphores.GetOrAdd(Name, _ => new SemaphoreSlim(1, 1));
 
         try
         {
-            await EnsureCreatedAsync();
+            await EnsureInitializedAsync();
 
             operation.Info("Building prebuild '{name}'", Name);
 
@@ -374,7 +366,7 @@ public class Prebuild
         }
 
         await cacheFile.WaitForFileAvailableAsync();
-        await LoadRoslynWorkspaceFromCache(cacheFile);
+        LoadRoslynWorkspaceFromCache(cacheFile);
 
         Interlocked.Exchange(ref buildCount, 0);
     }
@@ -411,15 +403,20 @@ public class Prebuild
     
     public override string ToString() => $"{Name} ({Directory.FullName})";
 
-    protected virtual bool IsBuildNeeded() => _roslynWorkspace is null;
-    
-    public async Task<bool> CreatePrebuildAsync(IPrebuildInitializer initializer)
+    private async Task<bool> InitializeAsync(IPrebuildInitializer initializer)
     {
         using var operation = Log.OnEnterAndConfirmOnExit();
 
         if (!EnableBuild)
         {
-            throw new InvalidOperationException($"Full build is disabled for prebuild '{this}'");
+            if (IsInitialized)
+            {
+                operation.Info("Prebuild already initialized in directory {directory}.", Directory);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Build disabled for prebuild: {this}");
+            }
         }
 
         if (!Directory.Exists)
@@ -435,9 +432,17 @@ public class Prebuild
             await initializer.InitializeAsync(Directory);
         }
 
+        IsInitialized = true;
+
         operation.Succeed();
 
         return true;
+    }
+
+    private bool IsInitialized
+    {
+        get => _isInitialized ?? Directory.Exists && FindCacheFile(Directory) is { Exists: true };
+        set => _isInitialized = value;
     }
 
     public static async Task<Prebuild> GetOrCreateConsolePrebuildAsync(bool enableBuild = false)

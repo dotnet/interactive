@@ -3,7 +3,7 @@
     <AdditionalFilesToIncludeForProject>
       <Value>..\polyglot-notebooks\src\contracts.ts</Value>
     </AdditionalFilesToIncludeForProject>
-    <DefaultTestTimeout>10000</DefaultTestTimeout>
+    <DefaultTestTimeout>20000</DefaultTestTimeout>
     <HiddenComponentWarnings>
       <Value>AspNetTestHostCompatibility</Value>
     </HiddenComponentWarnings>

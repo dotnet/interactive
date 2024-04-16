@@ -8,7 +8,16 @@ namespace Microsoft.DotNet.Interactive.Utility;
 public class CommandLineInvocationException : Exception
 {
     public CommandLineInvocationException(CommandLineResult result, string message = null) : base(
-        $"{message}{Environment.NewLine}Exit code {result.ExitCode}: {string.Join("\n", result.Error)}".Trim())
+            $"""
+        {message}
+        Exit code {result.ExitCode}
+        
+        StdErr:
+        {string.Join("\n", result.Error)}
+        
+        StdOut: 
+        {string.Join("\n", result.Output)}
+        """.Trim())
     {
     }
 }

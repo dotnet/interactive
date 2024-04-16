@@ -18,7 +18,7 @@ internal static class PrebuildExtensions
         IReadOnlyCollection<SourceFile> sources,
         SourceCodeKind sourceCodeKind,
         IEnumerable<string> defaultUsings) =>
-        prebuild.GetCompilationAsync(sources, sourceCodeKind, defaultUsings, prebuild.GetOrCreateWorkspaceAsync);
+        prebuild.GetCompilationAsync(sources, sourceCodeKind, defaultUsings, prebuild.CreateWorkspaceAsync);
 
     public static async Task<(Compilation compilation, CodeAnalysis.Project project)> GetCompilationAsync(
         this Prebuild prebuild,

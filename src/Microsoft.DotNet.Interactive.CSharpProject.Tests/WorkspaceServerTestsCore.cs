@@ -3,35 +3,40 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
+using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Pocket;
-using Serilog;
+using Pocket.For.Xunit;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[Collection(nameof(PrebuildFixture))]
+[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public abstract class WorkspaceServerTestsCore : IDisposable
 {
+    private readonly PrebuildFixture _prebuildFixture;
     private readonly CompositeDisposable _disposables = new();
 
-    static WorkspaceServerTestsCore()
+    protected WorkspaceServerTestsCore(
+        PrebuildFixture prebuildFixture, 
+        ITestOutputHelper output)
     {
-        TaskScheduler.UnobservedTaskException += (sender, args) =>
-        {
-            Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
-            args.SetObserved();
-        };
-    }
-
-    protected WorkspaceServerTestsCore(ITestOutputHelper output)
-    {
+        _prebuildFixture = prebuildFixture;
         _disposables.Add(output.SubscribeToPocketLogger());
     }
 
     public void Dispose() => _disposables.Dispose();
 
-    protected abstract ILanguageService GetLanguageService();
+    protected ILanguageService GetLanguageService() => CreateRoslynWorkspaceServer();
 
-    protected abstract ICodeCompiler GetCodeCompiler();
+    protected ICodeCompiler GetCodeCompiler() => CreateRoslynWorkspaceServer();
 
-    protected abstract ICodeRunner GetCodeRunner();
+    protected ICodeRunner GetCodeRunner() => CreateRoslynWorkspaceServer();
+
+    private RoslynWorkspaceServer CreateRoslynWorkspaceServer()
+    {
+        return new RoslynWorkspaceServer(PrebuildFinder.Create(() => Task.FromResult(_prebuildFixture.Prebuild)));
+    }
 }

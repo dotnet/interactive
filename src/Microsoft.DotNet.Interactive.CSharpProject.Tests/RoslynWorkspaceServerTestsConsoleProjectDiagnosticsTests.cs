@@ -8,11 +8,9 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
-public class RoslynWorkspaceServerTestsConsoleProjectDiagnosticsTests : RoslynWorkspaceServerTestsCore
+public class RoslynWorkspaceServerTestsConsoleProjectDiagnosticsTests : WorkspaceServerTestsCore
 {
-       
-
-    public RoslynWorkspaceServerTestsConsoleProjectDiagnosticsTests(ITestOutputHelper output) : base(output)
+    public RoslynWorkspaceServerTestsConsoleProjectDiagnosticsTests(PrebuildFixture prebuildFixture, ITestOutputHelper output) : base(prebuildFixture, output)
     {
     }
 
@@ -154,6 +152,4 @@ namespace FibonacciTest
         result.Diagnostics.Should().NotBeNullOrEmpty();
         result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "generators/FibonacciGenerator.cs(14,17): error CS0246: The type or namespace name \'adddd\' could not be found (are you missing a using directive or an assembly reference?)");
     }
-
-      
 }

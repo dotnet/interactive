@@ -4,7 +4,6 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.CSharpProject.Build.RoslynWorkspaceUtilities;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Build;

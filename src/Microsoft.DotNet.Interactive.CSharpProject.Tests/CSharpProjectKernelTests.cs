@@ -18,6 +18,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[Collection(nameof(PrebuildFixture))]
 [LogToPocketLogger]
 public class CSharpProjectKernelTests
 {
