@@ -385,7 +385,8 @@ public class Prebuild
 
         var projectFile = GetProjectFile();
 
-        var args = "";
+        // Default to Debug configuration as Try.NET does not work with Release builds
+        var args = "-c Debug";
         if (projectFile.Exists)
         {
             args = $"""
