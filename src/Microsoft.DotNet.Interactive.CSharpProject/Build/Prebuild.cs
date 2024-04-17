@@ -75,10 +75,12 @@ public class Prebuild
         string name,
         IPrebuildInitializer initializer = null,
         DirectoryInfo directory = null,
-        bool enableBuild = false)
+        bool enableBuild = false,
+        string args = null)
     {
         Name = name;
         EnableBuild = enableBuild;
+        Args = args;
         Directory = directory ?? new DirectoryInfo(Path.Combine(DefaultPrebuildsDirectory.FullName, Name));
         var prebuildInitializer = initializer ?? new PrebuildInitializer("console", Name);
 
@@ -103,6 +105,8 @@ public class Prebuild
     }
 
     public bool EnableBuild { get; }
+
+    public string Args { get;}
 
     public DirectoryInfo Directory { get; }
 
@@ -385,7 +389,7 @@ public class Prebuild
 
         var projectFile = GetProjectFile();
 
-        var args = "";
+        var args = Args;
         if (projectFile.Exists)
         {
             args = $"""
@@ -440,13 +444,14 @@ public class Prebuild
         return true;
     }
 
-    public static async Task<Prebuild> GetOrCreateConsolePrebuildAsync(bool enableBuild = false)
+    public static async Task<Prebuild> GetOrCreateConsolePrebuildAsync(bool enableBuild = false, string args = null)
     {
         var builder = new PrebuildBuilder("console");
         builder.UseTemplate("console");
         builder.UseLanguageVersion("latest");
         builder.AddPackageReference("Newtonsoft.Json", "13.0.3");
         builder.EnableBuild = enableBuild;
+        builder.Args = args;
         return builder.GetPrebuild();
     }
 
