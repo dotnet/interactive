@@ -29,8 +29,6 @@ public class PrebuildBuilder
 
     public bool EnableBuild { get; set; }
 
-    public string Args { get; set;}
-
     public string PrebuildName { get; }
 
     public IPrebuildInitializer PrebuildInitializer { get; private set; }
@@ -84,8 +82,7 @@ public class PrebuildBuilder
                 PrebuildName,
                 PrebuildInitializer,
                 Directory,
-                enableBuild: EnableBuild,
-                args: Args);
+                enableBuild: EnableBuild);
         }
 
         return _prebuild;
