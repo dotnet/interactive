@@ -40,6 +40,7 @@ import { ActiveNotebookTracker } from './activeNotebookTracker';
 import * as metadataUtilities from './metadataUtilities';
 import * as constants from './constants';
 import { ServiceCollection } from './serviceCollection';
+import { SurveyBanner } from './surveyBanner'
 
 export class CachedDotNetPathManager {
     private dotNetPath: string = 'dotnet'; // default to global tool if possible
@@ -66,6 +67,7 @@ export class CachedDotNetPathManager {
 export const DotNetPathManager = new CachedDotNetPathManager();
 
 const disposables: (() => void)[] = [];
+let surveryBanner: SurveyBanner;
 
 export async function activate(context: vscode.ExtensionContext) {
     // Wait for ipynb extension to be ready, temporary.
@@ -349,10 +351,14 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         }
     });
+
+    surveryBanner = new SurveyBanner(context.globalState, []);
+    disposables.push(() => surveryBanner?.dispose());
 }
 
 export function deactivate() {
     disposables.forEach(d => d());
+
 }
 
 function getPreloads(extensionPath: string): vscode.Uri[] {

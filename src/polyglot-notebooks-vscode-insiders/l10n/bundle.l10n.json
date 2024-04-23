@@ -4,5 +4,8 @@
     "VariableGridColumnValue": "Value",
     "VariableGridColumnType": "Type",
     "VariableGridColumnKernel": "Kernel",
-    "VariableGridshareTemplate": "Share value {value-name} from {kernel-name} kernel"
+    "VariableGridshareTemplate": "Share value {value-name} from {kernel-name} kernel",
+    "survey.yes": "Yes, take me to the survey",
+    "survey.no": "No",
+    "survey.message": "We would love to hear your feedback on the notebooks experience! Please take a few minutes to give feedback on using Polyglot Notebooks."
 }
