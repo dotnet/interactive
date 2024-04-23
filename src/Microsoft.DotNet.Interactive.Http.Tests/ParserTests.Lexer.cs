@@ -20,11 +20,9 @@ public partial class HttpParserTests
             var result = Parse("  \t  ");
 
             result.SyntaxTree.RootNode
-                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .ChildTokens.First().Should().BeOfType<HttpSyntaxToken>();
 
             result.SyntaxTree.RootNode
-                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .ChildTokens.Single().Text.Should().Be("  \t  ");
         }
 
@@ -33,7 +31,7 @@ public partial class HttpParserTests
         {
             var result = Parse("\n\v\r\n\n");
 
-            result.SyntaxTree.RootNode.ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
+            result.SyntaxTree.RootNode
                   .ChildTokens.Select(t => new { t.Text, t.Kind }).Should().BeEquivalentSequenceTo(
                       new { Text = "\n", Kind = HttpTokenKind.NewLine },
                       new { Text = "\v", Kind = HttpTokenKind.NewLine },
@@ -45,7 +43,7 @@ public partial class HttpParserTests
         public void multiple_punctuations_are_parsed_into_different_tokens()
         {
             var result = Parse(".!?.:/");
-            
+
             var requestNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpUrlNode>().Which;
             requestNode
                   .ChildTokens.Select(t => new { t.Text, t.Kind })

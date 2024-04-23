@@ -193,7 +193,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                         string text = currentDateTimeOffset.ToString(format, formatProvider);
                         return node.CreateBindingSuccess(text);
                     }
-                    catch(FormatException)
+                    catch (FormatException)
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeCustomFormat(format));
                     }

@@ -26,7 +26,6 @@ public partial class HttpParserTests
             var result = Parse(" \t ");
 
             result.SyntaxTree.RootNode
-                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .ChildTokens.First().Text.Should().Be(" \t ");
         }
 
@@ -36,7 +35,6 @@ public partial class HttpParserTests
             var result = Parse("\r\n\n\r\n");
 
             result.SyntaxTree.RootNode
-                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .FullText.Should().Be("\r\n\n\r\n");
         }
     }
