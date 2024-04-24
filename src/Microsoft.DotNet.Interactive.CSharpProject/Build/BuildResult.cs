@@ -130,9 +130,9 @@ internal class BuildResult
     {
         var projectBuildInfo = ProjectBuildInfo;
 
-        var workspace = new AdhocWorkspace();
-
         var projectId = ProjectId.CreateFromSerialized(projectBuildInfo.ProjectGuid);
+
+        var workspace = new AdhocWorkspace();
 
         var projectInfo = CreateProjectInfo(projectBuildInfo, workspace, projectId);
 
@@ -148,9 +148,12 @@ internal class BuildResult
         return workspace;
     }
 
-    private static ProjectInfo CreateProjectInfo(ProjectBuildInfo projectBuildInfo, CodeAnalysis.Workspace workspace, ProjectId projectId)
+    private static ProjectInfo CreateProjectInfo(
+        ProjectBuildInfo projectBuildInfo, 
+        CodeAnalysis.Workspace workspace, 
+        ProjectId projectId)
     {
-        string projectName = Path.GetFileNameWithoutExtension(projectBuildInfo.ProjectFilePath);
+        var projectName = Path.GetFileNameWithoutExtension(projectBuildInfo.ProjectFilePath);
 
         return ProjectInfo.Create(
             projectId,

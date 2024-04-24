@@ -103,7 +103,6 @@ var person = new { Name = ""Jeff"", Age = 20 };
 var s = $""{person.Name} is {person.Age} year(s) old"";
 Console.Write(s);");
 
-
         var result = await server.RunAsync(new WorkspaceRequest(request));
 
         result.ShouldSucceedWithOutput("Jeff is 20 year(s) old");

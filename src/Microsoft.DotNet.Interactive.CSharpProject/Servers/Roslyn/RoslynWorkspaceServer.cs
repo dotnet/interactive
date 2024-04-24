@@ -107,14 +107,14 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
     private SourceCodeKind GetSourceCodeKind(WorkspaceRequest request)
     {
-        return request.Workspace.WorkspaceType == "script"
-                   ? SourceCodeKind.Script
-                   : SourceCodeKind.Regular;
+        return request.Workspace.WorkspaceType is "script"
+            ? SourceCodeKind.Script
+            : SourceCodeKind.Regular;
     }
 
     private IEnumerable<string> GetUsings(Workspace workspace)
     {
-        return workspace.WorkspaceType == "script"
+        return workspace.WorkspaceType is "script"
             ? workspace.Usings.Concat(WorkspaceUtilities.DefaultUsingDirectives).Distinct()
             : workspace.Usings;
     }
@@ -151,6 +151,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
             syntaxNode,
             absolutePosition);
         result.RequestId = request.RequestId;
+
         if (diagnostics?.Count > 0)
         {
             result.Diagnostics = diagnostics;
@@ -226,33 +227,33 @@ public class RoslynWorkspaceServer : IWorkspaceServer
     {
         var workspace = request.Workspace;
 
-        using (await locks.GetOrAdd(workspace.WorkspaceType, s => new AsyncLock()).LockAsync())
+        using var _ = await locks.GetOrAdd(workspace.WorkspaceType, s => new AsyncLock()).LockAsync();
+
+        var prebuild = await _prebuildFinder.FindAsync(workspace.WorkspaceType);
+
+        var result = await GetCompilationAsync(request.Workspace, request.ActiveBufferId);
+
+        if (result.ProjectDiagnostics.ContainsError())
         {
-            var prebuild = await _prebuildFinder.FindAsync(workspace.WorkspaceType);
+            var errorMessagesToDisplayInOutput = result.DiagnosticsWithinBuffers.Any()
+                                                     ? result.DiagnosticsWithinBuffers.GetCompileErrorMessages()
+                                                     : result.ProjectDiagnostics.GetCompileErrorMessages();
 
-            var result = await GetCompilationAsync(request.Workspace, request.ActiveBufferId);
+            var runResult = new RunResult(
+                false,
+                errorMessagesToDisplayInOutput,
+                diagnostics: result.DiagnosticsWithinBuffers,
+                requestId: request.RequestId);
 
-            if (result.ProjectDiagnostics.ContainsError())
-            {
-                var errorMessagesToDisplayInOutput = result.DiagnosticsWithinBuffers.Any()
-                    ? result.DiagnosticsWithinBuffers.GetCompileErrorMessages()
-                    : result.ProjectDiagnostics.GetCompileErrorMessages();
+            runResult.AddFeature(new ProjectDiagnostics(result.ProjectDiagnostics));
 
-                var runResult = new RunResult(
-                    false,
-                    errorMessagesToDisplayInOutput,
-                    diagnostics: result.DiagnosticsWithinBuffers,
-                    requestId: request.RequestId);
+            return runResult;
+        }
 
-                runResult.AddFeature(new ProjectDiagnostics(result.ProjectDiagnostics));
+        await EmitCompilationAsync(result.Compilation, prebuild);
 
-                return runResult;
-            }
-
-            await EmitCompilationAsync(result.Compilation, prebuild);
-
-            return await RunConsoleAsync(
-                prebuild,
+        return await RunConsoleAsync(
+                   prebuild,
                    result.DiagnosticsWithinBuffers,
                    request.RequestId,
                    request.RunArgs);
@@ -299,7 +300,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
         var output = commandLineResult.Output;
 
-        if (commandLineResult.ExitCode == 124)
+        if (commandLineResult.ExitCode is 124)
         {
             throw new TimeoutException();
         }
@@ -328,7 +329,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         var prebuild = await _prebuildFinder.FindAsync(workspace.WorkspaceType);
         workspace = await workspace.InlineBuffersAsync();
         var sources = workspace.GetSourceFiles();
-        var (compilation, project) = await prebuild.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings, () => prebuild.CreateWorkspaceAsync());
+        var (compilation, project) = await prebuild.GetCompilationAsync(sources, SourceCodeKind.Regular, workspace.Usings);
         var (diagnosticsInActiveBuffer, allDiagnostics) = workspace.MapDiagnostics(activeBufferId, compilation.GetDiagnostics());
         return new CompilationResult(
             compilation,
