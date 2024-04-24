@@ -335,12 +335,9 @@ public class PowerShellKernel :
         var code = requestDiagnostics.Code;
 
         IsCompleteSubmission(code, out var parseErrors);
-
-        if (parseErrors.Length > 0)
-        {
-            var diagnostics = parseErrors.Select(ToDiagnostic);
-            context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
-        }
+        
+        var diagnostics = parseErrors.Select(ToDiagnostic);
+        context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
 
         return Task.CompletedTask;
     }

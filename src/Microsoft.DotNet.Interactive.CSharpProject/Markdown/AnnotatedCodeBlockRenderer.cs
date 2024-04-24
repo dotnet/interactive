@@ -25,7 +25,6 @@ public class AnnotatedCodeBlockRenderer : CodeBlockRenderer
 
             if (block.Diagnostics.Any())
             {
-
                 renderer.WriteLine(@"<div class=""notification is-danger"">");
                 renderer.WriteLine(SvgResources.ErrorSvg);
 
