@@ -264,20 +264,17 @@ public class HttpKernel :
 
     private void PublishDiagnostics(KernelInvocationContext context, KernelCommand command, IReadOnlyCollection<Diagnostic> diagnostics)
     {
-        if (diagnostics.Any())
-        {
-            var formattedDiagnostics =
-                diagnostics
-                    .Select(d => d.ToString())
-                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                    .ToArray();
+        var formattedDiagnostics =
+            diagnostics
+                .Select(d => d.ToString())
+                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                .ToArray();
 
-            context.Publish(
-                new DiagnosticsProduced(
-                    diagnostics.Select(ToSerializedDiagnostic),
-                    command,
-                    formattedDiagnostics));
-        }
+        context.Publish(
+            new DiagnosticsProduced(
+                diagnostics.Select(ToSerializedDiagnostic),
+                command,
+                formattedDiagnostics));
 
         static Interactive.Diagnostic ToSerializedDiagnostic(Diagnostic d)
         {

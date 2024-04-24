@@ -316,16 +316,14 @@ public class CSharpKernel :
             // Publish the compilation diagnostics. This doesn't include the exception.
             var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
 
-            if (kernelDiagnostics.Length > 0)
-            {
-                var formattedDiagnostics =
-                    diagnostics
-                        .Select(d => d.ToString())
-                        .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                        .ToImmutableArray();
+            
+            var formattedDiagnostics =
+                diagnostics
+                    .Select(d => d.ToString())
+                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                    .ToImmutableArray();
 
-                context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics));
-            }
+            context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics));
 
             // Report the compilation failure or exception
             if (exception is not null)

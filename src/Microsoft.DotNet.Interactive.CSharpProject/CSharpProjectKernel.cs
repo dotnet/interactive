@@ -145,15 +145,13 @@ public class CSharpProjectKernel :
         var result = await _workspaceServer.CompileAsync(request);
 
         var diagnostics = GetDiagnostics(_buffer.Content, result).ToArray();
-        if (diagnostics.Any())
-        {
-            context.Publish(new DiagnosticsProduced(diagnostics, command));
+        
+        context.Publish(new DiagnosticsProduced(diagnostics, command));
 
-            if (diagnostics.Any(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error))
-            {
-                context.Fail(command);
-                return;
-            }
+        if (diagnostics.Any(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error))
+        {
+            context.Fail(command);
+            return;
         }
 
         context.Publish(new AssemblyProduced(command, new Base64EncodedAssembly(result.Base64Assembly)));
@@ -189,10 +187,8 @@ public class CSharpProjectKernel :
         var result = await _workspaceServer.CompileAsync(request);
 
         var diagnostics = GetDiagnostics(command.Code, result).ToArray();
-        if (diagnostics.Any())
-        {
-            context.Publish(new DiagnosticsProduced(diagnostics, command));
-        }
+
+        context.Publish(new DiagnosticsProduced(diagnostics, command));
     }
 
     async Task IKernelCommandHandler<RequestSignatureHelp>.HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)

@@ -369,9 +369,8 @@ type FSharpKernel () as this =
             let _parseResults, checkFileResults, _checkProjectResults = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
             let errors = checkFileResults.Diagnostics
 
-            if errors.Length > 0 then
-                let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
-                context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
+            let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
+            context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
         }
 
     let handleRequestValueValueInfos (requestValueInfos: RequestValueInfos) (context: KernelInvocationContext) =

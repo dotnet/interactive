@@ -1139,19 +1139,21 @@ System.Threading.Thread.Sleep(1000);
     {
         using var kernel = CreateKernel();
 
-        var events = kernel.KernelEvents.ToSubscribedList();
+        var result = await kernel.SendAsync(new SubmitCode(
+                                                """
+                                                public static int CheckSwitch(int[] values)
+                                                    => values switch
+                                                    {
+                                                        [1, 2, .., 10] => 1,
+                                                        [1, 2] => 2,
+                                                        [1, _] => 3,
+                                                        [1, ..] => 4,
+                                                        [..] => 50
+                                                    };
+                                                """));
 
-        await kernel.SendAsync(new SubmitCode(@"public static int CheckSwitch(int[] values)
-    => values switch
-    {
-        [1, 2, .., 10] => 1,
-        [1, 2] => 2,
-        [1, _] => 3,
-        [1, ..] => 4,
-        [..] => 50
-    };"));
-
-        events.OfType<DiagnosticsProduced>().Should().BeEmpty();
+        result.Events.Should().ContainSingle<DiagnosticsProduced>()
+              .Which.Diagnostics.Should().BeEmpty();
     }
 
     [Theory]
