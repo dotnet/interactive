@@ -120,9 +120,7 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should()
-                  .ContainSingle<HttpCommentNode>()
-                  .Which.Text.Should().Be("# get a specific contact");
+            result.SyntaxTree.RootNode.ChildNodes.Last().Should().BeOfType<HttpCommentNode>().Which.Text.Should().Be("# get a specific contact");
         }
     }
 }

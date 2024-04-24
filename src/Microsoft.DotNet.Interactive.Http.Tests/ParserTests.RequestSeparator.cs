@@ -45,7 +45,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public void tokens_on_request_separator_nodes()
+        public void request_separator_nodes_after_various_nodes_are_parsed_correctly()
         {
             var result = Parse(
                 """

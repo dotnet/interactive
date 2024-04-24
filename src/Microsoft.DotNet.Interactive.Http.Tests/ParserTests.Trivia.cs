@@ -30,7 +30,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public void it_can_parse_a_string_with_only_newlines()
+        public void string_with_only_newlines_is_parsed_into_root_node()
         {
             var result = Parse("\r\n\n\r\n");
 
