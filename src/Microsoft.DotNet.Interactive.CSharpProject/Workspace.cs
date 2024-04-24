@@ -19,8 +19,7 @@ public class Workspace
         ProjectFileContent[] files = null,
         Buffer[] buffers = null,
         string workspaceType = DefaultWorkspaceType,
-        string language =  DefaultLanguage,
-        bool includeInstrumentation = false)
+        string language =  DefaultLanguage)
     {
         WorkspaceType = string.IsNullOrWhiteSpace(workspaceType) ? DefaultWorkspaceType : workspaceType;
         Language = string.IsNullOrWhiteSpace(language) ? DefaultLanguage : language;
@@ -28,8 +27,6 @@ public class Workspace
         Usings = usings ?? Array.Empty<string>();
         Files = files ?? Array.Empty<ProjectFileContent>();
         Buffers = buffers ?? Array.Empty<Buffer>();
-
-        IncludeInstrumentation = includeInstrumentation;
 
         if (Files.Distinct().Count() != Files.Length )
         {
@@ -53,9 +50,6 @@ public class Workspace
 
     [JsonProperty("workspaceType")]
     public string WorkspaceType { get; }
-
-    [JsonProperty("includeInstrumentation")]
-    public bool IncludeInstrumentation { get; }
 
     [Required]
     [MinLength(1)]
@@ -98,7 +92,6 @@ public class Workspace
                                       filesOnDisk.Single(fod => fod.Name == f.Name)
                                                  .Read()))
                           .ToArray(),
-            workspaceType: workspaceType,
-            includeInstrumentation: includeInstrumentation);
+            workspaceType: workspaceType);
     }
 }

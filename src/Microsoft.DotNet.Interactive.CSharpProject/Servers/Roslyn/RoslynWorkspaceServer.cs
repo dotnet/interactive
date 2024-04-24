@@ -253,11 +253,9 @@ public class RoslynWorkspaceServer : IWorkspaceServer
 
             return await RunConsoleAsync(
                 prebuild,
-                result.DiagnosticsWithinBuffers,
-                request.RequestId,
-                workspace.IncludeInstrumentation,
-                request.RunArgs);
-        }
+                   result.DiagnosticsWithinBuffers,
+                   request.RequestId,
+                   request.RunArgs);
     }
 
     private static async Task EmitCompilationAsync(Compilation compilation, Prebuild prebuild)
@@ -291,7 +289,6 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         Prebuild prebuild,
         IEnumerable<SerializableDiagnostic> diagnostics,
         string requestId,
-        bool includeInstrumentation,
         string commandLineArgs)
     {
         var dotnet = new Dotnet(prebuild.Directory);
