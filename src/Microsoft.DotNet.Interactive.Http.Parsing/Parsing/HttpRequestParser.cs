@@ -46,35 +46,38 @@ internal class HttpRequestParser
 
             while (MoreTokens())
             {
-                commentsToPrepend.AddRange(ParseComments());
-
-                if (ParseVariableDeclarations() is { } variableNodes)
+                while (GetNextSignificantToken() is not null)
                 {
-                    foreach (var variableNode in variableNodes)
+                    commentsToPrepend.AddRange(ParseComments());
+
+                    if (ParseVariableDeclarations() is { } variableNodes)
+                    {
+                        foreach (var variableNode in variableNodes)
+                        {
+                            foreach (var comment in commentsToPrepend)
+                            {
+                                variableNode.Add(comment, addBefore: true);
+                            }
+                            commentsToPrepend.Clear();
+                            _syntaxTree.RootNode.Add(variableNode);
+                        }
+                    }
+                    if (ParseRequestSeparator() is { } separatorNode)
+                    {
+                        _syntaxTree.RootNode.Add(separatorNode);
+                    }
+                    if (ParseRequest() is { } requestNode)
                     {
                         foreach (var comment in commentsToPrepend)
                         {
-                            variableNode.Add(comment, addBefore: true);
+                            requestNode.Add(comment, addBefore: true);
                         }
                         commentsToPrepend.Clear();
-                        _syntaxTree.RootNode.Add(variableNode);
+                        _syntaxTree.RootNode.Add(requestNode);
                     }
                 }
 
-                if (ParseRequest() is { } requestNode)
-                {
-                    foreach (var comment in commentsToPrepend)
-                    {
-                        requestNode.Add(comment, addBefore: true);
-                    }
-                    commentsToPrepend.Clear();
-                    _syntaxTree.RootNode.Add(requestNode);
-                }
-
-                if (ParseRequestSeparator() is { } separatorNode)
-                {
-                    _syntaxTree.RootNode.Add(separatorNode);
-                }
+                ConsumeCurrentTokenInto(_syntaxTree.RootNode);
             }
 
             foreach (var comment in commentsToPrepend)
@@ -305,6 +308,11 @@ internal class HttpRequestParser
             }
 
             if (IsRequestSeparator())
+            {
+                return null;
+            }
+
+            if (GetNextSignificantToken() is null)
             {
                 return null;
             }

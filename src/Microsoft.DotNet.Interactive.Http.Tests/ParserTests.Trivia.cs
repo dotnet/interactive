@@ -26,17 +26,15 @@ public partial class HttpParserTests
             var result = Parse(" \t ");
 
             result.SyntaxTree.RootNode
-                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .ChildTokens.First().Text.Should().Be(" \t ");
         }
 
         [Fact]
-        public void it_can_parse_a_string_with_only_newlines()
+        public void string_with_only_newlines_is_parsed_into_root_node()
         {
             var result = Parse("\r\n\n\r\n");
 
             result.SyntaxTree.RootNode
-                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .FullText.Should().Be("\r\n\n\r\n");
         }
     }

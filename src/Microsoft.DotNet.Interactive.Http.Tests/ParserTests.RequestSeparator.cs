@@ -43,5 +43,34 @@ public partial class HttpParserTests
                                     .Should().ContainSingle<HttpRequestSeparatorNode>()
                                     .Which.Text.Should().Be("### Slow Response (Json)");
         }
+
+        [Fact]
+        public void request_separator_nodes_after_various_nodes_are_parsed_correctly()
+        {
+            var result = Parse(
+                """
+                @MyRestaurantApi_HostAddress = https://localhost:7293
+
+                GET {{MyRestaurantApi_HostAddress}}/api/Contact
+                ###
+
+                @Somevar = hello
+
+                ###
+
+                PUT https://httpbin.org/anything
+                Content-Type: application/json
+
+                {
+                    "content": "content here",
+                    "message": {{Message}}
+                }
+
+                ###
+                """
+                );
+
+            result.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestSeparatorNode>().Count().Should().Be(3);
+        }
     }
 }

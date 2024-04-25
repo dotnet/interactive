@@ -250,5 +250,21 @@ public partial class HttpParserTests
             variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
 
         }
+
+        [Fact]
+        public void spaces_after_variable_do_not_produce_diagnostics()
+        {
+            var result = Parse(
+                """
+                @host=https://httpbin.org
+                
+                
+                
+                
+                
+                """);
+
+            result.SyntaxTree.RootNode.ChildNodes.Count().Should().Be(1);
+        }
     }
 }

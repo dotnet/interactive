@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation.Internal;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
@@ -49,7 +50,7 @@ public partial class HttpParserTests
         [Fact]
         public void Comment_node_can_immediately_follow_headers()
         {
-             var code = """
+            var code = """
                 GET https://example.com
                 Accept: text/plain
                 # This is a comment
@@ -102,6 +103,24 @@ public partial class HttpParserTests
 
             result.GetDiagnostics().Should().BeEmpty();
 
+        }
+
+        [Fact]
+        public void comment_after_request_separator_is_parsed_correctly()
+        {
+            var code = """
+                @MyRestaurantApi_HostAddress = https://localhost:7094
+
+                GET {{MyRestaurantApi_HostAddress}}/api/Contact
+
+                ###
+
+                # get a specific contact
+                """;
+
+            var result = Parse(code);
+
+            result.SyntaxTree.RootNode.ChildNodes.Last().Should().BeOfType<HttpCommentNode>().Which.Text.Should().Be("# get a specific contact");
         }
     }
 }
