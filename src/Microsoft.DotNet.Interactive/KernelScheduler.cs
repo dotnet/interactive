@@ -28,9 +28,8 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     public KernelScheduler()
     {
         _runLoopTask = Task.Factory.StartNew(
-            ScheduledOperationRunLoop,
-            TaskCreationOptions.LongRunning,
-            _schedulerDisposalSource.Token);
+           ScheduledOperationRunLoop,
+           creationOptions: TaskCreationOptions.LongRunning);
 
         _disposables = new CompositeDisposable
         {
@@ -105,7 +104,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         _childOperationsBarrier.SignalAndWait();
     }
 
-    private void ScheduledOperationRunLoop(object _)
+    private void ScheduledOperationRunLoop()
     {
         foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
         {
