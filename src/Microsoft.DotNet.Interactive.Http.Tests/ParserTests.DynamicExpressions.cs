@@ -26,7 +26,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.UtcNow;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy").ToString());
         }
 
@@ -42,7 +42,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.UtcNow;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.ToString("o").ToString());
         }
 
@@ -58,7 +58,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.UtcNow;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o").ToString());
         }
 
@@ -74,7 +74,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.UtcNow;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.ToString("r").ToString());
         }
 
@@ -90,7 +90,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.UtcNow;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.AddDays(1).ToString("r").ToString());
         }
 
@@ -106,7 +106,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy").ToString());
         }
 
@@ -122,7 +122,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.ToString("o").ToString());
         }
 
@@ -138,7 +138,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o").ToString());
         }
 
@@ -154,7 +154,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.ToString("r").ToString());
         }
 
@@ -170,7 +170,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.ToUnixTimeSeconds().ToString());
         }
 
@@ -186,7 +186,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.AddMonths(7).ToUnixTimeSeconds().ToString());
         }
 
@@ -202,7 +202,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             var stringValue = binding.Value.As<string>();
             Assert.True(int.TryParse(stringValue, out int value));
             value.Should().BeGreaterThanOrEqualTo(2).And.BeLessThan(10);
@@ -220,7 +220,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             var stringValue = binding.Value.As<string>();
             Assert.True(int.TryParse(stringValue, out int value));
             value.Should().BeGreaterThanOrEqualTo(0).And.BeLessThan(3);
@@ -238,7 +238,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             var stringValue = binding.Value.As<string>();
             Assert.True(int.TryParse(stringValue, out int value));
             value.Should().BeGreaterThanOrEqualTo(0);
@@ -256,7 +256,7 @@ public partial class HttpParserTests
             var currentTime = DateTimeOffset.Now;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
-            var binding = DynamicExpressionUtilites.ResolveExpressionBinding(node, () => currentTime, expression);
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             var stringValue = binding.Value.As<string>();
             Assert.True(Guid.TryParse(stringValue, out Guid value));
             value.Should().NotBeEmpty();
