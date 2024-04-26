@@ -97,8 +97,11 @@ internal class HttpRequestNode : HttpSyntaxNode
                 if (declaredVariables.TryGetValue(node.Text, out var declaredValue))
                 {
                     return HttpBindingResult<object?>.Success(declaredValue.Value);
-                } 
-                else { return originalBind(node); }
+                }
+                else
+                {
+                    return originalBind(node);
+                }
             };
         }
         var request = new HttpRequestMessage();
@@ -153,7 +156,7 @@ internal class HttpRequestNode : HttpSyntaxNode
                     continue;
                 }
 
-                var headerName = headerNode.NameNode.Text.ToLowerInvariant();
+                var headerName = headerNode.NameNode.Text;
                 var headerValueResult = headerNode.ValueNode.TryGetValue(bind);
 
                 diagnostics.AddRange(headerValueResult.Diagnostics);
