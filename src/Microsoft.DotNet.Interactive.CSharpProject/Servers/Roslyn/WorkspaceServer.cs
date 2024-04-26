@@ -21,13 +21,13 @@ using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
-public class RoslynWorkspaceServer : IWorkspaceServer
+public class WorkspaceServer : ILanguageService, ICodeRunner, ICodeCompiler
 {
     private readonly IPrebuildFinder _prebuildFinder;
 
-    private static readonly ConcurrentDictionary<string, AsyncLock> locks = new();
+    private static readonly ConcurrentDictionary<string, AsyncLock> _locks = new();
 
-    static RoslynWorkspaceServer()
+    static WorkspaceServer()
     {
         TaskScheduler.UnobservedTaskException += (_, args) =>
         {
@@ -36,12 +36,12 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         };
     }
 
-    public RoslynWorkspaceServer(Func<Task<Prebuild>> getPrebuildAsync)
+    public WorkspaceServer(Func<Task<Prebuild>> getPrebuildAsync)
     {
         _prebuildFinder = PrebuildFinder.Create(getPrebuildAsync);
     }
 
-    public RoslynWorkspaceServer(IPrebuildFinder prebuildRegistry)
+    public WorkspaceServer(IPrebuildFinder prebuildRegistry)
     {
         _prebuildFinder = prebuildRegistry ?? throw new ArgumentNullException(nameof(prebuildRegistry));
     }
@@ -189,7 +189,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
     {
         var workspace = request.Workspace;
 
-        using (await locks.GetOrAdd(workspace.WorkspaceType, _ => new AsyncLock()).LockAsync())
+        using (await _locks.GetOrAdd(workspace.WorkspaceType, _ => new AsyncLock()).LockAsync())
         {
             var result = await GetCompilationAsync(request.Workspace, request.ActiveBufferId);
 
@@ -227,7 +227,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
     {
         var workspace = request.Workspace;
 
-        using var _ = await locks.GetOrAdd(workspace.WorkspaceType, s => new AsyncLock()).LockAsync();
+        using var _ = await _locks.GetOrAdd(workspace.WorkspaceType, s => new AsyncLock()).LockAsync();
 
         var prebuild = await _prebuildFinder.FindAsync(workspace.WorkspaceType);
 
@@ -281,7 +281,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
                     throw;
                 }
 
-                await Task.Delay(10);
+                await Task.Delay(Random.Shared.Next(1, 10) *  20);
             }
         }
     }

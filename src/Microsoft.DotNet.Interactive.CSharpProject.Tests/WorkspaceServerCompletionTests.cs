@@ -5,15 +5,14 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
-public class RoslynWorkspaceServerTestsConsoleProjectIntellisenseTests : WorkspaceServerTestsCore
+public class WorkspaceServerCompletionTests : WorkspaceServerTestsCore
 {
-    public RoslynWorkspaceServerTestsConsoleProjectIntellisenseTests(PrebuildFixture prebuildFixture, ITestOutputHelper output) : base(prebuildFixture, output)
+    public WorkspaceServerCompletionTests(PrebuildFixture prebuildFixture, ITestOutputHelper output) : base(prebuildFixture, output)
     {
     }
 
@@ -182,7 +181,7 @@ namespace FibonacciTest
 }".EnforceLF();
 
         #endregion
-           
+
         var (processed, position) = CodeManipulation.ProcessMarkup(generator);
 
         var workspace = new Workspace(workspaceType: "console", buffers:
@@ -199,10 +198,10 @@ namespace FibonacciTest
         result.Items.Should().NotBeNullOrEmpty();
 
         result.Items
-            .Where(i => i.Documentation is not null && !string.IsNullOrWhiteSpace(i.Documentation))
-            .Select(i => i.Documentation)
-            .Should()
-            .Contain(d => d == "Writes the text representation of the specified Boolean value to the standard output stream.");
+              .Where(i => i.Documentation != null && !string.IsNullOrWhiteSpace(i.Documentation))
+              .Select(i => i.Documentation)
+              .Should()
+              .Contain(d => d == "Writes the text representation of the specified Boolean value to the standard output stream.");
     }
 
     [Fact]
