@@ -4,5 +4,8 @@
   "VariableGridColumnValue": "Değer",
   "VariableGridColumnType": "Tür",
   "VariableGridColumnKernel": "Çekirdek",
-  "VariableGridshareTemplate": "{kernel-name} çekirdeğindeki {value-name} değerini paylaşın"
+  "VariableGridshareTemplate": "{kernel-name} çekirdeğindeki {value-name} değerini paylaşın",
+  "survey.yes": "Evet, beni ankete götür",
+  "survey.no": "Hayır",
+  "survey.message": "Not defterleri deneyimi hakkındaki görüşlerinizi öğrenmek isteriz! Lütfen Çok Dilli Not Defterleri’nin kullanımı hakkında geri bildirimde bulunmak için birkaç dakikanızı ayırın."
 }

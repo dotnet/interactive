@@ -4,5 +4,8 @@
   "VariableGridColumnValue": "Значение",
   "VariableGridColumnType": "Тип",
   "VariableGridColumnKernel": "Ядро",
-  "VariableGridshareTemplate": "Отправить значение {value-name} из ядра {kernel-name}"
+  "VariableGridshareTemplate": "Отправить значение {value-name} из ядра {kernel-name}",
+  "survey.yes": "Да, перейти к опросу",
+  "survey.no": "Нет",
+  "survey.message": "Мы будем рады получить ваши отзывы о работе записных книжек! Уделите несколько минут, чтобы оставить отзыв об использовании Разноязычных блокнотов."
 }

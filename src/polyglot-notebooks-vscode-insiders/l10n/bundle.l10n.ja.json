@@ -4,5 +4,8 @@
   "VariableGridColumnValue": "値",
   "VariableGridColumnType": "種類",
   "VariableGridColumnKernel": "カーネル",
-  "VariableGridshareTemplate": "{kernel-name} カーネルから値 {value-name} を共有します"
+  "VariableGridshareTemplate": "{kernel-name} カーネルから値 {value-name} を共有します",
+  "survey.yes": "はい、アンケートに参加します",
+  "survey.no": "いいえ",
+  "survey.message": "ノートブック エクスペリエンスに関するフィードバックをお聞かせください。多言語ノートブックの使用に関するフィードバックをお寄せください。"
 }
