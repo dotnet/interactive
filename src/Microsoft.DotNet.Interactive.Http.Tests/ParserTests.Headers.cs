@@ -268,5 +268,43 @@ public partial class HttpParserTests
                   .Should().ContainSingle()
                   .Which.GetMessage().Should().Be("Missing header value.");
         }
+
+        [Fact]
+        public void Case_is_preserved_for_header_name()
+        {
+            var result = Parse(
+                """
+                GET https://example.com 
+                HEadEr: value
+                """);
+
+            var bindingResult =
+                result.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>().Single().TryGetHttpRequestMessage(
+                    node => HttpBindingResult<object>.Failure(node.CreateDiagnostic(CreateDiagnosticInfo("oops!"))));
+
+            bindingResult.Diagnostics.Should().BeEmpty();
+            
+            var request = bindingResult.Value;
+            request.Headers.Should().ContainSingle().Which.Key.Should().Be("HEadEr");
+        }
+
+        [Fact]
+        public void Case_is_preserved_for_header_value()
+        {
+            var result = Parse(
+                """
+                GET https://example.com 
+                header: ValUE
+                """);
+
+            var bindingResult =
+                result.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>().Single().TryGetHttpRequestMessage(
+                    node => HttpBindingResult<object>.Failure(node.CreateDiagnostic(CreateDiagnosticInfo("oops!"))));
+
+            bindingResult.Diagnostics.Should().BeEmpty();
+
+            var request = bindingResult.Value;
+            request.Headers.Should().ContainSingle().Which.Value.Should().ContainSingle().Which.Should().Be("ValUE");
+        }
     }
 }

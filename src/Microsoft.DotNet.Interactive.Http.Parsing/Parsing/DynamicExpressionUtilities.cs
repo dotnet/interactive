@@ -10,7 +10,7 @@ using System.Threading;
 namespace Microsoft.DotNet.Interactive.Http.Parsing
 {
 #nullable enable
-    internal static class DynamicExpressionUtilites
+    internal static class DynamicExpressionUtilities
     {
         const string DateTimeMacroName = "$datetime";
         const string LocalDateTimeMacroName = "$localDatetime";

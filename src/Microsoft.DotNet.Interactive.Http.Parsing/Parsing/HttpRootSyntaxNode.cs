@@ -3,10 +3,10 @@
 
 #nullable enable
 
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -24,7 +24,7 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
     public void Add(HttpCommentNode commentNode)
     {
         AddInternal(commentNode);
-    } 
+    }
 
     public void Add(HttpVariableDeclarationAndAssignmentNode variableNode)
     {
@@ -64,7 +64,7 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                         }
                         else
                         {
-                            return DynamicExpressionUtilites.ResolveExpressionBinding(node, node.Text);
+                            return DynamicExpressionUtilities.ResolveExpressionBinding(node, node.Text);
                         }
 
                     });
@@ -73,10 +73,10 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                     {
                         declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
                     }
-                    
                 }
             }
         }
+
         return declaredVariables;
     }
 }
