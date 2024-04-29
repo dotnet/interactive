@@ -4,5 +4,8 @@
   "VariableGridColumnValue": "Valor",
   "VariableGridColumnType": "Tipo",
   "VariableGridColumnKernel": "Kernel",
-  "VariableGridshareTemplate": "Compartir el valor {value-name} del kernel {kernel-name}"
+  "VariableGridshareTemplate": "Compartir el valor {value-name} del kernel {kernel-name}",
+  "survey.yes": "Sí, llevarme a la encuesta",
+  "survey.no": "No",
+  "survey.message": "Nos gustaría recibir sus comentarios sobre la experiencia de los cuadernos. Dedique unos minutos a enviar comentarios sobre el uso de cuadernos en varios lenguajes."
 }

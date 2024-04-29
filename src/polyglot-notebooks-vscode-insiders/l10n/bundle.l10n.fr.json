@@ -4,5 +4,8 @@
   "VariableGridColumnValue": "Valeur",
   "VariableGridColumnType": "Type",
   "VariableGridColumnKernel": "Noyau",
-  "VariableGridshareTemplate": "Partager la valeur {value-name} du noyau {kernel-name}"
+  "VariableGridshareTemplate": "Partager la valeur {value-name} du noyau {kernel-name}",
+  "survey.yes": "Oui, je souhaite participer à l'enquête",
+  "survey.no": "Non",
+  "survey.message": "Nous aimerions avoir vos commentaires sur l'expérience d'utilisation des notebooks ! Prenez quelques minutes pour nous faire part de vos commentaires sur l’utilisation des Notebooks polyglottes."
 }

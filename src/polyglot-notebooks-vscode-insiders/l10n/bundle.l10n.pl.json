@@ -4,5 +4,8 @@
   "VariableGridColumnValue": "Wartość",
   "VariableGridColumnType": "Typ",
   "VariableGridColumnKernel": "Jądro",
-  "VariableGridshareTemplate": "Udostępnij wartość {value-name} z jądra {kernel-name}"
+  "VariableGridshareTemplate": "Udostępnij wartość {value-name} z jądra {kernel-name}",
+  "survey.yes": "Tak, prześlij mnie do ankiety",
+  "survey.no": "Nie",
+  "survey.message": "Chcielibyśmy poznać Twoją opinię dotyczącą środowiska notebooków! Poświęć kilka minut na wyrażenie opinii na temat korzystania z Notesów Wielojęzycznych."
 }

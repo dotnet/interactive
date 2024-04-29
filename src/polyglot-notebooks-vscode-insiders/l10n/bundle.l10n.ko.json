@@ -4,5 +4,8 @@
   "VariableGridColumnValue": "값",
   "VariableGridColumnType": "유형",
   "VariableGridColumnKernel": "커널",
-  "VariableGridshareTemplate": "{kernel-name} 커널에서 {value-name} 값을 공유합니다."
+  "VariableGridshareTemplate": "{kernel-name} 커널에서 {value-name} 값을 공유합니다.",
+  "survey.yes": "Yes, take me to the survey",
+  "survey.no": "No",
+  "survey.message": "We would love to hear your feedback on the notebooks experience! Please take a few minutes to give feedback on using Polyglot Notebooks."
 }
