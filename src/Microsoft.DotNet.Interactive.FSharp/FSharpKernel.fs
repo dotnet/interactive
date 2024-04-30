@@ -209,7 +209,7 @@ type FSharpKernel () as this =
                     |> Array.map (fun d -> d.ToString())
                     |> Array.map (fun text -> new FormattedValue(PlainTextFormatter.MimeType, text))
 
-                context.Publish(DiagnosticsProduced(diagnostics, codeSubmission, formattedDiagnostics))
+                context.Publish(DiagnosticsProduced(diagnostics, formattedDiagnostics, codeSubmission))
 
             match result with
             | Ok(result) when not isError ->
@@ -370,7 +370,8 @@ type FSharpKernel () as this =
             let errors = checkFileResults.Diagnostics
 
             let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
-            context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
+            let formattedDiagnostics = errors |> Array.map (fun x -> new FormattedValue(PlainTextFormatter.MimeType, x.ToString())) 
+            context.Publish(DiagnosticsProduced(diagnostics, formattedDiagnostics, requestDiagnostics))
         }
 
     let handleRequestValueValueInfos (requestValueInfos: RequestValueInfos) (context: KernelInvocationContext) =

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
@@ -35,21 +34,25 @@ internal static class KernelEventExtensions
         return initialRange;
     }
 
-    public static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromRequestingCommand(this KernelEvent @event, IReadOnlyCollection<Diagnostic> diagnostics)
+    public static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromRequestingCommand(
+        this KernelEvent @event, 
+        IReadOnlyCollection<Diagnostic> diagnostics)
     {
         return @event.Command switch
         {
             SubmitCode submitCode
-                when submitCode.LanguageNode is { } => submitCode.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
+                when submitCode.LanguageNode is not null => submitCode.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
 
             RequestDiagnostics requestDiagnostics
-                when requestDiagnostics.LanguageNode is { } => requestDiagnostics.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
+                when requestDiagnostics.LanguageNode is not null => requestDiagnostics.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
 
             _ => diagnostics // no meaningful remapping can occur
         };
     }
 
-    private static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromLanguageNode(this LanguageNode languageNode, IReadOnlyCollection<Diagnostic> diagnostics)
+    private static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromLanguageNode(
+        this LanguageNode languageNode, 
+        IReadOnlyCollection<Diagnostic> diagnostics)
     {
         var root = languageNode.SyntaxTree.GetRoot();
         var initialSpan = languageNode.Span;
@@ -57,10 +60,9 @@ internal static class KernelEventExtensions
         var codePosition = sourceText.Lines.GetLinePositionSpan(initialSpan);
         return diagnostics.Select(d => d.WithLinePositionSpan(
                 new LinePositionSpan(
-                    new LinePosition(d.LinePositionSpan.Start.Line + codePosition.Start.Line, d.LinePositionSpan.Start.Character),
-                    new LinePosition(d.LinePositionSpan.End.Line + codePosition.Start.Line, d.LinePositionSpan.End.Character))
-            )
-        ).ToImmutableList();
+                    d.LinePositionSpan.Start with { Line = d.LinePositionSpan.Start.Line + codePosition.Start.Line },
+                    d.LinePositionSpan.End with { Line = d.LinePositionSpan.End.Line + codePosition.Start.Line }))
+        ).ToArray();
     }
 
     internal static void StampRoutingSlipAndLog(this KernelEvent @event, Uri uri)

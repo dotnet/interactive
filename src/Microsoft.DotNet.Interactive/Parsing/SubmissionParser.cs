@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
@@ -124,7 +125,10 @@ public class SubmissionParser
                                         CodeAnalysis.DiagnosticSeverity.Error,
                                         "NI0001", // QUESTION: (SplitSubmission) what code should this be?
                                         "Unrecognized magic command");
-                                    var diagnosticsProduced = new DiagnosticsProduced(new[] { diagnostic }, originalCommand);
+                                    var diagnosticsProduced = new DiagnosticsProduced(
+                                        [diagnostic], 
+                                        [new FormattedValue(PlainTextFormatter.MimeType, diagnostic.ToString())] , 
+                                        originalCommand);
                                     context.Publish(diagnosticsProduced);
                                     return Task.CompletedTask;
                                 });

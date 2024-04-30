@@ -12,6 +12,7 @@ using Microsoft.DotNet.Interactive.CSharpProject.Events;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;
 
@@ -146,7 +147,10 @@ public class CSharpProjectKernel :
 
         var diagnostics = GetDiagnostics(_buffer.Content, result).ToArray();
         
-        context.Publish(new DiagnosticsProduced(diagnostics, command));
+        context.Publish(new DiagnosticsProduced(
+                            diagnostics, 
+                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(),
+                            command));
 
         if (diagnostics.Any(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error))
         {
@@ -188,7 +192,10 @@ public class CSharpProjectKernel :
 
         var diagnostics = GetDiagnostics(command.Code, result).ToArray();
 
-        context.Publish(new DiagnosticsProduced(diagnostics, command));
+        context.Publish(new DiagnosticsProduced(
+                            diagnostics, 
+                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(), 
+                            command));
     }
 
     async Task IKernelCommandHandler<RequestSignatureHelp>.HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
