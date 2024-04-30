@@ -129,28 +129,30 @@ extends:
                       /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
                       /p:PublishToSymbolServer=true
 
-            outputs:
-              - output: pipelineArtifact
-                displayName: 'Publish Test results and Blame dumps'
-                condition: failed()
-                targetPath: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                artifactName: 'Windows_test_results_and_dumps'
-                publishLocation: Container
-              - output: pipelineArtifact
-                displayName: 'Publish VSCode extension artifacts'
-                targetPath: '$(Build.ArtifactStagingDirectory)\vscode'
-                artifactName: 'vscode'
-                publishLocation: Container
-              - output: pipelineArtifact
-                displayName: 'Publish NPM package artifacts'
-                targetPath: '$(Build.ArtifactStagingDirectory)\npm'
-                artifactName: 'npm'
-                publishLocation: Container
-              - output: pipelineArtifact
-                displayName: 'Publish packages to artifacts container'
-                targetPath: '$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)'
-                artifactName: 'packages'
-                publishLocation: Container
+            templateContext:
+              outputParentDirectory: $(Build.ArtifactStagingDirectory)
+              outputs:
+                - output: pipelineArtifact
+                  displayName: 'Publish Test results and Blame dumps'
+                  condition: failed()
+                  targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  artifactName: 'Windows_test_results_and_dumps'
+                  publishLocation: Container
+                - output: pipelineArtifact
+                  displayName: 'Publish VSCode extension artifacts'
+                  targetPath: '$(Build.ArtifactStagingDirectory)\vscode'
+                  artifactName: 'vscode'
+                  publishLocation: Container
+                - output: buildArtifacts
+                  displayName: 'Publish NPM package artifacts'
+                  PathtoPublish: '$(Build.ArtifactStagingDirectory)/npm'
+                  ArtifactName: 'npm'
+                  publishLocation: Container
+                - output: pipelineArtifact
+                  displayName: 'Publish packages to artifacts container'
+                  targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/packages/$(_BuildConfig)'
+                  artifactName: 'packages'
+                  publishLocation: Container
 
             steps:
             - checkout: self
@@ -211,12 +213,30 @@ extends:
               condition: always()
 
             - task: PowerShell@2
+              displayName: Pack VS Code Extensions
+              inputs:
+                filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
+                arguments: -stableToolVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
+                workingDirectory: "$(Build.SourcesDirectory)/src"
+                pwsh: true
+
+            - task: PowerShell@2
               displayName: Pack NPM package
               inputs:
                 filePath: $(Build.SourcesDirectory)/eng/package/PackNpmPackage.ps1
                 arguments: -packageVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\npm"
                 workingDirectory: "$(Build.SourcesDirectory)/src/polyglot-notebooks"
                 pwsh: true
+
+            - task: CopyFiles@2
+              displayName: Copy artifacts to $(Build.ArtifactStagingDirectory)\artifacts
+              inputs:
+                SourceFolder: 'artifacts'
+                Contents: |
+                  TestResults\**
+                  packages\**
+                TargetFolder: '$(Build.ArtifactStagingDirectory)\artifacts'
+              condition: succeededOrFailed()
 
             # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
             # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
@@ -237,13 +257,14 @@ extends:
               os: linux
               demands: ImageOverride -equals 1es-ubuntu-2204
             
-            outputs:
-              - output: pipelineArtifact
-                displayName: 'Publish Test results and Blame dumps'
-                condition: failed()
-                targetPath: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                artifactName: 'Linux_test_results_and_dumps'
-                publishLocation: Container
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  displayName: 'Publish Test results and Blame dumps'
+                  condition: failed()
+                  targetPath: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  artifactName: 'Linux_test_results_and_dumps'
+                  publishLocation: Container
 
             steps:
             - script: git config --global core.longpaths true
@@ -327,6 +348,9 @@ extends:
             -TsaPublish $True
             -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/policheck_exclusions.xml")
   
+    #---------------------------------------------------------------------------------------------------------------------#
+    #                                                    NPM Publish                                                      #
+    #---------------------------------------------------------------------------------------------------------------------#
     - template: /eng/publish/publish-npm.yml@self
       parameters:
         packageName: microsoft-polyglot-notebooks-*.tgz
