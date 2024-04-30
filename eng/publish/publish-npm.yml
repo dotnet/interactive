@@ -13,7 +13,8 @@ stages:
   - job: Publish_NPM
     pool:
       name: $(DncEngInternalBuildPool)
-      demands: ImageOverride -equals windows.10.vs2019.amd64
+      demands: ImageOverride -equals 1es-windows-2022-pt
+      os: windows
     variables:
     - group: AzureDevOps-Artifact-Feeds-Pats
     - name: NodeJSVersion
