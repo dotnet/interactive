@@ -18,4 +18,6 @@ public class ErrorProduced : DisplayEvent
     }
 
     public string Message { get; }
+
+    public override string ToString() => $"{nameof(ErrorProduced)}: {Message?.TruncateForDisplay()}";
 }

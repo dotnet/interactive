@@ -17,7 +17,13 @@
         "message": "message"
       }
     ],
-    "formattedDiagnostics": []
+    "formattedDiagnostics": [
+      {
+        "mimeType": "text/plain",
+        "value": "code: [(1, 2)-(3, 4)) message",
+        "suppressDisplay": false
+      }
+    ]
   },
   "eventType": "DiagnosticsProduced",
   "command": {

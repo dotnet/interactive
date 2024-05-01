@@ -323,7 +323,7 @@ public class CSharpKernel :
                     .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
                     .ToImmutableArray();
 
-            context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics));
+            context.Publish(new DiagnosticsProduced(kernelDiagnostics, formattedDiagnostics, submitCode));
 
             // Report the compilation failure or exception
             if (exception is not null)
@@ -457,7 +457,7 @@ public class CSharpKernel :
                 .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
                 .ToImmutableArray();
 
-        return new DiagnosticsProduced(kernelDiagnostics, command, formattedDiagnostics);
+        return new DiagnosticsProduced(kernelDiagnostics, formattedDiagnostics, command);
     }
 
     async Task IKernelCommandHandler<RequestDiagnostics>.HandleAsync(

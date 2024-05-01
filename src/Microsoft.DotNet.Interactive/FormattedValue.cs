@@ -51,4 +51,6 @@ public class FormattedValue
 
         return formattedValues;
     }
+
+    public override string ToString() => $"{MimeType}: {Value.TruncateForDisplay()}";
 }

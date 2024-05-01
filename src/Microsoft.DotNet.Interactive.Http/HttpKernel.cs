@@ -272,9 +272,9 @@ public class HttpKernel :
 
         context.Publish(
             new DiagnosticsProduced(
-                diagnostics.Select(ToSerializedDiagnostic),
-                command,
-                formattedDiagnostics));
+                diagnostics.Select(ToSerializedDiagnostic).ToArray(),
+                formattedDiagnostics,
+                command));
 
         static Interactive.Diagnostic ToSerializedDiagnostic(Diagnostic d)
         {

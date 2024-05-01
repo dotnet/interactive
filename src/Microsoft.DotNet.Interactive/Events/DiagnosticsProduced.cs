@@ -3,31 +3,36 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events;
 
 public class DiagnosticsProduced : KernelEvent
 {
-    private readonly IReadOnlyCollection<Diagnostic> _diagnostics;
-
-    public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics,
-        KernelCommand command,
-        IReadOnlyCollection<FormattedValue> formattedDiagnostics = null) : base(command)
+    public DiagnosticsProduced(
+        IReadOnlyCollection<Diagnostic> diagnostics,
+        IReadOnlyCollection<FormattedValue> formattedDiagnostics,
+        KernelCommand command) : base(command)
     {
         if (diagnostics is null)
         {
             throw new ArgumentNullException(nameof(diagnostics));
         }
 
-        _diagnostics = diagnostics.ToImmutableList();
-        FormattedDiagnostics = formattedDiagnostics ?? Array.Empty<FormattedValue>();
+        if (formattedDiagnostics is null)
+        {
+            throw new ArgumentNullException(nameof(formattedDiagnostics));
+        }
+
+        Diagnostics = this.RemapDiagnosticsFromRequestingCommand(diagnostics);
+
+        FormattedDiagnostics = formattedDiagnostics;
     }
 
-    public IReadOnlyCollection<Diagnostic> Diagnostics => this.RemapDiagnosticsFromRequestingCommand(_diagnostics);
+    public IReadOnlyCollection<Diagnostic> Diagnostics { get; }
 
     public IReadOnlyCollection<FormattedValue> FormattedDiagnostics { get; }
 
-    public override string ToString() => $"{GetType().Name}";
+    public override string ToString() =>
+        $"{nameof(DiagnosticsProduced)}: {string.Join(Environment.NewLine, Diagnostics).TruncateForDisplay()}";
 }

@@ -78,6 +78,7 @@ Microsoft.DotNet.Interactive
     public System.String MimeType { get;}
     public System.Boolean SuppressDisplay { get; set;}
     public System.String Value { get;}
+    public System.String ToString()
   public abstract class FrontendEnvironment
     public System.Threading.Tasks.Task ExecuteClientScript(System.String code, KernelInvocationContext context)
   public class HtmlKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
@@ -587,7 +588,7 @@ Microsoft.DotNet.Interactive.Events
     public System.Collections.Generic.IEnumerable<CompletionItem> Completions { get;}
     public Microsoft.DotNet.Interactive.LinePositionSpan LinePositionSpan { get;}
   public class DiagnosticsProduced : KernelEvent
-    .ctor(System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Diagnostic> diagnostics, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedDiagnostics = null)
+    .ctor(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Diagnostic> diagnostics, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedDiagnostics, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Diagnostic> Diagnostics { get;}
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> FormattedDiagnostics { get;}
     public System.String ToString()
@@ -603,6 +604,7 @@ Microsoft.DotNet.Interactive.Events
   public class ErrorProduced : DisplayEvent
     .ctor(System.String message, Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> formattedValues = null)
     public System.String Message { get;}
+    public System.String ToString()
   public class HoverTextProduced : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.Commands.RequestHoverText command, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> content, Microsoft.DotNet.Interactive.LinePositionSpan linePositionSpan = null)
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.FormattedValue> Content { get;}

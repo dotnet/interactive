@@ -277,17 +277,17 @@ public class SerializationTests
                 },
                 requestCompletion);
 
+            var diagnostic = new Diagnostic(
+                new LinePositionSpan(
+                    new LinePosition(1, 2),
+                    new LinePosition(3, 4)),
+                DiagnosticSeverity.Error,
+                "code",
+                "message");
+
             yield return new DiagnosticsProduced(
-                new[]
-                {
-                    new Diagnostic(
-                        new LinePositionSpan(
-                            new LinePosition(1, 2),
-                            new LinePosition(3, 4)),
-                        DiagnosticSeverity.Error,
-                        "code",
-                        "message")
-                },
+                [diagnostic],
+                [new FormattedValue(PlainTextFormatter.MimeType, diagnostic.ToString())],
                 new SubmitCode("123"));
 
             yield return new DisplayedValueProduced(

@@ -263,7 +263,7 @@ public class PowerShellKernel :
                     .ToImmutableArray();
 
             var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
-            context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
+            context.Publish(new DiagnosticsProduced(diagnostics, formattedDiagnostics, submitCode));
 
             var parseException = new ParseException(parseErrors);
             ReportError(parseException.ErrorRecord);
@@ -336,8 +336,11 @@ public class PowerShellKernel :
 
         IsCompleteSubmission(code, out var parseErrors);
         
-        var diagnostics = parseErrors.Select(ToDiagnostic);
-        context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
+        var diagnostics = parseErrors.Select(ToDiagnostic).ToArray();
+        context.Publish(new DiagnosticsProduced(
+                            diagnostics,   
+                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(), 
+                            requestDiagnostics));
 
         return Task.CompletedTask;
     }
