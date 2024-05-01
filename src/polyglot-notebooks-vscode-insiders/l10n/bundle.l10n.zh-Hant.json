@@ -5,7 +5,7 @@
   "VariableGridColumnType": "類型",
   "VariableGridColumnKernel": "核心",
   "VariableGridshareTemplate": "從 {kernel-name} 核心共用值 {value-name}",
-  "survey.yes": "Yes, take me to the survey",
-  "survey.no": "No",
-  "survey.message": "We would love to hear your feedback on the notebooks experience! Please take a few minutes to give feedback on using Polyglot Notebooks."
+  "survey.yes": "是，帶我前往問卷",
+  "survey.no": "否",
+  "survey.message": "歡迎您提供關於筆記本體驗的意見反應!請花幾分鐘的時間提供有關使用多語言筆記本的意見反應。"
 }
