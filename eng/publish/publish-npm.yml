@@ -13,7 +13,7 @@ stages:
   - job: Publish_NPM
     pool:
       name: $(DncEngInternalBuildPool)
-      demands: ImageOverride -equals 1es-windows-2022-pt
+      demands: ImageOverride -equals 1es-windows-2022
       os: windows
     variables:
     - group: AzureDevOps-Artifact-Feeds-Pats
