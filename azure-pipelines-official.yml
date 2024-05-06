@@ -75,7 +75,7 @@ extends:
     sdl:
       sourceAnalysisPool: 
         name: $(DncEngInternalBuildPool)
-        image: 1es-windows-2022-pt
+        image: 1es-windows-2022
         os: windows
       binskim:
         enabled: true
@@ -110,7 +110,7 @@ extends:
           - job: Windows_NT
             pool:
               name: $(DncEngInternalBuildPool)
-              demands: ImageOverride -equals 1es-windows-2022-pt
+              demands: ImageOverride -equals 1es-windows-2022
               os: windows
             timeoutInMinutes: 90
             variables:
