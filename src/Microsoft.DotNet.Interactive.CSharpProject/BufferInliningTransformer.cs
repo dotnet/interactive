@@ -21,7 +21,7 @@ public class BufferInliningTransformer : IWorkspaceTransformer
 
     public async Task<Workspace> TransformAsync(Workspace source)
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (source is null) throw new ArgumentNullException(nameof(source));
 
         var (files, buffers) = await InlineBuffersAsync(source);
 

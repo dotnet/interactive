@@ -81,10 +81,7 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         foreach (var symbol in symbols)
         {
             var key = (symbol.Name, (int)symbol.Kind);
-            if (!symbolToSymbolKey.ContainsKey(key))
-            {
-                symbolToSymbolKey[key] = symbol;
-            }
+            symbolToSymbolKey.TryAdd(key, symbol);
         }
 
         if (service is null)
@@ -102,7 +99,6 @@ public class RoslynWorkspaceServer : IWorkspaceServer
                 .ToArray(),
             requestId: request.RequestId,
             diagnostics: diagnostics);
-
     }
 
     private SourceCodeKind GetSourceCodeKind(WorkspaceRequest request)

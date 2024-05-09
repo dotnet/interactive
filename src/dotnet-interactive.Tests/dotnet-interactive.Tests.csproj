@@ -24,14 +24,14 @@
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.30" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
-    <PackageReference Include="PocketLogger.Subscribe" Version="0.8.0">
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.4" />
+    <PackageReference Include="PocketLogger.Subscribe" Version="0.9.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Assent" Version="1.7.0" />
-    <PackageReference Include="FluentAssertions" Version="6.8.0" />
-    <PackageReference Include="PocketLogger.For.Xunit" Version="0.6.1">
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="PocketLogger.For.Xunit" Version="0.9.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="PocketLogger" Version="0.8.2">
+    <PackageReference Include="PocketLogger" Version="0.9.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>

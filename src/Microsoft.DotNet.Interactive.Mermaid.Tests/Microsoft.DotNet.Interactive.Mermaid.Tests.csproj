@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="6.8.0" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Assent" Version="1.7.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.30" />
   </ItemGroup>

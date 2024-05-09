@@ -23,14 +23,14 @@
  </ItemGroup>
 
  <ItemGroup>
-   <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
+   <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-   <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
+   <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
    <PackageReference Include="Humanizer" Version="2.14.1" />
    <PackageReference Include="Azure.Identity" Version="1.10.3" />
-   <PackageReference Include="Microsoft.Identity.Client" Version="4.57.0" />
+   <PackageReference Include="Microsoft.Identity.Client" Version="4.60.3" />
    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.13" />
-   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.13">
+   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
      <PrivateAssets>all</PrivateAssets>
      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
    </PackageReference>

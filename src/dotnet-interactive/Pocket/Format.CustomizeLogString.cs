@@ -21,7 +21,7 @@ namespace Pocket;
 
 internal static partial class Format
 {
-    static partial void CustomizeLogString(object value, ref string output)
+    static partial void CustomizeLogString(object? value, ref string? output)
     {
         switch (value)
         {

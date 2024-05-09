@@ -20,7 +20,7 @@
 
   <!-- PowerShell Module Package References -->
   <ItemGroup>
-    <PackageReference Include="JsonSchema.Net" Version="6.0.4" />
+    <PackageReference Include="JsonSchema.Net" Version="6.0.7" />
     <PackageReference Include="PackageManagement" Version="1.4.6" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="PowerShellGet" Version="2.2.3" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.Archive" Version="1.2.5" PrivateAssets="all" GeneratePathProperty="true" />
@@ -52,7 +52,7 @@
     <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="$(SystemSecurityCryptographyPkcsVersion)" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.1" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.2" />
   </ItemGroup>
 
 </Project>
