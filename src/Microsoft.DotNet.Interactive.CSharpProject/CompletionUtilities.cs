@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Events;
@@ -24,13 +25,15 @@ internal static class CompletionUtilities
 
         public bool Equals(CompletionItem x, CompletionItem y)
         {
-            return x.Kind.Equals(y.Kind) &&
-                   x.InsertText.Equals(y.InsertText);
+            if (x is null || y is null)
+            {
+                return false;
+            }
+
+            return x.Kind.Equals(y.Kind, StringComparison.Ordinal) &&
+                   x.InsertText.Equals(y.InsertText, StringComparison.Ordinal);
         }
 
-        public int GetHashCode(CompletionItem obj)
-        {
-            return (obj.Kind + obj.InsertText).GetHashCode();
-        }
+        public int GetHashCode(CompletionItem obj) => HashCode.Combine(obj.InsertText, obj.Kind);
     }
 }

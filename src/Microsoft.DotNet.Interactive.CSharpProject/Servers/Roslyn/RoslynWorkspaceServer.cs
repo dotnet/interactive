@@ -17,6 +17,7 @@ using Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Pocket;
 using static Pocket.Logger;
+using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
@@ -88,15 +89,16 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         {
             return new CompletionResult(requestId: request.RequestId, diagnostics: diagnostics);
         }
-            
+
         var completionList = await service.GetCompletionsAsync(selectedDocument!, absolutePosition);
 
-        var completionItems = completionList.ItemsList
-            .Select(item => item.ToModel(symbolToSymbolKey, selectedDocument));
+        var completionItems = completionList
+                              .ItemsList
+                              .Where(i => !i.IsComplexTextEdit)
+                              .Select(item => item.ToModel(symbolToSymbolKey, selectedDocument)).Deduplicate().ToArray();
 
-        return new CompletionResult(completionItems
-                .Deduplicate()
-                .ToArray(),
+        return new CompletionResult(
+            completionItems,
             requestId: request.RequestId,
             diagnostics: diagnostics);
     }
@@ -104,8 +106,8 @@ public class RoslynWorkspaceServer : IWorkspaceServer
     private SourceCodeKind GetSourceCodeKind(WorkspaceRequest request)
     {
         return request.Workspace.WorkspaceType == "script"
-            ? SourceCodeKind.Script
-            : SourceCodeKind.Regular;
+                   ? SourceCodeKind.Script
+                   : SourceCodeKind.Regular;
     }
 
     private IEnumerable<string> GetUsings(Workspace workspace)
