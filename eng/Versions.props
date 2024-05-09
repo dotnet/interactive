@@ -1,7 +1,9 @@
 <Project>
   <PropertyGroup>
     <!-- opt-out properties -->
+    <UsingToolPdbConverter>false</UsingToolPdbConverter>
     <UsingToolSourceLink>false</UsingToolSourceLink>
+    <UsingToolXUnit>false</UsingToolXUnit>
     <!-- opt-in properties -->
     <UsingToolNuGetRepack>true</UsingToolNuGetRepack>
     <UsingToolSymbolUploader>true</UsingToolSymbolUploader>

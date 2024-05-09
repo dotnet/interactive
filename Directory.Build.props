@@ -5,10 +5,10 @@
   <Import Project="eng\targets\NuGet.targets" />
 
   <PropertyGroup>
-    <!-- private repo, don't do source-link -->
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
     <EnableSourceLink>true</EnableSourceLink>
-
+    <PublishWindowsPdb>false</PublishWindowsPdb>
+    
     <!-- NuGet: A stable release of a package should not have a prerelease dependency. -->
     <NoWarn>$(NoWarn);NU5104</NoWarn>
     <FSharpCoreIncludeDocFileInOutput Condition="'$(FSharpCoreIncludeDocFileInOutput)' == ''">true</FSharpCoreIncludeDocFileInOutput>
