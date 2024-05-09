@@ -28,7 +28,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger" Version="0.9.0">
+    <PackageReference Include="PocketLogger" Version="0.9.1">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PocketLogger.For.Xunit" Version="0.9.0">

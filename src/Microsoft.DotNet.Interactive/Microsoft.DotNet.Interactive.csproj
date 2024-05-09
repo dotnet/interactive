@@ -37,7 +37,7 @@
     <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
     <PackageReference Include="System.Reflection.Metadata" Version="8.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="PocketLogger" Version="0.9.0">
+    <PackageReference Include="PocketLogger" Version="0.9.1">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PocketLogger.Subscribe" Version="0.9.0">

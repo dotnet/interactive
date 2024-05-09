@@ -56,7 +56,7 @@
     <PackageReference Include="Pocket.TypeDiscovery" Version="0.6.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger" Version="0.9.0">
+    <PackageReference Include="PocketLogger" Version="0.9.1">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PocketLogger.For.ApplicationInsights" Version="0.8.0">

@@ -28,7 +28,7 @@
     <PackageReference Include="Markdig.Signed" Version="0.34.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="NetMQ" Version="4.0.1.13" />
-    <PackageReference Include="PocketLogger" Version="0.9.0">
+    <PackageReference Include="PocketLogger" Version="0.9.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
