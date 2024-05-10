@@ -3,9 +3,13 @@
 
 using System;
 using System.Threading;
+using Xunit;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[Collection("Do not parallelize")]
 public abstract class FormatterTestBase : IDisposable
 {
     private static readonly object _lock = new();

@@ -74,7 +74,7 @@ public class RunResultTests
     {
         var result = new RunResult(true);
 
-        result.AddFeature(new TestFeature<string[]>("array", new[] { "one", "two", "three" }));
+        result.AddFeature(new TestFeature<string[]>("array", ["one", "two", "three"]));
 
         var json = result.ToJson().FromJsonTo<JObject>();
 

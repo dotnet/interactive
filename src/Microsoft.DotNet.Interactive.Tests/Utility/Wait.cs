@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions.Execution;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
@@ -26,5 +27,19 @@ public static class Wait
         }
 
         throw new AssertionFailedException($"Failed after waiting {timeoutMs}ms");
+    }
+
+    public static async Task Timeout(
+        this Task source,
+        TimeSpan timeout)
+    {
+        if (await Task.WhenAny(
+                source,
+                Task.Delay(timeout)) != source)
+        {
+            throw new TimeoutException();
+        }
+
+        await source;
     }
 }

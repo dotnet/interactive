@@ -15,11 +15,17 @@
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="MarkupTestFile.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\TestUtility.cs" Link="TestUtility.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\WindowsFact.cs" Link="WindowsFact.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="6.8.0" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Assent" Version="1.7.0" />
+    <PackageReference Include="xunit" Version="$(xunitVersion)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(xunitrunnervisualstudioVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -28,11 +34,4 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.SQLite\Microsoft.DotNet.Interactive.SQLite.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="xunit.runner.visualstudio" Version="$(xunitrunnervisualstudioVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
-  </ItemGroup>
 </Project>

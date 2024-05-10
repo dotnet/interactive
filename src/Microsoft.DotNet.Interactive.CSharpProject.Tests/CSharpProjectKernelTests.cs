@@ -345,18 +345,20 @@ public class Program
     public async Task CompletionsProduced_is_returned_when_the_entire_file_contents_are_set()
     {
         using var kernel = new CSharpProjectKernel();
-        await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", "// this content will be replaced") })));
+        await kernel.SendAsync(new OpenProject(new Project([new("Program.cs", "// this content will be replaced")] )));
         await kernel.SendAsync(new OpenDocument("Program.cs"));
 
-        var markedCode = @"
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        var fileInfo = new System.IO.FileInfo(""test.file"");
-        fileInfo.$$
-    }
-}";
+        var markedCode = """
+
+                         public class Program
+                         {
+                             public static void Main(string[] args)
+                             {
+                                 var fileInfo = new System.IO.FileInfo("test.file");
+                                 fileInfo.$$
+                             }
+                         }
+                         """;
         MarkupTestFile.GetLineAndColumn(markedCode, out var code, out var line, out var character);
         var result = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
         result.Events
@@ -372,26 +374,37 @@ public class Program
     public async Task CompletionsProduced_is_returned_when_a_region_is_set()
     {
         using var kernel = new CSharpProjectKernel();
-        await kernel.SendAsync(new OpenProject(new Project(new[] { new ProjectFile("Program.cs", @"
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        var fileInfo = new System.IO.FileInfo(""test.file"");
-        #region TEST_REGION
-        #endregion
-    }
-}
-") })));
+        await kernel.SendAsync(
+            new OpenProject(
+                new Project(
+                    [
+                        new("Program.cs",
+                            """
+                            public class Program
+                            {
+                                public static void Main(string[] args)
+                                {
+                                    var fileInfo = new System.IO.FileInfo("test.file");
+                                    #region TEST_REGION
+                                    #endregion
+                                }
+                            }
+
+                            """)
+                    ]
+                )));
+
         await kernel.SendAsync(new OpenDocument("Program.cs", regionName: "TEST_REGION"));
 
         var markedCode = @"fileInfo.$$";
         MarkupTestFile.GetLineAndColumn(markedCode, out var code, out var line, out var character);
         var result = await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
-        result.Events
-              .Should()
-              .ContainSingle<CompletionsProduced>()
-              .Which
+        var completionsProduced = result.Events
+                                        .Should()
+                                        .ContainSingle<CompletionsProduced>()
+                                        .Which;
+
+        completionsProduced
               .Completions
               .Should()
               .Contain(ci => ci.DisplayText == "AppendText");

@@ -18,9 +18,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
-    <PackageReference Include="FluentAssertions" Version="6.8.0" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Assent" Version="1.7.0" />
+    <PackageReference Include="xunit" Version="$(xunitVersion)"  />
+    <PackageReference Include="xunit.runner.visualstudio"  Version="$(xunitrunnervisualstudioVersion)" >
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -32,10 +37,4 @@
     <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="xunit.runner.visualstudio" Version="$(xunitrunnervisualstudioVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
 </Project>

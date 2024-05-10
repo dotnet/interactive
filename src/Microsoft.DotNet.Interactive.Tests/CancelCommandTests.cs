@@ -185,7 +185,7 @@ while(!cancellationToken.IsCancellationRequested){
     }
 
     [Fact]
-    public void user_code_can_react_to_cancel_command_using_KernelInvocationContext_cancellation_token()
+    public async Task user_code_can_react_to_cancel_command_using_KernelInvocationContext_cancellation_token()
     {
         using var kernel = CreateKernel();
         var commandInProgress = new CancellableCommand();
@@ -197,8 +197,8 @@ while(!cancellationToken.IsCancellationRequested){
 
         var _ = kernel.SendAsync(commandInProgress);
 
-        Task.WhenAll(cancelSent, commandInProgress.Cancelled)
-            .Wait(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(cancelSent, commandInProgress.Cancelled)
+                  .Timeout(TimeSpan.FromSeconds(5));
     }
 
     public class CancellableCommand : KernelCommand

@@ -36,12 +36,12 @@ public class CSharpProjectKernel :
         // register commands and event with serialization
 
         var commandTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes
-                                                      .Where(t => !t.IsAbstract && !t.IsInterface)
+                                                      .Where(t => t is { IsAbstract: false, IsInterface: false })
                                                       .Where(t => typeof(KernelCommand).IsAssignableFrom(t))
                                                       .OrderBy(t => t.Name)
                                                       .ToList();
         var eventTypes = typeof(CSharpProjectKernel).Assembly.ExportedTypes
-                                                    .Where(t => !t.IsAbstract && !t.IsInterface)
+                                                    .Where(t => t is { IsAbstract: false, IsInterface: false })
                                                     .Where(t => typeof(KernelEvent).IsAssignableFrom(t))
                                                     .OrderBy(t => t.Name)
                                                     .ToList();

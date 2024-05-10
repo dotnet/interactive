@@ -12,7 +12,6 @@ namespace Microsoft.DotNet.Interactive.CSharpProject;
 [JsonConverter(typeof(RunResultJsonConverter))]
 public class RunResult : FeatureContainer
 {
-
     private readonly List<string> _output = new(); 
 
     public RunResult(
@@ -22,7 +21,7 @@ public class RunResult : FeatureContainer
         IEnumerable<SerializableDiagnostic> diagnostics = null, 
         string requestId = null)
     {
-        if (output != null)
+        if (output is not null)
         {
             _output.AddRange(output);
         }

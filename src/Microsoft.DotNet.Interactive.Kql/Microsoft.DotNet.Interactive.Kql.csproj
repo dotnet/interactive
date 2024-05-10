@@ -28,9 +28,9 @@
 
  <ItemGroup>
    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-   <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="11.3.5" />
+   <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="12.2.1" />
    <PackageReference Include="StreamJsonRpc" Version="2.17.8" />
-   <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
+   <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
  </ItemGroup>
 
   <ItemGroup>
