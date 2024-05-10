@@ -16,8 +16,7 @@ namespace Microsoft.DotNet.Interactive.SQLite.Tests;
 
 public class SQLiteConnectionTests
 {
-
-    [Fact]
+    [WindowsFact]
     public async Task SQLKernel_suggests_SQLite_connection_when_statements_are_submitted_to_it()
     {
         using var kernel = new CompositeKernel
@@ -59,7 +58,7 @@ SELECT * FROM fruit
                                   v.MimeType == "text/html");
     }
 
-    [Fact]
+    [WindowsFact]
     public async Task It_can_connect_and_query_data()
     {
         using var kernel = new CompositeKernel
