@@ -95,7 +95,9 @@ public class RoslynWorkspaceServer : IWorkspaceServer
         var completionItems = completionList
                               .ItemsList
                               .Where(i => !i.IsComplexTextEdit)
-                              .Select(item => item.ToModel(symbolToSymbolKey, selectedDocument)).Deduplicate().ToArray();
+                              .Deduplicate()
+                              .Select(item => item.ToModel(symbolToSymbolKey, selectedDocument))
+                              .ToArray();
 
         return new CompletionResult(
             completionItems,

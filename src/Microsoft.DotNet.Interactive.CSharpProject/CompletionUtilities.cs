@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Interactive.Events;
+using Microsoft.CodeAnalysis.Completion;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject;
 
@@ -30,10 +30,9 @@ internal static class CompletionUtilities
                 return false;
             }
 
-            return x.Kind.Equals(y.Kind, StringComparison.Ordinal) &&
-                   x.InsertText.Equals(y.InsertText, StringComparison.Ordinal);
+            return x.FilterText.Equals(y.FilterText, StringComparison.Ordinal);
         }
 
-        public int GetHashCode(CompletionItem obj) => HashCode.Combine(obj.InsertText, obj.Kind);
+        public int GetHashCode(CompletionItem obj) => obj.FilterText.GetHashCode();
     }
 }

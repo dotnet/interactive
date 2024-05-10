@@ -49,8 +49,10 @@ internal static class CompletionExtensions
 
     public static string GetKind(this RoslynCompletionItem completionItem)
     {
-        foreach (var tag in KindTags)
+        for (var i = 0; i < KindTags.Length; i++)
         {
+            var tag = KindTags[i];
+
             if (completionItem.Tags.Contains(tag))
             {
                 return tag;
