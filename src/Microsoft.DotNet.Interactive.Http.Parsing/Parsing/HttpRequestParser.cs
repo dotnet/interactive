@@ -243,11 +243,21 @@ internal class HttpRequestParser
             }
         }
 
+        private HttpTestNode ParseNamedRequestName()
+        {
+
+        }
+
         private T ParseLeadingWhitespaceAndComments<T>(T node) where T : HttpSyntaxNode
         {
             while (MoreTokens())
             {
-                if (CurrentToken?.Kind is HttpTokenKind.Whitespace)
+                if (CurrentToken is { Kind: HttpTokenKind.Punctuation }
+                and { Text: "@" })
+                {
+
+                } 
+                else if (CurrentToken?.Kind is HttpTokenKind.Whitespace)
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -270,7 +280,7 @@ internal class HttpRequestParser
 
             return node;
         }
-
+        
         private T ParseTrailingWhitespace<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewLine = false) where T : HttpSyntaxNode
         {
             while (MoreTokens())
@@ -627,6 +637,11 @@ internal class HttpRequestParser
             }
 
             return headersNode;
+        }
+
+        private HttpCommentNamedRequestNode ParseCommentNamedRequestNode()
+        {
+            var node = new HttpCommentNamedRequestNode(_sourceText, _syntaxTree);
         }
 
         private HttpHeaderNode ParseHeader()
