@@ -243,11 +243,6 @@ internal class HttpRequestParser
             }
         }
 
-        private HttpTestNode ParseNamedRequestName()
-        {
-
-        }
-
         private T ParseLeadingWhitespaceAndComments<T>(T node) where T : HttpSyntaxNode
         {
             while (MoreTokens())
@@ -642,6 +637,7 @@ internal class HttpRequestParser
         private HttpCommentNamedRequestNode ParseCommentNamedRequestNode()
         {
             var node = new HttpCommentNamedRequestNode(_sourceText, _syntaxTree);
+            return node;
         }
 
         private HttpHeaderNode ParseHeader()
