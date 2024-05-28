@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.CommandLine.Parsing;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
@@ -159,6 +160,24 @@ public partial class HttpParserTests
             var diagnostic = result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().ContainSingle<HttpUrlNode>()
                                    .Which.GetDiagnostics().Should().ContainSingle()
                                    .Which;
+        }
+
+        [Fact]
+        public void Filter_string_with_Spaces_is_valid()
+        {
+            var code = """
+                GET https://example.com/search?query=valid space here
+                ###
+                """;
+
+            var result = Parse(code);
+            result.GetDiagnostics().Should().BeEmpty();
+
+            var urlNode = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpUrlNode>().Single();
+
+            urlNode.Text.Should().Be("https://example.com/search?query=valid space here");
+
+
         }
 
         [Fact]

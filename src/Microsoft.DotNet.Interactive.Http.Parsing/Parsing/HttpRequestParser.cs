@@ -453,7 +453,8 @@ internal class HttpRequestParser
         {
             HttpUrlNode? node = null;
 
-            while ((CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression()))
+            var significantToken = GetNextSignificantToken()?.Text.ToLowerInvariant();
+            while (((CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation) || (CurrentToken is { Kind: HttpTokenKind.Whitespace } && significantToken is not "http/" or "https/") || (IsAtStartOfEmbeddedExpression())))
             {
                 if (node is null)
                 {
@@ -482,12 +483,23 @@ internal class HttpRequestParser
                     }
                 }
 
-                if (!((CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression())))
+                if(CurrentToken?.Kind is HttpTokenKind.NewLine)
                 {
                     break;
                 }
 
-                if (IsAtStartOfEmbeddedExpression())
+                if ((CurrentToken?.Kind is HttpTokenKind.Whitespace))
+                {
+                    var nextSignificantToken = GetNextSignificantToken()?.Text.ToLowerInvariant();
+                    if ((nextSignificantToken is not "http" or "https"))
+                    {
+                        ConsumeCurrentTokenInto(node);
+                    } else
+                    {
+                        break;
+                    }
+                }
+                else if (IsAtStartOfEmbeddedExpression())
                 {
                     node.Add(ParseEmbeddedExpression());
                 }
