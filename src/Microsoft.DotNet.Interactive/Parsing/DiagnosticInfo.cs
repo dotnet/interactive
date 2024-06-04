@@ -27,5 +27,4 @@ internal sealed class DiagnosticInfo
     internal DiagnosticSeverity Severity { get; }
 
     internal object[] MessageArguments { get; }
-<<<<<<<< HEAD:src/Microsoft.DotNet.Interactive/Parsing/DiagnosticInfo.cs
 }

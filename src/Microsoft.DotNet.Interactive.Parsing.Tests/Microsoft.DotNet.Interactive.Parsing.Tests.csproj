@@ -56,8 +56,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="xunit" Version="$(xunitVersion)"  />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="FluentAssertions" Version="6.8.0" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="JsonDiffPatch.Net" Version="2.3.0" />

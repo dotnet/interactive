@@ -108,7 +108,12 @@ public abstract partial class Kernel :
     {
         var kernelInfo = new KernelInfo(name);
 
-        var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name, d is ChooseKernelDirective)).ToArray();
+        foreach (var directive in Directives)
+        {
+            kernelInfo.SupportedDirectives.Add(directive is ChooseKernelDirective
+                                                   ? new KernelSpecifierDirective(directive.Name, Name)
+                                                   : new KernelActionDirective(directive.Name));
+        }
 
         foreach (var commandInfo in _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)))
         {
@@ -151,11 +156,11 @@ public abstract partial class Kernel :
         switch (originalCommand)
         {
             case SubmitCode { SyntaxNode: null } submitCode:
-                commands = SubmissionParser.SplitSubmission(submitCode);
+                commands = await SubmissionParser.SplitSubmission(submitCode);
                 break;
 
             case RequestDiagnostics { SyntaxNode: null } requestDiagnostics:
-                commands = SubmissionParser.SplitSubmission(requestDiagnostics);
+                commands = await SubmissionParser.SplitSubmission(requestDiagnostics);
                 break;
 
             case LanguageServiceCommand { SyntaxNode: null } languageServiceCommand:
@@ -192,7 +197,7 @@ public abstract partial class Kernel :
 
             command.SchedulingScope ??= handlingKernel.SchedulingScope;
             command.TargetKernelName ??= handlingKernel.Name;
-            
+
             if (!command.Equals(originalCommand))
             {
                 command.SetParent(originalCommand, true);
@@ -248,7 +253,7 @@ public abstract partial class Kernel :
             var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
             var offsetNodeLine = command.LinePosition.Line - nodeStartLine;
             var position = command.LinePosition with { Line = offsetNodeLine };
-            
+
             // create new command
             var offsetLanguageServiceCommand = command.With(
                 node,
@@ -291,10 +296,14 @@ public abstract partial class Kernel :
     public void AddDirective(Command command)
     {
         SubmissionParser.AddDirective(command);
-        KernelInfo.SupportedDirectives.Add(new(command.Name, command is ChooseKernelDirective));
+
+        KernelInfo.SupportedDirectives.Add(command is ChooseKernelDirective
+                                               ? (KernelDirective)new KernelSpecifierDirective(command.Name, Name)
+                                               : (KernelDirective)new KernelActionDirective(command.Name));
+        SubmissionParser.ResetParser();
     }
 
-    public void AddDirective(KernelActionDirective directive, KernelCommandInvocation handler)  
+    public void AddDirective(KernelActionDirective directive, KernelCommandInvocation handler)
     {
         KernelInfo.SupportedDirectives.Add(directive);
 
@@ -313,12 +322,12 @@ public abstract partial class Kernel :
     }
 
     private static string FullDirectiveName(KernelActionDirective directive) =>
-        directive.Parent is {} parent
+        directive.Parent is { } parent
             ? $"{parent.Name} {directive.Name}"
             : directive.Name;
 
-    public void AddDirective<TCommand>(KernelActionDirective directive, Func<TCommand, KernelInvocationContext, Task> handler) 
-        where TCommand : KernelCommand 
+    public void AddDirective<TCommand>(KernelActionDirective directive, Func<TCommand, KernelInvocationContext, Task> handler)
+        where TCommand : KernelCommand
     {
         if (directive.KernelCommandType != typeof(TCommand))
         {
@@ -551,9 +560,9 @@ public abstract partial class Kernel :
             var undeferScheduledCommands = new UndeferScheduledCommands(
                 context.HandlingKernel.Name,
                 context.Command);
-            
+
             await SendAsync(
-                undeferScheduledCommands, 
+                undeferScheduledCommands,
                 context.CancellationToken);
         }
         catch (TaskCanceledException)
@@ -566,10 +575,10 @@ public abstract partial class Kernel :
         public UndeferScheduledCommands(
             string targetKernelName,
             KernelCommand parent) : base((_, _) =>
-        {
-            Log.Info("Undeferring commands ahead of '{command}'", parent);
-            return Task.CompletedTask;
-        }, targetKernelName: targetKernelName)
+            {
+                Log.Info("Undeferring commands ahead of '{command}'", parent);
+                return Task.CompletedTask;
+            }, targetKernelName: targetKernelName)
         {
             SetParent(parent);
         }
@@ -635,7 +644,7 @@ public abstract partial class Kernel :
 
     private async Task<IReadOnlyList<KernelCommand>> GetDeferredCommands(KernelCommand command, string scope)
     {
-        if (command.SchedulingScope is null || 
+        if (command.SchedulingScope is null ||
             !command.SchedulingScope.Contains(SchedulingScope))
         {
             return Array.Empty<KernelCommand>();

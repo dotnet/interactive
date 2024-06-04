@@ -32,9 +32,6 @@ public partial class HttpParserTests
             
             var parseResult = Parse(code);
 
-            // FIX: (Valid_syntax_produces_expected_parse_tree_and_no_diagnostics) should these all be calling  HttpParserTests.Parse?
-            var parseResult = HttpRequestParser.Parse(code);
-
             _output.WriteLine($"""
                 === Generation #{index} ===
 
@@ -52,7 +49,7 @@ public partial class HttpParserTests
         {
             var code = syntaxSpec.ToString();
 
-            var parseResult = HttpRequestParser.Parse(code);
+            var parseResult = Parse(code);
 
             _output.WriteLine($"""
                 === Generation #{index} ===

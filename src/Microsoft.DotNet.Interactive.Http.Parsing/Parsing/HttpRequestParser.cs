@@ -409,7 +409,7 @@ internal class HttpRequestParser
 
                 while (MoreTokens())
                 {
-                    if (CurrentToken?.Kind is not HttpTokenKind.NewLine)
+                    if (CurrentToken?.Kind is not TokenKind.NewLine)
                     {
                         ConsumeCurrentTokenInto(node);
                     }
@@ -473,7 +473,7 @@ internal class HttpRequestParser
                         ParseLeadingWhitespaceAndComments(node);
                         node.Add(ParseEmbeddedExpression());
                     }
-                    else if (CurrentToken is { Kind: HttpTokenKind.Punctuation })
+                    else if (CurrentToken is { Kind: TokenKind.Punctuation })
                     {
                         node = new HttpUrlNode(_sourceText, _syntaxTree);
 
@@ -485,7 +485,7 @@ internal class HttpRequestParser
                     }
                 }
 
-                if (!((CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression())))
+                if (!((CurrentToken?.Kind is TokenKind.Word or TokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression())))
                 {
                     break;
                 }
@@ -770,7 +770,7 @@ internal class HttpRequestParser
 
         private HttpCommentBodyNode? ParseCommentBody()
         {
-            if (!MoreTokens() || CurrentToken is { Kind: HttpTokenKind.NewLine })
+            if (!MoreTokens() || CurrentToken is { Kind: TokenKind.NewLine })
             {
                 return null;
             }

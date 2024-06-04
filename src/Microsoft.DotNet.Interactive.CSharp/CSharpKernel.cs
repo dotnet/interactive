@@ -315,7 +315,6 @@ public class CSharpKernel :
 
             // Publish the compilation diagnostics. This doesn't include the exception.
             var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
-
             
             var formattedDiagnostics =
                 diagnostics
@@ -453,9 +452,8 @@ public class CSharpKernel :
         var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
         var formattedDiagnostics =
             diagnostics
-                .Select(d => d.ToString())
-                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                .ToImmutableArray();
+                .Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString()))
+                .ToArray();
 
         return new DiagnosticsProduced(kernelDiagnostics, formattedDiagnostics, command);
     }

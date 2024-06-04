@@ -6,19 +6,25 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-internal abstract class DirectiveNode : LanguageNode
+internal class DirectiveNode : TopLevelSyntaxNode
 {
     private ParseResult? _parseResult;
 
     internal DirectiveNode(
         SourceText sourceText,
-        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        PolyglotSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
@@ -60,12 +66,12 @@ internal abstract class DirectiveNode : LanguageNode
         }
         else
         {
-            var descriptor = new DiagnosticInfo(
-                id: "DNI0001",
-                messageFormat: error.Message,
-                severity: DiagnosticSeverity.Error);
+            foreach (var diagnostic in base.GetDiagnostics())
+            {
+                yield return diagnostic;
+            }
 
-            if (TryGetDirective(out var directive) )
+            if (TryGetDirective(out var directive))
             {
                 foreach (var namedParameter in directive.Parameters)
                 {
@@ -126,7 +132,7 @@ internal abstract class DirectiveNode : LanguageNode
                 {
                     if (kernelActionDirective.TryGetSubcommand(subcommandName, out var subcommand))
                     {
-                         directive = subcommand;
+                        directive = subcommand;
                     }
                 }
 
@@ -224,7 +230,7 @@ internal abstract class DirectiveNode : LanguageNode
     public DirectiveBindingResult<object?> CreateSuccessfulBindingResult(object? value) =>
         DirectiveBindingResult<object?>.Success(value);
 
-    public IEnumerable<(string Name, object Value, DirectiveParameterNode ParameterNode)> GetParameters(
+    public IEnumerable<(string Name, object Value, DirectiveParameterNode ParameterNode)> GetParameterValues(
         KernelDirective directive,
         Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
     {
@@ -241,22 +247,22 @@ internal abstract class DirectiveNode : LanguageNode
             switch (matchingNodes)
             {
                 case [{ } parameterNode]:
-                {
-                    if (parameter.Flag)
                     {
-                        yield return (propertyName: parameter.Name, true, parameterNode);
-                    }
-                    else if (boundExpressionValues?.TryGetValue(parameterNode.ValueNode, out var boundValue) is true)
-                    {
-                        yield return (propertyName: parameter.Name, boundValue, parameterNode);
-                    }
-                    else
-                    {
-                        yield return (propertyName: parameter.Name, parameterNode.ValueNode.Text, parameterNode);
-                    }
+                        if (parameter.Flag)
+                        {
+                            yield return (propertyName: parameter.Name, true, parameterNode);
+                        }
+                        else if (boundExpressionValues?.TryGetValue(parameterNode.ValueNode, out var boundValue) is true)
+                        {
+                            yield return (propertyName: parameter.Name, boundValue, parameterNode);
+                        }
+                        else
+                        {
+                            yield return (propertyName: parameter.Name, parameterNode.ValueNode.Text, parameterNode);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
 
                 case []:
                     if (parameter.Flag)
@@ -265,14 +271,14 @@ internal abstract class DirectiveNode : LanguageNode
                     }
                     break;
 
-                // FIX: (GetParameters) handle multiple matching nodes for the parameter (write array?)
+                    // FIX: (GetParameters) handle multiple matching nodes for the parameter (write array?)
             }
         }
-    } 
+    }
 
     public async Task<DirectiveBindingResult<string>> TryGetJsonAsync(DirectiveBindingDelegate? bind = null)
     {
-        if (!TryGetActionDirective(out var directive) && 
+        if (!TryGetActionDirective(out var directive) &&
             directive.KernelCommandType is null)
         {
             return DirectiveBindingResult<string>.Failure(
@@ -323,8 +329,8 @@ internal abstract class DirectiveNode : LanguageNode
                 case bool value:
                     writer.WriteBoolean(parameterName, value);
                     break;
-                
-                case string stringValue: 
+
+                case string stringValue:
                     WriteProperty(parameterName, stringValue);
                     break;
 

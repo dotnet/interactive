@@ -14,7 +14,7 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.String InvariantCultureDisplayValue { get; set;}
     public System.Boolean IsNull { get; set;}
     public System.Int64 RowId { get; set;}
-  public class ChooseMsSqlKernelDirective : Microsoft.DotNet.Interactive.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+  public class ChooseMsSqlKernelDirective : Microsoft.DotNet.Interactive.Directives.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
     public System.CommandLine.Option<System.String> NameOption { get;}
   public class ColumnInfo
@@ -254,7 +254,6 @@ Microsoft.DotNet.Interactive.SqlServer
     protected System.Boolean CanDeclareVariable(System.String name, System.Object value, ref System.String& msg)
     public System.Threading.Tasks.Task ConnectAsync()
     protected System.String CreateVariableDeclaration(System.String name, System.Object value)
-    protected System.Void StoreQueryResults(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> results, System.CommandLine.Parsing.ParseResult commandKernelChooserParseResult)
     protected System.Void StoreQueryResultSet(System.String name, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> queryResultSet)
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
   public class VersionedTextDocumentIdentifier : TextDocumentIdentifier

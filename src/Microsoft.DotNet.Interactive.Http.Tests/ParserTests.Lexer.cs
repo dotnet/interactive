@@ -4,8 +4,8 @@
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
-using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Parsing;
+using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -21,7 +21,6 @@ public partial class HttpParserTests
             var result = Parse("  \t  ");
 
             result.SyntaxTree.RootNode
-                  .ChildNodes.Should().ContainSingle<HttpRequestNode>().Which
                   .ChildTokens.First().Should().BeOfType<SyntaxToken>();
 
             result.SyntaxTree.RootNode

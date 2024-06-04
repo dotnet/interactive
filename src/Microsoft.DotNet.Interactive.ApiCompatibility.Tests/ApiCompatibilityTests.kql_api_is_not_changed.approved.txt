@@ -1,5 +1,5 @@
 Microsoft.DotNet.Interactive.Kql
-  public class ChooseMsKqlKernelDirective : Microsoft.DotNet.Interactive.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+  public class ChooseMsKqlKernelDirective : Microsoft.DotNet.Interactive.Directives.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
     public System.CommandLine.Option<System.String> NameOption { get;}
   public class ConnectKqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
@@ -262,7 +262,6 @@ Microsoft.DotNet.Interactive.SqlServer
     protected System.Boolean CanDeclareVariable(System.String name, System.Object value, ref System.String& msg)
     public System.Threading.Tasks.Task ConnectAsync()
     protected System.String CreateVariableDeclaration(System.String name, System.Object value)
-    protected System.Void StoreQueryResults(System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> results, System.CommandLine.Parsing.ParseResult commandKernelChooserParseResult)
     protected System.Void StoreQueryResultSet(System.String name, System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource> queryResultSet)
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
   public class VersionedTextDocumentIdentifier : TextDocumentIdentifier

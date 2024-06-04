@@ -6,12 +6,11 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-[DebuggerStepThrough]
-internal class KernelNameDirectiveNode : DirectiveNode
+internal class DirectiveExpressionTypeNode : SyntaxNode
 {
-    internal KernelNameDirectiveNode(
-        SourceText sourceText,
-        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    private string? _type;
+
+    internal DirectiveExpressionTypeNode(SourceText sourceText, SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 

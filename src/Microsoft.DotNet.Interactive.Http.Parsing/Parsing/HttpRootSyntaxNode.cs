@@ -3,6 +3,8 @@
 
 #nullable enable
 
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Parsing;
@@ -74,7 +76,6 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                 }
             }
         }
-
         return declaredVariables;
     }
 }

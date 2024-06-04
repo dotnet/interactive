@@ -10,10 +10,7 @@ internal class DirectiveCommand : KernelCommand
 {
     internal DirectiveCommand(DirectiveNode directiveNode)
     {
-        ParseResult = parseResult;
-        DirectiveNode = directiveNode;
-        SchedulingScope = SchedulingScope.Parse(directiveNode?.CommandScope);
-    }
+        DirectiveNode = directiveNode ?? throw new ArgumentNullException(nameof(directiveNode));
 
         if (directiveNode.CommandScope is not null)
         {

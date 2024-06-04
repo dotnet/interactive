@@ -344,10 +344,14 @@ public class SubmissionParser
             commands.Add(
                 new AnonymousKernelCommand((_, context) =>
                 {
-                    var diagnosticsProduced = new DiagnosticsProduced([Diagnostic.FromCodeAnalysisDiagnostic(diagnostic)], originalCommand);
-                    context.Publish(diagnosticsProduced);
+                    var diagnosticsProduced = new DiagnosticsProduced(
+                        [Diagnostic.FromCodeAnalysisDiagnostic(diagnostic)],
+                        [new FormattedValue(PlainTextFormatter.MimeType, diagnostic.ToString())],
+                        originalCommand);
 
+                    context.Publish(diagnosticsProduced);
                     context.Fail(originalCommand, message: diagnostic.ToString());
+
                     return Task.CompletedTask;
                 }));
         }
@@ -725,8 +729,6 @@ public class SubmissionParser
         {
             case CommandSucceeded:
             {
-                string boundValue = null;
-
                 if (result.Events.OfType<InputProduced>().SingleOrDefault() is { } inputProduced)
                 {
                     return (DirectiveBindingResult<object>.Success(inputProduced.Value),

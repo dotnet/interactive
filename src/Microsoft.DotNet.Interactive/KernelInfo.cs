@@ -3,7 +3,6 @@
 
 #nullable enable
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -15,15 +14,15 @@ namespace Microsoft.DotNet.Interactive;
 public class KernelInfo
 {
     private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
-    private readonly DirectiveCollection _supportedDirectives = new();
+    private readonly NamedSymbolCollection<KernelDirective> _supportedDirectives;
     private string? _displayName;
 
     [JsonConstructor]
     public KernelInfo(
-        string localName, 
-        string[]? aliases = null, 
-        bool isProxy = false, 
-        bool isComposite = false, 
+        string localName,
+        string[]? aliases = null,
+        bool isProxy = false,
+        bool isComposite = false,
         string? description = null)
     {
         if (string.IsNullOrWhiteSpace(localName))
@@ -77,9 +76,9 @@ public class KernelInfo
 
     public string? LanguageVersion { get; set; }
 
-    public bool IsProxy { get;  set; }
+    public bool IsProxy { get; set; }
 
-    public bool IsComposite { get;  set; }
+    public bool IsComposite { get; set; }
 
     public string DisplayName
     {
@@ -121,7 +120,7 @@ public class KernelInfo
 
             foreach (var directive in value)
             {
-                // _supportedDirectives.Add(directive.Name, directive);
+                _supportedDirectives.Add(directive);
             }
         }
     }
@@ -139,56 +138,6 @@ public class KernelInfo
     internal void UpdateSupportedKernelCommandsFrom(KernelInfo source) =>
         _supportedKernelCommands.UnionWith(source.SupportedKernelCommands);
 
-    internal bool TryGetDirective(string name, [MaybeNullWhen(false)]out KernelDirective directive)
-    {
-
-        directive = null;
-        return false;
-    }
-
-    private class DirectiveCollection : ICollection<KernelDirective>
-    {
-        private readonly List<KernelDirective> _directives = new();
-        private readonly Dictionary<string, KernelDirective> _directivesByName = new();
-
-        public IEnumerator<KernelDirective> GetEnumerator()
-        {
-            return _directives.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _directives.GetEnumerator();
-        }
-
-        public void Add(KernelDirective item)
-        {
-            _directivesByName.Add(item.Name, item);
-            _directives.Add(item);
-        }
-
-        public void Clear()
-        {
-            _directives.Clear();
-        }
-
-        public bool Contains(KernelDirective item)
-        {
-            return _directives.Contains(item);
-        }
-
-        public void CopyTo(KernelDirective[] array, int arrayIndex)
-        {
-            _directives.CopyTo(array, arrayIndex);
-        }
-
-        public bool Remove(KernelDirective item)
-        {
-            return _directives.Remove(item);
-        }
-
-        public int Count => _directives.Count;
-
-        public bool IsReadOnly => false;
-    }
+    internal bool TryGetDirective(string name, [MaybeNullWhen(false)] out KernelDirective directive) =>
+        _supportedDirectives.TryGetValue(name, out directive);
 }
