@@ -52,6 +52,11 @@ internal static class KernelEventExtensions
 
     private static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromNode(this SyntaxNode languageNode, IReadOnlyCollection<Diagnostic> diagnostics)
     {
+        if (diagnostics.Count == 0)
+        {
+            return [];
+        }
+
         var root = languageNode.SyntaxTree.RootNode;
         var initialSpan = languageNode.Span;
         var sourceText = SourceText.From(root.Text);

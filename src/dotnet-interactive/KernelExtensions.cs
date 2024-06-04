@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -58,16 +59,16 @@ public static class KernelExtensions
     public static T UseAboutMagicCommand<T>(this T kernel)
         where T : Kernel
     {
-        var about = new Command("#!about", LocalizationResources.Magics_about_Description())
-        {
-            Handler = CommandHandler.Create((InvocationContext ctx) =>
-            {
-                ctx.GetService<KernelInvocationContext>().Display(BuildInfo.GetBuildInfo(typeof(Program).Assembly));
-                return Task.CompletedTask;
-            })
-        };
+        var aboutDirective = new KernelActionDirective("#!about");
 
-        kernel.AddDirective(about);
+        kernel.AddDirective(
+            aboutDirective,
+            (_, context) =>
+            {
+                context.Display(BuildInfo.GetBuildInfo(typeof(Program).Assembly));
+                return Task.CompletedTask;
+            }
+        );
 
         Formatter.Register<BuildInfo>((info, writer) =>
         {

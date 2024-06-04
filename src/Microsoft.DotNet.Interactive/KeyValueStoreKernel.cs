@@ -248,14 +248,12 @@ public class KeyValueStoreKernel :
 
             string GetCellContent()
             {
-                if (directiveNode.NextNode() is LanguageNode nextNode)
-                {
-                    return nextNode.FullText;
-                }
-                else
+                if (directiveNode.NextNode() is DirectiveNode { DirectiveNameNode.Text: "#!value" } )
                 {
                     return null;
                 }
+
+                return directiveNode.NextNode()?.FullText;
             }
         }
     }
@@ -267,7 +265,6 @@ public class KeyValueStoreKernel :
         KernelInvocationContext context)
     {
         // FIX: (HandleAsync) 
-      
     }
 
     internal override bool AcceptsUnknownDirectives => true;

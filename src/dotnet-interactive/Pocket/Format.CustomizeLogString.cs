@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -160,16 +162,18 @@ internal static partial class Format
                 break;
 
             case DiagnosticsProduced diagnosticsProduced:
-                var diagnostics = diagnosticsProduced.Diagnostics;
-                var firstMessage = diagnostics.First().Message.TruncateIfNeeded();
-                writer.Write(firstMessage);
-
-                var diagnosticsCount = diagnostics.Count;
-                if (diagnosticsCount > 1)
+                if (diagnosticsProduced.Diagnostics.Count > 0)
                 {
-                    writer.Write(" (and ");
-                    writer.Write(diagnosticsCount - 1);
-                    writer.Write(" more)");
+                    var firstMessage = diagnosticsProduced.Diagnostics.First().Message.TruncateIfNeeded();
+                    writer.Write(firstMessage);
+
+                    var diagnosticsCount = diagnosticsProduced.Diagnostics.Count;
+                    if (diagnosticsCount > 1)
+                    {
+                        writer.Write(" (and ");
+                        writer.Write(diagnosticsCount - 1);
+                        writer.Write(" more)");
+                    }
                 }
                 break;
 
