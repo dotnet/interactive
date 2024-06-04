@@ -17,7 +17,6 @@ using Microsoft.DotNet.Interactive.CSharpProject.LanguageServices;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Pocket;
 using static Pocket.Logger;
-using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
@@ -50,8 +49,8 @@ public class WorkspaceServer : ILanguageService, ICodeRunner, ICodeCompiler
     {
         var prebuild = await _prebuildFinder.FindAsync(request.Workspace.WorkspaceType);
 
-        var workspace = await request.Workspace.InlineBuffersAsync();
-        var sourceFiles = workspace.GetSourceFiles();
+        var workspaceWithBuffersInlined = await request.Workspace.InlineBuffersAsync();
+        var sourceFiles = workspaceWithBuffersInlined.GetSourceFiles();
 
         // get project and ensure the solution is up-to-date
         var (_, project) = await prebuild.GetCompilationForLanguageServices(
@@ -62,15 +61,15 @@ public class WorkspaceServer : ILanguageService, ICodeRunner, ICodeCompiler
         var solution = project.Solution;
 
         // get most up-to-date document
-        var file = workspace.GetContentFromBufferId(request.ActiveBufferId);
+        var file = workspaceWithBuffersInlined.GetContentFromBufferId(request.ActiveBufferId);
         var selectedDocumentId = documents.First(doc => doc.IsMatch(file)).Id;
         var selectedDocument = solution.GetDocument(selectedDocumentId);
 
         var service = CompletionService.GetService(selectedDocument);
 
-        var (_, _, absolutePosition) = workspace.GetTextLocation(request.ActiveBufferId);
+        var (_, _, absolutePosition) = workspaceWithBuffersInlined.GetTextLocation(request.ActiveBufferId);
         var semanticModel = await selectedDocument!.GetSemanticModelAsync();
-        var diagnostics = DiagnosticsExtractor.ExtractSerializableDiagnosticsFromSemanticModel(request.ActiveBufferId, semanticModel, workspace);
+        var diagnostics = DiagnosticsExtractor.ExtractSerializableDiagnosticsFromSemanticModel(request.ActiveBufferId, semanticModel, workspaceWithBuffersInlined);
 
         var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(
             selectedDocument,

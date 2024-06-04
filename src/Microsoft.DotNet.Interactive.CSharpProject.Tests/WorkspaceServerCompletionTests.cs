@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -695,7 +696,7 @@ namespace FibonacciTest
         #endregion
 
         var (processed, position) = CodeManipulation.ProcessMarkup(generator);
-        var prebuild = await PrebuildUtilities.CreateBuildableCopy(await Prebuild.GetOrCreateConsolePrebuildAsync(false));
+        var prebuild = await (await Prebuild.GetOrCreateConsolePrebuildAsync(false)).CreateBuildableCopy();
         var workspace = new Workspace(workspaceType: prebuild.Name, buffers:
         [
             new Buffer("Program.cs", program),

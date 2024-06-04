@@ -725,7 +725,7 @@ public abstract partial class Kernel :
 
             context.Publish(
                 new CompletionsProduced(
-                    completions, command, resultRange));
+                    completions.ToArray(), command, resultRange));
         }
 
         return Task.CompletedTask;
@@ -744,7 +744,7 @@ public abstract partial class Kernel :
         if (result.CommandResult.Command == ChooseKernelDirective)
         {
             return result.GetCompletions()
-                .Select(s => SubmissionParser.CompletionItemFor(s.Label, result));
+                         .Select(s => SubmissionParser.CompletionItemFor(s.Label, result));
         }
 
         var allCompletions = new List<CompletionItem>();
@@ -761,15 +761,13 @@ public abstract partial class Kernel :
             var suggestions = parseResult.GetCompletions(requestPosition);
 
             var completions = suggestions
-                .Select(s => SubmissionParser.CompletionItemFor(s.Label, parseResult))
-                .ToArray();
+                              .Select(s => SubmissionParser.CompletionItemFor(s.Label, parseResult))
+                              .ToArray();
 
             allCompletions.AddRange(completions);
         }
 
-        return allCompletions
-            .Distinct(CompletionItemComparer.Instance)
-            .ToArray();
+        return allCompletions.Distinct(CompletionItemComparer.Instance);
     }
 
     private protected virtual IEnumerable<Parser> GetDirectiveParsersForCompletion(
