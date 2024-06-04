@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -79,7 +80,7 @@ public partial class KernelActionDirective : KernelDirective
         }
     }
 
-    internal override bool TryGetParameter(string name, out KernelDirectiveParameter value)
+    internal override bool TryGetParameter(string name, [MaybeNullWhen(false)] out KernelDirectiveParameter value)
     {
         if (base.TryGetParameter(name, out value))
         {

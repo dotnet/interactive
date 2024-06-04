@@ -91,7 +91,7 @@ public class KeyValueStoreKernel :
 
         return directive;
 
-        async Task<KernelCommand> TryGetKernelCommandAsync(
+        Task<KernelCommand> TryGetKernelCommandAsync(
             DirectiveNode directiveNode,
             ExpressionBindingResult expressionBindingResult,
             Kernel keyValueStoreKernel)
@@ -101,9 +101,9 @@ public class KeyValueStoreKernel :
                                   .ToDictionary(t => t.Name, t => (t.Value, t.ParameterNode));
 
             string name = null;
-            string? fromUrl = null;
-            string? fromFile = null;
-            string? mimeType = null;
+            string fromUrl = null;
+            string fromFile = null;
+            string mimeType = null;
 
             if (parameterValues.TryGetValue("--mime-type", out var mimeTypeResult) && mimeTypeResult.Value is string mimeTypeValue)
             {
@@ -131,11 +131,11 @@ public class KeyValueStoreKernel :
                         PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromFileCannotBeUsedTogether,
                         "The --from-url and --from-file options cannot be used together.");
 
-                    return null;
+                    return Task.FromResult<KernelCommand>(null);
                 }
             }
 
-            string? inlineValue = null;
+            string inlineValue = null;
 
             if (parameterValues.TryGetValue("--from-value", out var fromValueResult) && fromValueResult.Value is string fromValueValue)
             {
@@ -146,7 +146,7 @@ public class KeyValueStoreKernel :
                         PolyglotSyntaxParser.ErrorCodes.FromUrlAndFromValueCannotBeUsedTogether,
                         "The --from-url and --from-value options cannot be used together.");
 
-                    return null;
+                    return Task.FromResult<KernelCommand>(null);
                 }
 
                 if (fromFile is not null)
@@ -156,7 +156,7 @@ public class KeyValueStoreKernel :
                         PolyglotSyntaxParser.ErrorCodes.FromFileAndFromValueCannotBeUsedTogether,
                         "The --from-value and --from-file options cannot be used together.");
 
-                    return null;
+                    return Task.FromResult<KernelCommand>(null);
                 }
 
                 inlineValue = fromValueValue;
@@ -171,7 +171,7 @@ public class KeyValueStoreKernel :
                     AddDiagnostic("--from-file",
                                   PolyglotSyntaxParser.ErrorCodes.FromFileAndCellContentCannotBeUsedTogether,
                                   "The --from-file option cannot be used in combination with a content submission.");
-                    return null;
+                    return Task.FromResult<KernelCommand>(null);
                 }
             }
             else if (fromUrl is not null)
@@ -181,13 +181,13 @@ public class KeyValueStoreKernel :
                     AddDiagnostic("--from-url",
                                   PolyglotSyntaxParser.ErrorCodes.FromUrlAndCellContentCannotBeUsedTogether,
                                   "The --from-url option cannot be used in combination with a content submission.");
-                    return null;
+                    return Task.FromResult<KernelCommand>(null);
                 }
             }
 
             if (fromFile is not null || fromUrl is not null)
             {
-                return new AnonymousKernelCommand(async (_, context) =>
+                return Task.FromResult<KernelCommand>(new AnonymousKernelCommand(async (_, context) =>
                 {
                     string valueToStore = null;
 
@@ -218,7 +218,7 @@ public class KeyValueStoreKernel :
                         mimeType ??= response.Content.Headers?.ContentType?.MediaType;
                         return await response.Content.ReadAsStringAsync();
                     }
-                });
+                }));
             }
 
             var valueToStore = inlineValue ?? cellContent;
@@ -227,10 +227,10 @@ public class KeyValueStoreKernel :
             {
                 var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, valueToStore);
 
-                return new SendValue(name, null, formattedValue, targetKernelName: Name);
+                return Task.FromResult<KernelCommand>(new SendValue(name, null, formattedValue, targetKernelName: Name));
             }
 
-            return null;
+            return Task.FromResult<KernelCommand>(null);
 
             void AddDiagnostic(string parameterName, string errorCode, string message)
             {
@@ -260,11 +260,12 @@ public class KeyValueStoreKernel :
 
     public IReadOnlyDictionary<string, FormattedValue> Values => _values;
 
-    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(
+    Task IKernelCommandHandler<SubmitCode>.HandleAsync(
         SubmitCode command,
         KernelInvocationContext context)
     {
         // FIX: (HandleAsync) 
+        return Task.CompletedTask;
     }
 
     internal override bool AcceptsUnknownDirectives => true;

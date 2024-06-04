@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 public class SubmissionParser
 {
     private readonly Kernel _kernel;
-    private Parser? _directiveParser;
+    private Parser _directiveParser;
     private PolyglotParserConfiguration _parserConfiguration;
     private RootCommand _rootCommand;
     private Dictionary<Type, string> _customInputTypeHints;

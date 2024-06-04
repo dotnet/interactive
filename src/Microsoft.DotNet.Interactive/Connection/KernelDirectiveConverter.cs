@@ -32,7 +32,7 @@ public class KernelDirectiveConverter : JsonConverter<KernelDirective>
         writer.WriteEndObject();
     }
 
-    public override KernelDirective? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override KernelDirective Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         EnsureStartObject(reader, typeToConvert);
 
@@ -70,6 +70,16 @@ public class KernelDirectiveConverter : JsonConverter<KernelDirective>
             {
                 break;
             }
+        }
+
+        if (name is null)
+        {
+            throw new JsonException($"Property 'name' is required to deserialize a {nameof(KernelDirective)}.");
+        }
+
+        if (kernelName is null)
+        {
+            throw new JsonException($"Property 'kernelName' is required to deserialize a {nameof(KernelDirective)}.");
         }
 
         KernelDirective directive = kind switch

@@ -76,11 +76,14 @@ internal class PolyglotSyntaxParser
 
             var targetKernelName = _currentKernelName ?? _compositeKernelInfo?.LocalName;
 
-            var directiveNode = new DirectiveNode(_sourceText, _syntaxTree);
-            directiveNode.TargetKernelName = targetKernelName;
+            var directiveNode = new DirectiveNode(_sourceText, _syntaxTree)
+            {
+                TargetKernelName = targetKernelName
+            };
 
-            if (_configuration.TryGetDirectiveByName(targetKernelName, directiveNameNode.Text, out var directive) ||
-                _compositeKernelInfo?.TryGetDirective(directiveNameNode.Text, out directive) == true)
+            if (targetKernelName is not null &&
+                _configuration.TryGetDirectiveByName(targetKernelName, directiveNameNode.Text, out var directive) ||
+                _compositeKernelInfo?.TryGetDirective(directiveNameNode.Text, out directive) is true)
             {
                 _currentlyScopedDirective = directive;
 
@@ -377,9 +380,10 @@ internal class PolyglotSyntaxParser
 
                     ConsumeCurrentTokenInto(parameterNameNode!);
 
-                    if (_currentlyScopedDirective is KernelActionDirective actionDirective)
+                    if (_currentlyScopedDirective is KernelActionDirective actionDirective &&
+                        parameterNameNode.Text is { } text)
                     {
-                        if (actionDirective.TryGetParameter(parameterNameNode.Text, out var parameter))
+                        if (actionDirective.TryGetParameter(text, out var parameter))
                         {
                             _currentlyScopedParameter = parameter;
                         }

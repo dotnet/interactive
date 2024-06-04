@@ -292,7 +292,6 @@ public abstract partial class Kernel :
 
     public IReadOnlyCollection<Command> Directives => SubmissionParser.Directives;
 
-    [Obsolete]
     public void AddDirective(Command command)
     {
         SubmissionParser.AddDirective(command);

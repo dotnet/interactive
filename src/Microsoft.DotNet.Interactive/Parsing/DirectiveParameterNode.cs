@@ -3,6 +3,7 @@
 
 #nullable enable
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -74,7 +75,7 @@ internal class DirectiveParameterNode : SyntaxNode
         }
     }
 
-    public bool TryGetParameter(out KernelDirectiveParameter parameter)
+    public bool TryGetParameter([MaybeNullWhen(false)] out KernelDirectiveParameter parameter)
     {
         if (Parent is DirectiveNode directiveNode)
         {

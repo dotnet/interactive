@@ -6,12 +6,6 @@
       <Value>CopyReferencedAssembliesToWorkspaceIsOn</Value>
     </HiddenComponentWarnings>
     <IgnoredTests>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelPackageTests.Loads_native_dependencies_from_nugets</TestName>
-      </NamedTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelPackageTests</FixtureName>
-      </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.StdIoKernelConnectorTests</FixtureName>
       </FixtureTestSelector>
@@ -22,9 +16,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.PackageRestoreContextTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.PackageReferenceTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
@@ -32,9 +23,6 @@
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelFormattingTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelAssemblyReferenceTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KqlDiscoverabilityKernelTests</FixtureName>

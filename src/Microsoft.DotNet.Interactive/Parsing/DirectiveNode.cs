@@ -32,12 +32,10 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public DirectiveNameNode? DirectiveNameNode { get; private set; }
 
-    [Obsolete]
     internal Parser? DirectiveParser { get; set; }
 
     public DirectiveNodeKind Kind { get; set; }
 
-    [Obsolete]
     public ParseResult GetDirectiveParseResult()
     {
         if (DirectiveParser is null)
@@ -230,7 +228,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
     public DirectiveBindingResult<object?> CreateSuccessfulBindingResult(object? value) =>
         DirectiveBindingResult<object?>.Success(value);
 
-    public IEnumerable<(string Name, object Value, DirectiveParameterNode ParameterNode)> GetParameterValues(
+    public IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> GetParameterValues(
         KernelDirective directive,
         Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
     {
@@ -250,15 +248,19 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     {
                         if (parameter.Flag)
                         {
-                            yield return (propertyName: parameter.Name, true, parameterNode);
+                            yield return (parameter.Name, true, parameterNode);
                         }
-                        else if (boundExpressionValues?.TryGetValue(parameterNode.ValueNode, out var boundValue) is true)
+
+                        if (parameterNode.ValueNode is not null)
                         {
-                            yield return (propertyName: parameter.Name, boundValue, parameterNode);
-                        }
-                        else
-                        {
-                            yield return (propertyName: parameter.Name, parameterNode.ValueNode.Text, parameterNode);
+                            if (boundExpressionValues?.TryGetValue(parameterNode.ValueNode, out var boundValue) is true)
+                            {
+                                yield return (parameter.Name, boundValue, parameterNode);
+                            }
+                            else
+                            {
+                                yield return (parameter.Name, parameterNode.ValueNode.Text, parameterNode);
+                            }
                         }
 
                         break;
@@ -267,7 +269,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 case []:
                     if (parameter.Flag)
                     {
-                        yield return (propertyName: parameter.Name, false, null);
+                        yield return (parameter.Name, false, null);
                     }
                     break;
 

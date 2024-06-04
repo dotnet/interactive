@@ -12,9 +12,9 @@ internal class DirectiveExpressionNode : SyntaxNode
     {
     }
 
-    public DirectiveExpressionTypeNode TypeNode { get; private set; }
+    public DirectiveExpressionTypeNode? TypeNode { get; private set; }
 
-    public DirectiveExpressionParametersNode ParametersNode { get; private set; }
+    public DirectiveExpressionParametersNode? ParametersNode { get; private set; }
 
     public void Add(DirectiveExpressionTypeNode node)
     {

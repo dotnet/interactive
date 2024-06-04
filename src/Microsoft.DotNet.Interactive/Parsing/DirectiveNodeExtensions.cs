@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
@@ -15,8 +16,8 @@ internal static class DirectiveNodeExtensions
         this DirectiveNode directiveNode,
         Kernel kernel)
     {
-        Dictionary<string, InputProduced> inputsProduced = null;
-        Dictionary<string, ValueProduced> valuesProduced = null;
+        Dictionary<string, InputProduced>? inputsProduced = null;
+        Dictionary<string, ValueProduced>? valuesProduced = null;
 
         var (boundValues, diagnostics) =
             await directiveNode.TryBindExpressionsAsync(
@@ -27,29 +28,40 @@ internal static class DirectiveNodeExtensions
                             expressionNode,
                             directiveNode.TargetKernelName);
 
-                    var parameterName = ((DirectiveParameterNode)expressionNode.Parent.Parent).NameNode.Text;
-
-                    if (inputProduced is not null)
+                    if (expressionNode.Parent is { Parent: DirectiveParameterNode { NameNode.Text: { } parameterName } })
                     {
-                        inputsProduced ??= new();
-                        inputsProduced.Add(parameterName, inputProduced);
-                    }
+                        if (inputProduced is not null)
+                        {
+                            inputsProduced ??= new();
+                            inputsProduced.Add(parameterName, inputProduced);
+                        }
 
-                    if (valueProduced is not null)
-                    {
-                        valuesProduced ??= new();
-                        valuesProduced.Add(parameterName, valueProduced);
+                        if (valueProduced is not null)
+                        {
+                            valuesProduced ??= new();
+                            valuesProduced.Add(parameterName, valueProduced);
+                        }
                     }
 
                     return bindingResult;
                 });
 
-        return new()
+        var result = new ExpressionBindingResult
         {
             BoundValues = boundValues,
             Diagnostics = diagnostics,
-            InputsProduced = inputsProduced,
-            ValuesProduced = valuesProduced
         };
+
+        if (inputsProduced is not null)
+        {
+            result.InputsProduced.MergeWith(inputsProduced);
+        }
+
+        if (valuesProduced is not null)
+        {
+            result.ValuesProduced.MergeWith(valuesProduced);
+        }
+
+        return result;
     }
 }

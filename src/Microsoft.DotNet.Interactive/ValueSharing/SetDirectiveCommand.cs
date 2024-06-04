@@ -103,7 +103,6 @@ internal class SetDirectiveCommand : KernelCommand
             command.ReferenceValue = parsedLiteralValueBinding.Value;
         }
 
-
         var expressionNodes = directiveNode.DescendantNodesAndTokens().OfType<DirectiveExpressionNode>().ToArray();
 
         foreach (var expressionNode in expressionNodes)
