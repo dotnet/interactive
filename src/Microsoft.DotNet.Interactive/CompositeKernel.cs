@@ -279,34 +279,36 @@ public sealed class CompositeKernel :
         }
 
         connectionCommand.Handler = CommandHandler.Create<KernelInvocationContext, InvocationContext>(
-            async (context, commandLineContext) =>
-            {
-                var connectedKernels = await connectionCommand.ConnectKernelsAsync(context, commandLineContext);
-                foreach (var connectedKernel in connectedKernels)
-                {
-
-                    Add(connectedKernel);
-
-                    // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
-
-                    var chooseKernelDirective =
-                        Directives.OfType<ChooseKernelDirective>()
-                            .Single(d => d.Kernel == connectedKernel);
-
-                    if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
-                    {
-                        chooseKernelDirective.Description = connectionCommand.ConnectedKernelDescription;
-                    }
-
-                    chooseKernelDirective.Description += " (Connected kernel)";
-
-                    context.Display($"Kernel added: #!{connectedKernel.Name}");
-                }
-            });
+            async (context, commandLineContext) => await ConnectKernel(connectionCommand, context, commandLineContext));
 
         _connectDirective.Add(connectionCommand);
 
         SubmissionParser.ResetParser();
+    }
+
+    private async Task ConnectKernel(ConnectKernelCommand connectionCommand, KernelInvocationContext context, InvocationContext commandLineContext)
+    {
+        var connectedKernels = await connectionCommand.ConnectKernelsAsync(context, commandLineContext);
+        foreach (var connectedKernel in connectedKernels)
+        {
+
+            Add(connectedKernel);
+
+            // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
+
+            var chooseKernelDirective =
+                Directives.OfType<ChooseKernelDirective>()
+                          .Single(d => d.Kernel == connectedKernel);
+
+            if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
+            {
+                chooseKernelDirective.Description = connectionCommand.ConnectedKernelDescription;
+            }
+
+            chooseKernelDirective.Description += " (Connected kernel)";
+
+            context.Display($"Kernel added: #!{connectedKernel.Name}");
+        }
     }
 
     public KernelHost Host => _host;

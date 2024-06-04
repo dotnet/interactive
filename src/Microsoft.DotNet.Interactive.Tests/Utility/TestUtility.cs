@@ -52,7 +52,7 @@ public static class AssertionExtensions
     {
         assertions.BeEquivalentTo(expectation, o =>
         {
-            if (config is { })
+            if (config is not null)
             {
                 return config.Invoke(o).RespectingRuntimeTypes();
             }

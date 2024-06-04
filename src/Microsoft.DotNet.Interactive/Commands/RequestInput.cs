@@ -22,7 +22,7 @@ public class RequestInput : KernelCommand
 
     public string Prompt { get; }
 
-    public bool IsPassword => InputTypeHint == "password";
+    public bool IsPassword => InputTypeHint is "password";
 
     [JsonPropertyName("type")] 
     public string InputTypeHint { get; set; }

@@ -41,7 +41,8 @@
         ],
         "supportedDirectives": [
           {
-            "name": "#r"
+            "name": "#r",
+            "kind": "action"
           }
         ]
       }

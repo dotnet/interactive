@@ -1,4 +1,4 @@
-<ProjectConfiguration>
+﻿<ProjectConfiguration>
   <Settings>
     <CopyReferencedAssembliesToWorkspace>True</CopyReferencedAssembliesToWorkspace>
     <DefaultTestTimeout>10000</DefaultTestTimeout>
@@ -15,9 +15,6 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.KernelTests.Deferred_initialization_command_is_executed_on_first_submission</TestName>
       </NamedTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelRoutingTests</FixtureName>
-      </FixtureTestSelector>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.KernelTests.Deferred_initialization_command_is_not_executed_prior_to_first_submission</TestName>
       </NamedTestSelector>

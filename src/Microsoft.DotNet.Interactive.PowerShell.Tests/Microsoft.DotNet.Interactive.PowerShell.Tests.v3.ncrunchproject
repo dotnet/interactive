@@ -1,35 +1,5 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <DefaultTestTimeout>10000</DefaultTestTimeout>
-    <IgnoredTests>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.VerifyAllUsersProfileRuns</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.TryGetVariable_unwraps_PowerShell_object("$x = New-Object -TypeName System.IO.FileInfo -ArgumentList c:\\temp\\some.txt", "System.IO.FileInfo")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.TryGetVariable_unwraps_PowerShell_object("$x = \"hello!\"", "System.String")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.PowerShell_token_variables_work</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.PowerShell_progress_sends_updated_display_values</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.PowerShell_native_executable_output_is_collected</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.PowerShell_get_history_should_work</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.Powershell_customobject_is_formatted_for_outdisplay</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.GetCorrectProfilePaths</TestName>
-      </NamedTestSelector>
-      <AllTestsSelector />
-    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

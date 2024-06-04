@@ -18,7 +18,12 @@
           "name": "SubmitCode"
         }
       ],
-      "supportedDirectives": []
+      "supportedDirectives": [
+        {
+          "name": "#!example",
+          "kind": "action"
+        }
+      ]
     }
   },
   "eventType": "KernelInfoProduced",

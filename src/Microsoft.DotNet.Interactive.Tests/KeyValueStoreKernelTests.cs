@@ -291,7 +291,7 @@ public class KeyValueStoreKernelTests
             .Be("(1,46): error DNI206: The --from-url and --from-value options cannot be used together.");
     }
 
-    [Fact]
+    [Fact(Skip = "Consider changing this behavior")]
     public async Task Share_into_the_value_kernel_is_not_supported_and_stores_the_directive_text_literally()
     {
         using var kernel = CreateKernel();

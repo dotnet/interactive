@@ -19,11 +19,11 @@ public class KernelDirectiveConverter : JsonConverter<KernelDirective>
         switch (value)
         {
             case KernelSpecifierDirective specifier:
-                writer.WriteString("kind", "action");
+                writer.WriteString("kind", "kernelSpecifier");
                 writer.WriteString("kernelName", specifier.KernelName);
                 break;
-            case KernelActionDirective action:
-                writer.WriteString("kind", "kernelSpecifier");
+            case KernelActionDirective:
+                writer.WriteString("kind", "action");
                 break;
             default:
                 throw new NotSupportedException();

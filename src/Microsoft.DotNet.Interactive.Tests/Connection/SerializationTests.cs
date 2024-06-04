@@ -243,7 +243,6 @@ public class SerializationTests
 
         IEnumerable<KernelEvent> events()
         {
-
             yield return new CodeSubmissionReceived(
                 new SubmitCode("123"));
 

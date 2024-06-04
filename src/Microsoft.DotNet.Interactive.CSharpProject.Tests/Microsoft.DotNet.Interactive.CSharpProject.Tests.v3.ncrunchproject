@@ -1,7 +1,78 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <IgnoredTests>
-      <AllTestsSelector />
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.AnnotatedCodeBlockTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.AsyncLazyTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.BufferExtractorTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.BufferIdTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.BufferInliningTransformerTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.CodeMergeTransformerTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.CSharpProjectKernelTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.FileSystemDirectoryAccessorTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.InMemoryDirectoryAccessorTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.MarkupTestFileFacts</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.PrebuildTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.ProjectFileTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.RelativeDirectoryPathTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.RelativeFilePathTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.RenderingTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.RoslynWorkspaceServerConsoleProjectTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.RoslynWorkspaceServerTestsConsoleProjectDiagnosticsTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.RoslynWorkspaceServerTestsConsoleProjectIntellisenseTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.RunResultTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.SerializationTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.SignatureHelpItemTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.WorkspaceExtensionsTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.WorkspaceRunRequestTest</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.CSharpProject.Tests.WorkspaceTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

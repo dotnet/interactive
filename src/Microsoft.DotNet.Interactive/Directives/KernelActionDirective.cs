@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Directives;
 
@@ -40,6 +41,7 @@ public partial class KernelActionDirective : KernelDirective
 
     }
 
+    [JsonIgnore]
     public Type? KernelCommandType { get; set; }
 
     public ICollection<KernelActionDirective> Subcommands => _subcommands;
