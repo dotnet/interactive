@@ -4,26 +4,20 @@
 using System;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests : IDisposable
 {
-    private readonly ITestOutputHelper _output;
-
     private readonly AssertionScope _assertionScope;
 
-    public PolyglotSyntaxParserTests(ITestOutputHelper output)
+    public PolyglotSyntaxParserTests()
     {
-        _output = output;
-
         // FIX: (PolyglotSyntaxParserTests) put back
         // _assertionScope = new AssertionScope();
     }
 
-    public void Dispose()
-        => _assertionScope?.Dispose();
+    public void Dispose() => _assertionScope?.Dispose();
 
     private static PolyglotSyntaxTree Parse(string code, string defaultLanguage = "csharp")
     {
@@ -33,7 +27,7 @@ public partial class PolyglotSyntaxParserTests : IDisposable
 
         return syntaxTree;
     }
-    
+
     private static PolyglotSyntaxTree Parse(string code, PolyglotParserConfiguration configuration)
     {
         var syntaxTree = PolyglotSyntaxParser.Parse(code, configuration);

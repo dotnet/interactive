@@ -12,7 +12,7 @@ internal sealed class SyntaxToken : SyntaxNodeOrToken
         TokenKind kind,
         SourceText sourceText,
         TextSpan fullSpan,
-        SyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
         Kind = kind;
         FullSpan = fullSpan;

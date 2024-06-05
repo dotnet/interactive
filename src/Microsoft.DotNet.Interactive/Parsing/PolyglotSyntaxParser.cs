@@ -381,7 +381,7 @@ internal class PolyglotSyntaxParser
                     ConsumeCurrentTokenInto(parameterNameNode!);
 
                     if (_currentlyScopedDirective is KernelActionDirective actionDirective &&
-                        parameterNameNode.Text is { } text)
+                        parameterNameNode!.Text is { } text)
                     {
                         if (actionDirective.TryGetParameter(text, out var parameter))
                         {
@@ -526,9 +526,6 @@ internal class PolyglotSyntaxParser
             AdvanceToNextToken();
         }
     }
-
-    private bool AllowsValueSharingByInterpolation(DirectiveNode directiveNode) =>
-        directiveNode.Text != "set";
 
     internal class PolyglotLexer
     {
@@ -706,8 +703,6 @@ internal class PolyglotSyntaxParser
         {
             return _textWindow!.End < _sourceText.Length;
         }
-
-        private string CurrentTextWindow => _sourceText.GetSubText(_textWindow!.Span).ToString();
 
         private class TextWindow
         {

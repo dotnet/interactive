@@ -90,10 +90,12 @@ public class LanguageKernelPackageTests : LanguageKernelTestBase
 
         var result = await kernel.SendAsync(command);
 
-        result.Events.OfType<PackageAdded>()
-              .Should()
-              .ContainSingle(e => e.PackageReference.PackageName == "Microsoft.Extensions.Logging"
-                                  && e.PackageReference.PackageVersion == "2.2.0");
+        var packageAdded = result.Events
+                                 .Should()
+                                 .ContainSingle<PackageAdded>()
+                                 .Which;
+        packageAdded.PackageReference.PackageName.Should().Be("Microsoft.Extensions.Logging");
+        packageAdded.PackageReference.PackageVersion.Should().Be("2.2.0");
     }
 
     [Fact]

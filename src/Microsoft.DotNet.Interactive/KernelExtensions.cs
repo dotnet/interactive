@@ -278,7 +278,7 @@ public static class KernelExtensions
         var directive = new KernelActionDirective("#!set")
         {
             KernelCommandType = typeof(SetDirectiveCommand),
-            TryGetKernelCommandAsync = SetDirectiveCommand.TryParseSetDirectiveCommand,
+            TryGetKernelCommandAsync = SetDirectiveCommand.TryParseSetDirectiveCommandAsync,
             Parameters =
             {
                 new("--name")

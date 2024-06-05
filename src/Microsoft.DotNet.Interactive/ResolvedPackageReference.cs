@@ -5,6 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Microsoft.DotNet.Interactive.PackageManagement")]
 
 namespace Microsoft.DotNet.Interactive;
 

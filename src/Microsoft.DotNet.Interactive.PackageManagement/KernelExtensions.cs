@@ -8,6 +8,8 @@ using System.CommandLine.NamingConventionBinder;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.PackageManagement;
@@ -27,8 +29,44 @@ public static class KernelExtensions
         });
 
         kernel.AddDirective(i(lazyPackageRestoreContext));
-        kernel.AddDirective(r(lazyPackageRestoreContext));
 
+        var poundRDirective = new KernelActionDirective("#r")
+        {
+            KernelCommandType = typeof(AddPackage),
+            Parameters =
+            {
+                new("")
+                {
+                    AllowImplicitName = true,
+                    Required = true
+                }
+            },
+            TryGetKernelCommandAsync = AddPackage.TryParseRDirectiveAsync
+        };
+
+        kernel.AddDirective<AddPackage>(
+            poundRDirective,
+            (command, context) =>
+            {
+
+
+
+                return Task.CompletedTask;
+            });
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // FIX: (UseNugetDirective) remove
         kernel.KernelInfo.Description = $"""
                                          {kernel.KernelInfo.Description}
 

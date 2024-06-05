@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -138,6 +139,60 @@ public partial class PolyglotSyntaxParserTests
                   }
                 }
                 """);
+        }
+
+        [Fact]
+        public async Task Required_parameter_can_use_implicit_parameter_name()
+        {
+            PolyglotParserConfiguration config = new("csharp")
+            {
+                KernelInfos =
+                {
+                    new KernelInfo("csharp")
+                    {
+                        SupportedDirectives =
+                        {
+                            new KernelActionDirective("#r")
+                            {
+                                KernelCommandType = typeof(TestCommand),
+                                Parameters =
+                                {
+                                    new("--string-property")
+                                    {
+                                        AllowImplicitName = true,
+                                        Required = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            var tree = Parse("""
+                             #r "nuget:MyLibrary,1.2.3"
+                             """, config);
+
+            var directiveNode = tree.RootNode.ChildNodes
+                                    .Should().ContainSingle<DirectiveNode>()
+                                    .Which;
+
+            var result = await directiveNode.TryGetJsonAsync();
+
+            _output.WriteLine(directiveNode.Diagram());
+
+            result.Diagnostics.Should().BeEmpty();
+
+            result.Value.Should().BeEquivalentJsonTo("""
+                                                     {
+                                                       "commandType": "TestCommand",
+                                                       "command": {
+                                                         "stringProperty": "nuget:MyLibrary,1.2.3",
+                                                         "invokedDirective": "#r",
+                                                         "targetKernelName": "csharp"
+                                                       }
+                                                     }
+                                                     """);
         }
 
         [Fact]

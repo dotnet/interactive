@@ -76,7 +76,9 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     if (namedParameter.Required)
                     {
                         var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
-                                                      .Where(p => p.NameNode?.Text == namedParameter.Name);
+                                                      .Where(p => namedParameter.AllowImplicitName
+                                                                      ? p.NameNode is null
+                                                                      : p.NameNode?.Text == namedParameter.Name);
 
                         if (!matchingNodes.Any())
                         {
@@ -175,30 +177,6 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         directive = null!;
         return false;
-    }
-
-    internal int GetLine()
-    {
-        var line = 0;
-
-        for (var i = 0; i < Span.Start; i++)
-        {
-            if (SourceText[i] == '\n')
-            {
-                line++;
-            }
-        }
-
-        return line;
-    }
-
-    internal LinePositionSpan GetLinePositionSpan()
-    {
-        var line = GetLine();
-
-        return new LinePositionSpan(
-            new LinePosition(line, Span.Start),
-            new LinePosition(line, Span.End));
     }
 
     public void Add(DirectiveNameNode node)

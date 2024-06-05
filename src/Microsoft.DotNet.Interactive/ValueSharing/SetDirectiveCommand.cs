@@ -26,14 +26,14 @@ internal class SetDirectiveCommand : KernelCommand
 
     public FormattedValue FormattedValue { get; set; }
 
-    public static async Task<KernelCommand> TryParseSetDirectiveCommand(
+    public static Task<KernelCommand> TryParseSetDirectiveCommandAsync(
         DirectiveNode directiveNode,
         ExpressionBindingResult bindingResult,
         Kernel kernel)
     {
         if (!directiveNode.TryGetActionDirective(out var directive))
         {
-            return null;
+            return Task.FromResult<KernelCommand>(null);
         }
 
         var command = new SetDirectiveCommand
@@ -43,7 +43,7 @@ internal class SetDirectiveCommand : KernelCommand
 
         if (bindingResult.Diagnostics.Length > 0)
         {
-            return null;
+            return Task.FromResult<KernelCommand>(null);
         }
 
         var parameterValues = directiveNode
@@ -114,11 +114,11 @@ internal class SetDirectiveCommand : KernelCommand
                         LocalizationResources.Magics_set_ErrorMessageSharingByReference(),
                         DiagnosticSeverity.Error));
                 directiveNode.AddDiagnostic(diagnostic);
-                return null;
+                return Task.FromResult<KernelCommand>(null);
             }
         }
 
-        return command;
+        return Task.FromResult<KernelCommand>(command);
     }
 
     internal static async Task HandleAsync(SetDirectiveCommand command, KernelInvocationContext context)

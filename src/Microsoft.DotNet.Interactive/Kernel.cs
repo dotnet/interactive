@@ -311,20 +311,6 @@ public abstract partial class Kernel :
         SubmissionParser.ResetParser();
     }
 
-    public virtual KernelSpecifierDirective CreateKernelSpecifierDirective() => new($"#!{Name}", Name);
-
-    private void RegisterDirectiveCommandHandler(KernelActionDirective directive, KernelCommandInvocation handler)
-    {
-        var fullDirectiveName = FullDirectiveName(directive);
-
-        _directiveHandlers[fullDirectiveName] = handler;
-    }
-
-    private static string FullDirectiveName(KernelActionDirective directive) =>
-        directive.Parent is { } parent
-            ? $"{parent.Name} {directive.Name}"
-            : directive.Name;
-
     public void AddDirective<TCommand>(KernelActionDirective directive, Func<TCommand, KernelInvocationContext, Task> handler)
         where TCommand : KernelCommand
     {
@@ -338,6 +324,20 @@ public abstract partial class Kernel :
         RegisterCommandHandler(handler);
         KernelCommandEnvelope.RegisterCommand<TCommand>();
     }
+
+    public virtual KernelSpecifierDirective CreateKernelSpecifierDirective() => new($"#!{Name}", Name);
+
+    private void RegisterDirectiveCommandHandler(KernelActionDirective directive, KernelCommandInvocation handler)
+    {
+        var fullDirectiveName = FullDirectiveName(directive);
+
+        _directiveHandlers[fullDirectiveName] = handler;
+    }
+
+    private static string FullDirectiveName(KernelActionDirective directive) =>
+        directive.Parent is { } parent
+            ? $"{parent.Name} {directive.Name}"
+            : directive.Name;
 
     public void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
         where TCommand : KernelCommand

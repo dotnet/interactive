@@ -141,6 +141,34 @@ public class SubmissionParser
 
                                 break;
 
+                            case { Kind: DirectiveNodeKind.CompilerDirective }:
+
+                                var valueNode = directiveNode.DescendantNodesAndTokens()
+                                                             .OfType<DirectiveParameterValueNode>()
+                                                             .SingleOrDefault();
+
+                                if (valueNode.ChildTokens.Any(t => t is { Kind: TokenKind.Word } and { Text: "nuget" }))
+                                {
+                                    directiveCommand = new DirectiveCommand(directiveNode)
+                                    {
+                                        TargetKernelName = targetKernelName
+                                    };
+
+                                    if (directiveNode.DirectiveNameNode.Text is "#r" or "#i")
+                                    {
+                                        directiveCommand.SchedulingScope = lastCommandScope;
+                                        directiveCommand.TargetKernelName = targetKernelName;
+                                        AddHoistedCommand(directiveCommand);
+                                        nugetRestoreOnKernels.Add(targetKernelName);
+                                    }
+                                }
+                                else
+                                {
+                                    CreateCommandOrAppendToPrevious(directiveNode);
+                                }
+
+                                break;
+
                             case { Kind: DirectiveNodeKind.KernelSelector } kernelNameNode:
 
                                 targetKernelName = kernelNameNode.TargetKernelName;
@@ -174,49 +202,6 @@ public class SubmissionParser
                                 hoistedCommandsIndex = commands.Count;
 
                                 commands.Add(directiveCommand);
-
-                                break;
-
-                            case { Kind: DirectiveNodeKind.CompilerDirective }:
-
-                                var valueNode = directiveNode.DescendantNodesAndTokens().OfType<DirectiveParameterValueNode>().SingleOrDefault();
-
-                                if (valueNode.ChildTokens.Any(t => t is { Kind: TokenKind.Word } and { Text: "nuget" }))
-                                {
-                                    directiveCommand = new DirectiveCommand(directiveNode)
-                                    {
-                                        TargetKernelName = targetKernelName
-                                    };
-
-                                    if (directiveNode.DirectiveNameNode.Text == "#r")
-                                    {
-                                        // FIX: (SplitSubmission) extract package name and version details
-
-                                        if (valueNode is FileInfo)
-                                        {
-                                            var hoistedCommand = createChildCommand(directiveNode, originalCommand, lastKernelNameNode);
-                                            AddHoistedCommand(hoistedCommand);
-                                        }
-                                        else
-                                        {
-                                            directiveCommand.SchedulingScope = lastCommandScope;
-                                            directiveCommand.TargetKernelName = targetKernelName;
-                                            AddHoistedCommand(directiveCommand);
-                                            nugetRestoreOnKernels.Add(targetKernelName);
-                                        }
-                                    }
-                                    else if (directiveNode.DirectiveNameNode.Text == "#i")
-                                    {
-                                        directiveCommand.SchedulingScope = lastCommandScope;
-                                        directiveCommand.TargetKernelName = targetKernelName;
-                                        AddHoistedCommand(directiveCommand);
-                                        nugetRestoreOnKernels.Add(targetKernelName);
-                                    }
-                                }
-                                else
-                                {
-                                    CreateCommandOrAppendToPrevious(directiveNode);
-                                }
 
                                 break;
                         }
