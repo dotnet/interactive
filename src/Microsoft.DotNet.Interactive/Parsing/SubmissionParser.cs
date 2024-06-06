@@ -152,19 +152,16 @@ public class SubmissionParser
                                     if (await CreateActionDirectiveCommand(directiveNode, targetKernelName) is { } actionDirectiveCmd)
                                     {
                                         directiveCommand = actionDirectiveCmd;
+                                        directiveCommand.SchedulingScope = lastCommandScope;
+                                        directiveCommand.TargetKernelName = targetKernelName;
+                                        AddHoistedCommand(directiveCommand);
+                                        nugetRestoreOnKernels.Add(targetKernelName);
                                     }
-                                    else
+                                    else if (directiveNode.GetDiagnostics() is { } ds &&
+                                             ds.FirstOrDefault() is { } d)
                                     {
-                                        directiveCommand = new DirectiveCommand(directiveNode)
-                                        {
-                                            TargetKernelName = targetKernelName
-                                        };
+                                        ClearCommandsAndFail(d);
                                     }
-
-                                    directiveCommand.SchedulingScope = lastCommandScope;
-                                    directiveCommand.TargetKernelName = targetKernelName;
-                                    AddHoistedCommand(directiveCommand);
-                                    nugetRestoreOnKernels.Add(targetKernelName);
                                 }
                                 else
                                 {

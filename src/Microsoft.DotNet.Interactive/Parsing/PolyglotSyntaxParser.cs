@@ -761,6 +761,7 @@ internal class PolyglotSyntaxParser
         public const string FromFileAndFromValueCannotBeUsedTogether = "DNI207";
         public const string FromFileAndCellContentCannotBeUsedTogether = "DNI208";
         public const string FromUrlAndCellContentCannotBeUsedTogether = "DNI209";
+        public const string InvalidPackageAndVersionFormat = "DNI210";
 
         // API usage errors
         public const string MissingBindingDelegate = "DNI301";

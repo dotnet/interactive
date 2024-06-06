@@ -40,7 +40,8 @@ public class AddPackageSource : KernelCommand
 
             if (packageSourceParameterResult.Value is string packageSource)
             {
-                command = new AddPackageSource(packageSource.Replace("nuget:", ""));
+                packageSource = packageSource.Trim(['"']).Replace("nuget:", "");
+                command = new AddPackageSource(packageSource);
             }
         }
 

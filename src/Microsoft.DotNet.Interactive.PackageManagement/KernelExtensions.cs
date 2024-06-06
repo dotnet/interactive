@@ -178,7 +178,6 @@ public static class KernelExtensions
     private static async Task Restore<T>(KernelInvocationContext context,
         Lazy<PackageRestoreContext> lazyPackageRestoreContext, Func<T, IReadOnlyList<ResolvedPackageReference>, Task> registerResolvedPackageReferences) where T : Kernel
     {
-        
         var requestedPackages = lazyPackageRestoreContext.Value.RequestedPackageReferences.Select(s => s.PackageName).OrderBy(s => s).ToList();
 
         var requestedSources = lazyPackageRestoreContext.Value.RestoreSources.OrderBy(s => s).ToList();

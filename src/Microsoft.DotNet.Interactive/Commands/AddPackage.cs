@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing;
 
@@ -40,13 +41,24 @@ public class AddPackage : KernelCommand
         {
             var parameterValues = directiveNode.GetParameterValues(directive, bindingResult.BoundValues).ToArray();
 
-            var packageAndVersion = parameterValues.SingleOrDefault(v => v.Name is "");
+            var parameterResult = parameterValues.SingleOrDefault(v => v.Name is "");
 
-            if (packageAndVersion.Value is string packageAndVersionValue)
+            if (parameterResult.Value is string packageAndVersionValue)
             {
                 if (PackageReference.TryParse(packageAndVersionValue, out var packageReference))
                 {
                     command = new AddPackage(packageReference.PackageName, packageReference.PackageVersion);
+                }
+                else
+                {
+                    var parameterNode = parameterResult.ParameterNode;
+                    parameterNode.AddDiagnostic(
+                        parameterNode.CreateDiagnostic(
+                            new DiagnosticInfo(
+                                PolyglotSyntaxParser.ErrorCodes.InvalidPackageAndVersionFormat,
+                                "Unable to parse package reference: {0}",
+                                DiagnosticSeverity.Error,
+                                parameterNode.Text)));
                 }
             }
         }

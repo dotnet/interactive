@@ -222,7 +222,9 @@ Formatter.Register<DataFrame>((df, writer) =>
 
         using var events = kernel.KernelEvents.ToSubscribedList();
 
-        await kernel.SubmitCodeAsync(@"#r ""nuget:""");
+        await kernel.SubmitCodeAsync("""
+                                     #r "nuget:"
+                                     """);
 
         events
             .Should()
@@ -230,7 +232,7 @@ Formatter.Register<DataFrame>((df, writer) =>
             .Which
             .Message
             .Should()
-            .Be("Unable to parse package reference: \"nuget:\"");
+            .Be("(1,4): error DNI210: Unable to parse package reference: \"nuget:\"");
     }
 
     [Theory]
@@ -254,7 +256,7 @@ Formatter.Register<DataFrame>((df, writer) =>
             .Which
             .Message
             .Should()
-            .Be("Unable to parse package reference: \"nuget:,1.0.0\"");
+            .Be("(3,4): error DNI210: Unable to parse package reference: \"nuget:,1.0.0\"");
     }
 
     [Theory]
@@ -843,15 +845,15 @@ tInput.Length
 """
         };
 
-        await SubmitCode(kernel, source);
+        var result = await SubmitCode(kernel, source);
 
-        KernelEvents
-            .Should()
-            .ContainSingle<ReturnValueProduced>()
-            .Which
-            .Value
-            .Should()
-            .Be(4);
+        result.Events
+              .Should()
+              .ContainSingle<ReturnValueProduced>()
+              .Which
+              .Value
+              .Should()
+              .Be(4);
     }
 
     [Theory]
@@ -873,32 +875,32 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 """
         };
 
-        await SubmitCode(kernel, source);
+        var result = await SubmitCode(kernel, source);
 
         // Because this is platform specific there are platform specific results
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            KernelEvents
-                .Should()
-                .ContainSingle<ReturnValueProduced>()
-                .Which
-                .Value
-                .As<string>()
-                .EndsWith(@"runtimes\win\lib\netstandard2.0\System.Device.Gpio.dll")
-                .Should()
-                .Be(true);
+            result.Events
+                  .Should()
+                  .ContainSingle<ReturnValueProduced>()
+                  .Which
+                  .Value
+                  .As<string>()
+                  .EndsWith(@"runtimes\win\lib\netstandard2.0\System.Device.Gpio.dll")
+                  .Should()
+                  .Be(true);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            KernelEvents
-                .Should()
-                .ContainSingle<ReturnValueProduced>()
-                .Which
-                .Value
-                .As<string>()
-                .EndsWith(@"runtimes/linux/lib/netstandard2.0/System.Device.Gpio.dll")
-                .Should()
-                .Be(true);
+            result.Events
+                  .Should()
+                  .ContainSingle<ReturnValueProduced>()
+                  .Which
+                  .Value
+                  .As<string>()
+                  .EndsWith(@"runtimes/linux/lib/netstandard2.0/System.Device.Gpio.dll")
+                  .Should()
+                  .Be(true);
         }
         // (OSPlatform.OSX is not supported by this library
     }
