@@ -38,18 +38,15 @@ public class AddPackage : KernelCommand
 
         if (directiveNode.TryGetActionDirective(out var directive))
         {
-            if (directive.TryGetParameter("", out var value))
+            var parameterValues = directiveNode.GetParameterValues(directive, bindingResult.BoundValues).ToArray();
+
+            var packageAndVersion = parameterValues.SingleOrDefault(v => v.Name is "");
+
+            if (packageAndVersion.Value is string packageAndVersionValue)
             {
-                var parameterValues = directiveNode.GetParameterValues(directive, bindingResult.BoundValues).ToArray();
-
-                var packageAndVersion = parameterValues.SingleOrDefault(v => v.Name is "");
-
-                if (packageAndVersion.Value is string packageAndVersionValue)
+                if (PackageReference.TryParse(packageAndVersionValue, out var packageReference))
                 {
-                    if (PackageReference.TryParse(packageAndVersionValue, out var packageReference))
-                    {
-                        command = new AddPackage(packageReference.PackageName, packageReference.PackageVersion);
-                    }
+                    command = new AddPackage(packageReference.PackageName, packageReference.PackageVersion);
                 }
             }
         }

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -28,54 +27,78 @@ public static class KernelExtensions
             return packageRestoreContext;
         });
 
-        kernel.AddDirective(i(lazyPackageRestoreContext));
-
-        var poundRDirective = new KernelActionDirective("#r")
-        {
-            KernelCommandType = typeof(AddPackage),
-            Parameters =
-            {
-                new("")
-                {
-                    AllowImplicitName = true,
-                    Required = true
-                }
-            },
-            TryGetKernelCommandAsync = AddPackage.TryParseRDirectiveAsync
-        };
-
-        kernel.AddDirective<AddPackage>(
-            poundRDirective,
-            (command, context) =>
-            {
-                HandleAddPackageReference(
-                    context,
-                    lazyPackageRestoreContext,
-                    new PackageReference(command.PackageName, command.PackageVersion));
-
-                return Task.CompletedTask;
-            });
-
-        // FIX: (UseNugetDirective) remove
-        kernel.KernelInfo.Description = $"""
-                                         {kernel.KernelInfo.Description}
-
-                                         Can load packages from nuget.org or any other nuget feed.
-                                         """;
-
-        var restore = new KernelActionDirective("#!nuget-restore");
-
-        // FIX: (UseNugetDirective) hide this directive or reimplement
-
-        kernel.AddDirective(
-            restore,
-            async (command, context) =>
-            {
-                await context.ScheduleAsync(c => Restore<T>(c, lazyPackageRestoreContext, onResolvePackageReferences));
-            }
-            );
+        AddRDirective();
+        AddIDirective();
+        AddRestoreDirective();
 
         return kernel;
+
+        void AddRDirective()
+        {
+            var poundRDirective = new KernelActionDirective("#r")
+            {
+                Parameters =
+                {
+                    new("")
+                    {
+                        AllowImplicitName = true,
+                        Required = true
+                    }
+                },
+                TryGetKernelCommandAsync = AddPackage.TryParseRDirectiveAsync
+            };
+
+            kernel.AddDirective<AddPackage>(
+                poundRDirective,
+                (command, context) =>
+                {
+                    HandleAddPackageReference(
+                        context,
+                        lazyPackageRestoreContext,
+                        new PackageReference(command.PackageName, command.PackageVersion));
+
+                    return Task.CompletedTask;
+                });
+        }
+
+        void AddIDirective()
+        {
+            var directive = new KernelActionDirective("#i")
+            {
+                Parameters =
+                {
+                    new("")
+                    {
+                        AllowImplicitName = true,
+                        Required = true
+                    }
+                },
+                TryGetKernelCommandAsync = AddPackageSource.TryParseIDirectiveAsync
+            };
+
+            kernel.AddDirective<AddPackageSource>(
+                directive,
+                (command, context) =>
+                {
+                    lazyPackageRestoreContext.Value.TryAddRestoreSource(command.PackageSource);
+                    return Task.CompletedTask;
+                });
+        }
+
+        void AddRestoreDirective()
+        {
+            var directive = new KernelActionDirective("#!nuget-restore");
+
+            // FIX: (UseNugetDirective) hide this directive or reimplement
+
+            kernel.AddDirective(
+                directive,
+                async (command, context) =>
+                {
+                    await context.ScheduleAsync(c => Restore(c, lazyPackageRestoreContext, onResolvePackageReferences));
+                }
+            );
+        }
     }
 
     private static Command i(Lazy<PackageRestoreContext> lazyPackageRestoreContext)

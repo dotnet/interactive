@@ -314,7 +314,11 @@ public abstract partial class Kernel :
     public void AddDirective<TCommand>(KernelActionDirective directive, Func<TCommand, KernelInvocationContext, Task> handler)
         where TCommand : KernelCommand
     {
-        if (directive.KernelCommandType != typeof(TCommand))
+        if (directive.KernelCommandType is null)
+        {
+            directive.KernelCommandType = typeof(TCommand);
+        }
+        else if (directive.KernelCommandType != typeof(TCommand))
         {
             throw new ArgumentException($"{nameof(directive)}.{nameof(KernelActionDirective.KernelCommandType)} must be set to {typeof(TCommand)}.");
         }
