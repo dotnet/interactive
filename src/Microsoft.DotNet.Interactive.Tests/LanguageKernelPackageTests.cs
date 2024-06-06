@@ -83,19 +83,20 @@ public class LanguageKernelPackageTests : LanguageKernelTestBase
             Language.FSharp => new CompositeKernel { new FSharpKernel().UseNugetDirective() }
         };
 
-        var code = $@"
-#r ""nuget:Microsoft.Extensions.Logging, 2.2.0""
-{expression}".Trim();
+        var code = $"""
+                    #r "nuget:Microsoft.Extensions.Logging, 2.2.0"
+                    {expression}
+                    """;
         var command = new SubmitCode(code);
 
         var result = await kernel.SendAsync(command);
 
-        var packageAdded = result.Events
-                                 .Should()
-                                 .ContainSingle<PackageAdded>()
-                                 .Which;
-        packageAdded.PackageReference.PackageName.Should().Be("Microsoft.Extensions.Logging");
-        packageAdded.PackageReference.PackageVersion.Should().Be("2.2.0");
+        result.Events
+              .Should()
+              .ContainSingle<PackageAdded>(
+                  e =>
+                      e.PackageReference.PackageName == "Microsoft.Extensions.Logging" &&
+                      e.PackageReference.PackageVersion == "2.2.0");
     }
 
     [Fact]

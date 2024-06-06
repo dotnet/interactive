@@ -149,18 +149,22 @@ public class SubmissionParser
 
                                 if (valueNode.ChildTokens.Any(t => t is { Kind: TokenKind.Word } and { Text: "nuget" }))
                                 {
-                                    directiveCommand = new DirectiveCommand(directiveNode)
+                                    if (await CreateActionDirectiveCommand(directiveNode, targetKernelName) is { } actionDirectiveCmd)
                                     {
-                                        TargetKernelName = targetKernelName
-                                    };
-
-                                    if (directiveNode.DirectiveNameNode.Text is "#r" or "#i")
-                                    {
-                                        directiveCommand.SchedulingScope = lastCommandScope;
-                                        directiveCommand.TargetKernelName = targetKernelName;
-                                        AddHoistedCommand(directiveCommand);
-                                        nugetRestoreOnKernels.Add(targetKernelName);
+                                        directiveCommand = actionDirectiveCmd;
                                     }
+                                    else
+                                    {
+                                        directiveCommand = new DirectiveCommand(directiveNode)
+                                        {
+                                            TargetKernelName = targetKernelName
+                                        };
+                                    }
+
+                                    directiveCommand.SchedulingScope = lastCommandScope;
+                                    directiveCommand.TargetKernelName = targetKernelName;
+                                    AddHoistedCommand(directiveCommand);
+                                    nugetRestoreOnKernels.Add(targetKernelName);
                                 }
                                 else
                                 {

@@ -25,7 +25,7 @@ public class PackageReference
 
     public static bool TryParse(string value, out PackageReference reference)
     {
-        value = value.Trim();
+        value = value.Trim([' ', '\t', '"']);
 
         if (!value.StartsWith("nuget:"))
         {

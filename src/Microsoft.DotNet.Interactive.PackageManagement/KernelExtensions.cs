@@ -48,23 +48,13 @@ public static class KernelExtensions
             poundRDirective,
             (command, context) =>
             {
-
-
+                HandleAddPackageReference(
+                    context,
+                    lazyPackageRestoreContext,
+                    new PackageReference(command.PackageName, command.PackageVersion));
 
                 return Task.CompletedTask;
             });
-
-
-
-
-
-
-
-
-
-
-
-
 
         // FIX: (UseNugetDirective) remove
         kernel.KernelInfo.Description = $"""
@@ -73,13 +63,17 @@ public static class KernelExtensions
                                          Can load packages from nuget.org or any other nuget feed.
                                          """;
 
-        var restore = new Command("#!nuget-restore")
-        {
-            Handler = CommandHandler.Create((KernelCommandInvocation)(async (_, context) => await context.ScheduleAsync(c => Restore<T>(c, lazyPackageRestoreContext, onResolvePackageReferences)))),
-            IsHidden = true
-        };
+        var restore = new KernelActionDirective("#!nuget-restore");
 
-        kernel.AddDirective(restore);
+        // FIX: (UseNugetDirective) hide this directive or reimplement
+
+        kernel.AddDirective(
+            restore,
+            async (command, context) =>
+            {
+                await context.ScheduleAsync(c => Restore<T>(c, lazyPackageRestoreContext, onResolvePackageReferences));
+            }
+            );
 
         return kernel;
     }
@@ -98,111 +92,66 @@ public static class KernelExtensions
         return iDirective;
     }
 
-    private static Command r(Lazy<PackageRestoreContext> lazyPackageRestoreContext)
+    private static void HandleAddPackageReference(
+        KernelInvocationContext context,
+     Lazy<PackageRestoreContext> packageRestoreContext,
+     PackageReference pkg)
     {
-        var rDirective = new Command("#r")
+        var alreadyGotten = packageRestoreContext.Value.ResolvedPackageReferences
+                                                 .Concat(packageRestoreContext.Value.RequestedPackageReferences)
+                                                 .FirstOrDefault(r => r.PackageName.Equals(pkg.PackageName, StringComparison.OrdinalIgnoreCase));
+
+        if (alreadyGotten is not null && 
+            !string.IsNullOrWhiteSpace(pkg.PackageVersion) && 
+            pkg.PackageVersion != alreadyGotten.PackageVersion)
         {
-            new Argument<PackageReferenceOrFileInfo>(
-                result =>
-                {
-                    var token = result.Tokens
-                        .Select(t => t.Value)
-                        .SingleOrDefault();
-
-                    if (PackageReference.TryParse(token, out var reference))
-                    {
-                        return reference;
-                    }
-
-                    if (token is not null &&
-                        !token.StartsWith("nuget:") &&
-                        !EndsInDirectorySeparator(token))
-                    {
-                        return new FileInfo(token);
-                    }
-
-                    result.ErrorMessage = $"Unable to parse package reference: \"{token}\"";
-
-                    return null;
-                })
+            if (!pkg.IsPackageVersionSpecified || pkg.PackageVersion is "*-*" or "*")
             {
-                Name = "package"
+                // we will reuse the already loaded package since this is a wildcard
+                var added = packageRestoreContext.Value.GetOrAddPackageReference(alreadyGotten.PackageName, alreadyGotten.PackageVersion);
+
+                if (added is null)
+                {
+                    var errorMessage = GenerateErrorMessage(pkg);
+                    context.Fail(context.Command, message: errorMessage);
+                }
             }
-        };
-
-        rDirective.Handler = CommandHandler.Create<PackageReferenceOrFileInfo, KernelInvocationContext>((package, context) => HandleAddPackageReference(package, context, lazyPackageRestoreContext));
-
-        return rDirective;
-
-        Task HandleAddPackageReference(
-            PackageReferenceOrFileInfo package,
-            KernelInvocationContext context, 
-            Lazy<PackageRestoreContext> packageRestoreContext)
-        {
-            if (package?.Value is PackageReference pkg)
+            else
             {
-                var alreadyGotten = packageRestoreContext.Value.ResolvedPackageReferences
-                    .Concat(packageRestoreContext.Value.RequestedPackageReferences)
-                    .FirstOrDefault(r => r.PackageName.Equals(pkg.PackageName, StringComparison.OrdinalIgnoreCase));
+                var errorMessage = GenerateErrorMessage(pkg, alreadyGotten);
+                context.Fail(context.Command, message: errorMessage);
+            }
+        }
+        else
+        {
+            var added = packageRestoreContext.Value.GetOrAddPackageReference(pkg.PackageName, pkg.PackageVersion);
 
-                if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
+            if (added is null)
+            {
+                var errorMessage = GenerateErrorMessage(pkg);
+                context.Fail(context.Command, message: errorMessage);
+            }
+        }
+
+        static string GenerateErrorMessage(
+            PackageReference requested,
+            PackageReference existing = null)
+        {
+            if (existing is not null)
+            {
+                if (!string.IsNullOrEmpty(requested.PackageName))
                 {
-                    if (!pkg.IsPackageVersionSpecified || pkg.PackageVersion is "*-*" or "*")
+                    if (!string.IsNullOrEmpty(requested.PackageVersion))
                     {
-                        // we will reuse the the already loaded since this is a wildcard
-                        var added = packageRestoreContext.Value.GetOrAddPackageReference(alreadyGotten.PackageName, alreadyGotten.PackageVersion);
-
-                        if (added is null)
-                        {
-                            var errorMessage = GenerateErrorMessage(pkg);
-                            context.Fail(context.Command, message: errorMessage);
-                        }
+                        return $"{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.";
                     }
-                    else
-                    {
-                        var errorMessage = GenerateErrorMessage(pkg, alreadyGotten);
-                        context.Fail(context.Command, message: errorMessage);
-                    }
-                }
-                else
-                {
-                    var added = packageRestoreContext.Value.GetOrAddPackageReference(pkg.PackageName, pkg.PackageVersion);
-
-                    if (added is null)
-                    {
-                        var errorMessage = GenerateErrorMessage(pkg);
-                        context.Fail(context.Command, message: errorMessage);
-                    }
-                }
-
-                static string GenerateErrorMessage(
-                    PackageReference requested,
-                    PackageReference existing = null)
-                {
-                    if (existing is not null)
-                    {
-                        if (!string.IsNullOrEmpty(requested.PackageName))
-                        {
-                            if (!string.IsNullOrEmpty(requested.PackageVersion))
-                            {
-                                return $"{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.";
-                            }
-                        }
-                    }
-
-                    return $"Invalid Package specification: '{requested}'";
                 }
             }
 
-            return Task.CompletedTask;
+            return $"Invalid Package specification: '{requested}'";
         }
     }
 
-    private static bool EndsInDirectorySeparator(string path)
-    {
-        return path.Length > 0 && path.EndsWith(Path.DirectorySeparatorChar);
-    }
-    
     private static async Task Restore<T>(KernelInvocationContext context,
         Lazy<PackageRestoreContext> lazyPackageRestoreContext, Func<T, IReadOnlyList<ResolvedPackageReference>, Task> registerResolvedPackageReferences) where T : Kernel
     {
@@ -235,15 +184,15 @@ public static class KernelExtensions
             requestedSources,
             Array.Empty<string>(),
             lazyPackageRestoreContext.Value.ResolvedPackageReferences
-                  .Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase))
-                  .Select(s => $"{s.PackageName}, {s.PackageVersion}")
-                  .OrderBy(s => s)
-                  .ToList(),
+                                     .Where(r => requestedPackages.Contains(r.PackageName, StringComparer.OrdinalIgnoreCase))
+                                     .Select(s => $"{s.PackageName}, {s.PackageVersion}")
+                                     .OrderBy(s => s)
+                                     .ToList(),
             0);
 
         if (result.Succeeded)
         {
-            await registerResolvedPackageReferences(context.HandlingKernel as T ,result.ResolvedReferences);
+            await registerResolvedPackageReferences(context.HandlingKernel as T, result.ResolvedReferences);
             foreach (var resolvedReference in result.ResolvedReferences)
             {
                 context.Publish(new PackageAdded(resolvedReference, context.Command));
