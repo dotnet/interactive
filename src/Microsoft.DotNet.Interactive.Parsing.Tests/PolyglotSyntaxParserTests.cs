@@ -13,8 +13,7 @@ public partial class PolyglotSyntaxParserTests : IDisposable
 
     public PolyglotSyntaxParserTests()
     {
-        // FIX: (PolyglotSyntaxParserTests) put back
-        // _assertionScope = new AssertionScope();
+        _assertionScope = new AssertionScope();
     }
 
     public void Dispose() => _assertionScope?.Dispose();

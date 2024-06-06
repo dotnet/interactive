@@ -19,11 +19,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Parsing;
 public class SubmissionParserTests
 {
     [Theory]
-    [InlineData(Language.CSharp, Language.CSharp)]
-    [InlineData(Language.CSharp, Language.FSharp)]
-    [InlineData(Language.FSharp, Language.CSharp)]
-    [InlineData(Language.FSharp, Language.FSharp)]
-    public async Task Pound_i_is_dispatched_to_the_correct_kernel(Language defaultKernel, Language targetKernel)
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task Pound_i_is_dispatched_to_the_correct_kernel(Language targetKernel)
     {
         var command = new SubmitCode("#i \"nuget: SomeLocation\"", targetKernelName: targetKernel.LanguageName());
 

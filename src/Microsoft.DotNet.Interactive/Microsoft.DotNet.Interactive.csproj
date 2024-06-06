@@ -60,6 +60,10 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\Microsoft.DotNet.Interactive.Documents\Microsoft.DotNet.Interactive.Documents.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Interactive.PackageManagement" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Resources.Designer.cs">
