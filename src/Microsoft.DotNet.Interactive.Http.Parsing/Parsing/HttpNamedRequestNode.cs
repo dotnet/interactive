@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis.Text;
+﻿/*using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,3 +18,4 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
         private HttpResponse Response;
     }
 }
+*/

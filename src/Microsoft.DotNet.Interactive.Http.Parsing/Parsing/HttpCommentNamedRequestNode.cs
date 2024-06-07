@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis.Text;
+﻿#nullable enable
+
+using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,9 +12,9 @@ internal class HttpCommentNamedRequestNode : HttpSyntaxNode
     {
     }
 
-    public HttpCommentNamedRequestNameNode NameNode { get; private set; }
+    public HttpCommentNamedRequestNameNode? NameNode { get; private set; }
 
-    public HttpCommentNamedRequestValueNode ValueNode { get; private set; }
+    public HttpCommentNamedRequestValueNode? ValueNode { get; private set; }
 
     public void Add(HttpCommentNamedRequestNameNode node)
     {
