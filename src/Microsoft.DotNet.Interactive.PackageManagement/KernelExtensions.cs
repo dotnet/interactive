@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -99,20 +97,6 @@ public static class KernelExtensions
                 }
             );
         }
-    }
-
-    private static Command i(Lazy<PackageRestoreContext> lazyPackageRestoreContext)
-    {
-        var iDirective = new Command("#i")
-        {
-            new Argument<string>("source")
-        };
-
-        iDirective.Handler = CommandHandler.Create<string>(source =>
-        {
-            lazyPackageRestoreContext.Value.TryAddRestoreSource(source.Replace("nuget:", ""));
-        });
-        return iDirective;
     }
 
     private static void HandleAddPackageReference(

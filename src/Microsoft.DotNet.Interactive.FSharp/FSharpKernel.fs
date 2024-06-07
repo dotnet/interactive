@@ -432,7 +432,8 @@ type FSharpKernel () as this =
                     sb.AppendFormat("#r @\"{0}\"", assemblyReference) |> ignore
                     sb.Append(Environment.NewLine) |> ignore
 
-        let command = new SubmitCode(sb.ToString(), "fsharp")
+        let command = new SubmitCode(sb.ToString(), this.Name)
+
         this.DeferCommand(command)
 
     interface IKernelCommandHandler<RequestCompletions> with

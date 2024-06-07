@@ -5,7 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reactive.Concurrency;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Pocket;
@@ -216,7 +216,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
     {
         try
         {
-            foreach (ScheduledOperation deferredOperation in GetDeferredOperationsToRunBefore(operation))
+            foreach (ScheduledOperation deferredOperation in GetDeferredOperationsToRunBefore(operation).ToArray())
             {
                 Run(deferredOperation);
             }

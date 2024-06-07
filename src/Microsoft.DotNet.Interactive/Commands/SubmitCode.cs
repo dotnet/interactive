@@ -24,7 +24,6 @@ public class SubmitCode : KernelCommand
         Code = syntaxNode.Text;
         SyntaxNode = syntaxNode;
         DirectiveNode = directiveNode;
-        SchedulingScope = SchedulingScope.Parse(syntaxNode.CommandScope);
 
         if (syntaxNode is DirectiveNode { Kind: DirectiveNodeKind.Action } actionDirectiveNode)
         {

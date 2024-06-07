@@ -56,7 +56,10 @@ public class SubmissionParser
             {
                 if (!string.IsNullOrWhiteSpace(languageNode.Text))
                 {
-                    return new SubmitCode(languageNode, directiveNode);
+                    return new SubmitCode(languageNode, directiveNode)
+                    {
+                        SchedulingScope = submitCode.SchedulingScope
+                    };
                 }
                 else
                 {

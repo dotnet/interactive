@@ -31,9 +31,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests+SubmissionCount</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInvocationContextTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>

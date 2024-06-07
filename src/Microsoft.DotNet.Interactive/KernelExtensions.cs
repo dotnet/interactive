@@ -63,7 +63,7 @@ public static class KernelExtensions
         var root = kernel
             .RecurseWhileNotNull(k => k switch
             {
-                { } kb => kb.ParentKernel,
+                { } => k.ParentKernel,
                 _ => null
             })
             .LastOrDefault();

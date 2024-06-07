@@ -647,14 +647,17 @@ public abstract partial class Kernel :
 
     private async Task<IReadOnlyList<KernelCommand>> GetDeferredCommands(KernelCommand command, string scope)
     {
-        if (command.SchedulingScope is null ||
-            !command.SchedulingScope.Contains(SchedulingScope))
+        if (command.SchedulingScope is null)
+        {
+            return Array.Empty<KernelCommand>();
+        }
+
+        if (!command.SchedulingScope.Contains(SchedulingScope))
         {
             return Array.Empty<KernelCommand>();
         }
 
         var deferredCommands = new List<KernelCommand>();
-
         while (_deferredCommands.TryDequeue(out var kernelCommand))
         {
             var currentInvocationContext = KernelInvocationContext.Current;
