@@ -20,6 +20,8 @@ internal class HttpCommentNode : HttpSyntaxNode
 
     public HttpCommentBodyNode? CommentBodyNode { get; private set; }
 
+    public HttpCommentNamedRequestNode? CommentNamedRequestNode { get; private set; }
+
     public override bool IsSignificant => false;
 
     public void Add(HttpCommentStartNode node)
@@ -41,6 +43,17 @@ internal class HttpCommentNode : HttpSyntaxNode
         }
 
         CommentBodyNode = node;
+        AddInternal(node);
+    }
+
+    public void Add(HttpCommentNamedRequestNode node)
+    {
+        if (CommentNamedRequestNode is not null)
+        {
+            throw new InvalidOperationException($"{nameof(CommentNamedRequestNode)} was already added.");
+        }
+
+        CommentNamedRequestNode = node;
         AddInternal(node);
     }
 }

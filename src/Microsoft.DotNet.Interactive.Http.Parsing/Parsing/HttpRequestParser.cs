@@ -251,7 +251,7 @@ internal class HttpRequestParser
                 and { Text: "@" })
                 {
 
-                } 
+                }
                 else if (CurrentToken?.Kind is HttpTokenKind.Whitespace)
                 {
                     ConsumeCurrentTokenInto(node);
@@ -275,7 +275,7 @@ internal class HttpRequestParser
 
             return node;
         }
-        
+
         private T ParseTrailingWhitespace<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewLine = false) where T : HttpSyntaxNode
         {
             while (MoreTokens())
@@ -634,10 +634,46 @@ internal class HttpRequestParser
             return headersNode;
         }
 
-        private HttpCommentNamedRequestNode ParseCommentNamedRequestNode()
+        private HttpCommentNamedRequestNode? ParseCommentNamedRequestNode()
         {
+            if (!isCommentNamedRequest())
+            {
+                return null;
+            }
             var node = new HttpCommentNamedRequestNode(_sourceText, _syntaxTree);
+            node.Add(ParseCommentNamedRequestNameNode());
+            node.Add(ParseCommentNamedRequestValueNode());
+
             return node;
+        }
+
+        private HttpCommentNamedRequestNameNode ParseCommentNamedRequestNameNode()
+        {
+            var node = new HttpCommentNamedRequestNameNode(_sourceText, _syntaxTree);
+            ConsumeCurrentTokenInto(node);
+            ConsumeCurrentTokenInto(node);
+            ParseTrailingWhitespace(node);
+
+            return node;
+        }
+
+        private HttpCommentNamedRequestValueNode ParseCommentNamedRequestValueNode()
+        {
+            var node = new HttpCommentNamedRequestValueNode(_sourceText, _syntaxTree);
+            ConsumeCurrentTokenInto(node);
+            ParseTrailingWhitespace(node, stopAfterNewLine: true);
+
+            return node;
+
+        }
+
+        private bool isCommentNamedRequest()
+        {
+            return (CurrentToken is { Text: "@" } &&
+                CurrentTokenPlus(1) is { Text: "name" } &&
+                CurrentTokenPlus(2) is { Kind: HttpTokenKind.Whitespace } &&
+                CurrentTokenPlus(3) is { Kind: HttpTokenKind.Word }
+                    );
         }
 
         private HttpHeaderNode ParseHeader()
@@ -765,6 +801,13 @@ internal class HttpRequestParser
                 {
                     commentNode.Add(commentStartNode);
                 }
+
+                /*var commentNamedRequestNode = ParseCommentNamedRequestNode();
+
+                if (commentNamedRequestNode is not null)
+                {
+                    commentNode.Add(commentNamedRequestNode);
+                }*/
 
                 var commentBodyNode = ParseCommentBody();
                 if (commentBodyNode is not null)

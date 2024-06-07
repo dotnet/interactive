@@ -35,9 +35,7 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            result.SyntaxTree.RootNode.ChildNodes.OfType<HttpNamedRequestNode>().Should().HaveCount(1);
-
-            Assert.Fail();
+            result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Should().HaveCount(1);
         }
 
         [Fact]
@@ -61,11 +59,9 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            var namedRequest = result.SyntaxTree.RootNode.ChildNodes.OfType<HttpNamedRequestNode>().Single();
+            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
 
-            namedRequest.Name.Should().Be("login");
-
-            Assert.Fail();
+            namedRequest.ValueNode.Text.Should().Be("login");
         }
     }
 }
