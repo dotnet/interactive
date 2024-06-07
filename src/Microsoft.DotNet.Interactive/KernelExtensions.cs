@@ -92,20 +92,22 @@ public static class KernelExtensions
     public static TKernel UseImportMagicCommand<TKernel>(this TKernel kernel)
         where TKernel : Kernel
     {
-        var fileArg = new Argument<FileInfo>("file").ExistingOnly();
-        var command = new Command("#!import", LocalizationResources.Magics_import_Description())
+        var importDirective = new KernelActionDirective("#!import")
         {
-            fileArg
+            Parameters =
+            {
+                new("")
+                {
+                    AllowImplicitName = true,
+                    Required = true
+                }
+            },
+            TryGetKernelCommandAsync = ImportDocument.TryParseImportDirectiveAsync
         };
 
-        command.SetHandler(async ctx =>
-        {
-            var file = ctx.ParseResult.GetValueForArgument(fileArg);
-            var currentInvocationContext = ctx.GetService<KernelInvocationContext>();
-            await LoadAndRunInteractiveDocument(kernel, file, currentInvocationContext.Command);
-        });
-
-        kernel.AddDirective(command);
+        kernel.AddDirective<ImportDocument>(
+            importDirective,
+            async (command, context) => await LoadAndRunInteractiveDocument(kernel, new FileInfo(command.FilePath)));
 
         return kernel;
     }

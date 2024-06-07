@@ -13,9 +13,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.QuitCommandTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.PackageRestoreContextTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
@@ -26,9 +23,6 @@
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KqlDiscoverabilityKernelTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelTests+SubmissionCount</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInvocationContextTests</FixtureName>
@@ -46,13 +40,7 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.JavaScriptKernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.ImportNotebookTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.HtmlKernelTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.EventRoutingSlipTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.DataExplorerTests</FixtureName>
