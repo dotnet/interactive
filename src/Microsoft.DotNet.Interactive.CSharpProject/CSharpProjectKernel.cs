@@ -276,17 +276,13 @@ public class CSharpProjectKernel :
 
     private static IEnumerable<Diagnostic> GetDiagnostics(string code, CompileResult result)
     {
-        var diagnostics = Enumerable.Empty<SerializableDiagnostic>();
-
         if (result.Features.TryGetValue(nameof(Diagnostics), out var candidateDiagnostics) &&
             candidateDiagnostics is Diagnostics diags)
         {
-            diagnostics = diags;
+            return diags.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
         }
 
-        var finalDiagnostics = diagnostics.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
-
-        return finalDiagnostics;
+        return Enumerable.Empty<Diagnostic>();
     }
 
     private void ThrowIfProjectIsNotOpened()
