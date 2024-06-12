@@ -291,9 +291,17 @@ public class CSharpProjectKernel :
             projectDiagnostics = projectDiags;
         }
 
-        var allDiagnostics = diagnostics.Concat(projectDiagnostics);
+        var uniqueDiagnostics = diagnostics.ToDictionary(d => d.Id, d => d);
 
-        var finalDiagnostics = allDiagnostics.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
+        foreach (var projDiag in projectDiagnostics)
+        {
+            if (!uniqueDiagnostics.ContainsKey(projDiag.Id))
+            {
+                uniqueDiagnostics.Add(projDiag.Id, projDiag);
+            }
+        }
+
+        var finalDiagnostics = uniqueDiagnostics.Values.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
 
         return finalDiagnostics;
     }
