@@ -277,7 +277,6 @@ public class CSharpProjectKernel :
     private static IEnumerable<Diagnostic> GetDiagnostics(string code, CompileResult result)
     {
         var diagnostics = Enumerable.Empty<SerializableDiagnostic>();
-        var projectDiagnostics = Enumerable.Empty<SerializableDiagnostic>();
 
         if (result.Features.TryGetValue(nameof(Diagnostics), out var candidateDiagnostics) &&
             candidateDiagnostics is Diagnostics diags)
@@ -285,23 +284,7 @@ public class CSharpProjectKernel :
             diagnostics = diags;
         }
 
-        if (result.Features.TryGetValue(nameof(ProjectDiagnostics), out var candidateProjectDiagnostics) &&
-            candidateProjectDiagnostics is ProjectDiagnostics projectDiags)
-        {
-            projectDiagnostics = projectDiags;
-        }
-
-        var uniqueDiagnostics = diagnostics.ToDictionary(d => d.Id, d => d);
-
-        foreach (var projDiag in projectDiagnostics)
-        {
-            if (!uniqueDiagnostics.ContainsKey(projDiag.Id))
-            {
-                uniqueDiagnostics.Add(projDiag.Id, projDiag);
-            }
-        }
-
-        var finalDiagnostics = uniqueDiagnostics.Values.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
+        var finalDiagnostics = diagnostics.Select(d => new Diagnostic(new LinePositionSpan(GetLinePositionFromPosition(code, d.Start), GetLinePositionFromPosition(code, d.End)), d.Severity, d.Id, d.Message));
 
         return finalDiagnostics;
     }
