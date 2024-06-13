@@ -401,7 +401,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
         using var kernel = new CompositeKernel();
                 
-        kernel.AddKernelConnector(new ConnectStdIoCommand(new Uri("kernel://test-kernel")));
+        kernel.AddKernelConnector(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
 
         await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --http-port {port}"));
 

@@ -107,25 +107,31 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
 
     private void ScheduledOperationRunLoop()
     {
-        foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
+        try
         {
-            _currentlyRunningTopLevelOperation = operation;
-
-            var executionContext = operation.ExecutionContext;
-
-            try
+            foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
             {
-                ExecutionContext.Run(
-                    executionContext!.CreateCopy(),
-                    _ => RunDeferredOperationsAndThen(operation),
-                    operation);
+                _currentlyRunningTopLevelOperation = operation;
 
-                operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
+                var executionContext = operation.ExecutionContext;
+
+                try
+                {
+                    ExecutionContext.Run(
+                        executionContext!.CreateCopy(),
+                        _ => RunDeferredOperationsAndThen(operation),
+                        operation);
+
+                    operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
+                }
+                catch (Exception e)
+                {
+                    Log.Error("while executing {operation}", e, operation);
+                }
             }
-            catch (Exception e)
-            {
-                Log.Error("while executing {operation}", e, operation);
-            }
+        }
+        catch (OperationCanceledException)
+        {
         }
     }
 

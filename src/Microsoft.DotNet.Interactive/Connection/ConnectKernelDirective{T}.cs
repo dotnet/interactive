@@ -1,33 +1,40 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Threading.Tasks;
-
 #nullable enable
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
+
 namespace Microsoft.DotNet.Interactive.Connection;
 
 /// <summary>
 /// Defines a magic command that can be used to connect a subkernel dynamically.
 /// </summary>
-public abstract class ConnectKernelCommand : Command
+public abstract class ConnectKernelDirective<TCommand> : KernelActionDirective
+    where TCommand : ConnectKernelCommand
 {
-    protected ConnectKernelCommand(
+    protected ConnectKernelDirective(
         string name,
         string description) :
-        base(name, description)
+        base(name)
     {
-        AddOption(KernelNameOption);
+        Description = description;
+        Parameters.Add(KernelNameParameter);
     }
 
-    public Option<string> KernelNameOption = new(
-        "--kernel-name",
-        "The name of the subkernel to be added")
+    protected KernelDirectiveParameter KernelNameParameter = new("--kernel-name")
     {
-        IsRequired = true
+        Description = "The name of the subkernel to be added",
+        Required = true
     };
+
+    protected void AddOption(KernelDirectiveParameter parameter)
+    {
+        // FIX: (AddOption) inline and remove this method
+        Parameters.Add(parameter);
+    }
 
     /// <summary>
     /// Description used for the kernel connected using this command.
@@ -37,9 +44,10 @@ public abstract class ConnectKernelCommand : Command
     /// <summary>
     /// Creates a kernel instance when this connection command is invoked.
     /// </summary>
+    /// <param name="connectCommand">A <see cref="KernelCommand"/> sent to connect one or more new kernels.</param>
     /// <param name="context">The <see cref="KernelInvocationContext"/> for the current command.</param>
     /// <returns>A new <see cref="Kernel"/> instance to be added to the <see cref="CompositeKernel"/>.</returns>
     public abstract Task<IEnumerable<Kernel>> ConnectKernelsAsync(
-        KernelInvocationContext context,
-        InvocationContext commandLineContext);
+        TCommand connectCommand,
+        KernelInvocationContext context);
 }

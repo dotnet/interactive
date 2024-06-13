@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Mermaid;
 
-public class MermaidKernel : Kernel, 
+public class MermaidKernel : Kernel,
                              IKernelCommandHandler<SubmitCode>
 {
     private ChooseMermaidKernelDirective? _chooseKernelDirective;
@@ -17,38 +17,18 @@ public class MermaidKernel : Kernel,
         KernelInfo.LanguageName = "Mermaid";
         KernelInfo.Description = """
                                  This Kernel uses the Mermaid library to render diagrams. 
-                                 It supports the following diagrams types:
-                                  - Flowchart
-                                 - Sequence Diagram
-                                 - Class Diagram
-                                 - State Diagram
-                                 - Entity Relationship Diagram
-                                 - User Journey
-                                 - Gantt
-                                 - Pie Chart
-                                 - Quadrant Chart
-                                 - Requirement Diagram
-                                 - Gitgraph (Git) Diagram
-                                 - C4 Diagram
-                                 - Mindmap
-                                 - Timeline
-                                 - Zenuml
-                                 - Sankey
-                                 - XYChart
+                                 
+                                 For more information about Mermaid, see https://mermaid.js.org/intro.
                                  """;
     }
 
-    Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
+    Task IKernelCommandHandler<SubmitCode>.HandleAsync(
+        SubmitCode command,
+        KernelInvocationContext context)
     {
-        string? width = null;
-        string? height = null;
-        string? background = null;
-        if (ChooseKernelDirective is ChooseMermaidKernelDirective chooser)
-        {
-            width = command.KernelChooserParseResult?.GetValueForOption(chooser.WidthOption);
-            height = command.KernelChooserParseResult?.GetValueForOption(chooser.HeightOption);
-            background = command.KernelChooserParseResult?.GetValueForOption(chooser.BackgroundOption);
-        }
+        command.Parameters.TryGetValue("--display-width", out var width);
+        command.Parameters.TryGetValue("--display-height", out var height);
+        command.Parameters.TryGetValue("--display-background-color", out var background);
 
         var markdown = new MermaidMarkdown(command.Code)
         {
@@ -58,15 +38,33 @@ public class MermaidKernel : Kernel,
         };
 
         var formattedValues = FormattedValue.CreateManyFromObject(markdown);
-        
+
         context.Publish(
             new DisplayedValueProduced(
                 markdown,
                 command,
                 formattedValues));
-        
+
         return Task.CompletedTask;
     }
 
-    public override ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new ChooseMermaidKernelDirective(this);
+    public override KernelSpecifierDirective CreateKernelSpecifierDirective()
+    {
+        var directive = base.CreateKernelSpecifierDirective();
+
+
+        directive.Parameters.Add(new(
+                                     "--display-width",
+                                     description: "Specify width for the display."));
+
+        directive.Parameters.Add(new(
+                                     "--display-height",
+                                     description: "Specify height for the display."));
+
+        directive.Parameters.Add(new(
+                                     "--display-background-color",
+                                     description: "Specify background color for the display."));
+
+        return directive;
+    }
 }

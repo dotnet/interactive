@@ -43,7 +43,7 @@ public partial class CompletionTests
             string expected)
         {
             var kernel = CreateKernel();
-            kernel.AddKernelConnector(new ConnectSignalRCommand());
+            kernel.AddKernelConnector(new ConnectSignalRDirective());
 
             var completions = await markupCode
                 .ParseMarkupCode()
@@ -78,7 +78,7 @@ public partial class CompletionTests
             fakeKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
                 
             kernel.Add(fakeKernel);
-            kernel.AddKernelConnector(new ConnectSignalRCommand());
+            kernel.AddKernelConnector(new ConnectSignalRDirective());
 
             var completions = await markupCode
                 .ParseMarkupCode()
@@ -175,7 +175,7 @@ public partial class CompletionTests
         public async Task Inner_symbol_completions_do_not_include_top_level_symbols(string markupCode)
         {
             var kernel = CreateCompositeKernel();
-            kernel.AddKernelConnector(new ConnectSignalRCommand());
+            kernel.AddKernelConnector(new ConnectSignalRDirective());
 
             var completions = await markupCode
                 .ParseMarkupCode()

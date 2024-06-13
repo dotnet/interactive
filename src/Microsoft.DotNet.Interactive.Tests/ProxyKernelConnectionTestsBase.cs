@@ -107,10 +107,12 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
 
         connectResults.Events.Should().NotContainErrors();
 
-        var codeSubmissionForRemoteKernel = new SubmitCode($@"
-#!{localKernelName}
-var x = 1 + 1;
-x.Display(""text/plain"");");
+        var codeSubmissionForRemoteKernel = new SubmitCode(
+            $"""
+             #!{localKernelName}
+             var x = 1 + 1;
+             x.Display("text/plain");
+             """);
 
         var submissionResults = await localCompositeKernel.SendAsync(codeSubmissionForRemoteKernel);
 

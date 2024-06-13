@@ -19,7 +19,7 @@ public class MsSqlKernelExtension
 
             var sqlToolPath = Path.Combine(Paths.DotnetToolsPath, sqlToolName);
             compositeKernel
-                .AddKernelConnector(new ConnectMsSqlCommand(sqlToolPath));
+                .AddKernelConnector(new ConnectMsSqlDirective(sqlToolPath));
 
             compositeKernel
                 .SubmissionParser

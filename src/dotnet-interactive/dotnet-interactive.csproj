@@ -158,10 +158,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Http\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <LiveUnitTestingTestDependency Include="$(OutputPath)" />
   </ItemGroup>
 

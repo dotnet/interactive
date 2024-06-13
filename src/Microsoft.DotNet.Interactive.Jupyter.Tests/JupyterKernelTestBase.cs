@@ -43,7 +43,7 @@ public abstract class JupyterKernelTestBase : IDisposable
         var kernel = new CompositeKernel { csharpKernel };
         kernel.DefaultKernelName = csharpKernel.Name;
 
-        var jupyterKernelCommand = new ConnectJupyterKernelCommand();
+        var jupyterKernelCommand = new ConnectJupyterKernelDirective();
 
         foreach (var options in optionsList) 
         {

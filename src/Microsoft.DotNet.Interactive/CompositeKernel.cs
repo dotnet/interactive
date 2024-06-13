@@ -5,9 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,7 +23,7 @@ public sealed class CompositeKernel :
 {
     private readonly KernelCollection _childKernels;
     private string _defaultKernelName;
-    private Command _connectDirective;
+    private KernelActionDirective _rootConnectDirective;
     private KernelHost _host;
     private readonly ConcurrentDictionary<Type, string> _defaultKernelNamesByCommandType = new();
 
@@ -267,42 +264,54 @@ public sealed class CompositeKernel :
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public void AddKernelConnector(ConnectKernelCommand connectionCommand)
+    public void AddKernelConnector<T>(ConnectKernelDirective<T> connectDirective)
+        where T : ConnectKernelCommand
     {
-        if (_connectDirective is null)
+        if (_rootConnectDirective is null)
         {
-            _connectDirective = new Command(
-                "#!connect",
-                "Connects additional subkernels");
+            _rootConnectDirective = new("#!connect")
+            {
+                Description = "Connects additional subkernels"
+            };
 
-            AddDirective(_connectDirective);
+            KernelInfo.SupportedDirectives.Add(_rootConnectDirective);
         }
 
-        connectionCommand.Handler = CommandHandler.Create<KernelInvocationContext, InvocationContext>(
-            async (context, commandLineContext) => await ConnectKernel(connectionCommand, context, commandLineContext));
+        _rootConnectDirective.Subcommands.Add(connectDirective);
 
-        _connectDirective.Add(connectionCommand);
+        AddDirective<T>(connectDirective,
+                     async (command, context) =>
+                     {
+                         await ConnectKernel(
+                             command,
+                             connectDirective,
+                             context);
+                     });
 
         SubmissionParser.ResetParser();
     }
 
-    private async Task ConnectKernel(ConnectKernelCommand connectionCommand, KernelInvocationContext context, InvocationContext commandLineContext)
+    private async Task ConnectKernel<TCommand>(
+        TCommand command,
+        ConnectKernelDirective<TCommand> connectDirective,
+        KernelInvocationContext context) 
+        where TCommand : ConnectKernelCommand
     {
-        var connectedKernels = await connectionCommand.ConnectKernelsAsync(context, commandLineContext);
+        var connectedKernels = await connectDirective.ConnectKernelsAsync(
+                                   command,
+                                   context);
+
         foreach (var connectedKernel in connectedKernels)
         {
-
             Add(connectedKernel);
 
-            // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
-
             var chooseKernelDirective =
-                Directives.OfType<ChooseKernelDirective>()
-                          .Single(d => d.Kernel == connectedKernel);
+                KernelInfo.SupportedDirectives.OfType<KernelSpecifierDirective>()
+                          .Single(d => d.KernelName == connectedKernel.Name);
 
-            if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
+            if (!string.IsNullOrWhiteSpace(connectDirective.ConnectedKernelDescription))
             {
-                chooseKernelDirective.Description = connectionCommand.ConnectedKernelDescription;
+                chooseKernelDirective.Description = connectDirective.ConnectedKernelDescription;
             }
 
             chooseKernelDirective.Description += " (Connected kernel)";
@@ -315,7 +324,7 @@ public sealed class CompositeKernel :
 
     internal void SetHost(KernelHost host)
     {
-        if (_host is { })
+        if (_host is not null)
         {
             throw new InvalidOperationException("Host cannot be changed");
         }

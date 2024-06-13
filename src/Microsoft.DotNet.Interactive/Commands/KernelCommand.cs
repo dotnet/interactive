@@ -66,6 +66,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         }
     }
 
+    [JsonInclude]
     public string TargetKernelName { get; internal set; }
 
     internal static KernelCommand None => new NoCommand();

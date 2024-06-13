@@ -17,6 +17,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Directives;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
@@ -295,7 +296,7 @@ public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
 
     public TestJupyterConnectionOptions(IJupyterKernelConnectionOptions optionsToTest, string kernelSpecName, bool allowPlayback = false)
     {
-        if (optionsToTest == null)
+        if (optionsToTest is null)
         {
             throw new ArgumentNullException(nameof(optionsToTest));
         }
@@ -306,7 +307,7 @@ public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
 
     public TestJupyterConnectionOptions(TestJupyterConnection connection)
     {
-        if (connection == null)
+        if (connection is null)
         {
             throw new ArgumentNullException(nameof(connection));
         }
@@ -336,22 +337,22 @@ public class TestJupyterConnectionOptions : IJupyterKernelConnectionOptions
 
     public TestJupyterConnection Connection => _connection;
 
-    public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
+    public IJupyterConnection GetConnection(ConnectJupyterKernel connectCommand)
     {
-        if (_testOptions != null)
+        if (_testOptions is not null)
         {
-            _connection.Attach(_testOptions.GetConnection(connectionOptionsParseResult));
+            _connection.Attach(_testOptions.GetConnection(connectCommand));
         }
 
         return _connection;
     }
 
-    public IReadOnlyCollection<Option> GetOptions()
+    public IReadOnlyCollection<KernelDirectiveParameter> GetParameters()
     {
-        List<Option> options = new();
-        if (_testOptions != null)
+        List<KernelDirectiveParameter> options = new();
+        if (_testOptions is not null)
         {
-            options.AddRange(_testOptions.GetOptions());
+            options.AddRange(_testOptions.GetParameters());
         }
 
         return options;

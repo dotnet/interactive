@@ -112,7 +112,7 @@ public class SQLiteKernel :
 
     public static void AddSQLiteKernelConnectorTo(CompositeKernel kernel)
     {
-        kernel.AddKernelConnector(new ConnectSQLiteCommand());
+        kernel.AddKernelConnector(new ConnectSQLiteDirective());
 
         KernelInvocationContext.Current?.Display(
             new HtmlString(@"<details><summary>Query SQLite databases.</summary>

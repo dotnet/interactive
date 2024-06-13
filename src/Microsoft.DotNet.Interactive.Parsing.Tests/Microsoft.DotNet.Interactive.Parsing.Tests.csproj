@@ -19,12 +19,16 @@
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive\KernelCommandInfo.cs" Link="KernelCommandInfo.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\KernelInfo.cs" Link="KernelInfo.cs" LinkBase="Parsing" />
-
+    
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelActionDirective.cs" Link="KernelActionDirective.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirective.cs" Link="KernelDirective.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirectiveCompletionContext.cs" Link="KernelDirectiveCompletionContext.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirectiveParameter.cs" Link="KernelDirectiveParameter.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelSpecifierDirective.cs" Link="KernelSpecifierDirective.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\NamedSymbolCollection{T}.cs" Link="NamedSymbolCollection{T}.cs" LinkBase="Parsing" />
+
+    <Compile Include="..\Microsoft.DotNet.Interactive\Events\CompletionItem.cs" Link="CompletionItem.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Events\InsertTextFormat.cs" Link="InsertTextFormat.cs" LinkBase="Parsing" />
 
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveBindingDelegate.cs" Link="DirectiveBindingDelegate.cs" LinkBase="Parsing" />

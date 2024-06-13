@@ -2,30 +2,29 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.SQLite;
 
-public class ConnectSQLiteCommand : ConnectKernelCommand
+public class ConnectSQLiteDirective : ConnectKernelDirective<ConnectSQLiteKernel>
 {
-    public ConnectSQLiteCommand()
+    public ConnectSQLiteDirective()
         : base("sqlite", "Connects to a SQLite database")
     {
-        Add(ConnectionStringArgument);
+        AddOption(ConnectionStringParameter);
     }
 
-    public Argument<string> ConnectionStringArgument { get; } =
+    public KernelDirectiveParameter ConnectionStringParameter { get; } =
         new("connectionString", "The connection string used to connect to the database");
 
     public override Task<IEnumerable<Kernel>> ConnectKernelsAsync(
-        KernelInvocationContext context,
-        InvocationContext commandLineContext)
+        ConnectSQLiteKernel connectCommand,
+        KernelInvocationContext context)
     {
-        var connectionString = commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument);
-        var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+        var connectionString = connectCommand.ConnectionString;
+        var localName = connectCommand.ConnectedKernelName;
         var kernel = new SQLiteKernel($"sql-{localName}", connectionString);
         return Task.FromResult<IEnumerable<Kernel>>(new[] { kernel });
     }

@@ -3,54 +3,52 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
-public class ConnectMsSqlCommand : ConnectKernelCommand
+public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
 {
     private readonly string ResolvedToolsServicePath;
 
-    public ConnectMsSqlCommand(string resolvedToolsServicePath)
+    public ConnectMsSqlDirective(string resolvedToolsServicePath)
         : base("mssql", "Connects to a Microsoft SQL Server database")
     {
         ResolvedToolsServicePath = resolvedToolsServicePath;
-        Add(ConnectionStringArgument);
-        Add(CreateDbContextOption);
+        AddOption(ConnectionStringParameter);
+        AddOption(CreateDbContextParameter);
     }
 
-    private static Option<bool> CreateDbContextOption { get; } =
+    private static KernelDirectiveParameter CreateDbContextParameter { get; } =
         new("--create-dbcontext",
             "Scaffold a DbContext in the C# kernel.");
 
-    private Argument<MsSqlConnectionString> ConnectionStringArgument { get; } =
+    private KernelDirectiveParameter ConnectionStringParameter { get; } =
         new("connectionString",
-            description: "The connection string used to connect to the database",
-            parse: s => new(s.Tokens.Single().Value));
+            description: "The connection string used to connect to the database");
 
     public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
-        KernelInvocationContext context,
-        InvocationContext commandLineContext)
+        ConnectMsSqlKernel connectCommand,
+        KernelInvocationContext context)
     {
         var connector = new MsSqlKernelConnector(
-            commandLineContext.ParseResult.GetValueForOption(CreateDbContextOption),
-            commandLineContext.ParseResult.GetValueForArgument(ConnectionStringArgument).Value);
+            connectCommand.CreateDbContext,
+            connectCommand.ConnectionString);
+
         connector.PathToService = ResolvedToolsServicePath;
 
-        var localName = commandLineContext.ParseResult.GetValueForOption(KernelNameOption);
+        var localName = connectCommand.ConnectedKernelName;
 
         var found = context?.HandlingKernel?.RootKernel.FindKernelByName($"sql-{localName}") is not null;
 
         if (found)
         {
             throw new InvalidOperationException(
-                $"A kernel with name {localName} is already present. Use a different value for the --{KernelNameOption.Name} option.");
+                $"A kernel with name {localName} is already present. Use a different value for the {KernelNameParameter.Name} parameter.");
         }
 
         var kernel = await connector.CreateKernelAsync(localName);
@@ -60,7 +58,7 @@ public class ConnectMsSqlCommand : ConnectKernelCommand
             await InitializeDbContextAsync(localName, connector, context);
         }
 
-        return new []{kernel};
+        return new[] { kernel };
     }
 
     private async Task InitializeDbContextAsync(string kernelName, MsSqlKernelConnector options, KernelInvocationContext context)

@@ -5,9 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
@@ -41,8 +44,6 @@ public class ConnectDirectiveTests : IDisposable
             .Should()
             .NotContain(c => c.Name == "#!connect");
     }
-
-
 
     [Fact]
     public async Task When_a_kernel_is_connected_then_information_about_it_is_displayed()
@@ -115,7 +116,7 @@ hello!
         using var compositeKernel = new CompositeKernel();
 
         compositeKernel.AddKernelConnector(
-            new ConnectFakeKernelCommand("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
+            new ConnectFakeKernelDirective("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
 
         await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake-kernel");
 
@@ -139,7 +140,7 @@ hello!
         using var compositeKernel = new CompositeKernel();
 
         compositeKernel.AddKernelConnector(
-            new ConnectFakeKernelCommand("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
+            new ConnectFakeKernelDirective("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
 
         await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake1");
         await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake2");
@@ -156,48 +157,44 @@ hello!
         var compositeKernel = new CompositeKernel();
 
         compositeKernel.AddKernelConnector(
-            new ConnectFakeKernelCommand("fake", "Connects the fake kernel", _ => Task.FromResult<Kernel>(fakeKernel)));
+            new ConnectFakeKernelDirective("fake", "Connects the fake kernel", _ => Task.FromResult<Kernel>(fakeKernel)));
 
         return compositeKernel;
     }
 
-    public class ConnectFakeKernelCommand : ConnectKernelCommand
+    public class ConnectFakeKernelDirective : ConnectKernelDirective<ConnectFakeKernel>
     {
         private readonly Func<string, Task<Kernel>> _createKernel;
 
-        public ConnectFakeKernelCommand(
+        public ConnectFakeKernelDirective(
             string name,
             string description,
             Func<string, Task<Kernel>> createKernel) : base(name, description)
-
         {
-            AddOption(FakenessLevelOption);
-
+            KernelCommandType = typeof(ConnectFakeKernel);
+            Parameters.Add(FakenessLevelParameter);
             ConnectedKernelDescription = description;
 
             _createKernel = createKernel;
         }
 
-        public Option<int> FakenessLevelOption { get; } =
+        public KernelDirectiveParameter FakenessLevelParameter { get; } =
             new("--fakeness-level");
 
         public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
-            KernelInvocationContext context,
-            InvocationContext commandLineContext)
+            ConnectFakeKernel command,
+            KernelInvocationContext context)
         {
-            var connector = new FakeKernelConnector();
-            connector.CreateKernel = _createKernel;
-            var kernel = await connector.CreateKernelAsync(commandLineContext.ParseResult.GetValueForOption(KernelNameOption));
+            var kernel = await _createKernel(command.ConnectedKernelName);
+
             return new[] { kernel };
         }
     }
-}
 
-public class FakeKernelConnector 
-{
-    public int FakenessLevel { get; set; }
-
-    public Func<string, Task<Kernel>> CreateKernel { get; set; }
-
-    public Task<Kernel> CreateKernelAsync(string kernelName) => CreateKernel(kernelName);
+    public class ConnectFakeKernel : ConnectKernelCommand
+    {
+        public ConnectFakeKernel(string kernelName) : base(kernelName)
+        {
+        }
+    }
 }

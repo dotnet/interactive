@@ -36,6 +36,8 @@ public abstract partial class KernelDirective
     }
 
     public string Name { get; init; }
+    
+    public string? Description { get; set; }
 
     public ICollection<KernelDirectiveParameter> Parameters => _parameters;
 

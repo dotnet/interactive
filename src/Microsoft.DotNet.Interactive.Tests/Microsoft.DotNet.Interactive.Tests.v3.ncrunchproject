@@ -46,9 +46,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.DataExplorerTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.ConnectDirectiveTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.CancelCommandTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>

@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-public class DirectiveHelpBuilder : HelpBuilder
+internal class DirectiveHelpBuilder : HelpBuilder
 {
     private readonly string _rootCommandName;
     private readonly Dictionary<Symbol, string> _directiveHelp = new();

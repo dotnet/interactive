@@ -14,6 +14,7 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Tags;
 using Xunit;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
@@ -124,18 +125,18 @@ public class JupyterKernelTests : JupyterKernelTestBase
     {
         var specs = new List<KernelSpec>
         {
-            new KernelSpec() { Name = "testKernelSpec", DisplayName = "Test Kernel Spec", Language = "testLanguage" },
-            new KernelSpec() { Name = "sampleSpec", DisplayName = "Sample Spec", Language = "sampleLanguage" }
+            new() { Name = "testKernelSpec", DisplayName = "Test Kernel Spec", Language = "testLanguage" },
+            new() { Name = "sampleSpec", DisplayName = "Sample Spec", Language = "sampleLanguage" }
         };
 
         var options = new TestJupyterConnectionOptions(new TestJupyterConnection(new TestJupyterKernelConnection(null), specs));
-        var jupyterKernelCommand = new ConnectJupyterKernelCommand();
+        var jupyterKernelCommand = new ConnectJupyterKernelDirective();
         jupyterKernelCommand.AddConnectionOptions(options);
 
-        var kernelSpecCompletions = jupyterKernelCommand.KernelSpecName.GetCompletions();
+        var kernelSpecCompletions = jupyterKernelCommand.KernelSpecNameParameter.GetCompletions();
         kernelSpecCompletions
             .Should()
-            .BeEquivalentTo(specs.Select(s => new System.CommandLine.Completions.CompletionItem(s.Name)));
+            .BeEquivalentTo(specs.Select(s => new CompletionItem(s.Name, WellKnownTags.Parameter)));
     }
 
     [Fact]
