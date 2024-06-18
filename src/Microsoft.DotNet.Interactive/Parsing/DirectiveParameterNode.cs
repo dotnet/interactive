@@ -42,7 +42,8 @@ internal class DirectiveParameterNode : SyntaxNode
         
         if (NameNode is { Text: { } parameterName } nameNode)
         {
-            if (Parent is DirectiveNode directiveNode && directiveNode.TryGetDirective(out var directive))
+            if (Parent is DirectiveNode directiveNode && 
+                directiveNode.TryGetDirective(out var directive))
             {
                 if (directive.TryGetParameter(parameterName, out var option))
                 {

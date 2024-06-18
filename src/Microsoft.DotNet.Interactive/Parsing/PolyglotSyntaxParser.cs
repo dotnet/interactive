@@ -72,7 +72,7 @@ internal class PolyglotSyntaxParser
     {
         if (IsAtStartOfDirective())
         {
-            var directiveNameNode = ParseDirectiveName();
+            var directiveNameNode = ParseParameterName();
 
             var targetKernelName = _currentKernelName ?? _compositeKernelInfo?.LocalName;
 
@@ -130,13 +130,14 @@ internal class PolyglotSyntaxParser
                         directiveNode.Add(namedParameterNode);
                     }
                 }
-                else if (CurrentToken is { Kind: TokenKind.Word } word &&
-                         _currentlyScopedDirective is KernelActionDirective actionDirective &&
-                         actionDirective.TryGetSubcommand(word.Text, out var subcommand))
+                else if (IsAtStartOfSubcommand(out var subcommand, out var numberOfTokensToConsume))
                 {
                     _currentlyScopedDirective = subcommand;
                     var subcommandNode = new DirectiveSubcommandNode(_sourceText, _syntaxTree);
-                    ConsumeCurrentTokenInto(subcommandNode);
+                    while (numberOfTokensToConsume -- > 0)
+                    {
+                        ConsumeCurrentTokenInto(subcommandNode);
+                    }
                     ParseTrailingWhitespace(subcommandNode);
                     directiveNode.Add(subcommandNode);
                 }
@@ -166,7 +167,7 @@ internal class PolyglotSyntaxParser
 
         return null;
 
-        DirectiveNameNode ParseDirectiveName()
+        DirectiveNameNode ParseParameterName()
         {
             var directiveNameNode = new DirectiveNameNode(_sourceText, _syntaxTree);
 
@@ -314,7 +315,7 @@ internal class PolyglotSyntaxParser
 
                         ConsumeCurrentTokenInto(node);
 
-                        if (quoteCount == 2)
+                        if (quoteCount is 2)
                         {
                             break;
                         }
@@ -416,6 +417,49 @@ internal class PolyglotSyntaxParser
                 return null;
             }
         }
+    }
+
+    private bool IsAtStartOfSubcommand(out KernelActionDirective? subcommand, out int numberOfTokensToConsume)
+    {
+        if (CurrentToken is { Kind: TokenKind.Word } word &&
+            _currentlyScopedDirective is KernelActionDirective actionDirective)
+        {
+            if (actionDirective.TryGetSubcommand(word.Text, out subcommand))
+            {
+                numberOfTokensToConsume = 1;
+                return true;
+            }
+
+            var tokens = new List<SyntaxToken> { word };
+            while (_tokens!.Count - _currentTokenIndex > tokens.Count)
+            {
+                var nextToken = CurrentTokenPlus(tokens.Count);
+
+                if (nextToken is null or { Kind: TokenKind.Whitespace } or { Kind: TokenKind.NewLine })
+                {
+                    break;
+                }
+
+                if (nextToken is { Kind: TokenKind.Punctuation, Text: not "-" and not "_" })
+                {
+                    break;
+                }
+
+                tokens.Add(nextToken);
+
+                var candidateSubcommand = _sourceText.ToString(new(word.Span.Start, tokens[^1].Span.End - word.Span.Start));
+
+                if (actionDirective.TryGetSubcommand(candidateSubcommand, out subcommand))
+                {
+                    numberOfTokensToConsume = tokens.Count;
+                    return true;
+                }
+            }
+        }
+
+        subcommand = null;
+        numberOfTokensToConsume = 0;
+        return false;
     }
 
     private bool IsAtStartOfParameterName() =>

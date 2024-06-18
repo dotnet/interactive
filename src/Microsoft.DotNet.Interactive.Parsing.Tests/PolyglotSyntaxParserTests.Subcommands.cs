@@ -76,7 +76,7 @@ public partial class PolyglotSyntaxParserTests
         }
 
         [Fact]
-        public void Parameters_cannot_appear_after_subcommands()
+        public void Parameters_must_appear_after_subcommands()
         {
             var markupCode = """
                 #!test --opt arg [|one|]
@@ -113,12 +113,16 @@ public partial class PolyglotSyntaxParserTests
                 .Be(span.End);
         }
 
-        [Fact]
-        public void Parameters_defined_on_parent_command_are_valid_on_subcommand()
+        [Theory]
+        [InlineData("""
+                #!connect mssql --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false" --kernel-name sql-adventureworks 
+                """)]
+        [InlineData("""
+                #!connect mssql  --kernel-name sql-adventureworks  --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false"
+                """)]
+        public void Parameters_defined_on_parent_command_are_valid_on_subcommand(string code)
         {
-            var tree = Parse("""
-                #!connect mssql  --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false" --kernel-name sql-adventureworks 
-                """);
+            var tree = Parse(code);
 
             _output.WriteLine(tree.RootNode.Diagram());
 
@@ -126,6 +130,47 @@ public partial class PolyglotSyntaxParserTests
                 .Should()
                 .ContainSingle<DirectiveParameterNameNode>(where: node => node.Text == "--kernel-name");
 
+            tree.RootNode.GetDiagnostics().Should().BeEmpty();
+        }
+
+        [Theory]
+        [InlineData("sub-command")]
+        [InlineData("sub_command")]
+        [InlineData("sub_com-mand")]
+        public void Subcommands_can_contain_hyphens_and_underscores(string subcommandName)
+        {
+            var tree = Parse($"""
+                             #!test {subcommandName} --opt 123
+                             """, new PolyglotParserConfiguration("csharp")
+            {
+                KernelInfos =
+                {
+                    new("csharp")
+                    {
+                        SupportedDirectives =
+                        {
+                            new KernelActionDirective("#!test")
+                            {
+                                Subcommands =
+                                {
+                                    new(subcommandName)
+                                    {
+                                        Parameters =
+                                        {
+                                            new("--opt")
+                                        }
+                                    }
+                                },
+                            }
+                        }
+                    }
+                }
+            });
+
+            tree.RootNode
+                .DescendantNodesAndTokens().Should().ContainSingle<DirectiveSubcommandNode>()
+                .Which
+                .Text.Should().Be(subcommandName);
             tree.RootNode.GetDiagnostics().Should().BeEmpty();
         }
 

@@ -38,7 +38,6 @@ public class PolyglotParserConfigurationTests
                 {
                     SupportedDirectives =
                     {
-                        new KernelActionDirective("#!sql"),
                         new KernelSpecifierDirective("#!kql", "kql"),
                         new KernelSpecifierDirective("#!csharp", "csharp"),
                         new KernelSpecifierDirective("#!fsharp", "fsharp"),
@@ -47,6 +46,8 @@ public class PolyglotParserConfigurationTests
                         new KernelSpecifierDirective("#!value", "value"),
                         new KernelSpecifierDirective("#!mermaid", "mermaid"),
                         new KernelSpecifierDirective("#!http", "http"),
+                        
+                        new KernelActionDirective("#!sql"),
                         new KernelActionDirective("#!lsmagic"),
                         new KernelActionDirective("#!markdown"),
                         new KernelActionDirective("#!time"),
@@ -66,8 +67,35 @@ public class PolyglotParserConfigurationTests
                             },
                             Subcommands =
                             {
-                                new KernelActionDirective("stdio"),
-                                new KernelActionDirective("signalr"),
+                                new KernelActionDirective("named-pipe")
+                                {
+                                    Parameters =
+                                    {
+                                        new("--pipe-name")
+                                        {
+                                            Required = true
+                                        }
+                                    }
+                                },
+                                new KernelActionDirective("stdio")
+                                {
+                                    Parameters =
+                                    {
+                                        new("--working-directory"),
+                                        new("--command"),
+                                        new("--kernel-host")
+                                    }
+                                },
+                                new KernelActionDirective("signalr")
+                                {
+                                    Parameters =
+                                    {
+                                        new("--hub-url")
+                                        {
+                                            Required = true
+                                        }
+                                    }
+                                },
                                 new KernelActionDirective("jupyter"),
                                 new KernelActionDirective("mssql")
                                 {
