@@ -27,8 +27,8 @@
    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
    <PackageReference Include="Humanizer" Version="2.14.1" />
-   <PackageReference Include="Azure.Identity" Version="1.11.0" />
-   <PackageReference Include="Microsoft.Identity.Client" Version="4.60.3" />
+   <PackageReference Include="Azure.Identity" Version="1.11.4" />
+   <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.13" />
    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
      <PrivateAssets>all</PrivateAssets>
