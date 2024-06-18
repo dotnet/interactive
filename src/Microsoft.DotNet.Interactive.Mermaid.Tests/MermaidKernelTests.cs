@@ -172,6 +172,5 @@ public class MermaidKernelTests
             .Attributes["style"].Value;
 
         style.Should().Be(" width:200px;  height:250px; ");
-
     }
 }

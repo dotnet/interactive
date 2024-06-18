@@ -2,20 +2,24 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
 public class SubmitCode : KernelCommand
 {
+    private Dictionary<string, string> _kernelSpecifierParameters;
+
     public SubmitCode(
         string code,
-        string targetKernelName = null) 
+        string targetKernelName = null)
         : base(targetKernelName)
     {
         Code = code ?? throw new ArgumentNullException(nameof(code));
     }
-      
+
     internal SubmitCode(
         TopLevelSyntaxNode syntaxNode,
         DirectiveNode directiveNode = null)
@@ -25,13 +29,32 @@ public class SubmitCode : KernelCommand
         SyntaxNode = syntaxNode;
         DirectiveNode = directiveNode;
 
-        if (syntaxNode is DirectiveNode { Kind: DirectiveNodeKind.Action } actionDirectiveNode)
+        if (directiveNode is { HasParameters: true, Kind: DirectiveNodeKind.KernelSelector })
+        {
+            if (directiveNode.TryGetDirective(out var directive))
+            {
+                _kernelSpecifierParameters = directiveNode.GetParameterValues(
+                                                              directive,
+                                                              new Dictionary<DirectiveParameterValueNode, object>())
+                                                          .ToDictionary(t => t.Name, t => t.Value?.ToString());
+            }
+        }
+        else if (syntaxNode is DirectiveNode { Kind: DirectiveNodeKind.Action } actionDirectiveNode)
         {
             TargetKernelName = actionDirectiveNode.TargetKernelName;
         }
     }
 
     public string Code { get; internal set; }
+
+    public IDictionary<string, string> Parameters
+    {
+        get
+        {
+            _kernelSpecifierParameters ??= new Dictionary<string, string>();
+            return _kernelSpecifierParameters;
+        }
+    }
 
     public override string ToString() => $"{nameof(SubmitCode)}: {Code?.TruncateForDisplay()}";
 

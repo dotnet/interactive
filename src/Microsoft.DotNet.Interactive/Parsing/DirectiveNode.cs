@@ -34,6 +34,8 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     internal Parser? DirectiveParser { get; set; }
 
+    public bool HasParameters { get; private set; }
+
     public DirectiveNodeKind Kind { get; set; }
 
     public ParseResult GetDirectiveParseResult()
@@ -193,6 +195,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
     public void Add(DirectiveParameterNode node)
     {
         AddInternal(node);
+        HasParameters = true;
     }
 
     public void Add(DirectiveSubcommandNode node)

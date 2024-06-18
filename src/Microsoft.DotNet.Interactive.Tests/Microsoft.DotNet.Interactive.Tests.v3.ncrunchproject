@@ -94,6 +94,9 @@ var x = 123; // with some intervening code
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests</FixtureName>
       </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.ConnectDirectiveTests.Connected_kernel_help_description_provides_context_about_the_connection</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
