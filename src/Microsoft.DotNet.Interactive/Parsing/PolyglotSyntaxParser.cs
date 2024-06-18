@@ -72,7 +72,7 @@ internal class PolyglotSyntaxParser
     {
         if (IsAtStartOfDirective())
         {
-            var directiveNameNode = ParseParameterName();
+            var directiveNameNode = ParseDirectiveName();
 
             var targetKernelName = _currentKernelName ?? _compositeKernelInfo?.LocalName;
 
@@ -166,7 +166,7 @@ internal class PolyglotSyntaxParser
 
         return null;
 
-        DirectiveNameNode ParseParameterName()
+        DirectiveNameNode ParseDirectiveName()
         {
             var directiveNameNode = new DirectiveNameNode(_sourceText, _syntaxTree);
 
