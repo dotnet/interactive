@@ -7,8 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -30,6 +32,8 @@ internal class HttpRequestNode : HttpSyntaxNode
     public HttpHeadersNode? HeadersNode { get; private set; }
 
     public HttpBodyNode? BodyNode { get; private set; }
+
+    public bool IsNamedRequest => ChildNodes.OfType<HttpCommentNode>().Any(cn => cn.CommentNamedRequestNode is not null);
 
     public void Add(HttpMethodNode node)
     {
@@ -81,9 +85,17 @@ internal class HttpRequestNode : HttpSyntaxNode
         AddInternal(node);
     }
 
-    public void Add(HttpCommentNode node)
+    public HttpCommentNamedRequestNode? TryGetCommentNamedRequestNode()
     {
-        AddInternal(node);
+        if (IsNamedRequest)
+        {
+            return DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().FirstOrDefault();
+        } 
+        else
+        {
+            return null; 
+        }  
+        
     }
 
     public HttpBindingResult<HttpRequestMessage> TryGetHttpRequestMessage(HttpBindingDelegate bind)

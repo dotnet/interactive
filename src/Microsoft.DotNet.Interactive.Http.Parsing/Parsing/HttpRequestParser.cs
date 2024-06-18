@@ -250,7 +250,7 @@ internal class HttpRequestParser
                 if (CurrentToken is { Kind: HttpTokenKind.Punctuation }
                 and { Text: "@" })
                 {
-
+                    ConsumeCurrentTokenInto(node);
                 }
                 else if (CurrentToken?.Kind is HttpTokenKind.Whitespace)
                 {
@@ -265,6 +265,7 @@ internal class HttpRequestParser
                     foreach (var commentNode in ParseComments())
                     {
                         node.Add(commentNode, addBefore: true);
+                        
                     }
                 }
                 else
@@ -378,7 +379,7 @@ internal class HttpRequestParser
 
             foreach (var comment in ParseComments())
             {
-                requestNode.Add(comment);
+                requestNode.Add(comment, false);
             }
 
             ParseTrailingWhitespace(requestNode);
@@ -802,17 +803,19 @@ internal class HttpRequestParser
                     commentNode.Add(commentStartNode);
                 }
 
-                /*var commentNamedRequestNode = ParseCommentNamedRequestNode();
-
+                var commentNamedRequestNode = ParseCommentNamedRequestNode();
                 if (commentNamedRequestNode is not null)
                 {
                     commentNode.Add(commentNamedRequestNode);
-                }*/
-
-                var commentBodyNode = ParseCommentBody();
-                if (commentBodyNode is not null)
+                }
+                else
                 {
-                    commentNode.Add(commentBodyNode);
+
+                    var commentBodyNode = ParseCommentBody();
+                    if (commentBodyNode is not null)
+                    {
+                        commentNode.Add(commentBodyNode);
+                    }
                 }
 
                 yield return commentNode;

@@ -173,4 +173,31 @@ internal static class HttpDiagnostics
             """The supplied format '{0}' is invalid.""";
         return new HttpDiagnosticInfo(id, messageFormat, severity, format);
     }
+
+    internal static HttpDiagnosticInfo InvalidNamedRequestPath(string expression)
+    {
+        var id = $"HTTP0021";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, expression);
+    }
+
+    internal static HttpDiagnosticInfo InvalidHeaderNameInNamedRequest(string headerName)
+    {
+        var id = $"HTTP0022";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied header name '{0}' does not exist in the named request.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, headerName);
+    }
+
+    internal static HttpDiagnosticInfo InvalidContentInNamedRequest()
+    {
+        var id = $"HTTP0023";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The response does not contain any content.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity);
+    }
 }

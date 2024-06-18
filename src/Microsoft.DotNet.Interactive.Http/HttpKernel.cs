@@ -111,9 +111,27 @@ public class HttpKernel :
     {
         var parseResult = HttpRequestParser.Parse(command.Code);
 
-        var httpRequestResults = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>().Select(n => n.TryGetHttpRequestMessage(BindExpressionValues)).ToArray();
+        var requestNodes = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>();
 
-        var diagnostics = httpRequestResults.SelectMany(r => r.Diagnostics).ToArray();
+        var httpBoundResults = new List<HttpBindingResult<HttpRequestMessage>>();
+        var httpNamedBoundResults = new List<(HttpRequestNode requestNode, HttpBindingResult<HttpRequestMessage> bindingResult)>();
+
+        foreach(var requestNode in requestNodes)
+        {
+            if (requestNode.IsNamedRequest){
+                var httpNamedBoundResult = requestNode.TryGetHttpRequestMessage(BindExpressionValues);
+
+                httpNamedBoundResults.Add((requestNode, httpNamedBoundResult));
+                
+            }
+            else 
+            {
+                httpBoundResults.Add(requestNode.TryGetHttpRequestMessage(BindExpressionValues));
+            }
+        }
+
+        ;
+        var diagnostics = httpBoundResults.SelectMany(n => n.Diagnostics).Concat(httpNamedBoundResults.SelectMany(n => n.bindingResult.Diagnostics)).ToArray();
 
         PublishDiagnostics(context, command, diagnostics);
 
@@ -124,15 +142,22 @@ public class HttpKernel :
             return;
         }
 
-        var requestMessages = httpRequestResults
+        var requestMessages = httpBoundResults
                               .Where(r => r is { IsSuccessful: true, Value: not null })
                               .Select(r => r.Value!).ToArray();
+
+        var namedRequestMessages = httpNamedBoundResults.Where(n => n.bindingResult.IsSuccessful && n.bindingResult.Value is not null).ToArray();
 
         try
         {
             foreach (var requestMessage in requestMessages)
             {
                 await SendRequestAsync(requestMessage, command, context);
+            }
+
+            foreach(var (requestNode, bindingResult) in namedRequestMessages)
+            {
+                await SendRequestAsync(bindingResult.Value!, command, context, requestNode);
             }
         }
         catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException)
@@ -141,7 +166,7 @@ public class HttpKernel :
         }
     }
 
-    private async Task SendRequestAsync(HttpRequestMessage requestMessage, KernelCommand command, KernelInvocationContext context)
+    private async Task SendRequestAsync(HttpRequestMessage requestMessage, KernelCommand command, KernelInvocationContext context, HttpRequestNode? requestNode = null)
     {
         var cancellationToken = context.CancellationToken;
         var isResponseAvailable = false;
@@ -180,6 +205,16 @@ public class HttpKernel :
         async Task SendRequestAndHandleResponseAsync()
         {
             var response = await GetResponseWithTimingAsync(requestMessage, cancellationToken);
+
+            if(requestNode != null)
+            {
+                var namedRequest = new HttpNamedRequest(requestNode, response);
+                if(namedRequest.Name is not null)
+                {
+                    _variables.Add(namedRequest.Name, namedRequest);
+                }
+                
+            }
 
             await semaphore.WaitAsync(cancellationToken);
             isResponseAvailable = true;
@@ -321,8 +356,22 @@ public class HttpKernel :
     private HttpBindingResult<object?> BindExpressionValues(HttpExpressionNode node)
     {
         var expression = node.Text;
+        string[] expressionPath = [];
+        var expressionPathStart = "";
+        
 
-        if (_variables.TryGetValue(expression, out var value))
+        if (expression.Contains('.'))
+        {
+            expressionPath = expression.Split('.');
+            expressionPathStart = expressionPath.First();
+        }
+
+
+        if(expressionPath.Length > 0 && _variables.TryGetValue(expressionPathStart, out var namedRequest) && namedRequest is HttpNamedRequest nr)
+        {
+            return nr.ResolvePath(expressionPath, node);
+        } 
+        else if (_variables.TryGetValue(expression, out var value))
         {
             return node.CreateBindingSuccess(value);
         }

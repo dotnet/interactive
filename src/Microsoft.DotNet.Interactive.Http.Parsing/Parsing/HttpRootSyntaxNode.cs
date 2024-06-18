@@ -36,7 +36,7 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
         AddInternal(separatorNode);
     }
 
-    public Dictionary<string, DeclaredVariable> GetDeclaredVariables()
+    public Dictionary<string, DeclaredVariable> GetDeclaredVariables(HttpBindingDelegate? bind = null)
     {
 
         var variableAndDeclarationNodes = ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
@@ -58,7 +58,11 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                 {
                     var value = node.ValueNode.TryGetValue(node =>
                     {
-                        if (foundVariableValues.TryGetValue(node.Text, out string? strinValue))
+                        if(bind != null)
+                        {
+                            return bind(node);
+                        } 
+                        else if (foundVariableValues.TryGetValue(node.Text, out string? strinValue))
                         {
                             return node.CreateBindingSuccess(strinValue);
                         }

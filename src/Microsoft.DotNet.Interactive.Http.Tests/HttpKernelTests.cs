@@ -2122,15 +2122,57 @@ public class HttpKernelTests
             .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
     }
 
-    [Fact(Skip = "Requires updates to HTTP parser")]
-    public void responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
+    [Fact]
+    public async Task responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
     {
         // Request Variables
         // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
 
         // TODO (responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests) write test
-        throw new NotImplementedException();
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            GET {{baseUrl}} HTTP/1.1
+            X-Message: "Test"
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Authorization: {{login.response.headers.X-AuthToken}}
+            Content-Type: application/json
+            
+            {
+                "content": "fake content"
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+
+
     }
 
     [Fact(Skip = "Requires updates to HTTP parser")]
