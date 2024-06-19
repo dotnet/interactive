@@ -189,7 +189,7 @@ internal class PolyglotSyntaxParser
                 CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "-" })
             {
             }
-            else if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "{" or "\"" })
+            else if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "{" or "\"" or "[" })
             {
                 ParseJsonValueInto(valueNode);
 
@@ -223,7 +223,7 @@ internal class PolyglotSyntaxParser
 
                 var inputParametersNode = new DirectiveExpressionParametersNode(_sourceText, _syntaxTree);
 
-                if (CurrentToken is { Kind: TokenKind.Punctuation } and ({ Text: "{" } or { Text: "\"" }))
+                if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "\"" or "{" })
                 {
                     ParseJsonValueInto(inputParametersNode);
                 }
@@ -258,9 +258,9 @@ internal class PolyglotSyntaxParser
             {
                 var currentToken = CurrentToken;
 
-                if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "{" })
+                if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "{" or "[" })
                 {
-                    // Parse a JSON object
+                    // Parse a JSON object or array
                     var jsonDepth = 0;
 
                     while (MoreTokens())
@@ -274,11 +274,11 @@ internal class PolyglotSyntaxParser
 
                         switch (currentToken)
                         {
-                            case { Kind: TokenKind.Punctuation } and { Text: "{" }:
+                            case { Kind: TokenKind.Punctuation } and { Text: "{" or "[" }:
                                 jsonDepth++;
                                 break;
 
-                            case { Kind: TokenKind.Punctuation } and { Text: "}" }:
+                            case { Kind: TokenKind.Punctuation } and { Text: "}" or "]" }:
                                 jsonDepth--;
                                 break;
                         }
@@ -326,7 +326,7 @@ internal class PolyglotSyntaxParser
                 {
                     try
                     {
-                        JsonDocument.Parse(json);
+                        using var jsonDoc = JsonDocument.Parse(json);
                     }
                     catch (JsonException exception)
                     {

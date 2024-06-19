@@ -269,9 +269,18 @@ public partial class PolyglotSyntaxParserTests
                 .Should()
                 .Be(code.Length);
         }
-
-        [Fact]
-        public void Inline_JSON_is_consumed_as_a_parameter_value()
+     
+        [Theory]
+        [InlineData("""
+                    "just a JSON string"
+                    """)]
+        [InlineData("""
+                    { "fruit": "cherry" }
+                    """)]
+        [InlineData("""
+                    [ "a string", 123, { "fruit": "Granny Smith" } ]
+                    """)]
+        public void Inline_JSON_is_consumed_as_a_parameter_value(string jsonParameter)
         {
             PolyglotParserConfiguration config = new("csharp")
             {
@@ -295,14 +304,10 @@ public partial class PolyglotSyntaxParserTests
                     }
                 }
             };
-
-            var jsonParameter = """
-      { "fruit": "cherry" }
-      """;
-
+          
             var tree = PolyglotSyntaxParser.Parse($"""
-      #!test --opt {jsonParameter} other-parameter
-      """, config);
+                                                   #!test --opt {jsonParameter} other-parameter
+                                                   """, config);
 
             tree.RootNode.GetDiagnostics().Should().BeEmpty();
 

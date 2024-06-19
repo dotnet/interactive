@@ -343,7 +343,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         void WriteProperty(string propertyName, string value)
         {
-            if (value[0] is '{' or '"')
+            if (value[0] is '{' or '"' or '[')
             {
                 writer.WritePropertyName(propertyName);
                 writer.WriteRawValue(value);
