@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -36,7 +37,7 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
     }
 
     [WindowsFact(Skip = "connector reuse needs redesign")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task it_can_reuse_connection_for_multiple_proxy_kernels()
     {
         var createKernel = CreateConnector();
@@ -95,13 +96,11 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
         };
         localCompositeKernel.DefaultKernelName = "fsharp";
 
-        CreateConnector();
-
-        AddKernelConnector(localCompositeKernel);
+        AddConnectDirectiveTo(localCompositeKernel);
 
         var localKernelName = "newKernelName";
 
-        var connectToRemoteKernel = CreateConnectCommand(localKernelName);
+        var connectToRemoteKernel = CreateSubmitCodeToConnectProxyAs(localKernelName);
 
         var connectResults = await localCompositeKernel.SendAsync(connectToRemoteKernel);
 
@@ -135,14 +134,15 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
     {
         var createKernel = CreateConnector();
 
-        using var kernel = await createKernel("newKernelName");
-        kernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestHoverText)));
+        using var proxyKernel = await createKernel("newKernelName");
+
+        proxyKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestHoverText)));
 
         var markedCode = "var x = 12$$34;";
 
         MarkupTestFile.GetLineAndColumn(markedCode, out var code, out var line, out var column);
 
-        var result = await kernel.SendAsync(new RequestHoverText(code, new LinePosition(line, column)));
+        var result = await proxyKernel.SendAsync(new RequestHoverText(code, new LinePosition(line, column)));
 
         result.Events
               .Should()
@@ -151,7 +151,7 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
 
     protected abstract Func<string, Task<ProxyKernel>> CreateConnector();
 
-    protected abstract SubmitCode CreateConnectCommand(string localKernelName);
+    protected abstract SubmitCode CreateSubmitCodeToConnectProxyAs(string localKernelName);
 
-    protected abstract void AddKernelConnector(CompositeKernel compositeKernel);
+    protected abstract void AddConnectDirectiveTo(CompositeKernel compositeKernel);
 }

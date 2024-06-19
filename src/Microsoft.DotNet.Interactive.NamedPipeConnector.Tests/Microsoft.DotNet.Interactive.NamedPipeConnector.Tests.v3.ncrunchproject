@@ -1,7 +1,5 @@
 ﻿<ProjectConfiguration>
   <Settings>
-    <IgnoredTests>
-      <AllTestsSelector />
-    </IgnoredTests>
+    <DefaultTestTimeout>15000</DefaultTestTimeout>
   </Settings>
 </ProjectConfiguration>

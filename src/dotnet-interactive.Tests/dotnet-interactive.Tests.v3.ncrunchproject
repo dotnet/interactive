@@ -54,19 +54,10 @@
         <FixtureName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests</FixtureName>
       </FixtureTestSelector>
       <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.can_connect_to_remote_using_connect_magic_command</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.stdio_mode_honors_log_path</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.it_can_reuse_connection_for_multiple_proxy_kernels</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.stdio_server_encoding_is_utf_8</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.fast_path_commands_over_proxy_can_be_handled</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>StdIoBehaviorTests.Quit_command_causes_stdio_process_to_end</TestName>
@@ -103,9 +94,6 @@
       </NamedTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.App.Tests.FileProviderTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.App.Tests.TypeScriptInterfacesContractTests</FixtureName>

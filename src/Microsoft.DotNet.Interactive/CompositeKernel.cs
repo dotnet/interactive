@@ -279,6 +279,7 @@ public sealed class CompositeKernel :
 
         _rootConnectDirective.Subcommands.Add(connectDirective);
 
+        // FIX: (AddKernelConnector) don't add it to the root
         AddDirective<T>(connectDirective,
                      async (command, context) =>
                      {

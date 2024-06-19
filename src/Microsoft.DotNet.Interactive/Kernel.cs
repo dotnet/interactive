@@ -323,9 +323,17 @@ public abstract partial class Kernel :
             throw new ArgumentException($"{nameof(directive)}.{nameof(KernelActionDirective.KernelCommandType)} must be set to {typeof(TCommand)}.");
         }
 
-        KernelInfo.SupportedDirectives.Add(directive);
+        if (directive.Parent is null)
+        {
+            KernelInfo.SupportedDirectives.Add(directive);
+        }
+        else
+        {
+            // FIX: (AddDirective) throw?
+        }
 
         RegisterCommandHandler(handler);
+
         KernelCommandEnvelope.RegisterCommand<TCommand>();
     }
 

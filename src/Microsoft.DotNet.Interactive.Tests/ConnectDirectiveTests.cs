@@ -40,7 +40,9 @@ public class ConnectDirectiveTests : IDisposable
     {
         using var compositeKernel = new CompositeKernel();
 
-        compositeKernel.Directives
+        compositeKernel
+            .KernelInfo
+            .SupportedDirectives
             .Should()
             .NotContain(c => c.Name == "#!connect");
     }
@@ -193,7 +195,7 @@ hello!
 
     public class ConnectFakeKernel : ConnectKernelCommand
     {
-        public ConnectFakeKernel(string kernelName) : base(kernelName)
+        public ConnectFakeKernel(string connectedKernelName) : base(connectedKernelName)
         {
         }
     }

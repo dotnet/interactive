@@ -11,9 +11,9 @@ namespace Microsoft.DotNet.Interactive.Commands;
 /// </summary>
 public abstract class ConnectKernelCommand : KernelCommand
 {
-    protected ConnectKernelCommand(string kernelName)
+    protected ConnectKernelCommand(string connectedKernelName)
     {
-        ConnectedKernelName = kernelName;
+        ConnectedKernelName = connectedKernelName;
     }
 
     [JsonInclude]

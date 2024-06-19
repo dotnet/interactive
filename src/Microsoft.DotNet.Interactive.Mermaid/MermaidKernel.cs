@@ -10,8 +10,6 @@ namespace Microsoft.DotNet.Interactive.Mermaid;
 public class MermaidKernel : Kernel,
                              IKernelCommandHandler<SubmitCode>
 {
-    private ChooseMermaidKernelDirective? _chooseKernelDirective;
-
     public MermaidKernel() : base("mermaid")
     {
         KernelInfo.LanguageName = "Mermaid";

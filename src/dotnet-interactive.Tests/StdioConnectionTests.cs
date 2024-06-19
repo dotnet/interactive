@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.Connection;
@@ -53,7 +54,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 
         var args = new List<string>
         {
-            $"\"{toolPath.FullName}\"",
+            toolPath.FullName,
             "stdio",
             "--default-kernel",
             "csharp",
@@ -87,7 +88,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
             new FakeKernel("fsharp")
         };
 
-        AddKernelConnector(localCompositeKernel);
+        AddConnectDirectiveTo(localCompositeKernel);
 
         localCompositeKernel.DefaultKernelName = "fsharp";
 
@@ -107,13 +108,17 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
                   where: d => d.FormattedValues.Any(FormattedValue => FormattedValue.Value == expected));
     }
 
-    protected override SubmitCode CreateConnectCommand(string localKernelName)
+    protected override SubmitCode CreateSubmitCodeToConnectProxyAs(string localKernelName)
     {
+        string[] args = [_configuration.Command, .. _configuration.Args];
+
+        var json = JsonSerializer.Serialize(args);
+
         return new SubmitCode(
-            $"#!connect stdio --kernel-name {localKernelName} --command \"{_configuration.Command}\" {string.Join(" ", _configuration.Args)}");
+            $"#!connect stdio --kernel-name {localKernelName} --command {json}");
     }
 
-    protected override void AddKernelConnector(CompositeKernel compositeKernel)
+    protected override void AddConnectDirectiveTo(CompositeKernel compositeKernel)
     {
         compositeKernel.AddKernelConnector(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
     }

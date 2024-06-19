@@ -62,11 +62,10 @@ public class StdIoKernelConnector
     public async Task<ProxyKernel> CreateRootProxyKernelAsync()
     {
         ProxyKernel rootProxyKernel;
+        using var activity = Log.OnEnterAndExit();
 
         if (_receiver is null)
         {
-            using var activity = Log.OnEnterAndExit();
-
             var command = _command[0];
             var arguments = _command.Skip(1).ToArray();
             arguments = arguments.Concat(new[]
