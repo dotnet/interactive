@@ -86,7 +86,7 @@ extends:
         break: false
         severity: error
       sbom:
-        enabled: false
+        enabled: true
     stages:
     - stage: build
       displayName: Build and Test
