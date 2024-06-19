@@ -4,6 +4,7 @@
 #nullable enable
 
 using Microsoft.CodeAnalysis;
+using System.Linq.Expressions;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -183,18 +184,45 @@ internal static class HttpDiagnostics
         return new HttpDiagnosticInfo(id, messageFormat, severity, expression);
     }
 
-    internal static HttpDiagnosticInfo InvalidHeaderNameInNamedRequest(string headerName)
+    internal static HttpDiagnosticInfo InvalidBodyInNamedRequest(string name)
     {
         var id = $"HTTP0022";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied named request '{0}' does not have a request body.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, name);
+    }
+
+    internal static HttpDiagnosticInfo InvalidHeaderNameInNamedRequest(string headerName)
+    {
+        var id = $"HTTP0023";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
             """The supplied header name '{0}' does not exist in the named request.""";
         return new HttpDiagnosticInfo(id, messageFormat, severity, headerName);
     }
 
-    internal static HttpDiagnosticInfo InvalidContentInNamedRequest()
+    internal static HttpDiagnosticInfo InvalidHeadersInNamedRequest(string name)
     {
         var id = $"HTTP0023";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied named request '{0}' does not have any headers.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, name);
+    }
+
+    internal static HttpDiagnosticInfo InvalidXmlNodeInNamedRequest(string xmlNode)
+    {
+        var id = $"HTTP0024";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied xml name '{0}' does not exist in the named request.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, xmlNode);
+    }
+
+    internal static HttpDiagnosticInfo InvalidContentInNamedRequest()
+    {
+        var id = $"HTTP0025";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
             """The response does not contain any content.""";

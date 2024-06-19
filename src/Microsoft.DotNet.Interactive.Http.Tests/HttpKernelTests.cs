@@ -2128,25 +2128,19 @@ public class HttpKernelTests
         // Request Variables
         // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
-
-        // TODO (responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests) write test
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            request = message;
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            return Task.FromResult(response);
-        });
-        var client = new HttpClient(handler);
+        var client = new HttpClient();
         using var kernel = new HttpKernel(client: client);
 
         using var _ = new AssertionScope();
 
         var code = """
-            @baseUrl = https://httpbin.org/anything
+            @baseUrl = https://example.com/api
 
-            GET {{baseUrl}} HTTP/1.1
-            X-Message: "Test"
+            # @name login
+            POST {{baseUrl}}/api/login HTTP/1.1
+            Content-Type: application/x-www-form-urlencoded
+
+            name=foo&password=bar
 
             ###
             """;
@@ -2171,8 +2165,37 @@ public class HttpKernelTests
         var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
         secondResult.Events.Should().NotContainErrors();
+    }
 
 
+    [Fact]
+    public async Task Test_API_Response()
+    {
+
+        // TODO (responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests) write test
+        /*HttpRequestMessage request = null;*/
+        /*var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });*/
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            GET {{baseUrl}} HTTP/1.1
+            X-Message: "Test"
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
     }
 
     [Fact(Skip = "Requires updates to HTTP parser")]

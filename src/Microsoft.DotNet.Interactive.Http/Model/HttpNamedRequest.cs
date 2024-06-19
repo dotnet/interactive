@@ -73,8 +73,7 @@ internal class HttpNamedRequest
                 {
                     if (RequestNode.BodyNode is null)
                     {
-                        throw new NotImplementedException();
-                        //. return node.CreateBindingFailure();
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidBodyInNamedRequest(path[0]));
                     }
                     var xmlDoc = new XPathDocument(RequestNode.BodyNode.Text);
                     var nav = xmlDoc.CreateNavigator();
@@ -87,8 +86,7 @@ internal class HttpNamedRequest
                     }
                     else
                     {
-                        throw new NotImplementedException();
-                        //return node.CreateBindingFailure(xmlNode?.Value);
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidXmlNodeInNamedRequest(path[3]));
                     }
                 }
             }
@@ -96,14 +94,14 @@ internal class HttpNamedRequest
             {
                 if (RequestNode.HeadersNode is null)
                 {
-                    throw new NotImplementedException();
+                    return node.CreateBindingFailure(HttpDiagnostics.InvalidHeadersInNamedRequest(path[0]));
                 }
 
                 var headerNode = RequestNode.HeadersNode.HeaderNodes.First(hn => hn.NameNode?.Text == path[3]);
 
                 if (headerNode is null || headerNode.ValueNode is null)
                 {
-                    throw new NotImplementedException();
+                    return node.CreateBindingFailure(HttpDiagnostics.InvalidHeaderNameInNamedRequest(path[3]));
                 }
 
                 return node.CreateBindingSuccess(headerNode.ValueNode.Text);
@@ -140,8 +138,7 @@ internal class HttpNamedRequest
                 {
                     if(Response.Content is null)
                     {
-                        throw new NotImplementedException();
-                       //. return node.CreateBindingFailure();
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest());
                     }
                     var xmlDoc = new XPathDocument(Response.Content.Raw);
                     var nav = xmlDoc.CreateNavigator();
@@ -154,8 +151,7 @@ internal class HttpNamedRequest
                     }
                     else
                     {
-                        throw new NotImplementedException();
-                        //return node.CreateBindingFailure(xmlNode?.Value);
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidXmlNodeInNamedRequest(path[3]));
                     }
                     
                 }
