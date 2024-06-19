@@ -98,7 +98,7 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
 
         AddConnectDirectiveTo(localCompositeKernel);
 
-        var localKernelName = "newKernelName";
+        var localKernelName = "theProxyKernel";
 
         var connectToRemoteKernel = CreateSubmitCodeToConnectProxyAs(localKernelName);
 

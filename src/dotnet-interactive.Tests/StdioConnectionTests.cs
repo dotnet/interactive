@@ -92,13 +92,15 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 
         localCompositeKernel.DefaultKernelName = "fsharp";
 
-        var connectToRemoteKernel = new SubmitCode(
-            $"#!connect stdio --kernel-name newKernelName --command \"{_configuration.Command}\" {string.Join(" ", _configuration.Args)}");
+        var proxyKernelName = "theProxyKernel";
+
+        var connectToRemoteKernel = CreateSubmitCodeToConnectProxyAs(proxyKernelName);
 
         await localCompositeKernel.SendAsync(connectToRemoteKernel);
 
-        var result = await localCompositeKernel.SendAsync(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName",
-                                                                         "newKernelName"));
+        var result = await localCompositeKernel.SendAsync(
+                         new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName",
+                                        proxyKernelName));
 
         var expected = Encoding.UTF8.EncodingName + "/" + Encoding.UTF8.EncodingName;
 

@@ -9,13 +9,25 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Pocket;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class StdIoKernelConnectorTests
+    public class StdIoKernelConnectorTests : IDisposable
     {
-        private static StdIoKernelConnector CreateConnector()
+        private readonly CompositeDisposable _disposables = new();
+
+        public StdIoKernelConnectorTests()
+        {
+        }
+
+        public void Dispose()
+        {
+            _disposables.Dispose();
+        }
+
+        private StdIoKernelConnector CreateConnector()
         {
             var pocketLoggerPath = Environment.GetEnvironmentVariable("POCKETLOGGER_LOG_PATH");
             string loggingArgs = null;
@@ -54,6 +66,8 @@ namespace Microsoft.DotNet.Interactive.Tests
                 new[] { "dotnet", $""" "{toolAppDllPath}" stdio {loggingArgs}""" },
                 rootProxyKernelLocalName: "rootProxy",
                 hostUri);
+
+            _disposables.Add(connector);
 
             return connector;
         }
@@ -128,9 +142,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 RemoteUri = csharpKernelInfo.Uri,
                 Description = """
                               This Kernel can compile and execute C# code and display the results.
-                              The language is C# Scripting, a dialect of C# that is used for interactive programming.
-                              
-                              Can load packages from nuget.org or any other nuget feed.
+                              The language is C# Script, a dialect of C# used for interactive programming.
                               """
             };
 
@@ -153,9 +165,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 LanguageVersion = fsharpKernelInfo.LanguageVersion,
                 RemoteUri = fsharpKernelInfo.Uri,
                 Description = """
-                              This Kernel can compile and execute F# code and display the results.
-                              
-                              Can load packages from nuget.org or any other nuget feed.
+                              This kernel can compile and execute F# code and display the results.
                               """
             };
 

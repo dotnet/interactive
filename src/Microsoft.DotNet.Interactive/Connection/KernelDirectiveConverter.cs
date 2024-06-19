@@ -77,18 +77,22 @@ public class KernelDirectiveConverter : JsonConverter<KernelDirective>
             throw new JsonException($"Property 'name' is required to deserialize a {nameof(KernelDirective)}.");
         }
 
-        if (kernelName is null)
+        switch (kind)
         {
-            throw new JsonException($"Property 'kernelName' is required to deserialize a {nameof(KernelDirective)}.");
+            case "action":
+                return new KernelActionDirective(name);
+
+            case "kernelSpecifier":
+
+                if (kernelName is null)
+                {
+                    throw new JsonException($"Property 'kernelName' is required to deserialize a {nameof(KernelSpecifierDirective)}.");
+                }
+
+                return new KernelSpecifierDirective(name, kernelName);
+
+            default:
+                throw new NotSupportedException();
         }
-
-        KernelDirective directive = kind switch
-        {
-            "action" => new KernelActionDirective(name),
-            "kernelSpecifier" => new KernelSpecifierDirective(name, kernelName),
-            _ => throw new NotSupportedException()
-        };
-
-        return directive;
     }
 }

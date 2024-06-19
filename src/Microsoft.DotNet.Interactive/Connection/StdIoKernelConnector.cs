@@ -30,7 +30,7 @@ using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class StdIoKernelConnector
+public class StdIoKernelConnector : IDisposable
 {
     private readonly string[] _command;
     private readonly string _rootProxyKernelLocalName;
@@ -146,7 +146,7 @@ public class StdIoKernelConnector
             {
                 SendQuitCommand,
                 KillRemoteKernelProcess,
-                _receiver.Dispose
+                _receiver.Dispose, 
             });
 
             rootProxyKernel = new ProxyKernel(
@@ -166,10 +166,10 @@ public class StdIoKernelConnector
 
                 if (_process.HasExited)
                 {
-                    if (_process.ExitCode != 0)
+                    if (_process.ExitCode is not 0)
                     {
                         var stdErrString = stdErr.ToString()
-                                                 .Split(new[] { '\r', '\n' },
+                                                 .Split(['\r', '\n'],
                                                         StringSplitOptions.RemoveEmptyEntries);
 
                         throw new CommandLineInvocationException(
@@ -248,7 +248,7 @@ public class StdIoKernelConnector
                 .Where(info => info.LocalName == remoteName)
                 .ToArray();
 
-            if (remoteInfos.Length == 1)
+            if (remoteInfos.Length is 1)
             {
                 remoteInfo = remoteInfos[0];
                 proxyKernel = await CreateProxyKernelAsync(remoteInfo, localNameOverride);
@@ -311,5 +311,10 @@ public class StdIoKernelConnector
             _process?.Dispose();
             _process = null;
         }
+    }
+
+    public void Dispose()
+    {
+        _refCountDisposable?.Dispose();
     }
 }

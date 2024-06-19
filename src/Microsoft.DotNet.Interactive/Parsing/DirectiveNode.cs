@@ -148,7 +148,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public bool TryGetKernelSpecifierDirective(out KernelSpecifierDirective directive)
     {
-        if (SyntaxTree.ParserConfiguration.KernelInfos.SingleOrDefault(i => i.IsComposite) is { } compositeKernelInfo)
+        if (SyntaxTree.ParserConfiguration.KernelInfos.SingleOrDefault(i => i.IsComposite && !i.IsProxy) is { } compositeKernelInfo)
         {
             if (DirectiveNameNode is { Text: { } name } &&
                 compositeKernelInfo.TryGetDirective(name, out var d) &&
