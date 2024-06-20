@@ -42,7 +42,7 @@ public class SQLiteKernel :
         KernelInvocationContext context)
     {
         await using var connection = OpenConnection();
-        if (connection.State != ConnectionState.Open)
+        if (connection.State is not ConnectionState.Open)
         {
             await connection.OpenAsync();
         }
