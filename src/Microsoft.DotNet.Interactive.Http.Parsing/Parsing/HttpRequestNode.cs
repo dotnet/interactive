@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
+using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -90,34 +91,47 @@ internal class HttpRequestNode : HttpSyntaxNode
         if (IsNamedRequest)
         {
             return DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().FirstOrDefault();
-        } 
+        }
         else
         {
-            return null; 
-        }  
-        
+            return null;
+        }
+
     }
 
     public HttpBindingResult<HttpRequestMessage> TryGetHttpRequestMessage(HttpBindingDelegate bind)
     {
         var originalBind = bind;
-        var declaredVariables = SyntaxTree?.RootNode.GetDeclaredVariables();
-        if (declaredVariables?.Count > 0)
-        {
-            bind = node =>
-            {
-                if (declaredVariables.TryGetValue(node.Text, out var declaredValue))
-                {
-                    return HttpBindingResult<object?>.Success(declaredValue.Value);
-                }
-                else
-                {
-                    return originalBind(node);
-                }
-            };
-        }
-        var request = new HttpRequestMessage();
         var diagnostics = new List<Diagnostic>(base.GetDiagnostics());
+
+        if (SyntaxTree is not null)
+        {
+            (Dictionary<string, DeclaredVariable> declaredVariables, List<Diagnostic>? diagnostics) declaredVariableResults = SyntaxTree.RootNode.TryGetDeclaredVariables(originalBind);
+            var declaredVariables = declaredVariableResults.declaredVariables;
+            var declaredVariableDiagnostics = declaredVariableResults.diagnostics;
+
+            if (declaredVariables?.Count > 0)
+            {
+                bind = node =>
+                {
+                    if (declaredVariables.TryGetValue(node.Text, out var declaredValue))
+                    {
+                        return HttpBindingResult<object?>.Success(declaredValue.Value);
+                    }
+                    else
+                    {
+                        return originalBind(node);
+                    }
+                };
+            }
+
+            if (declaredVariableDiagnostics is not null)
+            {
+                diagnostics.AddRange(declaredVariableDiagnostics);
+            }
+        }
+
+        var request = new HttpRequestMessage();
 
         if (MethodNode is { Span.IsEmpty: false })
         {

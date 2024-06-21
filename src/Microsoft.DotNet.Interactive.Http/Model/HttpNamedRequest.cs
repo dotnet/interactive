@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Reactive.Concurrency;
 using System.Xml.XPath;
+using System.Xml;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -25,9 +26,9 @@ internal class HttpNamedRequest
 
     public string? Name { get; private set; }
 
-    private HttpRequestNode RequestNode;
+    private readonly HttpRequestNode RequestNode;
 
-    private HttpResponse Response;
+    private readonly HttpResponse Response;
 
     public HttpBindingResult<object?> ResolvePath(string[] path, HttpExpressionNode node)
     {
@@ -75,6 +76,7 @@ internal class HttpNamedRequest
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidBodyInNamedRequest(path[0]));
                     }
+
                     var xmlDoc = new XPathDocument(RequestNode.BodyNode.Text);
                     var nav = xmlDoc.CreateNavigator();
 
@@ -118,6 +120,11 @@ internal class HttpNamedRequest
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest());
                     }
 
+                    if(Response.Content.ContentType != "application/json")
+                    {
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentType(Response.Content.ContentType ?? "null", "application/json"));
+                    }
+
                     var responseJSON = JsonNode.Parse(Response.Content.Raw);
 
                     if (responseJSON is not null)
@@ -134,20 +141,28 @@ internal class HttpNamedRequest
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest());
                     }
                 }
-                else if (path[3] == "//")
+                else if (path[3].StartsWith("//"))
                 {
                     if(Response.Content is null)
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest());
                     }
-                    var xmlDoc = new XPathDocument(Response.Content.Raw);
-                    var nav = xmlDoc.CreateNavigator();
+
+                    if (Response.Content.ContentType != "application/xml")
+                    {
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentType(Response.Content.ContentType ?? "null", "application/xml"));
+                    }
+
+                    var xmlDoc = new XmlDocument();
+                    xmlDoc.LoadXml(Response.Content.Raw);
+
 
                     //Remove the leading slash
-                    var xmlNode = nav.SelectSingleNode(path[3].Substring(1));
-                    if (xmlNode is not null)
+                    var xmlNodes = xmlDoc.SelectNodes(path[3].Substring(1));
+                    
+                    if (xmlNodes is not null && xmlNodes.Count == 1)
                     {
-                        return node.CreateBindingSuccess(xmlNode?.Value);
+                        return node.CreateBindingSuccess(xmlNodes.Item(0)?.Value);
                     }
                     else
                     {
@@ -176,7 +191,7 @@ internal class HttpNamedRequest
         return node.CreateBindingFailure(HttpDiagnostics.InvalidNamedRequestPath(node.Text));
     }
 
-    private object? ResolveJsonPath(JsonNode responseJSON, string[] path, int currentIndex)
+    private static object? ResolveJsonPath(JsonNode responseJSON, string[] path, int currentIndex)
     {
         if(currentIndex + 1 == path.Length)
         {
@@ -195,25 +210,4 @@ internal class HttpNamedRequest
         }
   
     }
-
-    private void HandleFirst()
-    {
-
-    }
-
-    private void HandleSecond()
-    {
-
-    }
-
-    private void HandleThird()
-    {
-
-    }
-
-    private void HandleFour()
-    {
-
-    }
-
 }

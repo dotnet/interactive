@@ -5,6 +5,7 @@
 
 using Microsoft.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Xml;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -220,9 +221,18 @@ internal static class HttpDiagnostics
         return new HttpDiagnosticInfo(id, messageFormat, severity, xmlNode);
     }
 
-    internal static HttpDiagnosticInfo InvalidContentInNamedRequest()
+    internal static HttpDiagnosticInfo InvalidContentType(string contentType, string content)
     {
         var id = $"HTTP0025";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied named request has content type of '{0}' which differs from the content type needed of '{1}'.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, contentType, content);
+    }
+
+    internal static HttpDiagnosticInfo InvalidContentInNamedRequest()
+    {
+        var id = $"HTTP0026";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
             """The response does not contain any content.""";

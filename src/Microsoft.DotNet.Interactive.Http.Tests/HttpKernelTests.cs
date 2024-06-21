@@ -2134,6 +2134,123 @@ public class HttpKernelTests
         using var _ = new AssertionScope();
 
         var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+            Content-Type: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+
+            @origin = {{login.response.body.$.origin}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+    [Fact]
+    public async Task responses_to_named_requests_can_be_accessed_as_xml_in_later_requests()
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @baseUrl = https://httpbin.org/xml
+
+            # @name sampleXml
+            GET {{baseUrl}}
+            Content-Type: application/xml
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+
+            POST https://example.com/api/comments HTTP/1.1
+            X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+    [Fact]
+    public async Task responses_to_named_requests_can_be_accessed_through_headers_in_later_requests()
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @baseUrl = https://httpbin.org
+
+            # @name sample
+            GET {{baseUrl}}
+            Content-Type: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+
+            POST https://example.com/api/comments HTTP/1.1
+            Server: {{sample.response.headers.Server}}
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+
+    [Fact]
+    public async Task Invalid_named_request_property_produces_errors()
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
             @baseUrl = https://example.com/api
 
             # @name login
@@ -2149,10 +2266,13 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         var secondCode = """
+
+            @authToken = {{login.response.headers.X-AuthToken}}
+            
             
             # @name createComment
             POST https://example.com/api/comments HTTP/1.1
-            Authorization: {{login.response.headers.X-AuthToken}}
+            Authorization: {{authToken}}
             Content-Type: application/json
             
             {
@@ -2164,38 +2284,7 @@ public class HttpKernelTests
 
         var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
-        secondResult.Events.Should().NotContainErrors();
-    }
-
-
-    [Fact]
-    public async Task Test_API_Response()
-    {
-
-        // TODO (responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests) write test
-        /*HttpRequestMessage request = null;*/
-        /*var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            request = message;
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            return Task.FromResult(response);
-        });*/
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
-
-        var code = """
-            @baseUrl = https://httpbin.org/anything
-
-            GET {{baseUrl}} HTTP/1.1
-            X-Message: "Test"
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
+        secondResult.Events.Count().Should().Be(2);
     }
 
     [Fact(Skip = "Requires updates to HTTP parser")]

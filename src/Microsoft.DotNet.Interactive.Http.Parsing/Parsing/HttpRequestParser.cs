@@ -661,10 +661,32 @@ internal class HttpRequestParser
         private HttpCommentNamedRequestValueNode ParseCommentNamedRequestValueNode()
         {
             var node = new HttpCommentNamedRequestValueNode(_sourceText, _syntaxTree);
-            ConsumeCurrentTokenInto(node);
+            /*ConsumeCurrentTokenInto(node);
             ParseTrailingWhitespace(node, stopAfterNewLine: true);
+*/
+            //var node = new HttpVariableDeclarationNode(_sourceText, _syntaxTree);
+/*
+            if (MoreTokens())
+            {*/
+                ParseLeadingWhitespaceAndComments(node);
 
-            return node;
+                while (MoreTokens() && CurrentToken is not {Kind: HttpTokenKind.NewLine})
+                {
+                    if (CurrentToken is not null && !(CurrentToken is { Kind: HttpTokenKind.Word } or { Text: "_" or "@" or "."}))
+                    {
+                    var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.UnrecognizedVerb(""));
+
+                    node.AddDiagnostic(diagnostic);
+                }
+
+                ConsumeCurrentTokenInto(node);
+                /*}*/
+            }
+
+           return ParseTrailingWhitespace(node, stopAfterNewLine: true);
+            /*return ParseTrailingWhitespace(node);
+
+            return node;*/
 
         }
 

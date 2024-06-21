@@ -172,8 +172,37 @@ public partial class HttpParserTests
             namedRequest.ValueNode.Text.Should().Be("login");
         }
 
+        [Fact]
+        public void comments_before_named_request()
+        {
+            var code = """
+                // test comment
+                // @name login
+                POST {{baseUrl}}/api/login HTTP/1.1 
+                
+                Content-Type: application/x-www-form-urlencoded 
+                
+                
+                
+                name=foo&password=bar 
+                
+                
+                
+                """;
+
+            var result = Parse(code);
+
+            result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNode>().Should().HaveCount(2);
+            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
+
+            namedRequest.ValueNode.Text.Should().Be("login");
+        }
+
         [Theory]
-        [InlineData("@ name")]
+        [InlineData(" @name   ")]
+        [InlineData("@name     ")]
+        [InlineData("                @name   ")]
+        [InlineData("              @name")]
 
         public void miscellaneous_spaces_around_name_parsed_correctly(string nameToken)
         {
@@ -198,6 +227,7 @@ public partial class HttpParserTests
             var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
 
             namedRequest.NameNode.Text.Should().Be("@name");
+            namedRequest.ValueNode.Text.Should().Be("login");
         }
     }
 }
