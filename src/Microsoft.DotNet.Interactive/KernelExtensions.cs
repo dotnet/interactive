@@ -633,36 +633,13 @@ public static class KernelExtensions
         if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
             kernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
         {
-            kernel.AddDirective(who());
-            kernel.AddDirective(whos());
+            kernel.AddDirective(new KernelActionDirective("#!who") { Description = LocalizationResources.Magics_who_Description() },
+                                async (_, context) => await DisplayValues(context, false));
+            kernel.AddDirective(new KernelActionDirective("#!whos") { Description = LocalizationResources.Magics_whos_Description() },
+                                async (_, context) => await DisplayValues(context, true));
         }
+
         return kernel;
-    }
-
-    private static Command who()
-    {
-        var command = new Command(name: "#!who", LocalizationResources.Magics_who_Description())
-        {
-            Handler = CommandHandler.Create(async (InvocationContext ctx) =>
-            {
-                await DisplayValues(ctx.GetService<KernelInvocationContext>(), false);
-            })
-        };
-
-        return command;
-    }
-
-    private static Command whos()
-    {
-        var command = new Command("#!whos", LocalizationResources.Magics_whos_Description())
-        {
-            Handler = CommandHandler.Create(async (InvocationContext ctx) =>
-            {
-                await DisplayValues(ctx.GetService<KernelInvocationContext>(), true);
-            })
-        };
-
-        return command;
     }
 
     private static async Task DisplayValues(KernelInvocationContext context, bool detailed)
