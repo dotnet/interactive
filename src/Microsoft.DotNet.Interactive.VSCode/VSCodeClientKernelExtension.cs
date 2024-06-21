@@ -17,7 +17,7 @@ public class VSCodeClientKernelExtension
                 "vscode",
                 new Uri("kernel://vscode"),
                 new[] { "frontend" });
-            hostKernel.ChooseKernelDirective.IsHidden = true;
+            // FIX: (LoadAsync)    hostKernel.ChooseKernelDirective.IsHidden = true;
             hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestInput)));
             root.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), "vscode");
             hostKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(SendEditableCode)));

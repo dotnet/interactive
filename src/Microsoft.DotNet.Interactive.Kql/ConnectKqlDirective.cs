@@ -17,8 +17,8 @@ public class ConnectKqlDirective : ConnectKernelDirective<ConnectKqlKernel>
         : base("kql", "Connects to a Microsoft Kusto Server database")
     {
         ResolvedToolsServicePath = resolvedToolsServicePath;
-        AddOption(ClusterParameter);
-        AddOption(DatabaseParameter);
+        Parameters.Add(ClusterParameter);
+        Parameters.Add(DatabaseParameter);
     }
 
     public KernelDirectiveParameter ClusterParameter { get; } =
@@ -44,7 +44,7 @@ public class ConnectKqlDirective : ConnectKernelDirective<ConnectKqlKernel>
 
         var localName = connectCommand.ConnectedKernelName;
 
-        var found = context?.HandlingKernel?.RootKernel.FindKernelByName($"kql-{localName}") is not null;
+        var found = context.HandlingKernel?.RootKernel.FindKernelByName($"kql-{localName}") is not null;
 
         if (found)
         {

@@ -12,7 +12,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer;
 internal class MsSqlKernel : ToolsServiceKernel
 {
     private readonly string _connectionString;
-    private ChooseMsSqlKernelDirective _chooseKernelDirective;
 
     internal MsSqlKernel(
         string name,
@@ -40,18 +39,16 @@ internal class MsSqlKernel : ToolsServiceKernel
         }
     }
 
-    public override ChooseMsSqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
-
-    public override KernelSpecifierDirective CreateKernelSpecifierDirective()
+    public override KernelSpecifierDirective KernelSpecifierDirective
     {
-        var directive = base.CreateKernelSpecifierDirective();
-
-        directive.Parameters.Add(new("--name")
+        get
         {
-            Required = true
-        });
+            var directive = base.KernelSpecifierDirective;
 
-        return directive;
+            directive.Parameters.Add(new("--name"));
+
+            return directive;
+        }
     }
 
     protected override string CreateVariableDeclaration(string name, object value)

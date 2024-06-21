@@ -20,9 +20,9 @@ public class ConnectStdIoDirective : ConnectKernelDirective<ConnectStdio>
     {
         _kernelHostUri = kernelHostUri;
 
-        AddOption(CommandParameter);
-        AddOption(WorkingDirectoryParameter);
-        AddOption(KernelHostUriParameter);
+        Parameters.Add(CommandParameter);
+        Parameters.Add(WorkingDirectoryParameter);
+        Parameters.Add(KernelHostUriParameter);
     }
 
     private string CreateKernelHostAuthority()

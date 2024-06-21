@@ -12,7 +12,7 @@ public class ConnectSignalRDirective : ConnectKernelDirective<ConnectSignalR>
 {
     public ConnectSignalRDirective() : base("signalr", "Connects to a kernel using SignalR")
     {
-        AddOption(HubUrlParameter);
+        Parameters.Add(HubUrlParameter);
     }
 
     public KernelDirectiveParameter HubUrlParameter { get; } =

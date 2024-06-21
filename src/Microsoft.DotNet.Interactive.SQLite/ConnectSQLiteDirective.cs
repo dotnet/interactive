@@ -13,7 +13,7 @@ public class ConnectSQLiteDirective : ConnectKernelDirective<ConnectSQLiteKernel
     public ConnectSQLiteDirective()
         : base("sqlite", "Connects to a SQLite database")
     {
-        AddOption(ConnectionStringParameter);
+        Parameters.Add(ConnectionStringParameter);
     }
 
     public KernelDirectiveParameter ConnectionStringParameter { get; } =

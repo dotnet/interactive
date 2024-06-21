@@ -12,7 +12,7 @@ public class ConnectNamedPipeDirective : ConnectKernelDirective<ConnectNamedPipe
 {
     public ConnectNamedPipeDirective() : base("named-pipe", "Connects to a kernel using named pipes")
     {
-        AddOption(PipeNameParameter);
+        Parameters.Add(PipeNameParameter);
     }
 
     public KernelDirectiveParameter PipeNameParameter { get; } =

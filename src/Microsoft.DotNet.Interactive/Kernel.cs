@@ -27,6 +27,7 @@ using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
+
 namespace Microsoft.DotNet.Interactive;
 
 public abstract partial class Kernel :
@@ -43,7 +44,7 @@ public abstract partial class Kernel :
     private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
     private readonly ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler = new();
     private FrontendEnvironment _frontendEnvironment;
-    private ChooseKernelDirective _chooseKernelDirective;
+    private KernelSpecifierDirective _kernelSpecifierDirective;
     private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
     private KernelInvocationContext _inFlightContext;
     private int _countOfLanguageServiceCommandsInFlight = 0;
@@ -107,13 +108,6 @@ public abstract partial class Kernel :
     private KernelInfo InitializeKernelInfo(string name)
     {
         var kernelInfo = new KernelInfo(name);
-
-        foreach (var directive in Directives)
-        {
-            kernelInfo.SupportedDirectives.Add(directive is ChooseKernelDirective
-                                                   ? new KernelSpecifierDirective(directive.Name, Name)
-                                                   : new KernelActionDirective(directive.Name));
-        }
 
         foreach (var commandInfo in _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)))
         {
@@ -296,9 +290,6 @@ public abstract partial class Kernel :
     {
         SubmissionParser.AddDirective(command);
 
-        KernelInfo.SupportedDirectives.Add(command is ChooseKernelDirective
-                                               ? (KernelDirective)new KernelSpecifierDirective(command.Name, Name)
-                                               : (KernelDirective)new KernelActionDirective(command.Name));
         SubmissionParser.ResetParser();
     }
 
@@ -327,17 +318,13 @@ public abstract partial class Kernel :
         {
             KernelInfo.SupportedDirectives.Add(directive);
         }
-        else
-        {
-            // FIX: (AddDirective) throw?
-        }
 
         RegisterCommandHandler(handler);
 
         KernelCommandEnvelope.RegisterCommand<TCommand>();
     }
 
-    public virtual KernelSpecifierDirective CreateKernelSpecifierDirective() => new($"#!{Name}", Name);
+    public virtual KernelSpecifierDirective KernelSpecifierDirective => _kernelSpecifierDirective ??= new($"#!{Name}", Name);
 
     private void RegisterDirectiveCommandHandler(KernelActionDirective directive, KernelCommandInvocation handler)
     {
@@ -803,11 +790,11 @@ public abstract partial class Kernel :
 
         var result = directiveNode.GetDirectiveParseResult();
 
-        if (result.CommandResult.Command == ChooseKernelDirective)
-        {
-            return result.GetCompletions()
-                .Select(s => SubmissionParser.CompletionItemFor(s.Label, result));
-        }
+        // if (result.CommandResult.Command == ChooseKernelDirective)
+        // {
+        //     return result.GetCompletions()
+        //         .Select(s => SubmissionParser.CompletionItemFor(s.Label, result));
+        // }
 
         var allCompletions = new List<CompletionItem>();
         var topDirectiveParser = SubmissionParser.GetDirectiveParser();
@@ -968,8 +955,6 @@ public abstract partial class Kernel :
         KernelInvocationContext context) => context.HandlingKernel = this;
 
     public void Dispose() => _disposables.Dispose();
-
-    public virtual ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 
     internal virtual bool AcceptsUnknownDirectives => false;
 

@@ -73,7 +73,6 @@ StormEvents | take 10
     [KqlFact]
     public async Task It_does_not_add_a_kernel_on_connection_failure()
     {
-        var cluster = KqlFactAttribute.GetClusterForTests();
         using var kernel = await CreateKernelAsync();
         var result = await kernel.SubmitCodeAsync(
             "#!connect kql --kernel-name KustoHelp --cluster \"invalid_cluster\" --database \"Samples\"");

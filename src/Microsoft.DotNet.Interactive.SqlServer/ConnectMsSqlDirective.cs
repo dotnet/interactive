@@ -19,8 +19,8 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
         : base("mssql", "Connects to a Microsoft SQL Server database")
     {
         ResolvedToolsServicePath = resolvedToolsServicePath;
-        AddOption(ConnectionStringParameter);
-        AddOption(CreateDbContextParameter);
+        Parameters.Add(ConnectionStringParameter);
+        Parameters.Add(CreateDbContextParameter);
     }
 
     private static KernelDirectiveParameter CreateDbContextParameter { get; } =
@@ -28,8 +28,10 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
             "Scaffold a DbContext in the C# kernel.");
 
     private KernelDirectiveParameter ConnectionStringParameter { get; } =
-        new("connectionString",
-            description: "The connection string used to connect to the database");
+        new("connectionString", description: "The connection string used to connect to the database")
+        {
+            AllowImplicitName = true
+        };
 
     public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
         ConnectMsSqlKernel connectCommand,

@@ -46,23 +46,25 @@ public class MermaidKernel : Kernel,
         return Task.CompletedTask;
     }
 
-    public override KernelSpecifierDirective CreateKernelSpecifierDirective()
+    public override KernelSpecifierDirective KernelSpecifierDirective
     {
-        var directive = base.CreateKernelSpecifierDirective();
+        get
+        {
+            var directive = base.KernelSpecifierDirective;
 
+            directive.Parameters.Add(new(
+                                         "--display-width",
+                                         description: "Specify width for the display."));
 
-        directive.Parameters.Add(new(
-                                     "--display-width",
-                                     description: "Specify width for the display."));
+            directive.Parameters.Add(new(
+                                         "--display-height",
+                                         description: "Specify height for the display."));
 
-        directive.Parameters.Add(new(
-                                     "--display-height",
-                                     description: "Specify height for the display."));
+            directive.Parameters.Add(new(
+                                         "--display-background-color",
+                                         description: "Specify background color for the display."));
 
-        directive.Parameters.Add(new(
-                                     "--display-background-color",
-                                     description: "Specify background color for the display."));
-
-        return directive;
+            return directive;
+        }
     }
 }

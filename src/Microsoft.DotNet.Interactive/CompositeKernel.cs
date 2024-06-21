@@ -64,7 +64,7 @@ public sealed class CompositeKernel :
 
         kernel.SetScheduler(Scheduler);
 
-        if (kernel.CreateKernelSpecifierDirective() is { } kernelSpecifierDirective)
+        if (kernel.KernelSpecifierDirective is { } kernelSpecifierDirective)
         {
             AddDirective(kernelSpecifierDirective);
 

@@ -12,7 +12,6 @@ namespace Microsoft.DotNet.Interactive.Kql;
 internal class MsKqlKernel : ToolsServiceKernel
 {
     private readonly KqlConnectionDetails _connectionDetails;
-    private ChooseMsKqlKernelDirective _chooseKernelDirective;
 
     public MsKqlKernel(
         string name,
@@ -36,18 +35,16 @@ internal class MsKqlKernel : ToolsServiceKernel
         }
     }
 
-    public override ChooseMsKqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
-
-    public override KernelSpecifierDirective CreateKernelSpecifierDirective()
+    public override KernelSpecifierDirective KernelSpecifierDirective
     {
-        var directive = base.CreateKernelSpecifierDirective();
-
-        directive.Parameters.Add(new("--name")
+        get
         {
-            Required = true
-        });
+            var directive = base.KernelSpecifierDirective;
 
-        return directive;
+            directive.Parameters.Add(new("--name"));
+
+            return directive;
+        }
     }
 
     protected override string CreateVariableDeclaration(string name, object value)

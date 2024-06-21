@@ -30,12 +30,6 @@ public abstract class ConnectKernelDirective<TCommand> : KernelActionDirective
         Required = true
     };
 
-    protected void AddOption(KernelDirectiveParameter parameter)
-    {
-        // FIX: (AddOption) inline and remove this method
-        Parameters.Add(parameter);
-    }
-
     /// <summary>
     /// Description used for the kernel connected using this command.
     /// </summary>
