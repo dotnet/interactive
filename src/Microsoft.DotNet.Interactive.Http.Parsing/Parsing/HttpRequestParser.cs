@@ -166,7 +166,7 @@ internal class HttpRequestParser
             }
 
             return node is not null
-                       ? ParseTrailingWhitespace(node, stopAfterNewLine: true)
+                       ? ParseTrailingWhitespace(node, stopAfterNewLine: false)
                        : null;
         }
 
@@ -312,7 +312,10 @@ internal class HttpRequestParser
                 return null;
             }
 
-            if (GetNextSignificantToken() is null)
+            var nextSigToken = GetNextSignificantToken();
+
+            if (GetNextSignificantToken() is null || nextSigToken is { Kind: HttpTokenKind.Punctuation }
+            and { Text: "@" })
             {
                 return null;
             }

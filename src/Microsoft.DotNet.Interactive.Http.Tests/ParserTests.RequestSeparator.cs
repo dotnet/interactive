@@ -72,5 +72,63 @@ public partial class HttpParserTests
 
             result.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestSeparatorNode>().Count().Should().Be(3);
         }
+
+        [Fact]
+        public void request_separator_nodes_after_variable_nodes_are_parsed_correctly()
+        {
+            var result = Parse(
+                """
+                @MyRestaurantApi_HostAddress = https://localhost:7293
+
+                ###
+
+                GET {{MyRestaurantApi_HostAddress}}/api/Contact
+
+                ###
+
+                @Somevar = hello
+
+                ###
+
+                PUT https://httpbin.org/anything
+                Content-Type: application/json
+
+                {
+                    "content": "content here"                    
+                }
+
+                ###
+                """
+                );
+
+            result.SyntaxTree.RootNode.GetDiagnostics().Should().BeEmpty();
+        }
+
+        [Fact]
+        public void request_separator_nodes_with_comments_after_variable_nodes_are_parsed_correctly()
+        {
+            var result = Parse(
+                """
+                @MyRestaurantApi_HostAddress = https://localhost:7293
+
+                ###
+
+                GET {{MyRestaurantApi_HostAddress}}/api/Contact
+
+                ### this is a test example
+
+                PUT https://httpbin.org/anything
+                Content-Type: application/json
+
+                {
+                    "content": "content here"                    
+                }
+
+                ###
+                """
+                );
+
+            result.SyntaxTree.RootNode.GetDiagnostics().Should().BeEmpty();
+        }
     }
 }
