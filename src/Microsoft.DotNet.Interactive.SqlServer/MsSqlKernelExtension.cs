@@ -21,10 +21,6 @@ public class MsSqlKernelExtension
             compositeKernel
                 .AddKernelConnector(new ConnectMsSqlDirective(sqlToolPath));
 
-            compositeKernel
-                .SubmissionParser
-                .SetInputTypeHint(typeof(MsSqlConnectionString), "connectionstring-mssql");
-
             KernelInvocationContext.Current?.Display(
                 new HtmlString(@"<details><summary>Query Microsoft SQL Server databases.</summary>
 <p>This extension adds support for connecting to Microsoft SQL Server databases using the <code>#!connect mssql</code> magic command. For more information, run a cell using the <code>#!sql</code> magic command.</p>

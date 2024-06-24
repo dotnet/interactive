@@ -165,9 +165,10 @@ public abstract class ToolsServiceKernel :
                 }
                 finally
                 {
+                    command.Parameters.TryGetValue("--name", out var queryName);
+
                     // Always store the query results - even if an exception occurred - so we don't end up with stale results
-                    // FIX: (HandleAsync) query name
-                    StoreQueryResultSet("", results);
+                    StoreQueryResultSet(queryName ?? "", results);
                 }
 
                 completion.SetResult(true);

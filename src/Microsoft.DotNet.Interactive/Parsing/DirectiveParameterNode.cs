@@ -80,14 +80,19 @@ internal class DirectiveParameterNode : SyntaxNode
     {
         if (Parent is DirectiveNode directiveNode)
         {
-            if (NameNode is not null)
+            if (directiveNode.TryGetDirective(out var directive))
             {
-                if (directiveNode.TryGetActionDirective(out var actionDirective))
+                if (NameNode is not null)
                 {
-                    if (actionDirective.TryGetParameter(NameNode.Text, out parameter))
+                    if (directive.TryGetParameter(NameNode.Text, out parameter))
                     {
                         return true;
                     }
+                }
+                else if (directive.Parameters.SingleOrDefault(p => p.AllowImplicitName) is { } implicitlyNamedParameter)
+                {
+                    parameter = implicitlyNamedParameter;
+                    return true;
                 }
             }
         }

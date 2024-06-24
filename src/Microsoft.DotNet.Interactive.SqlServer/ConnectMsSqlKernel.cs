@@ -12,5 +12,6 @@ public class ConnectMsSqlKernel : ConnectKernelCommand
     }
 
     public string ConnectionString { get; set; }
+
     public bool CreateDbContext { get; set; }
 }

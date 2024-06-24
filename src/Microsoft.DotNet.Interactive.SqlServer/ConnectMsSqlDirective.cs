@@ -25,12 +25,16 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
 
     private static KernelDirectiveParameter CreateDbContextParameter { get; } =
         new("--create-dbcontext",
-            "Scaffold a DbContext in the C# kernel.");
+            "Scaffold a DbContext in the C# kernel.")
+        {
+            Flag = true
+        };
 
     private KernelDirectiveParameter ConnectionStringParameter { get; } =
         new("connectionString", description: "The connection string used to connect to the database")
         {
-            AllowImplicitName = true
+            AllowImplicitName = true,
+            TypeHint = "connectionstring-mssql"
         };
 
     public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
@@ -45,7 +49,7 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
 
         var localName = connectCommand.ConnectedKernelName;
 
-        var found = context?.HandlingKernel?.RootKernel.FindKernelByName($"sql-{localName}") is not null;
+        var found = context.HandlingKernel?.RootKernel.FindKernelByName($"sql-{localName}") is not null;
 
         if (found)
         {
@@ -82,58 +86,61 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
 
         context.DisplayAs($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
 
-        var submission1 = @$"  
-#r ""nuget: Microsoft.Data.SqlClient, 5.1.5""
-#r ""nuget: Microsoft.EntityFrameworkCore.Design, 7.0.13""
-#r ""nuget: Microsoft.EntityFrameworkCore.SqlServer, 7.0.13""
-#r ""nuget: Humanizer.Core, 2.14.1""
-#r ""nuget: Humanizer, 2.14.1""
-#r ""nuget: Microsoft.Identity.Client, 4.57.0""
-
+        // FIX: (InitializeDbContextAsync) package versions to make them reference the ones that are already referenced at build time
+        var submission1 = $$"""
+            #r "nuget: Microsoft.Data.SqlClient, 5.2.0"
+            #r "nuget: Microsoft.EntityFrameworkCore.Design, 8.0.6"
+            #r "nuget: Microsoft.EntityFrameworkCore.SqlServer, 8.0.6"
+            #r "nuget: Humanizer.Core, 2.14.1"
+            #r "nuget: Humanizer, 2.14.1"
+            #r "nuget: Microsoft.Identity.Client, 4.61.3"
+            
             using System;
-using System.Reflection;
-using System.Linq;
-using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Scaffolding;
-using Microsoft.Extensions.DependencyInjection;
+            using System.Reflection;
+            using System.Linq;
+            using Microsoft.EntityFrameworkCore.Design;
+            using Microsoft.EntityFrameworkCore.Scaffolding;
+            using Microsoft.Extensions.DependencyInjection;
 
-var services = new ServiceCollection();
-services.AddEntityFrameworkDesignTimeServices();
-var providerAssembly = Assembly.Load(""Microsoft.EntityFrameworkCore.SqlServer"");
-var providerServicesAttribute = providerAssembly.GetCustomAttribute<DesignTimeProviderServicesAttribute>();
-var providerServicesType = providerAssembly.GetType(providerServicesAttribute.TypeName);
-var providerServices = (IDesignTimeServices)Activator.CreateInstance(providerServicesType);
-providerServices.ConfigureDesignTimeServices(services);
+            var services = new ServiceCollection();
+            services.AddEntityFrameworkDesignTimeServices();
+            var providerAssembly = Assembly.Load("Microsoft.EntityFrameworkCore.SqlServer");
+            var providerServicesAttribute = providerAssembly.GetCustomAttribute<DesignTimeProviderServicesAttribute>();
+            var providerServicesType = providerAssembly.GetType(providerServicesAttribute.TypeName);
+            var providerServices = (IDesignTimeServices)Activator.CreateInstance(providerServicesType);
+            providerServices.ConfigureDesignTimeServices(services);
 
-var serviceProvider = services.BuildServiceProvider();
-var scaffolder = serviceProvider.GetService<IReverseEngineerScaffolder>();
+            var serviceProvider = services.BuildServiceProvider();
+            var scaffolder = serviceProvider.GetService<IReverseEngineerScaffolder>();
 
-var model = scaffolder.ScaffoldModel(
-    @""{options.ConnectionString}"",
-    new DatabaseModelFactoryOptions(),
-    new ModelReverseEngineerOptions(),
-    new ModelCodeGenerationOptions()
-    {{
-        ContextName = ""{kernelName}Context"",
-        ModelNamespace = ""{kernelName}""
-    }});
+            var model = scaffolder.ScaffoldModel(
+                @"{{options.ConnectionString}}",
+                new DatabaseModelFactoryOptions(),
+                new ModelReverseEngineerOptions(),
+                new ModelCodeGenerationOptions()
+                {
+                    ContextName = "{{kernelName}}Context",
+                    ModelNamespace = "{{kernelName}}"
+                });
 
-var code = @""using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;"";
+            var code = @"using System;
+            using System.Collections.Generic;
+            using Microsoft.EntityFrameworkCore;
+            using Microsoft.EntityFrameworkCore.Metadata;";
 
-foreach (var file in  new[] {{ model.ContextFile.Code }}.Concat(model.AdditionalFiles.Select(f => f.Code)))
-{{
-    var namespaceToFind = ""namespace {kernelName};"";
-    var headerSize = file.LastIndexOf(namespaceToFind)  + namespaceToFind.Length;
-    var fileCode = file
-        // remove namespaces, which don't compile in Roslyn scripting
-        .Substring(headerSize).Trim();
+            foreach (var file in  new[] { model.ContextFile.Code }.Concat(model.AdditionalFiles.Select(f => f.Code)))
+            {
+                var namespaceToFind = "namespace {{kernelName}};";
+                var headerSize = file.LastIndexOf(namespaceToFind)  + namespaceToFind.Length;
+                var fileCode = file
+                    // remove namespaces, which don't compile in Roslyn scripting
+                    .Substring(headerSize).Trim();
+            
+                code += fileCode;
+            }
 
-    code += fileCode;
-}}
-";
+            """;
+
         var submitCode = new SubmitCode(submission1);
         submitCode.SetParent(context.Command);
         await csharpKernel.SendAsync(submitCode, context.CancellationToken);

@@ -125,7 +125,7 @@ StormEvents | take 10
             .Which
             .Message
             .Should()
-            .Contain("A kernel with name KustoHelp is already present. Use a different value for the --kernel-name option.");
+            .Contain("A kernel with name KustoHelp is already present. Use a different value for the --kernel-name parameter.");
     }
 
     [KqlFact]
@@ -140,7 +140,7 @@ StormEvents | take 10
             .Should()
             .NotContainErrors();
 
-        result = await kernel.SubmitCodeAsync(@"
+        await kernel.SubmitCodeAsync(@"
 #!kql-KustoHelp --name my_data_result
 StormEvents | take 10
             ");

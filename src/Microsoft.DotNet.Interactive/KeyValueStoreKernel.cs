@@ -79,7 +79,10 @@ public class KeyValueStoreKernel :
                 Required = true
             });
             directive.Parameters.Add(new("--from-url"));
-            directive.Parameters.Add(new("--from-file"));
+            directive.Parameters.Add(new("--from-file")
+            {
+                TypeHint = "file"
+            });
             directive.Parameters.Add(new("--from-value"));
             directive.Parameters.Add(new("--mime-type"));
 

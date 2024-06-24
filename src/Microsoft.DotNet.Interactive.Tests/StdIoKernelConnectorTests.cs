@@ -18,10 +18,6 @@ namespace Microsoft.DotNet.Interactive.Tests
     {
         private readonly CompositeDisposable _disposables = new();
 
-        public StdIoKernelConnectorTests()
-        {
-        }
-
         public void Dispose()
         {
             _disposables.Dispose();

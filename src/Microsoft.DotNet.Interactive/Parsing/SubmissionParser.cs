@@ -4,10 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Binding;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -26,7 +24,6 @@ public class SubmissionParser
     private Parser _directiveParser;
     private PolyglotParserConfiguration _parserConfiguration;
     private RootCommand _rootCommand;
-    private Dictionary<Type, string> _customInputTypeHints;
 
     public SubmissionParser(Kernel kernel)
     {
@@ -257,12 +254,12 @@ public class SubmissionParser
 
         bool NoSplitWasNeeded()
         {
-            if (commands.Count == 0)
+            if (commands.Count is 0)
             {
                 return true;
             }
 
-            if (commands.Count == 1)
+            if (commands.Count is 1)
             {
                 if (commands[0] is SubmitCode sc)
                 {
@@ -673,20 +670,20 @@ public class SubmissionParser
 
         RequestInput requestInput;
 
-        if (parametersNodeText?[0] == '{')
+        if (parametersNodeText?[0] is '{')
         {
             requestInput = JsonSerializer.Deserialize<RequestInput>(parametersNode.Text, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
         else
         {
-            if (parametersNodeText?[0] == '"')
+            if (parametersNodeText?[0] is '"')
             {
                 parametersNodeText = JsonSerializer.Deserialize<string>(parametersNode.Text);
             }
 
             var valueName = GetValueNameFromNameParameter();
 
-            if (parametersNodeText?.Contains(" ") == true)
+            if (parametersNodeText?.Contains(" ") is true)
             {
                 requestInput = new(prompt: parametersNodeText,
                                    valueName: valueName);
@@ -704,11 +701,13 @@ public class SubmissionParser
         }
         else if (string.IsNullOrEmpty(requestInput.InputTypeHint))
         {
-            if (expressionNode.Parent?.Parent is DirectiveParameterNode parameterValueNode &&
-                parameterValueNode.TryGetParameter(out var parameter) &&
-                parameter.TypeHint is { } typeHint)
+            if (expressionNode.Parent?.Parent is DirectiveParameterNode parameterValueNode)
             {
-                requestInput.InputTypeHint = typeHint;
+                if (parameterValueNode.TryGetParameter(out var parameter) &&
+                    parameter.TypeHint is { } typeHint)
+                {
+                    requestInput.InputTypeHint = typeHint;
+                }
             }
         }
 
@@ -886,7 +885,7 @@ public class SubmissionParser
             }
             else if (parseResult.CommandResult.Children.FirstOrDefault(c => c.Tokens.Any(t => t.Value == replaceMe)) is { Symbol: { } symbol })
             {
-                typeHint = GetTypeHint(symbol);
+                // typeHint = GetTypeHint(symbol);
             }
 
             switch (parseResult.CommandResult.Command.Name)
@@ -1047,29 +1046,6 @@ public class SubmissionParser
         }
     }
 
-    private string GetTypeHint(Symbol symbol)
-    {
-        string hint;
-
-        if (_customInputTypeHints is not null &&
-            symbol is IValueDescriptor descriptor &&
-            _customInputTypeHints.TryGetValue(descriptor.ValueType, out hint))
-        {
-            return hint;
-        }
-
-        hint = symbol switch
-        {
-            IValueDescriptor<DateTime> => "datetime-local",
-            IValueDescriptor<int> => "number",
-            IValueDescriptor<float> => "number",
-            IValueDescriptor<FileSystemInfo> => "file",
-            IValueDescriptor<Uri> => "url",
-            _ => null
-        };
-        return hint;
-    }
-
     public void AddDirective(Command command)
     {
         if (command is null)
@@ -1104,20 +1080,6 @@ public class SubmissionParser
         _rootCommand.Add(command);
 
         ResetParser();
-    }
-
-    /// <summary>
-    /// Specifies the type hint to be used for a given destination type parsed as a magic command input type. 
-    /// </summary>
-    /// <remarks>Type hints are loosely based on the types used for HTML <c>input</c> elements. They allow what is ultimately a text input to be presented in a more specific way (e.g. a date or file picker) to a user according to the capabilities of a UI.</remarks>
-    public void SetInputTypeHint(Type expectedType, string inputTypeHint)
-    {
-        if (_customInputTypeHints is null)
-        {
-            _customInputTypeHints = new();
-        }
-
-        _customInputTypeHints[expectedType] = inputTypeHint;
     }
 
     internal void ResetParser()

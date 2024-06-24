@@ -17,7 +17,8 @@ public static class Serializer
             WriteIndented = false,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            PropertyNameCaseInsensitive = true
         };
         JsonSerializerOptions.Converters.Add(new DataDictionaryConverter());
         JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
