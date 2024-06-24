@@ -255,6 +255,37 @@ public partial class HttpParserTests
         }
 
         [Fact]
+        public void binding_for_variable_with_period_is_correct()
+        {
+            var result = Parse(
+                """             
+                @host.name = httpbin.org
+                @host.full = https://{{host.name}}                     
+
+                POST {{host.full}}/anything HTTP/1.1
+                content-type: application/json
+
+                {
+                    "name": "sample1",
+                }
+
+                
+                """
+                );
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes
+                                    .Should().ContainSingle<HttpRequestNode>().Which;
+
+            var bindingResult = requestNode.TryGetHttpRequestMessage(node =>
+            {
+                return node.CreateBindingFailure(CreateDiagnosticInfo(""));
+            });
+
+            bindingResult.IsSuccessful.Should().BeTrue();
+            bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/anything");
+        }
+
+        [Fact]
         public void binding_for_variable_in_header_is_correct()
         {
             var result = Parse(
