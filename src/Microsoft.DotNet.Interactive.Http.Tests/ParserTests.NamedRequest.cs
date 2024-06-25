@@ -91,11 +91,21 @@ public partial class HttpParserTests
             namedRequest.GetDiagnostics().Should().HaveCount(1);   
         }
 
-        [Fact]
-        public void named_request_with_special_characters_produces_an_error()
+        [Theory]
+        [InlineData("tes!")]
+        [InlineData("tes#")]
+        [InlineData("tes!t")]
+        [InlineData("+est")]
+        [InlineData("e-st")]
+        [InlineData("te$t")]
+        [InlineData("test%")]
+        [InlineData("test^")]
+        [InlineData("test&")]
+        [InlineData("test*")]
+        public void named_request_with_special_characters_produces_an_error(string name)
         {
-            var code = """
-                # @name tes!
+            var code = $$$"""
+                # @name {{{name}}}
 
                 POST {{baseUrl}}/api/login HTTP/1.1 
 
@@ -112,9 +122,9 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
+            result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Should().ContainSingle().Which.GetDiagnostics().Should().ContainSingle().Which.GetMessage().Should().Be("""The supplied name does not follow the correct pattern. The name should only contain alphanumerical characters.""");
 
-            namedRequest.GetDiagnostics().Should().HaveCount(1);
+            
         }
 
         [Theory]
@@ -149,7 +159,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public void named_request_with_slash_for_comment_start()
+        public void named_request_comments_can_use_double_slash_prefix()
         {
             var code = """
                 // @name login
@@ -173,7 +183,7 @@ public partial class HttpParserTests
         }
 
         [Fact]
-        public void comments_before_named_request()
+        public void comments_before_named_request_are_parsed_correctly()
         {
             var code = """
                 // test comment

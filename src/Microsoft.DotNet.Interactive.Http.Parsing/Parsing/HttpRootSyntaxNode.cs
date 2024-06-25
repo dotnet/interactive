@@ -77,25 +77,25 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
 
                     });
 
-                    if (value is not null)
+                    
+                    if(value?.Value != null)
                     {
-                        if(value.Value is not null)
+                        declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
+                    } 
+                    else 
+                    {
+                        if(diagnostics is null)
                         {
-                            declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
+                            diagnostics = value?.Diagnostics;
                         } 
-                        else 
+                        else
                         {
-                            if(diagnostics is null)
-                            {
-                                diagnostics = value.Diagnostics;
-                            } 
-                            else
+                            if (value is not null)
                             {
                                 diagnostics.AddRange(value.Diagnostics);
                             }
                             
-                        }
-                        
+                        }       
                     }
                 }
             }

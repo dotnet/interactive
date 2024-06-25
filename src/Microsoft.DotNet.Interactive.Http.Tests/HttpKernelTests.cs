@@ -2131,8 +2131,6 @@ public class HttpKernelTests
         var client = new HttpClient();
         using var kernel = new HttpKernel(client: client);
 
-        using var _ = new AssertionScope();
-
         var code = """
             @baseUrl = https://httpbin.org/anything
 

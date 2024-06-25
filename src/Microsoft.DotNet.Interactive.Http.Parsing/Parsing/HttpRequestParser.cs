@@ -674,7 +674,7 @@ internal class HttpRequestParser
                 {
                     if (CurrentToken is not null && !(CurrentToken is { Kind: HttpTokenKind.Word } or { Text: "_" or "@" or "."}))
                     {
-                    var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.UnrecognizedVerb(""));
+                    var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
 
                     node.AddDiagnostic(diagnostic);
                 }
@@ -694,8 +694,7 @@ internal class HttpRequestParser
         {
             return (CurrentToken is { Text: "@" } &&
                 CurrentTokenPlus(1) is { Text: "name" } &&
-                CurrentTokenPlus(2) is { Kind: HttpTokenKind.Whitespace } &&
-                CurrentTokenPlus(3) is { Kind: HttpTokenKind.Word }
+                CurrentTokenPlus(2) is { Kind: HttpTokenKind.Whitespace }
                     );
         }
 

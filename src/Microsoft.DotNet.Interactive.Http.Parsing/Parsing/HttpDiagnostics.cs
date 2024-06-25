@@ -181,13 +181,22 @@ internal static class HttpDiagnostics
         var id = $"HTTP0021";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""";
+            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""";
         return new HttpDiagnosticInfo(id, messageFormat, severity, expression);
+    }
+
+    internal static HttpDiagnosticInfo InvalidNamedRequestName()
+    {
+        var id = $"HTTP0022";
+        var severity = DiagnosticSeverity.Error;
+        var messageFormat =
+            """The supplied name does not follow the correct pattern. The name should only contain alphanumerical characters.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity);
     }
 
     internal static HttpDiagnosticInfo InvalidBodyInNamedRequest(string name)
     {
-        var id = $"HTTP0022";
+        var id = $"HTTP0023";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
             """The supplied named request '{0}' does not have a request body.""";
@@ -196,7 +205,7 @@ internal static class HttpDiagnostics
 
     internal static HttpDiagnosticInfo InvalidHeaderNameInNamedRequest(string headerName)
     {
-        var id = $"HTTP0023";
+        var id = $"HTTP0024";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
             """The supplied header name '{0}' does not exist in the named request.""";
@@ -205,7 +214,7 @@ internal static class HttpDiagnostics
 
     internal static HttpDiagnosticInfo InvalidHeadersInNamedRequest(string name)
     {
-        var id = $"HTTP0023";
+        var id = $"HTTP0025";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
             """The supplied named request '{0}' does not have any headers.""";
@@ -214,25 +223,25 @@ internal static class HttpDiagnostics
 
     internal static HttpDiagnosticInfo InvalidXmlNodeInNamedRequest(string xmlNode)
     {
-        var id = $"HTTP0024";
+        var id = $"HTTP0026";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            """The supplied xml name '{0}' does not exist in the named request.""";
+            """The supplied XML name '{0}' does not exist in the named request.""";
         return new HttpDiagnosticInfo(id, messageFormat, severity, xmlNode);
     }
 
     internal static HttpDiagnosticInfo InvalidContentType(string contentType, string content)
     {
-        var id = $"HTTP0025";
+        var id = $"HTTP0027";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            """The supplied named request has content type of '{0}' which differs from the content type needed of '{1}'.""";
+            """The supplied named request has content type of '{0}' which differs from the required content type of '{1}'.""";
         return new HttpDiagnosticInfo(id, messageFormat, severity, contentType, content);
     }
 
     internal static HttpDiagnosticInfo InvalidContentInNamedRequest()
     {
-        var id = $"HTTP0026";
+        var id = $"HTTP0028";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
             """The response does not contain any content.""";
