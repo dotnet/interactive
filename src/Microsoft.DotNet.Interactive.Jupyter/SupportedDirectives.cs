@@ -2,19 +2,19 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.CommandLine;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public class SupportedDirectives
 {
-    public SupportedDirectives(string kernelName, IReadOnlyList<Command> commands)
+    public SupportedDirectives(string kernelName, IReadOnlyList<KernelDirective> directives)
     {
         KernelName = kernelName;
-        Commands = commands;
+        Directives = directives;
     }
 
     public string KernelName { get; }
 
-    public IReadOnlyList<Command> Commands { get; }
+    public IReadOnlyList<KernelDirective> Directives { get; }
 }

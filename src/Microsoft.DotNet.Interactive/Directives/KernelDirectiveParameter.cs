@@ -30,19 +30,16 @@ public class KernelDirectiveParameter
 
     public bool Flag { get; set; }
 
-    public void AddCompletions(Func<KernelDirectiveCompletionContext, IEnumerable<CompletionItem>> getCompletions)
+    public KernelDirectiveParameter AddCompletions(Func<KernelDirectiveCompletionContext, IEnumerable<CompletionItem>> getCompletions)
     {
         // FIX: (AddCompletions) 
+        return this;
     }
 
-    public void AddCompletions(Func<KernelDirectiveCompletionContext, IEnumerable<string>> getCompletions)
+    public KernelDirectiveParameter AddCompletions(Func<KernelDirectiveCompletionContext, IEnumerable<string>> getCompletions)
     {
         // FIX: (AddCompletions) 
-    }
-
-    public void AddCompletions(IEnumerable<CompletionItem> getCompletions)
-    {
-        // FIX: (AddCompletions) 
+        return this;
     }
 
     public IReadOnlyList<CompletionItem> GetCompletions()

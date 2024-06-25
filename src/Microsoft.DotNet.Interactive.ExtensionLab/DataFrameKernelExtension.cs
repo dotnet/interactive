@@ -3,18 +3,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Completions;
-using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Html;
+using Microsoft.CodeAnalysis.Tags;
 using Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.ML;
@@ -30,44 +30,53 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 if (kernel is CSharpKernel cSharpKernel)
                 {
-                    var showCodeOption = new Option<bool>("--show-code", "Display the C# code for the generated DataFrame types");
-
-                    var variableNameArg = new Argument<string>("variable-name", "The name of the variable to replace")
-                        .AddCompletions(ctx => cSharpKernel.ScriptState
-                                                           .Variables
-                                                           .Where(v => v.Value is DataFrame)
-                                                           .Select(v => new CompletionItem(v.Name)));
-                    var command = new Command("#!linqify", "Replaces the specified Microsoft.Data.Analysis.DataFrame with a derived type for LINQ access to the contained data")
+                    var showCodeParameter = new KernelDirectiveParameter("--show-code")
                     {
-                        showCodeOption,
-                        variableNameArg
+                        Description = "Display the C# code for the generated DataFrame types",
+                        Flag = true
                     };
 
-                    cSharpKernel.AddDirective(command);
+                    var variableNameParameter = new KernelDirectiveParameter("--variable-name")
+                    {
+                        Description = "The name of the variable to replace",
+                        AllowImplicitName = true
+                    };
 
-                    command.Handler = CommandHandler.Create(Linqify);
+                    variableNameParameter.AddCompletions(_ => cSharpKernel.ScriptState
+                                                                          .Variables
+                                                                          .Where(v => v.Value is DataFrame)
+                                                                          .Select(v => new CompletionItem(v.Name, WellKnownTags.Parameter)));
+
+                    var directive = new KernelActionDirective("#!linqify")
+                    {
+                        Description = "Replaces the specified Microsoft.Data.Analysis.DataFrame with a derived type for LINQ access to the contained data"
+                    };
+
+                    directive.Parameters.Add(showCodeParameter);
+                    directive.Parameters.Add(variableNameParameter);
+
+                    cSharpKernel.AddDirective<Linqify>(directive, Linqify);
 
                     async Task Linqify(
-                        string variableName,
-                        bool showCode,
+                        Linqify command,
                         KernelInvocationContext context)
                     {
-                        if (cSharpKernel.TryGetValue<DataFrame>(variableName, out var dataFrame))
+                        if (cSharpKernel.TryGetValue<DataFrame>(command.VariableName, out var dataFrame))
                         {
                             var code = BuildTypedDataFrameCode(
                                 dataFrame,
-                                variableName);
+                                command.VariableName);
 
-                            if (showCode)
+                            if (command.ShowCode)
                             {
                                 context.Display(code);
                             }
 
-                            cSharpKernel.TryGetValue(variableName, out DataFrame oldFrame);
+                            cSharpKernel.TryGetValue(command.VariableName, out DataFrame oldFrame);
 
                             await cSharpKernel.SendAsync(new SubmitCode(code));
 
-                            cSharpKernel.TryGetValue(variableName, out DataFrame newFrame);
+                            cSharpKernel.TryGetValue(command.VariableName, out DataFrame newFrame);
 
                             foreach (var column in oldFrame.Columns)
                             {
@@ -150,6 +159,12 @@ var {variableName} = new {frameTypeName}();
             value = Regex.Replace(value, @"([^a-zA-Z]+)", "_");
             return value;
         }
+    }
+
+    public class Linqify : KernelCommand
+    {
+        public bool ShowCode { get; set; }
+        public string VariableName { get; set; }
     }
 }
 

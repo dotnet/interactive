@@ -113,30 +113,6 @@ hello!
     }
 
     [Fact]
-    public async Task Connected_kernel_help_description_provides_context_about_the_connection()
-    {
-        using var compositeKernel = new CompositeKernel();
-
-        compositeKernel.AddKernelConnector(
-            new ConnectFakeKernelDirective("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
-
-        await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake-kernel");
-
-        var result = await compositeKernel.SubmitCodeAsync("#!fake-kernel -h");
-
-        result.Events.Should()
-              .ContainSingle<StandardOutputValueProduced>()
-              .Which
-              .FormattedValues
-              .Should()
-              .ContainSingle()
-              .Which
-              .Value
-              .Should()
-              .ContainAll("#!fake-kernel", "Connects the fake kernel (Connected kernel)");
-    }
-
-    [Fact]
     public async Task Multiple_connections_can_be_created_using_the_same_connection_type()
     {
         using var compositeKernel = new CompositeKernel();

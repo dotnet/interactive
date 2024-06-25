@@ -2,12 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
@@ -207,14 +207,8 @@ public partial class CompletionTests
             compositeKernel.DefaultKernelName = cSharpKernel.Name;
 
             var commandName = "#!hello";
-            compositeKernel.AddDirective(new Command(commandName)
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
-            cSharpKernel.AddDirective(new Command(commandName)
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
+            compositeKernel.AddDirective(new KernelActionDirective(commandName),  (_, _) => Task.CompletedTask);
+            cSharpKernel.AddDirective(new KernelActionDirective(commandName),  (_, _) => Task.CompletedTask);
 
             var result = await compositeKernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
 
@@ -243,15 +237,9 @@ public partial class CompletionTests
 
             var kernelToExtend = kernel.FindKernelByName(defaultLanguage.LanguageName());
 
-            kernelToExtend.AddDirective(new Command("#!directiveOnChild")
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
+            kernelToExtend.AddDirective(new KernelActionDirective("#!directiveOnChild"),  (_, _) => Task.CompletedTask);
 
-            kernel.AddDirective(new Command("#!directiveOnParent")
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
+            kernel.AddDirective(new KernelActionDirective("#!directiveOnParent"),  (_, _) => Task.CompletedTask);
 
             var completions = await markupCode
                 .ParseMarkupCode()

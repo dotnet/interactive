@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -283,15 +281,6 @@ public abstract partial class Kernel :
     public string Name { get; }
 
     public KernelInfo KernelInfo => _kernelInfo;
-
-    public IReadOnlyCollection<Command> Directives => SubmissionParser.Directives;
-
-    public void AddDirective(Command command)
-    {
-        SubmissionParser.AddDirective(command);
-
-        SubmissionParser.ResetParser();
-    }
 
     public void AddDirective(KernelActionDirective directive, KernelCommandInvocation handler)
     {
@@ -783,49 +772,42 @@ public abstract partial class Kernel :
         DirectiveNode directiveNode,
         int requestPosition)
     {
-        var directiveParsers = new List<Parser>();
-
-        directiveParsers.AddRange(
-            GetDirectiveParsersForCompletion(directiveNode, requestPosition));
-
-        var result = directiveNode.GetDirectiveParseResult();
-
-        // if (result.CommandResult.Command == ChooseKernelDirective)
-        // {
-        //     return result.GetCompletions()
-        //         .Select(s => SubmissionParser.CompletionItemFor(s.Label, result));
-        // }
-
+        // var directiveParsers = new List<Parser>();
+        //
+        // directiveParsers.AddRange(
+        //     GetDirectiveParsersForCompletion(directiveNode, requestPosition));
+        //
+        // var result = directiveNode.GetDirectiveParseResult();
+        //
+        // // if (result.CommandResult.Command == ChooseKernelDirective)
+        // // {
+        // //     return result.GetCompletions()
+        // //         .Select(s => SubmissionParser.CompletionItemFor(s.Label, result));
+        // // }
+        //
         var allCompletions = new List<CompletionItem>();
-        var topDirectiveParser = SubmissionParser.GetDirectiveParser();
-        var prefix = topDirectiveParser.Configuration.RootCommand.Name + " ";
-        requestPosition += prefix.Length;
-
-        foreach (var parser in directiveParsers)
-        {
-            var effectiveText = $"{prefix}{directiveNode.Text}";
-
-            var parseResult = parser.Parse(effectiveText);
-
-            var suggestions = parseResult.GetCompletions(requestPosition);
-
-            var completions = suggestions
-                .Select(s => SubmissionParser.CompletionItemFor(s.Label, parseResult))
-                .ToArray();
-
-            allCompletions.AddRange(completions);
-        }
+        // var topDirectiveParser = SubmissionParser.GetDirectiveParser();
+        // var prefix = topDirectiveParser.Configuration.RootCommand.Name + " ";
+        // requestPosition += prefix.Length;
+        //
+        // foreach (var parser in directiveParsers)
+        // {
+        //     var effectiveText = $"{prefix}{directiveNode.Text}";
+        //
+        //     var parseResult = parser.Parse(effectiveText);
+        //
+        //     var suggestions = parseResult.GetCompletions(requestPosition);
+        //
+        //     var completions = suggestions
+        //         .Select(s => SubmissionParser.CompletionItemFor(s.Label, parseResult))
+        //         .ToArray();
+        //
+        //     allCompletions.AddRange(completions);
+        // }
 
         return allCompletions
             .Distinct(CompletionItemComparer.Instance)
             .ToArray();
-    }
-
-    private protected virtual IEnumerable<Parser> GetDirectiveParsersForCompletion(
-        DirectiveNode directiveNode,
-        int requestPosition)
-    {
-        yield return SubmissionParser.GetDirectiveParser();
     }
 
     private void TrySetHandler(

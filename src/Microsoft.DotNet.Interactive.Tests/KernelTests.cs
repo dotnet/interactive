@@ -1,10 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -17,6 +14,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 #if !NETFRAMEWORK
+using System;
 using Microsoft.DotNet.Interactive.CSharp;
 #endif
 

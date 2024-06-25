@@ -2,9 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.NamingConventionBinder;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -18,7 +15,6 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
@@ -63,47 +59,49 @@ using static {typeof(TopLevelMethods).FullName};
             .UseAdvancedExtensions()
             .Build();
 
-        kernel.AddDirective(new Command("#!markdown", LocalizationResources.Magics_markdown_Description())
+        var directive = new KernelActionDirective("#!markdown")
         {
-            Handler = CommandHandler.Create((InvocationContext cmdLineContext) =>
+            Description= LocalizationResources.Magics_markdown_Description()
+        };
+
+        kernel.AddDirective(directive, RenderMarkdownAsHtml);
+
+        Task RenderMarkdownAsHtml(KernelCommand _, KernelInvocationContext context)
+        {
+            if (context.Command is SubmitCode submitCode)
             {
-                var context = cmdLineContext.GetService<KernelInvocationContext>();
+                var markdown = submitCode.Code
+                                         .Replace("#!markdown", "")
+                                         .Trim();
 
-                if (context.Command is SubmitCode submitCode)
+                var document = Markdown.Parse(
+                    markdown,
+                    pipeline);
+
+                string html;
+
+                using (var writer = new StringWriter())
                 {
-                    var markdown = submitCode.Code
-                        .Replace("#!markdown", "")
-                        .Trim();
-
-                    var document = Markdown.Parse(
-                        markdown,
-                        pipeline);
-
-                    string html;
-
-                    using (var writer = new StringWriter())
-                    {
-                        var renderer = new HtmlRenderer(writer);
-                        pipeline.Setup(renderer);
-                        renderer.Render(document);
-                        html = writer.ToString();
-                    }
-
-                    context.Publish(
-                        new DisplayedValueProduced(
-                            html,
-                            context.Command,
-                            new[]
-                            {
-                                new FormattedValue("text/html", html)
-                            }));
-
-                    context.Complete(submitCode);
+                    var renderer = new HtmlRenderer(writer);
+                    pipeline.Setup(renderer);
+                    renderer.Render(document);
+                    html = writer.ToString();
                 }
-                    
-                return Task.CompletedTask;
-            })
-        });
+
+                context.Publish(
+                    new DisplayedValueProduced(
+                        html,
+                        context.Command,
+                        new[]
+                        {
+                            new FormattedValue("text/html", html)
+                        }));
+
+                context.Complete(submitCode);
+            }
+
+            return Task.CompletedTask;
+        }
 
         return kernel;
     }
@@ -145,47 +143,36 @@ using static {typeof(TopLevelMethods).FullName};
     private static T UseLsMagic<T>(this T kernel)
         where T : Kernel
     {
-        kernel.AddDirective(lsmagic(kernel));
-
-        kernel.VisitSubkernels(k =>
-        {
-            k.AddDirective(lsmagic(k));
-        });
+        kernel.VisitSubkernelsAndSelf(k => k.AddDirective(lsmagic(k), Handle));
 
         Formatter.Register<SupportedDirectives>((directives, context) =>
         {
             var indentLevel = 1.5;
             PocketView t = div(
                 h3(directives.KernelName + " kernel"),
-                div(directives.Commands.Select(v => div[style: $"text-indent:{indentLevel:##.#}em"](Summary(v, 0)))));
+                div(directives.Directives.Select(v => div[style: $"text-indent:{indentLevel:##.#}em"](Summary(v, 0)))));
 
             t.WriteTo(context);
 
-            IEnumerable<IHtmlContent> Summary(Command command, double offset)
+            IEnumerable<IHtmlContent> Summary(KernelDirective directive, double offset)
             {
                 yield return new HtmlString("<pre>");
 
                 var level = indentLevel + offset;
 
-                for (var i = 0; i < command.Aliases.ToArray().Length; i++)
-                {
-                    var alias = command.Aliases.ToArray()[i];
-                    yield return span[style: $"text-indent:{level:##.#}em; color:#512bd4"](alias);
-
-                    if (i < command.Aliases.Count - 1)
-                    {
-                        yield return span[style: $"text-indent:{level:##.#}em; color:darkgray"](", ");
-                    }
-                }
+                yield return span[style: $"text-indent:{level:##.#}em; color:#512bd4"](directive.Name);
 
                 var nextLevel = (indentLevel * 2) + offset;
                 yield return new HtmlString("</pre>");
 
-                yield return div[style: $"text-indent:{nextLevel:##.#}em"](command.Description);
+                yield return div[style: $"text-indent:{nextLevel:##.#}em"](directive.Description);
 
-                foreach (var subCommand in command.Children.OfType<Command>())
+                if (directive is KernelActionDirective actionDirective)
                 {
-                    yield return div[style: $"text-indent:{nextLevel:##.#}em"](Summary(subCommand, nextLevel));
+                    foreach (var subCommand in actionDirective.Subcommands)
+                    {
+                        yield return div[style: $"text-indent:{nextLevel:##.#}em"](Summary(subCommand, nextLevel));
+                    }
                 }
             }
 
@@ -193,36 +180,39 @@ using static {typeof(TopLevelMethods).FullName};
         }, "text/html");
 
         return kernel;
+
+        async Task Handle(KernelCommand _, KernelInvocationContext context)
+        {
+            var directives = kernel.KernelInfo
+                                 .SupportedDirectives
+                                 .Where(d => !d.Hidden)
+                                 .OrderBy(d => d.Name)
+                                 .ToArray();
+
+            var supportedDirectives = new SupportedDirectives(kernel.Name, directives);
+
+            context.Display(supportedDirectives);
+
+            var subkernels = kernel.Subkernels()
+                                   .Where(k => k.KernelInfo.SupportedDirectives.Any(d => d.Name == "#!lsmagic"));
+
+            foreach (var subkernel in subkernels)
+            {
+                var command = new SubmitCode(((SubmitCode)context.Command).Code);
+                command.SetParent(context.Command);
+
+                await subkernel.SendAsync(command);
+            }
+        }
     }
 
-    private static Command lsmagic(Kernel kernel)
+    private static KernelActionDirective lsmagic(Kernel kernel)
     {
-        return new Command("#!lsmagic", LocalizationResources.Magics_lsmagic_Description())
+        return new KernelActionDirective("#!lsmagic")
         {
-            Handler = CommandHandler.Create(async (InvocationContext cmdLineContext) =>
-            {
-                var context = cmdLineContext.GetService<KernelInvocationContext>();
-
-                var commands = kernel.Directives
-                                     .Where(d => !d.IsHidden)
-                                     .OrderBy(d => d.Name)
-                                     .ToArray();
-
-                var supportedDirectives = new SupportedDirectives(kernel.Name, commands);
-
-                context.Display(supportedDirectives);
-
-                var subkernels = kernel.Subkernels()
-                                       .Where(k => k.Directives.Any(d => d.Name == "#!lsmagic"));
-
-                foreach (var subkernel in subkernels)
-                {
-                    var command = new SubmitCode(((SubmitCode)context.Command).Code);
-                    command.SetParent(context.Command);
-
-                    await subkernel.SendAsync(command);
-                }
-            })
+           Description =  LocalizationResources.Magics_lsmagic_Description()
         };
+            
+           
     }
 }

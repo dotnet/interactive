@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,8 +19,6 @@ namespace Microsoft.DotNet.Interactive.Parsing;
 
 internal class DirectiveNode : TopLevelSyntaxNode
 {
-    private ParseResult? _parseResult;
-
     internal DirectiveNode(
         SourceText sourceText,
         PolyglotSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
@@ -32,71 +29,43 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public DirectiveNameNode? DirectiveNameNode { get; private set; }
 
-    internal Parser? DirectiveParser { get; set; }
-
     public bool HasParameters { get; private set; }
 
     public DirectiveNodeKind Kind { get; set; }
 
-    public ParseResult GetDirectiveParseResult()
-    {
-        if (DirectiveParser is null)
-        {
-            throw new InvalidOperationException($"{nameof(DirectiveParser)} was not set.");
-        }
-
-        return _parseResult ??= DirectiveParser.Parse(Text);
-    }
-
     public override IEnumerable<CodeAnalysis.Diagnostic> GetDiagnostics()
     {
-        if (DirectiveParser is not null)
-        {
-            var parseResult = GetDirectiveParseResult();
-
-            foreach (var error in parseResult.Errors)
-            {
-                var descriptor = new DiagnosticInfo(
-                    id: "DNI0001",
-                    messageFormat: error.Message,
-                    severity: DiagnosticSeverity.Error);
-
-                yield return CreateDiagnostic(descriptor);
-            }
-        }
-        else
-        {
-            foreach (var diagnostic in base.GetDiagnostics())
+        foreach (var diagnostic in base.GetDiagnostics())
             {
                 yield return diagnostic;
             }
 
-            if (TryGetDirective(out var directive))
+        if (TryGetDirective(out var directive))
+        {
+            foreach (var namedParameter in directive.Parameters)
             {
-                foreach (var namedParameter in directive.Parameters)
+                if (namedParameter.Required)
                 {
-                    if (namedParameter.Required)
-                    {
-                        var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
-                                                      .Where(p => namedParameter.AllowImplicitName
-                                                                      ? p.NameNode is null
-                                                                      : p.NameNode?.Text == namedParameter.Name);
+                    var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
+                                                  .Where(p => namedParameter.AllowImplicitName
+                                                                  ? p.NameNode is null
+                                                                  : p.NameNode?.Text == namedParameter.Name);
 
-                        if (!matchingNodes.Any())
-                        {
-                            yield return CreateDiagnostic(
-                                new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
-                                    "Missing required parameter '{0}'",
-                                    DiagnosticSeverity.Error,
-                                    namedParameter.Name));
-                        }
+                    if (!matchingNodes.Any())
+                    {
+                        yield return CreateDiagnostic(
+                            new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
+                                "Missing required parameter '{0}'",
+                                DiagnosticSeverity.Error,
+                                namedParameter.Name));
                     }
                 }
             }
+        }
 
-            var foundParameter = false;
+        var foundParameter = false;
 
-            foreach (var childNode in ChildNodes)
+        foreach (var childNode in ChildNodes)
             {
                 if (childNode is DirectiveSubcommandNode)
                 {
@@ -112,7 +81,6 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     foundParameter = true;
                 }
             }
-        }
     }
 
     public bool TryGetActionDirective(out KernelActionDirective directive)

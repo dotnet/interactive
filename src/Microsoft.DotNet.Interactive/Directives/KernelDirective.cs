@@ -39,6 +39,8 @@ public abstract partial class KernelDirective
     
     public string? Description { get; set; }
 
+    public bool Hidden { get; set; }
+
     public ICollection<KernelDirectiveParameter> Parameters => _parameters;
 
     internal KernelInfo? ParentKernelInfo { get; set; }

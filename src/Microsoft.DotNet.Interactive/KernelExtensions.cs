@@ -3,16 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.NamingConventionBinder;
-using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.CodeAnalysis.Tags;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Documents;
@@ -21,8 +17,6 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
-
-using CompletionItem = System.CommandLine.Completions.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -166,108 +160,6 @@ public static class KernelExtensions
         }
     }
 
-    private static async Task HandleSetMagicCommand<T>(
-        T kernel,
-        InvocationContext cmdLineContext,
-        Option<string> nameOption,
-        Option<ValueOptionResult> valueOption,
-        Option<bool> byrefOption)
-        where T : Kernel
-    {
-        // FIX: (HandleSetMagicCommand) delete
-        var context = cmdLineContext.GetService<KernelInvocationContext>();
-
-        if (kernel.SupportsCommandType(typeof(SendValue)))
-        {
-            var valueProducedEvents = new List<ValueProduced>();
-
-            var inputProducedEvents = new List<InputProduced>();
-
-            using var subscription = context.KernelEvents
-                                            .Where(e => e is ValueProduced or InputProduced)
-                                            .Subscribe(
-                                                e =>
-                                                {
-                                                    switch (e)
-                                                    {
-                                                        case ValueProduced vp:
-                                                            valueProducedEvents.Add(vp);
-                                                            break;
-                                                        case InputProduced ip:
-                                                            inputProducedEvents.Add(ip);
-                                                            break;
-                                                    }
-                                                });
-
-            var valueOptionResult = cmdLineContext.ParseResult.GetValueForOption(valueOption);
-
-            var sourceKernelName = valueOptionResult.Kernel;
-            
-            var sourceKernel = Kernel.Root.FindKernelByName(sourceKernelName);
-
-            ValueProduced valueProduced = null;
-
-            if (valueOptionResult is { Name: var sourceValueName } && 
-                sourceKernel is not null)
-            {
-                if (sourceKernel.KernelInfo.IsProxy == true)
-                {
-                    var destinationUri = sourceKernel.KernelInfo.RemoteUri;
-
-                    valueProduced = valueProducedEvents.SingleOrDefault(e =>
-                                                                            e.Name == sourceValueName && e.Command.DestinationUri == destinationUri);
-                }
-                else
-                {
-                    valueProduced = valueProducedEvents.SingleOrDefault(e =>
-                                                                            e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName);
-                }
-            }
-
-            var valueNameFromCommandLine = cmdLineContext.ParseResult.GetValueForOption(nameOption);
-
-            if (valueProduced is { })
-            {
-                var isByref = cmdLineContext.ParseResult.GetValueForOption(byrefOption);
-
-                var referenceValue = isByref ? valueProduced.Value : null;
-                var formattedValue = valueProduced.FormattedValue;
-
-                await SendValue(context, kernel, referenceValue, formattedValue, valueNameFromCommandLine);
-            }
-
-            if (inputProducedEvents.Count > 0)
-            {
-                foreach (var inputProduced in inputProducedEvents)
-                {
-                    if (inputProduced.Command is RequestInput requestInput)
-                    {
-                        if (requestInput.IsPassword)
-                        {
-                            await SendValue(context, kernel, new PasswordString(inputProduced.Value), null, requestInput.ValueName);
-                        }
-                        else
-                        {
-                            await SendValue(context, kernel, inputProduced.Value, null, requestInput.ValueName);
-                        }
-                    }
-                }
-            }
-
-            if (sourceKernelName is null)
-            {
-                if (inputProducedEvents.All(e => ((RequestInput)e.Command).ValueName != valueNameFromCommandLine))
-                {
-                    await SendValue(context, kernel, valueOptionResult.Value, null, valueNameFromCommandLine);
-                }
-            }
-        }
-        else
-        {
-            context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
-        }
-    }
-
     public static T UseValueSharing<T>(this T kernel) where T : Kernel
     {
         ConfigureAndAddShareMagicCommand(kernel);
@@ -285,189 +177,73 @@ public static class KernelExtensions
             {
                 new("--name")
                 {
+                    Description = LocalizationResources.Magics_set_name_Description(),
                     Required = true
                 },
-                new("--value")
+                new KernelDirectiveParameter("--value")
                 {
+                    Description = LocalizationResources.Magics_set_value_Description(),
                     Required = true
-                },
+                }.AddCompletions(_ =>
+                {
+                    if (destinationKernel.ParentKernel is { } composite)
+                    {
+                        var getValueTasks = composite.ChildKernels
+                                                     .Where(
+                                                         k => k != destinationKernel &&
+                                                              k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
+                                                     .Select(async k => await k.SendAsync(new RequestValueInfos(k.Name)));
+
+                        var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
+
+                        var x = tasks
+                                .Select(t => t.Events.OfType<ValueInfosProduced>())
+                                .SelectMany(events => events.Select(e => new { e.Command, e.ValueInfos }))
+                                .SelectMany(x =>
+                                {
+                                    var kernelName = x.Command.TargetKernelName;
+
+                                    // TODO: (ConfigureAndAddSetMagicCommand) this is compensating for https://github.com/dotnet/interactive/issues/2728
+                                    if (kernelName is null &&
+                                        destinationKernel.RootKernel is CompositeKernel root &&
+                                        root.ChildKernels.TryGetByUri(x.Command.DestinationUri, out var k))
+                                    {
+                                        kernelName = k.Name;
+                                    }
+
+                                    return x.ValueInfos.Select(i => $"@{kernelName}:{i.Name}");
+                                })
+                                .OrderBy(x => x)
+                                .Select(n => new CompletionItem(n, WellKnownTags.Parameter))
+                                .ToArray();
+
+                        return x;
+                    }
+
+                    return Array.Empty<CompletionItem>();
+                }),
                 new("--byref")
                 {
+                    Description = LocalizationResources.Magics_set_byref_Description(),
                     Flag = true
                 },
-                new("--mime-type")
+                new KernelDirectiveParameter("--mime-type")
+                {
+                    Description = LocalizationResources.Magics_set_mime_type_Description()
+                }.AddCompletions(
+                    _ =>
+                    [
+                        JsonFormatter.MimeType,
+                        HtmlFormatter.MimeType,
+                        PlainTextFormatter.MimeType
+                    ])
             }
         };
 
         destinationKernel.AddDirective<SetDirectiveCommand>(
             directive,
             SetDirectiveCommand.HandleAsync);
-
-        var nameOption = new Option<string>(
-            "--name",
-            description: LocalizationResources.Magics_set_name_Description())
-        {
-            IsRequired = true
-        };
-
-        var byrefOption = new Option<bool>(
-            "--byref",
-            LocalizationResources.Magics_set_byref_Description());
-
-        var mimeTypeOption = new Option<string>(
-            "--mime-type",
-            description: LocalizationResources.Magics_set_mime_type_Description(),
-            parseArgument: result =>
-            {
-                if (result.GetValueForOption(byrefOption))
-                {
-                    result.ErrorMessage = LocalizationResources.Magics_set_mime_type_ErrorMessageCannotBeUsed();
-                }
-
-                return result.Tokens.FirstOrDefault()?.Value;
-            })
-            {
-                ArgumentHelpName = "MIME-TYPE"
-            }
-            .AddCompletions(
-                JsonFormatter.MimeType,
-                HtmlFormatter.MimeType,
-                PlainTextFormatter.MimeType);
-
-        var valueOption = new Option<ValueOptionResult>(
-            "--value",
-            description:
-            LocalizationResources.Magics_set_value_Description(),
-            parseArgument: ParseValueOption)
-        {
-            IsRequired = true,
-            ArgumentHelpName = "@source:sourceValueName"
-        };
-
-        valueOption.AddCompletions(_ =>
-        {
-            if (destinationKernel.ParentKernel is { } composite)
-            {
-                var getValueTasks = composite.ChildKernels
-                                             .Where(
-                                                 k => k != destinationKernel &&
-                                                      k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
-                                             .Select(async k => await k.SendAsync(new RequestValueInfos(k.Name)));
-
-                var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
-
-                var x = tasks
-                        .Select(t => t.Events.OfType<ValueInfosProduced>())
-                        .SelectMany(events => events.Select(e => new { e.Command, e.ValueInfos }))
-                        .SelectMany(x =>
-                        {
-                            var kernelName = x.Command.TargetKernelName;
-
-                            // TODO: (ConfigureAndAddSetMagicCommand) this is compensating for https://github.com/dotnet/interactive/issues/2728
-                            if (kernelName is null &&
-                                destinationKernel.RootKernel is CompositeKernel root &&
-                                root.ChildKernels.TryGetByUri(x.Command.DestinationUri, out var k))
-                            {
-                                kernelName = k.Name;
-                            }
-
-                            return x.ValueInfos.Select(i => $"@{kernelName}:{i.Name}");
-                        })
-                        .OrderBy(x => x)
-                        .Select(n => new CompletionItem(n))
-                        .ToArray();
-
-                return x;
-            }
-
-            return Array.Empty<CompletionItem>();
-        });
-
-        var set = new Command("#!set", LocalizationResources.Magics_set_Description())
-        {
-            nameOption,
-            valueOption,
-            mimeTypeOption,
-            byrefOption
-        };
-
-        set.SetHandler(async cmdLineContext =>
-                           await HandleSetMagicCommand(destinationKernel, cmdLineContext, nameOption, valueOption, byrefOption));
-
-        // destinationKernel.AddDirective(set);
-
-        ValueOptionResult ParseValueOption(ArgumentResult argResult)
-        {
-            var valueOptionValue = argResult.Tokens.Single().Value;
-
-            if (!valueOptionValue.StartsWith("@"))
-            {
-                return new ValueOptionResult(valueOptionValue, null, null);
-            }
-
-            bool isByref;
-            var mimeTypeOptionResult = argResult.FindResultFor(mimeTypeOption);
-            RequestValue requestValue;
-
-            var (sourceKernelName, sourceValueName) = SubmissionParser.SplitKernelDesignatorToken(valueOptionValue[1..], destinationKernel.Name);
-
-            if (argResult.GetValueForOption(byrefOption))
-            {
-                if (destinationKernel.KernelInfo.IsProxy)
-                {
-                    argResult.ErrorMessage = LocalizationResources.Magics_set_ErrorMessageSharingByReference();
-                    return null;
-                }
-
-                if (destinationKernel.RootKernel.FindKernelByName(sourceKernelName) is { } sourceKernel &&
-                    sourceKernel.KernelInfo.IsProxy)
-                {
-                    argResult.ErrorMessage = LocalizationResources.Magics_set_ErrorMessageSharingByReference();
-                    return null;
-                }
-
-                requestValue = new RequestValue(sourceValueName, "text/plain", sourceKernelName);
-                isByref = true;
-            }
-            else if (mimeTypeOptionResult is { ErrorMessage: null })
-            {
-                var mimeType = mimeTypeOptionResult.GetValueForOption(mimeTypeOption);
-                requestValue = new RequestValue(sourceValueName, mimeType, sourceKernelName);
-                isByref = false;
-            }
-            else
-            {
-                requestValue = new RequestValue(sourceValueName, JsonFormatter.MimeType, sourceKernelName);
-                isByref = false;
-            }
-
-            if (KernelInvocationContext.Current is {} context)
-            {
-                requestValue.SetParent(context.Command);
-            }
-
-            var result = destinationKernel.RootKernel.SendAsync(requestValue).GetAwaiter().GetResult();
-
-            if (result.Events.LastOrDefault() is CommandFailed failed)
-            {
-                argResult.ErrorMessage = failed.Message;
-                return null;
-            }
-
-            var valueProduced = result.Events.OfType<ValueProduced>().Single();
-
-            if (isByref)
-            {
-                return new ValueOptionResult(valueProduced.Value, sourceKernelName, sourceValueName);
-            }
-            else
-            {
-                return new ValueOptionResult(valueProduced.FormattedValue, sourceKernelName, sourceValueName);
-            }
-        }
     }
-
-    private record ValueOptionResult(object Value, string Kernel, string Name);
 
     private static void ConfigureAndAddShareMagicCommand<T>(T kernel) where T : Kernel
     {
@@ -476,28 +252,11 @@ public static class KernelExtensions
             KernelCommandType = typeof(ShareDirectiveCommand),
             Parameters =
             {
-                new("--name")
+                new KernelDirectiveParameter("--name")
                 {
-                    AllowImplicitName = true
-                },
-                new("--from")
-                {
-                    Required = true
-                },
-                new("--as"),
-                new("--mime-type")
-            }
-        };
-
-        kernel.AddDirective<ShareDirectiveCommand>(
-            shareDirective,
-            ShareDirectiveCommand.HandleAsync);
-
-        var sourceValueNameArg = new Argument<string>(
-            "name",
-            LocalizationResources.Magics_share_name_Description());
-
-        sourceValueNameArg.AddCompletions(_ =>
+                    AllowImplicitName = true,
+                    Description = LocalizationResources.Magics_share_name_Description(),
+                }.AddCompletions(_ =>
         {
             if (kernel.ParentKernel is { } composite)
             {
@@ -514,49 +273,47 @@ public static class KernelExtensions
                        .SelectMany(events => events.SelectMany(e => e.ValueInfos))
                        .Select(vi => vi.Name)
                        .OrderBy(x => x)
-                       .Select(n => new CompletionItem(n))
+                       .Select(n => new CompletionItem(n, WellKnownTags.Parameter))
                        .ToArray();
             }
 
             return Array.Empty<CompletionItem>();
-        });
+        }),
+                new KernelDirectiveParameter("--from")
+                {
+                    Description = LocalizationResources.Magics_share_from_Description(),
+                    Required = true
+                }.AddCompletions(_ =>
+                {
+                    if (kernel.ParentKernel is { } composite)
+                    {
+                        return composite.ChildKernels
+                                        .Where(k =>
+                                                   k != kernel &&
+                                                   k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
+                                                   k.KernelInfo.SupportsCommand(nameof(RequestValue)))
+                                        .Select(k => new CompletionItem(k.Name, WellKnownTags.Parameter));
+                    }
 
-        var fromKernelOption = new Option<string>(
-            "--from",
-            LocalizationResources.Magics_share_from_Description());
-
-        fromKernelOption.AddCompletions(_ =>
-        {
-            if (kernel.ParentKernel is { } composite)
-            {
-                return composite.ChildKernels
-                    .Where(k =>
-                        k != kernel &&
-                        k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
-                        k.KernelInfo.SupportsCommand(nameof(RequestValue)))
-                    .Select(k => new CompletionItem(k.Name));
+                    return Array.Empty<CompletionItem>();
+                }),
+                new("--as")
+                {
+                    Description = LocalizationResources.Magics_share_as_Description()
+                },
+                new KernelDirectiveParameter("--mime-type") { Description = LocalizationResources.Magics_share_mime_type_Description() }.AddCompletions(
+                    _ =>
+                    [
+                        JsonFormatter.MimeType,
+                        HtmlFormatter.MimeType,
+                        PlainTextFormatter.MimeType
+                    ])
             }
-
-            return Array.Empty<CompletionItem>();
-        });
-
-        var mimeTypeOption =
-            new Option<string>("--mime-type", LocalizationResources.Magics_share_mime_type_Description())
-                .AddCompletions(
-                    JsonFormatter.MimeType,
-                    HtmlFormatter.MimeType,
-                    PlainTextFormatter.MimeType);
-
-        var asOption = new Option<string>("--as", LocalizationResources.Magics_share_as_Description());
-
-        var share = new Command("#!share",
-            LocalizationResources.Magics_share_Description())
-        {
-            fromKernelOption,
-            sourceValueNameArg,
-            mimeTypeOption,
-            asOption
         };
+
+        kernel.AddDirective<ShareDirectiveCommand>(
+            shareDirective,
+            ShareDirectiveCommand.HandleAsync);
     }
 
     internal static async Task GetValueAndSendTo(

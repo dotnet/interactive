@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.CommandLine.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -212,54 +211,6 @@ public sealed class CompositeKernel :
         }
     }
 
-    private protected override IEnumerable<Parser> GetDirectiveParsersForCompletion(
-        DirectiveNode directiveNode,
-        int requestPosition)
-    {
-        var upToCursor =
-            directiveNode.Text[..requestPosition];
-
-        var indexOfPreviousSpace =
-            upToCursor.LastIndexOf(" ", StringComparison.CurrentCultureIgnoreCase);
-
-        var compositeKernelDirectiveParser = SubmissionParser.GetDirectiveParser();
-
-        if (indexOfPreviousSpace >= 0 &&
-            directiveNode is { Kind : DirectiveNodeKind.Action } actionDirectiveNode)
-        {
-            // if the first token has been specified, we can narrow down to the specific directive parser that defines this directive
-
-            var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
-
-            var kernel = this.FindKernelByName(actionDirectiveNode.TargetKernelName) ?? this;
-            
-            var languageKernelDirectiveParser = kernel.SubmissionParser.GetDirectiveParser();
-
-            if (IsDirectiveDefinedIn(languageKernelDirectiveParser))
-            {
-                // the directive is defined in the subkernel, so this is the only directive parser we need
-                yield return languageKernelDirectiveParser;
-            }
-            else if (IsDirectiveDefinedIn(compositeKernelDirectiveParser))
-            {
-                yield return compositeKernelDirectiveParser;
-            }
-
-            bool IsDirectiveDefinedIn(Parser parser) =>
-                parser.Configuration.RootCommand.Children.GetByAlias(directiveName) is { };
-        }
-        else
-        {
-            // otherwise, return all directive parsers from the CompositeKernel as well as subkernels
-            yield return compositeKernelDirectiveParser;
-
-            foreach (var kernel in ChildKernels)
-            {
-                yield return kernel.SubmissionParser.GetDirectiveParser();
-            }
-        }
-    }
-
     public IEnumerator<Kernel> GetEnumerator() => _childKernels.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -279,7 +230,6 @@ public sealed class CompositeKernel :
 
         _rootConnectDirective.Subcommands.Add(connectDirective);
 
-        // FIX: (AddKernelConnector) don't add it to the root
         AddDirective<T>(connectDirective,
                      async (command, context) =>
                      {

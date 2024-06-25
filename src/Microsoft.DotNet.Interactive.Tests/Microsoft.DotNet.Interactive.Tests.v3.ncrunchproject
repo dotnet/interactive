@@ -16,16 +16,10 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelScriptReferenceTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelFormattingTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelInvocationContextTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelExtensionsTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.KernelCommandNestingTests+KernelCommandResult_Events</FixtureName>
