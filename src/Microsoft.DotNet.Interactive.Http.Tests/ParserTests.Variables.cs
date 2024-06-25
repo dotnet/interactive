@@ -252,6 +252,23 @@ public partial class HttpParserTests
         }
 
         [Fact]
+        public void periods_in_embedded_expressions_are_supported()
+        {
+            var result = Parse(
+                """
+
+                @host.name=httpbin.org
+                @host=https://{{host.name}}
+                """
+                );
+
+            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            variables.Should().Contain(n => n.Key == "host.name").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("httpbin.org");
+            variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
+
+        }
+
+        [Fact]
         public void spaces_after_variable_do_not_produce_diagnostics()
         {
             var result = Parse(
