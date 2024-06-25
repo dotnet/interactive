@@ -312,9 +312,7 @@ internal class HttpRequestParser
                 return null;
             }
 
-            var nextSigToken = GetNextSignificantToken();
-
-            if (GetNextSignificantToken() is null || nextSigToken is { Kind: HttpTokenKind.Punctuation }
+            if (GetNextSignificantToken() is null or { Kind: HttpTokenKind.Punctuation }
             and { Text: "@" })
             {
                 return null;
