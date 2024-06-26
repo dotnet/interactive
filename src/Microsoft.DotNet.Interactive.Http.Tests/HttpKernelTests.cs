@@ -1,13 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Microsoft.DotNet.Interactive.Tests.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,6 +10,13 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
@@ -2138,7 +2138,7 @@ public class HttpKernelTests
 
         var client = new HttpClient(handler);
         using var kernel = new HttpKernel(client: client);
-        kernel.SetRequestTimeout(TimeoutInMilliseconds);
+        kernel.RequestTimeout = TimeSpan.FromMilliseconds(TimeoutInMilliseconds);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
@@ -2166,18 +2166,25 @@ public class HttpKernelTests
 
         using var _ = new AssertionScope();
 
-        kernel.SetRequestTimeout(ShortTimeoutInMilliseconds);
+        kernel.RequestTimeout = TimeSpan.FromMilliseconds(ShortTimeoutInMilliseconds);
 
         var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
         result.Events.Should().ContainSingle<CommandFailed>().Which.Message.Should().Contain(
             "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
 
-        kernel.SetRequestTimeout(LongTimeoutInMilliseconds);
+        kernel.RequestTimeout = TimeSpan.FromMilliseconds(LongTimeoutInMilliseconds);
 
         result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
 
         result.Events.Should().ContainSingle<CommandSucceeded>();
+
+        kernel.RequestTimeout = TimeSpan.FromMilliseconds(ShortTimeoutInMilliseconds);
+
+        result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<CommandFailed>().Which.Message.Should().Contain(
+            "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
     }
 
     [Fact(Skip = "Requires updates to HTTP parser")]
