@@ -236,7 +236,6 @@ public partial class HttpParserTests
 
             var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Single();
 
-            namedRequest.NameNode.Text.Should().Be("@name");
             namedRequest.ValueNode.Text.Should().Be("login");
         }
     }

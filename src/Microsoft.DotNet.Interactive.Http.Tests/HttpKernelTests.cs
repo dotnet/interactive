@@ -2168,6 +2168,9 @@ public class HttpKernelTests
 
     [Theory]
     [InlineData("login.response.$")]
+    [InlineData("login.response.//")]
+    [InlineData("login.request.$")]
+    [InlineData("login.request.//")]
     public async Task responses_to_named_requests_with_incomplete_paths_produces_errors(string path)
     {
         // Request Variables
