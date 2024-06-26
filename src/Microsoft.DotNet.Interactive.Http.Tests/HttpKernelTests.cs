@@ -2122,6 +2122,64 @@ public class HttpKernelTests
             .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
     }
 
+    [Fact]
+    public async Task commands_that_exceed_the_configured_request_timeout_are_marked_as_failed()
+    {
+        const int DelayInMilliseconds = 300;
+        const int TimeoutInMilliseconds = 20;
+
+        var handler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(DelayInMilliseconds);
+            return response;
+        });
+
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+        kernel.SetRequestTimeout(TimeoutInMilliseconds);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<CommandFailed>().Which.Message.Should().Contain(
+            "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
+    }
+
+    [Fact]
+    public async Task request_timeout_can_be_changed_more_than_once()
+    {
+        const int DelayInMilliseconds = 300;
+        const int ShortTimeoutInMilliseconds = 20;
+        const int LongTimeoutInMilliseconds = 500;
+
+        var handler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(DelayInMilliseconds);
+            return response;
+        });
+
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        kernel.SetRequestTimeout(ShortTimeoutInMilliseconds);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<CommandFailed>().Which.Message.Should().Contain(
+            "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
+
+        kernel.SetRequestTimeout(LongTimeoutInMilliseconds);
+
+        result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<CommandSucceeded>();
+    }
+
     [Fact(Skip = "Requires updates to HTTP parser")]
     public void responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
     {

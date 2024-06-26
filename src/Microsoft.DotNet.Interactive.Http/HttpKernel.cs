@@ -36,6 +36,8 @@ public class HttpKernel :
     private readonly int _responseDelayThresholdInMilliseconds;
     private readonly long _contentByteLengthThreshold;
 
+    private int? _requestTimeoutInMilliseconds;
+
     private readonly Dictionary<string, object> _variables = new(StringComparer.InvariantCultureIgnoreCase);
 
     static HttpKernel()
@@ -55,12 +57,35 @@ public class HttpKernel :
                                  This Kernel is able to execute http requests and display the results.
                                  """;
 
-        _client = client ?? new HttpClient();
+        _client = client ?? new HttpClient() { Timeout = Timeout.InfiniteTimeSpan };
         _responseDelayThresholdInMilliseconds = responseDelayThresholdInMilliseconds;
         _contentByteLengthThreshold = contentByteLengthThreshold;
 
         RegisterForDisposal(_client);
     }
+
+    /// <summary>
+    /// Set a timeout for HTTP requests that are issued using this <see cref="HttpKernel"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// If an <see cref="HttpClient"/> is not passed in the constructor, the specified
+    /// <paramref name="requestTimeoutInMilliseconds"/> will be the only timeout that applies.
+    /// </para>
+    /// <para>
+    /// If an <see cref="HttpClient"/> is passed in the constructor, the timeout specified in
+    /// <see cref="HttpClient.Timeout"/> will not be overridden by the specified
+    /// <paramref name="requestTimeoutInMilliseconds"/>. The shorter of the two timeouts will apply in such cases.
+    /// </para>
+    /// <para>
+    /// Note that <see cref="HttpClient.Timeout"/> has a default value of 100 seconds. If you wish to control the
+    /// timeout exclusively via <paramref name="requestTimeoutInMilliseconds"/>, either omit the 
+    /// <see cref="HttpClient"/> parameter in the constructor, or pass in an <see cref="HttpClient"/> with
+    /// <see cref="HttpClient.Timeout"/> set to <see cref="Timeout.InfiniteTimeSpan"/>.
+    /// </para>
+    /// </remarks>
+    public void SetRequestTimeout(int requestTimeoutInMilliseconds)
+        => _requestTimeoutInMilliseconds = requestTimeoutInMilliseconds;
 
     public Task HandleAsync(ClearValues command, KernelInvocationContext context)
     {
@@ -241,6 +266,11 @@ public class HttpKernel :
         var stopWatch = Stopwatch.StartNew();
         var originalActivity = Activity.Current;
 
+        using var timeoutSource = new CancellationTokenSource();
+        var timeoutToken = timeoutSource.Token;
+        using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutToken);
+        var linkedToken = linkedSource.Token;
+
         try
         {
             // null out the current activity so the new one that we create won't be parented to it.
@@ -248,8 +278,19 @@ public class HttpKernel :
 
             Activity.Current = new Activity("").Start();
 
-            var responseMessage = await _client.SendAsync(requestMessage, cancellationToken);
-            response = (await responseMessage.ToHttpResponseAsync(cancellationToken))!;
+            if (_requestTimeoutInMilliseconds.HasValue)
+            {
+                timeoutSource.CancelAfter(_requestTimeoutInMilliseconds.Value);
+            }
+
+            var responseMessage = await _client.SendAsync(requestMessage, linkedToken);
+            response = (await responseMessage.ToHttpResponseAsync(linkedToken))!;
+        }
+        catch (OperationCanceledException ex) when (timeoutToken.IsCancellationRequested)
+        {
+            var timeoutInSeconds = TimeSpan.FromMilliseconds(_requestTimeoutInMilliseconds!.Value).TotalSeconds;
+            var message = string.Format(Resources.RequestTimedOut, timeoutInSeconds);
+            throw new TimeoutException(message, ex);
         }
         finally
         {
