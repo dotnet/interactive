@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -2165,8 +2166,91 @@ public class HttpKernelTests
         secondResult.Events.Should().NotContainErrors();
     }
 
+    [Theory]
+    [InlineData("login.response.$")]
+    public async Task responses_to_named_requests_with_incomplete_paths_produces_errors(string path)
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+            Content-Type: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{path}}}' does not follow the correct pattern. The expression should adhere to the following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""");
+    }
+
     [Fact]
     public async Task responses_to_named_requests_can_be_accessed_as_xml_in_later_requests()
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @baseUrl = https://httpbin.org/xml
+
+            # @name sampleXml
+            GET {{baseUrl}}
+            Content-Type: application/xml
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+
+            POST https://example.com/api/comments HTTP/1.1
+            X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+    [Fact]
+    public async Task named_requests_with_improper_xml_path_produces_errors()
     {
         // Request Variables
         // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
@@ -2302,16 +2386,6 @@ Content-Type: {{contentType}}
          */
 
         // TODO (prompt_symbol_sends_input_request_to_user) write test
-        throw new NotImplementedException();
-    }
-
-    [Fact(Skip = "Requires updates to HTTP parser")]
-    public void JSONPath_can_be_used_to_access_response_properties()
-    {
-        // example:
-        // @authToken = {{login.response.headers.X-AuthToken}}
-
-        // TODO (dot_notation_can_be_used_to_access_response_properties) write test
         throw new NotImplementedException();
     }
 

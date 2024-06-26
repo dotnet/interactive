@@ -34,7 +34,7 @@ internal class HttpRequestNode : HttpSyntaxNode
 
     public HttpBodyNode? BodyNode { get; private set; }
 
-    public bool IsNamedRequest => ChildNodes.OfType<HttpCommentNode>().Any(cn => cn.CommentNamedRequestNode is not null);
+    public bool IsNamedRequest => ChildNodes.OfType<HttpCommentNode>().Any(cn => cn.NamedRequestNode is not null);
 
     public void Add(HttpMethodNode node)
     {
@@ -86,11 +86,11 @@ internal class HttpRequestNode : HttpSyntaxNode
         AddInternal(node);
     }
 
-    public HttpCommentNamedRequestNode? TryGetCommentNamedRequestNode()
+    public HttpNamedRequestNode? TryGetCommentNamedRequestNode()
     {
         if (IsNamedRequest)
         {
-            return DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().FirstOrDefault();
+            return DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().FirstOrDefault();
         }
         else
         {

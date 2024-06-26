@@ -36,7 +36,7 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Should().HaveCount(1);
+            result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Should().HaveCount(1);
         }
 
         [Fact]
@@ -60,7 +60,7 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
+            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Single();
 
             namedRequest.ValueNode.Text.Should().Be("login");
         }
@@ -86,7 +86,7 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
+            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Single();
 
             namedRequest.GetDiagnostics().Should().HaveCount(1);   
         }
@@ -122,7 +122,7 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Should().ContainSingle().Which.GetDiagnostics().Should().ContainSingle().Which.GetMessage().Should().Be("""The supplied name does not follow the correct pattern. The name should only contain alphanumerical characters.""");
+            result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Should().ContainSingle().Which.GetDiagnostics().Should().ContainSingle().Which.GetMessage().Should().Be("""The supplied name does not follow the correct pattern. The name should only contain alphanumerical characters.""");
 
             
         }
@@ -153,7 +153,7 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
+            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Single();
 
             namedRequest.ValueNode.Text.Should().Be("login");
         }
@@ -177,7 +177,7 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
+            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Single();
 
             namedRequest.ValueNode.Text.Should().Be("login");
         }
@@ -203,7 +203,7 @@ public partial class HttpParserTests
             var result = Parse(code);
 
             result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNode>().Should().HaveCount(2);
-            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
+            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Single();
 
             namedRequest.ValueNode.Text.Should().Be("login");
         }
@@ -234,7 +234,7 @@ public partial class HttpParserTests
 
             var result = Parse(code);
 
-            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpCommentNamedRequestNode>().Single();
+            var namedRequest = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Single();
 
             namedRequest.NameNode.Text.Should().Be("@name");
             namedRequest.ValueNode.Text.Should().Be("login");

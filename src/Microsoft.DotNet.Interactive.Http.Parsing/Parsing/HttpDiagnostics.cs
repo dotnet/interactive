@@ -181,7 +181,7 @@ internal static class HttpDiagnostics
         var id = $"HTTP0021";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""";
+            """The supplied expression '{0}' does not follow the correct pattern. The expression should adhere to the following pattern: {{{{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}}}.""";
         return new HttpDiagnosticInfo(id, messageFormat, severity, expression);
     }
 

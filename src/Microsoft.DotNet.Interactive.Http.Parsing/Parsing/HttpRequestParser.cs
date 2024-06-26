@@ -635,15 +635,17 @@ internal class HttpRequestParser
             return headersNode;
         }
 
-        private HttpCommentNamedRequestNode? ParseCommentNamedRequestNode()
+        private HttpNamedRequestNode? ParseNamedRequestNode()
         {
             if (!isCommentNamedRequest())
             {
                 return null;
             }
-            var node = new HttpCommentNamedRequestNode(_sourceText, _syntaxTree);
-            node.Add(ParseCommentNamedRequestNameNode());
-            node.Add(ParseCommentNamedRequestValueNode());
+            var node = new HttpNamedRequestNode(_sourceText, _syntaxTree);
+            ConsumeCurrentTokenInto(node);
+            ConsumeCurrentTokenInto(node);
+            ParseTrailingWhitespace(node);
+            node.Add(ParseNamedRequestNameNode());
 
             return node;
         }
@@ -651,23 +653,15 @@ internal class HttpRequestParser
         private HttpCommentNamedRequestNameNode ParseCommentNamedRequestNameNode()
         {
             var node = new HttpCommentNamedRequestNameNode(_sourceText, _syntaxTree);
-            ConsumeCurrentTokenInto(node);
-            ConsumeCurrentTokenInto(node);
-            ParseTrailingWhitespace(node);
+            
 
             return node;
         }
 
-        private HttpCommentNamedRequestValueNode ParseCommentNamedRequestValueNode()
+        private HttpNamedRequestNameNode ParseNamedRequestNameNode()
         {
-            var node = new HttpCommentNamedRequestValueNode(_sourceText, _syntaxTree);
-            /*ConsumeCurrentTokenInto(node);
-            ParseTrailingWhitespace(node, stopAfterNewLine: true);
-*/
-            //var node = new HttpVariableDeclarationNode(_sourceText, _syntaxTree);
-/*
-            if (MoreTokens())
-            {*/
+            var node = new HttpNamedRequestNameNode(_sourceText, _syntaxTree);
+            
                 ParseLeadingWhitespaceAndComments(node);
 
                 while (MoreTokens() && CurrentToken is not {Kind: HttpTokenKind.NewLine})
@@ -680,13 +674,10 @@ internal class HttpRequestParser
                 }
 
                 ConsumeCurrentTokenInto(node);
-                /*}*/
+                
             }
 
            return ParseTrailingWhitespace(node, stopAfterNewLine: true);
-            /*return ParseTrailingWhitespace(node);
-
-            return node;*/
 
         }
 
@@ -824,7 +815,7 @@ internal class HttpRequestParser
                     commentNode.Add(commentStartNode);
                 }
 
-                var commentNamedRequestNode = ParseCommentNamedRequestNode();
+                var commentNamedRequestNode = ParseNamedRequestNode();
                 if (commentNamedRequestNode is not null)
                 {
                     commentNode.Add(commentNamedRequestNode);
