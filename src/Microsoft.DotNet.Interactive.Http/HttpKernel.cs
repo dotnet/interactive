@@ -43,6 +43,9 @@ public class HttpKernel :
     /// </summary>
     /// <remarks>
     /// <para>
+    /// Default value is <see cref="Timeout.InfiniteTimeSpan"/>
+    /// </para>
+    /// <para>
     /// If an <see cref="HttpClient"/> is not passed in the constructor, the specified <see cref="RequestTimeout"/>
     /// will be the only timeout that applies.
     /// </para>
@@ -58,7 +61,7 @@ public class HttpKernel :
     /// <see cref="Timeout.InfiniteTimeSpan"/>.
     /// </para>
     /// </remarks>
-    public TimeSpan? RequestTimeout { get; set; }
+    public TimeSpan RequestTimeout { get; set; } = Timeout.InfiniteTimeSpan;
 
     static HttpKernel()
         => KernelCommandEnvelope.RegisterCommand<ClearValues>();
@@ -271,18 +274,14 @@ public class HttpKernel :
 
             Activity.Current = new Activity("").Start();
 
-            if (RequestTimeout.HasValue)
-            {
-                timeoutSource.CancelAfter(RequestTimeout.Value);
-            }
+            timeoutSource.CancelAfter(RequestTimeout);
 
             var responseMessage = await _client.SendAsync(requestMessage, linkedToken);
             response = (await responseMessage.ToHttpResponseAsync(linkedToken))!;
         }
         catch (OperationCanceledException ex) when (timeoutToken.IsCancellationRequested)
         {
-            var timeoutInSeconds = RequestTimeout!.Value.TotalSeconds;
-            var message = string.Format(Resources.RequestTimedOut, timeoutInSeconds);
+            var message = string.Format(Resources.RequestTimedOut, RequestTimeout.TotalSeconds);
             throw new TimeoutException(message, ex);
         }
         finally
