@@ -2215,6 +2215,100 @@ public class HttpKernelTests
         diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{path}}}' does not follow the correct pattern. The expression should adhere to the following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""");
     }
 
+
+    [Theory]
+    [InlineData("login.request.body.$.test", "application/json")]
+    [InlineData("login.request.body.//test", "application/xml")]
+    public async Task named_requests_with_incomplete_content_produces_errors(string path, string contentType)
+    {   
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = $$$"""
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+            Content-Type: {{{contentType}}}
+
+            {
+                "test": testing
+            }
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The named request does not contain any content at this path '{{{path}}}'.""");
+    }
+
+    [Theory]
+    [InlineData("login.request.body.$")]
+    [InlineData("login.request.body.//")]
+    public async Task named_requests_with_no_body_produces_errors_when_trying_to_access(string path)
+    {
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request 'login' does not have a request body.""");
+    }
+
     [Fact]
     public async Task responses_to_named_requests_can_be_accessed_as_xml_in_later_requests()
     {

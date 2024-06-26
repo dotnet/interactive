@@ -239,12 +239,12 @@ internal static class HttpDiagnostics
         return new HttpDiagnosticInfo(id, messageFormat, severity, contentType, content);
     }
 
-    internal static HttpDiagnosticInfo InvalidContentInNamedRequest()
+    internal static HttpDiagnosticInfo InvalidContentInNamedRequest(string path)
     {
         var id = $"HTTP0028";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            """The response does not contain any content.""";
-        return new HttpDiagnosticInfo(id, messageFormat, severity);
+            """The named request does not contain any content at this path '{0}'.""";
+        return new HttpDiagnosticInfo(id, messageFormat, severity, path);
     }
 }

@@ -406,6 +406,7 @@ internal class HttpRequestParser
                 var node = new HttpRequestSeparatorNode(_sourceText, _syntaxTree);
                 ParseLeadingWhitespaceAndComments(node);
 
+                //Three tokens of # representing the request separator
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
@@ -642,18 +643,13 @@ internal class HttpRequestParser
                 return null;
             }
             var node = new HttpNamedRequestNode(_sourceText, _syntaxTree);
+
+            //Three tokens representing the @name and whitespace signifying a named request node 
             ConsumeCurrentTokenInto(node);
             ConsumeCurrentTokenInto(node);
             ParseTrailingWhitespace(node);
+
             node.Add(ParseNamedRequestNameNode());
-
-            return node;
-        }
-
-        private HttpCommentNamedRequestNameNode ParseCommentNamedRequestNameNode()
-        {
-            var node = new HttpCommentNamedRequestNameNode(_sourceText, _syntaxTree);
-            
 
             return node;
         }

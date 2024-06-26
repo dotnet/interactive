@@ -51,45 +51,60 @@ internal class HttpNamedRequest
                 {
                     if (RequestNode.BodyNode is null)
                     {
-                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest());
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidBodyInNamedRequest(path[0]));
                     }
-
-                    var requestJSON = JsonNode.Parse(RequestNode.BodyNode.Text);
-
-                    if (requestJSON is not null)
+                    try
                     {
-                        var resolvedPath = ResolveJsonPath(requestJSON, path, 4);
-                        if (resolvedPath != null)
+                        var requestJSON = JsonNode.Parse(RequestNode.BodyNode.Text);
+
+                        if (requestJSON is not null)
                         {
-                            return node.CreateBindingSuccess(resolvedPath);
-                        }
+                            var resolvedPath = ResolveJsonPath(requestJSON, path, 4);
+                            if (resolvedPath != null)
+                            {
+                                return node.CreateBindingSuccess(resolvedPath);
+                            }
 
+                        }
+                        else
+                        {
+                            return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest(string.Join(".", path)));
+                        }
                     }
-                    else
+                    catch (JsonException)
                     {
-                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest());
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest(string.Join(".", path)));
                     }
+
                 }
-                else if (path[3] == "//")
+                else if (path[3].StartsWith("//"))
                 {
                     if (RequestNode.BodyNode is null)
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidBodyInNamedRequest(path[0]));
                     }
 
-                    var xmlDoc = new XPathDocument(RequestNode.BodyNode.Text);
-                    var nav = xmlDoc.CreateNavigator();
+                    try
+                    {
+                        var xmlDoc = new XPathDocument(RequestNode.BodyNode.Text);
+                        var nav = xmlDoc.CreateNavigator();
 
-                    //Remove the leading slash
-                    var xmlNode = nav.SelectSingleNode(path[3].Substring(1));
-                    if (xmlNode is not null)
-                    {
-                        return node.CreateBindingSuccess(xmlNode?.Value);
+                        //Remove the leading slash
+                        var xmlNode = nav.SelectSingleNode(path[3].Substring(1));
+                        if (xmlNode is not null)
+                        {
+                            return node.CreateBindingSuccess(xmlNode?.Value);
+                        }
+                        else
+                        {
+                            return node.CreateBindingFailure(HttpDiagnostics.InvalidXmlNodeInNamedRequest(path[3]));
+                        }
                     }
-                    else
+                    catch
                     {
-                        return node.CreateBindingFailure(HttpDiagnostics.InvalidXmlNodeInNamedRequest(path[3]));
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest(string.Join(".", path)));
                     }
+
                 }
             }
             else if (path[2] == "headers")
@@ -117,10 +132,10 @@ internal class HttpNamedRequest
                 {
                     if (Response.Content is null)
                     {
-                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest());
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest(string.Join(".", path)));
                     }
 
-                    if(Response.Content.ContentType != "application/json")
+                    if (Response.Content.ContentType != "application/json")
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidContentType(Response.Content.ContentType ?? "null", "application/json"));
                     }
@@ -138,14 +153,14 @@ internal class HttpNamedRequest
                     }
                     else
                     {
-                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest());
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest(string.Join(".", path)));
                     }
                 }
                 else if (path[3].StartsWith("//"))
                 {
-                    if(Response.Content is null)
+                    if (Response.Content is null)
                     {
-                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest());
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest(string.Join(".", path)));
                     }
 
                     if (Response.Content.ContentType != "application/xml")
@@ -159,7 +174,7 @@ internal class HttpNamedRequest
 
                     //Remove the leading slash
                     var xmlNodes = xmlDoc.SelectNodes(path[3].Substring(1));
-                    
+
                     if (xmlNodes is not null && xmlNodes.Count == 1)
                     {
                         return node.CreateBindingSuccess(xmlNodes.Item(0)?.Value);
@@ -168,14 +183,14 @@ internal class HttpNamedRequest
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidXmlNodeInNamedRequest(path[3]));
                     }
-                    
+
                 }
             }
             else if (path[2] == "headers")
             {
-                 
+
                 if (Response.Headers.TryGetValue(path[3], out var header) && header is not null)
-                {   
+                {
                     return node.CreateBindingSuccess(header);
                 }
                 else
@@ -185,29 +200,29 @@ internal class HttpNamedRequest
 
             }
         }
-    
-        
+
+
 
         return node.CreateBindingFailure(HttpDiagnostics.InvalidNamedRequestPath(node.Text));
     }
 
     private static object? ResolveJsonPath(JsonNode responseJSON, string[] path, int currentIndex)
     {
-        if(currentIndex + 1 == path.Length)
+        if (currentIndex + 1 == path.Length)
         {
             var result = responseJSON[path[currentIndex]];
             return result?.ToJsonString();
         }
 
         var newResponseJSON = responseJSON[path[currentIndex + 1]];
-        if(newResponseJSON is null)
+        if (newResponseJSON is null)
         {
-            return null; 
+            return null;
         }
         else
         {
             return ResolveJsonPath(newResponseJSON, path, currentIndex + 1);
         }
-  
+
     }
 }
