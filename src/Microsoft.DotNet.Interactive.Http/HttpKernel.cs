@@ -282,7 +282,7 @@ public class HttpKernel :
         catch (OperationCanceledException ex) when (timeoutToken.IsCancellationRequested)
         {
             var message = string.Format(Resources.RequestTimedOut, RequestTimeout.TotalSeconds);
-            throw new TimeoutException(message, ex);
+            throw new TaskCanceledException(message, ex);
         }
         finally
         {
