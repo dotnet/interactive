@@ -8,6 +8,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Tags;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Directives;
 
@@ -59,6 +62,15 @@ public partial class KernelActionDirective : KernelDirective
 
             _parent = value;
         }
+    }
+
+    public override async Task<IReadOnlyList<CompletionItem>> GetChildCompletionsAsync()
+    {
+        var baseCompletions = await base.GetChildCompletionsAsync();
+
+        var subcommandCompletions = Subcommands.Select(s => new CompletionItem(s.Name, WellKnownTags.Method));
+
+        return subcommandCompletions.Concat(baseCompletions).ToArray();
     }
 
     internal override bool TryGetParameter(

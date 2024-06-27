@@ -421,4 +421,68 @@ internal class DirectiveNode : TopLevelSyntaxNode
         _kebabCaseRegex.Replace(
             value.TrimStart('-'),
             m => m.ToString().TrimStart('-').ToUpper());
+
+    public async Task<IReadOnlyList<CompletionItem>> GetCompletionsAtPositionAsync(int position)
+    {
+        var node = FindNode(position);
+        var currentToken = FindToken(position);
+
+        switch (node)
+        {
+            case DirectiveExpressionNode directiveExpressionNode:
+
+                break;
+
+            case DirectiveExpressionParametersNode directiveExpressionParametersNode:
+                break;
+
+            case DirectiveExpressionTypeNode directiveExpressionTypeNode:
+                break;
+
+            case DirectiveNameNode directiveNameNode:
+
+                if (directiveNameNode.Parent is DirectiveNode &&
+                    currentToken is { Kind: TokenKind.Whitespace } &&
+                    TryGetDirective(out var directive))
+                {
+                    var completions = await directive.GetChildCompletionsAsync();
+                    return completions;
+                }
+
+                break;
+
+            case DirectiveNode directiveNode:
+
+                break;
+
+            case DirectiveParameterNameNode directiveParameterNameNode:
+
+                if (directiveParameterNameNode?.Parent is DirectiveParameterNode pn && 
+                    pn.TryGetParameter(out var parameter) && 
+                    currentToken is { Kind: TokenKind.Whitespace })
+                {
+                    var completions = await parameter.GetValueCompletionsAsync();
+                    return completions;
+                }
+
+                break;
+
+            case DirectiveSubcommandNode subcommandNode:
+
+                break;
+
+            case DirectiveParameterNode parameterNode:
+
+                break;
+
+            case DirectiveParameterValueNode directiveParameterValueNode:
+                break;
+
+            default:
+
+                break;
+        }
+
+        return [];
+    }
 }

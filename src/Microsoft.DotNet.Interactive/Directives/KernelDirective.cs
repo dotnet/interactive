@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Tags;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Directives;
@@ -38,22 +39,36 @@ public abstract partial class KernelDirective
     }
 
     public string Name { get; init; }
-    
+
     public string? Description { get; set; }
 
     public bool Hidden { get; set; }
 
-    public ICollection<KernelDirectiveParameter> Parameters => _parameters;
+    public ICollection<KernelDirectiveParameter> Parameters
+    {
+        get => _parameters;
+        init
+        {
+            if (value is null)
+            {
+                return;
+            }
+
+            foreach (var parameter in value)
+            {
+                _parameters.Add(parameter);
+            }
+        }
+    }
 
     internal KernelInfo? ParentKernelInfo { get; set; }
 
     internal virtual bool TryGetParameter(string name, [MaybeNullWhen(false)] out KernelDirectiveParameter value) =>
         _parameters.TryGetValue(name, out value);
 
-    public Task<IReadOnlyList<CompletionItem>> GetChildCompletionsAsync()
+    public virtual async Task<IReadOnlyList<CompletionItem>> GetChildCompletionsAsync()
     {
-        // FIX: (GetCompletions) 
-        return Task.FromResult<IReadOnlyList<CompletionItem>>([]);
+        return Parameters.Select(p => new CompletionItem(p.Name, WellKnownTags.Property)).ToArray();
     }
 
     public override string ToString() => Name;

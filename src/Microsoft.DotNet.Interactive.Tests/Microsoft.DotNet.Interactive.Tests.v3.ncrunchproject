@@ -46,9 +46,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageServices.HoverTextTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageServices.CompletionTests+MagicCommands</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageServices.CompletionTests</FixtureName>
       </FixtureTestSelector>
       <NamedTestSelector>
@@ -78,9 +75,6 @@ var x = 123; // with some intervening code
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.DirectiveTests.Directives_can_display_help("csharp")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.KeyValueStoreKernelTests.Completions_show_value_options</TestName>
       </NamedTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests</FixtureName>

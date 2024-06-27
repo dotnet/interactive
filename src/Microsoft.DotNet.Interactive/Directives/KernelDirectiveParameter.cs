@@ -4,13 +4,17 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Tags;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Directives;
 
 public class KernelDirectiveParameter
 {
+    List<Func<KernelDirectiveCompletionContext, Task<IEnumerable<CompletionItem>>>>? _completionSources;
+
     public KernelDirectiveParameter(string name, string? description = null)
     {
         Name = name;
@@ -39,13 +43,30 @@ public class KernelDirectiveParameter
 
     public KernelDirectiveParameter AddCompletions(Func<KernelDirectiveCompletionContext, IEnumerable<string>> getCompletions)
     {
+        _completionSources ??= new();
+
+        _completionSources.Add(context => Task.FromResult(getCompletions(context).Select(s => new CompletionItem(s, WellKnownTags.Parameter))));
+
         return this;
     }
 
-    public Task<IReadOnlyList<CompletionItem>> GetValueCompletionsAsync()
+    public async Task<IReadOnlyList<CompletionItem>> GetValueCompletionsAsync()
     {
-        // FIX: (GetCompletions) 
-        return Task.FromResult<IReadOnlyList<CompletionItem>>([]);
+        if (_completionSources is null)
+        {
+            return [];
+        }
+
+        var completions = new List<CompletionItem>();
+
+        var context = new KernelDirectiveCompletionContext();
+
+        foreach (var source in _completionSources)
+        {
+            completions.AddRange(await source(context));
+        }
+
+        return completions;
     }
 
     public override string ToString() => Name;

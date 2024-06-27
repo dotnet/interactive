@@ -35,9 +35,8 @@ public partial class CompletionTests
         [InlineData("[|#!w|] \n", "#!who,#!whos")]
         // options
         [InlineData("#!share [||]", "--from")]
-        [InlineData("#!csharp [||]", "--help")]
         // subcommands
-        [InlineData("#!connect [||]", "--help,signalr")]
+        [InlineData("#!connect [||]", "signalr")]
         public async Task Completions_are_available_for_magic_commands(
             string markupCode,
             string expected)
