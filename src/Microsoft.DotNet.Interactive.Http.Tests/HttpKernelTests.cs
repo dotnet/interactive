@@ -3,6 +3,7 @@
 
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Markdig.Helpers;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -2265,6 +2266,94 @@ public class HttpKernelTests
         diagnostics.Diagnostics.First().Message.Should().Be($$$"""The named request does not contain any content at this path '{{{path}}}'.""");
     }
 
+    [Fact]
+    public async Task json_named_requests_with_wrong_content_type_produces_errors()
+    {
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = $$$"""
+            @baseUrl = https://httpbin.org/xml
+
+            # @name login
+            GET {{baseUrl}}
+            
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{login.response.body.$.test}}
+            
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request has content type of 'application/xml' which differs from the required content type of 'application/json'.""");
+    }
+
+    [Fact]
+    public async Task xml_named_request_with_json_content_type_produces_errors()
+    {
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = $$$"""
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+            Content-Type: application/json
+
+            {
+                "test": testing
+            }
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{login.response.body.//test}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request has content type of 'application/json' which differs from the required content type of 'application/xml'.""");
+    }
+
     [Theory]
     [InlineData("login.request.body.$")]
     [InlineData("login.request.body.//")]
@@ -2464,6 +2553,91 @@ public class HttpKernelTests
         var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
         secondResult.Events.Count().Should().Be(2);
+    }
+
+    [Theory]
+    [InlineData("example.request.headers.Content-Type", "Content-Type")]
+    [InlineData("example.response.headers.Authorization", "Authorization")]
+    public async Task non_existant_header_names_produces_an_error(string path, string headerName)
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name example
+            POST {{baseUrl}}
+            Accept: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @headerName = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "headerName" : {{headerName}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name '{{{headerName}}}' does not exist in the named request.""");
+    }
+
+    [Fact]
+    public async Task no_headers_in_named_requqest_produces_an_error_when_attempted_to_access()
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name example
+            POST {{baseUrl}}
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @headerName = {{example.request.headers.Content-Type}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "headerName" : {{headerName}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request 'example' does not have any headers.""");
     }
 
     [Fact(Skip = "Requires updates to HTTP parser")]

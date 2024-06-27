@@ -114,7 +114,7 @@ internal class HttpNamedRequest
                     return node.CreateBindingFailure(HttpDiagnostics.InvalidHeadersInNamedRequest(path[0]));
                 }
 
-                var headerNode = RequestNode.HeadersNode.HeaderNodes.First(hn => hn.NameNode?.Text == path[3]);
+                var headerNode = RequestNode.HeadersNode.HeaderNodes.FirstOrDefault(hn => hn.NameNode?.Text == path[3]);
 
                 if (headerNode is null || headerNode.ValueNode is null)
                 {
