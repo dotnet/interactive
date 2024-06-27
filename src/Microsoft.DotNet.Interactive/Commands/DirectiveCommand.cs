@@ -12,6 +12,8 @@ internal class DirectiveCommand : KernelCommand
     {
         DirectiveNode = directiveNode ?? throw new ArgumentNullException(nameof(directiveNode));
 
+        TargetKernelName = directiveNode.TargetKernelName;
+
         if (directiveNode.CommandScope is not null)
         {
             SchedulingScope = SchedulingScope.Parse(directiveNode.CommandScope);
@@ -22,5 +24,5 @@ internal class DirectiveCommand : KernelCommand
 
     internal override bool IsHidden => true;
 
-    public override string ToString() => $"Directive: {DirectiveNode.Text}";
+    public override string ToString() => $"Directive: {DirectiveNode?.Text}";
 }

@@ -16,7 +16,8 @@ internal class DirectiveNameNode : SyntaxNode
 
     public override IEnumerable<CodeAnalysis.Diagnostic> GetDiagnostics()
     {
-        if (GetKernelScope() is { } targetKernelName)
+        if (Parent is DirectiveNode &&
+            GetKernelScope() is { } targetKernelName)
         {
             if (!SyntaxTree.ParserConfiguration.IsDirectiveInScope(targetKernelName, Text, out _))
             {

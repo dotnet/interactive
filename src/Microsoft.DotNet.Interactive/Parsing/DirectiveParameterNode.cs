@@ -78,22 +78,42 @@ internal class DirectiveParameterNode : SyntaxNode
 
     public bool TryGetParameter([MaybeNullWhen(false)] out KernelDirectiveParameter parameter)
     {
-        if (Parent is DirectiveNode directiveNode)
+        KernelDirective? directive = null;
+
+        if (Parent is DirectiveNode parentDirectiveNode)
         {
-            if (directiveNode.TryGetDirective(out var directive))
+            if (!parentDirectiveNode.TryGetDirective(out directive))
             {
-                if (NameNode is not null)
+                parameter = null;
+                return false;
+            }
+        }
+
+        if (Parent is DirectiveSubcommandNode &&
+            Parent.Parent is DirectiveNode grandparentDirectiveNode)
+        {
+            if (grandparentDirectiveNode.TryGetDirective(out directive))
+            {
+                if (grandparentDirectiveNode.TryGetSubcommand(directive, out var actionDirective))
                 {
-                    if (directive.TryGetParameter(NameNode.Text, out parameter))
-                    {
-                        return true;
-                    }
+                    directive = actionDirective;
                 }
-                else if (directive.Parameters.SingleOrDefault(p => p.AllowImplicitName) is { } implicitlyNamedParameter)
+            }
+        }
+
+        if (directive is not null)
+        {
+            if (NameNode is not null)
+            {
+                if (directive.TryGetParameter(NameNode.Text, out parameter))
                 {
-                    parameter = implicitlyNamedParameter;
                     return true;
                 }
+            }
+            else if (directive.Parameters.SingleOrDefault(p => p.AllowImplicitName) is { } implicitlyNamedParameter)
+            {
+                parameter = implicitlyNamedParameter;
+                return true;
             }
         }
 

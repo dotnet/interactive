@@ -210,9 +210,7 @@ using static {typeof(TopLevelMethods).FullName};
     {
         return new KernelActionDirective("#!lsmagic")
         {
-           Description =  LocalizationResources.Magics_lsmagic_Description()
+            Description = LocalizationResources.Magics_lsmagic_Description()
         };
-            
-           
     }
 }

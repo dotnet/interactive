@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Directives;
@@ -76,7 +77,7 @@ public partial class PolyglotSyntaxParserTests
         }
 
         [Fact]
-        public void Parameters_must_appear_after_subcommands()
+        public void Subcommand_parameters_must_appear_after_subcommands()
         {
             var markupCode = """
                 #!test --opt arg [|one|]
@@ -134,6 +135,28 @@ public partial class PolyglotSyntaxParserTests
         }
 
         [Theory]
+        [InlineData("""
+                    #!connect mssql --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false" --kernel-name sql-adventureworks
+                    """)]
+        [InlineData("""
+                    #!connect mssql  --kernel-name sql-adventureworks  --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false"
+                    """)]
+        public void Parameters_defined_on_subcommand_are_parented_to_the_subcommand_node(string code)
+        {
+            var tree = Parse(code);
+
+            _output.WriteLine(tree.RootNode.Diagram());
+
+            tree.RootNode.DescendantNodesAndTokens()
+                .Should()
+                .ContainSingle<DirectiveParameterNameNode>(where: node => node.Text == "--connection-string")
+                .Which
+                .Ancestors().OfType<DirectiveSubcommandNode>().Should().ContainSingle().Which.NameNode.Text.Should().Be("mssql");
+
+            tree.RootNode.GetDiagnostics().Should().BeEmpty();
+        }
+
+        [Theory]
         [InlineData("sub-command")]
         [InlineData("sub_command")]
         [InlineData("sub_com-mand")]
@@ -170,7 +193,8 @@ public partial class PolyglotSyntaxParserTests
             tree.RootNode
                 .DescendantNodesAndTokens().Should().ContainSingle<DirectiveSubcommandNode>()
                 .Which
-                .Text.Should().Be(subcommandName);
+                .NameNode.Text
+                .Should().Be(subcommandName);
             tree.RootNode.GetDiagnostics().Should().BeEmpty();
         }
 

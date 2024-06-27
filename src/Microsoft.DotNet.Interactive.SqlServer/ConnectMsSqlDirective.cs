@@ -31,9 +31,10 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
         };
 
     private KernelDirectiveParameter ConnectionStringParameter { get; } =
-        new("connectionString", description: "The connection string used to connect to the database")
+        new("--connection-string", description: "The connection string used to connect to the database")
         {
             AllowImplicitName = true,
+            Required = true,
             TypeHint = "connectionstring-mssql"
         };
 

@@ -4,6 +4,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Directives;
@@ -38,13 +39,14 @@ public class KernelDirectiveParameter
 
     public KernelDirectiveParameter AddCompletions(Func<KernelDirectiveCompletionContext, IEnumerable<string>> getCompletions)
     {
-        // FIX: (AddCompletions) 
         return this;
     }
 
-    public IReadOnlyList<CompletionItem> GetCompletions()
+    public Task<IReadOnlyList<CompletionItem>> GetValueCompletionsAsync()
     {
         // FIX: (GetCompletions) 
-        return [];
+        return Task.FromResult<IReadOnlyList<CompletionItem>>([]);
     }
+
+    public override string ToString() => Name;
 }

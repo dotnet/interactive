@@ -47,25 +47,6 @@ public partial class KernelActionDirective : KernelDirective
 
     public ICollection<KernelActionDirective> Subcommands => _subcommands;
 
-    public override IEnumerable<KernelDirectiveParameter> BindableParameters
-    {
-        get
-        {
-            foreach (var parameter in Parameters)
-            {
-                yield return parameter;
-            }
-
-            if (Parent is not null)
-            {
-                foreach (var parentParameter in Parent.BindableParameters)
-                {
-                    yield return parentParameter;
-                }
-            }
-        }
-    }
-
     public KernelActionDirective? Parent
     {
         get => _parent;
@@ -80,7 +61,9 @@ public partial class KernelActionDirective : KernelDirective
         }
     }
 
-    internal override bool TryGetParameter(string name, [MaybeNullWhen(false)] out KernelDirectiveParameter value)
+    internal override bool TryGetParameter(
+        string name, 
+        [MaybeNullWhen(false)] out KernelDirectiveParameter value)
     {
         if (base.TryGetParameter(name, out value))
         {

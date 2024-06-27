@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Directives;
 
@@ -45,10 +47,14 @@ public abstract partial class KernelDirective
 
     internal KernelInfo? ParentKernelInfo { get; set; }
 
-    public virtual IEnumerable<KernelDirectiveParameter> BindableParameters => Parameters;
-
-    public override string ToString() => Name;
-
     internal virtual bool TryGetParameter(string name, [MaybeNullWhen(false)] out KernelDirectiveParameter value) =>
         _parameters.TryGetValue(name, out value);
+
+    public Task<IReadOnlyList<CompletionItem>> GetChildCompletionsAsync()
+    {
+        // FIX: (GetCompletions) 
+        return Task.FromResult<IReadOnlyList<CompletionItem>>([]);
+    }
+
+    public override string ToString() => Name;
 }

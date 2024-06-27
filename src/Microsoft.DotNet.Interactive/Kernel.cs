@@ -315,7 +315,9 @@ public abstract partial class Kernel :
 
     public virtual KernelSpecifierDirective KernelSpecifierDirective => _kernelSpecifierDirective ??= new($"#!{Name}", Name);
 
-    private void RegisterDirectiveCommandHandler(KernelActionDirective directive, KernelCommandInvocation handler)
+    private void RegisterDirectiveCommandHandler(
+        KernelActionDirective directive, 
+        KernelCommandInvocation handler)
     {
         var fullDirectiveName = FullDirectiveName(directive);
 

@@ -12,7 +12,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive;
 

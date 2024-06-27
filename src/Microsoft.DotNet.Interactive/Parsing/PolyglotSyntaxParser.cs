@@ -80,6 +80,7 @@ internal class PolyglotSyntaxParser
             {
                 TargetKernelName = targetKernelName
             };
+            DirectiveSubcommandNode? subcommandNode = null;
 
             if (targetKernelName is not null &&
                 _configuration.TryGetDirectiveByName(targetKernelName, directiveNameNode.Text, out var directive) ||
@@ -108,7 +109,7 @@ internal class PolyglotSyntaxParser
                 }
             }
 
-            directiveNode.Add(directiveNameNode);
+            AppendNode(directiveNameNode);
 
             while (MoreTokens())
             {
@@ -127,31 +128,43 @@ internal class PolyglotSyntaxParser
                 {
                     if (ParseNamedParameter() is { } namedParameterNode)
                     {
-                        directiveNode.Add(namedParameterNode);
+                        AppendNode(namedParameterNode);
                     }
                 }
-                else if (IsAtStartOfSubcommand(out var subcommand, out var numberOfTokensToConsume))
+                else
                 {
-                    _currentlyScopedDirective = subcommand;
-                    var subcommandNode = new DirectiveSubcommandNode(_sourceText, _syntaxTree);
-                    while (numberOfTokensToConsume -- > 0)
+                    if (IsAtStartOfSubcommand(out var subcommand, out var numberOfTokensToConsume))
                     {
-                        ConsumeCurrentTokenInto(subcommandNode);
+                        _currentlyScopedDirective = subcommand;
+
+                        if (subcommandNode is not null)
+                        {
+                            throw new InvalidOperationException("Subcommands cannot have subcommand children.");
+                        }
+
+                        subcommandNode = new DirectiveSubcommandNode(_sourceText, _syntaxTree);
+                        var subcommandNameNode = new DirectiveNameNode(_sourceText, _syntaxTree);
+                        subcommandNode.Add(subcommandNameNode);
+                        while (numberOfTokensToConsume-- > 0)
+                        {
+                            ConsumeCurrentTokenInto(subcommandNameNode);
+                        }
+
+                        ParseTrailingWhitespace(subcommandNode);
+                        directiveNode.Add(subcommandNode);
                     }
-                    ParseTrailingWhitespace(subcommandNode);
-                    directiveNode.Add(subcommandNode);
-                }
-                else if (ParseParameterValue() is { } parameterValueNode)
-                {
-                    if (_currentlyScopedParameter?.Flag is true)
+                    else if (ParseParameterValue() is { } parameterValueNode)
                     {
-                        directiveNode.Add(parameterValueNode);
-                    }
-                    else
-                    {
-                        DirectiveParameterNode parameterNode = new(_sourceText, _syntaxTree);
-                        parameterNode.Add(parameterValueNode);
-                        directiveNode.Add(parameterNode);
+                        if (_currentlyScopedParameter?.Flag is true)
+                        {
+                            AppendNode(parameterValueNode);
+                        }
+                        else
+                        {
+                            DirectiveParameterNode parameterNode = new(_sourceText, _syntaxTree);
+                            parameterNode.Add(parameterValueNode);
+                            AppendNode(parameterNode);
+                        }
                     }
                 }
             }
@@ -163,6 +176,35 @@ internal class PolyglotSyntaxParser
             }
 
             return directiveNode;
+
+            void AppendNode(SyntaxNode node)
+            {
+                switch (node)
+                {
+                    case DirectiveNameNode nameNode when subcommandNode is null:
+                        directiveNode.Add(nameNode);
+                        break;
+                    case DirectiveParameterNode parameterNode when subcommandNode is null:
+                        directiveNode.Add(parameterNode);
+                        break;
+                    case DirectiveParameterValueNode valueNode when subcommandNode is null:
+                        directiveNode.Add(valueNode);
+                        break;
+
+                    case DirectiveNameNode nameNode when subcommandNode is not null:
+                        subcommandNode.Add(nameNode);
+                        break;
+                    case DirectiveParameterNode parameterNode when subcommandNode is not null:
+                        subcommandNode.Add(parameterNode);
+                        break;
+                    case DirectiveParameterValueNode valueNode when subcommandNode is not null:
+                        subcommandNode.Add(valueNode);
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
         }
 
         return null;

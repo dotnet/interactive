@@ -188,7 +188,6 @@ public class SubmissionParser
                                 {
                                     directiveCommand = new DirectiveCommand(directiveNode)
                                     {
-                                        TargetKernelName = targetKernelName,
                                         Handler = (_, _) => Task.CompletedTask
                                     };
                                 }
@@ -337,14 +336,23 @@ public class SubmissionParser
 
         async Task<KernelCommand> CreateActionDirectiveCommand(DirectiveNode directiveNode, string targetKernelName)
         {
-            if (!directiveNode.TryGetActionDirective(out var directive) || 
-                directive.KernelCommandType is null)
+            if (!directiveNode.TryGetActionDirective(out var directive))
             {
                 // No command serialization needed.
-                return new DirectiveCommand(directiveNode)
+                return new DirectiveCommand(directiveNode);
+            }
+
+            if (directive.KernelCommandType is null)
+            {
+                if (!directiveNode.TryGetSubcommand(directive, out var subcommandDirective) ||
+                    subcommandDirective.KernelCommandType is null)
                 {
-                    TargetKernelName = targetKernelName
-                };
+                    // No command serialization needed.
+                    return new DirectiveCommand(directiveNode)
+                    {
+                        TargetKernelName = targetKernelName
+                    };
+                }
             }
 
             if (directive.TryGetKernelCommandAsync is not null &&

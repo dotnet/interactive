@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Directives;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
@@ -25,20 +27,23 @@ internal class DirectiveNode : TopLevelSyntaxNode
     {
     }
 
-    internal bool AllowValueSharingByInterpolation { get; set; }
+    public DirectiveNameNode? NameNode { get; private set; }
 
-    public DirectiveNameNode? DirectiveNameNode { get; private set; }
+    public DirectiveSubcommandNode? SubcommandNode { get; private set; }
 
     public bool HasParameters { get; private set; }
 
     public DirectiveNodeKind Kind { get; set; }
 
+    /// <summary>
+    /// Gets diagnostics for the current node, including diagnostics for descendant nodes.
+    /// </summary>
     public override IEnumerable<CodeAnalysis.Diagnostic> GetDiagnostics()
     {
         foreach (var diagnostic in base.GetDiagnostics())
-            {
-                yield return diagnostic;
-            }
+        {
+            yield return diagnostic;
+        }
 
         if (TryGetDirective(out var directive))
         {
@@ -47,8 +52,8 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 if (namedParameter.Required)
                 {
                     var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
-                                                  .Where(p => namedParameter.AllowImplicitName
-                                                                  ? p.NameNode is null
+                                                  .Where(p => p.NameNode is null
+                                                                  ? namedParameter.AllowImplicitName
                                                                   : p.NameNode?.Text == namedParameter.Name);
 
                     if (!matchingNodes.Any())
@@ -66,46 +71,32 @@ internal class DirectiveNode : TopLevelSyntaxNode
         var foundParameter = false;
 
         foreach (var childNode in ChildNodes)
+        {
+            if (childNode is DirectiveSubcommandNode)
             {
-                if (childNode is DirectiveSubcommandNode)
+                if (foundParameter)
                 {
-                    if (foundParameter)
-                    {
-                        yield return childNode.CreateDiagnostic(
-                            new(PolyglotSyntaxParser.ErrorCodes.ParametersMustAppearAfterSubcommands,
-                                "Parameters must appear after subcommands.", DiagnosticSeverity.Error));
-                    }
-                }
-                else if (childNode is DirectiveParameterNode)
-                {
-                    foundParameter = true;
+                    yield return childNode.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.ParametersMustAppearAfterSubcommands,
+                            "Parameters must appear after subcommands.", DiagnosticSeverity.Error));
                 }
             }
+            else if (childNode is DirectiveParameterNode)
+            {
+                foundParameter = true;
+            }
+        }
     }
 
     public bool TryGetActionDirective(out KernelActionDirective directive)
     {
         if (GetKernelInfo() is { } kernelInfo)
         {
-            if (DirectiveNameNode is { Text: { } name } &&
+            if (NameNode is { Text: { } name } &&
                 kernelInfo.TryGetDirective(name, out var d) &&
                 d is KernelActionDirective kernelActionDirective)
             {
                 directive = kernelActionDirective;
-
-                // drill into subcommands if any
-                var commands = DescendantNodesAndTokens()
-                               .Where(n => n is DirectiveSubcommandNode)
-                               .Select(node => node.Text);
-
-                foreach (var subcommandName in commands)
-                {
-                    if (kernelActionDirective.TryGetSubcommand(subcommandName, out var subcommand))
-                    {
-                        directive = subcommand;
-                    }
-                }
-
                 return true;
             }
         }
@@ -116,9 +107,9 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public bool TryGetKernelSpecifierDirective(out KernelSpecifierDirective directive)
     {
-        if (SyntaxTree.ParserConfiguration.KernelInfos.SingleOrDefault(i => i.IsComposite && !i.IsProxy) is { } compositeKernelInfo)
+        if (SyntaxTree.ParserConfiguration.KernelInfos.SingleOrDefault(i => i is { IsComposite: true, IsProxy: false }) is { } compositeKernelInfo)
         {
-            if (DirectiveNameNode is { Text: { } name } &&
+            if (NameNode is { Text: { } name } &&
                 compositeKernelInfo.TryGetDirective(name, out var d) &&
                 d is KernelSpecifierDirective kernelSpecifierDirective)
             {
@@ -151,13 +142,14 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public void Add(DirectiveNameNode node)
     {
-        DirectiveNameNode = node;
+        NameNode = node;
         AddInternal(node);
     }
 
-    public void Add(DirectiveParameterValueNode valueNode)
+    public void Add(DirectiveSubcommandNode node)
     {
-        AddInternal(valueNode);
+        SubcommandNode = node;
+        AddInternal(node);
     }
 
     public void Add(DirectiveParameterNode node)
@@ -166,34 +158,51 @@ internal class DirectiveNode : TopLevelSyntaxNode
         HasParameters = true;
     }
 
-    public void Add(DirectiveSubcommandNode node)
+    public void Add(DirectiveParameterValueNode valueNode)
     {
-        AddInternal(node);
+        AddInternal(valueNode);
+        HasParameters = true;
     }
-
-    public DirectiveBindingResult<object?> CreateFailedBindingResult(DiagnosticInfo diagnosticInfo) =>
-        DirectiveBindingResult<object?>.Failure(CreateDiagnostic(diagnosticInfo));
-
-    public DirectiveBindingResult<object?> CreateSuccessfulBindingResult(object? value) =>
-        DirectiveBindingResult<object?>.Success(value);
 
     public IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> GetParameterValues(
         KernelDirective directive,
         Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
     {
-        var parameterNodes = DescendantNodesAndTokens().OfType<DirectiveParameterNode>().ToArray();
+        var parameterNodes = ChildNodes.OfType<DirectiveParameterNode>().ToArray();
 
-        foreach (var parameter in directive.BindableParameters)
+        var parameters = directive.Parameters;
+
+        if (TryGetSubcommand(directive, out var subcommandActionDirective))
         {
-            var matchingNodes = parameterNodes.Where(node =>
-                                                         parameter.AllowImplicitName
-                                                             ? node.NameNode is null
-                                                             : node.NameNode?.Text == parameter.Name)
-                                              .ToArray();
+            var subcommandParameterNodes = SubcommandNode!.ChildNodes.OfType<DirectiveParameterNode>();
+            var subcommandParameters = subcommandActionDirective.Parameters;
 
-            switch (matchingNodes)
+            parameterNodes = parameterNodes.Concat(subcommandParameterNodes).ToArray();
+            parameters = parameters.Concat(subcommandParameters).ToArray();
+        }
+
+        foreach (var valueTuple in BindParameters(parameters, parameterNodes, boundExpressionValues))
+        {
+            yield return valueTuple;
+        }
+
+        static IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> BindParameters(
+            ICollection<KernelDirectiveParameter> parameters,
+            DirectiveParameterNode[] parameterNodes,
+            Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
+        {
+            foreach (var parameter in parameters)
             {
-                case [{ } parameterNode]:
+                var matchingNodes = parameterNodes
+                                    .Where(node =>
+                                               node.NameNode is null
+                                                   ? parameter.AllowImplicitName
+                                                   : node.NameNode?.Text == parameter.Name)
+                                    .ToArray();
+
+                switch (matchingNodes)
+                {
+                    case [{ } parameterNode]:
                     {
                         if (parameter.Flag)
                         {
@@ -215,14 +224,16 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         break;
                     }
 
-                case []:
-                    if (parameter.Flag)
-                    {
-                        yield return (parameter.Name, false, null);
-                    }
-                    break;
+                    case []:
+                        if (parameter.Flag)
+                        {
+                            yield return (parameter.Name, false, null);
+                        }
+
+                        break;
 
                     // FIX: (GetParameters) handle multiple matching nodes for the parameter (write array?)
+                }
             }
         }
     }
@@ -237,7 +248,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     new(PolyglotSyntaxParser.ErrorCodes.MissingSerializationType,
                         "No kernel command type type defined for {0}. Please specify a kernel command type using {1}.{2}.",
                         DiagnosticSeverity.Error,
-                        DirectiveNameNode?.Text ?? ToString(),
+                        NameNode?.Text ?? ToString(),
                         typeof(KernelActionDirective),
                         nameof(KernelActionDirective.KernelCommandType)
                     )));
@@ -265,13 +276,22 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         writer.WriteStartObject();
 
-        writer.WriteString("commandType", directive.KernelCommandType?.Name);
+        if (TryGetSubcommand(directive, out var subcommandDirective))
+        {
+            writer.WriteString("commandType", subcommandDirective.KernelCommandType?.Name);
+        }
+        else
+        {
+            writer.WriteString("commandType", directive.KernelCommandType?.Name);
+        }
 
         writer.WritePropertyName("command");
 
         writer.WriteStartObject();
 
-        foreach (var parameter in GetParameterValues(directive, boundExpressionValues))
+        IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> parameterValues = GetParameterValues(directive, boundExpressionValues).ToArray();
+
+        foreach (var parameter in parameterValues)
         {
             var parameterName = FromPosixStyleToCamelCase(parameter.Name);
 
@@ -366,13 +386,33 @@ internal class DirectiveNode : TopLevelSyntaxNode
         return (boundExpressionValues, Array.Empty<CodeAnalysis.Diagnostic>());
     }
 
+    internal bool TryGetSubcommand(
+        KernelDirective parentDirective,
+        [NotNullWhen(true)] out KernelActionDirective? subcommandDirective)
+    {
+        if (SubcommandNode is { NameNode: { } subcommandNameNode } &&
+            parentDirective is KernelActionDirective selfAsActionDirective &&
+            selfAsActionDirective.TryGetSubcommand(subcommandNameNode.Text, out subcommandDirective))
+        {
+            return true;
+        }
+        else
+        {
+            subcommandDirective = null;
+            return false;
+        }
+    }
+
     public string GetInvokedCommandPath()
     {
-        var commands = DescendantNodesAndTokensAndSelf()
-                       .Where(n => n is DirectiveSubcommandNode or Parsing.DirectiveNameNode)
-                       .Select(node => node.Text);
-
-        return string.Join(" ", commands);
+        if (SubcommandNode is { NameNode: { } subcommandNameNode })
+        {
+            return $"{NameNode?.Text} {subcommandNameNode.Text}";
+        }
+        else
+        {
+            return $"{NameNode?.Text}";
+        }
     }
 
     private static readonly Regex _kebabCaseRegex = new("-[\\w]", RegexOptions.Compiled);

@@ -8,7 +8,10 @@ namespace Microsoft.DotNet.Interactive;
 
 public class NoSuitableKernelException : Exception
 {
-    public NoSuitableKernelException(KernelCommand command) : base($"No kernel found for {command} with target kernel '{command.TargetKernelName}'.")
+    public NoSuitableKernelException(KernelCommand command) : base(
+        command.TargetKernelName is null
+            ? $"No kernel found for command: {command}"
+            : $"No handler registered on kernel {command.TargetKernelName} for command: {command}")
     {
     }
 

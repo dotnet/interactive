@@ -17,9 +17,11 @@ public class ConnectSQLiteDirective : ConnectKernelDirective<ConnectSQLiteKernel
     }
 
     public KernelDirectiveParameter ConnectionStringParameter { get; } =
-        new("connectionString", "The connection string used to connect to the database")
+        new("--connection-string", "The connection string used to connect to the database")
         {
-            AllowImplicitName = true
+            AllowImplicitName = true,
+            Required = true,
+            TypeHint = "connectionstring-sqlite"
         };
 
     public override Task<IEnumerable<Kernel>> ConnectKernelsAsync(

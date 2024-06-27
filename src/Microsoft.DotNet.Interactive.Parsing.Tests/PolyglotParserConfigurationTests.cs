@@ -101,7 +101,11 @@ public class PolyglotParserConfigurationTests
                                 {
                                     Parameters =
                                     {
-                                        new KernelDirectiveParameter("--connection-string"),
+                                        new KernelDirectiveParameter("--connection-string")
+                                        {
+                                            AllowImplicitName = true,
+                                            Required = true
+                                        }
                                     },
                                     KernelCommandType = typeof(ConnectMsSql)
                                 },

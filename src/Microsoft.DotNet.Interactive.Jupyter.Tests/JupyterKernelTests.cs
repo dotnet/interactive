@@ -133,7 +133,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
         var jupyterKernelCommand = new ConnectJupyterKernelDirective();
         jupyterKernelCommand.AddConnectionOptions(options);
 
-        var kernelSpecCompletions = jupyterKernelCommand.KernelSpecNameParameter.GetCompletions();
+        var kernelSpecCompletions = jupyterKernelCommand.KernelSpecNameParameter.GetValueCompletionsAsync();
         kernelSpecCompletions
             .Should()
             .BeEquivalentTo(specs.Select(s => new CompletionItem(s.Name, WellKnownTags.Parameter)));

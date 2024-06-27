@@ -247,7 +247,7 @@ public class KeyValueStoreKernel :
 
                 string GetCellContent()
                 {
-                    if (directiveNode.NextNode() is DirectiveNode { DirectiveNameNode.Text: "#!value" })
+                    if (directiveNode.NextNode() is DirectiveNode { NameNode.Text: "#!value" })
                     {
                         return null;
                     }

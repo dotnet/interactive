@@ -36,19 +36,16 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
     /// </summary>
     public string FullText => SourceText.ToString(FullSpan);
 
-    public bool Contains(SyntaxNode node) => false;
-
-    public SyntaxNode? FindNode(TextSpan span) =>
-        DescendantNodesAndTokensAndSelf()
-            .OfType<SyntaxNode>()
-            .Reverse()
-            .FirstOrDefault(n => n.FullSpan.Contains(span));
-
     public SyntaxNode? FindNode(int position) =>
         FindToken(position)?.Parent;
 
     public SyntaxToken? FindToken(int position)
     {
+        if (position == _fullSpan.End)
+        {
+            position--;
+        }
+
         var candidate = _childNodesAndTokens.FirstOrDefault(n => n.FullSpan.Contains(position));
 
         return candidate switch
@@ -150,6 +147,7 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
         }
 
         GrowSpan(child);
+        Parent?.GrowSpan(child);
     }
 
     public IEnumerable<SyntaxNode> ChildNodes =>
