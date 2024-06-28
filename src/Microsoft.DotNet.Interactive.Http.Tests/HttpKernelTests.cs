@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -2187,15 +2188,519 @@ public class HttpKernelTests
             "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
     }
 
-    [Fact(Skip = "Requires updates to HTTP parser")]
-    public void responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
+    public async Task responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
     {
         // Request Variables
         // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
 
-        // TODO (responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests) write test
-        throw new NotImplementedException();
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+            Content-Type: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+
+            @origin = {{login.response.body.$.origin}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+    [Theory]
+    [InlineData("login.response.$")]
+    [InlineData("login.response.//")]
+    [InlineData("login.request.$")]
+    [InlineData("login.request.//")]
+    public async Task responses_to_named_requests_with_incomplete_paths_produces_errors(string path)
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+            Content-Type: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{path}}}' does not follow the correct pattern. The expression should adhere to the following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""");
+    }
+
+
+    [Theory]
+    [InlineData("login.request.body.$.test", "application/json")]
+    [InlineData("login.request.body.//test", "application/xml")]
+    public async Task named_requests_with_incomplete_content_produces_errors(string path, string contentType)
+    {   
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = $$$"""
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+            Content-Type: {{{contentType}}}
+
+            {
+                "test": testing
+            }
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The named request does not contain any content at this path '{{{path}}}'.""");
+    }
+
+    [Fact]
+    public async Task json_named_requests_with_wrong_content_type_produces_errors()
+    {
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = $$$"""
+            @baseUrl = https://httpbin.org/xml
+
+            # @name login
+            GET {{baseUrl}}
+            
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{login.response.body.$.test}}
+            
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request has content type of 'application/xml' which differs from the required content type of 'application/json'.""");
+    }
+
+    [Fact]
+    public async Task xml_named_request_with_json_content_type_produces_errors()
+    {
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = $$$"""
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+            Content-Type: application/json
+
+            {
+                "test": testing
+            }
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{login.response.body.//test}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request has content type of 'application/json' which differs from the required content type of 'application/xml'.""");
+    }
+
+    [Theory]
+    [InlineData("login.request.body.$")]
+    [InlineData("login.request.body.//")]
+    public async Task named_requests_with_no_body_produces_errors_when_trying_to_access(string path)
+    {
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name login
+            POST {{baseUrl}}
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @origin = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "origin" : {{origin}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request 'login' does not have a request body.""");
+    }
+
+    [Fact]
+    public async Task responses_to_named_requests_can_be_accessed_as_xml_in_later_requests()
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @baseUrl = https://httpbin.org/xml
+
+            # @name sampleXml
+            GET {{baseUrl}}
+            Content-Type: application/xml
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+
+            POST https://example.com/api/comments HTTP/1.1
+            X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+    [Fact]
+    public async Task named_requests_with_improper_xml_path_produces_errors()
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @baseUrl = https://httpbin.org/xml
+
+            # @name sampleXml
+            GET {{baseUrl}}
+            Content-Type: application/xml
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+
+            POST https://example.com/api/comments HTTP/1.1
+            X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+    [Fact]
+    public async Task responses_to_named_requests_can_be_accessed_through_headers_in_later_requests()
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @baseUrl = https://httpbin.org
+
+            # @name sample
+            GET {{baseUrl}}
+            Content-Type: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+
+            POST https://example.com/api/comments HTTP/1.1
+            Server: {{sample.response.headers.Server}}
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+
+    [Fact]
+    public async Task Invalid_named_request_property_produces_errors()
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @baseUrl = https://example.com/api
+
+            # @name login
+            POST {{baseUrl}}/api/login HTTP/1.1
+            Content-Type: application/x-www-form-urlencoded
+
+            name=foo&password=bar
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = """
+
+            @authToken = {{login.response.headers.X-AuthToken}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Authorization: {{authToken}}
+            Content-Type: application/json
+            
+            {
+                "content": "fake content"
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Count().Should().Be(2);
+    }
+
+    [Theory]
+    [InlineData("example.request.headers.Content-Type", "Content-Type")]
+    [InlineData("example.response.headers.Authorization", "Authorization")]
+    public async Task non_existant_header_names_produces_an_error(string path, string headerName)
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name example
+            POST {{baseUrl}}
+            Accept: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @headerName = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "headerName" : {{headerName}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name '{{{headerName}}}' does not exist in the named request.""");
+    }
+
+    [Fact]
+    public async Task no_headers_in_named_requqest_produces_an_error_when_attempted_to_access()
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name example
+            POST {{baseUrl}}
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @headerName = {{example.request.headers.Content-Type}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "headerName" : {{headerName}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request 'example' does not have any headers.""");
     }
 
     [Fact(Skip = "Requires updates to HTTP parser")]
@@ -2215,16 +2720,6 @@ Content-Type: {{contentType}}
          */
 
         // TODO (prompt_symbol_sends_input_request_to_user) write test
-        throw new NotImplementedException();
-    }
-
-    [Fact(Skip = "Requires updates to HTTP parser")]
-    public void JSONPath_can_be_used_to_access_response_properties()
-    {
-        // example:
-        // @authToken = {{login.response.headers.X-AuthToken}}
-
-        // TODO (dot_notation_can_be_used_to_access_response_properties) write test
         throw new NotImplementedException();
     }
 

@@ -247,7 +247,12 @@ internal class HttpRequestParser
         {
             while (MoreTokens())
             {
-                if (CurrentToken?.Kind is HttpTokenKind.Whitespace)
+                if (CurrentToken is { Kind: HttpTokenKind.Punctuation }
+                and { Text: "@" })
+                {
+                    ConsumeCurrentTokenInto(node);
+                }
+                else if (CurrentToken?.Kind is HttpTokenKind.Whitespace)
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -260,6 +265,7 @@ internal class HttpRequestParser
                     foreach (var commentNode in ParseComments())
                     {
                         node.Add(commentNode, addBefore: true);
+                        
                     }
                 }
                 else
@@ -374,7 +380,7 @@ internal class HttpRequestParser
 
             foreach (var comment in ParseComments())
             {
-                requestNode.Add(comment);
+                requestNode.Add(comment, false);
             }
 
             ParseTrailingWhitespace(requestNode);
@@ -401,6 +407,7 @@ internal class HttpRequestParser
                 var node = new HttpRequestSeparatorNode(_sourceText, _syntaxTree);
                 ParseLeadingWhitespaceAndComments(node);
 
+                //Three tokens of # representing the request separator
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
                 ConsumeCurrentTokenInto(node);
@@ -630,6 +637,55 @@ internal class HttpRequestParser
             return headersNode;
         }
 
+        private HttpNamedRequestNode? ParseNamedRequestNode()
+        {
+            if (!isCommentNamedRequest())
+            {
+                return null;
+            }
+            var node = new HttpNamedRequestNode(_sourceText, _syntaxTree);
+
+            //Three tokens representing the @name and whitespace signifying a named request node 
+            ConsumeCurrentTokenInto(node);
+            ConsumeCurrentTokenInto(node);
+            ParseTrailingWhitespace(node);
+
+            node.Add(ParseNamedRequestNameNode());
+
+            return node;
+        }
+
+        private HttpNamedRequestNameNode ParseNamedRequestNameNode()
+        {
+            var node = new HttpNamedRequestNameNode(_sourceText, _syntaxTree);
+            
+                ParseLeadingWhitespaceAndComments(node);
+
+                while (MoreTokens() && CurrentToken is not {Kind: HttpTokenKind.NewLine})
+                {
+                    if (CurrentToken is not null && !(CurrentToken is { Kind: HttpTokenKind.Word } or { Text: "_" or "@" or "."}))
+                    {
+                    var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
+
+                    node.AddDiagnostic(diagnostic);
+                }
+
+                ConsumeCurrentTokenInto(node);
+                
+            }
+
+           return ParseTrailingWhitespace(node, stopAfterNewLine: true);
+
+        }
+
+        private bool isCommentNamedRequest()
+        {
+            return (CurrentToken is { Text: "@" } &&
+                CurrentTokenPlus(1) is { Text: "name" } &&
+                CurrentTokenPlus(2) is { Kind: HttpTokenKind.Whitespace }
+                    );
+        }
+
         private HttpHeaderNode ParseHeader()
         {
             var headerNode = new HttpHeaderNode(_sourceText, _syntaxTree);
@@ -756,10 +812,19 @@ internal class HttpRequestParser
                     commentNode.Add(commentStartNode);
                 }
 
-                var commentBodyNode = ParseCommentBody();
-                if (commentBodyNode is not null)
+                var commentNamedRequestNode = ParseNamedRequestNode();
+                if (commentNamedRequestNode is not null)
                 {
-                    commentNode.Add(commentBodyNode);
+                    commentNode.Add(commentNamedRequestNode);
+                }
+                else
+                {
+
+                    var commentBodyNode = ParseCommentBody();
+                    if (commentBodyNode is not null)
+                    {
+                        commentNode.Add(commentBodyNode);
+                    }
                 }
 
                 yield return commentNode;

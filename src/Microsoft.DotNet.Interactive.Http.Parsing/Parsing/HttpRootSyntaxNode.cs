@@ -10,6 +10,8 @@ using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
+using Diagnostic = CodeAnalysis.Diagnostic;
+
 internal class HttpRootSyntaxNode : HttpSyntaxNode
 {
     internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree? tree) : base(sourceText, tree)
@@ -36,10 +38,12 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
         AddInternal(separatorNode);
     }
 
-    public Dictionary<string, DeclaredVariable> GetDeclaredVariables()
+    public (Dictionary<string, DeclaredVariable> declaredVariables, List<Diagnostic>? diagnostics) TryGetDeclaredVariables(HttpBindingDelegate? bind = null)
     {
 
         var variableAndDeclarationNodes = ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
+
+        List<Diagnostic>? diagnostics = null;
 
         var foundVariableValues = new Dictionary<string, string>();
         var declaredVariables = new Dictionary<string, DeclaredVariable>();
@@ -62,6 +66,10 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                         {
                             return node.CreateBindingSuccess(strinValue);
                         }
+                        else if (bind != null)
+                        {
+                            return bind(node);
+                        }
                         else
                         {
                             return DynamicExpressionUtilities.ResolveExpressionBinding(node, node.Text);
@@ -69,14 +77,30 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
 
                     });
 
-                    if (value is not null && value.Value is not null)
+                    
+                    if(value?.Value != null)
                     {
                         declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
+                    } 
+                    else 
+                    {
+                        if(diagnostics is null)
+                        {
+                            diagnostics = value?.Diagnostics;
+                        } 
+                        else
+                        {
+                            if (value is not null)
+                            {
+                                diagnostics.AddRange(value.Diagnostics);
+                            }
+                            
+                        }       
                     }
                 }
             }
         }
 
-        return declaredVariables;
+        return (declaredVariables, diagnostics);
     }
 }
