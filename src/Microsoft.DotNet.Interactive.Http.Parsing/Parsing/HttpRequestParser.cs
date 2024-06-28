@@ -166,7 +166,7 @@ internal class HttpRequestParser
             }
 
             return node is not null
-                       ? ParseTrailingWhitespace(node, stopAfterNewLine: true)
+                       ? ParseTrailingWhitespace(node, stopAfterNewLine: false)
                        : null;
         }
 
@@ -194,7 +194,7 @@ internal class HttpRequestParser
 
                 while (MoreTokens())
                 {
-                    if (CurrentToken is { Text: "@" } or { Kind: HttpTokenKind.Word } or { Text: "_" })
+                    if (CurrentToken is { Kind: HttpTokenKind.Word } or { Text: "@" or "_" or "." })
                     {
                         ConsumeCurrentTokenInto(node);
                     }
@@ -318,7 +318,8 @@ internal class HttpRequestParser
                 return null;
             }
 
-            if (GetNextSignificantToken() is null)
+            if (GetNextSignificantToken() is null or { Kind: HttpTokenKind.Punctuation }
+            and { Text: "@" })
             {
                 return null;
             }

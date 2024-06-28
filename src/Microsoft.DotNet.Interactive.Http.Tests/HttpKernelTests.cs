@@ -1,14 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-using FluentAssertions.Execution;
-using Markdig.Helpers;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Microsoft.DotNet.Interactive.Tests.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,6 +11,13 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
@@ -2125,6 +2124,70 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task commands_that_exceed_the_configured_request_timeout_are_marked_as_failed()
+    {
+        const int DelayInMilliseconds = 300;
+        const int TimeoutInMilliseconds = 20;
+
+        var handler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(DelayInMilliseconds);
+            return response;
+        });
+
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+        kernel.RequestTimeout = TimeSpan.FromMilliseconds(TimeoutInMilliseconds);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<CommandFailed>().Which.Message.Should().Contain(
+            "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
+    }
+
+    [Fact]
+    public async Task request_timeout_can_be_changed_more_than_once()
+    {
+        const int DelayInMilliseconds = 300;
+        const int ShortTimeoutInMilliseconds = 20;
+        const int LongTimeoutInMilliseconds = 500;
+
+        var handler = new InterceptingHttpMessageHandler(async (message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            await Task.Delay(DelayInMilliseconds);
+            return response;
+        });
+
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        kernel.RequestTimeout = TimeSpan.FromMilliseconds(ShortTimeoutInMilliseconds);
+
+        var result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<CommandFailed>().Which.Message.Should().Contain(
+            "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
+
+        kernel.RequestTimeout = TimeSpan.FromMilliseconds(LongTimeoutInMilliseconds);
+
+        result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<CommandSucceeded>();
+
+        kernel.RequestTimeout = TimeSpan.FromMilliseconds(ShortTimeoutInMilliseconds);
+
+        result = await kernel.SendAsync(new SubmitCode($"GET http://testuri.ninja"));
+
+        result.Events.Should().ContainSingle<CommandFailed>().Which.Message.Should().Contain(
+            "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
+    }
+
     public async Task responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
     {
         // Request Variables
