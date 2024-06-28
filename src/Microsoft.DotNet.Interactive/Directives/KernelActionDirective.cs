@@ -48,7 +48,22 @@ public partial class KernelActionDirective : KernelDirective
     [JsonIgnore]
     public Type? KernelCommandType { get; set; }
 
-    public ICollection<KernelActionDirective> Subcommands => _subcommands;
+    public ICollection<KernelActionDirective> Subcommands
+    {
+        get => _subcommands;
+        init
+        {
+            if (value is null)
+            {
+                return;
+            }
+
+            foreach (var directive in value)
+            {
+                _subcommands.Add(directive);
+            }
+        }
+    }
 
     public KernelActionDirective? Parent
     {
@@ -68,7 +83,10 @@ public partial class KernelActionDirective : KernelDirective
     {
         var baseCompletions = await base.GetChildCompletionsAsync();
 
-        var subcommandCompletions = Subcommands.Select(s => new CompletionItem(s.Name, WellKnownTags.Method));
+        var subcommandCompletions = Subcommands.Select(s => new CompletionItem(s.Name, WellKnownTags.Method)
+        {
+            AssociatedSymbol = s
+        });
 
         return subcommandCompletions.Concat(baseCompletions).ToArray();
     }

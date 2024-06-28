@@ -427,38 +427,48 @@ internal class DirectiveNode : TopLevelSyntaxNode
         var node = FindNode(position);
         var currentToken = FindToken(position);
 
+        // FIX: (GetCompletionsAtPositionAsync) delete this
+        switch (TargetKernelName)
+        {
+            case ".NET":
+                break;
+            case "csharp":
+                break;
+        }
+
         switch (node)
         {
-            case DirectiveExpressionNode directiveExpressionNode:
-
-                break;
-
-            case DirectiveExpressionParametersNode directiveExpressionParametersNode:
-                break;
-
-            case DirectiveExpressionTypeNode directiveExpressionTypeNode:
-                break;
-
-            case DirectiveNameNode directiveNameNode:
-
-                if (directiveNameNode.Parent is DirectiveNode &&
-                    currentToken is { Kind: TokenKind.Whitespace } &&
-                    TryGetDirective(out var directive))
+            case DirectiveNameNode:
+                if (TryGetDirective(out var directive))
                 {
                     var completions = await directive.GetChildCompletionsAsync();
+
+                    if (directive is KernelActionDirective actionDirective &&
+                        actionDirective.Subcommands.Any() &&
+                        !DescendantNodesAndTokens().OfType<DirectiveSubcommandNode>().Any(n => n.Span.End <= position))
+                    {
+                        completions = completions.Where(c => c.AssociatedSymbol is KernelDirective).ToList();
+                    }
+
                     return completions;
+                }
+                else
+                {
+                    // FIX: (GetCompletionsAtPositionAsync) handle the case where the directive is not found
+
+
+
+                  
+
+
+
                 }
 
                 break;
 
-            case DirectiveNode directiveNode:
-
-                break;
-
             case DirectiveParameterNameNode directiveParameterNameNode:
-
-                if (directiveParameterNameNode?.Parent is DirectiveParameterNode pn && 
-                    pn.TryGetParameter(out var parameter) && 
+                if (directiveParameterNameNode?.Parent is DirectiveParameterNode pn &&
+                    pn.TryGetParameter(out var parameter) &&
                     currentToken is { Kind: TokenKind.Whitespace })
                 {
                     var completions = await parameter.GetValueCompletionsAsync();
@@ -468,7 +478,38 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 break;
 
             case DirectiveSubcommandNode subcommandNode:
+            {
+                if (subcommandNode.TryGetSubcommand(out var subcommandDirective) &&
+                    TryGetDirective(out var parentDirective))
+                {
+                    // parent directive parameter completions are valid under subcommands
+                    var completions = (await subcommandDirective.GetChildCompletionsAsync()).ToList();
 
+                    var parentDirectiveParameterCompletions = await parentDirective.GetChildCompletionsAsync();
+
+                    foreach (var completionItem in parentDirectiveParameterCompletions)
+                    {
+                        if (completionItem.AssociatedSymbol is not KernelDirective)
+                        {
+                            completions.Add(completionItem);
+                        }
+                    }
+
+                    return completions;
+                }
+            }
+                break;
+
+            case DirectiveNode directiveNode:
+                break;
+
+            case DirectiveExpressionNode directiveExpressionNode:
+                break;
+
+            case DirectiveExpressionParametersNode directiveExpressionParametersNode:
+                break;
+
+            case DirectiveExpressionTypeNode directiveExpressionTypeNode:
                 break;
 
             case DirectiveParameterNode parameterNode:
@@ -479,7 +520,6 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 break;
 
             default:
-
                 break;
         }
 

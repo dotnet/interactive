@@ -68,7 +68,19 @@ public abstract partial class KernelDirective
 
     public virtual async Task<IReadOnlyList<CompletionItem>> GetChildCompletionsAsync()
     {
-        return Parameters.Select(p => new CompletionItem(p.Name, WellKnownTags.Property)).ToArray();
+        var parameterNameCompletions = Parameters
+                                       .Select(p => new CompletionItem(p.Name, WellKnownTags.Property)
+                                       {
+                                           AssociatedSymbol = p
+                                       }).ToList();
+
+        if (Parameters.SingleOrDefault(p => p.AllowImplicitName) is { } allowsImplicitName)
+        {
+            var valueCompletions = await allowsImplicitName.GetValueCompletionsAsync();
+            parameterNameCompletions.AddRange(valueCompletions);
+        }
+
+        return parameterNameCompletions;
     }
 
     public override string ToString() => Name;

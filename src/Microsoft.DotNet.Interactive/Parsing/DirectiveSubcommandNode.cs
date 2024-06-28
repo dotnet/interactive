@@ -3,6 +3,7 @@
 
 #nullable enable
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
@@ -33,5 +34,22 @@ internal class DirectiveSubcommandNode : SyntaxNode
         // FIX: (Add) test implicit named parameters on subcommands
         AddInternal(valueNode);
         HasParameters = true;
+    }
+
+    public bool TryGetSubcommand(out KernelActionDirective subcommandDirective)
+    {
+        if (Parent is DirectiveNode parentDirectiveNode)
+        {
+            if (parentDirectiveNode.TryGetDirective(out var parentDirective))
+            {
+                if (parentDirectiveNode.TryGetSubcommand(parentDirective, out subcommandDirective))
+                {
+                    return true;
+                }
+            }
+        }
+
+        subcommandDirective = null;
+        return false;
     }
 }

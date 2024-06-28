@@ -111,7 +111,7 @@ public class PolyglotParserConfigurationTests
                                 },
                             }
                         },
-                        new KernelSpecifierDirective("#!javascript", "javascript"),
+                        new KernelSpecifierDirective("#!javascript", "javascript")
                     }
                 },
                 new KernelInfo("csharp", ["C#"])

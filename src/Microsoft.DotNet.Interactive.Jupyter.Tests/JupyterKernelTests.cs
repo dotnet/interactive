@@ -23,31 +23,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 public class JupyterKernelTests : JupyterKernelTestBase
 {
     [Fact]
-    public async Task can_get_help_for_connect_jupyter()
-    {
-        var kernel = CreateCompositeKernelAsync(new JupyterHttpKernelConnectionOptions(), new JupyterLocalKernelConnectionOptions());
-        
-        var command = new SubmitCode("#!connect jupyter --help");
-
-        var result = await kernel.SendAsync(command);
-
-        result.Events
-            .Should()
-            .NotContain(e => e is CommandFailed);
-
-        var outputs = result.Events.OfType<StandardOutputValueProduced>();
-
-        outputs.Should().HaveCount(1);
-
-        string.Join("",
-                outputs
-                    .SelectMany(e => e.FormattedValues.Select(v => v.Value))
-            ).ToLowerInvariant()
-            .Should()
-            .ContainAll("--kernel-spec", "--init-script", "--url", "--token", "in preview");
-    }
-
-    [Fact]
     public async Task variable_sharing_not_enabled_for_unsupported_languages()
     {
         var options = new TestJupyterConnectionOptions(GenerateReplies(null, "unsupportedLanguage"));

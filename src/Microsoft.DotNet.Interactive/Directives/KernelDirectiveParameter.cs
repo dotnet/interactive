@@ -37,7 +37,10 @@ public class KernelDirectiveParameter
 
     public KernelDirectiveParameter AddCompletions(Func<KernelDirectiveCompletionContext, IEnumerable<CompletionItem>> getCompletions)
     {
-        // FIX: (AddCompletions) 
+        _completionSources ??= new();
+
+        _completionSources.Add(context => Task.FromResult(getCompletions(context)));
+
         return this;
     }
 
@@ -45,7 +48,9 @@ public class KernelDirectiveParameter
     {
         _completionSources ??= new();
 
-        _completionSources.Add(context => Task.FromResult(getCompletions(context).Select(s => new CompletionItem(s, WellKnownTags.Parameter))));
+        _completionSources.Add(context =>
+                                   Task.FromResult(getCompletions(context)
+                                                       .Select(s => new CompletionItem(s, WellKnownTags.Parameter))));
 
         return this;
     }
@@ -64,6 +69,11 @@ public class KernelDirectiveParameter
         foreach (var source in _completionSources)
         {
             completions.AddRange(await source(context));
+        }
+
+        foreach (var completion in completions)
+        {
+            completion.AssociatedSymbol = this;
         }
 
         return completions;

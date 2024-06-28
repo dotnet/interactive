@@ -212,8 +212,9 @@ public abstract partial class Kernel :
     {
         var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
         var rootNode = tree.RootNode;
-        var sourceText = SourceText.From(command.Code);
+        var sourceText = tree.RootNode.SourceText;
         var lines = sourceText.Lines;
+
         if (command.LinePosition.Line < 0
             || command.LinePosition.Line >= lines.Count
             || command.LinePosition.Character < 0
@@ -240,7 +241,7 @@ public abstract partial class Kernel :
             }
         }
 
-        if (rootNode.FindNode(absolutePosition) is LanguageNode node)
+        if (rootNode.FindNode(absolutePosition)?.AncestorsAndSelf().OfType<TopLevelSyntaxNode>().FirstOrDefault() is { } node)
         {
             var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
             var offsetNodeLine = command.LinePosition.Line - nodeStartLine;
@@ -736,7 +737,7 @@ public abstract partial class Kernel :
         _disposables.Add(disposable);
     }
 
-    private Task HandleRequestCompletionsAsync(
+    private async Task HandleRequestCompletionsAsync(
         RequestCompletions command,
         KernelInvocationContext context)
     {
@@ -746,12 +747,11 @@ public abstract partial class Kernel :
                 .Lines
                 .GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
 
-            var completions = GetDirectiveCompletionItems(
+            var completions = await GetDirectiveCompletionItemsAsync(
                 directiveNode,
                 requestPosition);
 
-            var upToCursor =
-                directiveNode.Text[..command.LinePosition.Character];
+            var upToCursor = directiveNode.FullText[..command.LinePosition.Character];
 
             var indexOfPreviousSpace =
                 Math.Max(
@@ -766,50 +766,17 @@ public abstract partial class Kernel :
                 new CompletionsProduced(
                     completions, command, resultRange));
         }
-
-        return Task.CompletedTask;
     }
 
-    private IEnumerable<CompletionItem> GetDirectiveCompletionItems(
+    private async Task<IEnumerable<CompletionItem>> GetDirectiveCompletionItemsAsync(
         DirectiveNode directiveNode,
         int requestPosition)
     {
-        // var directiveParsers = new List<Parser>();
-        //
-        // directiveParsers.AddRange(
-        //     GetDirectiveParsersForCompletion(directiveNode, requestPosition));
-        //
-        // var result = directiveNode.GetDirectiveParseResult();
-        //
-        // // if (result.CommandResult.Command == ChooseKernelDirective)
-        // // {
-        // //     return result.GetCompletions()
-        // //         .Select(s => SubmissionParser.CompletionItemFor(s.Label, result));
-        // // }
-        //
-        var allCompletions = new List<CompletionItem>();
-        // var topDirectiveParser = SubmissionParser.GetDirectiveParser();
-        // var prefix = topDirectiveParser.Configuration.RootCommand.Name + " ";
-        // requestPosition += prefix.Length;
-        //
-        // foreach (var parser in directiveParsers)
-        // {
-        //     var effectiveText = $"{prefix}{directiveNode.Text}";
-        //
-        //     var parseResult = parser.Parse(effectiveText);
-        //
-        //     var suggestions = parseResult.GetCompletions(requestPosition);
-        //
-        //     var completions = suggestions
-        //         .Select(s => SubmissionParser.CompletionItemFor(s.Label, parseResult))
-        //         .ToArray();
-        //
-        //     allCompletions.AddRange(completions);
-        // }
+        var allCompletions = await directiveNode.GetCompletionsAtPositionAsync(requestPosition);
 
         return allCompletions
-            .Distinct(CompletionItemComparer.Instance)
-            .ToArray();
+               .Distinct(CompletionItemComparer.Instance)
+               .ToArray();
     }
 
     private void TrySetHandler(
