@@ -140,21 +140,30 @@ internal class HttpNamedRequest
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidContentType(Response.Content.ContentType ?? "null", "application/json"));
                     }
 
-                    var responseJSON = JsonNode.Parse(Response.Content.Raw);
-
-                    if (responseJSON is not null)
+                    try
                     {
-                        var resolvedPath = ResolveJsonPath(responseJSON, path, 4);
-                        if (resolvedPath != null)
-                        {
-                            return node.CreateBindingSuccess(resolvedPath);
-                        }
+                        var responseJSON = JsonNode.Parse(Response.Content.Raw);
 
-                    }
-                    else
+                        if (responseJSON is not null)
+                        {
+                            var resolvedPath = ResolveJsonPath(responseJSON, path, 4);
+                            if (resolvedPath != null)
+                            {
+                                return node.CreateBindingSuccess(resolvedPath);
+                            }
+
+                        }
+                        else
+                        {
+                            return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest(string.Join(".", path)));
+                        }
+                    } 
+                    catch
                     {
                         return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest(string.Join(".", path)));
                     }
+
+                    
                 }
                 else if (path[3].StartsWith("//"))
                 {
@@ -171,19 +180,24 @@ internal class HttpNamedRequest
                     var xmlDoc = new XmlDocument();
                     xmlDoc.LoadXml(Response.Content.Raw);
 
-
-                    //Remove the leading slash
-                    var xmlNodes = xmlDoc.SelectNodes(path[3].Substring(1));
-
-                    if (xmlNodes is not null && xmlNodes.Count == 1)
+                    try
                     {
-                        return node.CreateBindingSuccess(xmlNodes.Item(0)?.Value);
-                    }
-                    else
-                    {
-                        return node.CreateBindingFailure(HttpDiagnostics.InvalidXmlNodeInNamedRequest(path[3]));
-                    }
+                        //Remove the leading slash
+                        var xmlNodes = xmlDoc.SelectNodes(path[3].Substring(1));
 
+                        if (xmlNodes is not null && xmlNodes.Count == 1)
+                        {
+                            return node.CreateBindingSuccess(xmlNodes.Item(0)?.Value);
+                        }
+                        else
+                        {
+                            return node.CreateBindingFailure(HttpDiagnostics.InvalidXmlNodeInNamedRequest(path[3]));
+                        }
+                    }
+                    catch
+                    {
+                        return node.CreateBindingFailure(HttpDiagnostics.InvalidContentInNamedRequest(string.Join(".", path)));
+                    }
                 }
             }
             else if (path[2] == "headers")
@@ -200,8 +214,6 @@ internal class HttpNamedRequest
 
             }
         }
-
-
 
         return node.CreateBindingFailure(HttpDiagnostics.InvalidNamedRequestPath(node.Text));
     }
