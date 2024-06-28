@@ -220,7 +220,7 @@ public abstract partial class Kernel :
             || command.LinePosition.Character < 0
             || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
         {
-            context.Fail(command, message: $"The specified position {command.LinePosition}");
+            context.Fail(command, message: $"The specified position {command.LinePosition} is invalid.");
             adjustedCommand = null;
             return false;
         }
@@ -235,7 +235,7 @@ public abstract partial class Kernel :
             {
                 absolutePosition--;
             }
-            else if (char.IsWhiteSpace(rootNode.Text[absolutePosition]))
+            else if (char.IsWhiteSpace(rootNode.FullText[absolutePosition]))
             {
                 absolutePosition--;
             }

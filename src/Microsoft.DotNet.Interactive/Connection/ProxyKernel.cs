@@ -278,6 +278,7 @@ public sealed class ProxyKernel : Kernel
         {
             if (!existingDirectives.Any(d => d.Name == incomingDirective.Name))
             {
+                incomingDirective.ParentKernelInfo = null;
                 existingDirectives.Add(incomingDirective);
             }
         }

@@ -71,7 +71,8 @@ public abstract partial class KernelDirective
         var parameterNameCompletions = Parameters
                                        .Select(p => new CompletionItem(p.Name, WellKnownTags.Property)
                                        {
-                                           AssociatedSymbol = p
+                                           AssociatedSymbol = p,
+                                           Documentation = p.Description
                                        }).ToList();
 
         if (Parameters.SingleOrDefault(p => p.AllowImplicitName) is { } allowsImplicitName)

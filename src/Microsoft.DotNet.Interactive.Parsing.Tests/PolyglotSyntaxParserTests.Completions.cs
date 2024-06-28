@@ -18,6 +18,25 @@ public partial class PolyglotSyntaxParserTests
         public class Directives
         {
             [Theory]
+            [InlineData("#!$$", new[]{"#!connect", "#!set", "#!who"})]
+            [InlineData("#!conn$$", new[]{"#!connect"})]
+            public async Task produce_completions_for_partiaL_text(string markupCode, string[] expectedCompletions)
+            {
+                MarkupTestFile.GetPosition(markupCode, out var code, out var position);
+
+                var tree = Parse(code, PolyglotParserConfigurationTests.GetDefaultConfiguration());
+
+                var node = tree.RootNode.FindNode(position.Value)
+                               .AncestorsAndSelf()
+                               .OfType<DirectiveNode>()
+                               .First();
+
+                var completions = await node.GetCompletionsAtPositionAsync(position.Value);
+
+                completions.Select(c => c.DisplayText).Should().Contain(expectedCompletions);
+            }
+
+            [Theory]
             [InlineData("#!connect $$")]
             [InlineData("#!connect          $$")]
             public async Task produce_completions_for_subcommands(string markupCode)
@@ -40,8 +59,7 @@ public partial class PolyglotSyntaxParserTests
                         "signalr",
                         "jupyter",
                         "mssql",
-                    ]
-                );
+                    ]);
             }
 
             [Theory]

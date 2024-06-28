@@ -52,6 +52,11 @@ public class KernelInfo
             directive => directive.Name,
             onAdding: (directive, _) =>
             {
+                if (directive.ParentKernelInfo is not null)
+                {
+                    throw new ArgumentException($"Directives cannot be added to more than one kernel but directive {directive} already had parent {directive.ParentKernelInfo.LocalName}.");
+                }
+
                 directive.ParentKernelInfo = this;
             });
     }

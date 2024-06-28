@@ -120,6 +120,10 @@ public class PolyglotParserConfigurationTests
                     {
                         new KernelActionDirective("#i"),
                         new KernelActionDirective("#r"),
+                        new KernelActionDirective("#!lsmagic"),
+                        new KernelActionDirective("#!time"),
+                        new KernelActionDirective("#!who"),
+                        new KernelActionDirective("#!whos"),
                         new KernelActionDirective("#!set")
                         {
                             Parameters =
@@ -142,7 +146,26 @@ public class PolyglotParserConfigurationTests
                     SupportedDirectives =
                     {
                         new KernelActionDirective("#i"),
-                        new KernelActionDirective("#r")
+                        new KernelActionDirective("#r"),
+                        new KernelActionDirective("#!lsmagic"),
+                        new KernelActionDirective("#!time"),
+                        new KernelActionDirective("#!who"),
+                        new KernelActionDirective("#!whos"),
+                        new KernelActionDirective("#!set")
+                        {
+                            Parameters =
+                            {
+                                new("--name")
+                                {
+                                    Required = true
+                                },
+                                new("--value")
+                                {
+                                    Required = true
+                                },
+                            },
+                            KernelCommandType = typeof(SendValue)
+                        }
                     }
                 },
                 new KernelInfo("pwsh", ["powershell"]),

@@ -85,7 +85,8 @@ public partial class KernelActionDirective : KernelDirective
 
         var subcommandCompletions = Subcommands.Select(s => new CompletionItem(s.Name, WellKnownTags.Method)
         {
-            AssociatedSymbol = s
+            AssociatedSymbol = s,
+            Documentation = s.Description
         });
 
         return subcommandCompletions.Concat(baseCompletions).ToArray();

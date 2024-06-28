@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
@@ -456,8 +457,11 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 {
                     // FIX: (GetCompletionsAtPositionAsync) handle the case where the directive is not found
 
-
-
+                    if (node?.Text.StartsWith("#!") is true)
+                    {
+                        return GetCompletionsForPartialDirective();
+                    }
+                  
                   
 
 
@@ -467,6 +471,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 break;
 
             case DirectiveParameterNameNode directiveParameterNameNode:
+            {
                 if (directiveParameterNameNode?.Parent is DirectiveParameterNode pn &&
                     pn.TryGetParameter(out var parameter) &&
                     currentToken is { Kind: TokenKind.Whitespace })
@@ -474,6 +479,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     var completions = await parameter.GetValueCompletionsAsync();
                     return completions;
                 }
+            }
 
                 break;
 
@@ -501,6 +507,19 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 break;
 
             case DirectiveNode directiveNode:
+
+                return GetCompletionsForPartialDirective();
+
+            case DirectiveParameterValueNode directiveParameterValueNode:
+            {
+                if (directiveParameterValueNode.Parent is DirectiveParameterNode pn &&
+                    pn.TryGetParameter(out var parameter))
+                {
+                     var completions = await parameter.GetValueCompletionsAsync();
+                    return completions;
+                }
+            }
+
                 break;
 
             case DirectiveExpressionNode directiveExpressionNode:
@@ -516,13 +535,23 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
                 break;
 
-            case DirectiveParameterValueNode directiveParameterValueNode:
-                break;
+        
 
             default:
                 break;
         }
 
         return [];
+
+        CompletionItem[] GetCompletionsForPartialDirective()
+        {
+            return node.SyntaxTree
+                       .ParserConfiguration
+                       .KernelInfos
+                       .SelectMany(i => i.SupportedDirectives
+                                         .Where(d => !d.Hidden)
+                                         .Select(d => new CompletionItem(d.Name, WellKnownTags.Method)))
+                       .ToArray();
+        }
     }
 }

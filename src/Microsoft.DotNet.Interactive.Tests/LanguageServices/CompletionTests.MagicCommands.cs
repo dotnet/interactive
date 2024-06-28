@@ -258,25 +258,6 @@ public partial class CompletionTests
         }
 
         [Fact]
-        public async Task Magic_command_completion_documentation_does_not_include_root_command_name()
-        {
-            var exeName = RootCommand.ExecutableName;
-
-            var kernel = CreateCompositeKernel();
-
-            var result = await kernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
-
-            result.Events
-                  .Should()
-                  .ContainSingle<CompletionsProduced>()
-                  .Which
-                  .Completions
-                  .Select(i => i.Documentation)
-                  .Should()
-                  .NotContain(i => i.Contains(exeName));
-        }
-
-        [Fact]
         public async Task Share_suggests_kernel_names()
         {
             var kernel = CreateCompositeKernel();

@@ -74,6 +74,7 @@ public class KernelDirectiveParameter
         foreach (var completion in completions)
         {
             completion.AssociatedSymbol = this;
+            completion.Documentation = Description;
         }
 
         return completions;
