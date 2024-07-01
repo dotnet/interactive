@@ -17,12 +17,6 @@
         {
           "name": "SubmitCode"
         }
-      ],
-      "supportedDirectives": [
-        {
-          "name": "#!example",
-          "kind": "action"
-        }
       ]
     }
   },

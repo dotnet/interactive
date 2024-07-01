@@ -1,12 +1,13 @@
 Microsoft.DotNet.Interactive.Kql
-  public class ChooseMsKqlKernelDirective : Microsoft.DotNet.Interactive.Directives.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
-    .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
-    public System.CommandLine.Option<System.String> NameOption { get;}
-  public class ConnectKqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+  public class ConnectKqlDirective : Microsoft.DotNet.Interactive.Connection.ConnectKernelDirective<ConnectKqlKernel>
     .ctor(System.String resolvedToolsServicePath)
-    public System.CommandLine.Option<System.String> ClusterOption { get;}
-    public System.CommandLine.Option<System.String> DatabaseOption { get;}
-    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
+    public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter ClusterParameter { get;}
+    public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter DatabaseParameter { get;}
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(ConnectKqlKernel connectCommand, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+  public class ConnectKqlKernel : Microsoft.DotNet.Interactive.Commands.ConnectKernelCommand, System.IEquatable<Microsoft.DotNet.Interactive.Commands.KernelCommand>
+    .ctor(System.String connectedKernelName)
+    public System.String Cluster { get; set;}
+    public System.String Database { get; set;}
   public class KqlConnectionDetails
     .ctor()
     public System.String AuthenticationType { get; set;}

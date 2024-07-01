@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Assent;
 using FluentAssertions;
+using FluentAssertions.Equivalency;
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
@@ -50,18 +51,12 @@ public class SerializationTests
 
         var deserializedEnvelope = KernelCommandEnvelope.Deserialize(json);
 
-        // ignore these specific properties because they're not serialized
-        var ignoredProperties = new HashSet<string>
-        {
-            $"{nameof(SendValue)}.{nameof(SendValue.Value)}"
-        };
-
         deserializedEnvelope
             .Should()
             .BeEquivalentToRespectingRuntimeTypes(
                 originalEnvelope,
                 o => o.Excluding(e => e.Command.Handler)
-                      .Excluding(info => ignoredProperties.Contains($"{info.DeclaringType.Name}.{info.Name}")));
+                      .Excluding(info => IsPropertyJsonIgnored(info)));
     }
 
     [Theory]
@@ -76,20 +71,28 @@ public class SerializationTests
 
         var deserializedEnvelope = KernelEventEnvelope.Deserialize(json);
 
-        // ignore these specific properties because they're not serialized
-        var ignoredProperties = new HashSet<string>
-        {
-            $"{nameof(CommandFailed)}.{nameof(CommandFailed.Exception)}",
-            $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}",
-            $"{nameof(ValueProduced)}.{nameof(ValueProduced.Value)}",
-            $"{nameof(KernelValueInfo)}.{nameof(KernelValueInfo.Type)}",
-        };
-
         deserializedEnvelope
             .Should()
             .BeEquivalentToRespectingRuntimeTypes(
                 originalEnvelope,
-                o => o.Excluding(info => ignoredProperties.Contains($"{info.DeclaringType.Name}.{info.Name}")));
+                o => o.Excluding(info => IsPropertyJsonIgnored(info)));
+    }
+
+    private static bool IsPropertyJsonIgnored(IMemberInfo info)
+    {
+        var property = info.DeclaringType.GetProperty(info.Name);
+
+        if (property is not null)
+        {
+            var jsonIgnore = property.GetCustomAttributes(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), true);
+            if (jsonIgnore.Length> 0)
+            {
+                return true;
+            }
+
+        }
+
+        return false;
     }
 
     [Theory]
@@ -177,6 +180,10 @@ public class SerializationTests
 
         IEnumerable<KernelCommand> commands()
         {
+            yield return new AddPackage("Microsoft.DotNet.Interactive", "*-*");
+
+            yield return new AddPackageSource("https://api.nuget.org/v3/index.json");
+
             yield return new ClearValues();
 
             yield return new DisplayError("oops!");
@@ -331,14 +338,16 @@ public class SerializationTests
                     {
                         new KernelActionDirective("#!example")
                         {
-                            Parameters = { new("--opt")
+                            Parameters =
                             {
-                                Required = true,
-                                TypeHint = "file",
-                                MaxOccurrences = 123
-                            }  }
+                                new("--opt")
+                                {
+                                    Required = true,
+                                    TypeHint = "file",
+                                    MaxOccurrences = 123
+                                }
+                            }
                         }
-
                     }
                 },
                 new RequestKernelInfo(new Uri("kernel://webview/javascript"))

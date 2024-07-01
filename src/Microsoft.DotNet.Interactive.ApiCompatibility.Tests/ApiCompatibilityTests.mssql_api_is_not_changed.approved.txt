@@ -14,9 +14,6 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.String InvariantCultureDisplayValue { get; set;}
     public System.Boolean IsNull { get; set;}
     public System.Int64 RowId { get; set;}
-  public class ChooseMsSqlKernelDirective : Microsoft.DotNet.Interactive.Directives.ChooseKernelDirective, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
-    .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
-    public System.CommandLine.Option<System.String> NameOption { get;}
   public class ColumnInfo
     .ctor()
     public System.Nullable<System.Boolean> AllowDBNull { get; set;}
@@ -85,9 +82,13 @@ Microsoft.DotNet.Interactive.SqlServer
     public System.String DatabaseName { get; set;}
     public System.String ServerName { get; set;}
     public System.String UserName { get; set;}
-  public class ConnectMsSqlCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+  public class ConnectMsSqlDirective : Microsoft.DotNet.Interactive.Connection.ConnectKernelDirective<ConnectMsSqlKernel>
     .ctor(System.String resolvedToolsServicePath)
-    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(ConnectMsSqlKernel connectCommand, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+  public class ConnectMsSqlKernel : Microsoft.DotNet.Interactive.Commands.ConnectKernelCommand, System.IEquatable<Microsoft.DotNet.Interactive.Commands.KernelCommand>
+    .ctor(System.String connectedKernelName)
+    public System.String ConnectionString { get; set;}
+    public System.Boolean CreateDbContext { get; set;}
   public class ConnectParams
     .ctor()
     public ConnectionDetails Connection { get; set;}

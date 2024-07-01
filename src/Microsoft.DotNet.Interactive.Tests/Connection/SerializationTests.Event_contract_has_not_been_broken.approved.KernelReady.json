@@ -18,8 +18,7 @@
           {
             "name": "SubmitCode"
           }
-        ],
-        "supportedDirectives": []
+        ]
       },
       {
         "aliases": [
@@ -37,12 +36,6 @@
         "supportedKernelCommands": [
           {
             "name": "SubmitCode"
-          }
-        ],
-        "supportedDirectives": [
-          {
-            "name": "#r",
-            "kind": "action"
           }
         ]
       }
