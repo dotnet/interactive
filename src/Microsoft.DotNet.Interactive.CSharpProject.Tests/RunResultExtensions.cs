@@ -29,6 +29,7 @@ public static class RunResultExtensions
             result.Exception.Should().BeNull();
         }
     }
+
     public static void ShouldSucceedWithOutputAsOneOf(this RunResult result, params string[] expected)
     {
         using (new AssertionScope("result"))

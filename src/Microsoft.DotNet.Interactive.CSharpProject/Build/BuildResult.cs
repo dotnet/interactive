@@ -128,13 +128,11 @@ internal class BuildResult
 
     public AdhocWorkspace CreateWorkspace()
     {
-        var projectBuildInfo = ProjectBuildInfo;
-
+        var projectId = ProjectId.CreateFromSerialized(ProjectBuildInfo.ProjectGuid);
+        
         var workspace = new AdhocWorkspace();
 
-        var projectId = ProjectId.CreateFromSerialized(projectBuildInfo.ProjectGuid);
-
-        var projectInfo = CreateProjectInfo(projectBuildInfo, workspace, projectId);
+        var projectInfo = CreateProjectInfo(ProjectBuildInfo, workspace.CurrentSolution, projectId);
 
         var solution = workspace.CurrentSolution.AddProject(projectInfo);
 
@@ -148,22 +146,25 @@ internal class BuildResult
         return workspace;
     }
 
-    private static ProjectInfo CreateProjectInfo(ProjectBuildInfo projectBuildInfo, CodeAnalysis.Workspace workspace, ProjectId projectId)
+    private static ProjectInfo CreateProjectInfo(
+        ProjectBuildInfo projectBuildInfo, 
+        Solution solution, 
+        ProjectId projectId)
     {
-        string projectName = Path.GetFileNameWithoutExtension(projectBuildInfo.ProjectFilePath);
+        var projectName = Path.GetFileNameWithoutExtension(projectBuildInfo.ProjectFilePath);
 
         return ProjectInfo.Create(
             projectId,
-            VersionStamp.Create(),
+            VersionStamp.Default,
             projectName,
             projectName,
             LanguageNames.CSharp,
             filePath: projectBuildInfo.ProjectFilePath,
             outputFilePath: projectBuildInfo.TargetPath,
             documents: GetDocuments(projectBuildInfo, projectId),
-            projectReferences: GetExistingProjectReferences(projectBuildInfo, workspace),
+            projectReferences: GetExistingProjectReferences(projectBuildInfo, solution),
             metadataReferences: GetMetadataReferences(projectBuildInfo),
-            analyzerReferences: GetAnalyzerReferences(projectBuildInfo, workspace),
+            analyzerReferences: null,
             parseOptions: CreateParseOptions(projectBuildInfo),
             compilationOptions: CreateCompilationOptions(projectBuildInfo));
     }
@@ -181,31 +182,27 @@ internal class BuildResult
                                                   SourceText.From(File.ReadAllText(x), Encoding.Unicode), VersionStamp.Create())),
                                           filePath: x)).ToList();
 
-    private static IReadOnlyList<ProjectReference> GetExistingProjectReferences(ProjectBuildInfo projectBuildInfo, CodeAnalysis.Workspace workspace) =>
-        projectBuildInfo.ProjectReferences
-                        .Select(x => workspace.CurrentSolution.Projects.FirstOrDefault(y => y.FilePath.Equals(x, StringComparison.OrdinalIgnoreCase)))
-                        .Where(x => x != null)
-                        .Select(x => new ProjectReference(x.Id)).ToList();
+    private static IReadOnlyList<ProjectReference> GetExistingProjectReferences(
+        ProjectBuildInfo projectBuildInfo, 
+        Solution solution)
+    {
+        return projectBuildInfo.ProjectReferences
+                               .Select(x => solution.Projects.FirstOrDefault(y => y.FilePath.Equals(x, StringComparison.OrdinalIgnoreCase)))
+                               .Where(x => x is not null)
+                               .Select(x => new ProjectReference(x.Id)).ToList();
+    }
 
-    private static IReadOnlyList<MetadataReference> GetMetadataReferences(ProjectBuildInfo projectBuildInfo) =>
+    private static IReadOnlyList<MetadataReference> GetMetadataReferences(
+        ProjectBuildInfo projectBuildInfo) =>
         projectBuildInfo
             .References?.Where(File.Exists)
             .Select(x => MetadataReference.CreateFromFile(x)).ToList();
 
-    private static IReadOnlyList<AnalyzerReference> GetAnalyzerReferences(ProjectBuildInfo projectBuildInfo, CodeAnalysis.Workspace workspace)
-    {
-        IAnalyzerAssemblyLoader loader = workspace.Services.GetRequiredService<IAnalyzerService>().GetLoader();
+    private static ParseOptions CreateParseOptions(
+        ProjectBuildInfo projectBuildInfo) => CreateCSharpParseOptions(projectBuildInfo);
 
-        return projectBuildInfo.AnalyzerReferences is null
-                   ? Array.Empty<AnalyzerReference>()
-                   : projectBuildInfo.AnalyzerReferences?
-                                     .Where(File.Exists)
-                                     .Select(x => new AnalyzerFileReference(x, loader)).ToList();
-    }
-
-    private static ParseOptions CreateParseOptions(ProjectBuildInfo projectBuildInfo) => CreateCSharpParseOptions(projectBuildInfo);
-
-    private static CSharpParseOptions CreateCSharpParseOptions(ProjectBuildInfo projectBuildInfo)
+    private static CSharpParseOptions CreateCSharpParseOptions(
+        ProjectBuildInfo projectBuildInfo)
     {
         var parseOptions = new CSharpParseOptions();
 

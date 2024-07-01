@@ -1,11 +1,14 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -123,7 +126,7 @@ public class Prebuild
         return false;
     }
 
-    private CodeAnalysis.Workspace LoadRoslynWorkspaceFromCache(FileSystemInfo cacheFile)
+    private void LoadRoslynWorkspaceFromCache(FileSystemInfo cacheFile)
     {
         var projectFile = GetProjectFile();
 
@@ -141,11 +144,7 @@ public class Prebuild
 
         _buildResult = result;
 
-        if (result.Succeeded)
-        {
-            return CreateRoslynWorkspace(_buildResult);
-        }
-        else
+        if (!result.Succeeded)
         {
             throw new InvalidOperationException("Build failed.");
         }
@@ -187,8 +186,7 @@ public class Prebuild
             return CreateRoslynWorkspace(buildResult);
         }
 
-        // FIX: (GetOrCreateWorkspaceAsync) mutability is a problem here
-        if (_buildResult is not { } ws)
+        if (_buildResult is null)
         {
             CreateCompletionSourceIfNeeded(ref _buildCompletionSource, _buildCompletionSourceLock);
 
@@ -198,6 +196,59 @@ public class Prebuild
         }
 
         return null;
+    }
+
+    internal Task<(Compilation compilation, CodeAnalysis.Project project)> GetCompilationForLanguageServices(
+      IReadOnlyCollection<SourceFile> sources,
+      SourceCodeKind sourceCodeKind,
+      IEnumerable<string> defaultUsings) =>
+      GetCompilationAsync(sources, sourceCodeKind, defaultUsings);
+
+    internal async Task<(Compilation compilation, CodeAnalysis.Project project)> GetCompilationAsync(
+        IReadOnlyCollection<SourceFile> sources,
+        SourceCodeKind sourceCodeKind,
+        IEnumerable<string> defaultUsings)
+    {
+        var workspace = await CreateWorkspaceAsync();
+
+        var currentSolution = workspace.CurrentSolution;
+        var project = currentSolution.Projects.First();
+        var projectId = project.Id;
+
+        foreach (var source in sources)
+        {
+            if (currentSolution.Projects
+                    .SelectMany(p => p.Documents)
+                    .FirstOrDefault(d => d.IsMatch(source)) is { } document)
+            {
+                // there's a pre-existing document, so overwrite its contents
+                document = document.WithText(source.Text);
+                document = document.WithSourceCodeKind(sourceCodeKind);
+                currentSolution = document.Project.Solution;
+            }
+            else
+            {
+                var docId = DocumentId.CreateNewId(projectId, $"{Name}.Document");
+
+                currentSolution = currentSolution.AddDocument(docId, source.Name, source.Text);
+                currentSolution = currentSolution.WithDocumentSourceCodeKind(docId, sourceCodeKind);
+            }
+        }
+
+        project = currentSolution.GetProject(projectId);
+        var usings = defaultUsings?.ToArray() ?? Array.Empty<string>();
+        if (usings.Length > 0)
+        {
+            var options = (CSharpCompilationOptions)project.CompilationOptions;
+            project = project.WithCompilationOptions(options.WithUsings(usings));
+            currentSolution = project.Solution;
+        }
+
+        currentSolution.Workspace.TryApplyChanges(currentSolution);
+        currentSolution = workspace.CurrentSolution;
+        project = currentSolution.GetProject(projectId);
+        var compilation = await project.GetCompilationAsync();
+        return (compilation, project);
     }
 
     private void CreateCompletionSourceIfNeeded(ref TaskCompletionSource<CodeAnalysis.Workspace> completionSource, object lockObject)

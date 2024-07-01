@@ -12,7 +12,7 @@ public class CompletionsProduced : KernelEvent
     private readonly LinePositionSpan _linePositionSpan;
 
     public CompletionsProduced(
-        IEnumerable<CompletionItem> completions,
+        IReadOnlyCollection<CompletionItem> completions,
         RequestCompletions command,
         LinePositionSpan linePositionSpan = null) : base(command)
     {

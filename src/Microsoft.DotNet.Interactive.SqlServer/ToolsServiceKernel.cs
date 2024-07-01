@@ -332,7 +332,7 @@ public abstract class ToolsServiceKernel :
         }
 
         var completionItems = await ServiceClient.ProvideCompletionItemsAsync(TempFileUri, command);
-        context.Publish(new CompletionsProduced(completionItems, command));
+        context.Publish(new CompletionsProduced(completionItems.ToArray(), command));
     }
 
     public bool TryGetValue<T>(string name, out T value)

@@ -29,8 +29,7 @@ public class BufferInliningTransformer : IWorkspaceTransformer
             workspaceType: source.WorkspaceType,
             files: files,
             buffers: buffers,
-            usings: source.Usings,
-            includeInstrumentation: source.IncludeInstrumentation);
+            usings: source.Usings);
     }
 
     protected async Task<(ProjectFileContent[] files, Buffer[] buffers)> InlineBuffersAsync(Workspace source)

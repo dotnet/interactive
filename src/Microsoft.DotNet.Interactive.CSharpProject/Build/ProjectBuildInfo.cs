@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Build;
@@ -8,7 +8,9 @@ internal class ProjectBuildInfo
     public Guid ProjectGuid { get; set; } = Guid.Empty;
     public IReadOnlyList<string> ProjectReferences { get; set; } = [];
     public string ProjectFilePath { get; set; } = string.Empty;
+
     public string LanguageName { get; set; } = string.Empty;
+
     public string TargetPath { get; set; } = string.Empty;
     public string[] SourceFiles { get; set; } = [];
     public string[] References { get; set; } = [];

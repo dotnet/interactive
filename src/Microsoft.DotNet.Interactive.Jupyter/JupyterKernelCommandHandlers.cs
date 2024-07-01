@@ -119,25 +119,26 @@ internal partial class JupyterKernel
             return kind;
         };
 
-        var completionItems = metadataAvailable ?
-               resultsMetadata.Select(m =>
-                             new CompletionItem(
-                                 displayText: m.DisplayText ?? m.Text,
-                                 kind: GetCompletionKind(m.Type ?? string.Empty),
-                                 insertText: m.Text,
-                                 filterText: m.Text,
-                                 sortText: m.Text))
-                 : results.Matches.Select(match =>
-                             new CompletionItem(
-                                    displayText: match,
-                                    kind: string.Empty,
-                                    insertText: match,
-                                    filterText: match,
-                                    sortText: match));
+        var completionItems = metadataAvailable
+                                  ? resultsMetadata.Select(m =>
+                                                               new CompletionItem(
+                                                                   displayText: m.DisplayText ?? m.Text,
+                                                                   kind: GetCompletionKind(m.Type ?? string.Empty),
+                                                                   insertText: m.Text,
+                                                                   filterText: m.Text,
+                                                                   sortText: m.Text))
+                                  : results.Matches.Select(match =>
+                                                               new CompletionItem(
+                                                                   displayText: match,
+                                                                   kind: string.Empty,
+                                                                   insertText: match,
+                                                                   filterText: match,
+                                                                   sortText: match));
 
 
         var completion = new CompletionsProduced(
-            completionItems, command,
+            completionItems.ToArray(), 
+            command,
             SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(command.Code, results.CursorStart, results.CursorEnd));
 
         context.Publish(completion);
