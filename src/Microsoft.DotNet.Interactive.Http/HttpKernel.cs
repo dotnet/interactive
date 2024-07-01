@@ -399,15 +399,14 @@ public class HttpKernel :
             expressionPathStart = expressionPath.First();
         }
 
-
-        if(expressionPath.Length > 0 && _variables.TryGetValue(expressionPathStart, out var namedRequest) && namedRequest is HttpNamedRequest nr)
-        {
-            return nr.ResolvePath(expressionPath, node);
-        } 
-        else if (_variables.TryGetValue(expression, out var value))
+        if (_variables.TryGetValue(expression, out var value))
         {
             return node.CreateBindingSuccess(value);
         }
+        else if (expressionPath.Length > 0 && _variables.TryGetValue(expressionPathStart, out var namedRequest) && namedRequest is HttpNamedRequest nr)
+        {
+            return nr.ResolvePath(expressionPath, node);
+        } 
         else
         {
             return DynamicExpressionUtilities.ResolveExpressionBinding(node, expression);

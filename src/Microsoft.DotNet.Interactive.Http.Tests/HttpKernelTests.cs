@@ -2188,6 +2188,8 @@ public class HttpKernelTests
             "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
     }
 
+    [Fact]
+
     public async Task responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
     {
         // Request Variables
@@ -2701,6 +2703,77 @@ public class HttpKernelTests
         var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request 'example' does not have any headers.""");
+    }
+
+    [Fact]
+    public async Task variables_have_precedence_over_named_requests()
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name example
+            POST {{baseUrl}}
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @example.response.headers.Accept = application/xml
+            @headerName = {{example.response.headers.Accept}}
+           
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Accept: {{example.response.headers.Accept}}
+            
+            {
+                "headerName" : {{example.response.headers.Accept}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+    [Fact]
+    public async Task attempting_to_use_named_request_prior_to_run_will_cause_failure()
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = $$$"""
+            @baseUrl = https://httpbin.org/anything
+            
+            # @name example
+            POST {{baseUrl}}
+            
+            ###
+           
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            
+            
+            {
+                "Server" : {{example.response.headers.Server}}
+            }
+            
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""Unable to evaluate expression 'example.response.headers.Server'.""");
     }
 
     [Fact(Skip = "Requires updates to HTTP parser")]

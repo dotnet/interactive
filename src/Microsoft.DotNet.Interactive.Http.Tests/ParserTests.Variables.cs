@@ -262,7 +262,7 @@ public partial class HttpParserTests
                 """
                 );
 
-            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
             variables.Should().Contain(n => n.Key == "host.name").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("httpbin.org");
             variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
 
