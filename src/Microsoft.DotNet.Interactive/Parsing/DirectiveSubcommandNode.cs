@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Directives;
 
@@ -36,7 +37,7 @@ internal class DirectiveSubcommandNode : SyntaxNode
         HasParameters = true;
     }
 
-    public bool TryGetSubcommand(out KernelActionDirective subcommandDirective)
+    public bool TryGetSubcommand([NotNullWhen(true)] out KernelActionDirective? subcommandDirective)
     {
         if (Parent is DirectiveNode parentDirectiveNode)
         {

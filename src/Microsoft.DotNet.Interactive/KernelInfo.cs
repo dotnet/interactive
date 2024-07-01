@@ -113,6 +113,7 @@ public class KernelInfo
         }
     }
 
+    [JsonIgnore]
     public ICollection<KernelDirective> SupportedDirectives
     {
         get => _supportedDirectives;

@@ -184,7 +184,7 @@ public static class KernelExtensions
                 {
                     Description = LocalizationResources.Magics_set_value_Description(),
                     Required = true
-                }.AddCompletions(_ =>
+                }.AddCompletions(async _ =>
                 {
                     if (destinationKernel.ParentKernel is { } composite)
                     {
@@ -194,7 +194,7 @@ public static class KernelExtensions
                                                               k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
                                                      .Select(async k => await k.SendAsync(new RequestValueInfos(k.Name)));
 
-                        var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
+                        var tasks = await Task.WhenAll(getValueTasks);
 
                         var x = tasks
                                 .Select(t => t.Events.OfType<ValueInfosProduced>())
@@ -249,6 +249,7 @@ public static class KernelExtensions
     {
         var shareDirective = new KernelActionDirective("#!share")
         {
+            Description = LocalizationResources.Magics_share_Description(),
             KernelCommandType = typeof(ShareDirectiveCommand),
             Parameters =
             {
@@ -256,29 +257,29 @@ public static class KernelExtensions
                 {
                     AllowImplicitName = true,
                     Description = LocalizationResources.Magics_share_name_Description(),
-                }.AddCompletions(_ =>
-        {
-            if (kernel.ParentKernel is { } composite)
-            {
-                var getValueTasks = composite.ChildKernels
-                                             .Where(
-                                                 k => k != kernel &&
-                                                      k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
-                                             .Select(async k => await k.SendAsync(new RequestValueInfos()));
+                }.AddCompletions(async _ =>
+                {
+                    if (kernel.ParentKernel is { } composite)
+                    {
+                        var getValueTasks = composite.ChildKernels
+                                                     .Where(
+                                                         k => k != kernel &&
+                                                              k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
+                                                     .Select(async k => await k.SendAsync(new RequestValueInfos()));
 
-                var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
+                        var tasks = await Task.WhenAll(getValueTasks);
 
-                return tasks
-                       .Select(t => t.Events.OfType<ValueInfosProduced>())
-                       .SelectMany(events => events.SelectMany(e => e.ValueInfos))
-                       .Select(vi => vi.Name)
-                       .OrderBy(x => x)
-                       .Select(n => new CompletionItem(n, WellKnownTags.Parameter))
-                       .ToArray();
-            }
+                        return tasks
+                               .Select(t => t.Events.OfType<ValueInfosProduced>())
+                               .SelectMany(events => events.SelectMany(e => e.ValueInfos))
+                               .Select(vi => vi.Name)
+                               .OrderBy(x => x)
+                               .Select(n => new CompletionItem(n, WellKnownTags.Parameter))
+                               .ToArray();
+                    }
 
-            return Array.Empty<CompletionItem>();
-        }),
+                    return Array.Empty<CompletionItem>();
+                }),
                 new KernelDirectiveParameter("--from")
                 {
                     Description = LocalizationResources.Magics_share_from_Description(),
@@ -301,7 +302,10 @@ public static class KernelExtensions
                 {
                     Description = LocalizationResources.Magics_share_as_Description()
                 },
-                new KernelDirectiveParameter("--mime-type") { Description = LocalizationResources.Magics_share_mime_type_Description() }.AddCompletions(
+                new KernelDirectiveParameter("--mime-type")
+                {
+                    Description = LocalizationResources.Magics_share_mime_type_Description()
+                }.AddCompletions(
                     _ =>
                     [
                         JsonFormatter.MimeType,

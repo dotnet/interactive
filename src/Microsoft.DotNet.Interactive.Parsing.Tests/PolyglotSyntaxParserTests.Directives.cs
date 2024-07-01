@@ -180,12 +180,14 @@ x
         }
 
         [Theory]
-        [InlineData(@"
-{|none:#!fsharp |}
-let x = 
-{|.NET:#!time |}
-{|none:#!csharp|}
-{|csharp:#!who |}", "fsharp")]
+        [InlineData("""
+                    {|none:#!fsharp |}
+                    let x =
+                    {|.NET:#!time |}
+                    {|none:#!csharp|}
+                    {|csharp:#!who |}
+                    """, 
+                    "fsharp")]
         public void Directive_node_indicates_kernel_name(
             string markupCode,
             string defaultLanguage)

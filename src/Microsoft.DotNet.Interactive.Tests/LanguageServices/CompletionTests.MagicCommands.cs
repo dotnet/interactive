@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.CommandLine;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -64,9 +66,9 @@ public partial class CompletionTests
         // commands
         [InlineData("#!sha[||]", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")]
         // options
-        [InlineData("#!share --fr[||]", "--from*ValueSource*The name of the kernel")]
+        [InlineData("#!share --fr[||]", "The name of the kernel to get the value from")]
         // subcommands
-        [InlineData("#!connect signa[||]", "Connects to a kernel using SignalR*--hub-url*The URL of the SignalR hub")]
+        [InlineData("#!connect jup[||]", "Connects a Jupyter kernel as a .NET Interactive subkernel.")]
         public async Task Completion_documentation_is_available_for_magic_commands(
             string markupCode,
             string expected)
@@ -77,21 +79,30 @@ public partial class CompletionTests
             fakeKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
                 
             kernel.Add(fakeKernel);
-            kernel.AddKernelConnector(new ConnectSignalRDirective());
+            kernel.AddKernelConnector(new ConnectJupyterKernelDirective());
 
-            var completions = await markupCode
-                .ParseMarkupCode()
-                .PositionsInMarkedSpans()
-                .Should()
-                .ProvideCompletionsAsync(kernel);
-            completions.Which
-                .Should()
-                .ContainSingle()
-                .Which
-                .Completions
-                .Should()
-                .ContainSingle()
-                .Which
+
+            // FIX: (Completion_documentation_is_available_for_magic_commands) 
+
+            IEnumerable<CompletionsProduced> completions = (await markupCode
+                                                                  .ParseMarkupCode()
+                                                                  .PositionsInMarkedSpans()
+                                                                  .Should()
+                                                                  .ProvideCompletionsAsync(kernel))
+                .Which;
+
+            CompletionsProduced completionsProduced = completions
+                                                      .Should()
+                                                      .ContainSingle()
+                                                      .Which;
+
+            CompletionItem completionItem = completionsProduced
+                                            .Completions
+                                            .Should()
+                                            .ContainSingle()
+                                            .Which;
+
+            completionItem
                 .Documentation
                 .Should()
                 .Match($"*{expected}*");

@@ -23,7 +23,7 @@ public class KernelDirectiveParameter
 
     public string Name { get; }
 
-    public string Description { get; set; }
+    public string Description { get; init; }
 
     public bool AllowImplicitName { get; init; }
 
@@ -40,6 +40,15 @@ public class KernelDirectiveParameter
         _completionSources ??= new();
 
         _completionSources.Add(context => Task.FromResult(getCompletions(context)));
+
+        return this;
+    }
+
+    public KernelDirectiveParameter AddCompletions(Func<KernelDirectiveCompletionContext, Task<IEnumerable<CompletionItem>>> getCompletions)
+    {
+        _completionSources ??= new();
+
+        _completionSources.Add(getCompletions);
 
         return this;
     }

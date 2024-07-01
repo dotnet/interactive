@@ -88,9 +88,8 @@ internal class DirectiveParameterNode : SyntaxNode
                 return false;
             }
         }
-
-        if (Parent is DirectiveSubcommandNode &&
-            Parent.Parent is DirectiveNode grandparentDirectiveNode)
+        else if (Parent is DirectiveSubcommandNode &&
+                 Parent.Parent is DirectiveNode grandparentDirectiveNode)
         {
             if (grandparentDirectiveNode.TryGetDirective(out directive))
             {

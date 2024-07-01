@@ -428,18 +428,10 @@ internal class DirectiveNode : TopLevelSyntaxNode
         var node = FindNode(position);
         var currentToken = FindToken(position);
 
-        // FIX: (GetCompletionsAtPositionAsync) delete this
-        switch (TargetKernelName)
-        {
-            case ".NET":
-                break;
-            case "csharp":
-                break;
-        }
-
         switch (node)
         {
             case DirectiveNameNode:
+            {
                 if (TryGetDirective(out var directive))
                 {
                     var completions = await directive.GetChildCompletionsAsync();
@@ -459,25 +451,31 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
                     if (node?.Text.StartsWith("#!") is true)
                     {
-                        return GetCompletionsForPartialDirective();
+                        var completions = GetCompletionsForPartialDirective();
+                        return completions;
                     }
-                  
-                  
-
-
-
                 }
+            }
 
                 break;
 
             case DirectiveParameterNameNode directiveParameterNameNode:
             {
-                if (directiveParameterNameNode?.Parent is DirectiveParameterNode pn &&
+                if (directiveParameterNameNode.Parent is DirectiveParameterNode pn &&
                     pn.TryGetParameter(out var parameter) &&
                     currentToken is { Kind: TokenKind.Whitespace })
                 {
                     var completions = await parameter.GetValueCompletionsAsync();
                     return completions;
+                }
+
+                if (TryGetDirective(out var directive))
+                {
+                    var completions = await directive.GetChildCompletionsAsync();
+                    return completions
+                           .Where(c => c.AssociatedSymbol is KernelDirectiveParameter p && 
+                                       p.Name.StartsWith(node.Text))
+                           .ToArray();
                 }
             }
 
@@ -513,9 +511,17 @@ internal class DirectiveNode : TopLevelSyntaxNode
             case DirectiveParameterValueNode directiveParameterValueNode:
             {
                 if (directiveParameterValueNode.Parent is DirectiveParameterNode pn &&
+                    currentToken is not { Kind: TokenKind.Whitespace } &&
                     pn.TryGetParameter(out var parameter))
                 {
-                     var completions = await parameter.GetValueCompletionsAsync();
+                    var completions = await parameter.GetValueCompletionsAsync();
+                    return completions;
+                }
+
+                if (TryGetDirective(out var directive))
+                {
+                    // This could also be a partial subcommand, so...
+                    var completions = await directive.GetChildCompletionsAsync();
                     return completions;
                 }
             }
@@ -532,7 +538,6 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 break;
 
             case DirectiveParameterNode parameterNode:
-
                 break;
 
         
@@ -550,7 +555,11 @@ internal class DirectiveNode : TopLevelSyntaxNode
                        .KernelInfos
                        .SelectMany(i => i.SupportedDirectives
                                          .Where(d => !d.Hidden)
-                                         .Select(d => new CompletionItem(d.Name, WellKnownTags.Method)))
+                                         .Where(d => d.Name.StartsWith(node.Text))
+                                         .Select(d => new CompletionItem(d.Name, WellKnownTags.Method)
+                                         {
+                                             Documentation = d.Description,
+                                         }))
                        .ToArray();
         }
     }

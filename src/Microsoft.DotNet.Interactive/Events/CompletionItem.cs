@@ -20,7 +20,7 @@ public class CompletionItem
         Kind = kind ?? throw new ArgumentException(nameof(kind));
         FilterText = filterText;
         SortText = sortText;
-        InsertText = insertText;
+        InsertText = insertText ?? displayText;
         InsertTextFormat = insertTextFormat;
         Documentation = documentation;
     }

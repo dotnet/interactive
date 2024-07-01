@@ -434,9 +434,11 @@ public class KeyValueStoreKernelTests
 
         var result = await kernel.SendAsync(new RequestCompletions(markupCode.Code, new LinePosition(0, markupCode.Span.End)));
 
-        result.Events.Should()
-              .ContainSingle<CompletionsProduced>()
-              .Which
+        var completionsProduced = result.Events.Should()
+                                        .ContainSingle<CompletionsProduced>()
+                                        .Which;
+        
+        completionsProduced
               .Completions
               .Select(c => c.InsertText)
               .Should()
