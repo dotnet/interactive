@@ -425,8 +425,14 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public async Task<IReadOnlyList<CompletionItem>> GetCompletionsAtPositionAsync(int position)
     {
-        var node = FindNode(position);
+        // FindToken will return the token that follows the cursor position, so we adjust the position by one to get the token that has just been typed.
+        if (position > 0)
+        {
+            position--;
+        }
+
         var currentToken = FindToken(position);
+        var node = FindNode(position);
 
         switch (node)
         {
@@ -443,13 +449,14 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         completions = completions.Where(c => c.AssociatedSymbol is KernelDirective).ToList();
                     }
 
-                    return completions;
+                    return FilterOutParametersWithMaxOccurrencesReached(completions);
                 }
-                else
+                
+                if (currentToken is not { Kind: TokenKind.Whitespace })
                 {
                     // FIX: (GetCompletionsAtPositionAsync) handle the case where the directive is not found
 
-                    if (node?.Text.StartsWith("#!") is true)
+                    if (node?.Text.StartsWith("#") is true)
                     {
                         var completions = GetCompletionsForPartialDirective();
                         return completions;
@@ -462,8 +469,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
             case DirectiveParameterNameNode directiveParameterNameNode:
             {
                 if (directiveParameterNameNode.Parent is DirectiveParameterNode pn &&
-                    pn.TryGetParameter(out var parameter) &&
-                    currentToken is { Kind: TokenKind.Whitespace })
+                    pn.TryGetParameter(out var parameter))
                 {
                     var completions = await parameter.GetValueCompletionsAsync();
                     return completions;
@@ -473,7 +479,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 {
                     var completions = await directive.GetChildCompletionsAsync();
                     return completions
-                           .Where(c => c.AssociatedSymbol is KernelDirectiveParameter p && 
+                           .Where(c => c.AssociatedSymbol is KernelDirectiveParameter p &&
                                        p.Name.StartsWith(node.Text))
                            .ToArray();
                 }
@@ -522,7 +528,8 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 {
                     // This could also be a partial subcommand, so...
                     var completions = await directive.GetChildCompletionsAsync();
-                    return completions;
+
+                    return FilterOutParametersWithMaxOccurrencesReached(completions);
                 }
             }
 
@@ -539,8 +546,6 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
             case DirectiveParameterNode parameterNode:
                 break;
-
-        
 
             default:
                 break;
@@ -561,6 +566,30 @@ internal class DirectiveNode : TopLevelSyntaxNode
                                              Documentation = d.Description,
                                          }))
                        .ToArray();
+        }
+
+        List<CompletionItem> FilterOutParametersWithMaxOccurrencesReached(IReadOnlyList<CompletionItem> completions)
+        {
+            var filteredCompletions = new List<CompletionItem>();
+
+            var parametersProvided = DescendantNodesAndTokens()
+                                     .OfType<DirectiveParameterNode>()
+                                     .Where(n => n.NameNode?.Text is not null)
+                                     .GroupBy(n => n.NameNode?.Text)
+                                     .ToDictionary(g => g.Key, g => g.Count());
+
+            for (var i = 0; i < completions.Count; i++)
+            {
+                var completion = completions[i];
+                if (completion.AssociatedSymbol is not KernelDirectiveParameter p ||
+                    !parametersProvided.TryGetValue(completion.InsertText, out var count) ||
+                    count < p.MaxOccurrences)
+                {
+                    filteredCompletions.Add(completion);
+                }
+            }
+
+            return filteredCompletions;
         }
     }
 }

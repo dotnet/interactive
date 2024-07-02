@@ -46,14 +46,31 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
             position--;
         }
 
-        var candidate = _childNodesAndTokens.FirstOrDefault(n => n.FullSpan.Contains(position));
+        // var candidate = _childNodesAndTokens.FirstOrDefault(n => n.FullSpan.Contains(position));
 
-        return candidate switch
+        for (var i = 0; i < _childNodesAndTokens.Count; i++)
         {
-            SyntaxNode node => node.FindToken(position),
-            SyntaxToken token => token,
-            _ => null
-        };
+            var nodeOrToken = _childNodesAndTokens[i];
+
+            switch (nodeOrToken)
+            {
+                case SyntaxNode node:
+                    if (node.FullSpan.Contains(position))
+                    {
+                        var token = node.FindToken(position);
+                        return token;
+                    }
+                    break;
+                case SyntaxToken token:
+                    if (token.FullSpan.Contains(position))
+                    {
+                        return token;
+                    }
+                    break;
+            }
+        }
+
+        return null;
     }
 
     protected bool TextContainsWhitespace()

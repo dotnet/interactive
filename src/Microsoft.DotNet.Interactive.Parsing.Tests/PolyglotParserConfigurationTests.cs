@@ -29,7 +29,7 @@ public class PolyglotParserConfigurationTests
         config.IsKernelSelectorDirective("#!F#").Should().BeTrue();
     }
 
-    internal static PolyglotParserConfiguration GetDefaultConfiguration(string defaultKernelName = "") =>
+    internal static PolyglotParserConfiguration GetDefaultConfiguration(string defaultKernelName = "csharp") =>
         new(defaultKernelName)
         {
             KernelInfos =

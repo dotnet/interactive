@@ -304,6 +304,26 @@ public partial class PolyglotSyntaxParserTests
             }
         }
 
+        [Theory]
+        [InlineData("#!set --name xyz $$")]
+        [InlineData("#!set $$ --name xyz")]
+        public async Task Parameter_names_are_not_suggested_when_they_have_reached_their_max_occurrences(string markupCode)
+        {
+            MarkupTestFile.GetPosition(markupCode, out var code, out var position);
+
+            var tree = Parse(code, PolyglotParserConfigurationTests.GetDefaultConfiguration());
+
+            var node = tree.RootNode.FindNode(position.Value)
+                           .AncestorsAndSelf()
+                           .OfType<DirectiveNode>()
+                           .First();
+
+            var completions = await node.GetCompletionsAtPositionAsync(position.Value);
+
+            completions.Should().Contain(c => c.InsertText == "--value");
+            completions.Should().NotContain(c => c.InsertText == "--name");
+        }
+
         // FIX: (Completions) test partial words and filtering
         // FIX: (Completions) test values for parameters allowing implicit names
     }

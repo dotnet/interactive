@@ -34,7 +34,7 @@ public partial class CompletionTests
         [InlineData("[|#!|]", "#!csharp,#!who,#!whos")]
         [InlineData("[|#!w|]", "#!who,#!whos")]
         [InlineData("[|#!w|]\n", "#!who,#!whos")]
-        [InlineData("[|#!w|] \n", "#!who,#!whos")]
+        [InlineData("[|#!w|]  \n", "#!who,#!whos")]
         // options
         [InlineData("#!share [||]", "--from")]
         // subcommands
@@ -81,35 +81,26 @@ public partial class CompletionTests
             kernel.Add(fakeKernel);
             kernel.AddKernelConnector(new ConnectJupyterKernelDirective());
 
-
-            // FIX: (Completion_documentation_is_available_for_magic_commands) 
-
-            IEnumerable<CompletionsProduced> completions = (await markupCode
-                                                                  .ParseMarkupCode()
-                                                                  .PositionsInMarkedSpans()
-                                                                  .Should()
-                                                                  .ProvideCompletionsAsync(kernel))
-                .Which;
-
-            CompletionsProduced completionsProduced = completions
-                                                      .Should()
-                                                      .ContainSingle()
-                                                      .Which;
-
-            CompletionItem completionItem = completionsProduced
-                                            .Completions
-                                            .Should()
-                                            .ContainSingle()
-                                            .Which;
-
-            completionItem
+            (await markupCode
+                   .ParseMarkupCode()
+                   .PositionsInMarkedSpans()
+                   .Should()
+                   .ProvideCompletionsAsync(kernel))
+                .Which
+                .Should()
+                .ContainSingle()
+                .Which
+                .Completions
+                .Should()
+                .ContainSingle()
+                .Which
                 .Documentation
                 .Should()
                 .Match($"*{expected}*");
         }
 
         [Fact]
-        public async Task Insertion_range_is_correct_for_option_completions()
+        public async Task Insertion_range_is_correct_for_parameter_completions()
         {
             var kernel = CreateCompositeKernel();
 
@@ -129,7 +120,7 @@ public partial class CompletionTests
         }
 
         [Fact]
-        public async Task Insertion_range_is_correct_for_command_completions()
+        public async Task Insertion_range_is_correct_for_directive_completions()
         {
             var kernel = CreateCompositeKernel();
 
