@@ -18,6 +18,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.Net.Http.Headers;
 using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
@@ -2286,7 +2287,7 @@ public class HttpKernelTests
     [InlineData("login.request.body.$.test", "application/json")]
     [InlineData("login.request.body.//test", "application/xml")]
     public async Task named_requests_with_incomplete_content_produces_errors(string path, string contentType)
-    {   
+    {
 
         var client = new HttpClient();
         using var kernel = new HttpKernel(client: client);
@@ -2332,7 +2333,7 @@ public class HttpKernelTests
     }
 
     [Fact]
-    public async Task json_named_requests_with_wrong_content_type_produces_errors()
+    public async Task json_named_requests_with_xml_content_type_produces_errors()
     {
 
         var client = new HttpClient();
@@ -2500,6 +2501,44 @@ public class HttpKernelTests
         secondResult.Events.Should().NotContainErrors();
     }
 
+    [Theory]
+    [InlineData("example.request.body.*")]
+    [InlineData("example.response.body.*")]
+    public async Task asterick_after_body_for_named_request_uses_the_entirety_of_the_body_content(string path)
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name example
+            POST {{baseUrl}}
+            Accept: application/json
+
+            {
+                "sample" : "text"
+            }
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            {{{{{path}}}}}
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
     [Fact]
     public async Task named_requests_with_improper_xml_path_produces_errors()
     {
@@ -2618,6 +2657,43 @@ public class HttpKernelTests
         var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
         secondResult.Events.Count().Should().Be(2);
+    }
+
+    [Theory]
+    [InlineData("example.request.headers.*")]
+    [InlineData("example.response.headers.*")]
+    public async Task asterick_after_headers_for_named_request_is_not_supported_and_produces_errors(string path)
+    {
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/anything
+
+            # @name example
+            POST {{baseUrl}}
+            Accept: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            {{{{{path}}}}}
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name '*' does not exist in the named request.""");
     }
 
     [Theory]

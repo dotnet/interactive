@@ -779,7 +779,6 @@ internal class HttpRequestParser
                 CurrentToken is not { Kind: HttpTokenKind.Whitespace } and not { Kind: HttpTokenKind.NewLine } &&
                 !IsRequestSeparator())
             {
-                ConsumeCurrentTokenInto(node);
 
                 while (MoreTokens() && !IsRequestSeparator())
                 {

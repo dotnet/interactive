@@ -137,15 +137,16 @@ public class HttpKernel :
         var httpBoundResults = new List<HttpBindingResult<HttpRequestMessage>>();
         var httpNamedBoundResults = new List<(HttpRequestNode requestNode, HttpBindingResult<HttpRequestMessage> bindingResult)>();
 
-        foreach(var requestNode in requestNodes)
+        foreach (var requestNode in requestNodes)
         {
-            if (requestNode.IsNamedRequest){
+            if (requestNode.IsNamedRequest)
+            {
                 var httpNamedBoundResult = requestNode.TryGetHttpRequestMessage(BindExpressionValues);
 
                 httpNamedBoundResults.Add((requestNode, httpNamedBoundResult));
-                
+
             }
-            else 
+            else
             {
                 httpBoundResults.Add(requestNode.TryGetHttpRequestMessage(BindExpressionValues));
             }
@@ -176,7 +177,7 @@ public class HttpKernel :
                 await SendRequestAsync(requestMessage, command, context);
             }
 
-            foreach(var (requestNode, bindingResult) in namedRequestMessages)
+            foreach (var (requestNode, bindingResult) in namedRequestMessages)
             {
                 await SendRequestAsync(bindingResult.Value!, command, context, requestNode);
             }
@@ -227,14 +228,14 @@ public class HttpKernel :
         {
             var response = await GetResponseWithTimingAsync(requestMessage, cancellationToken);
 
-            if(requestNode != null)
+            if (requestNode is not null)
             {
                 var namedRequest = new HttpNamedRequest(requestNode, response);
-                if(namedRequest.Name is not null)
+                if (namedRequest.Name is not null)
                 {
                     _variables.Add(namedRequest.Name, namedRequest);
                 }
-                
+
             }
 
             await semaphore.WaitAsync(cancellationToken);
@@ -391,7 +392,7 @@ public class HttpKernel :
         var expression = node.Text;
         string[] expressionPath = [];
         var expressionPathStart = "";
-        
+
 
         if (expression.Contains('.'))
         {
@@ -406,7 +407,7 @@ public class HttpKernel :
         else if (expressionPath.Length > 0 && _variables.TryGetValue(expressionPathStart, out var namedRequest) && namedRequest is HttpNamedRequest nr)
         {
             return nr.ResolvePath(expressionPath, node);
-        } 
+        }
         else
         {
             return DynamicExpressionUtilities.ResolveExpressionBinding(node, expression);
