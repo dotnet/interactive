@@ -9,11 +9,13 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
+using KernelActionDirective = Microsoft.DotNet.Interactive.Directives.KernelActionDirective;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -40,10 +42,15 @@ public class KernelRoutingTests : IDisposable
             }
         };
 
-        var fakeMagic = new Command("#!fake");
+        var fakeMagic = new KernelActionDirective("#!fake");
         var fakeMagicWasCalled = false;
-        fakeMagic.SetHandler(() => { fakeMagicWasCalled = true; });
-        remoteCompositeKernel.AddDirective(fakeMagic);
+        remoteCompositeKernel.AddDirective(
+            fakeMagic,
+            (_, _) =>
+            {
+                fakeMagicWasCalled = true;
+                return Task.CompletedTask;
+            });
 
         ConnectHost.ConnectInProcessHost(
             localCompositeKernel,
@@ -81,10 +88,15 @@ public class KernelRoutingTests : IDisposable
             }
         };
 
-        var fakeMagic = new Command("#!fake");
+        var fakeMagic = new KernelActionDirective("#!fake");
         var fakeMagicWasCalled = false;
-        fakeMagic.SetHandler(() => { fakeMagicWasCalled = true; });
-        remoteCompositeKernel.AddDirective(fakeMagic);
+        remoteCompositeKernel.AddDirective(
+            fakeMagic,
+            (_, _) =>
+            {
+                fakeMagicWasCalled = true;
+                return Task.CompletedTask;
+            });
 
         ConnectHost.ConnectInProcessHost(
             localCompositeKernel,

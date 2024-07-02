@@ -1,24 +1,29 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
-using Microsoft.DotNet.Interactive.Documents;
-
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive;
 
 public class KernelInfo
 {
     private readonly HashSet<KernelCommandInfo> _supportedKernelCommands = new();
-    private readonly HashSet<KernelDirectiveInfo> _supportedDirectives = new();
+    private readonly NamedSymbolCollection<KernelDirective> _supportedDirectives;
     private string? _displayName;
 
     [JsonConstructor]
-    public KernelInfo(string localName, string[]? aliases = null, bool isProxy = false, bool isComposite = false, string? description = null)
+    public KernelInfo(
+        string localName,
+        string[]? aliases = null,
+        bool isProxy = false,
+        bool isComposite = false,
+        string? description = null)
     {
         if (string.IsNullOrWhiteSpace(localName))
         {
@@ -38,9 +43,22 @@ public class KernelInfo
         {
             NameAndAliases.UnionWith(aliases);
         }
+
         IsProxy = isProxy;
         IsComposite = isComposite;
         Description = description;
+
+        _supportedDirectives = new NamedSymbolCollection<KernelDirective>(
+            directive => directive.Name,
+            onAdding: (directive, _) =>
+            {
+                if (directive.ParentKernelInfo is not null)
+                {
+                    throw new ArgumentException($"Directives cannot be added to more than one kernel but directive {directive} already had parent {directive.ParentKernelInfo.LocalName}.");
+                }
+
+                directive.ParentKernelInfo = this;
+            });
     }
 
     private string CreateDisplayName()
@@ -63,9 +81,9 @@ public class KernelInfo
 
     public string? LanguageVersion { get; set; }
 
-    public bool IsProxy { get;  set; }
+    public bool IsProxy { get; set; }
 
-    public bool IsComposite { get;  set; }
+    public bool IsComposite { get; set; }
 
     public string DisplayName
     {
@@ -95,7 +113,8 @@ public class KernelInfo
         }
     }
 
-    public ICollection<KernelDirectiveInfo> SupportedDirectives
+    [JsonIgnore]
+    public ICollection<KernelDirective> SupportedDirectives
     {
         get => _supportedDirectives;
         init
@@ -105,14 +124,17 @@ public class KernelInfo
                 return;
             }
 
-            _supportedDirectives.UnionWith(value);
+            foreach (var directive in value)
+            {
+                _supportedDirectives.Add(directive);
+            }
         }
     }
 
     public override string ToString() => LocalName +
                                          (Uri is { } uri
-                                             ? $" ({uri})"
-                                             : null);
+                                              ? $" ({uri})"
+                                              : null);
 
     internal HashSet<string> NameAndAliases { get; }
 
@@ -121,4 +143,7 @@ public class KernelInfo
 
     internal void UpdateSupportedKernelCommandsFrom(KernelInfo source) =>
         _supportedKernelCommands.UnionWith(source.SupportedKernelCommands);
+
+    internal bool TryGetDirective(string name, [MaybeNullWhen(false)] out KernelDirective directive) =>
+        _supportedDirectives.TryGetValue(name, out directive);
 }

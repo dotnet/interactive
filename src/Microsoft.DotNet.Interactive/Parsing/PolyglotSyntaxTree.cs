@@ -1,70 +1,40 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System;
-using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
+using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-public class PolyglotSyntaxTree
+internal class PolyglotSyntaxTree : SyntaxTree
 {
-    private readonly SourceText _sourceText;
-    private SyntaxNode? _root;
-
-    internal PolyglotSyntaxTree(SourceText sourceText)
+    internal PolyglotSyntaxTree(SourceText sourceText, PolyglotParserConfiguration parserConfiguration)
     {
-        _sourceText = sourceText;
+        ParserConfiguration = parserConfiguration;
+        RootNode = new PolyglotSubmissionNode(sourceText, this);
     }
 
-    public int Length => _sourceText.Length;
+    public PolyglotParserConfiguration ParserConfiguration { get; }
 
-    internal SyntaxNode? RootNode
-    {
-        get => _root;
-        set => _root = value ?? throw new ArgumentNullException(nameof(value));
-    }
+    public PolyglotSubmissionNode RootNode { get; }
 
-    public SyntaxNode? GetRoot()
+    public string? GetKernelNameAtPosition(int position)
     {
-        return _root;
-    }
-
-    public override string ToString()
-    {
-        return _sourceText.ToString();
-    }
-
-    public string? GetLanguageAtPosition(int position)
-    {
-        if (_root is null)
+        if (position >= RootNode.Span.End)
         {
-            return null;
+            position = RootNode.Span.End - 1;
         }
 
-        if (position >= _root.Span.End)
-        {
-            position = _root.Span.End - 1;
-        }
+        var node = RootNode.FindNode(position);
 
-        var node = _root.FindNode(position);
-            
         switch (node)
         {
             case LanguageNode languageNode:
-                return languageNode.Name;
-
-            case PolyglotSubmissionNode submissionNode:
-                return submissionNode.DefaultLanguage;
+                return languageNode.TargetKernelName;
 
             default:
                 return null;
         }
-    }
-
-    public int GetAbsolutePosition(LinePosition linePosition)
-    {
-        return _sourceText.Lines.GetPosition(linePosition.ToCodeAnalysisLinePosition());
     }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -44,9 +45,9 @@ public partial class MagicCommandTests
                                .UseDefaultMagicCommands()
                                .LogEventsToPocketLogger();
 
-            kernel.AddDirective(new Command("#!one"));
-            kernel.AddDirective(new Command("#!two"));
-            kernel.AddDirective(new Command("#!three"));
+            kernel.AddDirective(new KernelActionDirective("#!one"), (_, _) => Task.CompletedTask);
+            kernel.AddDirective(new KernelActionDirective("#!two"), (_, _) => Task.CompletedTask);
+            kernel.AddDirective(new KernelActionDirective("#!three"), (_, _) => Task.CompletedTask);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -66,9 +67,9 @@ public partial class MagicCommandTests
         public async Task lsmagic_lists_registered_magic_commands_in_subkernels()
         {
             var subkernel1 = new CSharpKernel();
-            subkernel1.AddDirective(new Command("#!from-subkernel-1"));
+            subkernel1.AddDirective(new KernelActionDirective("#!from-subkernel-1"), (_, _) => Task.CompletedTask);
             var subkernel2 = new FSharpKernel();
-            subkernel2.AddDirective(new Command("#!from-subkernel-2"));
+            subkernel2.AddDirective(new KernelActionDirective("#!from-subkernel-2"), (_, _) => Task.CompletedTask);
 
             using var compositeKernel = new CompositeKernel
                 {
@@ -79,7 +80,7 @@ public partial class MagicCommandTests
                 .LogEventsToPocketLogger();
             compositeKernel.DefaultKernelName = "csharp";
 
-            compositeKernel.AddDirective(new Command("#!from-compositekernel"));
+            compositeKernel.AddDirective(new KernelActionDirective("#!from-compositekernel"), (_, _) => Task.CompletedTask);
 
             using var events = compositeKernel.KernelEvents.ToSubscribedList();
 
@@ -112,25 +113,25 @@ public partial class MagicCommandTests
     public async Task lsmagic_does_not_list_hidden_commands()
     {
         using var kernel = new CompositeKernel()
-            .UseDefaultMagicCommands()
-            .LogEventsToPocketLogger();
+                           .UseDefaultMagicCommands()
+                           .LogEventsToPocketLogger();
 
-        kernel.AddDirective(new Command("#!hidden")
+        kernel.AddDirective(new KernelActionDirective("#!hidden")
         {
-            IsHidden = true
-        });
+            Hidden = true
+        }, (_, _) => Task.CompletedTask);
 
         using var events = kernel.KernelEvents.ToSubscribedList();
 
         await kernel.SendAsync(new SubmitCode("#!lsmagic"));
 
         events.Should()
-            .ContainSingle(e => e is DisplayedValueProduced)
-            .Which
-            .As<DisplayedValueProduced>()
-            .Value
-            .ToDisplayString("text/html")
-            .Should()
-            .NotContain("#!hidden");
+              .ContainSingle(e => e is DisplayedValueProduced)
+              .Which
+              .As<DisplayedValueProduced>()
+              .Value
+              .ToDisplayString("text/html")
+              .Should()
+              .NotContain("#!hidden");
     }
 }

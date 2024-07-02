@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -7,6 +7,7 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
+using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,8 +15,6 @@ namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
-    private readonly ITestOutputHelper _output;
-
     public class Combinatorial
     {
         private readonly ITestOutputHelper _output;
@@ -30,15 +29,15 @@ public partial class HttpParserTests
         public void Valid_syntax_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int index)
         {
             var code = syntaxSpec.ToString();
-
-            var parseResult = HttpRequestParser.Parse(code);
+            
+            var parseResult = Parse(code);
 
             _output.WriteLine($"""
                 === Generation #{index} ===
 
                 {code}
                 """);
-
+            
             parseResult.GetDiagnostics().Should().BeEmpty();
 
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
@@ -50,7 +49,7 @@ public partial class HttpParserTests
         {
             var code = syntaxSpec.ToString();
 
-            var parseResult = HttpRequestParser.Parse(code);
+            var parseResult = Parse(code);
 
             _output.WriteLine($"""
                 === Generation #{index} ===
@@ -69,7 +68,7 @@ public partial class HttpParserTests
         {
             var code = syntaxSpec.ToString();
 
-            var parseResult = HttpRequestParser.Parse(code);
+            var parseResult = Parse(code);
 
             _output.WriteLine($"""
                 === Generation #{index} ===

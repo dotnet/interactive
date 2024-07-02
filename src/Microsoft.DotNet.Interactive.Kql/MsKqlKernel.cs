@@ -1,22 +1,17 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.CommandLine.Parsing;
-using System.Threading.Tasks;
-
 using Kusto.Data.Common;
-
-using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.SqlServer;
+using System;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Kql;
 
 internal class MsKqlKernel : ToolsServiceKernel
 {
     private readonly KqlConnectionDetails _connectionDetails;
-    private ChooseMsKqlKernelDirective _chooseKernelDirective;
 
     public MsKqlKernel(
         string name,
@@ -40,7 +35,17 @@ internal class MsKqlKernel : ToolsServiceKernel
         }
     }
 
-    public override ChooseMsKqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
+    public override KernelSpecifierDirective KernelSpecifierDirective
+    {
+        get
+        {
+            var directive = base.KernelSpecifierDirective;
+
+            directive.Parameters.Add(new("--name"));
+
+            return directive;
+        }
+    }
 
     protected override string CreateVariableDeclaration(string name, object value)
     {
@@ -78,15 +83,5 @@ internal class MsKqlKernel : ToolsServiceKernel
             return false;
         }
         return true;
-    }
-
-    protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
-    {
-        var chooser = ChooseKernelDirective;
-        var name = commandKernelChooserParseResult?.GetValueForOption(chooser.NameOption);
-        if (!string.IsNullOrWhiteSpace(name))
-        {
-            StoreQueryResultSet(name, results);
-        }
     }
 }

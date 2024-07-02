@@ -190,30 +190,14 @@ export function updateKernelInfo(destination: commandsAndEvents.KernelInfo, sour
         destination.displayName = source.displayName;
     }
 
-    const supportedDirectives = new Set<string>();
     const supportedCommands = new Set<string>();
-
-    if (!destination.supportedDirectives) {
-        destination.supportedDirectives = [];
-    }
 
     if (!destination.supportedKernelCommands) {
         destination.supportedKernelCommands = [];
     }
 
-    for (const supportedDirective of destination.supportedDirectives) {
-        supportedDirectives.add(supportedDirective.name);
-    }
-
     for (const supportedCommand of destination.supportedKernelCommands) {
         supportedCommands.add(supportedCommand.name);
-    }
-
-    for (const supportedDirective of source.supportedDirectives) {
-        if (!supportedDirectives.has(supportedDirective.name)) {
-            supportedDirectives.add(supportedDirective.name);
-            destination.supportedDirectives.push(supportedDirective);
-        }
     }
 
     for (const supportedCommand of source.supportedKernelCommands) {

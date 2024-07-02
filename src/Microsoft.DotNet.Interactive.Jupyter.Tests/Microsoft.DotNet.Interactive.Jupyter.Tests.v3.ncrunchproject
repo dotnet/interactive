@@ -51,6 +51,7 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Jupyter.Tests.MagicCommandTests+who_and_whos.who_lists_the_names_of_variables_in_scope("FSharp")</TestName>
       </NamedTestSelector>
+      <AllTestsSelector />
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

@@ -260,9 +260,10 @@ public static class MarkupTestFile
             }
         }
     }
-
-    public static void GetLine(string code, int position, out int line)
+    
+    public static void GetLineAndColumn(string code, int position, out int line, out int column)
     {
+        column = 0;
         line = 0;
         for (var i = 0; i < position; i++)
         {
@@ -270,6 +271,10 @@ public static class MarkupTestFile
             {
                 case '\n':
                     line++;
+                    column = 0;
+                    break;
+                default:
+                    column++;
                     break;
             }
         }

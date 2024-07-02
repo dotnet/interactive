@@ -54,7 +54,6 @@ export class Kernel {
             uri: routingslip.createKernelUri(`kernel://local/${name}`),
             languageVersion: languageVersion,
             displayName: displayName ?? name,
-            supportedDirectives: [],
             supportedKernelCommands: []
         };
         this._internalRegisterCommandHandler({

@@ -19,11 +19,7 @@ public class MsSqlKernelExtension
 
             var sqlToolPath = Path.Combine(Paths.DotnetToolsPath, sqlToolName);
             compositeKernel
-                .AddKernelConnector(new ConnectMsSqlCommand(sqlToolPath));
-
-            compositeKernel
-                .SubmissionParser
-                .SetInputTypeHint(typeof(MsSqlConnectionString), "connectionstring-mssql");
+                .AddKernelConnector(new ConnectMsSqlDirective(sqlToolPath));
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString(@"<details><summary>Query Microsoft SQL Server databases.</summary>

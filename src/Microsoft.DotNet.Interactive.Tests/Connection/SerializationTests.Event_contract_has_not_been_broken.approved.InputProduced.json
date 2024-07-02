@@ -9,8 +9,9 @@
     "command": {
       "prompt": "What is the path to the log file?",
       "isPassword": false,
-      "inputTypeHint": "file",
+      "type": "file",
       "valueName": "logfile",
+      "save": false,
       "targetKernelName": "vscode",
       "originUri": null,
       "destinationUri": null

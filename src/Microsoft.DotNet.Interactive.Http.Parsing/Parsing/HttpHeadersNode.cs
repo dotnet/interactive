@@ -13,7 +13,7 @@ internal class HttpHeadersNode : HttpSyntaxNode
 {
     internal HttpHeadersNode(
         SourceText sourceText,
-        HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 

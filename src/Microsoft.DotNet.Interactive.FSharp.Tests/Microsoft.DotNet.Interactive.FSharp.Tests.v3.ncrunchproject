@@ -5,5 +5,8 @@
     <HiddenComponentWarnings>
       <Value>CopyReferencedAssembliesToWorkspaceIsOn</Value>
     </HiddenComponentWarnings>
+    <IgnoredTests>
+      <AllTestsSelector />
+    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

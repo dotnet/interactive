@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.Interactive.NamedPipeConnector;
 
 public class NamedPipeKernelConnector : IDisposable
 {
+    // FIX: (NamedPipeKernelConnector) make this internal and inline into ConnectNamedPipe
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private NamedPipeClientStream? _clientStream;
@@ -30,7 +31,6 @@ public class NamedPipeKernelConnector : IDisposable
     public string PipeName { get; }
 
     public Uri RemoteHostUri { get; }
-
 
     public async Task<ProxyKernel> CreateKernelAsync(string localName)
     {

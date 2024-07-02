@@ -3,13 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -18,51 +17,60 @@ namespace Microsoft.DotNet.Interactive.Tests;
 
 public class InputsWithinMagicCommandsTests : IDisposable
 {
-    private readonly CompositeKernel kernel;
+    private readonly CompositeKernel _kernel;
 
     private RequestInput _receivedRequestInput = null;
 
     private readonly List<string> _receivedUserInput = new();
 
-    private readonly Command _shimCommand;
+    private readonly KernelActionDirective _shimCommand;
 
     private readonly Queue<string> _responses = new();
 
     public InputsWithinMagicCommandsTests()
     {
-        kernel = CreateKernel();
+        _kernel = CreateKernel();
 
-        kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+        _kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
         {
             _receivedRequestInput = requestInput;
             context.Publish(new InputProduced(_responses.Dequeue(), requestInput));
             return Task.CompletedTask;
         });
 
-        kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), kernel.Name);
+        _kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), _kernel.Name);
 
-        var stringOption = new Option<string>("--string");
         _shimCommand = new("#!shim")
         {
-            stringOption
+            KernelCommandType = typeof(ShimCommand),
+            Parameters =
+            {
+                new("--value")
+            }
         };
-        _shimCommand.SetHandler(context =>
-        {
-            _receivedUserInput.Add(context.ParseResult.GetValueForOption(stringOption));
-        });
 
-        kernel.FindKernelByName("csharp").AddDirective(_shimCommand);
+        _kernel.FindKernelByName("csharp")
+               .AddDirective<ShimCommand>(_shimCommand, (command, _) =>
+               {
+                   _receivedUserInput.Add(command.Value);
+                   return Task.CompletedTask;
+               });
+    }
+
+    public class ShimCommand : KernelCommand
+    {
+        public string Value { get; set; }
     }
 
     public void Dispose()
     {
-        kernel.Dispose();
+        _kernel.Dispose();
     }
 
     [Fact]
     public async Task Input_token_in_magic_command_prompts_user_for_input()
     {
-        await kernel.SendAsync(new SubmitCode("#!shim --string @input:input-please", "csharp"));
+        await _kernel.SendAsync(new SubmitCode("#!shim --value @input:input-please", "csharp"));
 
         _receivedRequestInput.IsPassword.Should().BeFalse();
 
@@ -78,7 +86,7 @@ public class InputsWithinMagicCommandsTests : IDisposable
     [Fact]
     public async Task Input_token_in_magic_command_includes_requested_value_name()
     {
-        await kernel.SendAsync(new SubmitCode("#!shim --string @input:input-please", "csharp"));
+        await _kernel.SendAsync(new SubmitCode("#!shim --value @input:input-please", "csharp"));
 
         _receivedRequestInput.IsPassword.Should().BeFalse();
 
@@ -96,8 +104,9 @@ public class InputsWithinMagicCommandsTests : IDisposable
     {
         _responses.Enqueue("one");
 
-        await kernel.SendAsync(new SubmitCode("#!shim --string @input:input-please", "csharp"));
+        var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @input:input-please", "csharp"));
 
+        result.Events.Should().NotContainErrors();
         _receivedUserInput.Should().ContainSingle().Which.Should().Be("one");
     }
 
@@ -107,18 +116,19 @@ public class InputsWithinMagicCommandsTests : IDisposable
         _responses.Enqueue("one");
         _responses.Enqueue("two");
 
-        await kernel.SendAsync(new SubmitCode("""
-            #!shim --string @input:input-please
-            #!shim --string @input:input-please
+        var result = await _kernel.SendAsync(new SubmitCode("""
+            #!shim --value @input:input-please
+            #!shim --value @input:input-please
             """, "csharp"));
 
+        result.Events.Should().NotContainErrors();
         _receivedUserInput.Should().BeEquivalentTo("one", "two");
     }
 
     [Fact]
     public async Task Input_token_in_magic_command_prompts_user_for_password()
     {
-        await kernel.SendAsync(new SubmitCode("#!shim --string @password:input-please", "csharp"));
+        await _kernel.SendAsync(new SubmitCode("#!shim --value @password:input-please", "csharp"));
 
         _receivedRequestInput.IsPassword.Should().BeTrue();
 
@@ -132,39 +142,19 @@ public class InputsWithinMagicCommandsTests : IDisposable
     }
 
     [Fact]
-    public async Task An_input_type_hint_is_set_for_file_inputs_when_prompt_is_unquoted()
+    public async Task An_input_type_hint_is_set_when_the_expected_parameter_specifies_it()
     {
-        _shimCommand.Add(new Option<FileInfo>("--file"));
+        _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file")
+        {
+            TypeHint = "file"
+        });
 
-        await kernel.SendAsync(new SubmitCode("""
-            #!shim --file @input:file-please
-            // some more stuff
-            """, "csharp"));
-
-        _receivedRequestInput.InputTypeHint.Should().Be("file");
-    }
-
-    [Fact]
-    public async Task An_input_type_hint_is_set_for_file_inputs_when_prompt_is_quoted()
-    {
-        _shimCommand.Add(new Option<FileInfo>("--file"));
-
-        await kernel.SendAsync(new SubmitCode("""
+        await _kernel.SendAsync(new SubmitCode("""
             #!shim --file @input:"file please"
             // some more stuff
             """, "csharp"));
 
         _receivedRequestInput.InputTypeHint.Should().Be("file");
-    }
-
-    [Fact]
-    public async Task Unknown_types_return_type_hint_of_text()
-    {
-        _shimCommand.Add(new Option<CompositeKernel>("--unknown"));
-
-        await kernel.SendAsync(new SubmitCode("#!shim --file @input:file-please\n// some more stuff", "csharp"));
-
-        _receivedRequestInput.InputTypeHint.Should().Be("text");
     }
 
     [Fact]
@@ -210,59 +200,46 @@ public class InputsWithinMagicCommandsTests : IDisposable
     }
 
     [Fact]
-    public async Task additional_properties_of_input_request_are_set_by_input_properties_when_prompt_is_quoted()
+    public async Task Additional_properties_of_input_request_are_set_by_input_properties()
     {
         using var kernel = new CSharpKernel();
 
-        var command = new Command("#!test")
+        var command = new KernelActionDirective("#!test")
         {
-            new Argument<string>()
+            KernelCommandType = typeof(TestCommand),
+            Parameters =
+            {
+                new("--value")
+                {
+                    AllowImplicitName = true
+                }
+            }
         };
-        kernel.AddDirective(command);
 
         RequestInput requestInput = null;
-        kernel.RegisterCommandHandler<RequestInput>((input, context) =>
+        kernel.AddDirective<TestCommand>(command, (_, _) => Task.CompletedTask);
+
+        kernel.RegisterCommandHandler<RequestInput>((input, _) =>
         {
             requestInput = input;
 
             return Task.CompletedTask;
         });
 
-        var magicCommand = """#!test @input:"pick a number",save,type=file  """;
+        var magicCommand = """
+            #!test @input:{ "prompt": "pick a number", "save": true, "type": "file" } 
+            """;
 
         await kernel.SendAsync(new SubmitCode(magicCommand));
 
         requestInput.Prompt.Should().Be("pick a number");
-        // FIX: requestInput.Persistent.Should().BeTrue();
+        requestInput.Save.Should().BeTrue();
         requestInput.InputTypeHint.Should().Be("file");
     }
 
-    [Fact(Skip = "Evaluating different syntax approaches")]
-    public async Task additional_properties_of_input_request_are_set_by_input_properties_when_prompt_or_field_name_is_not_quoted()
+    internal class TestCommand : KernelCommand
     {
-        using var kernel = new CSharpKernel();
-
-        var command = new Command("#!test")
-        {
-            new Argument<string>()
-        };
-        kernel.AddDirective(command);
-
-        RequestInput requestInput = null;
-        kernel.RegisterCommandHandler<RequestInput>((input, context) =>
-        {
-            requestInput = input;
-
-            return Task.CompletedTask;
-        });
-
-        var magicCommand = """#!test @input:promptOrFieldName,save,type=file  """;
-
-        await kernel.SendAsync(new SubmitCode(magicCommand));
-
-        requestInput.Prompt.Should().Be("promptOrFieldName");
-        // FIX: requestInput.Persistent.Should().BeTrue();
-        requestInput.InputTypeHint.Should().Be("file");
+        public string Value { get; set; }
     }
 
     private static CompositeKernel CreateKernel() =>

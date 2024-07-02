@@ -15,6 +15,7 @@
     "commandType": "SubmitCode",
     "command": {
       "code": "Console.Write(123);",
+      "parameters": {},
       "targetKernelName": "csharp",
       "originUri": null,
       "destinationUri": null

@@ -4,10 +4,11 @@
 #nullable enable
 
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
-internal class HttpSyntaxTree
+internal class HttpSyntaxTree : SyntaxTree
 {
     public HttpSyntaxTree(SourceText sourceText)
     {

@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 internal class HttpHeaderSeparatorNode : HttpSyntaxNode
 {
-    internal HttpHeaderSeparatorNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpHeaderSeparatorNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 }

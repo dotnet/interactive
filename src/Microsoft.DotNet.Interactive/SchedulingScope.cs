@@ -2,13 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
 
 namespace Microsoft.DotNet.Interactive;
 
-[DebuggerStepThrough]
 internal class SchedulingScope
 {
+    private readonly string _stringValue;
+
     private SchedulingScope(string scope)
     {
         if (string.IsNullOrWhiteSpace(scope))
@@ -47,9 +47,10 @@ internal class SchedulingScope
 
     public override int GetHashCode() => _stringValue.GetHashCode();
 
-    private readonly string _stringValue;
-
-    public override string ToString() => _stringValue;
+    public override string ToString()
+    {
+        return _stringValue;
+    }
 
     public static SchedulingScope Parse(string scope) => new(scope);
 

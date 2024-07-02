@@ -146,9 +146,9 @@ public class CSharpProjectKernel :
         var result = await _workspaceServer.CompileAsync(request);
 
         var diagnostics = GetDiagnostics(_buffer.Content, result).ToArray();
-        
+
         context.Publish(new DiagnosticsProduced(
-                            diagnostics, 
+                            diagnostics,
                             diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(),
                             command));
 
@@ -193,8 +193,8 @@ public class CSharpProjectKernel :
         var diagnostics = GetDiagnostics(command.Code, result).ToArray();
 
         context.Publish(new DiagnosticsProduced(
-                            diagnostics, 
-                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(), 
+                            diagnostics,
+                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(),
                             command));
     }
 

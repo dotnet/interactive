@@ -50,7 +50,6 @@ SELECT * FROM fruit
 
         var tabularData =  result.Events.OfType<DisplayedValueProduced>().Single()
             .Value;
-
            
         this.Assent(tabularData.ToDisplayString(TabularDataResourceFormatter .MimeType), _configuration);
     }

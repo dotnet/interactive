@@ -151,7 +151,6 @@ public class ImportNotebookTests
     [InlineData(".dib")]
     public async Task It_load_packages_from_imports(string notebookExt)
     {
-
         using var kernel = new CompositeKernel {
                 new CSharpKernel().UseNugetDirective()
                     .UseKernelHelpers()

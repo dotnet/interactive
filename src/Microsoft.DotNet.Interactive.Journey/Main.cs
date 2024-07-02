@@ -16,7 +16,7 @@ public static class Main
         if (kernel is CompositeKernel compositeKernel)
         {
             Lesson.ResetChallenge();
-            if(compositeKernel.Directives.FirstOrDefault(d => d.Name == "#!start-lesson") is null)
+            if(compositeKernel.KernelInfo.SupportedDirectives.FirstOrDefault(d => d.Name == "#!start-lesson") is null)
             {
                 compositeKernel.UseProgressiveLearning(httpClient)
                     .UseProgressiveLearningMiddleware()

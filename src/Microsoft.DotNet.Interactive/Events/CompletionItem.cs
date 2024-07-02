@@ -7,13 +7,20 @@ namespace Microsoft.DotNet.Interactive.Events;
 
 public class CompletionItem
 {
-    public CompletionItem(string displayText, string kind, string filterText = null, string sortText = null, string insertText = null, InsertTextFormat? insertTextFormat = null, string documentation = null)
+    public CompletionItem(
+        string displayText,
+        string kind,
+        string filterText = null,
+        string sortText = null,
+        string insertText = null,
+        InsertTextFormat? insertTextFormat = null,
+        string documentation = null)
     {
         DisplayText = displayText ?? throw new ArgumentNullException(nameof(displayText));
         Kind = kind ?? throw new ArgumentException(nameof(kind));
         FilterText = filterText;
         SortText = sortText;
-        InsertText = insertText;
+        InsertText = insertText ?? displayText;
         InsertTextFormat = insertTextFormat;
         Documentation = documentation;
     }
@@ -31,6 +38,8 @@ public class CompletionItem
     public InsertTextFormat? InsertTextFormat { get; }
 
     public string Documentation { get; set; }
+
+    internal object AssociatedSymbol { get; set; }
 
     public override string ToString() => DisplayText;
 }

@@ -1,34 +1,31 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
-using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnectionOptions
 {
-    private readonly IReadOnlyCollection<Option> _options;
-
-    public Option<string> CondaEnv { get; } =
-    new("--conda-env", "Conda environment to use; Default is base")
-    {
-    };
+    private readonly IReadOnlyCollection<KernelDirectiveParameter> _parameters;
 
     public JupyterLocalKernelConnectionOptions()
     {
-        _options = new List<Option>
-        {
-            CondaEnv.AddCompletions((ctx) => CondaEnvironment.GetEnvironments())
+        CondaEnv.AddCompletions(_ => CondaEnvironment.GetEnvironments());
+
+        _parameters = new List<KernelDirectiveParameter>
+        {CondaEnv
         };
     }
 
-    public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
+    public KernelDirectiveParameter CondaEnv { get; } = new("--conda-env", "Conda environment to use; Default is base");
+
+    public IJupyterConnection GetConnection(ConnectJupyterKernel connectCommand)
     {
-        var condaEnv = connectionOptionsParseResult.GetValueForOption(CondaEnv);
+        var condaEnv = connectCommand.CondaEnv;
         IJupyterEnvironment environment = null;
         if (condaEnv != null)
         {
@@ -38,8 +35,8 @@ public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnecti
         return new JupyterConnection(new JupyterKernelSpecModule(environment));
     }
 
-    public IReadOnlyCollection<Option> GetOptions()
+    public IReadOnlyCollection<KernelDirectiveParameter> GetParameters()
     {
-        return _options;
+        return _parameters;
     }
 }

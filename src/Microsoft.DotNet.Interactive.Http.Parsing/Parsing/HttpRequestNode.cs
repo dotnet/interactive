@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -17,7 +17,7 @@ using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
 internal class HttpRequestNode : HttpSyntaxNode
 {
-    internal HttpRequestNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpRequestNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
@@ -89,7 +89,7 @@ internal class HttpRequestNode : HttpSyntaxNode
     public HttpBindingResult<HttpRequestMessage> TryGetHttpRequestMessage(HttpBindingDelegate bind)
     {
         var originalBind = bind;
-        var declaredVariables = SyntaxTree?.RootNode.GetDeclaredVariables();
+        var declaredVariables = SyntaxTree!.RootNode.GetDeclaredVariables();
         if (declaredVariables?.Count > 0)
         {
             bind = node =>

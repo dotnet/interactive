@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -41,20 +41,23 @@ internal static class KernelEventExtensions
         return @event.Command switch
         {
             SubmitCode submitCode
-                when submitCode.LanguageNode is not null => submitCode.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
+                when submitCode.SyntaxNode is { } => submitCode.SyntaxNode.RemapDiagnosticsFromNode(diagnostics),
 
             RequestDiagnostics requestDiagnostics
-                when requestDiagnostics.LanguageNode is not null => requestDiagnostics.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
+                when requestDiagnostics.SyntaxNode is { } => requestDiagnostics.SyntaxNode.RemapDiagnosticsFromNode(diagnostics),
 
             _ => diagnostics // no meaningful remapping can occur
         };
     }
 
-    private static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromLanguageNode(
-        this LanguageNode languageNode, 
-        IReadOnlyCollection<Diagnostic> diagnostics)
+    private static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromNode(this SyntaxNode languageNode, IReadOnlyCollection<Diagnostic> diagnostics)
     {
-        var root = languageNode.SyntaxTree.GetRoot();
+        if (diagnostics.Count == 0)
+        {
+            return [];
+        }
+
+        var root = languageNode.SyntaxTree.RootNode;
         var initialSpan = languageNode.Span;
         var sourceText = SourceText.From(root.Text);
         var codePosition = sourceText.Lines.GetLinePositionSpan(initialSpan);

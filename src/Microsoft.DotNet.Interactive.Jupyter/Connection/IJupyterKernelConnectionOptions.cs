@@ -2,14 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Parsing;
+using Microsoft.DotNet.Interactive.Directives;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Connection;
 
 public interface IJupyterKernelConnectionOptions
 {
-    IReadOnlyCollection<Option> GetOptions();
+    IReadOnlyCollection<KernelDirectiveParameter> GetParameters();
 
-    IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult);
+    IJupyterConnection GetConnection(ConnectJupyterKernel connectCommand);
 }

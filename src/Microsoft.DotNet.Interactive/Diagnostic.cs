@@ -36,9 +36,15 @@ public class Diagnostic
 
     public static Diagnostic FromCodeAnalysisDiagnostic(CodeAnalysis.Diagnostic diagnostic)
     {
-        var fileLocation = diagnostic.Location.GetLineSpan();
+        var lineSpan = diagnostic.Location.GetLineSpan();
+
+        var start = LinePosition.FromCodeAnalysisLinePosition(lineSpan.StartLinePosition);
+        var end = LinePosition.FromCodeAnalysisLinePosition(lineSpan.EndLinePosition);
+
+        var linePositionSpan = new LinePositionSpan(start, end);
+
         return new Diagnostic(
-            new LinePositionSpan(LinePosition.FromCodeAnalysisLinePosition(fileLocation.StartLinePosition), LinePosition.FromCodeAnalysisLinePosition(fileLocation.EndLinePosition)),
+            linePositionSpan,
             diagnostic.Severity,
             diagnostic.Id,
             diagnostic.GetMessage());

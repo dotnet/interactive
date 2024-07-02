@@ -31,19 +31,12 @@ public partial class VariableSharingTests
         [Fact]
         public async Task can_set_value_directly()
         {
-            
-  var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(Language.CSharp);
 
             using var composite = new CompositeKernel
             {
                 kernel
             };
-
-            composite.RegisterCommandHandler<RequestInput>((requestInput, context) =>
-            {
-                context.Publish(new InputProduced("hello!", requestInput));
-                return Task.CompletedTask;
-            });
 
             composite.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), composite.Name);
 
@@ -51,7 +44,7 @@ public partial class VariableSharingTests
                 #!set --name x --value hello!
                 """));
             var valueProduced = await kernel.RequestValueAsync("x");
-            
+
             valueProduced.Value.Should().Be("hello!");
         }
 
@@ -100,6 +93,8 @@ public partial class VariableSharingTests
             await composite.SendAsync(new SubmitCode("#!set --name x --value @password:input-please"));
             var valueProduced = await kernel.RequestValueAsync("x");
 
+            valueProduced.Value.Should().BeOfType<PasswordString>();
+
             valueProduced.Value.As<PasswordString>().GetClearTextPassword().Should().Be("hello!");
         }
 
@@ -117,8 +112,8 @@ public partial class VariableSharingTests
             await kernel.SendAsync(new SubmitCode("""
                 let var1 = "one"
                 let var2 = "two"
-                """, targetKernelName:"fsharp"));
-
+                """, targetKernelName: "fsharp"));
+            
             var result = await kernel.SendAsync(new SubmitCode("""
                 #!set --name newVar1 --value @fsharp:var1 --mime-type text/plain
                 #!set --name newVar2 --value @fsharp:var2 --mime-type text/plain
@@ -130,24 +125,24 @@ public partial class VariableSharingTests
             result = await kernel.SendAsync(new RequestValueInfos("csharp"));
 
             var valueInfosProduced = result.Events.Should()
-                .ContainSingle<ValueInfosProduced>()
-                .Which;
+                                           .ContainSingle<ValueInfosProduced>()
+                                           .Which;
 
             valueInfosProduced.ValueInfos.Select(v => v.Name).Should().BeEquivalentTo("newVar1", "newVar2", "newVar3");
 
             var csharpKernel = (CSharpKernel)kernel.FindKernelByName("csharp");
 
-           csharpKernel.TryGetValue("newVar1", out object newVar1)
-                       .Should().BeTrue();
-           newVar1.Should().Be("one");
-           
-           csharpKernel.TryGetValue("newVar2", out object newVar2)
-                       .Should().BeTrue();
-           newVar2.Should().Be("two");
+            csharpKernel.TryGetValue("newVar1", out object newVar1)
+                        .Should().BeTrue();
+            newVar1.Should().Be("one");
 
-           csharpKernel.TryGetValue("newVar3", out object newVar3)
-                       .Should().BeTrue();
-           newVar3.Should().Be("three");
+            csharpKernel.TryGetValue("newVar2", out object newVar2)
+                        .Should().BeTrue();
+            newVar2.Should().Be("two");
+
+            csharpKernel.TryGetValue("newVar3", out object newVar3)
+                        .Should().BeTrue();
+            newVar3.Should().Be("three");
         }
 
         [Fact]
@@ -462,7 +457,7 @@ public partial class VariableSharingTests
         }
 
         [Fact]
-        public async Task Byref_sharing_is_not_allowed_when_source_kernel_is_a_proxy()
+        public async Task Byref_sharing_is_not_allowed_when_destination_kernel_is_a_proxy()
         {
             var (compositeKernel, _) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
 
@@ -482,11 +477,11 @@ public partial class VariableSharingTests
                   .Which
                   .Message
                   .Should()
-                  .StartWith("Sharing by reference is not allowed when kernels are remote.");
+                  .Be("(1,15): error DNI203: Sharing by reference is not allowed when kernels are remote.");
         }
 
         [Fact]
-        public async Task Byref_sharing_is_not_allowed_when_destination_kernel_is_a_proxy()
+        public async Task Byref_sharing_is_not_allowed_when_source_kernel_is_a_proxy()
         {
             var (compositeKernel, _) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
 
@@ -504,7 +499,7 @@ public partial class VariableSharingTests
                   .Which
                   .Message
                   .Should()
-                  .Be("Sharing by reference is not allowed when kernels are remote.");
+                  .Be("(1,15): error DNI203: Sharing by reference is not allowed when kernels are remote.");
         }
 
         [Fact]
@@ -540,9 +535,15 @@ public partial class VariableSharingTests
         [Fact]
         public async Task the_byref_option_cannot_be_combined_with_the_MIME_type_option()
         {
-            using var kernel = CreateKernel(Language.CSharp);
+            using var kernel = CreateCompositeKernel();
 
-            var result = await kernel.SubmitCodeAsync("#!set --name dir --value @fsharp:dir --byref --mime-type text/plain");
+            await kernel
+                  .FindKernelByName("fsharp")
+                  .SubmitCodeAsync("let x = 123");
+
+            var result = await kernel
+                               .FindKernelByName("csharp")
+                               .SubmitCodeAsync("#!set --name dir --value @fsharp:x --byref --mime-type text/plain");
 
             result.Events
                   .Should()
@@ -619,7 +620,7 @@ public partial class VariableSharingTests
             var results = await kernel.SendAsync(new SubmitCode("#!set --value x"));
 
             results.Events.Should().ContainSingle<CommandFailed>()
-                   .Which.Message.Should().Be("Option '--name' is required.");
+                   .Which.Message.Should().Be("(1,1): error DNI104: Missing required parameter '--name'");
         }
 
         [Fact]
@@ -630,7 +631,7 @@ public partial class VariableSharingTests
             var results = await kernel.SendAsync(new SubmitCode("#!set --name x"));
 
             results.Events.Should().ContainSingle<CommandFailed>()
-                   .Which.Message.Should().Be("Option '--value' is required.");
+                   .Which.Message.Should().Be("(1,1): error DNI104: Missing required parameter '--value'");
         }
 
         [Fact]

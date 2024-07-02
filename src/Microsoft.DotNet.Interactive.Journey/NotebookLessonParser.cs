@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -243,25 +244,39 @@ public class NotebookLessonParser
         }
     }
 
-    private static bool TryParseLessonDirectiveCell(InteractiveDocumentElement cell, out InteractiveDocumentElement? remainingCell, out string? directive, out string? afterDirective)
+    private static bool TryParseLessonDirectiveCell(
+        InteractiveDocumentElement cell,
+        [MaybeNullWhen(false)] out InteractiveDocumentElement remainingCell,
+        [MaybeNullWhen(false)] out string directive,
+        [MaybeNullWhen(false)] out string afterDirective)
     {
         if (!TryParseDirectiveElement(cell, out directive, out afterDirective, out remainingCell))
         {
             return false;
         }
+
         return _stringToLessonDirectiveMap.Keys.Contains(directive);
     }
 
-    private static bool TryParseChallengeDirectiveElement(InteractiveDocumentElement cell, out InteractiveDocumentElement? remainingCell, out string? directive, out string? afterDirective)
+    private static bool TryParseChallengeDirectiveElement(
+        InteractiveDocumentElement cell,
+        [MaybeNullWhen(false)] out InteractiveDocumentElement remainingCell,
+        [MaybeNullWhen(false)] out string directive,
+        [MaybeNullWhen(false)] out string afterDirective)
     {
         if (!TryParseDirectiveElement(cell, out directive, out afterDirective, out remainingCell))
         {
             return false;
         }
+
         return _stringToChallengeDirectiveMap.Keys.Contains(directive);
     }
 
-    private static bool TryParseDirectiveElement(InteractiveDocumentElement cell, out string? directive, out string? afterDirective, out InteractiveDocumentElement? remainingCell)
+    private static bool TryParseDirectiveElement(
+        InteractiveDocumentElement cell,
+        [MaybeNullWhen(false)] out string directive,
+        [MaybeNullWhen(false)] out string afterDirective,
+        [MaybeNullWhen(false)] out InteractiveDocumentElement remainingCell)
     {
         directive = null;
         afterDirective = null;

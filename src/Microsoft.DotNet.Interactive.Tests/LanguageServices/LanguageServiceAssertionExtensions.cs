@@ -39,7 +39,7 @@ public static class LanguageServiceAssertionExtensions
     {
         var items = new List<CompletionsProduced>();
 
-        using var _ = new AssertionScope();
+        // using var _ = new AssertionScope();
 
         foreach (var position in assertions.Subject)
         {

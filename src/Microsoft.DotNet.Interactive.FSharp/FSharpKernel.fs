@@ -38,7 +38,7 @@ type FSharpKernel () as this =
     do this.KernelInfo.LanguageName <- "F#"
     do this.KernelInfo.LanguageVersion <- "8.0"
     do this.KernelInfo.DisplayName <- $"{this.KernelInfo.LocalName} - F# Script"
-    do this.KernelInfo.Description <- """This Kernel can compile and execute F# code and display the results."""
+    do this.KernelInfo.Description <- """This kernel can compile and execute F# code and display the results."""
 
     static let lockObj = Object();
 
@@ -432,7 +432,8 @@ type FSharpKernel () as this =
                     sb.AppendFormat("#r @\"{0}\"", assemblyReference) |> ignore
                     sb.Append(Environment.NewLine) |> ignore
 
-        let command = new SubmitCode(sb.ToString(), "fsharp")
+        let command = new SubmitCode(sb.ToString(), this.Name)
+
         this.DeferCommand(command)
 
     interface IKernelCommandHandler<RequestCompletions> with

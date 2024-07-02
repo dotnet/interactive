@@ -3,13 +3,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
+[DebuggerStepThrough]
 public abstract class KernelCommand : IEquatable<KernelCommand>
 {
     private KernelCommand _parent;
@@ -64,6 +65,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         }
     }
 
+    [JsonInclude]
     public string TargetKernelName { get; internal set; }
 
     internal static KernelCommand None => new NoCommand();
@@ -129,9 +131,6 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
     [JsonIgnore] 
     internal bool? ShouldPublishCompletionEvent { get; set; }
-
-    [JsonIgnore]
-    public ParseResult KernelChooserParseResult { get; internal set; }
 
     [JsonIgnore] public CommandRoutingSlip RoutingSlip { get; }
 

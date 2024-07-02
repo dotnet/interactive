@@ -25,24 +25,24 @@ public class PackageReference
 
     public static bool TryParse(string value, out PackageReference reference)
     {
-        value = value.Trim();
+        value = value.Trim([' ', '\t', '"']);
 
         if (!value.StartsWith("nuget:"))
         {
             reference = null;
             return false;
         }
-        var parts = value.Split(new char[] {','}, 2)
+        var parts = value.Split([','], 2)
             .Select(v => v.Trim())
             .ToArray();
 
-        if (parts.Length == 0)
+        if (parts.Length is 0)
         {
             reference = null;
             return false;
         }
 
-        var packageName = parts[0].Substring(6).Trim();
+        var packageName = parts[0][6..].Trim();
 
         if (string.IsNullOrWhiteSpace(packageName))
         {
@@ -59,7 +59,7 @@ public class PackageReference
         return true;
     }
 
-    public bool IsPackageVersionSpecified => !string.IsNullOrWhiteSpace(PackageVersion) || PackageVersion == "*";
+    public bool IsPackageVersionSpecified => !string.IsNullOrWhiteSpace(PackageVersion) || PackageVersion is "*";
 
     public override string ToString()
     {

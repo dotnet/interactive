@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 internal class HttpCommentBodyNode : HttpSyntaxNode
 {
-    internal HttpCommentBodyNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpCommentBodyNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 }

@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 internal class HttpMethodNode : HttpSyntaxNode
 {
-    internal HttpMethodNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpMethodNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 }

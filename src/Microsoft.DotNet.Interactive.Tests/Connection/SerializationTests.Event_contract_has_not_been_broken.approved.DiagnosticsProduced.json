@@ -31,6 +31,7 @@
     "commandType": "SubmitCode",
     "command": {
       "code": "123",
+      "parameters": {},
       "targetKernelName": null,
       "originUri": null,
       "destinationUri": null

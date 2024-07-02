@@ -39,11 +39,8 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 
     KernelCommand IKernelCommandEnvelope.Command => _command;
 
-    public static void RegisterCommand<T>() where T : KernelCommand
-    {
-        var commandType = typeof(T);
-        RegisterCommand(commandType);
-    }
+    public static void RegisterCommand<T>() where T : KernelCommand => 
+        RegisterCommand(typeof(T));
 
     public static void RegisterCommand(Type commandType)
     {
@@ -133,7 +130,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
     {
         var commandTypeJson = string.Empty;
         string commandJson;
-        var commandToken = string.Empty;
+        string commandToken = null;
 
         if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
         {
@@ -142,7 +139,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 
         if (string.IsNullOrWhiteSpace(commandTypeJson))
         {
-            return null;
+            throw new ArgumentException($"Command type not specified: {Environment.NewLine}{json}");
         }
 
         var commandType = CommandTypeByName(commandTypeJson);
@@ -155,7 +152,7 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
             return null;
         }
 
-        var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
+         var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
 
         // restore the command token
         if (json.TryGetProperty(nameof(SerializationModel.token), out var tokenProperty))

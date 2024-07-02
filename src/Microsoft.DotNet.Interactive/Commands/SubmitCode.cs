@@ -1,41 +1,64 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
 public class SubmitCode : KernelCommand
 {
+    private Dictionary<string, string> _kernelSpecifierParameters;
+
     public SubmitCode(
         string code,
-        string targetKernelName = null) : base(targetKernelName)
+        string targetKernelName = null)
+        : base(targetKernelName)
     {
         Code = code ?? throw new ArgumentNullException(nameof(code));
     }
-      
-    internal SubmitCode(
-        LanguageNode languageNode,
-        KernelNameDirectiveNode kernelNameDirectiveNode = null)
-        : base(languageNode.Name)
-    {
-        Code = languageNode.Text;
-        LanguageNode = languageNode;
-        KernelNameDirectiveNode = kernelNameDirectiveNode;
-        SchedulingScope = languageNode.CommandScope;
 
-        if (languageNode is ActionDirectiveNode actionDirectiveNode)
+    internal SubmitCode(
+        TopLevelSyntaxNode syntaxNode,
+        DirectiveNode directiveNode = null)
+        : base(syntaxNode.TargetKernelName)
+    {
+        Code = syntaxNode.Text;
+        SyntaxNode = syntaxNode;
+        DirectiveNode = directiveNode;
+
+        if (directiveNode is { HasParameters: true, Kind: DirectiveNodeKind.KernelSelector })
         {
-            TargetKernelName = actionDirectiveNode.ParentKernelName;
+            if (directiveNode.TryGetDirective(out var directive))
+            {
+                _kernelSpecifierParameters = directiveNode.GetParameterValues(
+                                                              directive,
+                                                              new Dictionary<DirectiveParameterValueNode, object>())
+                                                          .ToDictionary(t => t.Name, t => t.Value?.ToString());
+            }
+        }
+        else if (syntaxNode is DirectiveNode { Kind: DirectiveNodeKind.Action } actionDirectiveNode)
+        {
+            TargetKernelName = actionDirectiveNode.TargetKernelName;
         }
     }
 
     public string Code { get; internal set; }
 
+    public IDictionary<string, string> Parameters
+    {
+        get
+        {
+            _kernelSpecifierParameters ??= new Dictionary<string, string>();
+            return _kernelSpecifierParameters;
+        }
+    }
+
     public override string ToString() => $"{nameof(SubmitCode)}: {Code?.TruncateForDisplay()}";
 
-    internal LanguageNode LanguageNode { get; }
+    internal TopLevelSyntaxNode SyntaxNode { get; }
 
-    internal KernelNameDirectiveNode KernelNameDirectiveNode { get; }
+    internal DirectiveNode DirectiveNode { get; }
 }

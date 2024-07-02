@@ -3,14 +3,11 @@
 
 #nullable enable
 
-using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
-
-using Diagnostic = CodeAnalysis.Diagnostic;
 
 internal class HttpRequestParseResult
 {
@@ -19,6 +16,6 @@ internal class HttpRequestParseResult
 
     public HttpSyntaxTree SyntaxTree { get; }
 
-    public IEnumerable<Diagnostic> GetDiagnostics()
-        => SyntaxTree.RootNode?.GetDiagnostics() ?? Enumerable.Empty<Diagnostic>();
+    public IEnumerable<CodeAnalysis.Diagnostic> GetDiagnostics()
+        => SyntaxTree.RootNode?.GetDiagnostics() ?? Enumerable.Empty<CodeAnalysis.Diagnostic>();
 }

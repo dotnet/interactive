@@ -1,8 +1,11 @@
 Microsoft.DotNet.Interactive.SQLite
-  public class ConnectSQLiteCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+  public class ConnectSQLiteDirective : Microsoft.DotNet.Interactive.Connection.ConnectKernelDirective<ConnectSQLiteKernel>
     .ctor()
-    public System.CommandLine.Argument<System.String> ConnectionStringArgument { get;}
-    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
+    public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter ConnectionStringParameter { get;}
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(ConnectSQLiteKernel connectCommand, Microsoft.DotNet.Interactive.KernelInvocationContext context)
+  public class ConnectSQLiteKernel : Microsoft.DotNet.Interactive.Commands.ConnectKernelCommand, System.IEquatable<Microsoft.DotNet.Interactive.Commands.KernelCommand>
+    .ctor(System.String connectedKernelName)
+    public System.String ConnectionString { get; set;}
   public class SQLiteKernel : Microsoft.DotNet.Interactive.Kernel, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, Microsoft.DotNet.Interactive.IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
     public static System.Void AddSQLiteKernelConnectorTo(Microsoft.DotNet.Interactive.CompositeKernel kernel)
     public static System.Void AddSQLiteKernelConnectorToCurrentRoot()

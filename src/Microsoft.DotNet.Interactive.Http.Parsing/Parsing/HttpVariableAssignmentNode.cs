@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 internal class HttpVariableAssignmentNode : HttpSyntaxNode
 {
-    internal HttpVariableAssignmentNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpVariableAssignmentNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 }

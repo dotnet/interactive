@@ -6,7 +6,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
@@ -15,7 +14,7 @@ using Diagnostic = CodeAnalysis.Diagnostic;
 
 internal class HttpUrlNode : HttpSyntaxNode
 {
-    internal HttpUrlNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpUrlNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
@@ -46,7 +45,7 @@ internal class HttpUrlNode : HttpSyntaxNode
 
     internal HttpBindingResult<Uri> TryGetUri(HttpBindingDelegate bind)
     {
-        var result = BindByInterpolation(bind);
+        var result = this.BindByInterpolation(bind);
 
         if (result.IsSuccessful)
         {

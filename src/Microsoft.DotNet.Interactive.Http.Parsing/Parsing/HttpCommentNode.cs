@@ -12,7 +12,7 @@ internal class HttpCommentNode : HttpSyntaxNode
 {
     internal HttpCommentNode(
         SourceText sourceText,
-        HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
