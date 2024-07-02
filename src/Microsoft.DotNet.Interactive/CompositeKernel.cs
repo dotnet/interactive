@@ -70,7 +70,10 @@ public sealed class CompositeKernel :
             {
                 foreach (var alias in aliases)
                 {
-                    var aliasDirective = new KernelSpecifierDirective($"#!{alias}", kernel.Name);
+                    var aliasDirective = new KernelSpecifierDirective($"#!{alias}", kernel.Name)
+                    {
+                        Description = $"Run the code that follows using the {kernel.Name} kernel."
+                    };
 
                     aliasDirective.TryGetKernelCommandAsync = kernelSpecifierDirective.TryGetKernelCommandAsync;
 

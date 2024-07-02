@@ -35,6 +35,7 @@ public static class KernelExtensions
         {
             var poundRDirective = new KernelActionDirective("#r")
             {
+                Description = """Add a NuGet package reference using #r "nuget:<package>[,<version>]" or reference an assembly using #r "<path to assembly>" """,
                 Parameters =
                 {
                     new("")
@@ -63,6 +64,7 @@ public static class KernelExtensions
         {
             var directive = new KernelActionDirective("#i")
             {
+                Description = "Include a NuGet package source or search path for referenced assemblies",
                 Parameters =
                 {
                     new("")
@@ -85,13 +87,16 @@ public static class KernelExtensions
 
         void AddRestoreDirective()
         {
-            var directive = new KernelActionDirective("#!nuget-restore");
+            var directive = new KernelActionDirective("#!nuget-restore")
+            {
+                Hidden = true
+            };
 
             // FIX: (UseNugetDirective) hide this directive or reimplement
 
             kernel.AddDirective(
                 directive,
-                async (command, context) =>
+                async (_, context) =>
                 {
                     await context.ScheduleAsync(c => Restore(c, lazyPackageRestoreContext, onResolvePackageReferences));
                 }

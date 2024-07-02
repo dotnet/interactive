@@ -315,7 +315,7 @@ internal class HttpRequestParser
                 return null;
             }
 
-            if (GetNextSignificantToken() is null or { Kind: HttpTokenKind.Punctuation }
+            if (GetNextSignificantToken() is null or { Kind: TokenKind.Punctuation }
             and { Text: "@" })
             {
                 return null;

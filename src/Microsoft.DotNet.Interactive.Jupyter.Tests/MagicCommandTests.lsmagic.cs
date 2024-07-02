@@ -89,23 +89,24 @@ public partial class MagicCommandTests
             var valueProduceds = events.OfType<DisplayedValueProduced>().ToArray();
 
             valueProduceds[0].Value
-                .ToDisplayString("text/html")
-                .Should()
-                .ContainAll("#!lsmagic",
-                    "#!csharp",
-                    "#!fsharp",
-                    "#!from-compositekernel");
+                             .ToDisplayString("text/html")
+                             .Should()
+                             .ContainAll("#!lsmagic",
+                                         "#!csharp",
+                                         "#!fsharp",
+                                         "#!from-compositekernel");
 
             valueProduceds[1].Value
-                .ToDisplayString("text/html")
-                .Should()
-                .ContainAll("#!lsmagic",
-                    "#!from-subkernel-1");
+                             .ToDisplayString("text/html")
+                             .Should()
+                             .ContainAll("#!lsmagic",
+                                         "#!from-subkernel-1");
+
             valueProduceds[2].Value
-                .ToDisplayString("text/html")
-                .Should()
-                .ContainAll("#!lsmagic",
-                    "#!from-subkernel-2");
+                             .ToDisplayString("text/html")
+                             .Should()
+                             .ContainAll("#!lsmagic",
+                                         "#!from-subkernel-2");
         }
     }
 

@@ -110,7 +110,10 @@ using static {typeof(TopLevelMethods).FullName};
         where T : Kernel
     {
         kernel.AddDirective(
-            new KernelActionDirective("#!time"), 
+            new KernelActionDirective("#!time")
+            {
+                Description = LocalizationResources.Magics_time_Description()
+            },
             MeasureTime);
 
         return kernel;
@@ -143,7 +146,7 @@ using static {typeof(TopLevelMethods).FullName};
     private static T UseLsMagic<T>(this T kernel)
         where T : Kernel
     {
-        kernel.VisitSubkernelsAndSelf(k => k.AddDirective(lsmagic(k), Handle));
+        kernel.VisitSubkernelsAndSelf(k => k.AddDirective(lsmagic(), Handle));
 
         Formatter.Register<SupportedDirectives>((directives, context) =>
         {
@@ -181,32 +184,41 @@ using static {typeof(TopLevelMethods).FullName};
 
         return kernel;
 
-        async Task Handle(KernelCommand _, KernelInvocationContext context)
+        static Task Handle(KernelCommand _, KernelInvocationContext context)
         {
-            var directives = kernel.KernelInfo
-                                 .SupportedDirectives
-                                 .Where(d => !d.Hidden)
-                                 .OrderBy(d => d.Name)
-                                 .ToArray();
+            var rootKernel = context.HandlingKernel.RootKernel;
 
-            var supportedDirectives = new SupportedDirectives(kernel.Name, directives);
+            DisplayDirectives(rootKernel, context);
 
-            context.Display(supportedDirectives);
-
-            var subkernels = kernel.Subkernels()
-                                   .Where(k => k.KernelInfo.SupportedDirectives.Any(d => d.Name == "#!lsmagic"));
-
-            foreach (var subkernel in subkernels)
+            if (rootKernel is CompositeKernel compositeKernel)
             {
-                var command = new SubmitCode(((SubmitCode)context.Command).Code);
-                command.SetParent(context.Command);
+                foreach (var subkernel in compositeKernel)
+                {
+                    if (subkernel.KernelInfo.SupportedDirectives.Any(d => d.Name is "#!lsmagic"))
+                    {
+                        DisplayDirectives(subkernel, context);
+                    }
+                }
+            }
 
-                await subkernel.SendAsync(command);
+            return Task.CompletedTask;
+
+            static void DisplayDirectives(Kernel kernel, KernelInvocationContext context)
+            {
+                var supportedDirectives = new SupportedDirectives(
+                    kernel.Name, 
+                    kernel.KernelInfo
+                              .SupportedDirectives
+                              .Where(d => !d.Hidden)
+                              .OrderBy(d => d.Name)
+                              .ToArray());
+
+                context.Display(supportedDirectives);
             }
         }
     }
 
-    private static KernelActionDirective lsmagic(Kernel kernel)
+    private static KernelActionDirective lsmagic()
     {
         return new KernelActionDirective("#!lsmagic")
         {

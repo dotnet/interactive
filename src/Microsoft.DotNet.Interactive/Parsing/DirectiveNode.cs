@@ -575,7 +575,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
             var parametersProvided = DescendantNodesAndTokens()
                                      .OfType<DirectiveParameterNode>()
                                      .Where(n => n.NameNode?.Text is not null)
-                                     .GroupBy(n => n.NameNode?.Text)
+                                     .GroupBy(n => n.NameNode!.Text)
                                      .ToDictionary(g => g.Key, g => g.Count());
 
             for (var i = 0; i < completions.Count; i++)

@@ -135,11 +135,11 @@ public class KernelHost : IDisposable
 
         _kernel.VisitSubkernelsAndSelf(k =>
         {
-            if (k.KernelInfo.IsProxy == false)
+            if (!k.KernelInfo.IsProxy)
             {
                 kernelInfos.Add(k.KernelInfo);
             }
-        }, true);
+        });
 
         await _defaultSender.SendAsync(
             new KernelReady(kernelInfos.ToArray()),

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Tags;
@@ -14,7 +13,6 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -88,6 +86,7 @@ public static class KernelExtensions
     {
         var importDirective = new KernelActionDirective("#!import")
         {
+            Description = LocalizationResources.Magics_import_Description(),
             Parameters =
             {
                 new("")
@@ -171,6 +170,7 @@ public static class KernelExtensions
     {
         var directive = new KernelActionDirective("#!set")
         {
+            Description = LocalizationResources.Magics_set_name_Description(),
             KernelCommandType = typeof(SetDirectiveCommand),
             TryGetKernelCommandAsync = SetDirectiveCommand.TryParseSetDirectiveCommandAsync,
             Parameters =
@@ -405,8 +405,7 @@ public static class KernelExtensions
 
     private static async Task DisplayValues(KernelInvocationContext context, bool detailed)
     {
-        if (context.Command is SubmitCode &&
-            context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
+        if (context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
             context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
         {
             var nameEvents = new List<ValueInfosProduced>();
@@ -444,8 +443,7 @@ public static class KernelExtensions
 
     public static void VisitSubkernels(
         this Kernel kernel,
-        Action<Kernel> onVisit,
-        bool recursive = false)
+        Action<Kernel> onVisit)
     {
         if (kernel is null)
         {
@@ -457,16 +455,18 @@ public static class KernelExtensions
             throw new ArgumentNullException(nameof(onVisit));
         }
 
-        foreach (var subKernel in kernel.Subkernels(recursive))
+        if (kernel is CompositeKernel compositeKernel)
         {
-            onVisit(subKernel);
+            foreach (var subKernel in compositeKernel)
+            {
+                onVisit(subKernel);
+            }
         }
     }
 
     public static void VisitSubkernelsAndSelf(
         this Kernel kernel,
-        Action<Kernel> onVisit,
-        bool recursive = false)
+        Action<Kernel> onVisit)
     {
         if (kernel is null)
         {
@@ -478,15 +478,13 @@ public static class KernelExtensions
             throw new ArgumentNullException(nameof(onVisit));
         }
 
-        foreach (var k in kernel.SubkernelsAndSelf(recursive))
+        foreach (var k in kernel.SubkernelsAndSelf())
         {
             onVisit(k);
         }
     }
 
-    public static IEnumerable<Kernel> SubkernelsAndSelf(
-        this Kernel kernel,
-        bool recursive = false)
+    internal static IEnumerable<Kernel> SubkernelsAndSelf(this Kernel kernel)
     {
         yield return kernel;
 
@@ -494,37 +492,7 @@ public static class KernelExtensions
         {
             foreach (var subKernel in compositeKernel.ChildKernels)
             {
-                if (recursive)
-                {
-                    foreach (var recursiveVisit in subKernel.SubkernelsAndSelf(recursive))
-                    {
-                        yield return recursiveVisit;
-                    }
-                }
-                else
-                {
-                    yield return subKernel;
-                }
-            }
-        }
-    }
-
-    public static IEnumerable<Kernel> Subkernels(
-        this Kernel kernel,
-        bool recursive = false)
-    {
-        if (kernel is CompositeKernel compositeKernel)
-        {
-            foreach (var subKernel in compositeKernel.ChildKernels)
-            {
                 yield return subKernel;
-                if (recursive)
-                {
-                    foreach (var recursiveVisit in subKernel.Subkernels(recursive))
-                    {
-                        yield return recursiveVisit;
-                    }
-                }
             }
         }
     }

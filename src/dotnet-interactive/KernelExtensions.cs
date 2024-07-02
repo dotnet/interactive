@@ -55,7 +55,10 @@ public static class KernelExtensions
     public static T UseAboutMagicCommand<T>(this T kernel)
         where T : Kernel
     {
-        var aboutDirective = new KernelActionDirective("#!about");
+        var aboutDirective = new KernelActionDirective("#!about")
+        {
+            Description = LocalizationResources.Magics_about_Description()
+        };
 
         kernel.AddDirective(
             aboutDirective,
