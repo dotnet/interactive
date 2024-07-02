@@ -319,7 +319,7 @@ public class PowerShellKernel :
             // The end index is the start index plus the length of the replacement.
             var endIndex = results.ReplacementIndex + results.ReplacementLength;
             completion = new CompletionsProduced(
-                completionItems,
+                completionItems.ToArray(),
                 requestCompletions,
                 SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(requestCompletions.Code, results.ReplacementIndex, endIndex));
         }

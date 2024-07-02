@@ -35,51 +35,50 @@ public static class CommandLine
         var stdOut = new StringBuilder();
         var stdErr = new StringBuilder();
 
-        using (var operation = ConfirmOnExit(command, args))
-        using (var process = StartProcess(
-                   command,
-                   args,
-                   workingDir,
-                   output: data =>
-                   {
-                       stdOut.AppendLine(data);
-                   },
-                   error: data =>
-                   {
-                       stdErr.AppendLine(data);
-                   }))
+        using var operation = ConfirmOnExit(command, args);
+        using var process = StartProcess(
+            command,
+            args,
+            workingDir,
+            output: data =>
+            {
+                stdOut.AppendLine(data);
+            },
+            error: data =>
+            {
+                stdErr.AppendLine(data);
+            });
+
+        var exitCode = await process.Complete().Timeout(timeout ?? TimeSpan.FromMinutes(1));
+
+        var output = stdOut.Replace("\r\n", "\n").ToString().Split('\n');
+
+        var error = stdErr.Replace("\r\n", "\n").ToString().Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (error.All(string.IsNullOrWhiteSpace))
         {
-            var exitCode = await process.Complete().Timeout(timeout ?? TimeSpan.FromMinutes(1));
-
-            var output = stdOut.Replace("\r\n", "\n").ToString().Split('\n');
-
-            var error = stdErr.Replace("\r\n", "\n").ToString().Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (error.All(string.IsNullOrWhiteSpace))
-            {
-                error = null;
-            }
-
-            var result = new CommandLineResult(
-                exitCode: exitCode,
-                output: output,
-                error: error);
-
-            if (exitCode == 0)
-            {
-                operation.Succeed(
-                    "> {command} {args} -> exited with {code}",
-                    process.StartInfo.FileName,
-                    process.StartInfo.Arguments,
-                    process.ExitCode);
-            }
-            else
-            {
-                operation.Fail(new CommandLineInvocationException(result));
-            }
-
-            return result;
+            error = null;
         }
+
+        var result = new CommandLineResult(
+            exitCode: exitCode,
+            output: output,
+            error: error);
+
+        if (exitCode is 0)
+        {
+            operation.Succeed(
+                "> {command} {args} -> exited with {code}",
+                process.StartInfo.FileName,
+                process.StartInfo.Arguments,
+                process.ExitCode);
+        }
+        else
+        {
+            operation.Fail(new CommandLineInvocationException(result));
+        }
+
+        return result;
     }
 
     public static async Task<int> Complete(

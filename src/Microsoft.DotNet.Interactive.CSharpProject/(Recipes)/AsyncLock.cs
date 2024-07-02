@@ -35,6 +35,6 @@ internal class AsyncLock
             _toRelease = toRelease ?? throw new ArgumentNullException(nameof(toRelease));
         }
 
-        public void Dispose() => _toRelease?._semaphore.Release();
+        public void Dispose() => _toRelease._semaphore.Release();
     }
 }

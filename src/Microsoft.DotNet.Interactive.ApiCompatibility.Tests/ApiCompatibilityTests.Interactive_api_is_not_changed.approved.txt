@@ -604,7 +604,7 @@ Microsoft.DotNet.Interactive.Events
     public System.String SortText { get;}
     public System.String ToString()
   public class CompletionsProduced : KernelEvent
-    .ctor(System.Collections.Generic.IEnumerable<CompletionItem> completions, Microsoft.DotNet.Interactive.Commands.RequestCompletions command, Microsoft.DotNet.Interactive.LinePositionSpan linePositionSpan = null)
+    .ctor(System.Collections.Generic.IReadOnlyCollection<CompletionItem> completions, Microsoft.DotNet.Interactive.Commands.RequestCompletions command, Microsoft.DotNet.Interactive.LinePositionSpan linePositionSpan = null)
     public System.Collections.Generic.IEnumerable<CompletionItem> Completions { get;}
     public Microsoft.DotNet.Interactive.LinePositionSpan LinePositionSpan { get;}
   public class DiagnosticsProduced : KernelEvent

@@ -764,7 +764,7 @@ public abstract partial class Kernel :
 
             context.Publish(
                 new CompletionsProduced(
-                    completions, command, resultRange));
+                    completions.ToArray(), command, resultRange));
         }
     }
 

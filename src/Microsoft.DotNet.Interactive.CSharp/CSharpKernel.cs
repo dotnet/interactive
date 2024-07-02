@@ -418,8 +418,10 @@ public class CSharpKernel :
         context.Publish(new CompletionsProduced(completionList, command));
     }
 
-    private async Task<IEnumerable<CompletionItem>> GetCompletionList(string code,
-        int cursorPosition, CancellationToken contextCancellationToken)
+    private async Task<IReadOnlyList<CompletionItem>> GetCompletionList(
+        string code,
+        int cursorPosition, 
+        CancellationToken contextCancellationToken)
     {
         using var _ = new GCPressure(1024 * 1024);
 
@@ -429,7 +431,7 @@ public class CSharpKernel :
 
         if (completionList is null)
         {
-            return Enumerable.Empty<CompletionItem>();
+            return [];
         }
 
         var items = new List<CompletionItem>();
