@@ -28,8 +28,7 @@ describe('dynamic grammar tests', async () => {
             languageName: 'csharp',
             aliases: ['see-sharp-alias'],
             displayName: '',
-            supportedKernelCommands: [],
-            supportedDirectives: [],
+            supportedKernelCommands: []
         },
         {
             isComposite: false,
@@ -39,8 +38,7 @@ describe('dynamic grammar tests', async () => {
             languageName: 'python',
             aliases: [],
             displayName: '',
-            supportedKernelCommands: [],
-            supportedDirectives: [],
+            supportedKernelCommands: []
         }
     ];
 
@@ -240,8 +238,7 @@ describe('dynamic grammar tests', async () => {
                 languageName: 'erlang',
                 aliases: [],
                 displayName: '',
-                supportedKernelCommands: [],
-                supportedDirectives: [],
+                supportedKernelCommands: []
             },
             ...defaultKernelInfos
         ];
@@ -294,8 +291,7 @@ describe('dynamic grammar tests', async () => {
             languageName: 'erlang',
             aliases: [],
             displayName: '',
-            supportedKernelCommands: [],
-            supportedDirectives: [],
+            supportedKernelCommands: []
         };
         dynamicTokenProvider.rebuildNotebookGrammar(testUri, [newKernelInfo]);
 
@@ -322,8 +318,7 @@ describe('dynamic grammar tests', async () => {
             languageName: 'see_sharp', // this is an alias and not the real name "csharp"
             aliases: [],
             displayName: '',
-            supportedKernelCommands: [],
-            supportedDirectives: []
+            supportedKernelCommands: []
         };
         dynamicTokenProvider.rebuildNotebookGrammar(testUri, [kernelInfoWithAlias]);
 
@@ -350,8 +345,7 @@ describe('dynamic grammar tests', async () => {
                 languageName: undefined, // not specified; no grammar should be applied
                 aliases: [],
                 displayName: '',
-                supportedKernelCommands: [],
-                supportedDirectives: [],
+                supportedKernelCommands: []
             },
             ...defaultKernelInfos
         ];
@@ -375,8 +369,7 @@ $x = "this is perl code";
                 languageName: 'not-perl', // language name is specified, but doesn't match any known language
                 aliases: [],
                 displayName: '',
-                supportedKernelCommands: [],
-                supportedDirectives: [],
+                supportedKernelCommands: []
             },
             ...defaultKernelInfos
         ];
@@ -400,8 +393,7 @@ $x = "this is perl code";
                 languageName: 'http',
                 aliases: [],
                 displayName: '',
-                supportedKernelCommands: [],
-                supportedDirectives: [],
+                supportedKernelCommands: []
             }
         ];
         dynamicTokenProvider.rebuildNotebookGrammar(testUri, updatedKernelInfos);
@@ -516,8 +508,7 @@ This is \`markdown\`.
             languageName: 'erlang',
             aliases: [],
             displayName: '',
-            supportedKernelCommands: [],
-            supportedDirectives: [],
+            supportedKernelCommands: []
         };
         dynamicTokenProvider.rebuildNotebookGrammar(testUri, [newKernelInfo]);
 
@@ -554,8 +545,7 @@ This is \`markdown\`.
             languageName: 'erlang',
             aliases: ['test-erlang-alias'],
             displayName: '',
-            supportedKernelCommands: [],
-            supportedDirectives: [],
+            supportedKernelCommands: []
         };
         dynamicTokenProvider.rebuildNotebookGrammar(testUri, [newKernelInfo]);
 
