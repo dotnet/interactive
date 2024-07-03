@@ -66,7 +66,6 @@ describe("frontEndHost", () => {
                         languageName: undefined,
                         languageVersion: undefined,
                         localName: 'testKernel',
-                        supportedDirectives: [],
                         supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
                         uri: 'kernel://testKernel/'
                     },
@@ -79,7 +78,6 @@ describe("frontEndHost", () => {
                         languageName: 'JavaScript',
                         languageVersion: undefined,
                         localName: 'javascript',
-                        supportedDirectives: [],
                         supportedKernelCommands:
                             [{ name: 'RequestKernelInfo' },
                             { name: 'SubmitCode' },
@@ -113,7 +111,6 @@ describe("frontEndHost", () => {
                     languageName: 'SQL',
                     languageVersion: '10',
                     displayName: 'SQL',
-                    supportedDirectives: [],
                     supportedKernelCommands: [
                         {
                             name: commandsAndEvents.RequestKernelInfoType
@@ -143,7 +140,6 @@ describe("frontEndHost", () => {
             localName: 'sql',
             remoteUri: 'kernel://remote/sql',
             description: 'This Kernel is for executing SQL code.',
-            supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },
                 { name: 'SubmitCode' },
@@ -170,7 +166,6 @@ describe("frontEndHost", () => {
                     description: 'This Kernel is for executing SQL code.',
                     aliases: [],
                     displayName: 'SQL',
-                    supportedDirectives: [],
                     supportedKernelCommands: [
                         {
                             name: commandsAndEvents.RequestKernelInfoType
@@ -192,7 +187,6 @@ describe("frontEndHost", () => {
                     languageVersion: '10',
                     displayName: 'SQL',
                     description: 'This Kernel is for executing SQL code.',
-                    supportedDirectives: [],
                     supportedKernelCommands: [
                         {
                             name: commandsAndEvents.RequestKernelInfoType
@@ -222,7 +216,6 @@ describe("frontEndHost", () => {
             localName: 'sql',
             remoteUri: 'kernel://remote/sql',
             description: 'This Kernel is for executing SQL code.',
-            supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },
                 { name: 'SubmitCode' },

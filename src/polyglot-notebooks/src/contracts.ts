@@ -148,7 +148,7 @@ export interface SendValue extends KernelCommand {
 
 export interface SubmitCode extends KernelCommand {
     code: string;
-    parameters: { [key: string]: string; };
+    parameters?: { [key: string]: string; };
 }
 
 export interface UpdateDisplayedValue extends KernelCommand {

@@ -260,7 +260,6 @@ describe("proxyKernel", () => {
             localName: 'proxy',
             remoteUri: 'kernel://local/remoteKernel',
             description: `This kernel executes g# code.`,
-            supportedDirectives: [],
             supportedKernelCommands:
                 [{ name: 'RequestKernelInfo' },
                 { name: 'customCommand1' },
