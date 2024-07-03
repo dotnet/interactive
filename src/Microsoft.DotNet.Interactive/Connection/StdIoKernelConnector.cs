@@ -169,7 +169,7 @@ public class StdIoKernelConnector : IDisposable
                     if (_process.ExitCode is not 0)
                     {
                         var stdErrString = stdErr.ToString()
-                                                 .Split(['\r', '\n'],
+                                                 .Split(new[] {'\r', '\n'},
                                                         StringSplitOptions.RemoveEmptyEntries);
 
                         throw new CommandLineInvocationException(
