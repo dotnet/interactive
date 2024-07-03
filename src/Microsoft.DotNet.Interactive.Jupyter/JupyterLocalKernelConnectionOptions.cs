@@ -17,7 +17,8 @@ public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnecti
         CondaEnv.AddCompletions(_ => CondaEnvironment.GetEnvironments());
 
         _parameters = new List<KernelDirectiveParameter>
-        {CondaEnv
+        {
+            CondaEnv
         };
     }
 
@@ -27,7 +28,7 @@ public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnecti
     {
         var condaEnv = connectCommand.CondaEnv;
         IJupyterEnvironment environment = null;
-        if (condaEnv != null)
+        if (condaEnv is not null)
         {
             environment = new CondaEnvironment(condaEnv);
         }

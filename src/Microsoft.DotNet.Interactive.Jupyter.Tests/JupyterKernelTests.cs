@@ -96,7 +96,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     }
 
     [Fact]
-    public void can_get_a_list_of_kernelspecs_from_completions()
+    public async Task can_get_a_list_of_kernelspecs_from_completions()
     {
         var specs = new List<KernelSpec>
         {
@@ -108,10 +108,13 @@ public class JupyterKernelTests : JupyterKernelTestBase
         var jupyterKernelCommand = new ConnectJupyterKernelDirective();
         jupyterKernelCommand.AddConnectionOptions(options);
 
-        var kernelSpecCompletions = jupyterKernelCommand.KernelSpecNameParameter.GetValueCompletionsAsync();
+        var kernelSpecCompletions = await jupyterKernelCommand.KernelSpecNameParameter.GetValueCompletionsAsync();
         kernelSpecCompletions
             .Should()
-            .BeEquivalentTo(specs.Select(s => new CompletionItem(s.Name, WellKnownTags.Parameter)));
+            .BeEquivalentTo(specs.Select(s => new CompletionItem(s.Name, WellKnownTags.Parameter)
+            {
+                Documentation = "The kernel spec to connect to"
+            }));
     }
 
     [Fact]

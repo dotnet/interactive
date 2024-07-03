@@ -356,8 +356,10 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
         var extensionPackage = await KernelExtensionTestHelper.GetFileProviderExtensionAsync();
 
-        await kernel.SubmitCodeAsync($@"#i ""nuget:{extensionPackage.PackageLocation}""
-#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
+        await kernel.SubmitCodeAsync($"""
+                                      #i "nuget:{extensionPackage.PackageLocation}"
+                                      #r "nuget:{extensionPackage.Name},{extensionPackage.Version}"
+                                      """);
 
         var response = await server.HttpClient.GetAsync("extensions/TestKernelExtension/resources/file.txt");
 
@@ -400,10 +402,16 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         var port = GetFreePort();
 
         using var kernel = new CompositeKernel();
-                
+
         kernel.AddKernelConnector(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
 
-        await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --http-port {port}"));
+        string[] args = [Dotnet.Path.FullName, typeof(Program).Assembly.Location, "stdio", "--http-port", port.ToString()];
+
+        var json = JsonSerializer.Serialize(args);
+
+        var submitCode = new SubmitCode($"#!connect stdio --kernel-name proxy --command {json}");
+
+        await kernel.SendAsync(submitCode);
 
         using var client = new HttpClient();
 

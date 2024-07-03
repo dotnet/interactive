@@ -19,7 +19,7 @@ public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyt
 
     public ConnectJupyterKernelDirective() : base("jupyter", "Connects a Jupyter kernel as a .NET Interactive subkernel.")
     {
-        KernelSpecNameParameter.AddCompletions(GetKernelSpecsCompletions);
+        KernelSpecNameParameter.AddCompletions(GetKernelSpecsCompletionsAsync);
         Parameters.Add(KernelSpecNameParameter);
         Parameters.Add(InitScriptParameter);
     }
@@ -86,7 +86,7 @@ public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyt
         return null;
     }
 
-    private IEnumerable<CompletionItem> GetKernelSpecsCompletions(KernelDirectiveCompletionContext ctx)
+    private async Task<IEnumerable<CompletionItem>> GetKernelSpecsCompletionsAsync(KernelDirectiveCompletionContext ctx)
     {
         var hash = GetParseResultHash(ctx);
         if (_mruKernelSpecSuggestions.Key == hash)
@@ -96,12 +96,11 @@ public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyt
 
         IEnumerable<CompletionItem> completions = [];
 
-        // FIX: (GetKernelSpecsCompletions) 
-        // var connection = GetJupyterConnection(ctx);
-        // using (connection as IDisposable)
-        // {
-        //     completions = GetKernelSpecsCompletions(connection);
-        // }
+        var connection = GetJupyterConnection(new ConnectJupyterKernel(""));
+        using (connection as IDisposable)
+        {
+            completions = await GetKernelSpecsCompletionsAsync(connection);
+        }
 
         if (completions is not null)
         {
@@ -111,11 +110,11 @@ public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyt
         return completions;
     }
 
-    private IEnumerable<CompletionItem> GetKernelSpecsCompletions(IJupyterConnection connection)
+    private async Task<IEnumerable<CompletionItem>> GetKernelSpecsCompletionsAsync(IJupyterConnection connection)
     {
         var completions = new List<CompletionItem>();
-        var specs = connection.GetKernelSpecsAsync().GetAwaiter().GetResult();
-        if (specs != null)
+        var specs = await connection.GetKernelSpecsAsync();
+        if (specs is not null)
         {
             foreach (var s in specs)
             {
@@ -126,14 +125,15 @@ public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyt
         return completions;
     }
 
-    private int GetParseResultHash(KernelDirectiveCompletionContext ctx)
+    private int GetParseResultHash(KernelDirectiveCompletionContext context)
     {
         string values = string.Empty;
+
         foreach (var option in Parameters)
         {
             if (option != KernelSpecNameParameter)
             {
-                // FIX: (GetParseResultHash)          values += parseResult.GetValueForOption(option);
+                // FIX: (GetParseResultHash)        values += parseResult.GetValueForOption(option);
             }
         }
 

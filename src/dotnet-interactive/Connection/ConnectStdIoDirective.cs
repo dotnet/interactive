@@ -32,9 +32,7 @@ public class ConnectStdIoDirective : ConnectKernelDirective<ConnectStdio>
     }
 
     public KernelDirectiveParameter WorkingDirectoryParameter { get; } =
-        new("--working-directory",
-            // FIX: (WorkingDirectoryParameter)     getDefaultValue: () => new DirectoryInfo(Directory.GetCurrentDirectory()),
-            "The working directory");
+        new("--working-directory", "The working directory");
 
     public KernelDirectiveParameter CommandParameter { get; } =
         new("--command", "The command to execute")
@@ -43,8 +41,7 @@ public class ConnectStdIoDirective : ConnectKernelDirective<ConnectStdio>
         };
 
     public KernelDirectiveParameter KernelHostUriParameter { get; } = new(
-        "--kernel-host",
-        description: "Name of the kernel host.");
+        "--kernel-host", "Name of the kernel host.");
 
     public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
         ConnectStdio connectCommand,
