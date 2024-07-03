@@ -1,9 +1,8 @@
 {
   "token": "the-token",
-  "commandType": "AddPackage",
+  "commandType": "ImportDocument",
   "command": {
-    "packageName": "Microsoft.DotNet.Interactive",
-    "packageVersion": "*-*",
+    "filePath": "c:\\temp\\some.ipynb",
     "targetKernelName": null,
     "originUri": null,
     "destinationUri": null

@@ -192,6 +192,8 @@ public class SerializationTests
                 new FormattedValue("text/html", "<b>hi!</b>")
             );
 
+            yield return new ImportDocument(@"c:\temp\some.ipynb");
+
             yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
             yield return new RequestDiagnostics("the-code");
