@@ -394,9 +394,15 @@ public static class KernelExtensions
         if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
             kernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
         {
-            kernel.AddDirective(new KernelActionDirective("#!who") { Description = LocalizationResources.Magics_who_Description() },
+            kernel.AddDirective(new KernelActionDirective("#!who")
+                                {
+                                    Description = LocalizationResources.Magics_who_Description()
+                                },
                                 async (_, context) => await DisplayValues(context, false));
-            kernel.AddDirective(new KernelActionDirective("#!whos") { Description = LocalizationResources.Magics_whos_Description() },
+            kernel.AddDirective(new KernelActionDirective("#!whos")
+                                {
+                                    Description = LocalizationResources.Magics_whos_Description()
+                                },
                                 async (_, context) => await DisplayValues(context, true));
         }
 

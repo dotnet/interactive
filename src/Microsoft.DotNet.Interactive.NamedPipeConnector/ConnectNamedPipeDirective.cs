@@ -25,8 +25,6 @@ public class ConnectNamedPipeDirective : ConnectKernelDirective<ConnectNamedPipe
         ConnectNamedPipe connectCommand,
         KernelInvocationContext context)
     {
-        // FIX: (ConnectKernelsAsync) register the connector for disposal
-
         var pipeName = connectCommand.PipeName;
 
         var connector = new NamedPipeKernelConnector(pipeName);
@@ -34,6 +32,8 @@ public class ConnectNamedPipeDirective : ConnectKernelDirective<ConnectNamedPipe
         var localName = connectCommand.ConnectedKernelName;
 
         var proxyKernel = await connector.CreateKernelAsync(localName);
+
+        proxyKernel.RegisterForDisposal(connector);
 
         return new Kernel[] { proxyKernel };
     }

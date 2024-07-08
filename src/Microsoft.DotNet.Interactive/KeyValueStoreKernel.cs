@@ -264,7 +264,6 @@ public class KeyValueStoreKernel :
         SubmitCode command,
         KernelInvocationContext context)
     {
-        // FIX: (HandleAsync) 
         return Task.CompletedTask;
     }
 

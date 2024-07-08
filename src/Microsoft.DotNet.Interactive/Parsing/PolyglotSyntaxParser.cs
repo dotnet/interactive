@@ -372,29 +372,34 @@ internal class PolyglotSyntaxParser
                     }
                     catch (JsonException exception)
                     {
-                        var positionInLine = (int)exception.BytePositionInLine! + node.FullSpan.Start;
-
-                        var location = Location.Create(
-                            filePath: string.Empty,
-                            new TextSpan(positionInLine, 1),
-                            new(new(0, positionInLine), new(0, positionInLine + 1)));
-
-                        var message = exception.Message;
-
-                        if (message.IndexOf(" LineNumber", StringComparison.InvariantCulture) is var index and > -1)
+                        // A common cause of an exception here is a quoted file path, which isn't required to be JSON (for backcompat reasons as well as the fact that JSON escaping isn't intuitive).
+                        // But we infer that if there are curly braces or square brackets in the string, it's likely intended to be JSON.
+                        if (ShouldParseAsJson(json))
                         {
-                            // Example message to be cleaned up since the character positions won't be accurate for the user's complete text: "Invalid JSON: 'c' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 11." 
-                            message = message.Remove(index);
+                            var positionInLine = (int)exception.BytePositionInLine! + node.FullSpan.Start;
+
+                            var location = Location.Create(
+                                filePath: string.Empty,
+                                new TextSpan(positionInLine, 1),
+                                new(new(0, positionInLine), new(0, positionInLine + 1)));
+
+                            var message = exception.Message;
+
+                            if (message.IndexOf(" LineNumber", StringComparison.InvariantCulture) is var index and > -1)
+                            {
+                                // Example message to be cleaned up since the character positions won't be accurate for the user's complete text: "Invalid JSON: 'c' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 11." 
+                                message = message.Remove(index);
+                            }
+
+                            var diagnostic = node.CreateDiagnostic(
+                                new(ErrorCodes.InvalidJsonInParameterValue,
+                                    "Invalid JSON: {0}",
+                                    DiagnosticSeverity.Error,
+                                    message),
+                                location);
+
+                            node.AddDiagnostic(diagnostic);
                         }
-
-                        var diagnostic = node.CreateDiagnostic(
-                            new(ErrorCodes.InvalidJsonInParameterValue,
-                                "Invalid JSON: {0}",
-                                DiagnosticSeverity.Error,
-                                message),
-                            location);
-
-                        node.AddDiagnostic(diagnostic);
                     }
                 }
             }
@@ -459,6 +464,12 @@ internal class PolyglotSyntaxParser
                 return null;
             }
         }
+
+        bool ShouldParseAsJson(string json) =>
+            json.Contains("{") ||
+            json.Contains("}") ||
+            json.Contains("[") ||
+            json.Contains("]");
     }
 
     private bool IsAtStartOfSubcommand(out KernelActionDirective? subcommand, out int numberOfTokensToConsume)

@@ -57,7 +57,7 @@ public abstract class JupyterKernelTestBase : IDisposable
 
     protected static List<Message> GenerateReplies(IReadOnlyCollection<Message> messages = null, string languageName = "name")
     {
-        var replies = new List<Message>()
+        var replies = new List<Message>
         {
             // always sent as a first request
             Message.CreateReply(

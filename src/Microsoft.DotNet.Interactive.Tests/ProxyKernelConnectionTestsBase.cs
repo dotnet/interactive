@@ -87,7 +87,7 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
     }
 
     [WindowsFact]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task can_connect_to_remote_using_connect_magic_command()
     {
         using var localCompositeKernel = new CompositeKernel

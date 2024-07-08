@@ -232,8 +232,6 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         }
 
                         break;
-
-                    // FIX: (GetParameters) handle multiple matching nodes for the parameter (write array?)
                 }
             }
         }
@@ -456,7 +454,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 {
                     // FIX: (GetCompletionsAtPositionAsync) handle the case where the directive is not found
 
-                    if (node?.Text.StartsWith("#") is true)
+                    if (node.Text.StartsWith("#"))
                     {
                         var completions = GetCompletionsForPartialDirective();
                         return completions;

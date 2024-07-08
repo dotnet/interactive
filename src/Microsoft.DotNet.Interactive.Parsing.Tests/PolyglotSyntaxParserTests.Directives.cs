@@ -196,7 +196,7 @@ x
 
             var tree = Parse(code, defaultLanguage);
 
-            using var _ = new AssertionScope();
+            // using var _ = new AssertionScope();
 
             foreach (var pair in spansByName)
             {

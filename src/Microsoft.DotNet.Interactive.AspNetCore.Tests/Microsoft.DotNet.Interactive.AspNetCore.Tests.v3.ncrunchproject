@@ -8,5 +8,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.AspNetCore.Tests.AspNetCoreTests</FixtureName>
       </FixtureTestSelector>
     </IgnoredTests>
+    <IgnoreThisComponentCompletely>True</IgnoreThisComponentCompletely>
   </Settings>
 </ProjectConfiguration>

@@ -121,7 +121,6 @@ public class PolyglotParserConfigurationTests
                         new KernelActionDirective("#i"),
                         new KernelActionDirective("#r"),
                         new KernelActionDirective("#!lsmagic"),
-                        new KernelActionDirective("#!time"),
                         new KernelActionDirective("#!who"),
                         new KernelActionDirective("#!whos"),
                         new KernelActionDirective("#!set")
@@ -148,7 +147,6 @@ public class PolyglotParserConfigurationTests
                         new KernelActionDirective("#i"),
                         new KernelActionDirective("#r"),
                         new KernelActionDirective("#!lsmagic"),
-                        new KernelActionDirective("#!time"),
                         new KernelActionDirective("#!who"),
                         new KernelActionDirective("#!whos"),
                         new KernelActionDirective("#!set")
