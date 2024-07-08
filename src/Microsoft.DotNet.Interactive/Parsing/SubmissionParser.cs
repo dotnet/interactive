@@ -389,11 +389,6 @@ public class SubmissionParser
 
                 var directiveCommand = commandEnvelope.Command;
 
-                if (directiveCommand.TargetKernelName is null)
-                {
-                    // FIX: (SplitSubmission) is this needed or does the initial parse always get it right?
-                    directiveCommand.TargetKernelName = targetKernelName;
-                }
                 return directiveCommand;
             }
             else

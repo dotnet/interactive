@@ -22,7 +22,8 @@ public static class Serializer
         };
         JsonSerializerOptions.Converters.Add(new DataDictionaryConverter());
         JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-        JsonSerializerOptions.Converters.Add(new FileSystemInfoJsonConverter());
+        JsonSerializerOptions.Converters.Add(new DirectoryInfoJsonConverter());
+        JsonSerializerOptions.Converters.Add(new FileInfoJsonConverter());
         JsonSerializerOptions.Converters.Add(new KernelDirectiveConverter());
     }
 
