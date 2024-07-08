@@ -3,10 +3,9 @@
 
 using System;
 using System.IO;
-using FluentAssertions;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -15,12 +14,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
 
 public class TranscriptTests : IDisposable
 {
-    private readonly CompositeDisposable _disposables = new CompositeDisposable();
+    private readonly CompositeDisposable _disposables = new();
 
     [Fact]
     public async Task transcript_extension_writes_all_received_commands_to_the_specified_file()
     {
-        var kernel = new CompositeKernel
+        using var kernel = new CompositeKernel
         {
             new FSharpKernel()
         };
@@ -38,9 +37,11 @@ public class TranscriptTests : IDisposable
         await kernel.SubmitCodeAsync($"#!record --output {filePath}");
         await kernel.SubmitCodeAsync("12345");
 
-        var lines = File.ReadAllLines(filePath);
+        await Task.Delay(500);
 
-        lines.First().Should().Contain("12345");
+        var lines = await File.ReadAllLinesAsync(filePath);
+
+        lines.Should().Contain(l => l.Contains("12345"));
     }
 
     public void Dispose() => _disposables.Dispose();

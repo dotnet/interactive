@@ -18,22 +18,18 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab;
 
 public class InspectExtension
 {
-    private const string InspectCommand = "inspect";
-
     public static Task LoadAsync(Kernel kernel)
     {
-        var inspect = new KernelActionDirective($"#!{InspectCommand}")
+        var inspect = new KernelActionDirective("#!inspect")
         {
             Description = "Inspect the following code in the submission"
         };
 
         inspect.Parameters.Add(new KernelDirectiveParameter("--configuration")
-                                   //    getDefaultValue: () => OptimizationLevel.Debug,
                                    {
                                        Description = "Build configuration to use. Debug or Release."
-                                   });
+                                   }.AddCompletions(_ => [ "Debug", "Release" ]));
         inspect.Parameters.Add(new KernelDirectiveParameter("--kind")
-                                   //    getDefaultValue: () => SourceCodeKind.Script,
                                    {
                                        Description = "Source code kind. Script or Regular."
                                    });
@@ -70,7 +66,7 @@ public class InspectExtension
         }
 
         // TODO: Is there a proper way of cleaning up code from the magic commands?
-        var code = Regex.Replace(command.Code, $"#!{InspectCommand}(.*)", "");
+        var code = Regex.Replace(command.Code, "#!inspect(.*)", "");
 
         var options = new InspectionOptions
         {

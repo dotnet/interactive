@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
 [Collection(nameof(PrebuildFixture))]
-// [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public abstract class WorkspaceServerTestsCore : IDisposable
 {
     private readonly PrebuildFixture _prebuildFixture;
@@ -23,7 +22,6 @@ public abstract class WorkspaceServerTestsCore : IDisposable
         ITestOutputHelper output)
     {
         _prebuildFixture = prebuildFixture;
-        // _disposables.Add(output.SubscribeToPocketLogger());
     }
 
     public void Dispose() => _disposables.Dispose();

@@ -4,7 +4,6 @@
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Directives;
 
@@ -29,14 +28,14 @@ public class RecordTranscriptExtension
 
             compositeKernel.AddDirective<StartCommandTranscription>(record, StartTranscription);
 
-            Task StartTranscription(StartCommandTranscription command, KernelInvocationContext _)
+            Task StartTranscription(StartCommandTranscription startTranscription, KernelInvocationContext _)
             {
-                compositeKernel.AddMiddleware(async (_, context, next) =>
+                compositeKernel.AddMiddleware(async (command, context, next) =>
                 {
                     var json = KernelCommandEnvelope.Serialize(command);
 
                     await File.AppendAllLinesAsync(
-                        command.OutputFile.FullName,
+                        startTranscription.OutputFile,
                         new[]
                         {
                             json
@@ -60,9 +59,4 @@ public class RecordTranscriptExtension
 
         return Task.CompletedTask;
     }
-}
-
-public class StartCommandTranscription : KernelCommand
-{
-    public FileInfo OutputFile { get; set; }
 }

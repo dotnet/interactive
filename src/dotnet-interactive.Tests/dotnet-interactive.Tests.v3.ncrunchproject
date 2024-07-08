@@ -45,9 +45,6 @@
         <TestName>Microsoft.DotNet.Interactive.App.Tests.FileProviderTests.It_tracks_extensions_that_are_not_file_providers("FSharp")</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.stdio_mode_honors_log_path</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.StdioConnectionTests.it_can_reuse_connection_for_multiple_proxy_kernels</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
@@ -87,9 +84,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.App.Tests.TypeScriptInterfacesContractTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.FirstTimeUseSentinelTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
@@ -103,6 +97,9 @@
       </FixtureTestSelector>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests.stdio_mode_returns_javascript_api_via_http</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.stdio_mode_honors_log_path</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>
