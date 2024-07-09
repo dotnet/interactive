@@ -330,6 +330,6 @@ CalcTrigArea = (double x, double y) => 0.5 * x * y;
             .Which
             .Message
             .Should()
-            .Be("The --from-url and --from-file options cannot be used together");
+            .Be("(1,1): error DNI211: The --from-url and --from-file options cannot be used together");
     }
 }
