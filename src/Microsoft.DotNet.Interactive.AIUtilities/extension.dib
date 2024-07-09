@@ -1,3 +1,0 @@
-#!csharp
-
-Microsoft.DotNet.Interactive.AIUtilities.InteractiveExtension.Load();
