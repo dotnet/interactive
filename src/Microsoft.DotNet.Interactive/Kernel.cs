@@ -390,7 +390,8 @@ public abstract partial class Kernel :
             if (Scheduler.CurrentValue is { } currentlyExecutingCommand)
             {
                 // don't parent heterogeneous commands
-                if (currentlyExecutingCommand.GetType() == command.GetType())
+                if (currentlyExecutingCommand.GetType() == command.GetType() && 
+                    command.Token is null)
                 {
                     command.SetParent(currentlyExecutingCommand);
                 }

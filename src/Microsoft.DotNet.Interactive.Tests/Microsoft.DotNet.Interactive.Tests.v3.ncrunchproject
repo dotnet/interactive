@@ -21,9 +21,6 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.DataExplorerTests</FixtureName>
       </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.CancelCommandTests</FixtureName>
-      </FixtureTestSelector>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
 #r one.dll

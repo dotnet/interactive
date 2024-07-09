@@ -289,8 +289,14 @@ public class KernelInvocationContext : IDisposable
         else
         {
             TryGetChildCommandEvents(command, out var events);
+
             var result = new KernelCommandResult(command);
-            using var _ = events.Subscribe(result.AddEvent);
+            
+            if (!events.IsDisposed)
+            {
+                using var _ = events.Subscribe(result.AddEvent);
+            }
+
             return result;
         }
     }

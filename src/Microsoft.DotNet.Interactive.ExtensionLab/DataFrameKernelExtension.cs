@@ -21,7 +21,8 @@ using Microsoft.ML;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class DataFrameKernelExtension{
+    public class DataFrameKernelExtension
+    {
         public static Task LoadAsync(Kernel rootKernel)
         {
             RegisterFormatters();
