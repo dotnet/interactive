@@ -393,6 +393,7 @@ public abstract partial class Kernel :
                 if (currentlyExecutingCommand.GetType() == command.GetType() && 
                     command.Token is null)
                 {
+                    // FIX: (SendAsync) is this even needed?
                     command.SetParent(currentlyExecutingCommand);
                 }
             }

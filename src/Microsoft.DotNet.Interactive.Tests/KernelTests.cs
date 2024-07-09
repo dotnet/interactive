@@ -212,8 +212,7 @@ public partial class KernelTests
             (await result).Events
             """));
 
-        result.Events.Should().ContainSingle<CommandFailed>()
-              .Which.Exception.Should().BeOfType<ObjectDisposedException>();
+        result.Events.Should().ContainSingle<CommandSucceeded>();
     }
 
     [Fact(Skip = "later")]

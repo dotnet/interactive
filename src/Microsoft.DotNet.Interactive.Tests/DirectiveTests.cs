@@ -50,7 +50,6 @@ public class DirectiveTests : IDisposable
     [InlineData("1")]
     public void Directives_may_not_begin_with_(string value)
     {
-        // FIX: (Directives_may_not_begin_with_) consider separate types for subcommands vs top-level directives
         using var kernel = new CompositeKernel();
 
         var addInvalidDirective = () =>

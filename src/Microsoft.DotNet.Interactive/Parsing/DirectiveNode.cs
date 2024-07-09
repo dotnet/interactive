@@ -452,8 +452,6 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 
                 if (currentToken is not { Kind: TokenKind.Whitespace })
                 {
-                    // FIX: (GetCompletionsAtPositionAsync) handle the case where the directive is not found
-
                     if (node.Text.StartsWith("#"))
                     {
                         var completions = GetCompletionsForPartialDirective();
