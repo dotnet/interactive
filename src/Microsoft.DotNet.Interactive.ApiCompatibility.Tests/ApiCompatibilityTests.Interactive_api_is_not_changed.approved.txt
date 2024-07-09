@@ -382,6 +382,8 @@ Microsoft.DotNet.Interactive.Commands
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
     public System.Void SetParent(KernelCommand parent, System.Boolean bubbleEvents = False)
     public System.Void SetToken(System.String token)
+  public abstract class KernelDirectiveCommand : KernelCommand, System.IEquatable<KernelCommand>
+    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors()
   public abstract class LanguageServiceCommand : KernelCommand, System.IEquatable<KernelCommand>
     public System.String Code { get;}
     public Microsoft.DotNet.Interactive.LinePosition LinePosition { get;}
@@ -448,10 +450,14 @@ Microsoft.DotNet.Interactive.Connection
   public abstract class ConnectKernelDirective<TCommand> : Microsoft.DotNet.Interactive.Directives.KernelActionDirective
     public System.String ConnectedKernelDescription { get; set;}
     public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(TCommand connectCommand, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public class FileSystemInfoJsonConverter : Microsoft.DotNet.Interactive.JsonConverter<System.IO.FileSystemInfo>
+  public class DirectoryInfoJsonConverter : Microsoft.DotNet.Interactive.JsonConverter<System.IO.DirectoryInfo>
     .ctor()
-    public System.IO.FileSystemInfo Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, System.IO.FileSystemInfo value, System.Text.Json.JsonSerializerOptions options)
+    public System.IO.DirectoryInfo Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, System.IO.DirectoryInfo value, System.Text.Json.JsonSerializerOptions options)
+  public class FileInfoJsonConverter : Microsoft.DotNet.Interactive.JsonConverter<System.IO.FileInfo>
+    .ctor()
+    public System.IO.FileInfo Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, System.IO.FileInfo value, System.Text.Json.JsonSerializerOptions options)
   public abstract class IKernelCommandAndEventReceiver, System.IObservable<CommandOrEvent>
   public abstract class IKernelCommandAndEventSender
     public System.Uri RemoteHostUri { get;}

@@ -119,10 +119,11 @@ Microsoft.DotNet.Interactive.Journey
     public Outcome Outcome { get;}
     public System.Boolean Passed { get;}
     public System.String Reason { get;}
-  public class StartLesson : Microsoft.DotNet.Interactive.Commands.KernelCommand, System.IEquatable<Microsoft.DotNet.Interactive.Commands.KernelCommand>
+  public class StartLesson : Microsoft.DotNet.Interactive.Commands.KernelDirectiveCommand, System.IEquatable<Microsoft.DotNet.Interactive.Commands.KernelCommand>
     .ctor(System.IO.FileInfo fromFile = null, System.Uri fromUrl = null)
     public System.IO.FileInfo FromFile { get;}
     public System.Uri FromUrl { get;}
+    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors()
 Microsoft.DotNet.Interactive.Journey.Utilities
   public class OrderedTable<T>, ICollection<T>, IEnumerable<T>, System.Collections.IEnumerable
     .ctor()
