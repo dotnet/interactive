@@ -48,9 +48,9 @@ internal class PolyglotSyntaxParser
         _compositeKernelInfo = configuration.KernelInfos.FirstOrDefault(i => i.IsComposite);
     }
 
-    public PolyglotSyntaxTree Parse()
+    public PolyglotSyntaxTree Parse(string? defaultKernelName = null)
     {
-        _currentKernelName = _configuration.DefaultKernelName;
+        _currentKernelName = defaultKernelName ?? _configuration.DefaultKernelName;
         _tokens = new PolyglotLexer(_sourceText, _syntaxTree).Lex();
 
         while (MoreTokens())

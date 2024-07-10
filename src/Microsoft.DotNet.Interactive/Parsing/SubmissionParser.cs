@@ -29,13 +29,13 @@ public class SubmissionParser
     {
         var sourceText = SourceText.From(code);
 
-        var configuration = GetParserConfiguration(defaultKernelName ?? DefaultKernelName());
+        var configuration = GetParserConfiguration();
 
         var parser = new PolyglotSyntaxParser(
             sourceText,
             configuration);
 
-        return parser.Parse();
+        return parser.Parse(defaultKernelName);
     }
 
     public async Task<IReadOnlyList<KernelCommand>> SplitSubmission(SubmitCode submitCode) =>
@@ -426,18 +426,11 @@ public class SubmissionParser
         return kernelName;
     }
 
-    private PolyglotParserConfiguration GetParserConfiguration(string defaultKernelName = null)
+    private PolyglotParserConfiguration GetParserConfiguration()
     {
-        if (_parserConfiguration is not null &&
-            defaultKernelName is not null &&
-            defaultKernelName != DefaultKernelName())
-        {
-            _parserConfiguration = null;
-        }
-
         if (_parserConfiguration is null)
         {
-            _parserConfiguration = new PolyglotParserConfiguration(defaultKernelName ?? DefaultKernelName());
+            _parserConfiguration = new PolyglotParserConfiguration(DefaultKernelName());
 
             _parserConfiguration.KernelInfos.Add(_kernel.KernelInfo);
 

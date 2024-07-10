@@ -385,20 +385,6 @@ public abstract partial class Kernel :
         // only subscribe for the root command 
         var currentCommandOwnsContext = ReferenceEquals(context.Command, command);
 
-        if (command.Parent is null)
-        {
-            if (Scheduler.CurrentValue is { } currentlyExecutingCommand)
-            {
-                // don't parent heterogeneous commands
-                if (currentlyExecutingCommand.GetType() == command.GetType() && 
-                    command.Token is null)
-                {
-                    // FIX: (SendAsync) is this even needed?
-                    command.SetParent(currentlyExecutingCommand);
-                }
-            }
-        }
-
         if (currentCommandOwnsContext)
         {
             disposable.Disposable = context.KernelEvents.Subscribe(PublishEvent);
