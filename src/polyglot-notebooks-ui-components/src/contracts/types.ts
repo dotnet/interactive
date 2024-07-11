@@ -22,4 +22,5 @@ export interface GridLocalization {
     actionsColumnHeader: string;
     kernelNameColumnHeader: string;
     shareTemplate: string;
+    gridCaption: string;
 }
