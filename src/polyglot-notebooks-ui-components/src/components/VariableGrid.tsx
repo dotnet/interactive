@@ -44,7 +44,7 @@ const defaultGridLocalization: GridLocalization = {
     valueColumnHeader: 'Value',
     typeColumnHeader: 'Type',
     kernelNameColumnHeader: 'Kernel',
-    shareTemplate: 'Share value {value-name} from {kernel-name} kernel',
+    shareTemplate: 'Share value "{value-name}" from kernel "{kernel-name}"',
     gridCaption: 'Polyglot notebook varialbes'
 }
 
