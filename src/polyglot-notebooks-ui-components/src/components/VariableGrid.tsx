@@ -45,7 +45,7 @@ const defaultGridLocalization: GridLocalization = {
     typeColumnHeader: 'Type',
     kernelNameColumnHeader: 'Kernel',
     shareTemplate: 'Share value "{value-name}" from kernel "{kernel-name}"',
-    gridCaption: 'Polyglot notebook varialbes'
+    gridCaption: 'Polyglot Notebook variables'
 }
 
 export class VariableGrid extends React.Component<VariableGridProps, VariableGridState> {
