@@ -291,6 +291,7 @@ Microsoft.DotNet.Interactive
     public System.Int32 GetHashCode()
     protected System.Boolean PrintMembers(System.Text.StringBuilder builder)
     public LinePositionSpan SubtractLineOffset(LinePosition offset)
+    public Microsoft.CodeAnalysis.Text.LinePositionSpan ToCodeAnalysisLinePositionSpan()
     public System.String ToString()
   public class NoSuitableKernelException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
