@@ -111,11 +111,11 @@ public class SubmissionParser
                                 break;
 
                             case { Kind: DirectiveNodeKind.Action }:
-                                ClearCommandsAndFail(diagnostics[0]);
+                                ClearCommandsAndFail(diagnostics);
                                 break;
 
                             case { Kind: DirectiveNodeKind.KernelSelector }:
-                                ClearCommandsAndFail(diagnostics[0]);
+                                ClearCommandsAndFail(diagnostics);
                                 break;
                         }
                     }
@@ -151,9 +151,9 @@ public class SubmissionParser
                                         nugetRestoreOnKernels.Add(targetKernelName);
                                     }
                                     else if (directiveNode.GetDiagnostics() is { } ds &&
-                                             ds.FirstOrDefault() is { } d)
+                                             ds.Any())
                                     {
-                                        ClearCommandsAndFail(d);
+                                        ClearCommandsAndFail(ds.ToArray());
                                     }
                                 }
                                 else
@@ -178,7 +178,7 @@ public class SubmissionParser
 
                                     if (directiveCommand is null)
                                     {
-                                        ClearCommandsAndFail(directiveNode.GetDiagnostics().FirstOrDefault());
+                                        ClearCommandsAndFail(directiveNode.GetDiagnostics().ToArray());
                                         break;
                                     }
 
@@ -310,11 +310,11 @@ public class SubmissionParser
             }
         }
 
-        void ClearCommandsAndFail(CodeAnalysis.Diagnostic diagnostic)
+        void ClearCommandsAndFail(params CodeAnalysis.Diagnostic[] diagnostics)
         {
-            if (diagnostic is null)
+            if (diagnostics is null)
             {
-                throw new ArgumentNullException(nameof(diagnostic));
+                throw new ArgumentNullException(nameof(diagnostics));
             }
 
             commands.Clear();
@@ -323,12 +323,12 @@ public class SubmissionParser
                 new AnonymousKernelCommand((_, context) =>
                 {
                     var diagnosticsProduced = new DiagnosticsProduced(
-                        [Diagnostic.FromCodeAnalysisDiagnostic(diagnostic)],
-                        [new FormattedValue(PlainTextFormatter.MimeType, diagnostic.ToString())],
+                        diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToArray(),
+                        [new FormattedValue(PlainTextFormatter.MimeType, diagnostics.ToString())],
                         originalCommand);
 
                     context.Publish(diagnosticsProduced);
-                    context.Fail(originalCommand, message: diagnostic.ToString());
+                    context.Fail(originalCommand, message: string.Join("\n", diagnostics.Select(d => d.ToString())) );
 
                     return Task.CompletedTask;
                 }));
@@ -365,7 +365,7 @@ public class SubmissionParser
 
                 if (diagnostics is { Length: > 0 })
                 {
-                    ClearCommandsAndFail(diagnostics[0]);
+                    ClearCommandsAndFail(diagnostics);
                     return null;
                 }
                 else
@@ -385,33 +385,40 @@ public class SubmissionParser
 
             if (directiveJsonResult.IsSuccessful)
             {
-                var commandEnvelope = KernelCommandEnvelope.Deserialize(directiveJsonResult.Value);
-
-                var directiveCommand = commandEnvelope.Command;
-
-                if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand)
+                try
                 {
-                    var errors = kernelDirectiveCommand.GetValidationErrors().ToArray();
+                    var commandEnvelope = KernelCommandEnvelope.Deserialize(directiveJsonResult.Value);
 
-                    if (errors.Length > 0)
+                    var directiveCommand = commandEnvelope.Command;
+
+                    if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand)
                     {
-                        var diagnostic = directiveNode.CreateDiagnostic(
-                            new(PolyglotSyntaxParser.ErrorCodes.CustomMagicCommandError,
-                                errors[0], DiagnosticSeverity.Error));
-                        directiveNode.AddDiagnostic(diagnostic);
+                        var errors = kernelDirectiveCommand.GetValidationErrors().ToArray();
 
-                        ClearCommandsAndFail(diagnostic);
-                        return null;
+                        if (errors.Length > 0)
+                        {
+                            var diagnostic = directiveNode.CreateDiagnostic(
+                                new(PolyglotSyntaxParser.ErrorCodes.CustomMagicCommandError,
+                                    errors[0], DiagnosticSeverity.Error));
+                            directiveNode.AddDiagnostic(diagnostic);
+
+                            ClearCommandsAndFail(diagnostic);
+                            return null;
+                        }
                     }
-                }
 
-                return directiveCommand;
+                    return directiveCommand;
+                }
+                catch (JsonException exception)
+                {
+                    PolyglotSyntaxParser.AddDiagnosticForJsonException(directiveNode, exception, SourceText.From(code), out var diagnostic);
+                    ClearCommandsAndFail(diagnostic);
+                    return null;
+                }
             }
-            else
-            {
-                ClearCommandsAndFail(directiveJsonResult.Diagnostics[0]);
-                return null;
-            }
+
+            ClearCommandsAndFail(directiveJsonResult.Diagnostics.ToArray());
+            return null;
         }
     }
 
@@ -739,5 +746,10 @@ public class SubmissionParser
     internal void ResetParser()
     {
         _parserConfiguration = null;
+
+        if (_kernel.ParentKernel is {} parentKernel)
+        {
+            parentKernel.SubmissionParser.ResetParser();
+        }
     }
 }

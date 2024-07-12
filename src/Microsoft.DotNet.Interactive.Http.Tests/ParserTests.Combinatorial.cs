@@ -135,7 +135,7 @@ public partial class HttpParserTests
                 {
                     new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection)
                     {
-                        ExtraTriviaRandomizer = new Random(1)
+                        Randomizer = new Random(1)
                     },
                     generationNumber
                 };

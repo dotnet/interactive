@@ -85,7 +85,10 @@ public partial class PolyglotSyntaxParserTests
             };
 
             var markupCode = """
-                #!test --opt @input:{ "fruit": [|c|]herry }
+                
+                #!test --opt  @input:{ "fruit":   [|cherry|] } 
+
+                
                 """;
 
             MarkupTestFile.GetSpan(markupCode, out var code, out var span);
@@ -96,21 +99,18 @@ public partial class PolyglotSyntaxParserTests
 
             diagnostic.GetMessage().Should().Be("Invalid JSON: 'c' is an invalid start of a value.");
 
-            diagnostic
-                .Location
-                .GetLineSpan()
-                .StartLinePosition
-                .Character
-                .Should()
-                .Be(span.Start);
+            var linePositionSpan = diagnostic.Location.GetLineSpan();
 
-            diagnostic
-                .Location
-                .GetLineSpan()
-                .EndLinePosition
-                .Character
-                .Should()
-                .Be(span.End);
+            linePositionSpan.StartLinePosition.Line.Should().Be(1);
+            linePositionSpan.EndLinePosition.Line.Should().Be(1);
+
+            diagnostic.Location.SourceSpan.Start
+                      .Should()
+                      .Be(span.Start);
+
+            diagnostic.Location.SourceSpan.End
+                      .Should()
+                      .Be(span.End);
         }
     }
 }

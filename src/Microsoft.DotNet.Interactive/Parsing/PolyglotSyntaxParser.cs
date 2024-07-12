@@ -11,6 +11,7 @@ using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Directives;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
@@ -221,30 +222,38 @@ internal class PolyglotSyntaxParser
             return ParseTrailingWhitespace(directiveNameNode, stopBeforeNewLine: true);
         }
 
-        DirectiveParameterValueNode ParseParameterValue()
+        DirectiveParameterValueNode? ParseParameterValue()
         {
-            DirectiveParameterValueNode valueNode = new(_sourceText, _syntaxTree);
+            DirectiveParameterValueNode? valueNode = null;
 
             var currentToken = CurrentToken;
 
-            if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "-" } &&
-                CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "-" })
+            if (currentToken is { Kind: TokenKind.NewLine } ||
+                (currentToken is { Kind: TokenKind.Punctuation } and { Text: "-" } &&
+                 CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "-" }))
             {
+                // there is no parameter value
             }
             else if (currentToken is { Kind: TokenKind.Punctuation } and { Text: "{" or "\"" or "[" })
             {
+                valueNode = new(_sourceText, _syntaxTree);
+                
                 ParseJsonValueInto(valueNode);
 
                 ParseTrailingWhitespace(valueNode, stopBeforeNewLine: true);
             }
             else if (currentToken is not ({ Kind: TokenKind.Punctuation } and { Text: "@" }))
             {
+                valueNode = new(_sourceText, _syntaxTree);
+
                 ParsePlainTextInto(valueNode);
 
                 ParseTrailingWhitespace(valueNode, stopBeforeNewLine: true);
             }
             else
             {
+                valueNode = new(_sourceText, _syntaxTree);
+
                 var expressionNode = new DirectiveExpressionNode(_sourceText, _syntaxTree);
 
                 var tokenNameNode = new DirectiveExpressionTypeNode(_sourceText, _syntaxTree);
@@ -268,17 +277,17 @@ internal class PolyglotSyntaxParser
                 if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "\"" or "{" })
                 {
                     ParseJsonValueInto(inputParametersNode);
+                    ParseTrailingWhitespace(inputParametersNode, stopBeforeNewLine: true);
                 }
                 else
                 {
                     ParsePlainTextInto(inputParametersNode);
+                    ParseTrailingWhitespace(inputParametersNode, stopBeforeNewLine: true);
                 }
 
                 expressionNode.Add(inputParametersNode);
 
                 valueNode.Add(expressionNode);
-
-                ParseTrailingWhitespace(inputParametersNode, stopBeforeNewLine: true);
             }
 
             return valueNode;
@@ -376,29 +385,7 @@ internal class PolyglotSyntaxParser
                         // But we infer that if there are curly braces or square brackets in the string, it's likely intended to be JSON.
                         if (ShouldParseAsJson(json))
                         {
-                            var positionInLine = (int)exception.BytePositionInLine! + node.FullSpan.Start;
-
-                            var location = Location.Create(
-                                filePath: string.Empty,
-                                new TextSpan(positionInLine, 1),
-                                new(new(0, positionInLine), new(0, positionInLine + 1)));
-
-                            var message = exception.Message;
-
-                            if (message.IndexOf(" LineNumber", StringComparison.InvariantCulture) is var index and > -1)
-                            {
-                                // Example message to be cleaned up since the character positions won't be accurate for the user's complete text: "Invalid JSON: 'c' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 11." 
-                                message = message.Remove(index);
-                            }
-
-                            var diagnostic = node.CreateDiagnostic(
-                                new(ErrorCodes.InvalidJsonInParameterValue,
-                                    "Invalid JSON: {0}",
-                                    DiagnosticSeverity.Error,
-                                    message),
-                                location);
-
-                            node.AddDiagnostic(diagnostic);
+                            AddDiagnosticForJsonException(node, exception, _sourceText, out _);
                         }
                     }
                 }
@@ -445,7 +432,8 @@ internal class PolyglotSyntaxParser
 
                     parameterNode.Add(parameterNameNode);
 
-                    if (_currentlyScopedParameter?.Flag is not true)
+                    if (MoreTokens() &&
+                        _currentlyScopedParameter?.Flag is not true)
                     {
                         if (ParseParameterValue() is { } parameterValueNode)
                         {
@@ -470,6 +458,48 @@ internal class PolyglotSyntaxParser
             json.Contains("}") ||
             json.Contains("[") ||
             json.Contains("]");
+    }
+
+    internal static void AddDiagnosticForJsonException(
+        SyntaxNode node,
+        JsonException exception,
+        SourceText sourceText,
+        out CodeAnalysis.Diagnostic diagnostic)
+    {
+        var jsonErrorPositionWithinJson = exception.BytePositionInLine!;
+
+        var startIndex = (int)jsonErrorPositionWithinJson + node.Span.Start;
+        var endIndex = node.Span.End;
+        var linePositionSpan = SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(
+            sourceText.ToString(),
+            startIndex,
+            endIndex).ToCodeAnalysisLinePositionSpan();
+
+        var textSpan = new TextSpan(
+            startIndex,
+            Math.Max(endIndex - startIndex - 2, 0));
+
+        var location = Location.Create(
+            filePath: string.Empty,
+            textSpan,
+            linePositionSpan);
+
+        var message = exception.Message;
+
+        if (message.IndexOf(" LineNumber", StringComparison.InvariantCulture) is var index and > -1)
+        {
+            // Example message to be cleaned up since the character positions won't be accurate for the user's complete text: "Invalid JSON: 'c' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 11." 
+            message = message.Remove(index);
+        }
+
+        diagnostic = node.CreateDiagnostic(
+            new(ErrorCodes.InvalidJsonInParameterValue,
+                "Invalid JSON: {0}",
+                DiagnosticSeverity.Error,
+                message),
+            location);
+
+        node.AddDiagnostic(diagnostic);
     }
 
     private bool IsAtStartOfSubcommand(out KernelActionDirective? subcommand, out int numberOfTokensToConsume)
@@ -700,78 +730,6 @@ internal class PolyglotSyntaxParser
             &&
             previousCharacter is '\r' && currentCharacter is '\n';
 
-        private bool IsDirective()
-        {
-            if (GetNextChar() != '#')
-            {
-                return false;
-            }
-
-            switch (GetPreviousChar())
-            {
-                case default(char):
-                case '\n':
-                case '\r':
-                    break;
-                default:
-                    return false;
-            }
-
-            // look ahead to see if this is a directive
-            var textIsLongEnoughToContainDirective =
-                _sourceText.Length >= _textWindow!.End + 2;
-
-            if (!textIsLongEnoughToContainDirective)
-            {
-                return false;
-            }
-
-            if (!IsShebangAndNoFollowingWhitespace(_textWindow.End + 1, '!') &&
-                !IsCharacterThenWhitespace('r') &&
-                !IsCharacterThenWhitespace('i'))
-            {
-                return false;
-            }
-
-            return true;
-
-            bool IsShebangAndNoFollowingWhitespace(int position, char value)
-            {
-                var next = position + 1;
-
-                if (_sourceText[position] != value)
-                {
-                    return false;
-                }
-
-                if (_sourceText.Length <= next)
-                {
-                    return true;
-                }
-
-                return !char.IsWhiteSpace(_sourceText[next]);
-            }
-
-            bool IsCharacterThenWhitespace(char value)
-            {
-                var isChar = _sourceText[_textWindow.End + 1] == value;
-
-                if (!isChar)
-                {
-                    return false;
-                }
-
-                var isFollowedByWhitespace = char.IsWhiteSpace(_sourceText[_textWindow.End + 2]);
-
-                if (!isFollowedByWhitespace)
-                {
-                    return false;
-                }
-
-                return true;
-            }
-        }
-
         private void FlushToken(TokenKind kind)
         {
             if (_textWindow is null || _textWindow.IsEmpty)
@@ -783,17 +741,6 @@ internal class PolyglotSyntaxParser
 
             _textWindow = new TextWindow(_textWindow.End, _sourceText.Length);
         }
-
-        [DebuggerHidden]
-        private char GetNextChar() => _sourceText[_textWindow!.End];
-
-        [DebuggerHidden]
-        private char GetPreviousChar() =>
-            _textWindow!.End switch
-            {
-                0 => default,
-                _ => _sourceText[_textWindow.End - 1]
-            };
 
         [DebuggerHidden]
         private bool More()

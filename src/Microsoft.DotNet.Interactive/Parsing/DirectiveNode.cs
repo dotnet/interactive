@@ -55,7 +55,8 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
                                                   .Where(p => p.NameNode is null
                                                                   ? namedParameter.AllowImplicitName
-                                                                  : p.NameNode?.Text == namedParameter.Name);
+                                                                  : p.NameNode?.Text == namedParameter.Name)
+                                                  .ToArray();
 
                     if (!matchingNodes.Any())
                     {
@@ -64,6 +65,20 @@ internal class DirectiveNode : TopLevelSyntaxNode
                                 "Missing required parameter '{0}'",
                                 DiagnosticSeverity.Error,
                                 namedParameter.Name));
+                    }
+                    else
+                    {
+                        foreach (var parameterNode in matchingNodes)
+                        {
+                            if (parameterNode.ValueNode is null)
+                            {
+                                yield return CreateDiagnostic(
+                                    new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
+                                        "Missing value for required parameter '{0}'",
+                                        DiagnosticSeverity.Error,
+                                        namedParameter.Name));
+                            }
+                        }
                     }
                 }
             }
@@ -330,7 +345,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         void WriteProperty(string propertyName, string value)
         {
-            if (value[0] is '{' or '"' or '[')
+            if (value.Length > 0 && value[0] is '{' or '"' or '[')
             {
                 writer.WritePropertyName(propertyName);
                 writer.WriteRawValue(value);

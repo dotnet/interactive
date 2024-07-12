@@ -156,6 +156,102 @@ i");
               .Be(1);
     }
 
+    [Fact]
+    public async Task Custom_directives_can_be_added_after_submission_parser_has_already_been_initialized()
+    {
+        var csharpKernel = new CSharpKernel();
+        using var compositeKernel = new CompositeKernel
+        {
+            csharpKernel.UseValueSharing()
+                        .UseImportMagicCommand()
+        };
+        compositeKernel.DefaultKernelName = csharpKernel.Name;
+
+        var result = await compositeKernel.SendAsync(
+                         new SubmitCode(
+                             """
+                             #!set --value 123 --name x
+                             """));
+
+        result.Events.Should().NotContainErrors();
+
+        AddFruitDirectiveTo(csharpKernel);
+
+        result = await compositeKernel.SendAsync(
+                     new SubmitCode(
+                         """
+                         #!fruit --varieties [ "Macintosh", "Granny Smith" ] --name "apple"
+                         """));
+
+        result.Events.Should().NotContainErrors();
+
+        result.Events.Should().ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues.Should().ContainSingle(v => v.Value.Contains("apple"));
+    }
+
+    [Fact]
+    public async Task Magic_command_JSON_parsing_errors_provide_an_informative_error_message()
+    {
+        var csharpKernel = new CSharpKernel();
+
+        AddFruitDirectiveTo(csharpKernel);
+
+        var result = await csharpKernel.SendAsync(
+                         new SubmitCode(
+                             """
+                             #!fruit --varieties { } --name "apple"
+                             """));
+
+        result.Events
+              .Should()
+              .ContainSingle<CommandFailed>()
+              .Which
+              .Message
+              .Should()
+              .Contain("error DNI106: Invalid JSON: The JSON value could not be converted to System.String[]. Path: $.varieties |");
+    }
+
+    private static void AddFruitDirectiveTo(Kernel csharpKernel)
+    {
+        var fruitDirective = new KernelActionDirective("#!fruit")
+        {
+            Parameters =
+            [
+                new KernelDirectiveParameter("--name", "The name of the fruit")
+                {
+                    AllowImplicitName = true,
+                    Required = true
+                },
+                new KernelDirectiveParameter("--varieties", "The available varieties of the fruit")
+                {
+                    MaxOccurrences = 1000
+                }
+            ]
+        };
+
+        csharpKernel.AddDirective<SpecifyFruitCommand>(
+            fruitDirective,
+            (command, context) =>
+            {
+                command.Display("text/plain");
+                return Task.CompletedTask;
+            });
+    }
+
+    public class SpecifyFruitCommand : KernelDirectiveCommand
+    {
+        public SpecifyFruitCommand(string name, string[] varieties)
+        {
+            Name = name;
+            Varieties = varieties;
+        }
+
+        public string Name { get; }
+
+        public string[] Varieties { get; }
+    }
+
     public class IncrementCommand : KernelCommand
     {
         public string VariableName { get; set; }

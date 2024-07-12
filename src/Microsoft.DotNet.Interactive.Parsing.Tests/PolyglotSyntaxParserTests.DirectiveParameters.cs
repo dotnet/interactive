@@ -219,8 +219,9 @@ public partial class PolyglotSyntaxParserTests
             }
         }
 
-        [Fact]
-        public void When_there_are_not_enough_occurrences_then_an_error_is_produced()
+        [Theory]
+        [InlineData("#!test")]
+        public void When_a_required_parameter_is_missing_then_an_error_is_produced(string code)
         {
             PolyglotParserConfiguration config = new("csharp")
             {
@@ -234,10 +235,11 @@ public partial class PolyglotSyntaxParserTests
                             {
                                 Parameters =
                                 {
-                                    new("--opt")
+                                    new("--required")
                                     {
                                         Required = true
-                                    }
+                                    },
+                                    new("--not-required")
                                 }
                             }
                         }
@@ -245,31 +247,59 @@ public partial class PolyglotSyntaxParserTests
                 }
             };
 
-            var code = "#!test";
+            var tree = Parse(code, config);
+
+            tree.RootNode
+                .GetDiagnostics()
+                .Should()
+                .ContainSingle()
+                .Which
+                .GetMessage()
+                .Should()
+                .Be("Missing required parameter '--required'");
+        }
+
+        [Theory]
+        [InlineData("#!test --not-required 123 --required")]
+        [InlineData("#!test --required --not-required 123")]
+        public void When_the_value_for_a_required_parameter_is_missing_then_an_error_is_produced(string code)
+        {
+            PolyglotParserConfiguration config = new("csharp")
+            {
+                KernelInfos =
+                {
+                    new("csharp")
+                    {
+                        SupportedDirectives =
+                        {
+                            new KernelActionDirective("#!test")
+                            {
+                                Parameters =
+                                {
+                                    new("--required")
+                                    {
+                                        Required = true
+                                    },
+                                    new("--not-required")
+                                }
+                            }
+                        }
+                    }
+                }
+            };
 
             var tree = Parse(code, config);
 
-            var diagnostic = tree.RootNode.GetDiagnostics().Should().ContainSingle().Which;
-
-            diagnostic.GetMessage().Should().Be("Missing required parameter '--opt'");
-
-            diagnostic
-                .Location
-                .GetLineSpan()
-                .StartLinePosition
-                .Character
+            tree.RootNode
+                .GetDiagnostics()
                 .Should()
-                .Be(0);
-
-            diagnostic
-                .Location
-                .GetLineSpan()
-                .EndLinePosition
-                .Character
+                .ContainSingle()
+                .Which
+                .GetMessage()
                 .Should()
-                .Be(code.Length);
+                .Be("Missing value for required parameter '--required'");
         }
-     
+
         [Theory]
         [InlineData("""
                     "just a JSON string"
@@ -346,7 +376,10 @@ public partial class PolyglotSyntaxParserTests
             };
 
             var markupCode = """
-                #!test --opt { "fruit": [|c|]herry }
+                
+                
+                #!test --opt { "fruit": [|cherry|] }
+                
                 """;
 
             MarkupTestFile.GetSpan(markupCode, out var code, out var span);
@@ -357,21 +390,18 @@ public partial class PolyglotSyntaxParserTests
 
             diagnostic.GetMessage().Should().Be("Invalid JSON: 'c' is an invalid start of a value.");
 
-            diagnostic
-                .Location
-                .GetLineSpan()
-                .StartLinePosition
-                .Character
-                .Should()
-                .Be(span.Start);
+            var linePositionSpan = diagnostic.Location.GetLineSpan();
 
-            diagnostic
-                .Location
-                .GetLineSpan()
-                .EndLinePosition
-                .Character
-                .Should()
-                .Be(span.End);
+            linePositionSpan.StartLinePosition.Line.Should().Be(2);
+            linePositionSpan.EndLinePosition.Line.Should().Be(2);
+
+            diagnostic.Location.SourceSpan.Start
+                      .Should()
+                      .Be(span.Start);
+
+            diagnostic.Location.SourceSpan.End
+                      .Should()
+                      .Be(span.End);
         }
     }
 
