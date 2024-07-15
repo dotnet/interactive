@@ -161,12 +161,12 @@ public static class KernelExtensions
 
     public static T UseValueSharing<T>(this T kernel) where T : Kernel
     {
-        ConfigureAndAddShareMagicCommand(kernel);
-        ConfigureAndAddSetMagicCommand(kernel);
+        ConfigureAndAddShareDirective(kernel);
+        ConfigureAndAddSetDirective(kernel);
         return kernel;
     }
 
-    private static void ConfigureAndAddSetMagicCommand<T>(T destinationKernel) where T : Kernel
+    private static void ConfigureAndAddSetDirective<T>(T destinationKernel) where T : Kernel
     {
         var directive = new KernelActionDirective("#!set")
         {
@@ -245,7 +245,7 @@ public static class KernelExtensions
             SetDirectiveCommand.HandleAsync);
     }
 
-    private static void ConfigureAndAddShareMagicCommand<T>(T kernel) where T : Kernel
+    private static void ConfigureAndAddShareDirective<T>(T kernel) where T : Kernel
     {
         var shareDirective = new KernelActionDirective("#!share")
         {
@@ -284,7 +284,7 @@ public static class KernelExtensions
                 {
                     Description = LocalizationResources.Magics_share_from_Description(),
                     Required = true
-                }.AddCompletions(_ =>
+                }.AddCompletions(ctx =>
                 {
                     if (kernel.ParentKernel is { } composite)
                     {

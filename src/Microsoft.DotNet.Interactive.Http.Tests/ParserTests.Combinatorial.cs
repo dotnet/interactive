@@ -26,14 +26,14 @@ public partial class HttpParserTests
 
         [Theory]
         [MemberData(nameof(GenerateValidRequests))]
-        public void Valid_syntax_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int index)
+        public void Valid_syntax_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
             
             var parseResult = Parse(code);
 
             _output.WriteLine($"""
-                === Generation #{index} ===
+                === Generation #{generation} ===
 
                 {code}
                 """);
@@ -45,14 +45,14 @@ public partial class HttpParserTests
 
         [Theory]
         [MemberData(nameof(GenerateValidRequestsWithExtraTrivia))]
-        public void Valid_syntax_with_extra_trivia_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int index)
+        public void Valid_syntax_with_extra_trivia_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
 
             var parseResult = Parse(code);
 
             _output.WriteLine($"""
-                === Generation #{index} ===
+                === Generation #{generation} ===
 
                 {code}
                 """);
@@ -64,14 +64,14 @@ public partial class HttpParserTests
 
         [Theory]
         [MemberData(nameof(GenerateInvalidRequests))]
-        public void Invalid_syntax_produces_diagnostics(ISyntaxSpec syntaxSpec, int index)
+        public void Invalid_syntax_produces_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
 
             var parseResult = Parse(code);
 
             _output.WriteLine($"""
-                === Generation #{index} ===
+                === Generation #{generation} ===
 
                 {code}
                 """);
@@ -83,7 +83,7 @@ public partial class HttpParserTests
 
         [Theory]
         [MemberData(nameof(GenerateValidRequestsWithExtraTrivia))]
-        public void Code_that_a_user_has_not_finished_typing_round_trips_correctly_and_does_not_throw(ISyntaxSpec syntaxSpec, int index)
+        public void Code_that_a_user_has_not_finished_typing_round_trips_correctly_and_does_not_throw(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
 
@@ -92,7 +92,7 @@ public partial class HttpParserTests
                 var truncatedCode = code[..truncateAfter];
 
                 _output.WriteLine($"""
-                === Generation #{index} truncated after {truncateAfter} characters ===
+                === Generation #{generation} truncated after {truncateAfter} characters ===
 
                 {truncatedCode}
                 """);

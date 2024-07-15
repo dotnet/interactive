@@ -2,8 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
+using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.Events;
+
 namespace Microsoft.DotNet.Interactive.Directives;
 
 public class KernelDirectiveCompletionContext
 {
+    public KernelDirectiveCompletionContext()
+    {
+    }
+
+    public IList<CompletionItem> Completions { get; } = new List<CompletionItem>();
 }

@@ -198,10 +198,7 @@ internal class PolyglotSyntaxParser
                     case DirectiveParameterNode parameterNode when subcommandNode is not null:
                         subcommandNode.Add(parameterNode);
                         break;
-                    case DirectiveParameterValueNode valueNode when subcommandNode is not null:
-                        subcommandNode.Add(valueNode);
-                        break;
-
+                   
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

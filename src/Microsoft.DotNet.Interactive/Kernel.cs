@@ -228,17 +228,11 @@ public abstract partial class Kernel :
         // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
         var absolutePosition = tree.RootNode.SourceText.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
 
-        // don't let abs position drop below 0
-        if (absolutePosition > 0)
+        if (absolutePosition > 0 &&
+            absolutePosition < rootNode.FullSpan.Length &&
+            char.IsWhiteSpace(rootNode.FullText[absolutePosition]))
         {
-            if (absolutePosition >= tree.RootNode.SourceText.Length)
-            {
-                absolutePosition--;
-            }
-            else if (char.IsWhiteSpace(rootNode.FullText[absolutePosition]))
-            {
-                absolutePosition--;
-            }
+            absolutePosition--;
         }
 
         if (rootNode.FindNode(absolutePosition)?.AncestorsAndSelf().OfType<TopLevelSyntaxNode>().FirstOrDefault() is { } node)
@@ -248,9 +242,10 @@ public abstract partial class Kernel :
             var position = command.LinePosition with { Line = offsetNodeLine };
 
             // create new command
-            var offsetLanguageServiceCommand = command.With(
+            var offsetLanguageServiceCommand = command.AdjustForCommandSplit(
                 node,
-                position);
+                position,
+                absolutePosition);
 
             offsetLanguageServiceCommand.TargetKernelName = node.TargetKernelName;
 
@@ -734,13 +729,17 @@ public abstract partial class Kernel :
     {
         if (command.SyntaxNode is DirectiveNode directiveNode)
         {
-            var requestPosition = SourceText.From(command.Code)
-                .Lines
-                .GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
+            var sourceText = SourceText.From(command.Code);
+
+            var linePosition = command.LinePosition.ToCodeAnalysisLinePosition();
+
+            var requestPosition = sourceText
+                                  .Lines
+                                  .GetPosition(linePosition);
 
             var completions = await GetDirectiveCompletionItemsAsync(
                 directiveNode,
-                requestPosition);
+                command.OriginalPosition);
 
             var upToCursor = directiveNode.FullText[..command.LinePosition.Character];
 

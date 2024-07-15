@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Collections;
-using FluentAssertions.Execution;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -38,8 +37,6 @@ public static class LanguageServiceAssertionExtensions
         Kernel kernel)
     {
         var items = new List<CompletionsProduced>();
-
-        // using var _ = new AssertionScope();
 
         foreach (var position in assertions.Subject)
         {

@@ -563,6 +563,7 @@ Microsoft.DotNet.Interactive.Directives
     public System.String ToString()
   public class KernelDirectiveCompletionContext
     .ctor()
+    public System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Events.CompletionItem> Completions { get;}
   public class KernelDirectiveParameter
     .ctor(System.String name, System.String description = null)
     public System.Boolean AllowImplicitName { get; set;}

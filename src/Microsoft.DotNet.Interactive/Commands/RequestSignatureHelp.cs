@@ -17,15 +17,17 @@ public class RequestSignatureHelp : LanguageServiceCommand
 
     internal RequestSignatureHelp(
         TopLevelSyntaxNode syntaxNode,
-        LinePosition linePosition)
-        : base(syntaxNode, linePosition)
+        LinePosition linePosition, 
+        int originalPosition)
+        : base(syntaxNode, linePosition, originalPosition)
     {
     }
 
-    internal override LanguageServiceCommand With(
+    internal override LanguageServiceCommand AdjustForCommandSplit(
         TopLevelSyntaxNode syntaxNode,
-        LinePosition position)
+        LinePosition adjustedPosition,
+        int originalPosition)
     {
-        return new RequestSignatureHelp(syntaxNode, position);
+        return new RequestSignatureHelp(syntaxNode, adjustedPosition, originalPosition);
     }
 }

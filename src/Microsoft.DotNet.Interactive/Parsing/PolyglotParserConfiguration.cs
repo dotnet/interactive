@@ -42,23 +42,6 @@ internal class PolyglotParserConfiguration
             return true;
         }
 
-        if (_kernelInfoByKernelSpecifierDirectiveName!.TryGetValue(currentKernelName, out var kernelInfo))
-        {
-            if (kernelInfo.SupportedDirectives.SingleOrDefault(d => d.Name == directiveName) is { } directive)
-            {
-                if (directive is KernelSpecifierDirective)
-                {
-                    kind = DirectiveNodeKind.KernelSelector;
-                }
-                else
-                {
-                    kind = DirectiveNodeKind.Action;
-                }
-
-                return true;
-            }
-        }
-
         kind = null;
         return false;
     }

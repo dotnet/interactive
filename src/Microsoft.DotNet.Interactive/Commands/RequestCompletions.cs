@@ -17,15 +17,17 @@ public class RequestCompletions : LanguageServiceCommand
 
     internal RequestCompletions(
         TopLevelSyntaxNode syntaxNode,
-        LinePosition linePosition) 
-        : base(syntaxNode, linePosition)
+        LinePosition linePosition, 
+        int originalPosition) 
+        : base(syntaxNode, linePosition, originalPosition)
     {
     }
 
-    internal override LanguageServiceCommand With(
+    internal override LanguageServiceCommand AdjustForCommandSplit(
         TopLevelSyntaxNode syntaxNode,
-        LinePosition position)
+        LinePosition adjustedPosition,
+        int originalPosition)
     {
-        return new RequestCompletions(syntaxNode, position);
+        return new RequestCompletions(syntaxNode, adjustedPosition, originalPosition);
     }
 }

@@ -71,22 +71,24 @@ public class KernelDirectiveParameter
             return [];
         }
 
-        var completions = new List<CompletionItem>();
-
         var context = new KernelDirectiveCompletionContext();
 
         foreach (var source in _completionSources)
         {
-            completions.AddRange(await source(context));
+            var completionItems = await source(context);
+            foreach (var item in completionItems)
+            {
+                context.Completions.Add(item);
+            }
         }
 
-        foreach (var completion in completions)
+        foreach (var completion in context.Completions)
         {
             completion.AssociatedSymbol = this;
             completion.Documentation = Description;
         }
 
-        return completions;
+        return context.Completions.ToArray();
     }
 
     public override string ToString() => Name;
