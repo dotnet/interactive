@@ -5,6 +5,7 @@
   "VariableGridColumnType": "Typ",
   "VariableGridColumnKernel": "Jádro",
   "VariableGridshareTemplate": "Hodnota sdílené složky {value-name} z jádra {kernel-name}",
+  "'VariableGridCaption": "Polyglot Notebook variables",
   "survey.yes": "Ano, otevřít průzkum",
   "survey.no": "Ne",
   "survey.message": "Rádi bychom znali váš názor na poznámkové bloky. Věnujte nám prosím několik minut a pošlete nám zpětnou vazbu k používání vícejazyčných poznámkových bloků."

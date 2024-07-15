@@ -5,6 +5,7 @@
   "VariableGridColumnType": "Tipo",
   "VariableGridColumnKernel": "Kernel",
   "VariableGridshareTemplate": "Compartilhe o valor {value-name} do kernel {kernel-name}",
+  "'VariableGridCaption": "Polyglot Notebook variables",
   "survey.yes": "Sim, leve-me para a pesquisa",
   "survey.no": "Não",
   "survey.message": "Adoraríamos saber seus comentários sobre a experiência com o notebooks! Reserve alguns minutos para enviar comentários sobre como usar os Notebooks em vários idiomas."
