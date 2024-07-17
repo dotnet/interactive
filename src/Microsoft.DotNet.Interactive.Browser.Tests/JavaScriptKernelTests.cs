@@ -97,21 +97,25 @@ console.log(x);", targetKernelName: kernel.Name));
     [FactSkipLinux("Requires Playwright installed")]
     public async Task It_can_share_value_with_another_kernel()
     {
-        using var kernel = await CreateJavaScriptProxyKernelAsync();
-        var csharp = new CSharpKernel();
-        csharp.UseValueSharing();
+        using var javascriptKernel = await CreateJavaScriptProxyKernelAsync();
+        var csharpKernel = new CSharpKernel();
+        csharpKernel.UseValueSharing();
 
         var compositeKernel = new CompositeKernel
         {
-            kernel,
-            csharp
+            javascriptKernel,
+            csharpKernel
         };
 
-        compositeKernel.DefaultKernelName = csharp.Name;
+        compositeKernel.DefaultKernelName = csharpKernel.Name;
 
-        await compositeKernel.SendAsync(new SubmitCode(" x = 123;", targetKernelName: kernel.Name));
-        var result = await compositeKernel.SendAsync(new SubmitCode(@$"#!share x --from {kernel.Name}
-Console.Write(x);", targetKernelName: csharp.Name));
+        await compositeKernel.SendAsync(new SubmitCode("x = 123;", targetKernelName: javascriptKernel.Name));
+        var result = await compositeKernel.SendAsync(new SubmitCode($"""
+                                                                     #!share x --from {javascriptKernel.Name}
+                                                                     System.Console.Write(x);
+                                                                     """, targetKernelName: csharpKernel.Name));
+
+        result.Events.Should().NotContainErrors();
 
         result.Events.Should().ContainSingle<StandardOutputValueProduced>()
             .Which

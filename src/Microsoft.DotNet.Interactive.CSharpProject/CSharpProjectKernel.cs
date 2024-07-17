@@ -27,7 +27,7 @@ public class CSharpProjectKernel :
     IKernelCommandHandler<SubmitCode>
 {
     private readonly IPrebuildFinder _prebuildFinder;
-    private RoslynWorkspaceServer _workspaceServer;
+    private WorkspaceServer _workspaceServer;
     private Workspace _workspace;
     private Buffer _buffer;
 
@@ -66,7 +66,7 @@ public class CSharpProjectKernel :
 
     async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)
     {
-        _workspaceServer = new RoslynWorkspaceServer(_prebuildFinder ?? PrebuildFinder.Create(() => Prebuild.GetOrCreateConsolePrebuildAsync(enableBuild: false)));
+        _workspaceServer = new WorkspaceServer(_prebuildFinder ?? PrebuildFinder.Create(() => Prebuild.GetOrCreateConsolePrebuildAsync(enableBuild: false)));
 
         var extractor = new BufferFromRegionExtractor();
         _workspace = extractor.Extract(command.Project.Files.Select(f => new ProjectFileContent(f.RelativeFilePath, f.Content)).ToArray());
@@ -146,9 +146,9 @@ public class CSharpProjectKernel :
         var result = await _workspaceServer.CompileAsync(request);
 
         var diagnostics = GetDiagnostics(_buffer.Content, result).ToArray();
-        
+
         context.Publish(new DiagnosticsProduced(
-                            diagnostics, 
+                            diagnostics,
                             diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(),
                             command));
 
@@ -193,8 +193,8 @@ public class CSharpProjectKernel :
         var diagnostics = GetDiagnostics(command.Code, result).ToArray();
 
         context.Publish(new DiagnosticsProduced(
-                            diagnostics, 
-                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(), 
+                            diagnostics,
+                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(),
                             command));
     }
 

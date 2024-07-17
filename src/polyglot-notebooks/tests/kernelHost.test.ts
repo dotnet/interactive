@@ -44,7 +44,6 @@ describe("kernelHost",
                                 languageName: undefined,
                                 languageVersion: undefined,
                                 localName: 'vscode',
-                                supportedDirectives: [],
                                 supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
                                 uri: 'kernel://vscode/'
                             },
@@ -56,7 +55,6 @@ describe("kernelHost",
                                 languageName: 'customLanguage',
                                 languageVersion: undefined,
                                 localName: 'test',
-                                supportedDirectives: [],
                                 supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'customCommand' }],
                                 uri: 'kernel://vscode/test'
                             }]

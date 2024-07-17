@@ -17,34 +17,6 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-public static class ValueSharingMessageAssertionExtensions
-{
-    public static void ShouldContainCommMsgWithValues(this SubscribedList<Messaging.Message> messages, params string[] values)
-    {
-        messages
-            .Should()
-            .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.CommMsg)
-            .Which
-            .Content
-            .Should()
-            .BeOfType<CommMsg>()
-            .Which
-            .ShouldContainValues(values);
-    }
-
-    public static void ShouldContainValues(this CommMsg commMsg, params string[] values)
-    {
-        commMsg
-            .Data
-            .Should()
-            .ContainKey("commandOrEvent")
-            .WhoseValue
-            .ToString()
-            .Should()
-            .ContainAll(values);
-    }
-}
-
 public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 {
     private async Task SharedValueShouldBeReturnedBackSame<T>(T expectedValue, string csharpDeclaration, Kernel kernel, TestJupyterConnectionOptions options)

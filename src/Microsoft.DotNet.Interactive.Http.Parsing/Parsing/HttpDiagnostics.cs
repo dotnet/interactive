@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -6,6 +6,7 @@
 using Microsoft.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Xml;
+using HttpDiagnosticInfo = Microsoft.DotNet.Interactive.Parsing.DiagnosticInfo;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 

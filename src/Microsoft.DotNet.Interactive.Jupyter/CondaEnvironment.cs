@@ -18,7 +18,9 @@ internal class CondaEnvironment : IJupyterEnvironment
 
     public const string BASE_ENV = "base";
     public string Name { get; set; }
+
     public static string CondaPath;
+
     private static IReadOnlyCollection<string> _environments = new List<string>();
 
     static CondaEnvironment()

@@ -6,14 +6,12 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Pocket;
-using Pocket.For.Xunit;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
 [Collection(nameof(PrebuildFixture))]
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public abstract class WorkspaceServerTestsCore : IDisposable
 {
     private readonly PrebuildFixture _prebuildFixture;
@@ -24,7 +22,6 @@ public abstract class WorkspaceServerTestsCore : IDisposable
         ITestOutputHelper output)
     {
         _prebuildFixture = prebuildFixture;
-        _disposables.Add(output.SubscribeToPocketLogger());
     }
 
     public void Dispose() => _disposables.Dispose();
@@ -35,8 +32,8 @@ public abstract class WorkspaceServerTestsCore : IDisposable
 
     protected ICodeRunner GetCodeRunner() => CreateRoslynWorkspaceServer();
 
-    private RoslynWorkspaceServer CreateRoslynWorkspaceServer()
+    private WorkspaceServer CreateRoslynWorkspaceServer()
     {
-        return new RoslynWorkspaceServer(PrebuildFinder.Create(() => Task.FromResult(_prebuildFixture.Prebuild)));
+        return new WorkspaceServer(PrebuildFinder.Create(() => Task.FromResult(_prebuildFixture.Prebuild)));
     }
 }

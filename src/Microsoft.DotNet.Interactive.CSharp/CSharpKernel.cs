@@ -63,7 +63,7 @@ public class CSharpKernel :
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - C# Script";
         KernelInfo.Description = """
                                  This Kernel can compile and execute C# code and display the results.
-                                 The language is C# Scripting, a dialect of C# that is used for interactive programming.
+                                 The language is C# Script, a dialect of C# used for interactive programming.
                                  """;
         _workspace = new InteractiveWorkspace();
 
@@ -315,7 +315,6 @@ public class CSharpKernel :
 
             // Publish the compilation diagnostics. This doesn't include the exception.
             var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
-
             
             var formattedDiagnostics =
                 diagnostics
@@ -419,8 +418,10 @@ public class CSharpKernel :
         context.Publish(new CompletionsProduced(completionList, command));
     }
 
-    private async Task<IEnumerable<CompletionItem>> GetCompletionList(string code,
-        int cursorPosition, CancellationToken contextCancellationToken)
+    private async Task<IReadOnlyList<CompletionItem>> GetCompletionList(
+        string code,
+        int cursorPosition, 
+        CancellationToken contextCancellationToken)
     {
         using var _ = new GCPressure(1024 * 1024);
 
@@ -430,7 +431,7 @@ public class CSharpKernel :
 
         if (completionList is null)
         {
-            return Enumerable.Empty<CompletionItem>();
+            return [];
         }
 
         var items = new List<CompletionItem>();
@@ -453,9 +454,8 @@ public class CSharpKernel :
         var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
         var formattedDiagnostics =
             diagnostics
-                .Select(d => d.ToString())
-                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                .ToImmutableArray();
+                .Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString()))
+                .ToArray();
 
         return new DiagnosticsProduced(kernelDiagnostics, formattedDiagnostics, command);
     }

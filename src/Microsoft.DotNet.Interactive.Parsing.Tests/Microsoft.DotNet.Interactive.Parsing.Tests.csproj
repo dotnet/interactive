@@ -1,0 +1,85 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
+    <LangVersion>Latest</LangVersion>
+
+    <!-- Assent isn't strongly signed -->
+    <NoWarn>$(NoWarn);VSTHRD200;CS8002;CS8509</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="TestResults\**" />
+    <Compile Remove="TestProjects\**" />
+    <EmbeddedResource Remove="TestResults\**" />
+    <None Remove="TestResults\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive\KernelCommandInfo.cs" Link="KernelCommandInfo.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\KernelInfo.cs" Link="KernelInfo.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\LinePosition.cs" Link="LinePosition.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\LinePositionSpan.cs" Link="LinePositionSpan.cs" LinkBase="Parsing" />
+    
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\SourceUtilities.cs" Link="SourceUtilities.cs" LinkBase="Parsing" />
+
+    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelActionDirective.cs" Link="KernelActionDirective.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirective.cs" Link="KernelDirective.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirectiveCompletionContext.cs" Link="KernelDirectiveCompletionContext.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirectiveParameter.cs" Link="KernelDirectiveParameter.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelSpecifierDirective.cs" Link="KernelSpecifierDirective.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Directives\NamedSymbolCollection{T}.cs" Link="NamedSymbolCollection{T}.cs" LinkBase="Parsing" />
+
+    <Compile Include="..\Microsoft.DotNet.Interactive\Events\CompletionItem.cs" Link="CompletionItem.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Events\InsertTextFormat.cs" Link="InsertTextFormat.cs" LinkBase="Parsing" />
+
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveBindingDelegate.cs" Link="DirectiveBindingDelegate.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveBindingResult{T}.cs" Link="DirectiveBindingResult{T}.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveExpressionNode.cs" Link="Parsing\DirectiveExpressionNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveExpressionParametersNode.cs" Link="Parsing\DirectiveExpressionParametersNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveExpressionTypeNode.cs" Link="Parsing\DirectiveExpressionTypeNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveNameNode.cs" Link="Parsing\DirectiveNameNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveNode.cs" Link="Parsing\DirectiveNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveNodeKind.cs" Link="Parsing\DirectiveNodeKind.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveParameterNameNode.cs" Link="Parsing\DirectiveParameterNameNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveParameterNode.cs" Link="Parsing\DirectiveParameterNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveParameterValueNode.cs" Link="Parsing\DirectiveParameterValueNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveSubcommandNode.cs" Link="Parsing\DirectiveSubcommandNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\LanguageNode.cs" Link="Parsing\LanguageNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\PolyglotParserConfiguration.cs" Link="Parsing\PolyglotParserConfiguration.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\PolyglotSubmissionNode.cs" Link="Parsing\PolyglotSubmissionNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\PolyglotSyntaxParser.cs" Link="Parsing\PolyglotSyntaxParser.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\PolyglotSyntaxTree.cs" Link="Parsing\PolyglotSyntaxTree.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNode.cs" Link="Parsing\SyntaxNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNodeOrToken.CodeSubmission.cs" Link="Parsing\SyntaxNodeOrToken.CodeSubmission.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNodeOrToken.cs" Link="Parsing\SyntaxNodeOrToken.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxToken.cs" Link="Parsing\SyntaxToken.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxTree.cs" Link="Parsing\SyntaxTree.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TokenKind.cs" Link="Parsing\TokenKind.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TopLevelSyntaxNode.cs" Link="Parsing\TopLevelSyntaxNode.cs" LinkBase="Parsing" />
+
+    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="Utility\MarkupTestFile.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="$(xunitVersion)"  />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
+    <PackageReference Include="JsonDiffPatch.Net" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="xunit.runner.visualstudio" Version="$(xunitrunnervisualstudioVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

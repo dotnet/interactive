@@ -125,7 +125,7 @@ SELECT TOP 100 * FROM Person.Person
             .Which
             .Message
             .Should()
-            .Contain("A kernel with name adventureworks is already present. Use a different value for the --kernel-name option.");
+            .Contain("A kernel with name adventureworks is already present. Use a different value for the --kernel-name parameter.");
     }
 
     [MsSqlFact]
@@ -191,7 +191,6 @@ SELECT TOP 100 * FROM Person.Person
               .Contain("#!sql-adventureworks")
               .And
               .Contain("SELECT TOP 100 * FROM Person.Person");
-
     }
 
     [MsSqlFact]
@@ -577,7 +576,7 @@ select TOP(@testVar) * from sys.databases";
 
         kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), kernel.Name);
 
-        await kernel.SendAsync(new SubmitCode("#!connect mssql @input:connectionString"));
+        await kernel.SendAsync(new SubmitCode("#!connect mssql @input:connectionString --kernel-name abc"));
 
         requestInput.InputTypeHint.Should().Be("connectionstring-mssql");
     }

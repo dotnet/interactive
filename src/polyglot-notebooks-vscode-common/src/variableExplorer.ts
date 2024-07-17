@@ -159,7 +159,8 @@ class WatchWindowTableViewProvider implements vscode.WebviewViewProvider {
                 valueColumnHeader: this.translate('VariableGridColumnValue', 'Value'),
                 typeColumnHeader: this.translate('VariableGridColumnType', 'Type'),
                 kernelNameColumnHeader: this.translate('VariableGridColumnKernel', 'Kernel'),
-                shareTemplate: this.translate('VariableGridshareTemplate', 'Share value {value-name} from {kernel-name} kernel')
+                shareTemplate: this.translate('VariableGridshareTemplate', 'Share value "{value-name}" from kernel "{kernel-name}"'),
+                gridCaption: this.translate('VariableGridCaption', 'Polyglot Notebook variables')
             };
 
             const jsonRows = JSON.parse(connection.Serialize(rows));

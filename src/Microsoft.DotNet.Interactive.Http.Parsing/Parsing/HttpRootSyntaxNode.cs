@@ -1,12 +1,13 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
 
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -14,7 +15,7 @@ using Diagnostic = CodeAnalysis.Diagnostic;
 
 internal class HttpRootSyntaxNode : HttpSyntaxNode
 {
-    internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree? tree) : base(sourceText, tree)
+    internal HttpRootSyntaxNode(SourceText sourceText, HttpSyntaxTree tree) : base(sourceText, tree)
     {
     }
 
@@ -40,7 +41,6 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
 
     public (Dictionary<string, DeclaredVariable> declaredVariables, List<Diagnostic>? diagnostics) TryGetDeclaredVariables(HttpBindingDelegate? bind = null)
     {
-
         var variableAndDeclarationNodes = ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
 
         List<Diagnostic>? diagnostics = null;
@@ -62,9 +62,9 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                 {
                     var value = node.ValueNode.TryGetValue(node =>
                     {
-                        if (foundVariableValues.TryGetValue(node.Text, out string? strinValue))
+                        if (foundVariableValues.TryGetValue(node.Text, out string? stringValue))
                         {
-                            return node.CreateBindingSuccess(strinValue);
+                            return node.CreateBindingSuccess(stringValue);
                         }
                         else if (bind != null)
                         {
@@ -77,8 +77,7 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
 
                     });
 
-                    
-                    if(value?.Value != null)
+                    if (value?.Value != null)
                     {
                         declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, value.Value, value);
                     } 

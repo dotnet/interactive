@@ -130,7 +130,6 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
 
                 if (!string.IsNullOrWhiteSpace(json))
                 {
-
                     var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
                     return commandOrEvent;
                 }

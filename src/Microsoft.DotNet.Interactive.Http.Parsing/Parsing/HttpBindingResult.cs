@@ -17,6 +17,7 @@ internal class HttpBindingResult<T>
     }
 
     public List<Diagnostic> Diagnostics { get; } = new();
+
     public bool IsSuccessful { get; private set; }
 
     public T? Value { get; set; }

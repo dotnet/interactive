@@ -16,10 +16,9 @@ internal class HttpVariableDeclarationAndAssignmentNode : HttpSyntaxNode
 
     internal HttpVariableDeclarationAndAssignmentNode(
         SourceText sourceText,
-        HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
-
 
     public void Add(HttpVariableDeclarationNode node)
     {

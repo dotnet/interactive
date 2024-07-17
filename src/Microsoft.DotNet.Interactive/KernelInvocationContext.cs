@@ -289,8 +289,11 @@ public class KernelInvocationContext : IDisposable
         else
         {
             TryGetChildCommandEvents(command, out var events);
+
             var result = new KernelCommandResult(command);
+
             using var _ = events.Subscribe(result.AddEvent);
+
             return result;
         }
     }
@@ -352,7 +355,7 @@ public class KernelInvocationContext : IDisposable
                 var subscription = replaySubject
                     .Where(e =>
                     {
-                        if (innerCommand.OriginUri is { })
+                        if (innerCommand.OriginUri is not null)
                         {
                             // if executing on behalf of a proxy, don't swallow anything
                             return true;
@@ -363,7 +366,6 @@ public class KernelInvocationContext : IDisposable
                     .Subscribe(e => currentContext._events.OnNext(e));
 
                 currentContext._disposables.Add(subscription);
-                currentContext._disposables.Add(replaySubject);
 
                 return replaySubject;
             });

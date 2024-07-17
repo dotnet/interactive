@@ -33,7 +33,6 @@ describe("kernelInfo", () => {
                 languageName: undefined,
                 languageVersion: undefined,
                 localName: 'root',
-                supportedDirectives: [],
                 supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
                 uri: 'kernel://local/root'
             },
@@ -46,7 +45,6 @@ describe("kernelInfo", () => {
                 languageName: 'JavaScript',
                 languageVersion: undefined,
                 localName: 'child1',
-                supportedDirectives: [],
                 supportedKernelCommands:
                     [{ name: 'RequestKernelInfo' },
                     { name: 'SubmitCode' },
@@ -64,7 +62,6 @@ describe("kernelInfo", () => {
                 languageName: 'JavaScript',
                 languageVersion: undefined,
                 localName: 'child2',
-                supportedDirectives: [],
                 supportedKernelCommands:
                     [{ name: 'RequestKernelInfo' },
                     { name: 'SubmitCode' },
@@ -122,7 +119,6 @@ describe("kernelInfo", () => {
                         languageName: 'JavaScript',
                         languageVersion: undefined,
                         localName: 'child1',
-                        supportedDirectives: [],
                         supportedKernelCommands:
                             [{ name: 'RequestKernelInfo' },
                             { name: 'SubmitCode' },
@@ -188,7 +184,6 @@ describe("kernelInfo", () => {
                             languageName: 'customLanguage',
                             languageVersion: undefined,
                             localName: 'child1',
-                            supportedDirectives: [],
                             supportedKernelCommands:
                                 [{ name: 'RequestKernelInfo' },
                                 { name: 'SubmitCode' },
@@ -238,7 +233,6 @@ describe("kernelInfo", () => {
                             languageName: 'customLanguage',
                             languageVersion: undefined,
                             localName: 'child1',
-                            supportedDirectives: [],
                             supportedKernelCommands: [{ name: 'RequestKernelInfo' }, { name: 'SubmitCode' }],
                             uri: 'kernel://local/root/child1'
                         }
@@ -313,7 +307,6 @@ describe("kernelInfo", () => {
                             languageName: 'customLanguage',
                             languageVersion: undefined,
                             localName: 'child2',
-                            supportedDirectives: [],
                             supportedKernelCommands: [{ name: 'RequestKernelInfo' }],
                             uri: 'kernel://local/root/child2'
                         }

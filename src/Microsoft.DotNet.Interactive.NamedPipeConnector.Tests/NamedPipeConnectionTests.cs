@@ -31,9 +31,11 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
     {
         using var compositeKernel = new CompositeKernel();
 
-        compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
+        compositeKernel.AddKernelConnector(new ConnectNamedPipeDirective());
 
-        compositeKernel.Directives
+        compositeKernel
+            .KernelInfo
+            .SupportedDirectives
             .Should()
             .Contain(c => c.Name == "#!connect");
     }
@@ -49,14 +51,16 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
         return connector.CreateKernelAsync;
     }
 
-    protected override SubmitCode CreateConnectCommand(string localKernelName)
+    protected override SubmitCode CreateSubmitCodeToConnectProxyAs(string localKernelName)
     {
         return new SubmitCode($"#!connect named-pipe --kernel-name {localKernelName} --pipe-name {_pipeName}");
     }
 
-    protected override void AddKernelConnector(CompositeKernel compositeKernel)
+    protected override void AddConnectDirectiveTo(CompositeKernel compositeKernel)
     {
-        compositeKernel.AddKernelConnector(new ConnectNamedPipeCommand());
+        CreateRemoteKernelTopology(_pipeName);
+
+        compositeKernel.AddKernelConnector(new ConnectNamedPipeDirective());
     }
    
     private void CreateRemoteKernelTopology(string pipeName)

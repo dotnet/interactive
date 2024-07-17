@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -18,6 +16,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
@@ -26,6 +25,7 @@ using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
+
 namespace Microsoft.DotNet.Interactive;
 
 public abstract partial class Kernel :
@@ -38,10 +38,11 @@ public abstract partial class Kernel :
     private readonly Subject<KernelEvent> _kernelEvents = new();
     private readonly CompositeDisposable _disposables = new();
     private readonly ConcurrentDictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
+    private readonly ConcurrentDictionary<string, KernelCommandInvocation> _directiveHandlers = new();
     private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
     private readonly ImmediateScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler = new();
     private FrontendEnvironment _frontendEnvironment;
-    private ChooseKernelDirective _chooseKernelDirective;
+    private KernelSpecifierDirective _kernelSpecifierDirective;
     private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
     private KernelInvocationContext _inFlightContext;
     private int _countOfLanguageServiceCommandsInFlight = 0;
@@ -104,15 +105,14 @@ public abstract partial class Kernel :
 
     private KernelInfo InitializeKernelInfo(string name)
     {
-        var supportedKernelCommands = _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)).ToArray();
+        var kernelInfo = new KernelInfo(name);
 
-        var supportedDirectives = Directives.Select(d => new KernelDirectiveInfo(d.Name)).ToArray();
-
-        return new KernelInfo(name, aliases: null)
+        foreach (var commandInfo in _supportedCommandTypes.Select(t => new KernelCommandInfo(t.Name)))
         {
-            SupportedKernelCommands = supportedKernelCommands,
-            SupportedDirectives = supportedDirectives,
-        };
+            kernelInfo.SupportedKernelCommands.Add(commandInfo);
+        }
+
+        return kernelInfo;
     }
 
     internal KernelCommandPipeline Pipeline { get; }
@@ -139,26 +139,26 @@ public abstract partial class Kernel :
         _deferredCommands.Enqueue(command);
     }
 
-    private bool TrySplitCommand(
+    private async Task<(bool successful, IReadOnlyList<KernelCommand> commands)> TrySplitCommand(
         KernelCommand originalCommand,
-        KernelInvocationContext context,
-        out IReadOnlyList<KernelCommand> commands)
+        KernelInvocationContext context)
     {
+        IReadOnlyList<KernelCommand> commands = null;
+
         switch (originalCommand)
         {
-            case SubmitCode { LanguageNode: null } submitCode:
-                commands = SubmissionParser.SplitSubmission(submitCode);
+            case SubmitCode { SyntaxNode: null } submitCode:
+                commands = await SubmissionParser.SplitSubmission(submitCode);
                 break;
 
-            case RequestDiagnostics { LanguageNode: null } requestDiagnostics:
-                commands = SubmissionParser.SplitSubmission(requestDiagnostics);
+            case RequestDiagnostics { SyntaxNode: null } requestDiagnostics:
+                commands = await SubmissionParser.SplitSubmission(requestDiagnostics);
                 break;
 
-            case LanguageServiceCommand { LanguageNode: null } languageServiceCommand:
+            case LanguageServiceCommand { SyntaxNode: null } languageServiceCommand:
                 if (!TryAdjustLanguageServiceCommandLinePositions(languageServiceCommand, context, out var adjustedCommand))
                 {
-                    commands = null;
-                    return false;
+                    return (false, null);
                 }
 
                 commands = new[] { adjustedCommand };
@@ -176,7 +176,7 @@ public abstract partial class Kernel :
             if (handlingKernel is null)
             {
                 context.Fail(command, new CommandNotSupportedException(command.GetType(), this));
-                return false;
+                return (false, null);
             }
 
             if (command.DestinationUri is not null &&
@@ -189,7 +189,7 @@ public abstract partial class Kernel :
 
             command.SchedulingScope ??= handlingKernel.SchedulingScope;
             command.TargetKernelName ??= handlingKernel.Name;
-            
+
             if (!command.Equals(originalCommand))
             {
                 command.SetParent(originalCommand, true);
@@ -202,7 +202,7 @@ public abstract partial class Kernel :
             }
         }
 
-        return true;
+        return (true, commands);
     }
 
     private bool TryAdjustLanguageServiceCommandLinePositions(
@@ -211,51 +211,43 @@ public abstract partial class Kernel :
         out LanguageServiceCommand adjustedCommand)
     {
         var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
-        var rootNode = tree.GetRoot();
-        var sourceText = SourceText.From(command.Code);
+        var rootNode = tree.RootNode;
+        var sourceText = tree.RootNode.SourceText;
         var lines = sourceText.Lines;
+
         if (command.LinePosition.Line < 0
             || command.LinePosition.Line >= lines.Count
             || command.LinePosition.Character < 0
             || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
         {
-            context.Fail(command, message: $"The specified position {command.LinePosition}");
+            context.Fail(command, message: $"The specified position {command.LinePosition} is invalid.");
             adjustedCommand = null;
             return false;
         }
 
         // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
-        var absolutePosition = tree.GetAbsolutePosition(command.LinePosition);
+        var absolutePosition = tree.RootNode.SourceText.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
 
-        // don't let abs position drop below 0
-        if (absolutePosition > 0)
+        if (absolutePosition > 0 &&
+            absolutePosition < rootNode.FullSpan.Length &&
+            char.IsWhiteSpace(rootNode.FullText[absolutePosition]))
         {
-            if (absolutePosition >= tree.Length)
-            {
-                absolutePosition--;
-            }
-            else if (char.IsWhiteSpace(rootNode.Text[absolutePosition]))
-            {
-                absolutePosition--;
-            }
+            absolutePosition--;
         }
 
-        if (rootNode.FindNode(absolutePosition) is LanguageNode node)
+        if (rootNode.FindNode(absolutePosition)?.AncestorsAndSelf().OfType<TopLevelSyntaxNode>().FirstOrDefault() is { } node)
         {
             var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
             var offsetNodeLine = command.LinePosition.Line - nodeStartLine;
             var position = command.LinePosition with { Line = offsetNodeLine };
-            
-            // create new command
-            var offsetLanguageServiceCommand = command.With(
-                node,
-                position);
 
-            offsetLanguageServiceCommand.TargetKernelName = node switch
-            {
-                DirectiveNode => Name,
-                _ => node.Name,
-            };
+            // create new command
+            var offsetLanguageServiceCommand = command.AdjustForCommandSplit(
+                node,
+                position,
+                absolutePosition);
+
+            offsetLanguageServiceCommand.TargetKernelName = node.TargetKernelName;
 
             adjustedCommand = offsetLanguageServiceCommand;
         }
@@ -286,13 +278,55 @@ public abstract partial class Kernel :
 
     public KernelInfo KernelInfo => _kernelInfo;
 
-    public IReadOnlyCollection<Command> Directives => SubmissionParser.Directives;
-
-    public void AddDirective(Command command)
+    public void AddDirective(KernelActionDirective directive, KernelCommandInvocation handler)
     {
-        SubmissionParser.AddDirective(command);
-        KernelInfo.SupportedDirectives.Add(new(command.Name));
+        KernelInfo.SupportedDirectives.Add(directive);
+
+        RegisterDirectiveCommandHandler(directive, handler);
+
+        SubmissionParser.ResetParser();
     }
+
+    public void AddDirective<TCommand>(KernelActionDirective directive, Func<TCommand, KernelInvocationContext, Task> handler)
+        where TCommand : KernelCommand
+    {
+        if (directive.KernelCommandType is null)
+        {
+            directive.KernelCommandType = typeof(TCommand);
+        }
+        else if (directive.KernelCommandType != typeof(TCommand))
+        {
+            throw new ArgumentException($"{nameof(directive)}.{nameof(KernelActionDirective.KernelCommandType)} must be set to {typeof(TCommand)}.");
+        }
+
+        // Don't add subcommands to the KernelInfo
+        if (directive.Parent is null)
+        {
+            KernelInfo.SupportedDirectives.Add(directive);
+        }
+
+        RegisterCommandHandler(handler);
+
+        SubmissionParser.ResetParser();
+
+        KernelCommandEnvelope.RegisterCommand<TCommand>();
+    }
+
+    public virtual KernelSpecifierDirective KernelSpecifierDirective => _kernelSpecifierDirective ??= new($"#!{Name}", Name);
+
+    private void RegisterDirectiveCommandHandler(
+        KernelActionDirective directive, 
+        KernelCommandInvocation handler)
+    {
+        var fullDirectiveName = FullDirectiveName(directive);
+
+        _directiveHandlers[fullDirectiveName] = handler;
+    }
+
+    private static string FullDirectiveName(KernelActionDirective directive) =>
+        directive.Parent is { } parent
+            ? $"{parent.Name} {directive.Name}"
+            : directive.Name;
 
     public void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
         where TCommand : KernelCommand
@@ -304,7 +338,8 @@ public abstract partial class Kernel :
     public void RegisterCommandType<TCommand>()
         where TCommand : KernelCommand
     {
-        // QUESTION: (RegisterCommandType) why is this a separate gesture from RegisterCommand?
+        // FIX: (RegisterCommandType) consider always automatically calling KernelCommandEnvelope.RegisterCommand<TCommand>();
+        // FIX: (RegisterCommandType) why is this a separate gesture from RegisterCommand? Does it even need to be public?
         if (_supportedCommandTypes.Add(typeof(TCommand)))
         {
             var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
@@ -348,18 +383,6 @@ public abstract partial class Kernel :
         // only subscribe for the root command 
         var currentCommandOwnsContext = ReferenceEquals(context.Command, command);
 
-        if (command.Parent is null)
-        {
-            if (Scheduler.CurrentValue is { } currentlyExecutingCommand)
-            {
-                // don't parent heterogeneous commands
-                if (currentlyExecutingCommand.GetType() == command.GetType())
-                {
-                    command.SetParent(currentlyExecutingCommand);
-                }
-            }
-        }
-
         if (currentCommandOwnsContext)
         {
             disposable.Disposable = context.KernelEvents.Subscribe(PublishEvent);
@@ -370,7 +393,7 @@ public abstract partial class Kernel :
             }
         }
 
-        if (TrySplitCommand(command, context, out var commands))
+        if (await TrySplitCommand(command, context) is { successful: true, commands: { } commands })
         {
             SetHandlingKernel(command, context);
 
@@ -513,9 +536,9 @@ public abstract partial class Kernel :
             var undeferScheduledCommands = new UndeferScheduledCommands(
                 context.HandlingKernel.Name,
                 context.Command);
-            
+
             await SendAsync(
-                undeferScheduledCommands, 
+                undeferScheduledCommands,
                 context.CancellationToken);
         }
         catch (TaskCanceledException)
@@ -528,10 +551,10 @@ public abstract partial class Kernel :
         public UndeferScheduledCommands(
             string targetKernelName,
             KernelCommand parent) : base((_, _) =>
-        {
-            Log.Info("Undeferring commands ahead of '{command}'", parent);
-            return Task.CompletedTask;
-        }, targetKernelName: targetKernelName)
+            {
+                Log.Info("Undeferring commands ahead of '{command}'", parent);
+                return Task.CompletedTask;
+            }, targetKernelName: targetKernelName)
         {
             SetParent(parent);
         }
@@ -595,16 +618,19 @@ public abstract partial class Kernel :
             InvokePipelineAndCommandHandler);
     }
 
-    private IReadOnlyList<KernelCommand> GetDeferredCommands(KernelCommand command, string scope)
+    private async Task<IReadOnlyList<KernelCommand>> GetDeferredCommands(KernelCommand command, string scope)
     {
-        if (command.SchedulingScope is null || 
-            !command.SchedulingScope.Contains(SchedulingScope))
+        if (command.SchedulingScope is null)
+        {
+            return Array.Empty<KernelCommand>();
+        }
+
+        if (!command.SchedulingScope.Contains(SchedulingScope))
         {
             return Array.Empty<KernelCommand>();
         }
 
         var deferredCommands = new List<KernelCommand>();
-
         while (_deferredCommands.TryDequeue(out var kernelCommand))
         {
             var currentInvocationContext = KernelInvocationContext.Current;
@@ -612,7 +638,7 @@ public abstract partial class Kernel :
             kernelCommand.SchedulingScope = SchedulingScope;
             kernelCommand.SetParent(currentInvocationContext.Command);
 
-            if (TrySplitCommand(kernelCommand, currentInvocationContext, out var commands))
+            if (await TrySplitCommand(kernelCommand, currentInvocationContext) is { successful: true, commands: { } commands })
             {
                 deferredCommands.AddRange(commands);
             }
@@ -697,22 +723,19 @@ public abstract partial class Kernel :
         _disposables.Add(disposable);
     }
 
-    private Task HandleRequestCompletionsAsync(
+    private async Task HandleRequestCompletionsAsync(
         RequestCompletions command,
         KernelInvocationContext context)
     {
-        if (command.LanguageNode is DirectiveNode directiveNode)
+        if (command.SyntaxNode is DirectiveNode directiveNode)
         {
-            var requestPosition = SourceText.From(command.Code)
-                .Lines
-                .GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
+            var allCompletions = await directiveNode.GetCompletionsAtPositionAsync(command.OriginalPosition);
 
-            var completions = GetDirectiveCompletionItems(
-                directiveNode,
-                requestPosition);
+            var completions = allCompletions
+                              .Distinct(CompletionItemComparer.Instance)
+                              .ToArray();
 
-            var upToCursor =
-                directiveNode.Text[..command.LinePosition.Character];
+            var upToCursor = directiveNode.FullText[..command.LinePosition.Character];
 
             var indexOfPreviousSpace =
                 Math.Max(
@@ -725,58 +748,8 @@ public abstract partial class Kernel :
 
             context.Publish(
                 new CompletionsProduced(
-                    completions, command, resultRange));
+                    completions.ToArray(), command, resultRange));
         }
-
-        return Task.CompletedTask;
-    }
-
-    private IEnumerable<CompletionItem> GetDirectiveCompletionItems(
-        DirectiveNode directiveNode,
-        int requestPosition)
-    {
-        var directiveParsers = new List<Parser>();
-
-        directiveParsers.AddRange(
-            GetDirectiveParsersForCompletion(directiveNode, requestPosition));
-
-        var result = directiveNode.GetDirectiveParseResult();
-        if (result.CommandResult.Command == ChooseKernelDirective)
-        {
-            return result.GetCompletions()
-                .Select(s => SubmissionParser.CompletionItemFor(s.Label, result));
-        }
-
-        var allCompletions = new List<CompletionItem>();
-        var topDirectiveParser = SubmissionParser.GetDirectiveParser();
-        var prefix = topDirectiveParser.Configuration.RootCommand.Name + " ";
-        requestPosition += prefix.Length;
-
-        foreach (var parser in directiveParsers)
-        {
-            var effectiveText = $"{prefix}{directiveNode.Text}";
-
-            var parseResult = parser.Parse(effectiveText);
-
-            var suggestions = parseResult.GetCompletions(requestPosition);
-
-            var completions = suggestions
-                .Select(s => SubmissionParser.CompletionItemFor(s.Label, parseResult))
-                .ToArray();
-
-            allCompletions.AddRange(completions);
-        }
-
-        return allCompletions
-            .Distinct(CompletionItemComparer.Instance)
-            .ToArray();
-    }
-
-    private protected virtual IEnumerable<Parser> GetDirectiveParsersForCompletion(
-        DirectiveNode directiveNode,
-        int requestPosition)
-    {
-        yield return SubmissionParser.GetDirectiveParser();
     }
 
     private void TrySetHandler(
@@ -796,7 +769,7 @@ public abstract partial class Kernel :
                     SetHandler(submitCode, submitCodeHandler);
                     break;
 
-                case (RequestCompletions { LanguageNode: DirectiveNode } rq, _):
+                case (RequestCompletions { SyntaxNode: DirectiveNode } rq, _):
                     rq.Handler = (_, _) => HandleRequestCompletionsAsync(rq, context);
                     break;
 
@@ -841,6 +814,11 @@ public abstract partial class Kernel :
                 case (Cancel cancel, _):
                     break;
 
+                case (DirectiveCommand directiveCommand, _):
+                    TrySetDirectiveHandler(directiveCommand);
+
+                    break;
+
                 default:
                     // for command types defined outside this assembly, we can dynamically assign the handler
                     if (command.GetType().IsPublic)
@@ -859,6 +837,26 @@ public abstract partial class Kernel :
         }
     }
 
+    private bool TrySetDirectiveHandler(DirectiveCommand command)
+    {
+        var fullDirectiveName = command.DirectiveNode.GetInvokedCommandPath();
+
+        if (_directiveHandlers.TryGetValue(fullDirectiveName, out var handler))
+        {
+            command.Handler = handler;
+            return true;
+        }
+
+        if (ParentKernel is { } parent &&
+            parent._directiveHandlers.TryGetValue(fullDirectiveName, out handler))
+        {
+            command.Handler = handler;
+            return true;
+        }
+
+        return false;
+    }
+
     private bool TrySetDynamicHandler(KernelCommand command)
     {
         if (_dynamicHandlers.TryGetValue(command.GetType(), out var handler))
@@ -866,10 +864,9 @@ public abstract partial class Kernel :
             command.Handler = handler;
             return true;
         }
-        else
-        {
-            return false;
-        }
+
+
+        return false;
     }
 
     private static void SetHandler<T>(T command, IKernelCommandHandler<T> handler)
@@ -882,8 +879,6 @@ public abstract partial class Kernel :
         KernelInvocationContext context) => context.HandlingKernel = this;
 
     public void Dispose() => _disposables.Dispose();
-
-    public virtual ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
 
     internal virtual bool AcceptsUnknownDirectives => false;
 

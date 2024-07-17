@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Connection;
@@ -269,7 +270,19 @@ public sealed class ProxyKernel : Kernel
         KernelInfo.LanguageName = kernelInfo.LanguageName;
         KernelInfo.LanguageVersion = kernelInfo.LanguageVersion;
         KernelInfo.UpdateSupportedKernelCommandsFrom(kernelInfo);
-        ((HashSet<KernelDirectiveInfo>)KernelInfo.SupportedDirectives).UnionWith(kernelInfo.SupportedDirectives);
+
+        var existingDirectives = KernelInfo.SupportedDirectives;
+        var incomingDirectives = kernelInfo.SupportedDirectives;
+
+        foreach (var incomingDirective in incomingDirectives)
+        {
+            if (!existingDirectives.Any(d => d.Name == incomingDirective.Name))
+            {
+                incomingDirective.ParentKernelInfo = null;
+                existingDirectives.Add(incomingDirective);
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(kernelInfo.Description))
         {
             KernelInfo.Description = kernelInfo.Description;

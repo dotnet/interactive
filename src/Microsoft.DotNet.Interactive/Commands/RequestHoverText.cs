@@ -16,16 +16,18 @@ public class RequestHoverText : LanguageServiceCommand
     }
 
     internal RequestHoverText(
-        LanguageNode languageNode,
-        LinePosition linePosition)
-        : base(languageNode, linePosition)
+        TopLevelSyntaxNode syntaxNode,
+        LinePosition adjustedPosition,
+        int originalPosition)
+        : base(syntaxNode, adjustedPosition, originalPosition)
     {
     }
 
-    internal override LanguageServiceCommand With(
-        LanguageNode languageNode,
-        LinePosition position)
+    internal override LanguageServiceCommand AdjustForCommandSplit(
+        TopLevelSyntaxNode syntaxNode,
+        LinePosition adjustedPosition,
+        int originalPosition)
     {
-        return new RequestHoverText(languageNode, position);
+        return new RequestHoverText(syntaxNode, adjustedPosition, originalPosition);
     }
 }

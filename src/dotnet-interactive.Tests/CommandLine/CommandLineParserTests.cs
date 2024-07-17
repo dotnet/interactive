@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -117,9 +118,13 @@ public class CommandLineParserTests : IDisposable
 
         using (var kernel = new CompositeKernel())
         {
-            kernel.AddKernelConnector(new ConnectStdIoCommand(new Uri("kernel://test-kernel")));
+            kernel.AddKernelConnector(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
 
-            await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command \"{Dotnet.Path}\" \"{typeof(Program).Assembly.Location}\" stdio --log-path \"{logPath.Directory.FullName}\" --verbose"));
+            string[] args = [Dotnet.Path.FullName, typeof(Program).Assembly.Location, "stdio", "--log-path", logPath.Directory.FullName, "--verbose"];
+
+            var json = JsonSerializer.Serialize(args);
+
+            await kernel.SendAsync(new SubmitCode($"#!connect stdio --kernel-name proxy --command {json}"));
 
             await kernel.SendAsync(new SubmitCode("1+1", "proxy"));
         }
@@ -127,7 +132,7 @@ public class CommandLineParserTests : IDisposable
         // wait for log file to be created
         var logFile = await logPath.Directory.WaitForFile(
             timeout: waitTime,
-            predicate: _file => true); // any matching file is the one we want
+            predicate: _ => true); // any matching file is the one we want
         logFile.Should().NotBeNull($"a log file should have been created at {logFile.FullName}");
 
         // check log file for expected contents
