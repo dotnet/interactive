@@ -60,6 +60,7 @@ internal abstract class SyntaxSpecBase<T> : ISyntaxSpec
 internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
 {
     public HttpRequestNodeSyntaxSpec(
+        HttpNamedRequestNodeSyntaxSpec namedRequest,
         HttpMethodNodeSyntaxSpec method,
         HttpUrlNodeSyntaxSpec url,
         HttpVersionNodeSyntaxSpec version = null,
@@ -67,6 +68,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         HttpBodyNodeSyntaxSpec bodySection = null,
         params Action<HttpRequestNode>[] assertions) : base(assertions)
     {
+        NamedRequest = namedRequest;    
         Method = method;
         Url = url;
 
@@ -78,6 +80,8 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         HeadersSection = headersSection;
         BodySection = bodySection;
     }
+
+    public HttpNamedRequestNodeSyntaxSpec NamedRequest { get; }
 
     public HttpMethodNodeSyntaxSpec Method { get; }
 
@@ -256,6 +260,13 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
 internal class HttpMethodNodeSyntaxSpec : SyntaxSpecBase<HttpMethodNode>
 {
     public HttpMethodNodeSyntaxSpec(string text, params Action<HttpMethodNode>[] assertions) : base(text, assertions)
+    {
+    }
+}
+
+internal class HttpNamedRequestNodeSyntaxSpec : SyntaxSpecBase<HttpNamedRequestNode>
+{
+    public HttpNamedRequestNodeSyntaxSpec(string text, params Action<HttpNamedRequestNode>[] assertions) : base(text, assertions)
     {
     }
 }

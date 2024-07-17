@@ -144,7 +144,7 @@ internal class HttpNamedRequest
                     else if (path[3] == "$")
                     {
 
-                        if (Response.Content.ContentType != "application/json")
+                        if (Response.Content.ContentType == null || !(Response.Content.ContentType.StartsWith("application/json")))
                         {
                             return node.CreateBindingFailure(HttpDiagnostics.InvalidContentType(Response.Content.ContentType ?? "null", "application/json"));
                         }
@@ -234,7 +234,7 @@ internal class HttpNamedRequest
         if (currentIndex + 1 == path.Length)
         {
             var result = responseJSON[path[currentIndex]];
-            return result?.ToJsonString();
+            return result?.ToString();
         }
 
         var newResponseJSON = responseJSON[path[currentIndex + 1]];

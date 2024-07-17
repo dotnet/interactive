@@ -124,7 +124,18 @@ public class HttpKernel :
 
     private Task SetValueAsync(string valueName, object value, Type? declaredType = null)
     {
-        _variables[valueName] = value;
+        if(value is (HttpExpressionNode))
+        {
+            var bindingResult = BindExpressionValues((HttpExpressionNode) value);
+            if(bindingResult.IsSuccessful && bindingResult.Value is not null)
+            {
+                _variables[valueName] = bindingResult.Value;
+            }
+        } 
+        else
+        {
+            _variables[valueName] = value;
+        }
         return Task.CompletedTask;
     }
 
@@ -152,7 +163,7 @@ public class HttpKernel :
             }
         }
 
-        ;
+        
         var diagnostics = httpBoundResults.SelectMany(n => n.Diagnostics).Concat(httpNamedBoundResults.SelectMany(n => n.bindingResult.Diagnostics)).ToArray();
 
         PublishDiagnostics(context, command, diagnostics);
@@ -233,7 +244,7 @@ public class HttpKernel :
                 var namedRequest = new HttpNamedRequest(requestNode, response);
                 if (namedRequest.Name is not null)
                 {
-                    _variables.Add(namedRequest.Name, namedRequest);
+                    _variables[namedRequest.Name] = namedRequest;
                 }
 
             }

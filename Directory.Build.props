@@ -5,6 +5,7 @@
   <Import Project="eng\targets\NuGet.targets" />
 
   <PropertyGroup>
+    <DotNetUseShippingVersions>true</DotNetUseShippingVersions>
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
     <EnableSourceLink>true</EnableSourceLink>
     <PublishWindowsPdb>false</PublishWindowsPdb>
