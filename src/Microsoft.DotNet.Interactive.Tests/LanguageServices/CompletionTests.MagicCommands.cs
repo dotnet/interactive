@@ -1,16 +1,18 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -32,18 +34,30 @@ public partial class CompletionTests
         [InlineData("[|#!|]", "#!csharp,#!who,#!whos")]
         [InlineData("[|#!w|]", "#!who,#!whos")]
         [InlineData("[|#!w|]\n", "#!who,#!whos")]
-        [InlineData("[|#!w|] \n", "#!who,#!whos")]
+        [InlineData("[|#!w|]  \n", "#!who,#!whos")]
         // options
         [InlineData("#!share [||]", "--from")]
-        [InlineData("#!csharp [||]", "--help")]
+        [InlineData("#!connect [||]", "signalr")]
+        [InlineData("""
+                    
+                    
+                    
+                    
+                    
+                    #!share [||]
+                    """, "--from")]
+        [InlineData("""
+                    
+                    #!set --name x [||]
+                    
+                    """, "--value")]
         // subcommands
-        [InlineData("#!connect [||]", "--help,signalr")]
         public async Task Completions_are_available_for_magic_commands(
             string markupCode,
             string expected)
         {
             var kernel = CreateKernel();
-            kernel.AddKernelConnector(new ConnectSignalRCommand());
+            kernel.AddKernelConnector(new ConnectSignalRDirective());
 
             var completions = await markupCode
                 .ParseMarkupCode()
@@ -65,9 +79,9 @@ public partial class CompletionTests
         // commands
         [InlineData("#!sha[||]", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")]
         // options
-        [InlineData("#!share --fr[||]", "--from*ValueSource*The name of the kernel")]
+        [InlineData("#!share --fr[||]", "The name of the kernel to get the value from")]
         // subcommands
-        [InlineData("#!connect signa[||]", "Connects to a kernel using SignalR*--hub-url*The URL of the SignalR hub")]
+        [InlineData("#!connect jup[||]", "Connects a Jupyter kernel as a .NET Interactive subkernel.")]
         public async Task Completion_documentation_is_available_for_magic_commands(
             string markupCode,
             string expected)
@@ -78,14 +92,14 @@ public partial class CompletionTests
             fakeKernel.KernelInfo.SupportedKernelCommands.Add(new(nameof(RequestValueInfos)));
                 
             kernel.Add(fakeKernel);
-            kernel.AddKernelConnector(new ConnectSignalRCommand());
+            kernel.AddKernelConnector(new ConnectJupyterKernelDirective());
 
-            var completions = await markupCode
-                .ParseMarkupCode()
-                .PositionsInMarkedSpans()
-                .Should()
-                .ProvideCompletionsAsync(kernel);
-            completions.Which
+            (await markupCode
+                   .ParseMarkupCode()
+                   .PositionsInMarkedSpans()
+                   .Should()
+                   .ProvideCompletionsAsync(kernel))
+                .Which
                 .Should()
                 .ContainSingle()
                 .Which
@@ -99,7 +113,7 @@ public partial class CompletionTests
         }
 
         [Fact]
-        public async Task Insertion_range_is_correct_for_option_completions()
+        public async Task Insertion_range_is_correct_for_parameter_completions()
         {
             var kernel = CreateCompositeKernel();
 
@@ -119,7 +133,7 @@ public partial class CompletionTests
         }
 
         [Fact]
-        public async Task Insertion_range_is_correct_for_command_completions()
+        public async Task Insertion_range_is_correct_for_directive_completions()
         {
             var kernel = CreateCompositeKernel();
 
@@ -175,7 +189,7 @@ public partial class CompletionTests
         public async Task Inner_symbol_completions_do_not_include_top_level_symbols(string markupCode)
         {
             var kernel = CreateCompositeKernel();
-            kernel.AddKernelConnector(new ConnectSignalRCommand());
+            kernel.AddKernelConnector(new ConnectSignalRDirective());
 
             var completions = await markupCode
                 .ParseMarkupCode()
@@ -207,14 +221,8 @@ public partial class CompletionTests
             compositeKernel.DefaultKernelName = cSharpKernel.Name;
 
             var commandName = "#!hello";
-            compositeKernel.AddDirective(new Command(commandName)
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
-            cSharpKernel.AddDirective(new Command(commandName)
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
+            compositeKernel.AddDirective(new KernelActionDirective(commandName),  (_, _) => Task.CompletedTask);
+            cSharpKernel.AddDirective(new KernelActionDirective(commandName),  (_, _) => Task.CompletedTask);
 
             var result = await compositeKernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
 
@@ -243,15 +251,9 @@ public partial class CompletionTests
 
             var kernelToExtend = kernel.FindKernelByName(defaultLanguage.LanguageName());
 
-            kernelToExtend.AddDirective(new Command("#!directiveOnChild")
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
+            kernelToExtend.AddDirective(new KernelActionDirective("#!directiveOnChild"),  (_, _) => Task.CompletedTask);
 
-            kernel.AddDirective(new Command("#!directiveOnParent")
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
+            kernel.AddDirective(new KernelActionDirective("#!directiveOnParent"),  (_, _) => Task.CompletedTask);
 
             var completions = await markupCode
                 .ParseMarkupCode()
@@ -268,25 +270,6 @@ public partial class CompletionTests
                             .Should()
                             .Contain(expected.Split(","),
                                 because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
-        }
-
-        [Fact]
-        public async Task Magic_command_completion_documentation_does_not_include_root_command_name()
-        {
-            var exeName = RootCommand.ExecutableName;
-
-            var kernel = CreateCompositeKernel();
-
-            var result = await kernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
-
-            result.Events
-                  .Should()
-                  .ContainSingle<CompletionsProduced>()
-                  .Which
-                  .Completions
-                  .Select(i => i.Documentation)
-                  .Should()
-                  .NotContain(i => i.Contains(exeName));
         }
 
         [Fact]

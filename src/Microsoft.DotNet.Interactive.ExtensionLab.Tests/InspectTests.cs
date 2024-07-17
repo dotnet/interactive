@@ -86,35 +86,37 @@ public class A
     [Fact]
     public async Task inspect_with_complex_source_and_release_settings_calls_inspector_and_produces_output()
     {
-        using var kernel = new CompositeKernel() {
+        using var kernel = new CompositeKernel 
+        {
             new CSharpKernel()
         };
 
         await InspectExtension.LoadAsync(kernel);
 
-        var submission = @"
-#!inspect -c Release -k Regular
+        var submission = """
+                           #!inspect --configuration Release --kind Regular
 
-using System;
-public static class A {
-    public static int Sum(ReadOnlySpan<int> source)
-    {
-        int result = 0;
+                           using System;
+                           public static class A {
+                               public static int Sum(ReadOnlySpan<int> source)
+                               {
+                                   int result = 0;
+                           
+                                   for (int i = 0; i < source.Length; i++)
+                                   {
+                                       result += source[i];
+                                   }
+                           
+                                   return result;
+                               }
+                           
+                               static unsafe void Unsafe() {
+                                       int var = 20;
+                                       int* p = &var;
+                               }
+                           }
 
-        for (int i = 0; i < source.Length; i++)
-        {
-            result += source[i];
-        }
-
-        return result;
-    }
-
-    static unsafe void Unsafe() {
-            int var = 20;
-            int* p = &var;
-    }
-}
-";
+                           """;
 
         var result = await kernel.SendAsync(new SubmitCode(submission, "csharp"));
 
@@ -143,14 +145,15 @@ public static class A {
     [InlineData("Debug")]
     public async Task inspect_with_configuration_settings_calls_inspector_and_produces_output(string configuration)
     {
-        using var kernel = new CompositeKernel() {
+        using var kernel = new CompositeKernel
+        {
             new CSharpKernel()
         };
 
         await InspectExtension.LoadAsync(kernel);
 
         var submission = @$"
-#!inspect -c {configuration}
+#!inspect --configuration {configuration}
 
 public class A
 {{
@@ -176,9 +179,12 @@ public class A
             .Should()
             .ContainAll(
                 "Tabbed view ",
-                "[assembly: CompilationRelaxations(8)]", "[assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]",
-                "private auto ansi ", "instance string get_P1 () cil managed",
-                "ctor()", "get_P1()");
+                "[assembly: CompilationRelaxations(8)]", 
+                "[assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]",
+                "private auto ansi ", 
+                "instance string get_P1 () cil managed",
+                "ctor()", 
+                "get_P1()");
     }
 
     [Theory(Skip = "Utility will be determined later")]

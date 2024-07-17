@@ -9,5 +9,6 @@
         <FixtureName>Microsoft.DotNet.Interactive.Browser.Tests.JavaScriptKernelTests</FixtureName>
       </FixtureTestSelector>
     </IgnoredTests>
+    <IgnoreThisComponentCompletely>True</IgnoreThisComponentCompletely>
   </Settings>
 </ProjectConfiguration>

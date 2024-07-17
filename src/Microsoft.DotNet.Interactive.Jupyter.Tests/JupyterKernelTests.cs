@@ -14,6 +14,7 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Tags;
 using Xunit;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
@@ -21,31 +22,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 public class JupyterKernelTests : JupyterKernelTestBase
 {
-    [Fact]
-    public async Task can_get_help_for_connect_jupyter()
-    {
-        var kernel = CreateCompositeKernelAsync(new JupyterHttpKernelConnectionOptions(), new JupyterLocalKernelConnectionOptions());
-        
-        var command = new SubmitCode("#!connect jupyter --help");
-
-        var result = await kernel.SendAsync(command);
-
-        result.Events
-            .Should()
-            .NotContain(e => e is CommandFailed);
-
-        var outputs = result.Events.OfType<StandardOutputValueProduced>();
-
-        outputs.Should().HaveCount(1);
-
-        string.Join("",
-                outputs
-                    .SelectMany(e => e.FormattedValues.Select(v => v.Value))
-            ).ToLowerInvariant()
-            .Should()
-            .ContainAll("--kernel-spec", "--init-script", "--url", "--token", "in preview");
-    }
-
     [Fact]
     public async Task variable_sharing_not_enabled_for_unsupported_languages()
     {
@@ -120,22 +96,25 @@ public class JupyterKernelTests : JupyterKernelTestBase
     }
 
     [Fact]
-    public void can_get_a_list_of_kernelspecs_from_completions()
+    public async Task can_get_a_list_of_kernelspecs_from_completions()
     {
         var specs = new List<KernelSpec>
         {
-            new KernelSpec() { Name = "testKernelSpec", DisplayName = "Test Kernel Spec", Language = "testLanguage" },
-            new KernelSpec() { Name = "sampleSpec", DisplayName = "Sample Spec", Language = "sampleLanguage" }
+            new() { Name = "testKernelSpec", DisplayName = "Test Kernel Spec", Language = "testLanguage" },
+            new() { Name = "sampleSpec", DisplayName = "Sample Spec", Language = "sampleLanguage" }
         };
 
         var options = new TestJupyterConnectionOptions(new TestJupyterConnection(new TestJupyterKernelConnection(null), specs));
-        var jupyterKernelCommand = new ConnectJupyterKernelCommand();
+        var jupyterKernelCommand = new ConnectJupyterKernelDirective();
         jupyterKernelCommand.AddConnectionOptions(options);
 
-        var kernelSpecCompletions = jupyterKernelCommand.KernelSpecName.GetCompletions();
+        var kernelSpecCompletions = await jupyterKernelCommand.KernelSpecNameParameter.GetValueCompletionsAsync();
         kernelSpecCompletions
             .Should()
-            .BeEquivalentTo(specs.Select(s => new System.CommandLine.Completions.CompletionItem(s.Name)));
+            .BeEquivalentTo(specs.Select(s => new CompletionItem(s.Name, WellKnownTags.Parameter)
+            {
+                Documentation = "The kernel spec to connect to"
+            }));
     }
 
     [Fact]

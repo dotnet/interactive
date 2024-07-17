@@ -125,8 +125,8 @@ document.head.insertAdjacentHTML('afterbegin', `<style>${notebookCSS}</style>`);
 
             context.DisplayAs($@"
 Added browser kernels:
-* `{htmlKernel.ChooseKernelDirective.Name}`: Render HTML in an external browser
-* `{jsKernel.ChooseKernelDirective.Name}`: Run JavaScript in the same external browser",
+* `{htmlKernel.KernelSpecifierDirective.Name}`: Render HTML in an external browser
+* `{jsKernel.KernelSpecifierDirective.Name}`: Run JavaScript in the same external browser",
                               "text/markdown");
         }
         else

@@ -49,7 +49,6 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
     [Fact]
     public async Task new_commands_issued_after_cancel_are_executed()
     {
-        // todo: this test is flaky and timeouts in CI
         while (true)
         {
             using var kernel = CreateKernel()

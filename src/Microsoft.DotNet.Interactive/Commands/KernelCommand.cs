@@ -3,17 +3,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
+[DebuggerStepThrough]
 public abstract class KernelCommand : IEquatable<KernelCommand>
 {
     private KernelCommand _parent;
-    private string _token;
     private List<KernelCommand> _childCommandsToBubbleEventsFrom;
     private KernelCommand _selfOrFirstUnhiddenAncestor;
 
@@ -26,7 +26,10 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     [JsonIgnore] 
     public KernelCommandInvocation Handler { get; set; }
 
-    [JsonIgnore] public KernelCommand Parent => _parent;
+    [JsonIgnore] 
+    public KernelCommand Parent => _parent;
+
+    internal string Token { get; private set; }
 
     public void SetParent(KernelCommand parent, bool bubbleEvents = false)
     {
@@ -35,9 +38,9 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
             throw new ArgumentNullException(nameof(parent));
         }
 
-        if (_token is not null &&
-            parent._token is not null && 
-            GetRootToken(_token) != GetRootToken(parent._token))
+        if (Token is not null &&
+            parent.Token is not null && 
+            GetRootToken(Token) != GetRootToken(parent.Token))
         {
             throw new InvalidOperationException("Token of parented command cannot be changed.");
         }
@@ -46,7 +49,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         {
             _parent = parent;
 
-            if (_parent._token is null)
+            if (_parent.Token is null)
             {
                 _parent.GetOrCreateToken();
             }
@@ -64,6 +67,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         }
     }
 
+    [JsonInclude]
     public string TargetKernelName { get; internal set; }
 
     internal static KernelCommand None => new NoCommand();
@@ -74,11 +78,11 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
     public void SetToken(string token)
     {
-        if (_token is null)
+        if (Token is null)
         {
-            _token = token;
+            Token = token;
         }
-        else if (token != _token)
+        else if (token != Token)
         {
             throw new InvalidOperationException("Command token cannot be changed.");
         }
@@ -93,20 +97,20 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
     public string GetOrCreateToken()
     {
-        if (_token is not null)
+        if (Token is not null)
         {
-            return _token;
+            return Token;
         }
 
         if (_parent is { })
         {
-            _token = $"{_parent.GetOrCreateToken()}.{_parent.GetNextChildToken()}";
-            return _token;
+            Token = $"{_parent.GetOrCreateToken()}.{_parent.GetNextChildToken()}";
+            return Token;
         }
 
-        _token = CreateRootToken();
+        Token = CreateRootToken();
 
-        return _token;
+        return Token;
 
         static string CreateRootToken()
         {
@@ -129,9 +133,6 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
 
     [JsonIgnore] 
     internal bool? ShouldPublishCompletionEvent { get; set; }
-
-    [JsonIgnore]
-    public ParseResult KernelChooserParseResult { get; internal set; }
 
     [JsonIgnore] public CommandRoutingSlip RoutingSlip { get; }
 
@@ -196,9 +197,9 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
             return true;
         }
 
-        if (_token is not null && other?._token is not null)
+        if (Token is not null && other?.Token is not null)
         {
-            var tokensAreEqual = _token == other._token;
+            var tokensAreEqual = Token == other.Token;
 
             return tokensAreEqual;
         }

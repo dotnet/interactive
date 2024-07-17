@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Parsing;
@@ -17,24 +17,30 @@ public abstract class LanguageServiceCommand : KernelCommand
         LinePosition = linePosition;
     }
         
-    protected LanguageServiceCommand(
-        LanguageNode languageNode,
-        LinePosition linePosition)
-        : base(languageNode.Name)
+    private protected LanguageServiceCommand(
+        TopLevelSyntaxNode syntaxNode,
+        LinePosition linePosition,
+        int originalPosition)
+        : base(syntaxNode.TargetKernelName)
     {
-        Code = languageNode.Text;
-        LanguageNode = languageNode;
+        Code = syntaxNode.Text;
+        SyntaxNode = syntaxNode;
         LinePosition = linePosition;
-        SchedulingScope = languageNode.CommandScope;
+        OriginalPosition = originalPosition;
+        SchedulingScope = SchedulingScope.Parse(syntaxNode.CommandScope);
+
     }
 
     public string Code { get; protected set; }
 
     public LinePosition LinePosition { get; protected set; }
 
-    internal abstract LanguageServiceCommand With(
-        LanguageNode languageNode,
-        LinePosition position);
+    internal int OriginalPosition { get; }
 
-    internal LanguageNode LanguageNode { get; }
+    internal abstract LanguageServiceCommand AdjustForCommandSplit(
+        TopLevelSyntaxNode syntaxNode,
+        LinePosition adjustedPosition,
+        int originalPosition);
+
+    internal TopLevelSyntaxNode SyntaxNode { get; }
 }

@@ -83,7 +83,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
             case "Property": return vscode.CompletionItemKind.Property;
             case "Structure": return vscode.CompletionItemKind.Struct;
             case "Value": return vscode.CompletionItemKind.Value;
-            default: return vscode.CompletionItemKind.Text; // what's an appropriate default?
+            default: return vscode.CompletionItemKind.Value; // what's an appropriate default?
         }
     }
 }

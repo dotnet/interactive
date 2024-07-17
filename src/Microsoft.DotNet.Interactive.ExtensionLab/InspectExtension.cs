@@ -1,14 +1,13 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab.Inspector;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -19,36 +18,47 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab;
 
 public class InspectExtension
 {
-    private const string InspectCommand = "inspect";
     public static Task LoadAsync(Kernel kernel)
     {
-        var inspect = new Command($"#!{InspectCommand}", "Inspect the following code in the submission")
+        var inspect = new KernelActionDirective("#!inspect")
         {
-            new Option<OptimizationLevel>(
-                new [] {"-c", "--configuration"},
-                getDefaultValue: () => OptimizationLevel.Debug,
-                description: "Build configuration to use. Debug or Release."),
-            new Option<SourceCodeKind>(
-                new [] {"-k", "--kind"},
-                getDefaultValue: () => SourceCodeKind.Script,
-                description: "Source code kind. Script or Regular."),
+            Description = "Inspect the following code in the submission"
         };
 
-        inspect.Handler = CommandHandler.Create((OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context) => Inspect(configuration, kind, platform, context));
+        inspect.Parameters.Add(new KernelDirectiveParameter("--configuration")
+                                   {
+                                       Description = "Build configuration to use. Debug or Release."
+                                   }.AddCompletions(_ => [ "Debug", "Release" ]));
+        inspect.Parameters.Add(new KernelDirectiveParameter("--kind")
+                                   {
+                                       Description = "Source code kind. Script or Regular."
+                                   });
 
-        kernel.AddDirective(inspect);
+        kernel.AddDirective<InspectCode>(
+            inspect,
+            (command, context) =>
+            {
+                Inspect(command.Configuration, command.Kind, command.Platform, context);
+                return Task.CompletedTask;
+            });
 
         KernelInvocationContext.Current?.Display(
-            new HtmlString(@"<details><summary>Inspect code compilation details using the <code>#!inspect</code> magic command.</summary>
-    <p>The <code>#!inspect</code> magic command allows you to see the C# decompilation, IL, and JIT Asm for the code in a C# cell.</p>
-    <img src=""https://user-images.githubusercontent.com/547415/109560515-d5749a00-7a90-11eb-9fa3-51b737345bb4.png"" width=""75%"" />
-    </details>"),
+            new HtmlString("""
+                           <details><summary>Inspect code compilation details using the <code>#!inspect</code> magic command.</summary>
+                               <p>The <code>#!inspect</code> magic command allows you to see the C# decompilation, IL, and JIT Asm for the code in a C# cell.</p>
+                               <img src="https://user-images.githubusercontent.com/547415/109560515-d5749a00-7a90-11eb-9fa3-51b737345bb4.png" width="75%" />
+                               </details>
+                           """),
             "text/html");
 
         return Task.CompletedTask;
     }
 
-    private static void Inspect(OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context)
+    private static void Inspect(
+        OptimizationLevel configuration, 
+        SourceCodeKind kind, 
+        Platform platform, 
+        KernelInvocationContext context)
     {
         if (context.Command is not SubmitCode command)
         {
@@ -56,7 +66,7 @@ public class InspectExtension
         }
 
         // TODO: Is there a proper way of cleaning up code from the magic commands?
-        var code = Regex.Replace(command.Code, $"#!{InspectCommand}(.*)", "");
+        var code = Regex.Replace(command.Code, "#!inspect(.*)", "");
 
         var options = new InspectionOptions
         {

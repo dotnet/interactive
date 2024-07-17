@@ -1,21 +1,17 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Data.SqlClient.Server;
+using Microsoft.DotNet.Interactive.Directives;
 using System;
-using System.Collections.Generic;
-using System.CommandLine.Parsing;
 using System.Data;
 using System.Threading.Tasks;
-
-using Microsoft.Data.SqlClient.Server;
-using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
 internal class MsSqlKernel : ToolsServiceKernel
 {
     private readonly string _connectionString;
-    private ChooseMsSqlKernelDirective _chooseKernelDirective;
 
     internal MsSqlKernel(
         string name,
@@ -43,8 +39,17 @@ internal class MsSqlKernel : ToolsServiceKernel
         }
     }
 
-    public override ChooseMsSqlKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= new(this);
+    public override KernelSpecifierDirective KernelSpecifierDirective
+    {
+        get
+        {
+            var directive = base.KernelSpecifierDirective;
 
+            directive.Parameters.Add(new("--name"));
+
+            return directive;
+        }
+    }
 
     protected override string CreateVariableDeclaration(string name, object value)
     {
@@ -98,15 +103,5 @@ internal class MsSqlKernel : ToolsServiceKernel
         }
 
         return true;
-    }
-
-    protected override void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
-    {
-        var chooser = ChooseKernelDirective;
-        var name = commandKernelChooserParseResult?.GetValueForOption(chooser.NameOption);
-        if (!string.IsNullOrWhiteSpace(name))
-        {
-            StoreQueryResultSet(name, results);
-        }
     }
 }

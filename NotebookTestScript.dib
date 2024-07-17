@@ -100,7 +100,7 @@ console.log(jsKernel.name);
 # Execute the next cell. After execution, the output immediately below should be:
 
 ```
-[".NET","csharp","fsharp","html","http","javascript","kql","mermaid","pwsh","sql","value","vscode","webview"]
+[".NET","csharp","fsharp","html","http","javascript","kql","mermaid","pwsh","sql","value","webview"]
 ```
 
 #!javascript
@@ -140,11 +140,9 @@ await kernel.root.send(command);
 
 # Execute the next cell, the output should be displayed as HTML like so:
 
-| Name | Salary |
- :---|---: |
-| Developer | 42 |
+<details class="dni-treeview" open=""><summary><span class="dni-code-hint"><code>{ Name = Developer, Salary = 42 }</code></span></summary><div><table><thead><tr></tr></thead><tbody><tr><td>Name</td><td><div class="dni-plaintext"><pre>Developer</pre></div></td></tr><tr><td>Salary</td><td><div class="dni-plaintext"><pre>42</pre></div></td></tr></tbody></table></div></details>
 
-change the renderer using the `...` element, choose the json and the output should look like so:
+Next, change the renderer using the `...` element, choose the json and the output should look like so:
 
 ``` json
 {"Name":"Developer","Salary":42}
@@ -153,7 +151,7 @@ change the renderer using the `...` element, choose the json and the output shou
 #!csharp
 
 var value = new { Name = "Developer", Salary = 42 };
-value.Display("application/json", "text/html");
+value.Display("text/html", "application/json");
 
 #!markdown
 

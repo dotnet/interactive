@@ -42,7 +42,7 @@ public class SQLiteKernel :
         KernelInvocationContext context)
     {
         await using var connection = OpenConnection();
-        if (connection.State != ConnectionState.Open)
+        if (connection.State is not ConnectionState.Open)
         {
             await connection.OpenAsync();
         }
@@ -112,7 +112,7 @@ public class SQLiteKernel :
 
     public static void AddSQLiteKernelConnectorTo(CompositeKernel kernel)
     {
-        kernel.AddKernelConnector(new ConnectSQLiteCommand());
+        kernel.AddKernelConnector(new ConnectSQLiteDirective());
 
         KernelInvocationContext.Current?.Display(
             new HtmlString(@"<details><summary>Query SQLite databases.</summary>

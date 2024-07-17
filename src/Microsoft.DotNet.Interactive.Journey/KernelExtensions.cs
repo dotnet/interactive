@@ -3,17 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.NamingConventionBinder;
-using System.CommandLine.Parsing;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Journey;
@@ -24,8 +19,8 @@ public static class KernelExtensions
 
     public static CompositeKernel UseModelAnswerValidation(this CompositeKernel kernel)
     {
-        var modelAnswerCommand = new Command(_modelAnswerCommandName);
-        kernel.AddDirective(modelAnswerCommand);
+        var modelAnswerCommand = new KernelActionDirective(_modelAnswerCommandName);
+        kernel.AddDirective(modelAnswerCommand, (_, _) => Task.CompletedTask);
         return kernel;
     }
 
@@ -35,53 +30,30 @@ public static class KernelExtensions
     {
         kernel.Bootstrapping();
 
-        var fromUrlOption = new Option<Uri>(
-            "--from-url",
-            LocalizationResources.Magics_model_answer_from_url_Description());
-
-        var fromFileOption = new Option<FileInfo>(
-            "--from-file",
-            description: LocalizationResources.Magics_model_answer_from_file_Description(),
-            parseArgument: result =>
-            {
-                var filePath = result.Tokens.Single().Value;
-                var fromUrlResult = result.FindResultFor(fromUrlOption);
-                if (fromUrlResult is not null)
-                {
-                    result.ErrorMessage = LocalizationResources.Magics_model_answer_from_file_ErrorMessage(fromUrlResult.Token.Value, (result.Parent as OptionResult).Token.Value);
-                    return null;
-                }
-
-                if (!File.Exists(filePath))
-                {
-                    result.ErrorMessage = LocalizationResources.FileDoesNotExist(filePath);
-                    return null;
-                }
-
-                return new FileInfo(filePath);
-            });
-
-        var startCommand = new Command("#!start-lesson")
+        var fromUrlOption = new KernelDirectiveParameter("--from-url")
         {
-            fromFileOption,
-            fromUrlOption
+            Description = LocalizationResources.Magics_model_answer_from_url_Description()
         };
 
-        startCommand.Handler = CommandHandler.Create(StartCommandHandler);
+        var fromFileOption = new KernelDirectiveParameter("--from-file")
+        {
+            Description = LocalizationResources.Magics_model_answer_from_file_Description()
+        };
 
-        kernel.AddDirective(startCommand);
+        var directive = new KernelActionDirective("#!start-lesson");
+        directive.Parameters.Add(fromFileOption);
+        directive.Parameters.Add(fromUrlOption);
+
+        kernel.AddDirective<StartLesson>(directive, StartCommandHandler);
 
         return kernel;
 
-        async Task StartCommandHandler(InvocationContext cmdlLineContext)
+        async Task StartCommandHandler(StartLesson command, KernelInvocationContext context)
         {
-            var fromFile = cmdlLineContext.ParseResult.GetValueForOption(fromFileOption);
-            var fromUrl = cmdlLineContext.ParseResult.GetValueForOption(fromUrlOption);
-
-            var document = fromFile switch
+            var document = command.FromFile switch
             {
-                { } => NotebookLessonParser.ReadFileAsInteractiveDocument(fromFile, kernel),
-                _ => await NotebookLessonParser.LoadNotebookFromUrl(fromUrl, httpClient)
+                not null => NotebookLessonParser.ReadFileAsInteractiveDocument(command.FromFile, kernel),
+                _ => await NotebookLessonParser.LoadNotebookFromUrl(command.FromUrl, httpClient)
             };
 
             NotebookLessonParser.Parse(document, out var lessonDefinition, out var challengeDefinitions);
@@ -214,4 +186,3 @@ public static class KernelExtensions
         }
     }
 }
-

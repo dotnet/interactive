@@ -4,6 +4,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
@@ -16,11 +17,14 @@ public static class Serializer
             WriteIndented = false,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            PropertyNameCaseInsensitive = true
         };
         JsonSerializerOptions.Converters.Add(new DataDictionaryConverter());
         JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-        JsonSerializerOptions.Converters.Add(new FileSystemInfoJsonConverter());
+        JsonSerializerOptions.Converters.Add(new DirectoryInfoJsonConverter());
+        JsonSerializerOptions.Converters.Add(new FileInfoJsonConverter());
+        JsonSerializerOptions.Converters.Add(new KernelDirectiveConverter());
     }
 
     public static JsonSerializerOptions JsonSerializerOptions { get; }

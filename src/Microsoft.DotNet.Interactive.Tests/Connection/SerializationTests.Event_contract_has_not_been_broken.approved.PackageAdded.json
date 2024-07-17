@@ -20,6 +20,7 @@
     "commandType": "SubmitCode",
     "command": {
       "code": "#r \"nuget:ThePackage,1.2.3\"",
+      "parameters": {},
       "targetKernelName": null,
       "originUri": null,
       "destinationUri": null

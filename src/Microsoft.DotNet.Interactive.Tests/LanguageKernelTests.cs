@@ -14,6 +14,7 @@ using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -687,19 +688,18 @@ $${languageSpecificCode}
     {
         var kernel = CreateKernel(language);
         var handlerInvoked = false;
-        kernel.AddDirective(new Command("#!custom")
-        {
-            Handler = CommandHandler.Create(() =>
+        kernel.AddDirective(new KernelActionDirective("#!custom"), (command, context) =>
             {
                 handlerInvoked = true;
-            })
-        });
-        var fullCode = $@"
+                return Task.CompletedTask;
+            });
 
-#!time
-#!custom
-$${languageSpecificCode}
-";
+        var fullCode = $"""
+                        #!time
+                        #!custom
+                        $${languageSpecificCode}
+
+                        """;
 
         MarkupTestFile.GetLineAndColumn(fullCode, out var code, out var line, out var _column);
 

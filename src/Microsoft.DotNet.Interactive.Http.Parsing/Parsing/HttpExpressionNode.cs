@@ -4,16 +4,17 @@
 #nullable enable
 
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 internal class HttpExpressionNode : HttpSyntaxNode
 {
-    internal HttpExpressionNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpExpressionNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
-    public HttpBindingResult<object?> CreateBindingFailure(HttpDiagnosticInfo diagnosticInfo) =>
+    public HttpBindingResult<object?> CreateBindingFailure(DiagnosticInfo diagnosticInfo) =>
         HttpBindingResult<object?>.Failure(CreateDiagnostic(diagnosticInfo));
 
     public HttpBindingResult<object?> CreateBindingSuccess(object? value) =>

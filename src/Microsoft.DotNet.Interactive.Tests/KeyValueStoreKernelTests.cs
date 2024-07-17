@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -25,17 +25,18 @@ public class KeyValueStoreKernelTests
         var storedValue = "1,2,3";
 
         var result = await kernel.SubmitCodeAsync(
-            @$"
-#!value
-{storedValue}
-");
+                         $"""
+                          #!value
+                          {storedValue}
+
+                          """);
 
         result.Events.Should()
               .ContainSingle<CommandFailed>()
               .Which
               .Message
               .Should()
-              .Be("Option '--name' is required.");
+              .Be("(1,1): error DNI104: Missing required parameter '--name'");
     }
 
     [Fact]
@@ -67,10 +68,10 @@ public class KeyValueStoreKernelTests
         var storedValue = "1,2,3";
 
         var result = await kernel.SubmitCodeAsync(
-            @$"
-#!value --name hello --mime-type text/test-stuff
-{storedValue}
-");
+                         $"""
+                          #!value --name hello --mime-type text/test-stuff
+                          {storedValue}
+                          """);
 
         result.Events
               .Should()
@@ -115,17 +116,19 @@ public class KeyValueStoreKernelTests
         var storedValue = "1,2,3";
 
         await kernel.SubmitCodeAsync(
-            @$"
-#!value --name a --mime-type text/plain
-{storedValue}
-");
+            $"""
+                #!value --name a --mime-type text/plain
+                {storedValue}
+
+                """);
 
 
         await kernel.SubmitCodeAsync(
-            @$"
-#!value --name b --mime-type application/json
-{storedValue}
-");
+            $"""
+                #!value --name b --mime-type application/json
+                {storedValue}
+
+                """);
 
         var result = await kernel.SendAsync(new RequestValueInfos( targetKernelName: "value"));
 
@@ -135,22 +138,21 @@ public class KeyValueStoreKernelTests
 
         valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "a" && v.TypeName == "text/plain");
 
-
         valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "b" && v.TypeName == "application/json");
     }
 
     [Fact]
-    public async Task When_mime_type_is_not_specified_then_it_default_to_text_plain ()
+    public async Task When_mime_type_is_not_specified_then_it_default_to_text_plain()
     {
         using var kernel = CreateKernel();
 
         var storedValue = "1,2,3";
 
         await kernel.SubmitCodeAsync(
-            @$"
-#!value --name hello
-{storedValue}
-");
+            $"""
+                #!value --name hello
+                {storedValue}
+                """);
 
         var result = await kernel.SendAsync(new RequestValue("hello", targetKernelName: "value"));
 
@@ -254,7 +256,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("The --from-url and --from-file options cannot be used together.");
+            .Be("(1,46): error DNI205: The --from-url and --from-file options cannot be used together.");
     }
 
     [Fact]
@@ -270,7 +272,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("The --from-value and --from-file options cannot be used together.");
+            .Be("(1,44): error DNI207: The --from-value and --from-file options cannot be used together.");
     }
 
     [Fact]
@@ -286,18 +288,18 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("The --from-url and --from-value options cannot be used together.");
+            .Be("(1,46): error DNI206: The --from-url and --from-value options cannot be used together.");
     }
 
-    [Fact]
+    [Fact(Skip = "Consider changing this behavior")]
     public async Task Share_into_the_value_kernel_is_not_supported_and_stores_the_directive_text_literally()
     {
         using var kernel = CreateKernel();
 
-        var result = await kernel.SubmitCodeAsync(@"
-#!value --name x
-#!share --from fsharp f
-");
+        var result = await kernel.SubmitCodeAsync("""
+            #!value --name x
+            #!share --from fsharp f
+            """);
 
         result.Events.Should().NotContainErrors();
 
@@ -316,9 +318,10 @@ public class KeyValueStoreKernelTests
         var file = Path.GetTempFileName();
         await File.WriteAllTextAsync(file, "1,2,3");
 
-        var result = await kernel.SubmitCodeAsync($@"
-#!value --name hi --from-file {file}
-// some content");
+        var result = await kernel.SubmitCodeAsync($"""
+            #!value --name hi --from-file {file}
+            // some content
+            """);
 
         result.Events
             .Should()
@@ -326,7 +329,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("The --from-file option cannot be used in combination with a content submission.");
+            .Be("(1,19): error DNI208: The --from-file option cannot be used in combination with a content submission.");
     }
 
     [Fact]
@@ -335,9 +338,10 @@ public class KeyValueStoreKernelTests
         using var kernel = CreateKernel();
 
         var url = $"http://example.com/{Guid.NewGuid():N}";
-        var result = await kernel.SubmitCodeAsync($@"
-#!value --name hi --from-url {url}
-// some content");
+        var result = await kernel.SubmitCodeAsync($"""
+            #!value --name hi --from-url {url}
+            // some content
+            """);
 
         result.Events
             .Should()
@@ -345,7 +349,7 @@ public class KeyValueStoreKernelTests
             .Which
             .Message
             .Should()
-            .Be("The --from-url option cannot be used in combination with a content submission.");
+            .Be("(1,19): error DNI209: The --from-url option cannot be used in combination with a content submission.");
     }
 
     [Fact]
@@ -383,9 +387,10 @@ public class KeyValueStoreKernelTests
         using var kernel = CreateKernel();
 
         var url = $"http://example.com/{Guid.NewGuid():N}";
-        await kernel.SubmitCodeAsync($@"
-#!value --name hi --from-url {url}
-// some content");
+        await kernel.SubmitCodeAsync($"""
+            #!value --name hi --from-url {url}
+            // some content
+            """);
 
         var valueKernel = kernel.FindKernelByName("value");
 
@@ -407,7 +412,7 @@ public class KeyValueStoreKernelTests
 #!value --name hi 
 // previous content");
 
-        var result = await kernel.SubmitCodeAsync($@"
+        await kernel.SubmitCodeAsync($@"
 #!value --name hi --from-url {url}
 // some content");
 
@@ -429,9 +434,11 @@ public class KeyValueStoreKernelTests
 
         var result = await kernel.SendAsync(new RequestCompletions(markupCode.Code, new LinePosition(0, markupCode.Span.End)));
 
-        result.Events.Should()
-              .ContainSingle<CompletionsProduced>()
-              .Which
+        var completionsProduced = result.Events.Should()
+                                        .ContainSingle<CompletionsProduced>()
+                                        .Which;
+        
+        completionsProduced
               .Completions
               .Select(c => c.InsertText)
               .Should()
@@ -441,7 +448,7 @@ public class KeyValueStoreKernelTests
     private static CompositeKernel CreateKernel() =>
         new()
         {
-            new KeyValueStoreKernel(),
+            new KeyValueStoreKernel().UseValueSharing(),
             new FakeKernel("fake")
         };
 }

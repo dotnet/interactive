@@ -5,10 +5,13 @@
 
 // --------------------------------------------- Kernel Commands
 
+export const AddPackageType = "AddPackage";
+export const AddPackageSourceType = "AddPackageSource";
 export const CancelType = "Cancel";
 export const CompileProjectType = "CompileProject";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
+export const ImportDocumentType = "ImportDocument";
 export const OpenDocumentType = "OpenDocument";
 export const OpenProjectType = "OpenProject";
 export const QuitType = "Quit";
@@ -26,10 +29,13 @@ export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
-      typeof CancelType
+      typeof AddPackageType
+    | typeof AddPackageSourceType
+    | typeof CancelType
     | typeof CompileProjectType
     | typeof DisplayErrorType
     | typeof DisplayValueType
+    | typeof ImportDocumentType
     | typeof OpenDocumentType
     | typeof OpenProjectType
     | typeof QuitType
@@ -46,13 +52,22 @@ export type KernelCommandType =
     | typeof SubmitCodeType
     | typeof UpdateDisplayedValueType;
 
-export interface Cancel extends KernelCommand {
+export interface AddPackage extends KernelCommand {
+    packageName: string;
+    packageVersion: string;
 }
 
 export interface KernelCommand {
     destinationUri?: string;
     originUri?: string;
     targetKernelName?: string;
+}
+
+export interface AddPackageSource extends KernelCommand {
+    packageSource: string;
+}
+
+export interface Cancel extends KernelCommand {
 }
 
 export interface CompileProject extends KernelCommand {
@@ -65,6 +80,10 @@ export interface DisplayError extends KernelCommand {
 export interface DisplayValue extends KernelCommand {
     formattedValue: FormattedValue;
     valueId: string;
+}
+
+export interface ImportDocument extends KernelCommand {
+    filePath: string;
 }
 
 export interface OpenDocument extends KernelCommand {
@@ -98,6 +117,7 @@ export interface RequestInput extends KernelCommand {
     inputTypeHint: string;
     isPassword: boolean;
     prompt: string;
+    save: boolean;
     valueName: string;
 }
 
@@ -128,6 +148,7 @@ export interface SendValue extends KernelCommand {
 
 export interface SubmitCode extends KernelCommand {
     code: string;
+    parameters?: { [key: string]: string; };
 }
 
 export interface UpdateDisplayedValue extends KernelCommand {
@@ -443,16 +464,11 @@ export interface KernelInfo {
     languageVersion?: string;
     localName: string;
     remoteUri?: string;
-    supportedDirectives: Array<KernelDirectiveInfo>;
     supportedKernelCommands: Array<KernelCommandInfo>;
     uri: string;
 }
 
 export interface KernelCommandInfo {
-    name: string;
-}
-
-export interface KernelDirectiveInfo {
     name: string;
 }
 

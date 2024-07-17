@@ -1,31 +1,30 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using Microsoft.CodeAnalysis.Text;
-
 #nullable enable
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing;
 
-[DebuggerStepThrough]
-[DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
-public abstract class SyntaxToken : SyntaxNodeOrToken
+internal sealed class SyntaxToken : SyntaxNodeOrToken
 {
     internal SyntaxToken(
+        TokenKind kind,
         SourceText sourceText,
-        TextSpan span,
-        PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+        TextSpan fullSpan,
+        SyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
-        Span = span;
+        Kind = kind;
+        FullSpan = fullSpan;
     }
 
-    public override TextSpan Span { get; }
+    public override TextSpan FullSpan { get; }
 
-    private string GetDebuggerDisplay()
-    {
-        return GetType().Name + ": " + this;
-    }
+    public override bool IsSignificant => this is not { Kind: TokenKind.Whitespace or TokenKind.NewLine };
 
-    public override string ToString() => Text;
+    public override TextSpan Span => FullSpan;
+
+    public TokenKind Kind { get; set; }
+
+    public override string ToString() => $"{Kind}: {Text}";
 }

@@ -10,7 +10,6 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SQLite.Tests;
 
@@ -26,7 +25,7 @@ public class SQLiteConnectionTests
             new KeyValueStoreKernel()
         };
 
-        kernel.AddKernelConnector(new ConnectSQLiteCommand());
+        kernel.AddKernelConnector(new ConnectSQLiteDirective());
 
         using var _ = CreateInMemorySQLiteDb(out var connectionString);
 
@@ -68,12 +67,14 @@ SELECT * FROM fruit
             new KeyValueStoreKernel()
         };
 
-        kernel.AddKernelConnector(new ConnectSQLiteCommand());
+        kernel.AddKernelConnector(new ConnectSQLiteDirective());
 
         using var _ = CreateInMemorySQLiteDb(out var connectionString);
 
         var result = await kernel.SubmitCodeAsync(
-            $"#!connect sqlite --kernel-name mydb  \"{connectionString}\"");
+                         $"""
+                          #!connect sqlite --kernel-name mydb  "{connectionString}"
+                          """);
 
         result.Events
             .Should()
@@ -111,7 +112,7 @@ CREATE TABLE fruit (
     deliciousness INT NOT NULL 
 );
             ";
-        createCommand.ExecuteNonQuery();
+        var result = createCommand.ExecuteNonQuery();
 
         using var connection = new SqliteConnection(connectionString);
 
@@ -129,7 +130,7 @@ VALUES ('banana', 'red', 11);
 INSERT INTO fruit (name, color, deliciousness)
 VALUES ('cherry', 'red', 9000);
                 ";
-        updateCommand.ExecuteNonQuery();
+        result = updateCommand.ExecuteNonQuery();
 
         return topLevelConnection;
     }

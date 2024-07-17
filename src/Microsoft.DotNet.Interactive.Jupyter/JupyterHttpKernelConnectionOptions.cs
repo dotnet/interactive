@@ -1,37 +1,30 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Jupyter.Connection;
-using Microsoft.DotNet.Interactive.Jupyter.Http;
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Parsing;
+using Microsoft.DotNet.Interactive.Directives;
+using Microsoft.DotNet.Interactive.Jupyter.Connection;
+using Microsoft.DotNet.Interactive.Jupyter.Http;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public sealed class JupyterHttpKernelConnectionOptions : IJupyterKernelConnectionOptions
 {
-    private readonly IReadOnlyCollection<Option> _options;
+    private readonly IReadOnlyCollection<KernelDirectiveParameter> _parameters;
 
-    public Option<string> TargetUrl { get; } =
-    new("--url", "URL to connect to a remote jupyter server")
-    {
-    };
+    public KernelDirectiveParameter TargetUrl { get; } =
+        new("--url", "URL to connect to a remote jupyter server");
 
-    public Option<string> Token { get; } =
-    new("--token", "token to connect to a remote jupyter server")
-    {
-    };
+    public KernelDirectiveParameter Token { get; } =
+        new("--token", "token to connect to a remote jupyter server");
 
-    private Option<bool> UseBearerAuth { get; } =
-    new("--bearer", "auth type is bearer token for remote jupyter server")
-    {
-    };
+    private KernelDirectiveParameter UseBearerAuth { get; } =
+        new("--bearer", "auth type is bearer token for remote jupyter server");
 
     public JupyterHttpKernelConnectionOptions()
     {
-        _options = new List<Option>
+        _parameters = new List<KernelDirectiveParameter>
         {
             TargetUrl,
             Token,
@@ -39,24 +32,29 @@ public sealed class JupyterHttpKernelConnectionOptions : IJupyterKernelConnectio
         };
     }
 
-    public IJupyterConnection GetConnection(ParseResult connectionOptionsParseResult)
+    public IJupyterConnection GetConnection(ConnectJupyterKernel connectCommand)
     {
-        var targetUrl = connectionOptionsParseResult.GetValueForOption(TargetUrl);
+        var targetUrl = connectCommand.TargetUrl;
 
         if (targetUrl is null)
         {
             return null;
         }
 
-        var token = connectionOptionsParseResult.GetValueForOption(Token);
-        var useBearerAuth = connectionOptionsParseResult.GetValueForOption(UseBearerAuth);
+        var token = connectCommand.Token;
+        var useBearerAuth = connectCommand.UseBearerAuth;
 
-        var connection = new JupyterHttpConnection(new Uri(targetUrl), new JupyterTokenProvider(token, useBearerAuth ? AuthorizationScheme.Bearer : null));
+        var connection = new JupyterHttpConnection(
+            new Uri(targetUrl),
+            new JupyterTokenProvider(token,
+                                     useBearerAuth
+                                         ? AuthorizationScheme.Bearer
+                                         : null));
         return connection;
     }
 
-    public IReadOnlyCollection<Option> GetOptions()
+    public IReadOnlyCollection<KernelDirectiveParameter> GetParameters()
     {
-        return _options;
+        return _parameters;
     }
 }

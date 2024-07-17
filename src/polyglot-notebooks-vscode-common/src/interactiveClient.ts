@@ -241,11 +241,9 @@ export class InteractiveClient {
                 reject(e);
             }
         });
-
     }
 
     async completion(kernelName: string, code: string, line: number, character: number): Promise<CompletionsProduced> {
-
         const command = new KernelCommandEnvelope(
             RequestCompletionsType,
             <RequestCompletions>{
@@ -393,34 +391,38 @@ export class InteractiveClient {
         return new Promise<TEvent | undefined>(async (resolve, reject) => {
             let handled = false;
             const token = command.getOrCreateToken();
-            let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
+            const rootToken = KernelCommandEnvelope.getRootToken(token);
+            let disposable = this.subscribeToKernelTokenEvents(rootToken, eventEnvelope => {
                 if (eventEnvelope.command?.hasSameRootCommandAs(command)) {
+
+                    let isRootCommand = eventEnvelope.command?.getToken() === rootToken;
+
                     switch (eventEnvelope.eventType) {
                         case CommandFailedType:
-                            if (!handled) {
+                            if (!handled && isRootCommand) {
                                 handled = true;
-                                disposable.dispose();
                                 let err = <CommandFailed>eventEnvelope.event;
                                 reject(err);
+                                disposable.dispose();
                             }
                             break;
                         case CommandSucceededType:
-                            if (!handled) {
+                            if (!handled && isRootCommand) {
                                 handled = true;
-                                disposable.dispose();
                                 if (eventIsOptional) {
                                     resolve(undefined);
                                 } else {
                                     reject('Command was handled before reporting expected result.');
                                 }
+                                disposable.dispose();
                             }
                             break;
                         default:
                             if (eventEnvelope.eventType === expectedEventType) {
                                 handled = true;
-                                disposable.dispose();
                                 let event = <TEvent>eventEnvelope.event;
                                 resolve(event);
+                                disposable.dispose();
                             }
                             break;
                     }
@@ -470,7 +472,9 @@ export class InteractiveClient {
         });
     }
 
-    private subscribeToKernelTokenEvents(token: string, observer: KernelEventEnvelopeObserver): DisposableSubscription {
+    private subscribeToKernelTokenEvents(commandToken: string, observer: KernelEventEnvelopeObserver): DisposableSubscription {
+        const token = KernelCommandEnvelope.getRootToken(commandToken);
+
         if (!this.tokenEventObservers.get(token)) {
             this.tokenEventObservers.set(token, []);
         }

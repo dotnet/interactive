@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
 internal class HttpBodyNode : HttpSyntaxNode
 {
-    internal HttpBodyNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpBodyNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
@@ -17,6 +17,6 @@ internal class HttpBodyNode : HttpSyntaxNode
 
     public HttpBindingResult<string> TryGetBody(HttpBindingDelegate bind)
     {
-        return BindByInterpolation(bind);
+        return this.BindByInterpolation(bind);
     }
 }

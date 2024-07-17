@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -7,6 +7,7 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
+using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,8 +15,6 @@ namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
-    private readonly ITestOutputHelper _output;
-
     public class Combinatorial
     {
         private readonly ITestOutputHelper _output;
@@ -27,18 +26,18 @@ public partial class HttpParserTests
 
         [Theory]
         [MemberData(nameof(GenerateValidRequests))]
-        public void Valid_syntax_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int index)
+        public void Valid_syntax_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
-
-            var parseResult = HttpRequestParser.Parse(code);
+            
+            var parseResult = Parse(code);
 
             _output.WriteLine($"""
-                === Generation #{index} ===
+                === Generation #{generation} ===
 
                 {code}
                 """);
-
+            
             parseResult.GetDiagnostics().Should().BeEmpty();
 
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
@@ -46,14 +45,14 @@ public partial class HttpParserTests
 
         [Theory]
         [MemberData(nameof(GenerateValidRequestsWithExtraTrivia))]
-        public void Valid_syntax_with_extra_trivia_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int index)
+        public void Valid_syntax_with_extra_trivia_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
 
-            var parseResult = HttpRequestParser.Parse(code);
+            var parseResult = Parse(code);
 
             _output.WriteLine($"""
-                === Generation #{index} ===
+                === Generation #{generation} ===
 
                 {code}
                 """);
@@ -65,14 +64,14 @@ public partial class HttpParserTests
 
         [Theory]
         [MemberData(nameof(GenerateInvalidRequests))]
-        public void Invalid_syntax_produces_diagnostics(ISyntaxSpec syntaxSpec, int index)
+        public void Invalid_syntax_produces_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
 
-            var parseResult = HttpRequestParser.Parse(code);
+            var parseResult = Parse(code);
 
             _output.WriteLine($"""
-                === Generation #{index} ===
+                === Generation #{generation} ===
 
                 {code}
                 """);
@@ -84,7 +83,7 @@ public partial class HttpParserTests
 
         [Theory]
         [MemberData(nameof(GenerateValidRequestsWithExtraTrivia))]
-        public void Code_that_a_user_has_not_finished_typing_round_trips_correctly_and_does_not_throw(ISyntaxSpec syntaxSpec, int index)
+        public void Code_that_a_user_has_not_finished_typing_round_trips_correctly_and_does_not_throw(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
 
@@ -93,7 +92,7 @@ public partial class HttpParserTests
                 var truncatedCode = code[..truncateAfter];
 
                 _output.WriteLine($"""
-                === Generation #{index} truncated after {truncateAfter} characters ===
+                === Generation #{generation} truncated after {truncateAfter} characters ===
 
                 {truncatedCode}
                 """);
@@ -136,7 +135,7 @@ public partial class HttpParserTests
                 {
                     new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection)
                     {
-                        ExtraTriviaRandomizer = new Random(1)
+                        Randomizer = new Random(1)
                     },
                     generationNumber
                 };

@@ -8,6 +8,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Parsing;
+using SyntaxNode = Microsoft.DotNet.Interactive.Parsing.SyntaxNode;
+using SyntaxToken = Microsoft.DotNet.Interactive.Parsing.SyntaxToken;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -28,7 +31,7 @@ internal class HttpRequestParser
     private class HttpSyntaxParser
     {
         private readonly SourceText _sourceText;
-        private IReadOnlyList<HttpSyntaxToken>? _tokens;
+        private IReadOnlyList<SyntaxToken>? _tokens;
         private int _currentTokenIndex = 0;
         private readonly HttpSyntaxTree _syntaxTree;
 
@@ -106,7 +109,7 @@ internal class HttpRequestParser
             while (MoreTokens() &&
                    !IsRequestSeparator())
             {
-                if (GetNextSignificantToken() is { Kind: HttpTokenKind.Punctuation } and { Text: "@" })
+                if (GetNextSignificantToken() is { Kind: TokenKind.Punctuation } and { Text: "@" })
                 {
                     var variableNode = new HttpVariableDeclarationAndAssignmentNode(_sourceText, _syntaxTree);
 
@@ -130,11 +133,11 @@ internal class HttpRequestParser
             HttpVariableValueNode? node = null;
 
             while (MoreTokens() &&
-                CurrentToken is not { Kind: HttpTokenKind.NewLine })
+                CurrentToken is not { Kind: TokenKind.NewLine })
             {
                 if (node is null)
                 {
-                    if (CurrentToken is ({ Kind: HttpTokenKind.Word }) or ({ Kind: HttpTokenKind.Punctuation } and { Text: "/" }))
+                    if (CurrentToken is { Kind: TokenKind.Word } or ({ Kind: TokenKind.Punctuation} and { Text: "/"}))
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
 
@@ -144,7 +147,7 @@ internal class HttpRequestParser
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
                         node.Add(ParseEmbeddedExpression());
-                        if (CurrentToken is { Kind: HttpTokenKind.NewLine })
+                        if (CurrentToken is { Kind: TokenKind.NewLine })
                         {
                             break;
                         }
@@ -194,7 +197,7 @@ internal class HttpRequestParser
 
                 while (MoreTokens())
                 {
-                    if (CurrentToken is { Kind: HttpTokenKind.Word } or { Text: "@" or "_" or "." })
+                    if (CurrentToken is { Kind: TokenKind.Word } or { Text: "@" or "_" or "." })
                     {
                         ConsumeCurrentTokenInto(node);
                     }
@@ -208,12 +211,12 @@ internal class HttpRequestParser
             return ParseTrailingWhitespace(node);
         }
 
-        private HttpSyntaxToken? CurrentToken =>
+        private SyntaxToken? CurrentToken =>
             MoreTokens()
                 ? _tokens![_currentTokenIndex]
                 : null;
 
-        private HttpSyntaxToken? CurrentTokenPlus(int offset)
+        private SyntaxToken? CurrentTokenPlus(int offset)
         {
             var nextTokenIndex = _currentTokenIndex + offset;
 
@@ -234,7 +237,7 @@ internal class HttpRequestParser
         private void AdvanceToNextToken() => _currentTokenIndex++;
 
         [DebuggerStepThrough]
-        private void ConsumeCurrentTokenInto(HttpSyntaxNode node)
+        private void ConsumeCurrentTokenInto(SyntaxNode node)
         {
             if (CurrentToken is { } token)
             {
@@ -247,11 +250,11 @@ internal class HttpRequestParser
         {
             while (MoreTokens())
             {
-                if (CurrentToken?.Kind is HttpTokenKind.Whitespace)
+                if (CurrentToken?.Kind is TokenKind.Whitespace)
                 {
                     ConsumeCurrentTokenInto(node);
                 }
-                else if (CurrentToken?.Kind is HttpTokenKind.NewLine)
+                else if (CurrentToken?.Kind is TokenKind.NewLine)
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -271,11 +274,11 @@ internal class HttpRequestParser
             return node;
         }
 
-        private T ParseTrailingWhitespace<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewLine = false) where T : HttpSyntaxNode
+        private T ParseTrailingWhitespace<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewLine = false) where T : SyntaxNode
         {
             while (MoreTokens())
             {
-                if (CurrentToken?.Kind is HttpTokenKind.NewLine)
+                if (CurrentToken?.Kind is TokenKind.NewLine)
                 {
                     if (stopBeforeNewLine)
                     {
@@ -289,7 +292,7 @@ internal class HttpRequestParser
                     }
                 }
 
-                if (CurrentToken is not { Kind: HttpTokenKind.Whitespace } and not { Kind: HttpTokenKind.NewLine })
+                if (CurrentToken is not { Kind: TokenKind.Whitespace } and not { Kind: TokenKind.NewLine })
                 {
                     break;
                 }
@@ -312,7 +315,7 @@ internal class HttpRequestParser
                 return null;
             }
 
-            if (GetNextSignificantToken() is null or { Kind: HttpTokenKind.Punctuation }
+            if (GetNextSignificantToken() is null or { Kind: TokenKind.Punctuation }
             and { Text: "@" })
             {
                 return null;
@@ -407,7 +410,7 @@ internal class HttpRequestParser
 
                 while (MoreTokens())
                 {
-                    if (CurrentToken?.Kind is not HttpTokenKind.NewLine)
+                    if (CurrentToken?.Kind is not TokenKind.NewLine)
                     {
                         ConsumeCurrentTokenInto(node);
                     }
@@ -427,8 +430,8 @@ internal class HttpRequestParser
         {
             HttpMethodNode? node = null;
 
-            while (CurrentToken?.Kind is HttpTokenKind.Word &&
-                   CurrentTokenPlus(1)?.Kind is HttpTokenKind.Whitespace)
+            while (CurrentToken?.Kind is TokenKind.Word &&
+                   CurrentTokenPlus(1)?.Kind is TokenKind.Whitespace)
             {
                 node = new HttpMethodNode(_sourceText, _syntaxTree);
 
@@ -454,11 +457,11 @@ internal class HttpRequestParser
         {
             HttpUrlNode? node = null;
 
-            while ((CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression()))
+            while ((CurrentToken?.Kind is TokenKind.Word or TokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression()))
             {
                 if (node is null)
                 {
-                    if (CurrentToken is { Kind: HttpTokenKind.Word })
+                    if (CurrentToken is { Kind: TokenKind.Word })
                     {
                         node = new HttpUrlNode(_sourceText, _syntaxTree);
 
@@ -471,7 +474,7 @@ internal class HttpRequestParser
                         ParseLeadingWhitespaceAndComments(node);
                         node.Add(ParseEmbeddedExpression());
                     }
-                    else if (CurrentToken is { Kind: HttpTokenKind.Punctuation })
+                    else if (CurrentToken is { Kind: TokenKind.Punctuation })
                     {
                         node = new HttpUrlNode(_sourceText, _syntaxTree);
 
@@ -483,7 +486,7 @@ internal class HttpRequestParser
                     }
                 }
 
-                if (!((CurrentToken?.Kind is HttpTokenKind.Word or HttpTokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression())))
+                if (!((CurrentToken?.Kind is TokenKind.Word or TokenKind.Punctuation) || (IsAtStartOfEmbeddedExpression())))
                 {
                     break;
                 }
@@ -503,7 +506,7 @@ internal class HttpRequestParser
                        : null;
         }
 
-        private HttpSyntaxToken? GetNextSignificantToken()
+        private SyntaxToken? GetNextSignificantToken()
         {
             var token = CurrentToken;
             int i = 0;
@@ -597,14 +600,14 @@ internal class HttpRequestParser
 
         private HttpVersionNode? ParseVersion()
         {
-            if (CurrentToken?.Kind is HttpTokenKind.Word)
+            if (CurrentToken?.Kind is TokenKind.Word)
             {
                 var node = new HttpVersionNode(_sourceText, _syntaxTree);
 
                 ParseLeadingWhitespaceAndComments(node);
                 ConsumeCurrentTokenInto(node);
 
-                while (MoreTokens() && CurrentToken.Kind is not HttpTokenKind.NewLine &&
+                while (MoreTokens() && CurrentToken.Kind is not TokenKind.NewLine &&
                        !IsRequestSeparator())
                 {
                     ConsumeCurrentTokenInto(node);
@@ -620,7 +623,7 @@ internal class HttpRequestParser
         {
             HttpHeadersNode? headersNode = null;
 
-            while (CurrentToken is { Kind: HttpTokenKind.Word } or { Text: ":" })
+            while (CurrentToken is { Kind: TokenKind.Word } or { Text: ":" })
             {
                 headersNode ??= new HttpHeadersNode(_sourceText, _syntaxTree);
 
@@ -646,7 +649,7 @@ internal class HttpRequestParser
             var node = new HttpHeaderNameNode(_sourceText, _syntaxTree);
 
             if (MoreTokens() &&
-                CurrentToken is not { Kind: HttpTokenKind.NewLine } and not { Kind: HttpTokenKind.Punctuation, Text: ":" })
+                CurrentToken is not { Kind: TokenKind.NewLine } and not { Kind: TokenKind.Punctuation, Text: ":" })
             {
                 ParseLeadingWhitespaceAndComments(node);
 
@@ -656,7 +659,7 @@ internal class HttpRequestParser
 
                     while (MoreTokens())
                     {
-                        if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: ":" })
+                        if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: ":" })
                         {
                             break;
                         }
@@ -675,7 +678,7 @@ internal class HttpRequestParser
 
             ParseLeadingWhitespaceAndComments(node);
 
-            if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: ":" })
+            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: ":" })
             {
                 ConsumeCurrentTokenInto(node);
             }
@@ -689,10 +692,10 @@ internal class HttpRequestParser
 
             ParseLeadingWhitespaceAndComments(node);
 
-            while (MoreTokens() && CurrentToken is not { Kind: HttpTokenKind.NewLine })
+            while (MoreTokens() && CurrentToken is not { Kind: TokenKind.NewLine })
             {
-                if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "{" } &&
-                    CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "{" })
+                if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "{" } &&
+                    CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "{" })
                 {
                     node.Add(ParseEmbeddedExpression());
                 }
@@ -720,7 +723,7 @@ internal class HttpRequestParser
             var node = new HttpBodyNode(_sourceText, _syntaxTree);
 
             if (MoreTokens() &&
-                CurrentToken is not { Kind: HttpTokenKind.Whitespace } and not { Kind: HttpTokenKind.NewLine } &&
+                CurrentToken is not { Kind: TokenKind.Whitespace } and not { Kind: TokenKind.NewLine } &&
                 !IsRequestSeparator())
             {
                 ConsumeCurrentTokenInto(node);
@@ -768,7 +771,7 @@ internal class HttpRequestParser
 
         private HttpCommentBodyNode? ParseCommentBody()
         {
-            if (!MoreTokens() || CurrentToken is { Kind: HttpTokenKind.NewLine })
+            if (!MoreTokens() || CurrentToken is { Kind: TokenKind.NewLine })
             {
                 return null;
             }
@@ -777,7 +780,7 @@ internal class HttpRequestParser
             ParseLeadingWhitespaceAndComments(node);
 
             while (MoreTokens() &&
-                   CurrentToken is not { Kind: HttpTokenKind.NewLine })
+                   CurrentToken is not { Kind: TokenKind.NewLine })
             {
                 ConsumeCurrentTokenInto(node);
             }
@@ -789,15 +792,15 @@ internal class HttpRequestParser
 
         private HttpCommentStartNode? ParseCommentStart()
         {
-            if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "#" })
+            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "#" })
             {
                 var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
                 ConsumeCurrentTokenInto(node);
                 return ParseTrailingWhitespace(node, stopBeforeNewLine: true);
             }
 
-            if (CurrentToken is { Kind: HttpTokenKind.Punctuation } and { Text: "/" } &&
-                CurrentTokenPlus(1) is { Kind: HttpTokenKind.Punctuation } and { Text: "/" })
+            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "/" } &&
+                CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "/" })
             {
                 var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
 
@@ -870,7 +873,7 @@ internal class HttpRequestParser
         private readonly SourceText _sourceText;
         private readonly HttpSyntaxTree _syntaxTree;
         private TextWindow? _textWindow;
-        private readonly List<HttpSyntaxToken> _tokens = new();
+        private readonly List<SyntaxToken> _tokens = new();
 
         public HttpLexer(SourceText sourceText, HttpSyntaxTree syntaxTree)
         {
@@ -878,11 +881,11 @@ internal class HttpRequestParser
             _syntaxTree = syntaxTree;
         }
 
-        public IReadOnlyList<HttpSyntaxToken> Lex()
+        public IReadOnlyList<SyntaxToken> Lex()
         {
             _textWindow = new TextWindow(0, _sourceText.Length);
 
-            HttpTokenKind? previousTokenKind = null;
+            TokenKind? previousTokenKind = null;
 
             char previousCharacter = default;
 
@@ -892,11 +895,11 @@ internal class HttpRequestParser
 
                 var currentTokenKind = currentCharacter switch
                 {
-                    ' ' or '\t' => HttpTokenKind.Whitespace,
-                    '\n' or '\r' or '\v' => HttpTokenKind.NewLine,
+                    ' ' or '\t' => TokenKind.Whitespace,
+                    '\n' or '\r' or '\v' => TokenKind.NewLine,
                     _ => char.IsLetterOrDigit(currentCharacter)
-                             ? HttpTokenKind.Word
-                             : HttpTokenKind.Punctuation,
+                             ? TokenKind.Word
+                             : TokenKind.Punctuation,
                 };
 
                 if (previousTokenKind is { } previousTokenKindValue)
@@ -907,8 +910,8 @@ internal class HttpRequestParser
                             currentTokenKind,
                             currentCharacter) &&
                         (previousTokenKind != currentTokenKind || currentTokenKind
-                             is HttpTokenKind.NewLine ||
-                         currentTokenKind is HttpTokenKind.Punctuation))
+                             is TokenKind.NewLine ||
+                         currentTokenKind is TokenKind.Punctuation))
                     {
                         FlushToken(previousTokenKindValue);
                     }
@@ -929,14 +932,14 @@ internal class HttpRequestParser
             return _tokens;
         }
 
-        private void FlushToken(HttpTokenKind kind)
+        private void FlushToken(TokenKind kind)
         {
             if (_textWindow is null || _textWindow.IsEmpty)
             {
                 return;
             }
 
-            _tokens.Add(new HttpSyntaxToken(kind, _sourceText, _textWindow.Span, _syntaxTree));
+            _tokens.Add(new SyntaxToken(kind, _sourceText, _textWindow.Span, _syntaxTree));
 
             _textWindow = new TextWindow(_textWindow.End, _sourceText.Length);
         }
@@ -952,12 +955,12 @@ internal class HttpRequestParser
         }
 
         private bool IsCurrentTokenANewLinePrecededByACarriageReturn(
-            HttpTokenKind previousTokenKindValue,
+            TokenKind previousTokenKindValue,
             char previousCharacter,
-            HttpTokenKind currentTokenKind,
+            TokenKind currentTokenKind,
             char currentCharacter) =>
-            currentTokenKind is HttpTokenKind.NewLine &&
-            previousTokenKindValue is HttpTokenKind.NewLine
+            currentTokenKind is TokenKind.NewLine &&
+            previousTokenKindValue is TokenKind.NewLine
             &&
             previousCharacter is '\r' && currentCharacter is '\n';
     }

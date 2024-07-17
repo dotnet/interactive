@@ -3,9 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine.Parsing;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -167,8 +165,10 @@ public abstract class ToolsServiceKernel :
                 }
                 finally
                 {
+                    command.Parameters.TryGetValue("--name", out var queryName);
+
                     // Always store the query results - even if an exception occurred - so we don't end up with stale results
-                    StoreQueryResults(results, command.KernelChooserParseResult);
+                    StoreQueryResultSet(queryName ?? "", results);
                 }
 
                 completion.SetResult(true);
@@ -229,10 +229,6 @@ public abstract class ToolsServiceKernel :
             _queryCompletionHandler = null;
             _queryMessageHandler = null;
         }
-    }
-
-    protected virtual void StoreQueryResults(IReadOnlyCollection<TabularDataResource> results, ParseResult commandKernelChooserParseResult)
-    {
     }
 
     private static IEnumerable<TabularDataResource> GetTabularDataResources(ColumnInfo[] columnInfos, CellValue[][] rows)

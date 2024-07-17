@@ -153,8 +153,6 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
 
         var eventTypeName = jsonObject.GetProperty(nameof(SerializationModel.eventType)).GetString();
 
-
-
         var eventType = EventTypeByName(eventTypeName);
 
         var ctor = eventType.GetConstructors(BindingFlags.IgnoreCase

@@ -6,15 +6,64 @@
       <Value>CopyReferencedAssembliesToWorkspaceIsOn</Value>
     </HiddenComponentWarnings>
     <IgnoredTests>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.Tests.LanguageKernelPackageTests.Loads_native_dependencies_from_nugets</TestName>
-      </NamedTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelPackageTests</FixtureName>
-      </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.StdIoKernelConnectorTests</FixtureName>
       </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.QuitCommandTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.JavaScriptKernelTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.HtmlKernelTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.DataExplorerTests</FixtureName>
+      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
+#r one.dll
+#r two.dll", "csharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
+#r one.dll
+let x = 123 // with some intervening code
+#r two.dll", "fsharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
+#r one.dll
+var x = 123; // with some intervening code
+#r two.dll", "csharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Parsing.SubmissionParserTests.Multiple_pound_r_directives_are_submitted_together("
+#r one.dll
+#r two.dll", "fsharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.DirectiveTests.Directives_can_display_help(".NET")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.DirectiveTests.Directives_can_display_help("csharp")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests.Command_contract_has_not_been_broken</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.ConnectDirectiveTests.Connected_kernel_help_description_provides_context_about_the_connection</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests.All_event_types_are_tested_for_round_trip_serialization</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests.All_command_types_are_tested_for_round_trip_serialization</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests.Event_contract_has_not_been_broken</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

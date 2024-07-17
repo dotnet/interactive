@@ -15,12 +15,20 @@ Microsoft.DotNet.Interactive.Jupyter
     public System.String SignatureScheme { get; set;}
     public System.Int32 StdinPort { get; set;}
     public System.String Transport { get; set;}
-  public class ConnectJupyterKernelCommand : Microsoft.DotNet.Interactive.Connection.ConnectKernelCommand, System.Collections.Generic.IEnumerable<System.CommandLine.Symbol>, System.Collections.IEnumerable, System.CommandLine.Completions.ICompletionSource
+  public class ConnectJupyterKernel : Microsoft.DotNet.Interactive.Commands.ConnectKernelCommand, System.IEquatable<Microsoft.DotNet.Interactive.Commands.KernelCommand>
+    .ctor(System.String connectedKernelName)
+    public System.String CondaEnv { get; set;}
+    public System.String InitScript { get; set;}
+    public System.String KernelSpecName { get; set;}
+    public System.String TargetUrl { get; set;}
+    public System.String Token { get; set;}
+    public System.Boolean UseBearerAuth { get; set;}
+  public class ConnectJupyterKernelDirective : Microsoft.DotNet.Interactive.Connection.ConnectKernelDirective<ConnectJupyterKernel>
     .ctor()
-    public System.CommandLine.Option<System.String> InitScript { get;}
-    public System.CommandLine.Option<System.String> KernelSpecName { get;}
-    public ConnectJupyterKernelCommand AddConnectionOptions(Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions connectionOptions)
-    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context, System.CommandLine.Invocation.InvocationContext commandLineContext)
+    public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter InitScriptParameter { get;}
+    public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter KernelSpecNameParameter { get;}
+    public ConnectJupyterKernelDirective AddConnectionOptions(Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions connectionOptions)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(ConnectJupyterKernel connectCommand, Microsoft.DotNet.Interactive.KernelInvocationContext context)
   public static class Constants
   public class ExecuteRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.ExecuteRequest>, System.IDisposable
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
@@ -55,10 +63,10 @@ Microsoft.DotNet.Interactive.Jupyter
     .ctor()
   public class JupyterHttpKernelConnectionOptions, Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions
     .ctor()
-    public System.CommandLine.Option<System.String> TargetUrl { get;}
-    public System.CommandLine.Option<System.String> Token { get;}
-    public Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
-    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
+    public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter TargetUrl { get;}
+    public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter Token { get;}
+    public Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterConnection GetConnection(ConnectJupyterKernel connectCommand)
+    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter> GetParameters()
   public class JupyterKernelSpecModule, IJupyterKernelSpecModule
     .ctor(IJupyterEnvironment environment = null)
     public System.IO.DirectoryInfo GetDefaultKernelSpecDirectory()
@@ -67,9 +75,9 @@ Microsoft.DotNet.Interactive.Jupyter
     public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernels()
   public class JupyterLocalKernelConnectionOptions, Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions
     .ctor()
-    public System.CommandLine.Option<System.String> CondaEnv { get;}
-    public Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
-    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
+    public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter CondaEnv { get;}
+    public Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterConnection GetConnection(ConnectJupyterKernel connectCommand)
+    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter> GetParameters()
   public class JupyterRequestContext
     .ctor(IJupyterMessageResponseSender jupyterMessageSender, Microsoft.DotNet.Interactive.Jupyter.Messaging.Message request)
     public IJupyterMessageResponseSender JupyterMessageSender { get;}
@@ -117,8 +125,8 @@ Microsoft.DotNet.Interactive.Jupyter
     public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
     protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
   public class SupportedDirectives
-    .ctor(System.String kernelName, System.Collections.Generic.IReadOnlyList<System.CommandLine.Command> commands)
-    public System.Collections.Generic.IReadOnlyList<System.CommandLine.Command> Commands { get;}
+    .ctor(System.String kernelName, System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Directives.KernelDirective> directives)
+    public System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Directives.KernelDirective> Directives { get;}
     public System.String KernelName { get;}
   public static class TopLevelMethods
     public static System.String input(System.String prompt = )
@@ -133,8 +141,8 @@ Microsoft.DotNet.Interactive.Jupyter.Connection
     public System.Uri Uri { get;}
     public System.Threading.Tasks.Task StartAsync()
   public abstract class IJupyterKernelConnectionOptions
-    public IJupyterConnection GetConnection(System.CommandLine.Parsing.ParseResult connectionOptionsParseResult)
-    public System.Collections.Generic.IReadOnlyCollection<System.CommandLine.Option> GetOptions()
+    public IJupyterConnection GetConnection(Microsoft.DotNet.Interactive.Jupyter.ConnectJupyterKernel connectCommand)
+    public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter> GetParameters()
 Microsoft.DotNet.Interactive.Jupyter.Formatting
   public class LaTeXString
     public static LaTeXString op_Implicit(System.String source)

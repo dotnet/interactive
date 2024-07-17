@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <OutputType>Library</OutputType>
   </PropertyGroup>
@@ -26,10 +26,6 @@
 
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utilities\InvocationContextExtensions.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="bin\Debug\netstandard2.1\/Microsoft.DotNet.Interactive.Journey.dll" />
   </ItemGroup>
 
   <ItemGroup>

@@ -43,7 +43,7 @@ public abstract class JupyterKernelTestBase : IDisposable
         var kernel = new CompositeKernel { csharpKernel };
         kernel.DefaultKernelName = csharpKernel.Name;
 
-        var jupyterKernelCommand = new ConnectJupyterKernelCommand();
+        var jupyterKernelCommand = new ConnectJupyterKernelDirective();
 
         foreach (var options in optionsList) 
         {
@@ -57,7 +57,7 @@ public abstract class JupyterKernelTestBase : IDisposable
 
     protected static List<Message> GenerateReplies(IReadOnlyCollection<Message> messages = null, string languageName = "name")
     {
-        var replies = new List<Message>()
+        var replies = new List<Message>
         {
             // always sent as a first request
             Message.CreateReply(

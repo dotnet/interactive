@@ -346,7 +346,6 @@ stringType");
                   .Be("System.String");
         }
 
-
         [Fact]
         public async Task honors_mimetype_from_value_kernel()
         {
@@ -377,29 +376,28 @@ stringType");
                          .Should()
                          .BeEquivalentTo(expected, opt => opt.ComparingByMembers<JsonElement>());
         }
-        
+
         [Fact]
         public async Task A_name_can_be_specified_for_the_imported_value()
         {
             using var kernel = CreateCompositeKernel();
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
             await kernel.SubmitCodeAsync("#!csharp\nvar x = 123;");
 
-            await kernel.SubmitCodeAsync(@"
-#!fsharp
-#!share --from csharp x --mime-type text/plain --as y
-y");
+            var result = await kernel.SubmitCodeAsync("""
+                #!fsharp
+                #!share --from csharp x --mime-type text/plain --as y
+                y
+                """);
 
-            events.Should().NotContainErrors();
+            result.Events.Should().NotContainErrors();
 
-            events.Should()
+            result.Events.Should()
                   .ContainSingle<ValueProduced>()
                   .Which
                   .FormattedValue
                   .Should()
-                  .BeEquivalentTo(new FormattedValue("text/plain", 123.ToDisplayString("text/plain")));
+                  .BeEquivalentTo(new FormattedValue("text/plain", "123"));
         }
 
         [Theory]

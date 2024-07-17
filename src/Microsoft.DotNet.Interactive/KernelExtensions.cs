@@ -3,25 +3,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.NamingConventionBinder;
-using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.CodeAnalysis.Tags;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
-
-using CompletionItem = System.CommandLine.Completions.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -62,7 +55,7 @@ public static class KernelExtensions
         var root = kernel
             .RecurseWhileNotNull(k => k switch
             {
-                { } kb => kb.ParentKernel,
+                { } => k.ParentKernel,
                 _ => null
             })
             .LastOrDefault();
@@ -91,20 +84,23 @@ public static class KernelExtensions
     public static TKernel UseImportMagicCommand<TKernel>(this TKernel kernel)
         where TKernel : Kernel
     {
-        var fileArg = new Argument<FileInfo>("file").ExistingOnly();
-        var command = new Command("#!import", LocalizationResources.Magics_import_Description())
+        var importDirective = new KernelActionDirective("#!import")
         {
-            fileArg
+            Description = LocalizationResources.Magics_import_Description(),
+            Parameters =
+            {
+                new("")
+                {
+                    AllowImplicitName = true,
+                    Required = true
+                }
+            },
+            TryGetKernelCommandAsync = ImportDocument.TryParseImportDirectiveAsync
         };
 
-        command.SetHandler(async ctx =>
-        {
-            var file = ctx.ParseResult.GetValueForArgument(fileArg);
-            var currentInvocationContext = ctx.GetService<KernelInvocationContext>();
-            await LoadAndRunInteractiveDocument(kernel, file, currentInvocationContext.Command);
-        });
-
-        kernel.AddDirective(command);
+        kernel.AddDirective<ImportDocument>(
+            importDirective,
+            async (command, context) => await LoadAndRunInteractiveDocument(kernel, new FileInfo(command.FilePath)));
 
         return kernel;
     }
@@ -163,373 +159,165 @@ public static class KernelExtensions
         }
     }
 
-    private static async Task HandleSetMagicCommand<T>(
-        T kernel,
-        InvocationContext cmdLineContext,
-        Option<string> nameOption,
-        Option<ValueOptionResult> valueOption,
-        Option<bool> byrefOption)
-        where T : Kernel
-    {
-        var context = cmdLineContext.GetService<KernelInvocationContext>();
-
-        if (kernel.SupportsCommandType(typeof(SendValue)))
-        {
-            var valueProducedEvents = new List<ValueProduced>();
-
-            var inputProducedEvents = new List<InputProduced>();
-
-            using var subscription = context.KernelEvents
-                                            .Where(e => e is ValueProduced or InputProduced)
-                                            .Subscribe(
-                                                e =>
-                                                {
-                                                    switch (e)
-                                                    {
-                                                        case ValueProduced vp:
-                                                            valueProducedEvents.Add(vp);
-                                                            break;
-                                                        case InputProduced ip:
-                                                            inputProducedEvents.Add(ip);
-                                                            break;
-                                                    }
-                                                });
-
-            var valueOptionResult = cmdLineContext.ParseResult.GetValueForOption(valueOption);
-
-            var sourceKernelName = valueOptionResult.Kernel;
-            
-            var sourceKernel = Kernel.Root.FindKernelByName(sourceKernelName);
-
-            ValueProduced valueProduced = null;
-
-            if (valueOptionResult is { Name: var sourceValueName } && 
-                sourceKernel is not null)
-            {
-                if (sourceKernel.KernelInfo.IsProxy == true)
-                {
-                    var destinationUri = sourceKernel.KernelInfo.RemoteUri;
-
-                    valueProduced = valueProducedEvents.SingleOrDefault(e =>
-                                                                            e.Name == sourceValueName && e.Command.DestinationUri == destinationUri);
-                }
-                else
-                {
-                    valueProduced = valueProducedEvents.SingleOrDefault(e =>
-                                                                            e.Name == sourceValueName && e.Command.TargetKernelName == sourceKernelName);
-                }
-            }
-
-            var valueNameFromCommandLine = cmdLineContext.ParseResult.GetValueForOption(nameOption);
-
-            if (valueProduced is { })
-            {
-                var isByref = cmdLineContext.ParseResult.GetValueForOption(byrefOption);
-
-                var referenceValue = isByref ? valueProduced.Value : null;
-                var formattedValue = valueProduced.FormattedValue;
-
-                await SendValue(context, kernel, referenceValue, formattedValue, valueNameFromCommandLine);
-            }
-
-            if (inputProducedEvents.Count > 0)
-            {
-                foreach (var inputProduced in inputProducedEvents)
-                {
-                    if (inputProduced.Command is RequestInput requestInput)
-                    {
-                        if (requestInput.IsPassword)
-                        {
-                            await SendValue(context, kernel, new PasswordString(inputProduced.Value), null, requestInput.ValueName);
-                        }
-                        else
-                        {
-                            await SendValue(context, kernel, inputProduced.Value, null, requestInput.ValueName);
-                        }
-                    }
-                }
-            }
-
-            if (sourceKernelName is null)
-            {
-                if (inputProducedEvents.All(e => ((RequestInput)e.Command).ValueName != valueNameFromCommandLine))
-                {
-                    await SendValue(context, kernel, valueOptionResult.Value, null, valueNameFromCommandLine);
-                }
-            }
-        }
-        else
-        {
-            context.Fail(context.Command, new CommandNotSupportedException(typeof(SendValue), kernel));
-        }
-    }
-
     public static T UseValueSharing<T>(this T kernel) where T : Kernel
     {
-        ConfigureAndAddShareMagicCommand(kernel);
-        ConfigureAndAddSetMagicCommand(kernel);
+        ConfigureAndAddShareDirective(kernel);
+        ConfigureAndAddSetDirective(kernel);
         return kernel;
     }
 
-    private static void ConfigureAndAddSetMagicCommand<T>(T destinationKernel) where T : Kernel
+    private static void ConfigureAndAddSetDirective<T>(T destinationKernel) where T : Kernel
     {
-        var nameOption = new Option<string>(
-            "--name",
-            description: LocalizationResources.Magics_set_name_Description())
+        var directive = new KernelActionDirective("#!set")
         {
-            IsRequired = true
+            Description = LocalizationResources.Magics_set_name_Description(),
+            KernelCommandType = typeof(SetDirectiveCommand),
+            TryGetKernelCommandAsync = SetDirectiveCommand.TryParseSetDirectiveCommandAsync,
+            Parameters =
+            {
+                new("--name")
+                {
+                    Description = LocalizationResources.Magics_set_name_Description(),
+                    Required = true
+                },
+                new KernelDirectiveParameter("--value")
+                {
+                    Description = LocalizationResources.Magics_set_value_Description(),
+                    Required = true
+                }.AddCompletions(async _ =>
+                {
+                    if (destinationKernel.ParentKernel is { } composite)
+                    {
+                        var getValueTasks = composite.ChildKernels
+                                                     .Where(
+                                                         k => k != destinationKernel &&
+                                                              k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
+                                                     .Select(async k => await k.SendAsync(new RequestValueInfos(k.Name)));
+
+                        var tasks = await Task.WhenAll(getValueTasks);
+
+                        var x = tasks
+                                .Select(t => t.Events.OfType<ValueInfosProduced>())
+                                .SelectMany(events => events.Select(e => new { e.Command, e.ValueInfos }))
+                                .SelectMany(x =>
+                                {
+                                    var kernelName = x.Command.TargetKernelName;
+
+                                    // TODO: (ConfigureAndAddSetMagicCommand) this is compensating for https://github.com/dotnet/interactive/issues/2728
+                                    if (kernelName is null &&
+                                        destinationKernel.RootKernel is CompositeKernel root &&
+                                        root.ChildKernels.TryGetByUri(x.Command.DestinationUri, out var k))
+                                    {
+                                        kernelName = k.Name;
+                                    }
+
+                                    return x.ValueInfos.Select(i => $"@{kernelName}:{i.Name}");
+                                })
+                                .OrderBy(x => x)
+                                .Select(n => new CompletionItem(n, WellKnownTags.Parameter))
+                                .ToArray();
+
+                        return x;
+                    }
+
+                    return Array.Empty<CompletionItem>();
+                }),
+                new("--byref")
+                {
+                    Description = LocalizationResources.Magics_set_byref_Description(),
+                    Flag = true
+                },
+                new KernelDirectiveParameter("--mime-type")
+                {
+                    Description = LocalizationResources.Magics_set_mime_type_Description()
+                }.AddCompletions(
+                    _ =>
+                    [
+                        JsonFormatter.MimeType,
+                        HtmlFormatter.MimeType,
+                        PlainTextFormatter.MimeType
+                    ])
+            }
         };
 
-        var byrefOption = new Option<bool>(
-            "--byref",
-            LocalizationResources.Magics_set_byref_Description());
-
-        var mimeTypeOption = new Option<string>(
-            "--mime-type",
-            description: LocalizationResources.Magics_set_mime_type_Description(),
-            parseArgument: result =>
-            {
-                if (result.GetValueForOption(byrefOption))
-                {
-                    result.ErrorMessage = LocalizationResources.Magics_set_mime_type_ErrorMessageCannotBeUsed();
-                }
-
-                return result.Tokens.FirstOrDefault()?.Value;
-            })
-            {
-                ArgumentHelpName = "MIME-TYPE"
-            }
-            .AddCompletions(
-                JsonFormatter.MimeType,
-                HtmlFormatter.MimeType,
-                PlainTextFormatter.MimeType);
-
-        var valueOption = new Option<ValueOptionResult>(
-            "--value",
-            description:
-            LocalizationResources.Magics_set_value_Description(),
-            parseArgument: ParseValueOption)
-        {
-            IsRequired = true,
-            ArgumentHelpName = "@source:sourceValueName"
-        };
-
-        valueOption.AddCompletions(_ =>
-        {
-            if (destinationKernel.ParentKernel is { } composite)
-            {
-                var getValueTasks = composite.ChildKernels
-                                             .Where(
-                                                 k => k != destinationKernel &&
-                                                      k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
-                                             .Select(async k => await k.SendAsync(new RequestValueInfos(k.Name)));
-
-                var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
-
-                var x = tasks
-                        .Select(t => t.Events.OfType<ValueInfosProduced>())
-                        .SelectMany(events => events.Select(e => new { e.Command, e.ValueInfos }))
-                        .SelectMany(x =>
-                        {
-                            var kernelName = x.Command.TargetKernelName;
-
-                            // TODO: (ConfigureAndAddSetMagicCommand) this is compensating for https://github.com/dotnet/interactive/issues/2728
-                            if (kernelName is null &&
-                                destinationKernel.RootKernel is CompositeKernel root &&
-                                root.ChildKernels.TryGetByUri(x.Command.DestinationUri, out var k))
-                            {
-                                kernelName = k.Name;
-                            }
-
-                            return x.ValueInfos.Select(i => $"@{kernelName}:{i.Name}");
-                        })
-                        .OrderBy(x => x)
-                        .Select(n => new CompletionItem(n))
-                        .ToArray();
-
-                return x;
-            }
-
-            return Array.Empty<CompletionItem>();
-        });
-
-        var set = new Command("#!set", LocalizationResources.Magics_set_Description())
-        {
-            nameOption,
-            valueOption,
-            mimeTypeOption,
-            byrefOption
-        };
-
-        set.SetHandler(async cmdLineContext =>
-                           await HandleSetMagicCommand(destinationKernel, cmdLineContext, nameOption, valueOption, byrefOption));
-
-        destinationKernel.AddDirective(set);
-
-        ValueOptionResult ParseValueOption(ArgumentResult argResult)
-        {
-            var valueOptionValue = argResult.Tokens.Single().Value;
-
-            if (!valueOptionValue.StartsWith("@"))
-            {
-                return new ValueOptionResult(valueOptionValue, null, null);
-            }
-
-            bool isByref;
-            var mimeTypeOptionResult = argResult.FindResultFor(mimeTypeOption);
-            RequestValue requestValue;
-
-            var (sourceKernelName, sourceValueName) = SubmissionParser.SplitKernelDesignatorToken(valueOptionValue[1..], destinationKernel.Name);
-
-            if (argResult.GetValueForOption(byrefOption))
-            {
-                if (destinationKernel.KernelInfo.IsProxy)
-                {
-                    argResult.ErrorMessage = LocalizationResources.Magics_set_ErrorMessageSharingByReference();
-                    return null;
-                }
-
-                if (destinationKernel.RootKernel.FindKernelByName(sourceKernelName) is { } sourceKernel &&
-                    sourceKernel.KernelInfo.IsProxy)
-                {
-                    argResult.ErrorMessage = LocalizationResources.Magics_set_ErrorMessageSharingByReference();
-                    return null;
-                }
-
-                requestValue = new RequestValue(sourceValueName, "text/plain", sourceKernelName);
-                isByref = true;
-            }
-            else if (mimeTypeOptionResult is { ErrorMessage: null })
-            {
-                var mimeType = mimeTypeOptionResult.GetValueForOption(mimeTypeOption);
-                requestValue = new RequestValue(sourceValueName, mimeType, sourceKernelName);
-                isByref = false;
-            }
-            else
-            {
-                requestValue = new RequestValue(sourceValueName, JsonFormatter.MimeType, sourceKernelName);
-                isByref = false;
-            }
-
-            if (KernelInvocationContext.Current is {} context)
-            {
-                requestValue.SetParent(context.Command);
-            }
-
-            var result = destinationKernel.RootKernel.SendAsync(requestValue).GetAwaiter().GetResult();
-
-            if (result.Events.LastOrDefault() is CommandFailed failed)
-            {
-                argResult.ErrorMessage = failed.Message;
-                return null;
-            }
-
-            var valueProduced = result.Events.OfType<ValueProduced>().Single();
-
-            if (isByref)
-            {
-                return new ValueOptionResult(valueProduced.Value, sourceKernelName, sourceValueName);
-            }
-            else
-            {
-                return new ValueOptionResult(valueProduced.FormattedValue, sourceKernelName, sourceValueName);
-            }
-        }
+        destinationKernel.AddDirective<SetDirectiveCommand>(
+            directive,
+            SetDirectiveCommand.HandleAsync);
     }
 
-    private record ValueOptionResult(object Value, string Kernel, string Name);
-
-    private static void ConfigureAndAddShareMagicCommand<T>(T kernel) where T : Kernel
+    private static void ConfigureAndAddShareDirective<T>(T kernel) where T : Kernel
     {
-        var sourceValueNameArg = new Argument<string>(
-            "name",
-            LocalizationResources.Magics_share_name_Description());
-
-        sourceValueNameArg.AddCompletions(_ =>
+        var shareDirective = new KernelActionDirective("#!share")
         {
-            if (kernel.ParentKernel is { } composite)
+            Description = LocalizationResources.Magics_share_Description(),
+            KernelCommandType = typeof(ShareDirectiveCommand),
+            Parameters =
             {
-                var getValueTasks = composite.ChildKernels
-                                             .Where(
-                                                 k => k != kernel &&
-                                                      k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
-                                             .Select(async k => await k.SendAsync(new RequestValueInfos()));
+                new KernelDirectiveParameter("--name")
+                {
+                    AllowImplicitName = true,
+                    Description = LocalizationResources.Magics_share_name_Description(),
+                }.AddCompletions(async _ =>
+                {
+                    if (kernel.ParentKernel is { } composite)
+                    {
+                        var getValueTasks = composite.ChildKernels
+                                                     .Where(
+                                                         k => k != kernel &&
+                                                              k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)))
+                                                     .Select(async k => await k.SendAsync(new RequestValueInfos()));
 
-                var tasks = Task.WhenAll(getValueTasks).GetAwaiter().GetResult();
+                        var tasks = await Task.WhenAll(getValueTasks);
 
-                return tasks
-                       .Select(t => t.Events.OfType<ValueInfosProduced>())
-                       .SelectMany(events => events.SelectMany(e => e.ValueInfos))
-                       .Select(vi => vi.Name)
-                       .OrderBy(x => x)
-                       .Select(n => new CompletionItem(n))
-                       .ToArray();
+                        return tasks
+                               .Select(t => t.Events.OfType<ValueInfosProduced>())
+                               .SelectMany(events => events.SelectMany(e => e.ValueInfos))
+                               .Select(vi => vi.Name)
+                               .OrderBy(x => x)
+                               .Select(n => new CompletionItem(n, WellKnownTags.Parameter))
+                               .ToArray();
+                    }
+
+                    return Array.Empty<CompletionItem>();
+                }),
+                new KernelDirectiveParameter("--from")
+                {
+                    Description = LocalizationResources.Magics_share_from_Description(),
+                    Required = true
+                }.AddCompletions(ctx =>
+                {
+                    if (kernel.ParentKernel is { } composite)
+                    {
+                        return composite.ChildKernels
+                                        .Where(k =>
+                                                   k != kernel &&
+                                                   k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
+                                                   k.KernelInfo.SupportsCommand(nameof(RequestValue)))
+                                        .Select(k => new CompletionItem(k.Name, WellKnownTags.Parameter));
+                    }
+
+                    return Array.Empty<CompletionItem>();
+                }),
+                new("--as")
+                {
+                    Description = LocalizationResources.Magics_share_as_Description()
+                },
+                new KernelDirectiveParameter("--mime-type")
+                {
+                    Description = LocalizationResources.Magics_share_mime_type_Description()
+                }.AddCompletions(
+                    _ =>
+                    [
+                        JsonFormatter.MimeType,
+                        HtmlFormatter.MimeType,
+                        PlainTextFormatter.MimeType
+                    ])
             }
-
-            return Array.Empty<CompletionItem>();
-        });
-
-        var fromKernelOption = new Option<string>(
-            "--from",
-            LocalizationResources.Magics_share_from_Description());
-
-        fromKernelOption.AddCompletions(_ =>
-        {
-            if (kernel.ParentKernel is { } composite)
-            {
-                return composite.ChildKernels
-                    .Where(k =>
-                        k != kernel &&
-                        k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
-                        k.KernelInfo.SupportsCommand(nameof(RequestValue)))
-                    .Select(k => new CompletionItem(k.Name));
-            }
-
-            return Array.Empty<CompletionItem>();
-        });
-
-        var mimeTypeOption =
-            new Option<string>("--mime-type", LocalizationResources.Magics_share_mime_type_Description())
-                .AddCompletions(
-                    JsonFormatter.MimeType,
-                    HtmlFormatter.MimeType,
-                    PlainTextFormatter.MimeType);
-
-        var asOption = new Option<string>("--as", LocalizationResources.Magics_share_as_Description());
-
-        var share = new Command("#!share",
-            LocalizationResources.Magics_share_Description())
-        {
-            fromKernelOption,
-            sourceValueNameArg,
-            mimeTypeOption,
-            asOption
         };
 
-        share.SetHandler(async cmdLineContext =>
-        {
-            var from = cmdLineContext.ParseResult.GetValueForOption(fromKernelOption);
-            var valueName = cmdLineContext.ParseResult.GetValueForArgument(sourceValueNameArg);
-            var context = cmdLineContext.GetService<KernelInvocationContext>();
-            var mimeType = cmdLineContext.ParseResult.GetValueForOption(mimeTypeOption);
-            var importAsName = cmdLineContext.ParseResult.GetValueForOption(asOption);
-
-            if (kernel.FindKernelByName(from) is { } fromKernel)
-            {
-                await fromKernel.GetValueAndSendTo(
-                    context,
-                    kernel,
-                    valueName,
-                    mimeType,
-                    importAsName);
-            }
-            else
-            {
-                context.Fail(context.Command, message: $"Kernel not found: {from}");
-            }
-        });
-
-        kernel.AddDirective(share);
+        kernel.AddDirective<ShareDirectiveCommand>(
+            shareDirective,
+            ShareDirectiveCommand.HandleAsync);
     }
 
     internal static async Task GetValueAndSendTo(
@@ -540,39 +328,43 @@ public static class KernelExtensions
         string requestedMimeType,
         string toName)
     {
-        var valueProduced = await GetValue(context, fromKernel, fromName, requestedMimeType);
+        var supportedRequestValue = fromKernel.SupportsCommandType(typeof(RequestValue));
+
+        if (!supportedRequestValue)
+        {
+            throw new InvalidOperationException($"Kernel {fromKernel} does not support command {nameof(RequestValue)}");
+        }
+
+        var requestValue = new RequestValue(fromName, mimeType: requestedMimeType);
+
+        requestValue.SetParent(context.Command, true);
+
+        var requestValueResult = await fromKernel.SendAsync(requestValue);
+        var valueProduced = requestValueResult.Events.OfType<ValueProduced>().SingleOrDefault();
 
         if (valueProduced is not null)
         {
             var declarationName = toName ?? fromName;
 
-            await SendValue(context, toKernel, requestedMimeType is not null, valueProduced, declarationName);
+            bool ignoreReferenceValue = requestedMimeType is not null;
+
+            if (toKernel.SupportsCommandType(typeof(SendValue)))
+            {
+                var value =
+                    ignoreReferenceValue
+                        ? null
+                        : valueProduced.Value;
+
+                await SendValue(context, toKernel, value, valueProduced.FormattedValue, declarationName);
+            }
+            else
+            {
+                throw new CommandNotSupportedException(typeof(SendValue), toKernel);
+            }
         }
     }
 
-    private static async Task SendValue(
-        KernelInvocationContext context,
-        Kernel kernel, 
-        bool ignoreReferenceValue, 
-        ValueProduced valueProduced,
-        string declarationName)
-    {
-        if (kernel.SupportsCommandType(typeof(SendValue)))
-        {
-            var value =
-                ignoreReferenceValue
-                    ? null
-                    : valueProduced.Value;
-
-            await SendValue(context, kernel, value, valueProduced.FormattedValue, declarationName);
-        }
-        else
-        {
-            throw new CommandNotSupportedException(typeof(SendValue), kernel);
-        }
-    }
-
-    private static async Task SendValue(
+    internal static async Task SendValue(
         KernelInvocationContext context,
         Kernel kernel, 
         object value, 
@@ -596,70 +388,30 @@ public static class KernelExtensions
         }
     }
 
-    private static async Task<ValueProduced> GetValue(
-        KernelInvocationContext context,
-        Kernel kernel, 
-        string name, 
-        string requestedMimeType)
-    {
-        var supportedRequestValue = kernel.SupportsCommandType(typeof(RequestValue));
-
-        if (!supportedRequestValue)
-        {
-            throw new InvalidOperationException($"Kernel {kernel} does not support command {nameof(RequestValue)}");
-        }
-
-        var requestValue = new RequestValue(name, mimeType: requestedMimeType);
-
-        requestValue.SetParent(context.Command, true);
-
-        var requestValueResult = await kernel.SendAsync(requestValue);
-
-        return requestValueResult.Events.OfType<ValueProduced>().SingleOrDefault();
-    }
-
     public static TKernel UseWho<TKernel>(this TKernel kernel)
         where TKernel : Kernel
     {
         if (kernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
             kernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
         {
-            kernel.AddDirective(who());
-            kernel.AddDirective(whos());
+            kernel.AddDirective(new KernelActionDirective("#!who")
+                                {
+                                    Description = LocalizationResources.Magics_who_Description()
+                                },
+                                async (_, context) => await DisplayValues(context, false));
+            kernel.AddDirective(new KernelActionDirective("#!whos")
+                                {
+                                    Description = LocalizationResources.Magics_whos_Description()
+                                },
+                                async (_, context) => await DisplayValues(context, true));
         }
+
         return kernel;
-    }
-
-    private static Command who()
-    {
-        var command = new Command(name: "#!who", LocalizationResources.Magics_who_Description())
-        {
-            Handler = CommandHandler.Create(async (InvocationContext ctx) =>
-            {
-                await DisplayValues(ctx.GetService<KernelInvocationContext>(), false);
-            })
-        };
-
-        return command;
-    }
-
-    private static Command whos()
-    {
-        var command = new Command("#!whos", LocalizationResources.Magics_whos_Description())
-        {
-            Handler = CommandHandler.Create(async (InvocationContext ctx) =>
-            {
-                await DisplayValues(ctx.GetService<KernelInvocationContext>(), true);
-            })
-        };
-
-        return command;
     }
 
     private static async Task DisplayValues(KernelInvocationContext context, bool detailed)
     {
-        if (context.Command is SubmitCode &&
-            context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
+        if (context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
             context.HandlingKernel.KernelInfo.SupportsCommand(nameof(RequestValue)))
         {
             var nameEvents = new List<ValueInfosProduced>();
@@ -697,8 +449,7 @@ public static class KernelExtensions
 
     public static void VisitSubkernels(
         this Kernel kernel,
-        Action<Kernel> onVisit,
-        bool recursive = false)
+        Action<Kernel> onVisit)
     {
         if (kernel is null)
         {
@@ -710,16 +461,18 @@ public static class KernelExtensions
             throw new ArgumentNullException(nameof(onVisit));
         }
 
-        foreach (var subKernel in kernel.Subkernels(recursive))
+        if (kernel is CompositeKernel compositeKernel)
         {
-            onVisit(subKernel);
+            foreach (var subKernel in compositeKernel)
+            {
+                onVisit(subKernel);
+            }
         }
     }
 
     public static void VisitSubkernelsAndSelf(
         this Kernel kernel,
-        Action<Kernel> onVisit,
-        bool recursive = false)
+        Action<Kernel> onVisit)
     {
         if (kernel is null)
         {
@@ -731,15 +484,13 @@ public static class KernelExtensions
             throw new ArgumentNullException(nameof(onVisit));
         }
 
-        foreach (var k in kernel.SubkernelsAndSelf(recursive))
+        foreach (var k in kernel.SubkernelsAndSelf())
         {
             onVisit(k);
         }
     }
 
-    public static IEnumerable<Kernel> SubkernelsAndSelf(
-        this Kernel kernel,
-        bool recursive = false)
+    internal static IEnumerable<Kernel> SubkernelsAndSelf(this Kernel kernel)
     {
         yield return kernel;
 
@@ -747,37 +498,7 @@ public static class KernelExtensions
         {
             foreach (var subKernel in compositeKernel.ChildKernels)
             {
-                if (recursive)
-                {
-                    foreach (var recursiveVisit in subKernel.SubkernelsAndSelf(recursive))
-                    {
-                        yield return recursiveVisit;
-                    }
-                }
-                else
-                {
-                    yield return subKernel;
-                }
-            }
-        }
-    }
-
-    public static IEnumerable<Kernel> Subkernels(
-        this Kernel kernel,
-        bool recursive = false)
-    {
-        if (kernel is CompositeKernel compositeKernel)
-        {
-            foreach (var subKernel in compositeKernel.ChildKernels)
-            {
                 yield return subKernel;
-                if (recursive)
-                {
-                    foreach (var recursiveVisit in subKernel.Subkernels(recursive))
-                    {
-                        yield return recursiveVisit;
-                    }
-                }
             }
         }
     }

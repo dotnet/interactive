@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
 
@@ -13,7 +14,7 @@ using Diagnostic = CodeAnalysis.Diagnostic;
 
 internal class HttpVersionNode : HttpSyntaxNode
 {
-    internal HttpVersionNode(SourceText sourceText, HttpSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
+    internal HttpVersionNode(SourceText sourceText, HttpSyntaxTree syntaxTree) : base(sourceText, syntaxTree)
     {
     }
 
@@ -24,7 +25,7 @@ internal class HttpVersionNode : HttpSyntaxNode
             yield return diagnostic;
         }
 
-        if (ChildTokens.FirstOrDefault() is { Kind: HttpTokenKind.Word } word)
+        if (ChildTokens.FirstOrDefault() is { Kind: TokenKind.Word } word)
         {
             if ((word.Text.ToLowerInvariant() is not "http" and not "https") || TextContainsWhitespace())
             {

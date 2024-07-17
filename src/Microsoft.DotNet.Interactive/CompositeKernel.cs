@@ -5,17 +5,13 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.NamingConventionBinder;
-using System.CommandLine.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -25,7 +21,7 @@ public sealed class CompositeKernel :
 {
     private readonly KernelCollection _childKernels;
     private string _defaultKernelName;
-    private Command _connectDirective;
+    private KernelActionDirective _rootConnectDirective;
     private KernelHost _host;
     private readonly ConcurrentDictionary<Type, string> _defaultKernelNamesByCommandType = new();
 
@@ -66,12 +62,27 @@ public sealed class CompositeKernel :
 
         kernel.SetScheduler(Scheduler);
 
-        if (aliases is not null)
+        if (kernel.KernelSpecifierDirective is { } kernelSpecifierDirective)
         {
-            kernel.KernelInfo.NameAndAliases.UnionWith(aliases);
-        }
+            AddDirective(kernelSpecifierDirective);
 
-        AddChooseKernelDirective(kernel);
+            if (aliases is not null)
+            {
+                foreach (var alias in aliases)
+                {
+                    var aliasDirective = new KernelSpecifierDirective($"#!{alias}", kernel.Name)
+                    {
+                        Description = $"Run the code that follows using the {kernel.Name} kernel."
+                    };
+
+                    aliasDirective.TryGetKernelCommandAsync = kernelSpecifierDirective.TryGetKernelCommandAsync;
+
+                    AddDirective(aliasDirective);
+
+                    kernel.KernelInfo.NameAndAliases.Add(alias);
+                }
+            }
+        }
 
         _childKernels.Add(kernel);
 
@@ -90,23 +101,23 @@ public sealed class CompositeKernel :
         }
     }
 
+    private void AddDirective(KernelSpecifierDirective directive)
+    {
+        if (KernelInfo.SupportedDirectives.Any(d => d.Name == directive.Name))
+        {
+            throw new ArgumentException($"The kernel name or alias '{directive.Name}' is already in use.");
+        }
+
+        KernelInfo.SupportedDirectives.Add(directive);
+
+        SubmissionParser.ResetParser();
+    }
+
     public void SetDefaultTargetKernelNameForCommand(
         Type commandType,
         string kernelName)
     {
         _defaultKernelNamesByCommandType[commandType] = kernelName;
-    }
-
-    private void AddChooseKernelDirective(Kernel kernel)
-    {
-        var chooseKernelCommand = kernel.ChooseKernelDirective;
-
-        foreach (var alias in kernel.KernelInfo.Aliases)
-        {
-            chooseKernelCommand.AddAlias($"#!{alias}");
-        }
-
-        AddDirective(chooseKernelCommand);
     }
 
     public KernelCollection ChildKernels => _childKernels;
@@ -202,105 +213,71 @@ public sealed class CompositeKernel :
         }
     }
 
-    private protected override IEnumerable<Parser> GetDirectiveParsersForCompletion(
-        DirectiveNode directiveNode,
-        int requestPosition)
-    {
-        var upToCursor =
-            directiveNode.Text[..requestPosition];
-
-        var indexOfPreviousSpace =
-            upToCursor.LastIndexOf(" ", StringComparison.CurrentCultureIgnoreCase);
-
-        var compositeKernelDirectiveParser = SubmissionParser.GetDirectiveParser();
-
-        if (indexOfPreviousSpace >= 0 &&
-            directiveNode is ActionDirectiveNode actionDirectiveNode)
-        {
-            // if the first token has been specified, we can narrow down to the specific directive parser that defines this directive
-
-            var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
-
-            var kernel = this.FindKernelByName(actionDirectiveNode.ParentKernelName) ?? this;
-            
-            var languageKernelDirectiveParser = kernel.SubmissionParser.GetDirectiveParser();
-
-            if (IsDirectiveDefinedIn(languageKernelDirectiveParser))
-            {
-                // the directive is defined in the subkernel, so this is the only directive parser we need
-                yield return languageKernelDirectiveParser;
-            }
-            else if (IsDirectiveDefinedIn(compositeKernelDirectiveParser))
-            {
-                yield return compositeKernelDirectiveParser;
-            }
-
-            bool IsDirectiveDefinedIn(Parser parser) =>
-                parser.Configuration.RootCommand.Children.GetByAlias(directiveName) is { };
-        }
-        else
-        {
-            // otherwise, return all directive parsers from the CompositeKernel as well as subkernels
-            yield return compositeKernelDirectiveParser;
-
-            foreach (var kernel in ChildKernels)
-            {
-                yield return kernel.SubmissionParser.GetDirectiveParser();
-            }
-        }
-    }
-
     public IEnumerator<Kernel> GetEnumerator() => _childKernels.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public void AddKernelConnector(ConnectKernelCommand connectionCommand)
+    public void AddKernelConnector<T>(ConnectKernelDirective<T> connectDirective)
+        where T : ConnectKernelCommand
     {
-        if (_connectDirective is null)
+        if (_rootConnectDirective is null)
         {
-            _connectDirective = new Command(
-                "#!connect",
-                "Connects additional subkernels");
+            _rootConnectDirective = new("#!connect")
+            {
+                Description = "Connects additional subkernels"
+            };
 
-            AddDirective(_connectDirective);
+            KernelInfo.SupportedDirectives.Add(_rootConnectDirective);
         }
 
-        connectionCommand.Handler = CommandHandler.Create<KernelInvocationContext, InvocationContext>(
-            async (context, commandLineContext) =>
-            {
-                var connectedKernels = await connectionCommand.ConnectKernelsAsync(context, commandLineContext);
-                foreach (var connectedKernel in connectedKernels)
-                {
+        _rootConnectDirective.Subcommands.Add(connectDirective);
 
-                    Add(connectedKernel);
-
-                    // todo : here the connector should be used to patch the kernelInfo with the right destination uri for the proxy
-
-                    var chooseKernelDirective =
-                        Directives.OfType<ChooseKernelDirective>()
-                            .Single(d => d.Kernel == connectedKernel);
-
-                    if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
-                    {
-                        chooseKernelDirective.Description = connectionCommand.ConnectedKernelDescription;
-                    }
-
-                    chooseKernelDirective.Description += " (Connected kernel)";
-
-                    context.Display($"Kernel added: #!{connectedKernel.Name}");
-                }
-            });
-
-        _connectDirective.Add(connectionCommand);
+        AddDirective<T>(connectDirective,
+                     async (command, context) =>
+                     {
+                         await ConnectKernel(
+                             command,
+                             connectDirective,
+                             context);
+                     });
 
         SubmissionParser.ResetParser();
+    }
+
+    private async Task ConnectKernel<TCommand>(
+        TCommand command,
+        ConnectKernelDirective<TCommand> connectDirective,
+        KernelInvocationContext context) 
+        where TCommand : ConnectKernelCommand
+    {
+        var connectedKernels = await connectDirective.ConnectKernelsAsync(
+                                   command,
+                                   context);
+
+        foreach (var connectedKernel in connectedKernels)
+        {
+            Add(connectedKernel);
+
+            var chooseKernelDirective =
+                KernelInfo.SupportedDirectives.OfType<KernelSpecifierDirective>()
+                          .Single(d => d.KernelName == connectedKernel.Name);
+
+            if (!string.IsNullOrWhiteSpace(connectDirective.ConnectedKernelDescription))
+            {
+                chooseKernelDirective.Description = connectDirective.ConnectedKernelDescription;
+            }
+
+            chooseKernelDirective.Description += " (Connected kernel)";
+
+            context.Display($"Kernel added: #!{connectedKernel.Name}");
+        }
     }
 
     public KernelHost Host => _host;
 
     internal void SetHost(KernelHost host)
     {
-        if (_host is { })
+        if (_host is not null)
         {
             throw new InvalidOperationException("Host cannot be changed");
         }
