@@ -40,7 +40,7 @@ import { ActiveNotebookTracker } from './activeNotebookTracker';
 import * as metadataUtilities from './metadataUtilities';
 import * as constants from './constants';
 import { ServiceCollection } from './serviceCollection';
-import { SurveyBanner } from './surveyBanner'
+import { SurveyBanner } from './surveyBanner';
 
 export class CachedDotNetPathManager {
     private dotNetPath: string = 'dotnet'; // default to global tool if possible

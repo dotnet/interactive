@@ -17,9 +17,9 @@ You can see the actual HTML that this produces by converting a `PocketView` to a
 
 ![image](https://user-images.githubusercontent.com/547415/82271047-8ad3c800-992b-11ea-9218-d4d33a88fbe9.png)
 
-Because HTML is hard to represent concisely using a statically-typed language, `PocketView` makes use of `dynamic`. This is what allows you to use arbitrary indexer names to specify HTML attributes.
+Because HTML is hard to represent concisely using a statically-typed language, `PocketView` makes use of `dynamic`. This is what allows you to use arbitrary indexer names to specify HTML attributes. Each of the methods on `PocketViewTags` returns a `PocketView` as `dynamic`. Let's take a closer look at some of the things you can do with a `PocketView`.
 
-The `PocketView` methods that are available can be found on the `PocketViewTags` class in the `Microsoft.DotNet.Interactive.Formatting` package. You can call them directly, without the class name qualifier, because `dotnet-interactive` preconfigures your C# session with `using static Microsoft.DotNet.Interactive.Formatting`. Each of the methods on `PocketViewTags` returns a `PocketView` as `dynamic`. Let's take a closer look at some of the things you can do with a `PocketView`.
+_Note: In the code samples shown here, the `PocketView` methods can be called without a class name qualifier by running `using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags` in your notebook._
 
 As we saw above, you can use square bracket-delimited indexers to specify HTML attributes:
 

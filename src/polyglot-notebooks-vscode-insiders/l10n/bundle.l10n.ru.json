@@ -5,6 +5,7 @@
   "VariableGridColumnType": "Тип",
   "VariableGridColumnKernel": "Ядро",
   "VariableGridshareTemplate": "Отправить значение {value-name} из ядра {kernel-name}",
+  "'VariableGridCaption": "Polyglot Notebook variables",
   "survey.yes": "Да, перейти к опросу",
   "survey.no": "Нет",
   "survey.message": "Мы будем рады получить ваши отзывы о работе записных книжек! Уделите несколько минут, чтобы оставить отзыв об использовании Разноязычных блокнотов."

@@ -165,17 +165,4 @@ telemetry
                             new KeyValuePair<string, string>("PackageName", "nodatime".ToSha256HashWithNormalizedCasing()),
                             new KeyValuePair<string, string>("PackageVersion", "3.1.9".ToSha256Hash()));
     }
-
-    [Fact(Skip = "requires package on internal feed")]
-    public async Task Extensions_can_send_telemetry_using_PocketLogger()
-    {
-        var results = await _kernel.SendAsync(new SubmitCode("""
-            #i "nuget:c:\temp\packages"
-            #r "nuget:Microsoft.DotNet.Interactive.AIUtilities,*-*"
-            """));
-
-        results.Events.Should().NotContainErrors();
-        
-        _telemetrySender.TelemetryEvents.Should().Contain(e => e.EventName == "Microsoft.DotNet.Interactive.AIUtilities.InteractiveExtension.Load");
-    }
 }

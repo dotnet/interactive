@@ -44,7 +44,8 @@ const defaultGridLocalization: GridLocalization = {
     valueColumnHeader: 'Value',
     typeColumnHeader: 'Type',
     kernelNameColumnHeader: 'Kernel',
-    shareTemplate: 'Share value {value-name} from {kernel-name} kernel'
+    shareTemplate: 'Share value "{value-name}" from kernel "{kernel-name}"',
+    gridCaption: 'Polyglot Notebook variables'
 }
 
 export class VariableGrid extends React.Component<VariableGridProps, VariableGridState> {
@@ -363,6 +364,9 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                 </div>
                 <div className="table-container" >
                     <table id="table-root">
+                        <caption>
+                            {this.state.gridLocalization!.gridCaption}
+                        </caption>
                         <colgroup>
                             <col id="name-column" className="name-column"></col>
                             <col id="value-column" className="value-column"></col>
@@ -370,9 +374,10 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                             <col id="kernel-column" className="kernel-column"></col>
                             <col id="actions-column" className="actions-column"></col>
                         </colgroup>
-                        <tbody>
+                        <thead>
                             <tr>
                                 <th
+                                    scope="col"
                                     key={0}
                                     id={`0-0`}
                                     className="header name-column"
@@ -386,6 +391,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     />
                                 </th>
                                 <th
+                                    scope="col"
                                     key={1}
                                     id={`0-1`}
                                     className="header value-column"
@@ -399,6 +405,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     />
                                 </th>
                                 <th
+                                    scope="col"
                                     key={2}
                                     id={`0-2`}
                                     className="header type-column"
@@ -412,6 +419,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     />
                                 </th>
                                 <th
+                                    scope="col"
                                     key={3}
                                     id={`0-3`}
                                     className="header kernel-column"
@@ -425,6 +433,7 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     />
                                 </th>
                                 <th
+                                    scope="col"
                                     key={4}
                                     id={`0-4`}
                                     className="header actions-column"
@@ -432,6 +441,8 @@ export class VariableGrid extends React.Component<VariableGridProps, VariableGri
                                     {this.state.gridLocalization!.actionsColumnHeader}
                                 </th>
                             </tr>
+                        </thead>
+                        <tbody>
                             {rows.map((row: VariableGridRow, i) =>
                                 <tr key={i + 1}>
                                     <td key={0} id={`${row.id}-${0}`} className="name-column">
