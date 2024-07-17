@@ -37,6 +37,7 @@ public partial class CompletionTests
         [InlineData("[|#!w|]  \n", "#!who,#!whos")]
         // options
         [InlineData("#!share [||]", "--from")]
+        [InlineData("#!connect [||]", "signalr")]
         [InlineData("""
                     
                     
@@ -45,8 +46,12 @@ public partial class CompletionTests
                     
                     #!share [||]
                     """, "--from")]
+        [InlineData("""
+                    
+                    #!set --name x [||]
+                    
+                    """, "--value")]
         // subcommands
-        [InlineData("#!connect [||]", "signalr")]
         public async Task Completions_are_available_for_magic_commands(
             string markupCode,
             string expected)

@@ -438,12 +438,6 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     public async Task<IReadOnlyList<CompletionItem>> GetCompletionsAtPositionAsync(int position)
     {
-        // FindToken will return the token that follows the cursor position, so we adjust the position by one to get the token that has just been typed.
-        if (position > 0)
-        {
-            position--;
-        }
-
         var currentToken = FindToken(position);
         var node = FindNode(position);
 

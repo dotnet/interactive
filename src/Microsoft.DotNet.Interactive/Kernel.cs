@@ -729,17 +729,11 @@ public abstract partial class Kernel :
     {
         if (command.SyntaxNode is DirectiveNode directiveNode)
         {
-            var sourceText = SourceText.From(command.Code);
+            var allCompletions = await directiveNode.GetCompletionsAtPositionAsync(command.OriginalPosition);
 
-            var linePosition = command.LinePosition.ToCodeAnalysisLinePosition();
-
-            var requestPosition = sourceText
-                                  .Lines
-                                  .GetPosition(linePosition);
-
-            var completions = await GetDirectiveCompletionItemsAsync(
-                directiveNode,
-                command.OriginalPosition);
+            var completions = allCompletions
+                              .Distinct(CompletionItemComparer.Instance)
+                              .ToArray();
 
             var upToCursor = directiveNode.FullText[..command.LinePosition.Character];
 
@@ -756,17 +750,6 @@ public abstract partial class Kernel :
                 new CompletionsProduced(
                     completions.ToArray(), command, resultRange));
         }
-    }
-
-    private async Task<IEnumerable<CompletionItem>> GetDirectiveCompletionItemsAsync(
-        DirectiveNode directiveNode,
-        int requestPosition)
-    {
-        var allCompletions = await directiveNode.GetCompletionsAtPositionAsync(requestPosition);
-
-        return allCompletions
-               .Distinct(CompletionItemComparer.Instance)
-               .ToArray();
     }
 
     private void TrySetHandler(

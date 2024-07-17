@@ -92,8 +92,6 @@ public static class KernelExtensions
                 Hidden = true
             };
 
-            // FIX: (UseNugetDirective) hide this directive or reimplement
-
             kernel.AddDirective(
                 directive,
                 async (_, context) =>
