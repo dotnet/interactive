@@ -6,25 +6,25 @@ namespace Microsoft.DotNet.Interactive.Journey;
 internal static class LocalizationResources
 {
     /// <summary>
-    ///   Interpolates values into a localized string Specify lesson source file
+    ///   Gets a localized message like: Specify lesson source file
     /// </summary>
     internal static string Magics_model_answer_from_file_Description()
         => GetResourceString(Resources.Magics_model_answer_from_file_Description);
 
     /// <summary>
-    ///   Interpolates values into a localized string The {0} and {1} options cannot be used together
+    ///   Gets a localized message like: The {0} and {1} options cannot be used together
     /// </summary>
     internal static string Magics_model_answer_from_file_ErrorMessage(string option1, string option2)
         => GetResourceString(Resources.Magics_model_answer_from_file_ErrorMessage, option1, option2);
 
     /// <summary>
-    ///   Interpolates values into a localized string Specify lesson source URL
+    ///   Gets a localized message like: Specify lesson source URL
     /// </summary>
     internal static string Magics_model_answer_from_url_Description()
         => GetResourceString(Resources.Magics_model_answer_from_url_Description);
 
     /// <summary>
-    ///   Interpolates values into a localized string similar to File does not exist: {0}.
+    ///   Gets a localized message like: similar to File does not exist: {0}.
     /// </summary>
     internal static string FileDoesNotExist(string filePath) =>
         GetResourceString(Resources.FileDoesNotExist, filePath);

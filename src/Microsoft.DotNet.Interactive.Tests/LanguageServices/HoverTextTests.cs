@@ -1,12 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -63,6 +63,33 @@ public class HoverTextTests : LanguageKernelTestBase
                      .Content
                      .Should()
                      .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
+    }
+
+    [Theory]
+    [InlineData("#!s$$et --value", "Sets a value in the current kernel")]
+    [InlineData("#!set --valu$$e", "The value to be set")]
+    [InlineData("#!connect sign$$alr --kernel-name blah", "Connects to a kernel using SignalR")]
+    public async Task hover_request_returns_expected_result_for_magic_commands(
+        string markupCode,
+        string expectedContent)
+    {
+        using var kernel = CreateKernel();
+        kernel.AddKernelConnector(new ConnectSignalRDirective());
+
+        MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+        var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+        commandResult.Events
+                     .Should()
+                     .ContainSingle<HoverTextProduced>()
+                     .Which
+                     .Content
+                     .Should()
+                     .ContainSingle()
+                     .Which
+                     .Value
+                     .Should()
+                     .Contain(expectedContent);
     }
 
     [Theory]

@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing;
@@ -23,6 +24,7 @@ public class ImportDocument : KernelCommand
         FilePath = filePath;
     }
 
+    [JsonPropertyName("file")]
     public string FilePath { get; }
 
     internal static Task<KernelCommand> TryParseImportDirectiveAsync(
@@ -40,9 +42,7 @@ public class ImportDocument : KernelCommand
 
             if (parameterResult.Value is string filePath)
             {
-                {
-                    command = new ImportDocument(filePath);
-                }
+                command = new ImportDocument(filePath);
             }
         }
 

@@ -88,6 +88,15 @@ namespace Microsoft.DotNet.Interactive {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The path to the file to be imported. Supported file extensions include notebooks (.ipynb, .dib) as well as source code for supported languages (.cs, .csx, .fs, .fsx, .ps1, .html, .http, .js)..
+        /// </summary>
+        internal static string Magics_import_file_Description {
+            get {
+                return ResourceManager.GetString("Magics_import_file_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enables session logging..
         /// </summary>
         internal static string Magics_log_Description {

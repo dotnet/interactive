@@ -2,7 +2,7 @@
   "token": "the-token",
   "commandType": "ImportDocument",
   "command": {
-    "filePath": "c:\\temp\\some.ipynb",
+    "file": "c:\\temp\\some.ipynb",
     "targetKernelName": null,
     "originUri": null,
     "destinationUri": null
