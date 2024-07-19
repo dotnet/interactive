@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FluentAssertions;
@@ -13,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests.Utility;
 internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
 {
     public HttpRequestNodeSyntaxSpec(
+        HttpCommentNodeSyntaxSpec commentNamedRequest,
         HttpMethodNodeSyntaxSpec method,
         HttpUrlNodeSyntaxSpec url,
         HttpVersionNodeSyntaxSpec version = null,
@@ -20,6 +22,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         HttpBodyNodeSyntaxSpec bodySection = null,
         params Action<HttpRequestNode>[] assertions) : base(assertions)
     {
+        CommentNamedRequest = commentNamedRequest;
         Method = method;
         Url = url;
 
@@ -31,6 +34,8 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         HeadersSection = headersSection;
         BodySection = bodySection;
     }
+
+    public HttpCommentNodeSyntaxSpec CommentNamedRequest { get; }
 
     public HttpMethodNodeSyntaxSpec Method { get; }
 
@@ -45,6 +50,21 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
     public override void Validate(HttpRequestNode requestNode)
     {
         base.Validate(requestNode);
+
+        if (!string.IsNullOrEmpty(CommentNamedRequest?.Text))
+        {
+            var httpNamedRequestNode = requestNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().SingleOrDefault();
+
+            httpNamedRequestNode.Should().NotBeNull();
+
+            httpNamedRequestNode.Parent.Should().NotBeNull();
+
+            httpNamedRequestNode.Parent.GetType().Should().Be(typeof(HttpCommentNode));
+
+            var commentNode = httpNamedRequestNode.Parent as HttpCommentNode;
+
+            CommentNamedRequest.Validate(syntaxNode: commentNode);
+        }
 
         if (!string.IsNullOrEmpty(Method?.Text))
         {
@@ -117,6 +137,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         var sb = new StringBuilder();
 
         sb.Append(MaybeNewLines());
+        sb.Append(CommentNamedRequest);
         sb.Append(MaybeLineComment());
         sb.Append(MaybeWhitespace());
 
@@ -155,7 +176,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
         return sb.ToString();
     }
 
-    private string MaybeLineComment()
+    private HttpCommentNodeSyntaxSpec MaybeLineComment()
     {
         var numberOfCommentLines = Randomizer?.NextDouble() switch
         {
@@ -171,7 +192,7 @@ internal class HttpRequestNodeSyntaxSpec : SyntaxSpecBase<HttpRequestNode>
             commentText += CommentLine();
         }
 
-        return commentText;
+        return new(commentText);
 
         string CommentLine()
         {

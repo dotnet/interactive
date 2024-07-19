@@ -250,16 +250,16 @@ internal class HttpRequestParser
         {
             while (MoreTokens())
             {
-                if (CurrentToken is { Kind: HttpTokenKind.Punctuation }
+                if (CurrentToken is { Kind: TokenKind.Punctuation }
                 and { Text: "@" })
                 {
                     ConsumeCurrentTokenInto(node);
                 }
-                else if (CurrentToken?.Kind is HttpTokenKind.Whitespace)
+                else if (CurrentToken?.Kind is TokenKind.Whitespace)
                 {
                     ConsumeCurrentTokenInto(node);
                 }
-                else if (CurrentToken?.Kind is HttpTokenKind.NewLine)
+                else if (CurrentToken?.Kind is TokenKind.NewLine)
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -651,7 +651,7 @@ internal class HttpRequestParser
             //Three tokens representing the @name and whitespace signifying a named request node 
             ConsumeCurrentTokenInto(node);
             ConsumeCurrentTokenInto(node);
-            ParseTrailingWhitespace(node);
+            ParseTrailingWhitespace(node, stopBeforeNewLine: true);
 
             node.Add(ParseNamedRequestNameNode());
 
@@ -661,31 +661,44 @@ internal class HttpRequestParser
         private HttpNamedRequestNameNode ParseNamedRequestNameNode()
         {
             var node = new HttpNamedRequestNameNode(_sourceText, _syntaxTree);
-            
-                ParseLeadingWhitespaceAndComments(node);
 
-                while (MoreTokens() && CurrentToken is not {Kind: HttpTokenKind.NewLine})
+            if (CurrentToken is { Kind: TokenKind.Whitespace or TokenKind.NewLine })
+            {
+                var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
+                node.AddDiagnostic(diagnostic);
+            }
+            bool wordParsedOnce = false;
+            while (MoreTokens() && CurrentToken is not {Kind: TokenKind.NewLine })
                 {
-                    if (CurrentToken is not null && !(CurrentToken is { Kind: HttpTokenKind.Word } or { Text: "_" or "@" or "."}))
+
+                    if (CurrentToken is not null && (!(CurrentToken is { Kind: TokenKind.Word or TokenKind.Whitespace} or { Text: "_" or "@" or "."}) || CurrentToken is {Kind: TokenKind.Word } && wordParsedOnce)) 
                     {
-                    var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
+                        var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
+                        node.AddDiagnostic(diagnostic);
+                        wordParsedOnce = false;
+                    }
 
-                    node.AddDiagnostic(diagnostic);
-                }
+                    if (CurrentToken is { Kind: TokenKind.Word })
+                    {
+                        wordParsedOnce = true;
+                    }
+                    ConsumeCurrentTokenInto(node);
+                /*if (CurrentToken is { Kind: TokenKind.Whitespace })
+                {
+                    ParseTrailingWhitespace(node, stopBeforeNewLine: true);
+                }*/
 
-                ConsumeCurrentTokenInto(node);
-                
             }
 
-           return ParseTrailingWhitespace(node, stopAfterNewLine: true);
-
+            return ParseTrailingWhitespace(node, stopAfterNewLine: true);
         }
 
         private bool isCommentNamedRequest()
         {
+            var nextTokenIndicatesName = CurrentTokenPlus(1) != null ? CurrentTokenPlus(1)!.Text.StartsWith("name") : false;
             return (CurrentToken is { Text: "@" } &&
-                CurrentTokenPlus(1) is { Text: "name" } &&
-                CurrentTokenPlus(2) is { Kind: HttpTokenKind.Whitespace }
+                nextTokenIndicatesName  &&
+                CurrentTokenPlus(2) is { Kind: TokenKind.Whitespace }
                     );
         }
 

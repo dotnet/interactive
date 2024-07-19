@@ -212,7 +212,7 @@ public partial class HttpParserTests
             foreach (var method in ValidMethods())
             foreach (var url in ValidUrls())
             foreach (var version in ValidVersions())
-            foreach (var headerSection in InvalidHeaderSections())
+            foreach (var headerSection in ValidHeaderSections())
             foreach (var bodySection in ValidBodySections())
             {
                 ++generationNumber;
@@ -232,18 +232,18 @@ public partial class HttpParserTests
             yield return new("PUT");
         }
 
-        private static IEnumerable<HttpNamedRequestNodeSyntaxSpec> ValidNamedRequests()
+        private static IEnumerable<HttpCommentNodeSyntaxSpec> ValidNamedRequests()
         {
-            yield return new("");
-            yield return new("// @name example");
-            yield return new("# @name example");
+            yield return new("", true);
+            yield return new("// @name example \r\n", true);
+            yield return new("# @name example \r\n", true);
         }
 
-        private static IEnumerable<HttpNamedRequestNodeSyntaxSpec> InvalidNamedRequests()
+        private static IEnumerable<HttpCommentNodeSyntaxSpec> InvalidNamedRequests()
         {
-            yield return new("// @name");
-            yield return new("# @nameExample");
-            yield return new("### @name example");
+            yield return new("// @name \r\n", true);
+            yield return new("# @nameExample \r\n", true);
+            yield return new("// @name tes! \r\n", true);
         }
 
         private static IEnumerable<HttpMethodNodeSyntaxSpec> InvalidMethods()
