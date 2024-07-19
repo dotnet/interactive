@@ -12,7 +12,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
@@ -723,7 +722,7 @@ public abstract partial class Kernel :
         _disposables.Add(disposable);
     }
 
-    private async Task HandleRequestCompletionsAsync(
+    private async Task PublishDirectiveCompletionsAsync(
         RequestCompletions command,
         KernelInvocationContext context)
     {
@@ -752,6 +751,64 @@ public abstract partial class Kernel :
         }
     }
 
+    private Task PublishDirectiveHoverTextAsync(
+        RequestHoverText command,
+        KernelInvocationContext context)
+    {
+        if (command.SyntaxNode is DirectiveNode directiveNode)
+        {
+            string hoverText = null;
+
+            if (!directiveNode.TryGetDirective(out var directive))
+            {
+                return Task.CompletedTask;
+            }
+
+            var node = directiveNode.FindNode(command.OriginalPosition);
+
+            switch (node)
+            {
+                case DirectiveNameNode { Parent: DirectiveSubcommandNode subcommandNode }:
+                    if (subcommandNode.TryGetSubcommand(out var subcommandDirective))
+                    {
+                        hoverText = subcommandDirective.Description;
+                    }
+
+                    break;
+
+                case DirectiveNameNode _:
+                    hoverText = directive.Description;
+                    break;
+
+                case DirectiveParameterNameNode directiveParameterNameNode:
+                    if (directiveParameterNameNode.Parent is DirectiveParameterNode pn &&
+                        pn.TryGetParameter(out var parameter))
+                    {
+                        hoverText = parameter.Description;
+                    }
+
+                    break;
+            }
+
+            if (hoverText is not null)
+            {
+                var linePosition = new LinePosition(command.LinePosition.Line, command.LinePosition.Character);
+
+                var linePositionSpan = new LinePositionSpan(
+                    linePosition, 
+                    linePosition);
+
+                context.Publish(
+                    new HoverTextProduced(
+                        command,
+                        [new FormattedValue("text/markdown", hoverText)],
+                        linePositionSpan  ));
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
     private void TrySetHandler(
         KernelCommand command,
         KernelInvocationContext context)
@@ -770,7 +827,11 @@ public abstract partial class Kernel :
                     break;
 
                 case (RequestCompletions { SyntaxNode: DirectiveNode } rq, _):
-                    rq.Handler = (_, _) => HandleRequestCompletionsAsync(rq, context);
+                    rq.Handler = (_, _) => PublishDirectiveCompletionsAsync(rq, context);
+                    break;
+                
+                case (RequestHoverText { SyntaxNode: DirectiveNode } rq, _):
+                    rq.Handler = (_, _) => PublishDirectiveHoverTextAsync(rq, context);
                     break;
 
                 case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions>

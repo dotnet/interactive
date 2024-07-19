@@ -89,10 +89,11 @@ public static class KernelExtensions
             Description = LocalizationResources.Magics_import_Description(),
             Parameters =
             {
-                new("")
+                new("--file")
                 {
                     AllowImplicitName = true,
-                    Required = true
+                    Required = true,
+                    Description = LocalizationResources.Magics_import_file_Description()
                 }
             },
             TryGetKernelCommandAsync = ImportDocument.TryParseImportDirectiveAsync
@@ -170,7 +171,7 @@ public static class KernelExtensions
     {
         var directive = new KernelActionDirective("#!set")
         {
-            Description = LocalizationResources.Magics_set_name_Description(),
+            Description = LocalizationResources.Magics_set_Description(),
             KernelCommandType = typeof(SetDirectiveCommand),
             TryGetKernelCommandAsync = SetDirectiveCommand.TryParseSetDirectiveCommandAsync,
             Parameters =

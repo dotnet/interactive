@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.Commands;
 
 public abstract class LanguageServiceCommand : KernelCommand
 {
-    protected LanguageServiceCommand(
+    private protected LanguageServiceCommand(
         string code,
         LinePosition linePosition,
         string targetKernelName = null)
