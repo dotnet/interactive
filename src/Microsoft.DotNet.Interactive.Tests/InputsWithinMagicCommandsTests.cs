@@ -237,6 +237,46 @@ public class InputsWithinMagicCommandsTests : IDisposable
         requestInput.InputTypeHint.Should().Be("file");
     }
 
+    [Theory]
+    [MemberData(nameof(LanguageServiceCommands))]
+    public async Task Language_service_commands_do_not_trigger_input_requests(KernelCommand command)
+    {
+        using var kernel = new CSharpKernel().UseValueSharing();
+
+        bool requestInputWasSent = false;
+
+        kernel.RegisterCommandHandler<RequestInput>((input, _) =>
+        {
+            requestInputWasSent = true;
+
+            return Task.CompletedTask;
+        });
+
+        var result = await kernel.SendAsync(command);
+
+        result.Events.Should().NotContainErrors();
+
+        requestInputWasSent.Should().BeFalse();
+    }
+
+    public static IEnumerable<object[]> LanguageServiceCommands()
+    {
+        // Testing with both one and multiple inputs in a single magic command
+        var code = "#!set --name @input:name --value 123";
+
+        yield return [new RequestCompletions(code, new LinePosition(0, code.Length))];
+        yield return [new RequestHoverText(code, new LinePosition(0, 3))];
+        yield return [new RequestDiagnostics(code)];
+        yield return [new RequestSignatureHelp(code, new LinePosition(0, 3))];
+        
+        code = "#!set --name @input:name --value @password:password ";
+
+        yield return [new RequestCompletions(code, new LinePosition(0, code.Length))];
+        yield return [new RequestHoverText(code, new LinePosition(0, 3))];
+        yield return [new RequestDiagnostics(code)];
+        yield return [new RequestSignatureHelp(code, new LinePosition(0, 3))];
+    }
+
     internal class TestCommand : KernelCommand
     {
         public string Value { get; set; }

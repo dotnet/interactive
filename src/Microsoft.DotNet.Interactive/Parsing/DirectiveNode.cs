@@ -382,16 +382,19 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 {
                     var bindingResult = await bind(expressionNode);
 
-                    if (bindingResult.IsSuccessful)
+                    if (bindingResult is not null)
                     {
-                        boundExpressionValues.Add(
-                            (DirectiveParameterValueNode)expressionNode.Parent!,
-                            bindingResult.Value);
-                    }
-                    else
-                    {
-                        var diagnostics = bindingResult.Diagnostics.ToArray();
-                        return (boundExpressionValues, diagnostics);
+                        if (bindingResult.IsSuccessful)
+                        {
+                            boundExpressionValues.Add(
+                                (DirectiveParameterValueNode)expressionNode.Parent!,
+                                bindingResult.Value);
+                        }
+                        else
+                        {
+                            var diagnostics = bindingResult.Diagnostics.ToArray();
+                            return (boundExpressionValues, diagnostics);
+                        }
                     }
                 }
             }
