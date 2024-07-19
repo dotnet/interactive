@@ -9,19 +9,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 internal static class LocalizationResources
 {
     /// <summary>
-    ///   Interpolates values into a localized string List the available magic commands / directives.
+    ///   Gets a localized message like: List the available magic commands / directives.
     /// </summary>
     internal static string Magics_lsmagic_Description() =>
         GetResourceString(Resources.Magics_lsmagic_Description);
 
     /// <summary>
-    ///   Interpolates values into a localized string Convert the code that follows from Markdown into HTML
+    ///   Gets a localized message like: Convert the code that follows from Markdown into HTML
     /// </summary>
     internal static string Magics_markdown_Description() =>
         GetResourceString(Resources.Magics_markdown_Description);
 
     /// <summary>
-    ///   Interpolates values into a localized string Time the execution of the following code in the submission.
+    ///   Gets a localized message like: Time the execution of the following code in the submission.
     /// </summary>
     internal static string Magics_time_Description() =>
         GetResourceString(Resources.Magics_time_Description);

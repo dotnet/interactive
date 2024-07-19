@@ -126,6 +126,9 @@
   <data name="Magics_import_Description" xml:space="preserve">
     <value>Runs another notebook or source code file inline.</value>
   </data>
+  <data name="Magics_import_file_Description" xml:space="preserve">
+    <value>The path to the file to be imported. Supported file extensions include notebooks (.ipynb, .dib) as well as source code for supported languages (.cs, .csx, .fs, .fsx, .ps1, .html, .http, .js).</value>
+  </data>
   <data name="Magics_log_Description" xml:space="preserve">
     <value>Enables session logging.</value>
   </data>
