@@ -574,6 +574,7 @@ public class SubmissionParser
         DirectiveExpressionNode expressionNode,
         string targetKernelName)
     {
+        // FIX: (RequestSingleValueFromKernel) make sure this is not dispatched on language service commands
         if (!(expressionNode
              .Ancestors()
              .OfType<DirectiveNode>()
@@ -628,6 +629,8 @@ public class SubmissionParser
         bool allowByRef,
         DirectiveExpressionNode expressionNode)
     {
+        // FIX: (RequestSingleValueFromKernel) make sure this is not dispatched on language service commands
+
         var requestValue = new RequestValue(sourceValueName, mimeType: mimeType, targetKernelName: sourceKernelName);
 
         var result = await destinationKernel.RootKernel.SendAsync(requestValue);
