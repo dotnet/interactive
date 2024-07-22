@@ -66,9 +66,9 @@ public class HoverTextTests : LanguageKernelTestBase
     }
 
     [Theory]
-    [InlineData("#!s$$et --value", "Sets a value in the current kernel")]
-    [InlineData("#!set --valu$$e", "The value to be set")]
-    [InlineData("#!connect sign$$alr --kernel-name blah", "Connects to a kernel using SignalR")]
+    [InlineData("#!s$$et --value", "Sets a value in the current kernel*--name*--value*")]
+    [InlineData("#!set --valu$$e", "The value to be set*")]
+    [InlineData("#!connect sign$$alr --kernel-name blah", "Connects to a kernel using SignalR*")]
     public async Task hover_request_returns_expected_result_for_magic_commands(
         string markupCode,
         string expectedContent)
@@ -89,7 +89,7 @@ public class HoverTextTests : LanguageKernelTestBase
                      .Which
                      .Value
                      .Should()
-                     .Contain(expectedContent);
+                     .Match(expectedContent);
     }
 
     [Theory]
