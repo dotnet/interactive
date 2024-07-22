@@ -5,7 +5,7 @@
   "VariableGridColumnType": "Tür",
   "VariableGridColumnKernel": "Çekirdek",
   "VariableGridshareTemplate": "{kernel-name} çekirdeğindeki {value-name} değerini paylaşın",
-  "'VariableGridCaption": "Polyglot Notebook variables",
+  "'VariableGridCaption": "Polyglot Not Defteri değişkenleri",
   "survey.yes": "Evet, beni ankete götür",
   "survey.no": "Hayır",
   "survey.message": "Not defterleri deneyimi hakkındaki görüşlerinizi öğrenmek isteriz! Lütfen Çok Dilli Not Defterleri’nin kullanımı hakkında geri bildirimde bulunmak için birkaç dakikanızı ayırın."
