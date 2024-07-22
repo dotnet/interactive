@@ -73,7 +73,7 @@ internal class PolyglotSyntaxParser
     {
         if (IsAtStartOfDirective())
         {
-            var directiveNameNode = ParseParameterName();
+            var directiveNameNode = ParseDirectiveName();
 
             var targetKernelName = _currentKernelName ?? _compositeKernelInfo?.LocalName;
 
@@ -151,7 +151,7 @@ internal class PolyglotSyntaxParser
                             ConsumeCurrentTokenInto(subcommandNameNode);
                         }
 
-                        ParseTrailingWhitespace(subcommandNode);
+                        ParseTrailingWhitespace(subcommandNode, stopBeforeNewLine: true);
                         directiveNode.Add(subcommandNode);
                     }
                     else if (ParseParameterValue() is { } parameterValueNode)
@@ -207,7 +207,7 @@ internal class PolyglotSyntaxParser
 
         return null;
 
-        DirectiveNameNode ParseParameterName()
+        DirectiveNameNode ParseDirectiveName()
         {
             var directiveNameNode = new DirectiveNameNode(_sourceText, _syntaxTree);
 

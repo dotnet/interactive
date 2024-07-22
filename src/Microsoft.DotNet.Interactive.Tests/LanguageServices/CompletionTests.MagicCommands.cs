@@ -49,6 +49,17 @@ public partial class CompletionTests
                     #!set --name x [||]
                     
                     """, "--value")]
+        [InlineData("""
+                    
+                    #!connect signalr
+                    
+                    
+                    #!set [||]
+                    
+                    
+                    #!share  
+                    
+                    """, "--value")]
         // subcommands
         public async Task Completions_are_available_for_magic_commands(
             string markupCode,
