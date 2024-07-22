@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -771,13 +773,14 @@ public abstract partial class Kernel :
                 case DirectiveNameNode { Parent: DirectiveSubcommandNode subcommandNode }:
                     if (subcommandNode.TryGetSubcommand(out var subcommandDirective))
                     {
-                        hoverText = subcommandDirective.Description;
+                        hoverText = BuildHoverText(subcommandDirective);
                     }
 
                     break;
 
                 case DirectiveNameNode _:
-                    hoverText = directive.Description;
+                    hoverText = BuildHoverText(directive);
+
                     break;
 
                 case DirectiveParameterNameNode directiveParameterNameNode:
@@ -795,18 +798,63 @@ public abstract partial class Kernel :
                 var linePosition = new LinePosition(command.LinePosition.Line, command.LinePosition.Character);
 
                 var linePositionSpan = new LinePositionSpan(
-                    linePosition, 
+                    linePosition,
                     linePosition);
 
                 context.Publish(
                     new HoverTextProduced(
                         command,
                         [new FormattedValue("text/markdown", hoverText)],
-                        linePositionSpan  ));
+                        linePositionSpan));
             }
         }
 
         return Task.CompletedTask;
+
+        static string BuildHoverText(KernelDirective directive)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(directive.Description);
+
+            if (directive.Parameters.Any())
+            {
+                sb.AppendLine();
+
+                sb.AppendLine("| <span>Parameter&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> | Description  |");
+                sb.AppendLine("| :----     | :----        |");
+
+                foreach (var parameter in directive.Parameters.OrderByDescending(p => p.Required).ThenBy(p => p.Name))
+                {
+                    WriteParameterRow(sb, parameter);
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        static void WriteParameterRow(StringBuilder sb, KernelDirectiveParameter parameter)
+        {
+            sb.Append("|");
+
+            sb.Append("*");
+            if (parameter.Required)
+            {
+                sb.Append("*");
+            }
+            sb.Append(parameter.Name);
+            sb.Append("*");
+            if (parameter.Required)
+            {
+                sb.Append("*");
+            }
+
+            sb.Append("|");
+
+            sb.Append(parameter.Description);
+                    
+            sb.AppendLine("|");
+        }
     }
 
     private void TrySetHandler(
