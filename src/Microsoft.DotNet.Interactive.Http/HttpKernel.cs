@@ -124,13 +124,18 @@ public class HttpKernel :
 
     private Task SetValueAsync(string valueName, object value, Type? declaredType = null)
     {
-        if(value is (HttpExpressionNode))
+        if(value is (HttpVariableDeclarationAndAssignmentNode))
         {
-            var bindingResult = BindExpressionValues((HttpExpressionNode) value);
-            if(bindingResult.IsSuccessful && bindingResult.Value is not null)
+            var variable = (HttpVariableDeclarationAndAssignmentNode) value;
+            if(variable.ValueNode is not null)
             {
-                _variables[valueName] = bindingResult.Value;
+                var bindingResult = variable.ValueNode.TryGetValue(BindExpressionValues);
+                if (bindingResult.IsSuccessful && bindingResult.Value is not null)
+                {
+                    _variables[valueName] = bindingResult.Value;
+                }
             }
+            
         } 
         else
         {
