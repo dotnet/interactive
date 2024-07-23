@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
+    <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Assent" Version="1.7.0" />
     <PackageReference Include="xunit" Version="$(xunitVersion)"  />
