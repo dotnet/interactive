@@ -18,9 +18,9 @@
     <MicrosoftNETTestSdkVersion>17.4.0</MicrosoftNETTestSdkVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <MicrosoftCodeAnalysisCommonVersion>4.9.2</MicrosoftCodeAnalysisCommonVersion>
-    <SystemDrawingCommonVersion>8.0.1</SystemDrawingCommonVersion>
+    <SystemDrawingCommonVersion>8.0.6</SystemDrawingCommonVersion>
     <SystemReactiveVersion>6.0.0</SystemReactiveVersion>
-    <SystemSecurityCryptographyXmlVersion>8.0.0</SystemSecurityCryptographyXmlVersion>
+    <SystemSecurityCryptographyXmlVersion>8.0.1</SystemSecurityCryptographyXmlVersion>
     <SystemSecurityCryptographyPkcsVersion>8.0.0</SystemSecurityCryptographyPkcsVersion>
     <xunitVersion>2.7.0</xunitVersion>
     <xunitrunnervisualstudioVersion>2.5.7</xunitrunnervisualstudioVersion>

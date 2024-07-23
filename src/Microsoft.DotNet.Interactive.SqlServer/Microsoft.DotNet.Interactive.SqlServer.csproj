@@ -23,7 +23,7 @@
  </ItemGroup>
 
  <ItemGroup>
-   <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
+   <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
    <PackageReference Include="Humanizer" Version="2.14.1" />
