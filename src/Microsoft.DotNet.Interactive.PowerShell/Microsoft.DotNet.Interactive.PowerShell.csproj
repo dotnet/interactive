@@ -24,6 +24,7 @@
     <PackageReference Include="PackageManagement" Version="1.4.6" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="PowerShellGet" Version="2.2.3" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.Archive" Version="1.2.5" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.PowerShell.SecretManagement" Version="1.1.2" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="ThreadJob" Version="2.0.3" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
@@ -60,6 +61,14 @@
              PackageCopyToOutput="true" 
              CopyToOutputDirectory="PreserveNewest" 
              Condition="'$(PkgMicrosoft_PowerShell_Archive)' != ''" />
+
+    <Content Include="$(PkgMicrosoft_PowerShell_SecretManagement)\**" 
+             Exclude="$(PkgMicrosoft_PowerShell_SecretManagement)\**\*.nupkg;$(PkgMicrosoft_PowerShell_SecretManagement)\**\*.nuspec;$(PkgMicrosoft_PowerShell_SecretManagement)\**\*.sha512" 
+             Link="Modules\Microsoft.PowerShell.SecretManagement\%(RecursiveDir)%(FileName)%(Extension)" 
+             PackagePath="contentFiles/any/any/Modules/Microsoft.PowerShell.SecretManagement" 
+             PackageCopyToOutput="true"
+             CopyToOutputDirectory="PreserveNewest" 
+             Condition="'$(PkgMicrosoft_PowerShell_SecretManagement)' != ''" />
 
     <Content Include="$(PkgThreadJob)\**" 
              Exclude="$(PkgThreadJob)\**\*.nupkg;$(PkgThreadJob)\**\*.nuspec;$(PkgThreadJob)\**\*.sha512" 
