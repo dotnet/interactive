@@ -105,6 +105,7 @@ public partial class HttpParserTests
         {
             var generationNumber = 0;
 
+            foreach(var namedRequest in ValidNamedRequests())
             foreach (var method in ValidMethods())
             foreach (var url in ValidUrls())
             foreach (var version in ValidVersions())
@@ -114,7 +115,7 @@ public partial class HttpParserTests
                 ++generationNumber;
                 yield return new object[]
                 {
-                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
+                    new HttpRequestNodeSyntaxSpec(namedRequest, method, url, version, headerSection, bodySection),
                     generationNumber
                 };
             }
@@ -124,6 +125,7 @@ public partial class HttpParserTests
         {
             var generationNumber = 0;
 
+            foreach (var namedRequest in ValidNamedRequests())
             foreach (var method in ValidMethods())
             foreach (var url in ValidUrls())
             foreach (var version in ValidVersions())
@@ -133,7 +135,7 @@ public partial class HttpParserTests
                 ++generationNumber;
                 yield return new object[]
                 {
-                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection)
+                    new HttpRequestNodeSyntaxSpec(namedRequest, method, url, version, headerSection, bodySection)
                     {
                         Randomizer = new Random(1)
                     },
@@ -146,6 +148,7 @@ public partial class HttpParserTests
         {
             var generationNumber = 0;
 
+            foreach (var namedRequest in ValidNamedRequests())
             foreach (var method in InvalidMethods())
             foreach (var url in ValidUrls())
             foreach (var version in ValidVersions())
@@ -155,11 +158,12 @@ public partial class HttpParserTests
                 ++generationNumber;
                 yield return new object[]
                 {
-                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
+                    new HttpRequestNodeSyntaxSpec(namedRequest, method, url, version, headerSection, bodySection),
                     generationNumber
                 };
             }
 
+            foreach (var namedRequest in ValidNamedRequests())
             foreach (var method in ValidMethods())
             foreach (var url in InvalidUrls())
             foreach (var version in ValidVersions())
@@ -169,11 +173,12 @@ public partial class HttpParserTests
                 ++generationNumber;
                 yield return new object[]
                 {
-                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
+                    new HttpRequestNodeSyntaxSpec(namedRequest, method, url, version, headerSection, bodySection),
                     generationNumber
                 };
             }
 
+            foreach(var namedRequest in ValidNamedRequests())
             foreach (var method in ValidMethods())
             foreach (var url in ValidUrls())
             foreach (var version in InvalidVersions())
@@ -183,11 +188,12 @@ public partial class HttpParserTests
                 ++generationNumber;
                 yield return new object[]
                 {
-                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
+                    new HttpRequestNodeSyntaxSpec(namedRequest, method, url, version, headerSection, bodySection),
                     generationNumber
                 };
             }
             
+            foreach(var namedRequest in ValidNamedRequests())
             foreach (var method in ValidMethods())
             foreach (var url in ValidUrls())
             foreach (var version in ValidVersions())
@@ -197,7 +203,22 @@ public partial class HttpParserTests
                 ++generationNumber;
                 yield return new object[]
                 {
-                    new HttpRequestNodeSyntaxSpec(method, url, version, headerSection, bodySection),
+                    new HttpRequestNodeSyntaxSpec(namedRequest, method, url, version, headerSection, bodySection),
+                    generationNumber
+                };
+            }
+
+            foreach (var namedRequest in InvalidNamedRequests())
+            foreach (var method in ValidMethods())
+            foreach (var url in ValidUrls())
+            foreach (var version in ValidVersions())
+            foreach (var headerSection in ValidHeaderSections())
+            foreach (var bodySection in ValidBodySections())
+            {
+                ++generationNumber;
+                yield return new object[]
+                {
+                    new HttpRequestNodeSyntaxSpec(namedRequest, method, url, version, headerSection, bodySection),
                     generationNumber
                 };
             }
@@ -209,6 +230,20 @@ public partial class HttpParserTests
             yield return new("GET");
             yield return new("POST");
             yield return new("PUT");
+        }
+
+        private static IEnumerable<HttpCommentNodeSyntaxSpec> ValidNamedRequests()
+        {
+            yield return new("", true);
+            yield return new("// @name example \r\n", true);
+            yield return new("# @name example \r\n", true);
+        }
+
+        private static IEnumerable<HttpCommentNodeSyntaxSpec> InvalidNamedRequests()
+        {
+            yield return new("// @name \r\n", true);
+            yield return new("# @nameExample \r\n", true);
+            yield return new("// @name tes! \r\n", true);
         }
 
         private static IEnumerable<HttpMethodNodeSyntaxSpec> InvalidMethods()

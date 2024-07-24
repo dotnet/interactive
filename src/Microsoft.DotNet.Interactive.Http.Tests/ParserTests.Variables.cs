@@ -177,7 +177,7 @@ public partial class HttpParserTests
                 @hostname=httpbin.org
                 """);
 
-            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
             variables.Should().ContainSingle().Which.Value.Value.Should().Be("httpbin.org");
         }
 
@@ -190,7 +190,7 @@ public partial class HttpParserTests
                 @host=https://{{hostname}}
                 """);
 
-            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
             variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
 
         }
@@ -213,7 +213,7 @@ public partial class HttpParserTests
             """
                 );
 
-            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
 
             var barValue = variables.Should().Contain(n => n.Key == "bar").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value;
             var createAtValue = variables.Should().Contain(n => n.Key == "createdAt").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value;
@@ -230,8 +230,8 @@ public partial class HttpParserTests
                 @host_name=https://httpbin.org
                 """
                 );
-            var variable = result.SyntaxTree.RootNode.GetDeclaredVariables();
-            variable.Keys.Should().ContainSingle().Which.Should().Be("host_name");
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
+            variables.Keys.Should().ContainSingle().Which.Should().Be("host_name");
 
         }
 
@@ -246,7 +246,7 @@ public partial class HttpParserTests
                 """
                 );
 
-            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
             variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
 
         }
@@ -262,7 +262,7 @@ public partial class HttpParserTests
                 """
                 );
 
-            var variables = result.SyntaxTree.RootNode.GetDeclaredVariables();
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
             variables.Should().Contain(n => n.Key == "host.name").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("httpbin.org");
             variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("https://httpbin.org");
 
