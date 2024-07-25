@@ -6,13 +6,18 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Http;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
@@ -73,11 +78,13 @@ public class ImportNotebookTests
 
         using var events = kernel.KernelEvents.ToSubscribedList();
 
-        await kernel.SubmitCodeAsync($"#!import {filePath}");
+        await kernel.SubmitCodeAsync($"#!import \"{filePath}\"");
+
+        events.Should().NotContainErrors();
 
         var returnedValues = events.Where(x => x.GetType() == typeof(ReturnValueProduced)).ToArray();
             
-        int[] results = new int[] { 11, 22, 33 };
+        int[] results = [11, 22, 33];
         returnedValues.Length.Should().Be(results.Length);
 
         for (int i=0 ; i < results.Length; i++)
@@ -87,11 +94,70 @@ public class ImportNotebookTests
     }
 
     [Theory]
+    [InlineData(".cs")]
+    [InlineData(".csx")]
+    [InlineData(".fs")]
+    [InlineData(".fsx")]
+    [InlineData(".ps1")]
+    [InlineData(".http")]
+    public async Task It_imports_and_runs_source_code_from_files_with_well_known_file_extensions(string fileExtension)
+    {
+        using var kernel = new CompositeKernel
+            {
+                new CSharpKernel(),
+                new FSharpKernel(),
+                new PowerShellKernel(),
+                new HttpKernel()
+            }
+            .UseImportMagicCommand();
+
+        string receivedCodeSubmissions = "";
+        string receivedTargetKernelName = null;
+
+        kernel.AddMiddleware((command, context, next) =>
+        {
+            if (command is SubmitCode submitCode)
+            {
+                receivedCodeSubmissions += submitCode.Code;
+                receivedTargetKernelName = command.TargetKernelName;
+            }
+
+            return next(command, context);
+        });
+
+        var (fileContents, expectedTargetKernelName) = fileExtension switch
+        {
+            ".cs" or ".csx" => ("Console.WriteLine(123);", "csharp"),
+            ".fs" or ".fsx" => ("123 |> System.Console.WriteLine", "fsharp"),
+            ".ps1" => ("123 | Out-Default", "pwsh"),
+            ".http" => ("@url = https://httpbin.org/", "http"),
+            _ => throw new InvalidOperationException($"Unrecognized extension for a notebook: {fileExtension}")
+        };
+
+        using var directory = DisposableDirectory.Create();
+
+        var filePath = Path.Combine(directory.Directory.FullName, $"file{fileExtension}");
+
+        await File.WriteAllTextAsync(filePath, fileContents);
+
+        using var events = kernel.KernelEvents.ToSubscribedList();
+
+        var code = $"#!import \"{filePath}\"";
+
+        await kernel.SubmitCodeAsync(code);
+
+        using var _ = new AssertionScope();
+
+        events.Should().NotContainErrors();
+        receivedCodeSubmissions.Should().Contain(fileContents);
+        receivedTargetKernelName.Should().Be(expectedTargetKernelName);
+    }
+
+    [Theory]
     [InlineData(".ipynb")]
     [InlineData(".dib")]
     public async Task It_produces_DisplayedValueProduced_events_for_markdown_cells(string notebookExt)
     {
-        
         using var kernel = new CompositeKernel {
                 new CSharpKernel(),
                 new FSharpKernel(),
@@ -149,7 +215,7 @@ public class ImportNotebookTests
     [Theory]
     [InlineData(".ipynb")]
     [InlineData(".dib")]
-    public async Task It_load_packages_from_imports(string notebookExt)
+    public async Task It_loads_packages_from_imports(string notebookExt)
     {
         using var kernel = new CompositeKernel {
                 new CSharpKernel().UseNugetDirective()

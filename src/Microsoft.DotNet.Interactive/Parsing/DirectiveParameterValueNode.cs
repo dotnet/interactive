@@ -16,6 +16,8 @@ internal class DirectiveParameterValueNode : SyntaxNode
 
     public DirectiveExpressionNode? ExpressionNode { get; private set; }
 
+    public bool ContainsJson { get; set; }
+
     public void Add(DirectiveExpressionNode node)
     {
         AddInternal(node);

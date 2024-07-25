@@ -235,7 +235,7 @@ internal class PolyglotSyntaxParser
             {
                 valueNode = new(_sourceText, _syntaxTree);
                 
-                ParseJsonValueInto(valueNode);
+                ParsePossibleJsonValueInto(valueNode);
 
                 ParseTrailingWhitespace(valueNode, stopBeforeNewLine: true);
             }
@@ -271,16 +271,16 @@ internal class PolyglotSyntaxParser
 
                 var inputParametersNode = new DirectiveExpressionParametersNode(_sourceText, _syntaxTree);
 
-                if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "\"" or "{" })
+                if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "\"" or "{" or "[" })
                 {
-                    ParseJsonValueInto(inputParametersNode);
-                    ParseTrailingWhitespace(inputParametersNode, stopBeforeNewLine: true);
+                    ParsePossibleJsonValueInto(inputParametersNode);
                 }
                 else
                 {
                     ParsePlainTextInto(inputParametersNode);
-                    ParseTrailingWhitespace(inputParametersNode, stopBeforeNewLine: true);
                 }
+
+                ParseTrailingWhitespace(inputParametersNode, stopBeforeNewLine: true);
 
                 expressionNode.Add(inputParametersNode);
 
@@ -302,7 +302,7 @@ internal class PolyglotSyntaxParser
                 }
             }
 
-            void ParseJsonValueInto(SyntaxNode node)
+            void ParsePossibleJsonValueInto(SyntaxNode node)
             {
                 var currentToken = CurrentToken;
 
@@ -370,17 +370,22 @@ internal class PolyglotSyntaxParser
                     }
                 }
 
-                if (node.Text is { } json)
+                if (node.Text is { } potentialJson && ShouldParseAsJson(potentialJson.AsSpan()))
                 {
                     try
                     {
-                        using var jsonDoc = JsonDocument.Parse(json);
+                        using var jsonDoc = JsonDocument.Parse(potentialJson);
+
+                        if (node is DirectiveParameterValueNode directiveParameterValueNode)
+                        {
+                            directiveParameterValueNode.ContainsJson = true;
+                        }
                     }
                     catch (JsonException exception)
                     {
                         // A common cause of an exception here is a quoted file path, which isn't required to be JSON (for backcompat reasons as well as the fact that JSON escaping isn't intuitive).
                         // But we infer that if there are curly braces or square brackets in the string, it's likely intended to be JSON.
-                        if (ShouldParseAsJson(json))
+                        if (ShouldParseAsJson(potentialJson.AsSpan()))
                         {
                             AddDiagnosticForJsonException(node, exception, _sourceText, out _);
                         }
@@ -450,11 +455,58 @@ internal class PolyglotSyntaxParser
             }
         }
 
-        bool ShouldParseAsJson(string json) =>
-            json.Contains("{") ||
-            json.Contains("}") ||
-            json.Contains("[") ||
-            json.Contains("]");
+        static bool ShouldParseAsJson(ReadOnlySpan<char> parameterValue)
+        {
+            if (parameterValue.Length is 0)
+            {
+                return false;
+            }
+
+            if (parameterValue[0] is '"')
+            {
+                int legalEscapeChars = 0;
+                int illegalEscapeChars = 0;
+
+                for (var i = 1; i < parameterValue.Length; i++)
+                {
+                    var previousChar = parameterValue[i - 1];
+                    var currentChar = parameterValue[i];
+
+                    if (previousChar is '\\' &&
+                        currentChar is
+                            'b' or
+                            'f' or
+                            'n' or
+                            'r' or
+                            't' or
+                            '"' or
+                            '\\')
+                    {
+                        legalEscapeChars++;
+                    }
+                    else
+                    {
+                        illegalEscapeChars++;
+                    }
+
+                    if (illegalEscapeChars > 0)
+                    {
+                        if (legalEscapeChars > 0)
+                        {
+
+                        }
+
+                        return false;
+                    }
+                }
+            }
+            else if (parameterValue[0] is '{' or '[')
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 
     internal static void AddDiagnosticForJsonException(
