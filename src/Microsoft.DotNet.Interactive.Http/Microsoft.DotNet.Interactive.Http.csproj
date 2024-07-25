@@ -21,19 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="..\Microsoft.DotNet.Interactive.Http.Parsing\Parsing\DiagnosticInfo.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing"  />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNode.cs" Link="Parsing\SyntaxNode.cs" LinkBase="Parsing"  />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNodeOrToken.cs" Link="Parsing\SyntaxNodeOrToken.cs" LinkBase="Parsing"  />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxToken.cs" Link="Parsing\SyntaxToken.cs" LinkBase="Parsing"  />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxTree.cs" Link="Parsing\SyntaxTree.cs" LinkBase="Parsing"  />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TokenKind.cs" Link="Parsing\TokenKind.cs" LinkBase="Parsing" />
-  </ItemGroup>
-  
-  <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
   </ItemGroup>

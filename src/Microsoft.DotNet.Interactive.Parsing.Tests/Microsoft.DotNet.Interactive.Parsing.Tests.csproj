@@ -34,7 +34,13 @@
     <Compile Include="..\Microsoft.DotNet.Interactive\Events\CompletionItem.cs" Link="CompletionItem.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Events\InsertTextFormat.cs" Link="InsertTextFormat.cs" LinkBase="Parsing" />
 
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Http.Parsing\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Http.Parsing\Parsing\SyntaxNode.cs" Link="Parsing\SyntaxNode.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Http.Parsing\Parsing\SyntaxNodeOrToken.cs" Link="Parsing\SyntaxNodeOrToken.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Http.Parsing\Parsing\SyntaxToken.cs" Link="Parsing\SyntaxToken.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Http.Parsing\Parsing\SyntaxTree.cs" Link="Parsing\SyntaxTree.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Http.Parsing\Parsing\TokenKind.cs" Link="Parsing\TokenKind.cs" LinkBase="Parsing" />
+    
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveBindingDelegate.cs" Link="DirectiveBindingDelegate.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveBindingResult{T}.cs" Link="DirectiveBindingResult{T}.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DirectiveExpressionNode.cs" Link="Parsing\DirectiveExpressionNode.cs" LinkBase="Parsing" />
@@ -52,12 +58,7 @@
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\PolyglotSubmissionNode.cs" Link="Parsing\PolyglotSubmissionNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\PolyglotSyntaxParser.cs" Link="Parsing\PolyglotSyntaxParser.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\PolyglotSyntaxTree.cs" Link="Parsing\PolyglotSyntaxTree.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNode.cs" Link="Parsing\SyntaxNode.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNodeOrToken.CodeSubmission.cs" Link="Parsing\SyntaxNodeOrToken.CodeSubmission.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNodeOrToken.cs" Link="Parsing\SyntaxNodeOrToken.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxToken.cs" Link="Parsing\SyntaxToken.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxTree.cs" Link="Parsing\SyntaxTree.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TokenKind.cs" Link="Parsing\TokenKind.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TopLevelSyntaxNode.cs" Link="Parsing\TopLevelSyntaxNode.cs" LinkBase="Parsing" />
 
     <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\MarkupTestFile.cs" Link="Utility\MarkupTestFile.cs" />
