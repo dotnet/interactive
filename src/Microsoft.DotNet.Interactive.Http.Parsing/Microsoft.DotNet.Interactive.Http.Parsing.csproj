@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -18,14 +18,7 @@
     <!-- Remove once https://github.com/NuGet/Home/issues/8583 is fixed -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNodeOrToken.cs" Link="Parsing\SyntaxNodeOrToken.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNode.cs" Link="Parsing\SyntaxNode.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxToken.cs" Link="Parsing\SyntaxToken.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxTree.cs" Link="Parsing\SyntaxTree.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TokenKind.cs" Link="Parsing\TokenKind.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="NullableAttributes.cs" />
   </ItemGroup>
 

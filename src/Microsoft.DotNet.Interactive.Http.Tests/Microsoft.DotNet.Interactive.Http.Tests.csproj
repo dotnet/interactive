@@ -23,12 +23,6 @@
     <Compile Include="..\Microsoft.DotNet.Interactive.Parsing.Tests\Utility\ISyntaxSpec.cs" Link="Utility\ISyntaxSpec.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Parsing.Tests\Utility\SyntaxSpecBase{T}.cs" Link="Utility\SyntaxSpecBase{T}.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Parsing.Tests\Utility\SyntaxAssertionExtensions.cs" Link="Utility\SyntaxAssertionExtensions.cs" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\DiagnosticInfo.cs" Link="Parsing\DiagnosticInfo.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNode.cs" Link="Parsing\SyntaxNode.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxNodeOrToken.cs" Link="Parsing\SyntaxNodeOrToken.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxToken.cs" Link="Parsing\SyntaxToken.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\SyntaxTree.cs" Link="SyntaxTree.cs" LinkBase="Parsing" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Parsing\TokenKind.cs" Link="Parsing\TokenKind.cs" LinkBase="Parsing" />
   </ItemGroup>
 
   <ItemGroup>
