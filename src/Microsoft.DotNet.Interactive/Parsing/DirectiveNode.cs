@@ -316,7 +316,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     break;
 
                 case string stringValue:
-                    WriteProperty(parameterName, stringValue);
+                    WriteProperty(parameterName, stringValue, parameter.ParameterNode?.ValueNode?.ContainsJson is true);
                     break;
 
                 case null:
@@ -343,15 +343,20 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         return DirectiveBindingResult<string>.Success(json);
 
-        void WriteProperty(string propertyName, string value)
+        void WriteProperty(string propertyName, string value, bool containsJson)
         {
-            if (value.Length > 0 && value[0] is '{' or '"' or '[')
+            if (containsJson)
             {
                 writer.WritePropertyName(propertyName);
                 writer.WriteRawValue(value);
             }
             else
             {
+                if (value.Length > 0 && value[0] is '"')
+                {
+                    value = value.Trim('"');
+                }
+
                 writer.WriteString(propertyName, value);
             }
         }

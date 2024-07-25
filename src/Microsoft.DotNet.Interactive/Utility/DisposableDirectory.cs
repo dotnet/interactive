@@ -4,18 +4,23 @@
 using System;
 using System.IO;
 
+#nullable enable
+
 namespace Microsoft.DotNet.Interactive.Utility;
 
 public class DisposableDirectory : IDisposable
 {
-    public DisposableDirectory(DirectoryInfo directory)
+    private DisposableDirectory(DirectoryInfo directory)
     {
         Directory = directory;
     }
 
-    public static DisposableDirectory Create()
+    public static DisposableDirectory Create(string? directoryName = null)
     {
-        var tempDir = System.IO.Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
+        var tempDir = System.IO.Directory.CreateDirectory(
+            Path.Combine(
+                Path.GetTempPath(),
+                directoryName ?? Path.GetRandomFileName()));
         return new DisposableDirectory(tempDir);
     }
 
@@ -29,7 +34,6 @@ public class DisposableDirectory : IDisposable
         }
         catch
         {
-
         }
     }
 }
