@@ -734,8 +734,7 @@ Microsoft.DotNet.Interactive.Utility
   public static class DirectoryUtility
     public static System.IO.DirectoryInfo EnsureExists()
   public class DisposableDirectory, System.IDisposable
-    public static DisposableDirectory Create()
-    .ctor(System.IO.DirectoryInfo directory)
+    public static DisposableDirectory Create(System.String directoryName = null)
     public System.IO.DirectoryInfo Directory { get;}
     public System.Void Dispose()
   public class Dotnet
