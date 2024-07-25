@@ -17,12 +17,25 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>$(NoWarn);NU5104;NU5100;2003;8002</NoWarn>
   </PropertyGroup>
+  
+  <!-- The dependencies for this project -->
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" Version="7.1.2" />
+    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="$(SystemSecurityCryptographyPkcsVersion)" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.3" />
+  </ItemGroup>
 
   <!-- PowerShell Module Package References -->
   <ItemGroup>
-    <PackageReference Include="JsonSchema.Net" Version="6.0.7" />
-    <PackageReference Include="PackageManagement" Version="1.4.6" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="PowerShellGet" Version="2.2.3" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="PackageManagement" Version="1.4.8.1" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="PowerShellGet" Version="2.2.5" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.Archive" Version="1.2.5" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.SecretManagement" Version="1.1.2" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.PowerShell.SecretStore" Version="1.0.6" PrivateAssets="all" GeneratePathProperty="true" />
@@ -86,19 +99,6 @@
              PackageCopyToOutput="true" 
              CopyToOutputDirectory="PreserveNewest" 
              Condition="'$(PkgThreadJob)' != ''" />
-  </ItemGroup>
-
-  <!-- The dependencies for this project -->
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="$(SystemSecurityCryptographyPkcsVersion)" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.3" />
   </ItemGroup>
 
 </Project>
