@@ -87,7 +87,7 @@
     <Content Include="$(PkgMicrosoft_PowerShell_SecretStore)\**" 
              Exclude="$(PkgMicrosoft_PowerShell_SecretStore)\**\*.nupkg;$(PkgMicrosoft_PowerShell_SecretStore)\**\*.nuspec;$(PkgMicrosoft_PowerShell_SecretStore)\**\*.sha512" 
              Link="Modules\Microsoft.PowerShell.SecretStore\%(RecursiveDir)%(FileName)%(Extension)" 
-             PackagePath="contentFiles/any/any/Modules/Microsoft.PowerShell.SecretStore" 
+             PackagePath="contentFiles/any/any/Modules/M.P.S" 
              PackageCopyToOutput="true"
              CopyToOutputDirectory="PreserveNewest" 
              Condition="'$(PkgMicrosoft_PowerShell_SecretStore)' != ''" />
