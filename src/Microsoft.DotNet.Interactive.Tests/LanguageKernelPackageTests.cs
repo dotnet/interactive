@@ -235,6 +235,52 @@ Formatter.Register<DataFrame>((df, writer) =>
             .Be("(1,4): error DNI210: Unable to parse package reference: \"nuget:\"");
     }
 
+    [Fact]
+    public async Task Pound_r_is_not_treated_as_pound_r_nuget_by_csharp_kernel_if_assembly_path_happens_to_contain_the_string_nuget()
+    {
+        var kernel = CreateCSharpKernel();
+
+        using var events = kernel.KernelEvents.ToSubscribedList();
+
+        await kernel.SubmitCodeAsync("""
+                                     #r "C:\Users\abcde\.nuget\packages\package\1.0.0\package.dll"
+                                     """);
+
+        events
+            .Should()
+            .ContainSingle<CommandFailed>()
+            .Which
+            .Message
+            .Should()
+            .Contain("Metadata file")
+            .And
+            .Contain("could not be found")
+            .And
+            .NotContain("DNI");
+    }
+
+    [Fact]
+    public async Task Pound_r_is_not_treated_as_pound_r_nuget_by_fsharp_kernel_if_assembly_path_happens_to_contain_the_string_nuget()
+    {
+        var kernel = CreateKernel(Language.FSharp);
+
+        using var events = kernel.KernelEvents.ToSubscribedList();
+
+        await kernel.SubmitCodeAsync("""
+                                     #r "C:\Users\abcde\.nuget\packages\package\1.0.0\package.dll"
+                                     """);
+
+        events
+            .Should()
+            .ContainSingle<CommandFailed>()
+            .Which
+            .Message
+            .Should()
+            .Contain("is not a valid assembly name")
+            .And
+            .NotContain("DNI");
+    }
+
     [Theory]
     [InlineData(Language.CSharp)]
     [InlineData(Language.FSharp)]
