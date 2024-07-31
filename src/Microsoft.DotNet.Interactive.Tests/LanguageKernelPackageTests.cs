@@ -240,13 +240,13 @@ Formatter.Register<DataFrame>((df, writer) =>
     {
         var kernel = CreateCSharpKernel();
 
-        using var events = kernel.KernelEvents.ToSubscribedList();
+        var result =
+            await kernel.SubmitCodeAsync(
+                """
+                #r "C:\Users\abcde\.nuget\packages\package\1.0.0\package.dll"
+                """);
 
-        await kernel.SubmitCodeAsync("""
-                                     #r "C:\Users\abcde\.nuget\packages\package\1.0.0\package.dll"
-                                     """);
-
-        events
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which
@@ -262,13 +262,13 @@ Formatter.Register<DataFrame>((df, writer) =>
     {
         var kernel = CreateKernel(Language.FSharp);
 
-        using var events = kernel.KernelEvents.ToSubscribedList();
+        var result =
+            await kernel.SubmitCodeAsync(
+                """
+                #r "C:\Users\abcde\.nuget\packages\package\1.0.0\package.dll"
+                """);
 
-        await kernel.SubmitCodeAsync("""
-                                     #r "C:\Users\abcde\.nuget\packages\package\1.0.0\package.dll"
-                                     """);
-
-        events
+        result.Events
             .Should()
             .ContainSingle<CommandFailed>()
             .Which
