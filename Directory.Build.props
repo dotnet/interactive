@@ -23,6 +23,7 @@
     <SystemReactiveVersion>6.0.0</SystemReactiveVersion>
     <SystemSecurityCryptographyXmlVersion>8.0.1</SystemSecurityCryptographyXmlVersion>
     <SystemSecurityCryptographyPkcsVersion>8.0.0</SystemSecurityCryptographyPkcsVersion>
+    <SystemTextJsonVersion>8.0.4</SystemTextJsonVersion>
     <xunitVersion>2.7.0</xunitVersion>
     <xunitrunnervisualstudioVersion>2.5.7</xunitrunnervisualstudioVersion>
   </PropertyGroup>
