@@ -252,9 +252,7 @@ Formatter.Register<DataFrame>((df, writer) =>
             .Which
             .Message
             .Should()
-            .Contain("Metadata file")
-            .And
-            .Contain("could not be found")
+            .ContainAll("Metadata file", "could not be found")
             .And
             .NotContain("DNI");
     }
