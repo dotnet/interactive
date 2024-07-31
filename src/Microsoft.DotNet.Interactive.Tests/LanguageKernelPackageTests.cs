@@ -243,7 +243,7 @@ Formatter.Register<DataFrame>((df, writer) =>
         var result =
             await kernel.SubmitCodeAsync(
                 """
-                #r "C:\Users\abcde\.nuget\packages\package\1.0.0\package.dll"
+                #r "C:/Users/abcde/.nuget/packages/package/1.0.0/package.dll"
                 """);
 
         result.Events
@@ -265,7 +265,7 @@ Formatter.Register<DataFrame>((df, writer) =>
         var result =
             await kernel.SubmitCodeAsync(
                 """
-                #r @"C:\Users\abcde\.nuget\packages\package\1.0.0\package.dll"
+                #r @"C:/Users/abcde/.nuget/packages/package/1.0.0/package.dll"
                 """);
 
         result.Events
