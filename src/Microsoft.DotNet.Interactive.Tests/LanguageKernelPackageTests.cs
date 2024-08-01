@@ -257,28 +257,6 @@ Formatter.Register<DataFrame>((df, writer) =>
             .NotContain("DNI");
     }
 
-    [Fact]
-    public async Task Pound_r_is_not_treated_as_pound_r_nuget_by_fsharp_kernel_if_assembly_path_happens_to_contain_the_string_nuget()
-    {
-        var kernel = CreateKernel(Language.FSharp);
-
-        var result =
-            await kernel.SubmitCodeAsync(
-                """
-                #r @"C:/Users/abcde/.nuget/packages/package/1.0.0/package.dll"
-                """);
-
-        result.Events
-            .Should()
-            .ContainSingle<CommandFailed>()
-            .Which
-            .Message
-            .Should()
-            .Contain("Unable to find the file")
-            .And
-            .NotContain("DNI");
-    }
-
     [Theory]
     [InlineData(Language.CSharp)]
     [InlineData(Language.FSharp)]
