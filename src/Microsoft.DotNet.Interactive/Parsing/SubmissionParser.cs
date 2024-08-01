@@ -142,7 +142,8 @@ public class SubmissionParser
                                                              .OfType<DirectiveParameterValueNode>()
                                                              .SingleOrDefault();
 
-                                if (valueNode.ChildTokens.Any(t => t is { Kind: TokenKind.Word } and { Text: "nuget" }))
+                                if (valueNode.ChildTokens.FirstOrDefault(t => t is { Kind: TokenKind.Word }) is SyntaxToken firstWordToken &&
+                                    firstWordToken.Text is "nuget")
                                 {
                                     if (await CreateActionDirectiveCommand(directiveNode, targetKernelName) is { } actionDirectiveCmd)
                                     {
