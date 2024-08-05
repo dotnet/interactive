@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 var localDateTimeMatches = localDateTimePattern.Matches(expression);
                 if (localDateTimeMatches.Count == 1)
                 {
-                    return GetDateTime(node, LocalDateTimeMacroName, GetDateTimeOffset(isLocal: false), expression, localDateTimeMatches[0]);
+                    return GetDateTime(node, LocalDateTimeMacroName, GetDateTimeOffset(isLocal: true), expression, localDateTimeMatches[0]);
                 }
 
                 return node.CreateBindingFailure(HttpDiagnostics.IncorrectDateTimeFormat(expression, LocalDateTimeMacroName));
