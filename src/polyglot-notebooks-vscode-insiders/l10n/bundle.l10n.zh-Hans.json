@@ -5,7 +5,7 @@
   "VariableGridColumnType": "类型",
   "VariableGridColumnKernel": "内核",
   "VariableGridshareTemplate": "从 {kernel-name} 内核共享值 {value-name}",
-  "'VariableGridCaption": "Polyglot Notebook variables",
+  "'VariableGridCaption": "Polyglot Notebook 变量",
   "survey.yes": "是，请将我转到调查",
   "survey.no": "否",
   "survey.message": "我们乐于收到你对笔记本体验的反馈!请花几分钟时间提供有关使用 Polyglot Notebook 的反馈。"
