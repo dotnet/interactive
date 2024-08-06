@@ -17,8 +17,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_datetime_with_custom_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime 'dd-MM-yyyy' 1 d";
             var code = $@"@var = {{{{{expression}}}}}";
 
@@ -27,14 +25,29 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy"));
+        }
+
+        [Fact]
+        public void can_bind_datetime_uses_utcnow()
+        {
+            var expression = "$datetime 'Tzz'";
+            var code = $@"@var = {{{{{expression}}}}}";
+
+            var result = HttpRequestParser.Parse(code);
+            var currentTime = DateTimeOffset.UtcNow;
+            var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
+
+            // Since we want to make sure that the provided expression is evaluated
+            // and .Now or .UtcNow is used as appropriate, we do not pass our own offset, like we do with other unit tests.
+            // we can do this since we are passing a custom format which only includes the time zone.
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, expression);
+            binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz"));
         }
 
         [Fact]
         public void can_bind_datetime_with_iso8601_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime iso8601";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -43,14 +56,12 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("o").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("o"));
         }
 
         [Fact]
         public void can_bind_datetime_with_iso8601_format_with_offset()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime iso8601 1 y";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -59,14 +70,12 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o"));
         }
 
         [Fact]
         public void can_bind_datetime_with_rfc1123_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime rfc1123";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -75,14 +84,12 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("r").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("r"));
         }
 
         [Fact]
         public void can_bind_datetime_with_rfc1123_format_with_offset()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime rfc1123 1 d";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -91,14 +98,12 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddDays(1).ToString("r").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddDays(1).ToString("r"));
         }
 
         [Fact]
         public void can_bind_local_datetime_with_custom_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$localDatetime 'dd-MM-yyyy' 1 d";
             var code = $@"@var = {{{{{expression}}}}}";
 
@@ -107,14 +112,29 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy"));
+        }
+
+        [Fact]
+        public void can_bind_local_datetime_uses_now()
+        {
+            var expression = "$localDatetime 'Tzz'";
+            var code = $@"@var = {{{{{expression}}}}}";
+
+            var result = HttpRequestParser.Parse(code);
+            var currentTime = DateTimeOffset.Now;
+            var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
+
+            // Since we want to make sure that the provided expression is evaluated
+            // and .Now or .UtcNow is used as appropriate, we do not pass our own offset, like we do with other unit tests.
+            // we can do this since we are passing a custom format which only includes the time zone.
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, expression);
+            binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz"));
         }
 
         [Fact]
         public void can_bind_local_datetime_with_iso8601_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$localDatetime iso8601";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -123,14 +143,12 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("o").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("o"));
         }
 
         [Fact]
         public void can_bind_local_datetime_with_iso8601_format_with_offset()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$localDatetime iso8601 1 y";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -139,14 +157,12 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o"));
         }
 
         [Fact]
         public void can_bind_local_datetime_with_rfc1123_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$localDatetime rfc1123";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -155,14 +171,12 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("r").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("r"));
         }
 
         [Fact]
         public void can_bind_timestamp()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$timestamp";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -177,8 +191,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_timestamp_with_offset()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$timestamp 7 M";
             var code = $@"@var = {{{{{expression}}}}}""";
 
