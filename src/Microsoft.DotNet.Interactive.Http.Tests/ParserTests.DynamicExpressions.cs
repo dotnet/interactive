@@ -27,7 +27,7 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy"));
         }
 
         [Fact]
@@ -46,7 +46,7 @@ public partial class HttpParserTests
             // and .Now or .UtcNow is used as appropriate, we do not pass our own offset, like we do with other unit tests.
             // we can do this since we are passing a custom format which only includes the time zone.
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz"));
         }
 
         [Fact]
@@ -62,7 +62,7 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("o").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("o"));
         }
 
         [Fact]
@@ -78,7 +78,7 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o"));
         }
 
         [Fact]
@@ -94,7 +94,7 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("r").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("r"));
         }
 
         [Fact]
@@ -110,7 +110,7 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddDays(1).ToString("r").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddDays(1).ToString("r"));
         }
 
         [Fact]
@@ -126,7 +126,7 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy"));
         }
 
         [Fact]
@@ -145,7 +145,7 @@ public partial class HttpParserTests
             // and .Now or .UtcNow is used as appropriate, we do not pass our own offset, like we do with other unit tests.
             // we can do this since we are passing a custom format which only includes the time zone.
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz"));
         }
 
         [Fact]
@@ -161,7 +161,7 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("o").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("o"));
         }
 
         [Fact]
@@ -177,7 +177,7 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o"));
         }
 
         [Fact]
@@ -193,7 +193,7 @@ public partial class HttpParserTests
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
-            binding.Value.As<string>().Should().Be(currentTime.ToString("r").ToString());
+            binding.Value.As<string>().Should().Be(currentTime.ToString("r"));
         }
 
         [Fact]
