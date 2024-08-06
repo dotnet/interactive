@@ -31,6 +31,25 @@ public partial class HttpParserTests
         }
 
         [Fact]
+        public void can_bind_datetime_uses_utcnow()
+        {
+            using var _ = new AssertionScope();
+
+            var expression = "$datetime 'Tzz'";
+            var code = $@"@var = {{{{{expression}}}}}";
+
+            var result = HttpRequestParser.Parse(code);
+            var currentTime = DateTimeOffset.UtcNow;
+            var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
+
+            // Since we want to make sure that the provided expression is evaluated
+            // and .Now or .UtcNow is used as appropriate, we do not pass our own offset, like we do with other unit tests.
+            // we can do this since we are passing a custom format which only includes the time zone.
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, expression);
+            binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz").ToString());
+        }
+
+        [Fact]
         public void can_bind_datetime_with_iso8601_format()
         {
             using var _ = new AssertionScope();
@@ -108,6 +127,25 @@ public partial class HttpParserTests
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy").ToString());
+        }
+
+        [Fact]
+        public void can_bind_local_datetime_uses_now()
+        {
+            using var _ = new AssertionScope();
+
+            var expression = "$localDatetime 'Tzz'";
+            var code = $@"@var = {{{{{expression}}}}}";
+
+            var result = HttpRequestParser.Parse(code);
+            var currentTime = DateTimeOffset.Now;
+            var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
+
+            // Since we want to make sure that the provided expression is evaluated
+            // and .Now or .UtcNow is used as appropriate, we do not pass our own offset, like we do with other unit tests.
+            // we can do this since we are passing a custom format which only includes the time zone.
+            var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, expression);
+            binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz").ToString());
         }
 
         [Fact]
