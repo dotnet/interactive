@@ -17,8 +17,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_datetime_with_custom_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime 'dd-MM-yyyy' 1 d";
             var code = $@"@var = {{{{{expression}}}}}";
 
@@ -33,8 +31,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_datetime_uses_utcnow()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime 'Tzz'";
             var code = $@"@var = {{{{{expression}}}}}";
 
@@ -52,8 +48,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_datetime_with_iso8601_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime iso8601";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -68,8 +62,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_datetime_with_iso8601_format_with_offset()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime iso8601 1 y";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -84,8 +76,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_datetime_with_rfc1123_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime rfc1123";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -100,8 +90,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_datetime_with_rfc1123_format_with_offset()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$datetime rfc1123 1 d";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -116,8 +104,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_local_datetime_with_custom_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$localDatetime 'dd-MM-yyyy' 1 d";
             var code = $@"@var = {{{{{expression}}}}}";
 
@@ -132,8 +118,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_local_datetime_uses_now()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$localDatetime 'Tzz'";
             var code = $@"@var = {{{{{expression}}}}}";
 
@@ -151,8 +135,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_local_datetime_with_iso8601_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$localDatetime iso8601";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -167,8 +149,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_local_datetime_with_iso8601_format_with_offset()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$localDatetime iso8601 1 y";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -183,8 +163,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_local_datetime_with_rfc1123_format()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$localDatetime rfc1123";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -199,8 +177,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_timestamp()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$timestamp";
             var code = $@"@var = {{{{{expression}}}}}""";
 
@@ -215,8 +191,6 @@ public partial class HttpParserTests
         [Fact]
         public void can_bind_timestamp_with_offset()
         {
-            using var _ = new AssertionScope();
-
             var expression = "$timestamp 7 M";
             var code = $@"@var = {{{{{expression}}}}}""";
 
