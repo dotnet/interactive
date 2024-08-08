@@ -204,7 +204,13 @@ public class SerializationTests
 
             yield return new SendEditableCode("someKernelName", "code");
 
-            yield return new SubmitCode("123", "csharp");
+            yield return new SubmitCode("123", "csharp")
+            {
+                Parameters =
+                {
+                    ["SomeValue"] = "123"
+                }
+            };
 
             yield return new UpdateDisplayedValue(
                 new FormattedValue("text/html", "<b>hi!</b>"),

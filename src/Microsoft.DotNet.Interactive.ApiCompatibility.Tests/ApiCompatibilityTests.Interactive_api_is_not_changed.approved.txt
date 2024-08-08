@@ -431,7 +431,7 @@ Microsoft.DotNet.Interactive.Commands
   public class SubmitCode : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String code, System.String targetKernelName = null)
     public System.String Code { get;}
-    public System.Collections.Generic.IDictionary<System.String,System.String> Parameters { get;}
+    public System.Collections.Generic.IDictionary<System.String,System.String> Parameters { get; set;}
     public System.String ToString()
   public class UpdateDisplayedValue : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(Microsoft.DotNet.Interactive.FormattedValue formattedValue, System.String valueId)

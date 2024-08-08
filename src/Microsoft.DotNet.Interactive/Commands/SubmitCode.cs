@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Commands;
 
 public class SubmitCode : KernelCommand
 {
-    private Dictionary<string, string> _kernelSpecifierParameters;
+    private Dictionary<string, string> _parameters;
 
     public SubmitCode(
         string code,
@@ -33,10 +33,10 @@ public class SubmitCode : KernelCommand
         {
             if (directiveNode.TryGetDirective(out var directive))
             {
-                _kernelSpecifierParameters = directiveNode.GetParameterValues(
-                                                              directive,
-                                                              new Dictionary<DirectiveParameterValueNode, object>())
-                                                          .ToDictionary(t => t.Name, t => t.Value?.ToString());
+                _parameters = directiveNode.GetParameterValues(
+                                               directive,
+                                               new Dictionary<DirectiveParameterValueNode, object>())
+                                           .ToDictionary(t => t.Name, t => t.Value?.ToString());
             }
         }
         else if (syntaxNode is DirectiveNode { Kind: DirectiveNodeKind.Action } actionDirectiveNode)
@@ -51,8 +51,19 @@ public class SubmitCode : KernelCommand
     {
         get
         {
-            _kernelSpecifierParameters ??= new Dictionary<string, string>();
-            return _kernelSpecifierParameters;
+            _parameters ??= new();
+            return _parameters;
+        }
+        init
+        {
+            _parameters ??= new();
+            if (value is not null)
+            {
+                foreach (var pair in value)
+                {
+                    _parameters.Add(pair.Key, pair.Value);
+                }
+            }
         }
     }
 
