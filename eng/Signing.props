@@ -60,6 +60,15 @@
     <FileSignInfo Include="Microsoft.PowerShell.Archive.psm1" CertificateName="None" />
     <FileSignInfo Include="ArchiveResources.psd1" CertificateName="None" />
 
+    <!-- Microsoft.PowerShell.SecretManagement -->
+    <FileSignInfo Include="Microsoft.PowerShell.SecretManagement.psd1" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PowerShell.SecretManagement.format.ps1xml" CertificateName="None" />
+    
+    <!-- Microsoft.PowerShell.SecretStore -->
+    <FileSignInfo Include="Microsoft.PowerShell.SecretStore.psd1" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PowerShell.SecretStore.Extension.psd1" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PowerShell.SecretStore.Extension.psm1" CertificateName="None" />
+
     <!-- PackageManagement -->
     <FileSignInfo Include="PackageManagement.cat" CertificateName="None" />
     <FileSignInfo Include="PackageManagement.format.ps1xml" CertificateName="None" />
