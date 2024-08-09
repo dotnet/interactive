@@ -5,10 +5,11 @@
 using System;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Directives;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class KernelDirectiveConverter : JsonConverter<KernelDirective>
+internal class KernelDirectiveConverter : JsonConverter<KernelDirective>
 {
     public override void Write(Utf8JsonWriter writer, KernelDirective value, JsonSerializerOptions options)
     {

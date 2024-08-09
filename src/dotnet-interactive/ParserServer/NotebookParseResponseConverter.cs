@@ -5,6 +5,7 @@
 using System;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
@@ -23,26 +24,26 @@ internal class NotebookParseResponseConverter : JsonConverter<NotebookParserServ
 
         while (reader.Read())
         {
-            if (reader.TokenType == JsonTokenType.PropertyName)
+            if (reader.TokenType is JsonTokenType.PropertyName)
             {
                 switch (reader.GetString())
                 {
                     case "id":
-                        if (reader.Read() && reader.TokenType == JsonTokenType.String)
+                        if (reader.Read() && reader.TokenType is JsonTokenType.String)
                         {
                             id = reader.GetString();
                         }
                         break;
 
                     case "document":
-                        if (reader.Read() && reader.TokenType == JsonTokenType.StartObject)
+                        if (reader.Read() && reader.TokenType is JsonTokenType.StartObject)
                         {
                             document = JsonSerializer.Deserialize<InteractiveDocument>(ref reader, options);
                         }
                         break;
 
                     case "rawData":
-                        if (reader.Read() && reader.TokenType == JsonTokenType.String)
+                        if (reader.Read() && reader.TokenType is JsonTokenType.String)
                         {
                             rawData = JsonSerializer.Deserialize<byte[]>(ref reader, options);
                         }

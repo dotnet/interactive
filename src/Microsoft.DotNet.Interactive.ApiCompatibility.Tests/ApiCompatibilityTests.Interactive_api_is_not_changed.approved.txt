@@ -88,10 +88,6 @@ Microsoft.DotNet.Interactive
     .ctor(Microsoft.DotNet.Interactive.Connection.KernelClientBase client = null)
     protected Func<TCommand,KernelInvocationContext,System.Threading.Tasks.Task> CreateDefaultHandlerForCommandType<TCommand>()
     public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, KernelInvocationContext context)
-  public abstract class JsonConverter<T> : JsonConverter<T>
-    protected System.Void EnsureStartObject(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
-    protected System.Void OnWrite(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
   public abstract class Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, System.IDisposable
     public static Kernel Current { get;}
     public static Kernel Root { get;}
@@ -451,14 +447,6 @@ Microsoft.DotNet.Interactive.Connection
   public abstract class ConnectKernelDirective<TCommand> : Microsoft.DotNet.Interactive.Directives.KernelActionDirective
     public System.String ConnectedKernelDescription { get; set;}
     public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(TCommand connectCommand, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public class DirectoryInfoJsonConverter : Microsoft.DotNet.Interactive.JsonConverter<System.IO.DirectoryInfo>
-    .ctor()
-    public System.IO.DirectoryInfo Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, System.IO.DirectoryInfo value, System.Text.Json.JsonSerializerOptions options)
-  public class FileInfoJsonConverter : Microsoft.DotNet.Interactive.JsonConverter<System.IO.FileInfo>
-    .ctor()
-    public System.IO.FileInfo Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, System.IO.FileInfo value, System.Text.Json.JsonSerializerOptions options)
   public abstract class IKernelCommandAndEventReceiver, System.IObservable<CommandOrEvent>
   public abstract class IKernelCommandAndEventSender
     public System.Uri RemoteHostUri { get;}
@@ -505,10 +493,6 @@ Microsoft.DotNet.Interactive.Connection
     .ctor(T command)
     public T Command { get;}
     public System.String CommandType { get;}
-  public class KernelDirectiveConverter : Microsoft.DotNet.Interactive.JsonConverter<Microsoft.DotNet.Interactive.Directives.KernelDirective>
-    .ctor()
-    public Microsoft.DotNet.Interactive.Directives.KernelDirective Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, Microsoft.DotNet.Interactive.Directives.KernelDirective value, System.Text.Json.JsonSerializerOptions options)
   public abstract class KernelEventEnvelope, IKernelEventEnvelope
     public static IKernelEventEnvelope Create(Microsoft.DotNet.Interactive.Events.KernelEvent event)
     public static IKernelEventEnvelope Deserialize(System.String json)

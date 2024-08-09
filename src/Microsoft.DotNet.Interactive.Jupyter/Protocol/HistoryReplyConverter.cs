@@ -4,22 +4,23 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-public class HistoryReplyConverter : JsonConverter<HistoryReply>
+internal class HistoryReplyConverter : JsonConverter<HistoryReply>
 {
     public override HistoryReply Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.StartObject)
+        if (reader.TokenType is JsonTokenType.StartObject)
         {
-            if (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+            if (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
             {
-                if (reader.GetString() == "history")
+                if (reader.GetString() is "history")
                 {
                     if (reader.Read())
                     {
-                        if (reader.TokenType == JsonTokenType.StartArray)
+                        if (reader.TokenType is JsonTokenType.StartArray)
                         {
                             if (reader.Read())
                             {
@@ -27,14 +28,14 @@ public class HistoryReplyConverter : JsonConverter<HistoryReply>
                                 {
                                     case JsonTokenType.StartArray:
                                         var elements = ReadHistoryElements(ref reader);
-                                        if (!reader.Read() || reader.TokenType != JsonTokenType.EndObject)
+                                        if (!reader.Read() || reader.TokenType is not JsonTokenType.EndObject)
                                         {
                                             throw new JsonException();
                                         }
 
                                         return new HistoryReply(elements);
                                     case JsonTokenType.EndArray:
-                                        if (reader.Read() && reader.TokenType == JsonTokenType.EndObject)
+                                        if (reader.Read() && reader.TokenType is JsonTokenType.EndObject)
                                         {
                                             return new HistoryReply();
                                         }
@@ -46,9 +47,9 @@ public class HistoryReplyConverter : JsonConverter<HistoryReply>
                             }
 
                         }
-                        else if (reader.TokenType == JsonTokenType.Null)
+                        else if (reader.TokenType is JsonTokenType.Null)
                         {
-                            if (!reader.Read() || reader.TokenType != JsonTokenType.EndObject)
+                            if (!reader.Read() || reader.TokenType is not JsonTokenType.EndObject)
                             {
                                 throw new JsonException();
                             }
@@ -64,10 +65,10 @@ public class HistoryReplyConverter : JsonConverter<HistoryReply>
     private IReadOnlyList<HistoryElement> ReadHistoryElements(ref Utf8JsonReader reader)
     {
         var elements = new List<HistoryElement>();
-        while (reader.TokenType == JsonTokenType.StartArray)
+        while (reader.TokenType is JsonTokenType.StartArray)
         {
             int session;
-            if (reader.Read() && reader.TokenType == JsonTokenType.Number)
+            if (reader.Read() && reader.TokenType is JsonTokenType.Number)
             {
                 session = reader.GetInt32();
             }
@@ -77,7 +78,7 @@ public class HistoryReplyConverter : JsonConverter<HistoryReply>
             }
 
             int lineNumber;
-            if (reader.Read() && reader.TokenType == JsonTokenType.Number)
+            if (reader.Read() && reader.TokenType is JsonTokenType.Number)
             {
                 lineNumber = reader.GetInt32();
             }
@@ -100,7 +101,7 @@ public class HistoryReplyConverter : JsonConverter<HistoryReply>
                     {
                         string input = null;
                         string output = null;
-                        if (reader.Read() && reader.TokenType == JsonTokenType.String)
+                        if (reader.Read() && reader.TokenType is JsonTokenType.String)
                         {
                             input = reader.GetString();
                         }
@@ -110,7 +111,7 @@ public class HistoryReplyConverter : JsonConverter<HistoryReply>
                         }
 
 
-                        if (reader.Read() && reader.TokenType == JsonTokenType.String)
+                        if (reader.Read() && reader.TokenType is JsonTokenType.String)
                         {
                             output = reader.GetString();
                         }
@@ -119,7 +120,7 @@ public class HistoryReplyConverter : JsonConverter<HistoryReply>
                             throw new JsonException();
                         }
 
-                        if (!reader.Read() || reader.TokenType != JsonTokenType.EndArray)
+                        if (!reader.Read() || reader.TokenType is not JsonTokenType.EndArray)
                         {
                             throw new JsonException();
                         }
@@ -132,7 +133,7 @@ public class HistoryReplyConverter : JsonConverter<HistoryReply>
 
                 }
 
-                if (reader.Read() && reader.TokenType == JsonTokenType.EndArray)
+                if (reader.Read() && reader.TokenType is JsonTokenType.EndArray)
                 {
                     reader.Read();
                 }
