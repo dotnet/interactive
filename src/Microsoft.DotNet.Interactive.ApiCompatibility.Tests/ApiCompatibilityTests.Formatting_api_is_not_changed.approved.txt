@@ -1,7 +1,4 @@
 Microsoft.DotNet.Interactive.Formatting
-  public class DataDictionaryConverter : JsonConverter<System.Collections.Generic.IDictionary<System.String,System.Object>>
-    .ctor()
-    public System.Collections.Generic.IDictionary<System.String,System.Object> Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
   public static class Destructurer
     public static IDestructurer GetOrCreate(System.Type type)
   public class Destructurer<T>, IDestructurer<T>, IDestructurer
@@ -132,11 +129,6 @@ Microsoft.DotNet.Interactive.Formatting
     public System.Boolean Format(T instance, FormatContext context)
   public abstract class ITypeFormatterSource
     public System.Collections.Generic.IEnumerable<ITypeFormatter> CreateTypeFormatters()
-  public abstract class JsonConverter<T> : JsonConverter<T>
-    protected System.Void EnsureStartArray(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
-    protected System.Void EnsureStartObject(System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert)
-    protected System.Void OnWrite(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
   public static class JsonExtensions
     public static Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource ToTabularDataResource()
     public static Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource ToTabularDataResource()

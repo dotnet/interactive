@@ -1,16 +1,17 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
 using System;
 using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
 
-public abstract class JsonConverter<T> : System.Text.Json.Serialization.JsonConverter<T>
+internal abstract class JsonConverter<T> : System.Text.Json.Serialization.JsonConverter<T>
 {
     protected void EnsureStartObject(Utf8JsonReader reader, Type typeToConvert)
     {
-        if (reader.TokenType != JsonTokenType.StartObject)
+        if (reader.TokenType is not JsonTokenType.StartObject)
         {
             throw new JsonException(
                 $"Cannot deserialize {typeToConvert.Name}, expecting {JsonTokenType.StartObject} but found {reader.TokenType}");
@@ -19,7 +20,7 @@ public abstract class JsonConverter<T> : System.Text.Json.Serialization.JsonConv
 
     protected void EnsureStartArray(Utf8JsonReader reader, Type typeToConvert)
     {
-        if (reader.TokenType != JsonTokenType.StartArray)
+        if (reader.TokenType is not JsonTokenType.StartArray)
         {
             throw new JsonException(
                 $"Cannot deserialize {typeToConvert.Name}, expecting {JsonTokenType.StartObject} but found {reader.TokenType}");
@@ -35,6 +36,6 @@ public abstract class JsonConverter<T> : System.Text.Json.Serialization.JsonConv
     {
         var localOptions = new JsonSerializerOptions(options);
         localOptions.Converters.Remove(this);
-        JsonSerializer.Serialize(writer, value, value.GetType(), localOptions);
+        JsonSerializer.Serialize(writer, value, value!.GetType(), localOptions);
     }
 }

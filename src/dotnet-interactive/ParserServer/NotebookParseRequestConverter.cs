@@ -5,6 +5,7 @@
 using System;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.App.ParserServer;
 

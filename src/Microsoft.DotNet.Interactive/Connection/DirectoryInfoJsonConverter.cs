@@ -4,14 +4,15 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
-public class FileInfoJsonConverter : JsonConverter<FileInfo>
+internal class DirectoryInfoJsonConverter : JsonConverter<DirectoryInfo>
 {
-    public override FileInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override DirectoryInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.String)
+        if (reader.TokenType is JsonTokenType.String)
         {
             var path = reader.GetString();
 
@@ -20,13 +21,13 @@ public class FileInfoJsonConverter : JsonConverter<FileInfo>
                 return null;
             }
 
-            return new FileInfo(path);
+            return new DirectoryInfo(path);
         }
 
         return null;
     }
 
-    public override void Write(Utf8JsonWriter writer, FileInfo value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, DirectoryInfo value, JsonSerializerOptions options)
     {
         writer.WriteStringValue(value.FullName);
     }

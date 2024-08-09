@@ -15,6 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.Formatting\JsonConverter.cs" Link="Utility\JsonConverter.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\DictionaryExtensions.cs" Link="Utility\DictionaryExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\IOExtensions.cs" Link="Utility\IOExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\NullableAttributes.cs" Link="Utility\NullableAttributes.cs" />

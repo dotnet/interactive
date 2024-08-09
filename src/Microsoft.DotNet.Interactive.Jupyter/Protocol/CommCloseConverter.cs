@@ -4,10 +4,11 @@
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using System;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
-public class CommCloseConverter : JsonConverter<CommClose>
+internal class CommCloseConverter : JsonConverter<CommClose>
 {
     public override CommClose Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

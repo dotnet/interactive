@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting;
 
-public class DataDictionaryConverter : JsonConverter<IDictionary<string, object>>
+internal class DataDictionaryConverter : JsonConverter<IDictionary<string, object>>
 {
     public override IDictionary<string, object> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

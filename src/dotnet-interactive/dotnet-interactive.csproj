@@ -122,6 +122,8 @@
     <None Remove="resources\logo-64x64.png" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Documents\JsonReaderExtensions.cs" Link="ParserServer\JsonReaderExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Documents\Json\ByteArrayConverter.cs" Link="ParserServer\ByteArrayConverter.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Formatting\DataDictionaryConverter.cs" Link="Utility\DataDictionaryConverter.cs" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.Formatting\JsonConverter.cs" Link="ParserServer\JsonConverter.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\DictionaryExtensions.cs" Link="%28Recipes%29\DictionaryExtensions.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Http\Utility\InvocationContextExtensions.cs" />
 

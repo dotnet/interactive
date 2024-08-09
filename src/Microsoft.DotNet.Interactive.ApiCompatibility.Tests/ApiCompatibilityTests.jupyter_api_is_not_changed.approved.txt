@@ -205,10 +205,6 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     .ctor(System.String commId, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null)
     public System.String CommId { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
-  public class CommCloseConverter : Microsoft.DotNet.Interactive.JsonConverter<CommClose>
-    .ctor()
-    public CommClose Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, CommClose value, System.Text.Json.JsonSerializerOptions options)
   public class CommInfoReply : ReplyMessage
     .ctor(System.Collections.Generic.IReadOnlyDictionary<System.String,CommTarget> comms)
     public System.Collections.Generic.IReadOnlyDictionary<System.String,CommTarget> Comms { get;}
@@ -300,10 +296,6 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
   public class HistoryReply : ReplyMessage
     .ctor(System.Collections.Generic.IReadOnlyList<HistoryElement> history = null)
     public System.Collections.Generic.IReadOnlyList<HistoryElement> History { get;}
-  public class HistoryReplyConverter : Microsoft.DotNet.Interactive.JsonConverter<HistoryReply>
-    .ctor()
-    public HistoryReply Read(ref System.Text.Json.Utf8JsonReader& reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-    public System.Void Write(System.Text.Json.Utf8JsonWriter writer, HistoryReply value, System.Text.Json.JsonSerializerOptions options)
   public class HistoryRequest : RequestMessage
     .ctor(System.Int32 session, System.String accessType = range, System.Int32 start = 0, System.Int32 stop = 0, System.Int32 n = 0, System.String pattern = null, System.Boolean unique = False, System.Boolean raw = False, System.Boolean output = False)
     public System.String AccessType { get;}
