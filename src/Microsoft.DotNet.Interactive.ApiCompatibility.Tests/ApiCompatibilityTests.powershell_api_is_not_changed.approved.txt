@@ -9,6 +9,10 @@ Microsoft.DotNet.Interactive.PowerShell
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
   public static class PowerShellKernelExtensions
     public static PowerShellKernel UseProfiles()
+  public class SecretManager
+    .ctor(PowerShellKernel kernel)
+    public System.Void SetSecret(System.String name, System.String value, System.String command = null, System.String source = null)
+    public System.Boolean TryGetSecret(System.String secretName, ref System.String& value)
 Microsoft.DotNet.Interactive.PowerShell.Commands
   public class EnterAzShellCommand : System.Management.Automation.PSCmdlet
     .ctor()

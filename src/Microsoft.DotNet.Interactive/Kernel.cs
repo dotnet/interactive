@@ -25,7 +25,6 @@ using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive;
 

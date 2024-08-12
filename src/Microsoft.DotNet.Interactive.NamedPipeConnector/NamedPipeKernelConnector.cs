@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.NamedPipeConnector;
 
 public class NamedPipeKernelConnector : IDisposable
 {
-    // FIX: (NamedPipeKernelConnector) make this internal and inline into ConnectNamedPipe
+    // TODO: (NamedPipeKernelConnector) make this internal and inline into ConnectNamedPipe
     private KernelCommandAndEventReceiver? _receiver;
     private KernelCommandAndEventSender? _sender;
     private NamedPipeClientStream? _clientStream;

@@ -76,26 +76,26 @@ internal class SetDirectiveCommand : KernelCommand
             command.DestinationValueName = (string)destinationValueNameBinding.Value;
         }
 
-        if (bindingResult.InputsProduced?.TryGetValue("--value", out var inputProduced1) is true)
+        if (bindingResult.InputsProduced.TryGetValue("--value", out var inputProduced))
         {
-            if (((RequestInput)inputProduced1.Command).IsPassword)
+            if (((RequestInput)inputProduced.Command).IsPassword)
             {
-                command.ReferenceValue = new PasswordString(inputProduced1.Value);
+                command.ReferenceValue = new PasswordString(inputProduced.Value);
             }
             else
             {
-                command.ReferenceValue = inputProduced1.Value;
+                command.ReferenceValue = inputProduced.Value;
             }
         }
-        else if (bindingResult.ValuesProduced?.TryGetValue("--value", out var valueProduced1) is true)
+        else if (bindingResult.ValuesProduced.TryGetValue("--value", out var valueProduced))
         {
-            command.SourceValueName = valueProduced1.Name;
-            command.SourceKernelName = (valueProduced1.Command as RequestValue)?.TargetKernelName;
-            command.FormattedValue = valueProduced1.FormattedValue;
+            command.SourceValueName = valueProduced.Name;
+            command.SourceKernelName = (valueProduced.Command as RequestValue)?.TargetKernelName;
+            command.FormattedValue = valueProduced.FormattedValue;
             
-            if (valueProduced1.Value is not null && command.ShareByRef)
+            if (valueProduced.Value is not null && command.ShareByRef)
             {
-                command.ReferenceValue = valueProduced1.Value;
+                command.ReferenceValue = valueProduced.Value;
             }
         }
         else if (parameterValues.TryGetValue("--value", out var parsedLiteralValueBinding))

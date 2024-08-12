@@ -32,6 +32,7 @@ public class PackageReference
             reference = null;
             return false;
         }
+
         var parts = value.Split([','], 2)
             .Select(v => v.Trim())
             .ToArray();

@@ -25,7 +25,7 @@ public static class HtmlFormatter
         }
     }
 
-    // FIX: (HtmlFormatter) this can return a formatter with the wrong MIME type
+    // TODO: (HtmlFormatter) this can return a formatter with the wrong MIME type
     public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
         Formatter.GetPreferredFormatterFor(type, MimeType);
 
