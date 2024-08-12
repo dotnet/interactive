@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PackageManagement;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -96,7 +97,7 @@ public static class KernelExtensions
                         td(img[src: encodedImage, width: "125em"]),
                         td[style: "line-height:.8em"](
                             p[style: "font-size:1.5em"](b(".NET Interactive")),
-                            p("© 2020 Microsoft Corporation"),
+                            p("© 2020-2024 Microsoft Corporation"),
                             p(b("Version: "), info.AssemblyInformationalVersion),
                             p(b("Library version: "), libraryInformationalVersion),
                             p(b("Build date: "), info.BuildDate),
@@ -106,6 +107,58 @@ public static class KernelExtensions
 
             writer.Write(html);
         }, HtmlFormatter.MimeType);
+
+        return kernel;
+    }
+
+    public static CompositeKernel UseSecretManager(this CompositeKernel kernel)
+    {
+        PowerShellKernel powerShellKernel = null;
+        SecretManager secretManager = null;
+
+        kernel.AddMiddleware(async (command, context, next) =>
+        {
+            if (command is not RequestInput { SaveAs: { } saveAs } requestInput)
+            {
+                await next(command, context);
+                return;
+            }
+
+            if (secretManager is null)
+            {
+                powerShellKernel = kernel.ChildKernels.OfType<PowerShellKernel>().SingleOrDefault();
+
+                if (powerShellKernel is not null)
+                {
+                    secretManager = new(powerShellKernel);
+                }
+                else
+                {
+                    // FIX: (UseSecretManager) what's the best thing to do here? maybe silently ignore? display a warning?
+                    await next(command, context);
+                    return;
+                }
+            }
+
+            if (secretManager.TryGetSecret(requestInput.SaveAs, out var value))
+            {
+                context.Publish(new InputProduced(value, requestInput));
+            }
+            else
+            {
+                using var _ = context.KernelEvents.Subscribe(@event =>
+                {
+                    switch (@event)
+                    {
+                        case InputProduced inputProduced when inputProduced.Command == requestInput:
+                            secretManager.SetSecret(requestInput.SaveAs, inputProduced.Value);
+                            break;
+                    }
+                });
+
+                await next(command, context);
+            }
+        });
 
         return kernel;
     }

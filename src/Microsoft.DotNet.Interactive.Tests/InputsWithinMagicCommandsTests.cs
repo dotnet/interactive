@@ -227,13 +227,13 @@ public class InputsWithinMagicCommandsTests : IDisposable
         });
 
         var magicCommand = """
-            #!test @input:{ "prompt": "pick a number", "save": true, "type": "file" } 
+            #!test @input:{ "prompt": "pick a number", "saveAs": "this-is-the-save-key", "type": "file" } 
             """;
 
         await kernel.SendAsync(new SubmitCode(magicCommand));
 
         requestInput.Prompt.Should().Be("pick a number");
-        requestInput.Save.Should().BeTrue();
+        requestInput.SaveAs.Should().Be("this-is-the-save-key");
         requestInput.InputTypeHint.Should().Be("file");
     }
 

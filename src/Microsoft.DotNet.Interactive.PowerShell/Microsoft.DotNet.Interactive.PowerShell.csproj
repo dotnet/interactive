@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -73,7 +73,7 @@
              Link="Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)%(FileName)%(Extension)" 
              PackagePath="contentFiles/any/any/Modules/Microsoft.PowerShell.Archive" 
              PackageCopyToOutput="true" 
-             CopyToOutputDirectory="PreserveNewest" 
+             CopyToOutputDirectory="PreserveNewest"
              Condition="'$(PkgMicrosoft_PowerShell_Archive)' != ''" />
 
     <Content Include="$(PkgMicrosoft_PowerShell_SecretManagement)\**" 

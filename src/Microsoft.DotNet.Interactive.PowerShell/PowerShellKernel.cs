@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -49,9 +49,8 @@ public class PowerShellKernel :
 
     private readonly PSKernelHost _psHost;
     private readonly Lazy<PowerShell> _lazyPwsh;
-    private int _errorCount;
 
-    private PowerShell pwsh => _lazyPwsh.Value;
+    internal PowerShell Pwsh => _lazyPwsh.Value;
 
     public Func<string, string> ReadInput { get; set; }
 
@@ -59,7 +58,7 @@ public class PowerShellKernel :
 
     internal AzShellConnectionUtils AzShell { get; set; }
 
-    internal int DefaultRunspaceId => _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1;
+    internal int DefaultRunspaceId => _lazyPwsh.IsValueCreated ? Pwsh.Runspace.Id : -1;
 
     private readonly HashSet<string> _suppressedValueInfoNames = new();
 
@@ -79,7 +78,7 @@ public class PowerShellKernel :
 
         // Get the AddAccelerator method
         var acceleratorType = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
-        _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
+        _addAccelerator = acceleratorType?.GetMethod("Add", [typeof(string), typeof(Type)]);
     }
 
     public PowerShellKernel() : this(DefaultKernelName)
@@ -98,7 +97,7 @@ public class PowerShellKernel :
         _psHost = new PSKernelHost(this);
         _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
 
-        var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
+        var psObject = Pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
 
         if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
         {
@@ -153,12 +152,12 @@ public class PowerShellKernel :
 
     public void AddAccelerator(string name, Type type)
     {
-        _addAccelerator?.Invoke(null, new object[] { name, type });
+        _addAccelerator?.Invoke(null, [name, type]);
     }
 
     public bool TryGetValue<T>(string name, out T value)
     {
-        var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
+        var variable = Pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
 
         if (variable is not null)
         {
@@ -177,7 +176,7 @@ public class PowerShellKernel :
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
-        var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
+        var psObject = Pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
 
         KernelValueInfo[] valueInfos;
 
@@ -278,15 +277,15 @@ public class PowerShellKernel :
 
         if (AzShell is not null)
         {
-            await RunSubmitCodeInAzShell(code);
+            await RunInAzShell(code);
         }
         else
         {
-            var success = RunSubmitCodeLocally(code);
+            var success = RunLocally(code, out var errorMessage);
 
             if (!success)
             {
-                context.Fail(context.Command);
+                context.Fail(context.Command, message: errorMessage);
             }
         }
     }
@@ -308,7 +307,7 @@ public class PowerShellKernel :
                 requestCompletions.Code,
                 SourceUtilities.GetCursorOffsetFromPosition(requestCompletions.Code, requestCompletions.LinePosition),
                 options: null,
-                pwsh);
+                Pwsh);
 
             var completionItems = results.CompletionMatches.Select(
                 c => new CompletionItem(
@@ -345,7 +344,7 @@ public class PowerShellKernel :
         return Task.CompletedTask;
     }
 
-    private async Task RunSubmitCodeInAzShell(string code)
+    private async Task RunInAzShell(string code)
     {
         code = code.Trim();
         var shouldDispose = false;
@@ -375,42 +374,41 @@ public class PowerShellKernel :
         }
     }
 
-    private bool RunSubmitCodeLocally(string code)
+    internal bool RunLocally(string code, out string errorMessage)
     {
+        var command = new Command(code, isScript: true);
+
         var succeeded = true;
+        errorMessage = "";
 
         try
         {
-            pwsh.AddScript(code).AddCommand(_outDefaultCommand);
+            Pwsh.Commands.AddCommand(command);
+            Pwsh.AddCommand(_outDefaultCommand);
 
-            pwsh.Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
+            Pwsh.Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
 
-            pwsh.InvokeAndClear();
+            Pwsh.InvokeAndClear();
 
-            if (pwsh.HadErrors)
+            Pwsh.AddScript(
+                """
+                $error
+                $error.clear()
+                """);
+            var errors = new List<string>();
+            try
+            {
+                Pwsh.Invoke(input: null, output: errors);
+            }
+            finally
+            {
+                Pwsh.Clear();
+            }
+
+            if (errors.Count > 0)
             {
                 succeeded = false;
-            }
-            else
-            {
-                // certain kinds of errors aren't signaled by the HadErrors so we can check using $error
-                pwsh.AddScript("$error");
-                var output = new List<string>();
-                try
-                {
-                    pwsh.Invoke(input: null, output: output);
-                }
-                finally
-                {
-                    pwsh.Clear();
-                }
-
-                if (output.Count > _errorCount)
-                {
-                    succeeded = false;
-                }
-
-                _errorCount = output.Count;
+                errorMessage = string.Join(Environment.NewLine, errors);
             }
         }
         catch (Exception e)
@@ -440,7 +438,7 @@ public class PowerShellKernel :
         var psObject = PSObject.AsPSObject(error);
         _writeStreamProperty.SetValue(psObject, _errorStreamValue);
 
-        pwsh.AddCommand(_outDefaultCommand)
+        Pwsh.AddCommand(_outDefaultCommand)
             .AddParameter("InputObject", psObject)
             .InvokeAndClear();
     }

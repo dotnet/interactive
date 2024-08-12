@@ -11,7 +11,7 @@ public class RequestInput : KernelCommand
     public RequestInput(
         string prompt,
         string targetKernelName = null,
-        string inputTypeHint = null,
+        string inputTypeHint = "text",
         string valueName = null)
         : base(targetKernelName)
     {
@@ -29,5 +29,5 @@ public class RequestInput : KernelCommand
 
     public string ValueName { get; }
 
-    public bool Save { get; set; }
+    public string SaveAs { get; set; }
 }

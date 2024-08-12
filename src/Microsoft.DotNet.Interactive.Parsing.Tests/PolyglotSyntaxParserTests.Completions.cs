@@ -323,8 +323,5 @@ public partial class PolyglotSyntaxParserTests
             completions.Should().Contain(c => c.InsertText == "--value");
             completions.Should().NotContain(c => c.InsertText == "--name");
         }
-
-        // FIX: (Completions) test partial words and filtering
-        // FIX: (Completions) test values for parameters allowing implicit names
     }
 }
