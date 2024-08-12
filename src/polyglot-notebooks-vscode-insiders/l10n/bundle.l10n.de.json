@@ -5,7 +5,7 @@
   "VariableGridColumnType": "Typ",
   "VariableGridColumnKernel": "Kernel",
   "VariableGridshareTemplate": "{value-name}-Wert aus {kernel-name}-Kernel freigeben",
-  "'VariableGridCaption": "Polyglot Notebook variables",
+  "'VariableGridCaption": "Polyglot-Notebookvariablen",
   "survey.yes": "Ja, zur Umfrage wechseln",
   "survey.no": "Nein",
   "survey.message": "Wir freuen uns über Ihr Feedback zur Notebooks-Funktionalität. Nehmen Sie sich ein paar Minuten Zeit, um uns Ihr Feedback zur Verwendung von polyglotten Notebooks zu geben."

@@ -5,7 +5,7 @@
   "VariableGridColumnType": "類型",
   "VariableGridColumnKernel": "核心",
   "VariableGridshareTemplate": "從 {kernel-name} 核心共用值 {value-name}",
-  "'VariableGridCaption": "Polyglot Notebook variables",
+  "'VariableGridCaption": "Polyglot Notebook 變數",
   "survey.yes": "是，帶我前往問卷",
   "survey.no": "否",
   "survey.message": "歡迎您提供關於筆記本體驗的意見反應!請花幾分鐘的時間提供有關使用多語言筆記本的意見反應。"
