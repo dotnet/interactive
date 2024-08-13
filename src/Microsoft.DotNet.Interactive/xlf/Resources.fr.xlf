@@ -17,6 +17,11 @@
         <target state="translated">Exécute un autre bloc-notes ou fichier de code source inline.</target>
         <note />
       </trans-unit>
+      <trans-unit id="Magics_import_file_Description">
+        <source>The path to the file to be imported. Supported file extensions include notebooks (.ipynb, .dib) as well as source code for supported languages (.cs, .csx, .fs, .fsx, .ps1, .html, .http, .js).</source>
+        <target state="new">The path to the file to be imported. Supported file extensions include notebooks (.ipynb, .dib) as well as source code for supported languages (.cs, .csx, .fs, .fsx, .ps1, .html, .http, .js).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Magics_log_Description">
         <source>Enables session logging.</source>
         <target state="translated">Active la journalisation de session.</target>
