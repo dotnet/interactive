@@ -11,7 +11,6 @@ public class SecretManager
 {
     private readonly PowerShellKernel _kernel;
     private bool _initialized;
-    private const string VaultName = "DotnetInteractiveVault";
 
     public SecretManager(PowerShellKernel kernel)
     {
@@ -34,7 +33,7 @@ public class SecretManager
                     Get-SecretVault -Name '{VaultName}' | Out-Null
                     """;
 
-        if (!_kernel.RunLocally(code, out var errorMessage))
+        if (!_kernel.RunLocally(code, out var errorMessage, true))
         {
             // initialize the SecretVault
 
@@ -51,7 +50,7 @@ public class SecretManager
                   Set-SecretStoreConfiguration @storeConfiguration
                   """;
 
-            if (!_kernel.RunLocally(registrationCode, out errorMessage))
+            if (!_kernel.RunLocally(registrationCode, out errorMessage, true))
             {
                 throw new InvalidOperationException(errorMessage);
             }
@@ -59,6 +58,8 @@ public class SecretManager
             _initialized = true;
         }
     }
+
+    public string VaultName => "DotnetInteractive";
 
     public void SetSecret(
         string name,
@@ -76,7 +77,7 @@ public class SecretManager
               }
               """;
 
-        if (!_kernel.RunLocally(code, out var errorMessage))
+        if (!_kernel.RunLocally(code, out var errorMessage, true))
         {
             throw new InvalidOperationException(errorMessage);
         }
@@ -94,7 +95,7 @@ public class SecretManager
                         ${temporaryVariableName} = Get-Secret -Name '{secretName}' -Vault '{VaultName}' -AsPlainText
                         """;
 
-            if (!_kernel.RunLocally(code, out var errorMessage))
+            if (!_kernel.RunLocally(code, out _, true))
             {
                 value = null;
                 return false;
@@ -113,7 +114,7 @@ public class SecretManager
             if (!_kernel.RunLocally($"""
                                      Remove-Variable -Name '{temporaryVariableName}'
                                      """,
-                                    out var errorMessage))
+                                    out _, true))
             {
             }
         }

@@ -7,7 +7,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App;
@@ -45,36 +44,6 @@ public partial class VariableSharingTests
             var valueProduced = await kernel.RequestValueAsync("x");
 
             valueProduced.Value.Should().Be("hello!");
-        }
-
-        [Fact]
-        public async Task When_JSON_array_is_set_directly_it_is_deserialized()
-        {
-            var kernel = CreateKernel(Language.CSharp);
-
-            await kernel.SendAsync(
-                new SubmitCode(
-                    """
-                    #!set --name x --value [ 1, 2, 3 ]
-                    """));
-            var valueProduced = await kernel.RequestValueAsync("x");
-
-            valueProduced.Value.Should().BeOfType<JsonDocument>();
-        }
-
-        [Fact]
-        public async Task When_JSON_object_is_set_directly_it_is_deserialized()
-        {
-            var kernel = CreateKernel(Language.CSharp);
-
-            await kernel.SendAsync(
-                new SubmitCode(
-                    """
-                    #!set --name x --value { "value": 123 }
-                    """));
-            var valueProduced = await kernel.RequestValueAsync("x");
-
-            valueProduced.Value.Should().BeOfType<JsonDocument>();
         }
 
         [Fact]

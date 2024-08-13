@@ -143,16 +143,40 @@ public static class KernelExtensions
             if (secretManager.TryGetSecret(requestInput.SaveAs, out var value))
             {
                 context.Publish(new InputProduced(value, requestInput));
+
+                var message =
+                    $"""
+                     Using saved value '{requestInput.SaveAs}'. To remove this value, run the following command in a PowerShell cell:
+                     
+                     ```powershell
+                         Remove-Secret -Name {requestInput.SaveAs} -Vault {secretManager.VaultName}
+                     ```
+                     """;
+                context.Publish(new DisplayedValueProduced(
+                                    message,
+                                    requestInput,
+                                    [new FormattedValue("text/markdown", message)]));
             }
             else
             {
                 using var _ = context.KernelEvents.Subscribe(@event =>
                 {
-                    switch (@event)
+                    if (@event is InputProduced inputProduced && inputProduced.Command.GetOrCreateToken() == requestInput.GetOrCreateToken())
                     {
-                        case InputProduced inputProduced when inputProduced.Command == requestInput:
-                            secretManager.SetSecret(requestInput.SaveAs, inputProduced.Value);
-                            break;
+                        secretManager.SetSecret(requestInput.SaveAs, inputProduced.Value);
+
+                        var message =
+                            $"""
+                             Saving your response for value '{saveAs}'. To remove this value, run the following command in a PowerShell cell:
+
+                             ```powershell
+                                 Remove-Secret -Name {requestInput.SaveAs} -Vault {secretManager.VaultName}
+                             ```
+                             """;
+                        context.Publish(new DisplayedValueProduced(
+                                            message,
+                                            requestInput,
+                                            [new FormattedValue("text/markdown", message)]));
                     }
                 });
 

@@ -374,7 +374,7 @@ public class PowerShellKernel :
         }
     }
 
-    internal bool RunLocally(string code, out string errorMessage)
+    internal bool RunLocally(string code, out string errorMessage, bool suppressOutput = false)
     {
         var command = new Command(code, isScript: true);
 
@@ -386,7 +386,10 @@ public class PowerShellKernel :
             Pwsh.Commands.AddCommand(command);
             Pwsh.AddCommand(_outDefaultCommand);
 
-            Pwsh.Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
+            if (!suppressOutput)
+            {
+                Pwsh.Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
+            }
 
             Pwsh.InvokeAndClear();
 

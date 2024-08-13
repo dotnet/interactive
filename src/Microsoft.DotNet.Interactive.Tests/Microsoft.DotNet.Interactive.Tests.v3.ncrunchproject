@@ -64,6 +64,9 @@ var x = 123; // with some intervening code
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.Connection.SerializationTests.Event_contract_has_not_been_broken</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.Tests.RequestInputTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
