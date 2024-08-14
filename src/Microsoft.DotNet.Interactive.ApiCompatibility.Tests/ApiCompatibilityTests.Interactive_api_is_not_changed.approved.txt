@@ -126,7 +126,7 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task<KernelCommandResult> SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Threading.CancellationToken cancellationToken = null)
     protected System.Void SetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
      System.Void SetScheduler(KernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult> scheduler)
-    protected System.Threading.Tasks.Task SetValueAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, KernelInvocationContext context, SetValueAsyncDelegate setValueAsync)
+    protected System.Threading.Tasks.Task SetValueAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, KernelInvocationContext context, SetValueAsyncDelegate onSetValueAsync)
     public System.Boolean SupportsCommandType(System.Type commandType)
     public System.String ToString()
   public class KernelCollection, System.Collections.Generic.IEnumerable<Kernel>, System.Collections.Generic.IReadOnlyCollection<Kernel>, System.Collections.IEnumerable
@@ -401,7 +401,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.String InputTypeHint { get; set;}
     public System.Boolean IsPassword { get;}
     public System.String Prompt { get;}
-    public System.Boolean Save { get; set;}
+    public System.String SaveAs { get; set;}
     public System.String ValueName { get;}
   public class RequestKernelInfo : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String targetKernelName = null)

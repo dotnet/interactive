@@ -11,6 +11,7 @@ Microsoft.DotNet.Interactive.PowerShell
     public static PowerShellKernel UseProfiles()
   public class SecretManager
     .ctor(PowerShellKernel kernel)
+    public System.String VaultName { get;}
     public System.Void SetSecret(System.String name, System.String value, System.String command = null, System.String source = null)
     public System.Boolean TryGetSecret(System.String secretName, ref System.String& value)
 Microsoft.DotNet.Interactive.PowerShell.Commands
