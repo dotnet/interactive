@@ -10,6 +10,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[Trait("Category", "Contracts and serialization")]
 public class TypeScriptInterfacesContractTests
 {
     private string GetTypeScriptContractFullPath(string subPath, [CallerFilePath] string thisDir = null)

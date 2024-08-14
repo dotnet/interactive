@@ -30,6 +30,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
+[Trait("Category", "Contracts and serialization")]
 public class SerializationTests
 {
     private readonly ITestOutputHelper _output;

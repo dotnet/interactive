@@ -23,6 +23,7 @@ using System.Text.Encodings.Web;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[Trait("Category", "Contracts and serialization")]
 public class SerializationTests
 {
     private readonly ITestOutputHelper _output;
