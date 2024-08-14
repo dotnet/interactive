@@ -11,11 +11,9 @@ public class RequestInput : KernelCommand
     public RequestInput(
         string prompt,
         string targetKernelName = null,
-        string inputTypeHint = null,
-        string valueName = null)
+        string inputTypeHint = null)
         : base(targetKernelName)
     {
-        ValueName = valueName;
         Prompt = prompt;
         InputTypeHint = inputTypeHint;
     }
@@ -26,8 +24,6 @@ public class RequestInput : KernelCommand
 
     [JsonPropertyName("type")] 
     public string InputTypeHint { get; set; }
-
-    public string ValueName { get; }
 
     public string SaveAs { get; set; }
 }

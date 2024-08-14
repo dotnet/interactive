@@ -189,33 +189,7 @@ public partial class VariableSharingTests
                         .Should().BeTrue();
             newVar3.Should().Be("three");
         }
-
-        [Fact]
-        public async Task RequestInput_ValueName_is_initialized_from_name_option()
-        {
-            var kernel = CreateKernel(Language.CSharp);
-
-            using var composite = new CompositeKernel
-            {
-                kernel
-            };
-
-            RequestInput receivedRequestInputCommand = null;
-
-            composite.RegisterCommandHandler<RequestInput>((requestInput, context) =>
-            {
-                receivedRequestInputCommand = requestInput;
-                context.Publish(new InputProduced("hello!", requestInput));
-                return Task.CompletedTask;
-            });
-
-            composite.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), composite.Name);
-
-            await composite.SendAsync(new SubmitCode("#!set --name x --value @input:input-please"));
-
-            receivedRequestInputCommand.ValueName.Should().Be("x");
-        }
-
+        
         [Theory]
         [InlineData(
             """

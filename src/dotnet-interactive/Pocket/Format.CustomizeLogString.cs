@@ -75,7 +75,6 @@ internal static partial class Format
             case RequestInput requestInput:
                 writer.Write(requestInput.Prompt);
                 writer.AppendProperties(
-                    (nameof(requestInput.ValueName), requestInput.ValueName),
                     (nameof(requestInput.IsPassword), requestInput.IsPassword.ToString()),
                     (nameof(requestInput.InputTypeHint), requestInput.InputTypeHint),
                     (nameof(requestInput.SaveAs), requestInput.SaveAs));
