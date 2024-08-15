@@ -86,7 +86,23 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
         var result = await kernel.SendAsync(new SubmitCode("Get-ChildItem oops"));
 
-        result.Events.Last().Should().BeOfType<CommandFailed>();
+        result.Events.Last().Should().BeOfType<CommandFailed>()
+              .Which.Message
+              .Should().Match("Cannot find path '*oops' because it does not exist.");
+    }
+
+    [Fact]
+    public async Task Errors_from_previous_submissions_are_not_shown()
+    {
+        using var kernel = CreateKernel(Language.PowerShell);
+
+        await kernel.SendAsync(new SubmitCode("Get-ChildItem oops1"));
+
+        var result = await kernel.SendAsync(new SubmitCode("Get-ChildItem oops2"));
+
+        result.Events.Last().Should().BeOfType<CommandFailed>()
+              .Which.Message
+              .Should().NotContain("oops1");
     }
 
     [Fact]

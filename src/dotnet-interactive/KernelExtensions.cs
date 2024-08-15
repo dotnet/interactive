@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PackageManagement;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -96,7 +97,7 @@ public static class KernelExtensions
                         td(img[src: encodedImage, width: "125em"]),
                         td[style: "line-height:.8em"](
                             p[style: "font-size:1.5em"](b(".NET Interactive")),
-                            p("© 2020 Microsoft Corporation"),
+                            p("© 2020-2024 Microsoft Corporation"),
                             p(b("Version: "), info.AssemblyInformationalVersion),
                             p(b("Library version: "), libraryInformationalVersion),
                             p(b("Build date: "), info.BuildDate),
@@ -106,6 +107,82 @@ public static class KernelExtensions
 
             writer.Write(html);
         }, HtmlFormatter.MimeType);
+
+        return kernel;
+    }
+
+    public static CompositeKernel UseSecretManager(this CompositeKernel kernel)
+    {
+        PowerShellKernel powerShellKernel = null;
+        SecretManager secretManager = null;
+
+        kernel.AddMiddleware(async (command, context, next) =>
+        {
+            if (command is not RequestInput { SaveAs: { } saveAs } requestInput)
+            {
+                await next(command, context);
+                return;
+            }
+
+            if (secretManager is null)
+            {
+                powerShellKernel = kernel.ChildKernels.OfType<PowerShellKernel>().SingleOrDefault();
+
+                if (powerShellKernel is not null)
+                {
+                    secretManager = new(powerShellKernel);
+                }
+                else
+                {
+                    // FIX: (UseSecretManager) what's the best thing to do here? maybe silently ignore? display a warning?
+                    await next(command, context);
+                    return;
+                }
+            }
+
+            if (secretManager.TryGetSecret(requestInput.SaveAs, out var value))
+            {
+                context.Publish(new InputProduced(value, requestInput));
+
+                var message =
+                    $"""
+                     Using saved value '{requestInput.SaveAs}'. To remove this value, run the following command in a PowerShell cell:
+                     
+                     ```powershell
+                         Remove-Secret -Name {requestInput.SaveAs} -Vault {secretManager.VaultName}
+                     ```
+                     """;
+                context.Publish(new DisplayedValueProduced(
+                                    message,
+                                    requestInput,
+                                    [new FormattedValue("text/markdown", message)]));
+            }
+            else
+            {
+                using var _ = context.KernelEvents.Subscribe(@event =>
+                {
+                    if (@event is InputProduced inputProduced && inputProduced.Command.GetOrCreateToken() == requestInput.GetOrCreateToken())
+                    {
+                        secretManager.SetSecret(requestInput.SaveAs, inputProduced.Value);
+
+                        var message =
+                            $"""
+                             Saving your response for value '{saveAs}'. To remove this value, run the following command in a PowerShell cell:
+
+                             ```powershell
+                                 Remove-Secret -Name {requestInput.SaveAs} -Vault {secretManager.VaultName}
+                             ```
+                             """;
+                        context.Publish(new DisplayedValueProduced(
+                                            message,
+                                            requestInput,
+                                            [new FormattedValue("text/markdown", message)]));
+                    }
+                });
+
+                await next(command, context);
+            }
+        });
 
         return kernel;
     }

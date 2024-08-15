@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public class JupyterClientKernelExtension
 {
-    public static  Task LoadAsync(Kernel kernel)
+    public static Task LoadAsync(Kernel kernel)
     {
         if (kernel is CompositeKernel root)
         {

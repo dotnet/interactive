@@ -46,6 +46,7 @@ using static {typeof(TopLevelMethods).FullName};
     public static PowerShellKernel UseJupyterHelpers(
         this PowerShellKernel kernel)
     {
+        // TODO: (UseJupyterHelpers) remove Powershell package reference?
         kernel.ReadInput = TopLevelMethods.input;
         kernel.ReadPassword = TopLevelMethods.password;
         return kernel;

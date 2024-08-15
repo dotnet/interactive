@@ -11,6 +11,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[Trait("Category", "Contracts and serialization")]
 public class HistorySerializationTests
 {
     [Fact]

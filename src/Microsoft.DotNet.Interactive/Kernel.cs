@@ -25,7 +25,6 @@ using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Kernel>;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 using Disposable = System.Reactive.Disposables.Disposable;
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -1050,7 +1049,7 @@ public abstract partial class Kernel :
     protected async Task SetValueAsync(
         SendValue command,
         KernelInvocationContext context,
-        SetValueAsyncDelegate setValueAsync)
+        SetValueAsyncDelegate onSetValueAsync)
     {
         object value = null;
 
@@ -1063,7 +1062,6 @@ public abstract partial class Kernel :
                     break;
 
                 default:
-
                     value = command.Value;
                     break;
             }
@@ -1071,7 +1069,7 @@ public abstract partial class Kernel :
 
         if (value is null)
         {
-            if (command.FormattedValue.MimeType == JsonFormatter.MimeType)
+            if (command.FormattedValue.MimeType is JsonFormatter.MimeType)
             {
                 var jsonDoc = JsonDocument.Parse(command.FormattedValue.Value);
 
@@ -1096,7 +1094,7 @@ public abstract partial class Kernel :
             }
         }
 
-        await setValueAsync(command.Name, value);
+        await onSetValueAsync(command.Name, value);
     }
 
     public override string ToString()

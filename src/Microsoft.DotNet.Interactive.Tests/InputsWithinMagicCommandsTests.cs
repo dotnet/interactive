@@ -84,22 +84,6 @@ public class InputsWithinMagicCommandsTests : IDisposable
     }
 
     [Fact]
-    public async Task Input_token_in_magic_command_includes_requested_value_name()
-    {
-        await _kernel.SendAsync(new SubmitCode("#!shim --value @input:input-please", "csharp"));
-
-        _receivedRequestInput.IsPassword.Should().BeFalse();
-
-        _receivedRequestInput
-            .Should()
-            .BeOfType<RequestInput>()
-            .Which
-            .ValueName
-            .Should()
-            .Be("input-please");
-    }
-
-    [Fact]
     public async Task Input_token_in_magic_command_prompts_user_passes_user_input_to_directive_to_handler()
     {
         _responses.Enqueue("one");
@@ -227,13 +211,13 @@ public class InputsWithinMagicCommandsTests : IDisposable
         });
 
         var magicCommand = """
-            #!test @input:{ "prompt": "pick a number", "save": true, "type": "file" } 
+            #!test @input:{ "prompt": "pick a number", "saveAs": "this-is-the-save-key", "type": "file" } 
             """;
 
         await kernel.SendAsync(new SubmitCode(magicCommand));
 
         requestInput.Prompt.Should().Be("pick a number");
-        requestInput.Save.Should().BeTrue();
+        requestInput.SaveAs.Should().Be("this-is-the-save-key");
         requestInput.InputTypeHint.Should().Be("file");
     }
 

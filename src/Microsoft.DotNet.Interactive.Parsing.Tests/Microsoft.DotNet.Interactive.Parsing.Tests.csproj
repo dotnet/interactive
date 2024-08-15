@@ -22,7 +22,7 @@
     <Compile Include="..\Microsoft.DotNet.Interactive\LinePosition.cs" Link="LinePosition.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\LinePositionSpan.cs" Link="LinePositionSpan.cs" LinkBase="Parsing" />
     
-    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\SourceUtilities.cs" Link="SourceUtilities.cs" LinkBase="Parsing" />
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\SourceUtilities.cs" Link="Utility\SourceUtilities.cs" LinkBase="Parsing" />
 
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelActionDirective.cs" Link="KernelActionDirective.cs" LinkBase="Parsing" />
     <Compile Include="..\Microsoft.DotNet.Interactive\Directives\KernelDirective.cs" Link="KernelDirective.cs" LinkBase="Parsing" />
@@ -65,7 +65,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" Version="$(xunitVersion)"  />
+    <PackageReference Include="xunit" Version="$(xunitVersion)" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />

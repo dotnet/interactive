@@ -5,8 +5,7 @@
     "prompt": "provide answer",
     "isPassword": true,
     "type": "password",
-    "valueName": "yourPassword",
-    "save": false,
+    "saveAs": null,
     "targetKernelName": "vscode",
     "originUri": null,
     "destinationUri": null

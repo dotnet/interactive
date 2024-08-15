@@ -680,17 +680,13 @@ public class SubmissionParser
                 parametersNodeText = JsonSerializer.Deserialize<string>(parametersNode.Text);
             }
 
-            var valueName = GetValueNameFromNameParameter();
-
             if (parametersNodeText?.Contains(" ") is true)
             {
-                requestInput = new(prompt: parametersNodeText,
-                                   valueName: valueName);
+                requestInput = new(prompt: parametersNodeText);
             }
             else
             {
-                requestInput = new(prompt: $"Please enter a value for field \"{parametersNodeText}\".",
-                                   valueName: valueName ?? parametersNodeText);
+                requestInput = new(prompt: $"Please enter a value for field \"{parametersNodeText}\".");
             }
         }
 
@@ -742,19 +738,6 @@ public class SubmissionParser
 
             default:
                 throw new ArgumentOutOfRangeException();
-        }
-
-        string GetValueNameFromNameParameter()
-        {
-            if (expressionNode.Ancestors().OfType<DirectiveNode>().FirstOrDefault() is { } directiveNode)
-            {
-                if (directiveNode.ChildNodes.OfType<DirectiveParameterNode>().FirstOrDefault(n => n.NameNode?.Text == "--name") is { } nameParameterNode)
-                {
-                    return nameParameterNode.ValueNode?.Text;
-                }
-            }
-
-            return null;
         }
     }
 

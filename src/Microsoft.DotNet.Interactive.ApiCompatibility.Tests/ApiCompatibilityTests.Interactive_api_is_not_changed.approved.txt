@@ -93,8 +93,8 @@ Microsoft.DotNet.Interactive
     public static Kernel Root { get;}
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
-    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text, System.String valueName = null)
-    public static System.Threading.Tasks.Task<PasswordString> GetPasswordAsync(System.String prompt = , System.String valueName = null)
+    public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text)
+    public static System.Threading.Tasks.Task<PasswordString> GetPasswordAsync(System.String prompt = )
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
     public FrontendEnvironment FrontendEnvironment { get; set;}
@@ -126,7 +126,7 @@ Microsoft.DotNet.Interactive
     public System.Threading.Tasks.Task<KernelCommandResult> SendAsync(Microsoft.DotNet.Interactive.Commands.KernelCommand command, System.Threading.CancellationToken cancellationToken = null)
     protected System.Void SetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
      System.Void SetScheduler(KernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult> scheduler)
-    protected System.Threading.Tasks.Task SetValueAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, KernelInvocationContext context, SetValueAsyncDelegate setValueAsync)
+    protected System.Threading.Tasks.Task SetValueAsync(Microsoft.DotNet.Interactive.Commands.SendValue command, KernelInvocationContext context, SetValueAsyncDelegate onSetValueAsync)
     public System.Boolean SupportsCommandType(System.Type commandType)
     public System.String ToString()
   public class KernelCollection, System.Collections.Generic.IEnumerable<Kernel>, System.Collections.Generic.IReadOnlyCollection<Kernel>, System.Collections.IEnumerable
@@ -397,12 +397,11 @@ Microsoft.DotNet.Interactive.Commands
   public class RequestHoverText : LanguageServiceCommand, System.IEquatable<KernelCommand>
     .ctor(System.String code, Microsoft.DotNet.Interactive.LinePosition linePosition, System.String targetKernelName = null)
   public class RequestInput : KernelCommand, System.IEquatable<KernelCommand>
-    .ctor(System.String prompt, System.String targetKernelName = null, System.String inputTypeHint = null, System.String valueName = null)
+    .ctor(System.String prompt, System.String targetKernelName = null, System.String inputTypeHint = null)
     public System.String InputTypeHint { get; set;}
     public System.Boolean IsPassword { get;}
     public System.String Prompt { get;}
-    public System.Boolean Save { get; set;}
-    public System.String ValueName { get;}
+    public System.String SaveAs { get; set;}
   public class RequestKernelInfo : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String targetKernelName = null)
     .ctor(System.Uri destinationUri)

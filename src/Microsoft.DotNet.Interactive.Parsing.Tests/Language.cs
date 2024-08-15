@@ -5,7 +5,6 @@ namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public enum Language
 {
-    // FIX: (Language) simplify
     CSharp = 0,
     FSharp = 1,
     PowerShell = 2,

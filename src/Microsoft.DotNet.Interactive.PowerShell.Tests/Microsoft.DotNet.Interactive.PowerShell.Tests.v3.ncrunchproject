@@ -1,5 +1,10 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <DefaultTestTimeout>10000</DefaultTestTimeout>
+    <IgnoredTests>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.PowerShell.Tests.SecretManagerTests</FixtureName>
+      </FixtureTestSelector>
+    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
 using System.Diagnostics;
 using Assent;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -22,6 +23,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ApiCompatibility.Tests;
 
+[Trait("Category", "Contracts and serialization")]
 public class ApiCompatibilityTests
 {
     private readonly Configuration _configuration;

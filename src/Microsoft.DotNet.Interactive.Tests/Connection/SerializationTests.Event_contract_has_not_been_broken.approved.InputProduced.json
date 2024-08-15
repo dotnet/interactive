@@ -10,8 +10,7 @@
       "prompt": "What is the path to the log file?",
       "isPassword": false,
       "type": "file",
-      "valueName": "logfile",
-      "save": false,
+      "saveAs": null,
       "targetKernelName": "vscode",
       "originUri": null,
       "destinationUri": null

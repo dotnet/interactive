@@ -13,6 +13,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
+[Trait("Category", "Contracts and serialization")]
 public class NotebookParserServerTests_Serialization
 {
     private readonly Configuration _configuration =

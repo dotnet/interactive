@@ -40,30 +40,25 @@ public partial class Kernel
     /// <returns>The user input value.</returns>
     public static async Task<string> GetInputAsync(
         string prompt = "",
-        string typeHint = "text", 
-        string valueName = null)
+        string typeHint = "text")
     {
-        return await GetInputAsync(prompt, false, typeHint, valueName);
+        return await GetInputAsync(prompt, false, typeHint);
     }
         
-    public static async Task<PasswordString> GetPasswordAsync(
-        string prompt = "",
-        string valueName = null)
+    public static async Task<PasswordString> GetPasswordAsync(string prompt = "")
     {
-        var password = await GetInputAsync(prompt, true, valueName: valueName);
+        var password = await GetInputAsync(prompt, true);
         return new PasswordString(password);
     }
 
     private static async Task<string> GetInputAsync(
         string prompt,
         bool isPassword,
-        string typeHint = "text",
-        string valueName = null)
+        string typeHint = "text")
     {
         var command = new RequestInput(
             prompt,
-            inputTypeHint: isPassword ? "password" : typeHint,
-            valueName: valueName);
+            inputTypeHint: isPassword ? "password" : typeHint);
 
         var result = await Root.SendAsync(command, CancellationToken.None);
 

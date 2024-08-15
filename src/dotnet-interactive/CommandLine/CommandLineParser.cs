@@ -509,6 +509,7 @@ public static class CommandLineParser
             .UseDefaultMagicCommands()
             .UseAboutMagicCommand()
             .UseImportMagicCommand()
+            .UseSecretManager()
             .UseNuGetExtensions(telemetrySender);
 
         kernel.AddKernelConnector(new ConnectSignalRDirective());
