@@ -38,6 +38,7 @@ public class HttpKernel :
     private readonly long _contentByteLengthThreshold;
 
     private readonly Dictionary<string, object> _variables = new(StringComparer.InvariantCultureIgnoreCase);
+    private string _currentDocument;
 
     /// <summary>
     /// Gets or sets a timeout for HTTP requests that are issued using this <see cref="HttpKernel"/>.
@@ -82,6 +83,7 @@ public class HttpKernel :
         _client = client ?? new HttpClient() { Timeout = Timeout.InfiniteTimeSpan };
         _responseDelayThresholdInMilliseconds = responseDelayThresholdInMilliseconds;
         _contentByteLengthThreshold = contentByteLengthThreshold;
+        _currentDocument = string.Empty;
 
         RegisterForDisposal(_client);
     }
@@ -131,19 +133,24 @@ public class HttpKernel :
 
     async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
-        string? doc = "";
-        if (command.Parameters.TryGetValue("Document", out doc))
+        var parseResult = HttpRequestParser.Parse(command.Code);
+        var requestNodes = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>();
+        var lastSpan = requestNodes.Select(n => n.Span).LastOrDefault();
+
+
+
+        if (command.Parameters.TryGetValue("Document", out var doc))
         {
-            var parsedDoc = HttpRequestParser.Parse(doc);
-            foreach (DeclaredVariable dv in parsedDoc.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
+            if (doc is not null && !string.Equals(doc, _currentDocument))
             {
-                _variables[dv.Name] = dv.Value;
+                _currentDocument = doc;
+                var parsedDoc = HttpRequestParser.Parse(doc);
+                foreach (DeclaredVariable dv in parsedDoc.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
+                {
+                    _variables[dv.Name] = dv.Value;
+                }
             }
         }
-
-        var parseResult = HttpRequestParser.Parse(command.Code);
-
-        var requestNodes = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>();
 
         var httpBoundResults = new List<HttpBindingResult<HttpRequestMessage>>();
         var httpNamedBoundResults = new List<(HttpRequestNode requestNode, HttpBindingResult<HttpRequestMessage> bindingResult)>();

@@ -2234,9 +2234,9 @@ public class HttpKernelTests
     }
 
     [Theory]
-    [InlineData("json.response.body.$.slideshow.slides.title")]
-    [InlineData("json.response.body.$.slideshow.slides.type")]
-    public async Task json_named_requests_with_sub_routes_can_be_accessed_correctly(string path)
+    [InlineData("json.response.body.$.slideshow.slides.title", "Wake up to WonderWidgets!")]
+    [InlineData("json.response.body.$.slideshow.slides.type", "all")]
+    public async Task json_named_requests_with_sub_routes_can_be_accessed_correctly(string path, string end)
     {
         // Request Variables
         // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
@@ -2267,7 +2267,7 @@ public class HttpKernelTests
             Content-Type: application/json
             
             {
-                "path" : {{pathContents}}
+                "path" :{{pathContents}}
             }
             
             ###
@@ -2276,6 +2276,13 @@ public class HttpKernelTests
         var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
         secondResult.Events.Should().NotContainErrors();
+
+        var returnValue = secondResult.Events.OfType<ReturnValueProduced>().First();
+
+        var response = (HttpResponse)returnValue.Value;
+
+        response.Request.Content.Raw.Split(":").Last().TrimEnd("\r\n}".ToCharArray()).Should().Be(end);
+
     }
 
     [Theory]

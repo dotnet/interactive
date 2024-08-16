@@ -101,7 +101,7 @@ internal class HttpNamedRequest
                             {
                                 return node.CreateBindingFailure(HttpDiagnostics.InvalidXmlNodeInNamedRequest(path[3]));
                             }
-                            
+
                         }
                         catch (XmlException)
                         {
@@ -234,19 +234,15 @@ internal class HttpNamedRequest
     {
         if (currentIndex + 1 == path.Length)
         {
-            if(responseJSON.GetType() == typeof(JsonArray))
+            switch (responseJSON)
             {
-                var jsonArray = (JsonArray)responseJSON;
-                return jsonArray.FirstOrDefault(n => n?[path[currentIndex]] != null)?.ToJsonString();
-            } 
-            else if(responseJSON.GetType() == typeof(JsonObject))
-            {
-                var jsonObject = (JsonObject)responseJSON;
-                return jsonObject[path[currentIndex]]?.ToString();
-            }
-            else
-            {
-                return null;
+                case JsonArray jsonArray:
+                    var node = jsonArray.FirstOrDefault(n => n?[path[currentIndex]] != null);
+                    return node?[path[currentIndex]]?.ToString();
+                case JsonObject jsonObject:
+                    return jsonObject[path[currentIndex]]?.ToString();
+                default:
+                    return null;
             }
         }
 
@@ -254,12 +250,12 @@ internal class HttpNamedRequest
         try
         {
             newResponseJSON = responseJSON[path[currentIndex]];
-        } 
-        catch (Exception)
+        }
+        catch (InvalidOperationException)
         {
             return null;
         }
-        
+
         if (newResponseJSON is null)
         {
             return null;
