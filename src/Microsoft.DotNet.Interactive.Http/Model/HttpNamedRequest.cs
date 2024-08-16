@@ -10,6 +10,7 @@ using System.Text.Json.Nodes;
 using System.Reactive.Concurrency;
 using System.Xml.XPath;
 using System.Xml;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -233,11 +234,32 @@ internal class HttpNamedRequest
     {
         if (currentIndex + 1 == path.Length)
         {
-            var result = responseJSON[path[currentIndex]];
-            return result?.ToString();
+            if(responseJSON.GetType() == typeof(JsonArray))
+            {
+                var jsonArray = (JsonArray)responseJSON;
+                return jsonArray.FirstOrDefault(n => n?[path[currentIndex]] != null)?.ToJsonString();
+            } 
+            else if(responseJSON.GetType() == typeof(JsonObject))
+            {
+                var jsonObject = (JsonObject)responseJSON;
+                return jsonObject[path[currentIndex]]?.ToString();
+            }
+            else
+            {
+                return null;
+            }
         }
 
-        var newResponseJSON = responseJSON[path[currentIndex + 1]];
+        JsonNode? newResponseJSON = null;
+        try
+        {
+            newResponseJSON = responseJSON[path[currentIndex]];
+        } 
+        catch (Exception)
+        {
+            return null;
+        }
+        
         if (newResponseJSON is null)
         {
             return null;

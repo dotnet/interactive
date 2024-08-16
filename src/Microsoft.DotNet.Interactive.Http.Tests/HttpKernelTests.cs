@@ -2234,6 +2234,51 @@ public class HttpKernelTests
     }
 
     [Theory]
+    [InlineData("json.response.body.$.slideshow.slides.title")]
+    [InlineData("json.response.body.$.slideshow.slides.type")]
+    public async Task json_named_requests_with_sub_routes_can_be_accessed_correctly(string path)
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/json
+
+            # @name json
+            GET {{baseUrl}}
+            Content-Type: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @pathContents = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "path" : {{pathContents}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+    }
+
+    [Theory]
     [InlineData("login.response.$")]
     [InlineData("login.response.//")]
     [InlineData("login.request.$")]

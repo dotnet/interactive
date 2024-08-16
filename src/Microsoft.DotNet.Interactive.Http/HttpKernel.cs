@@ -15,6 +15,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -124,28 +125,22 @@ public class HttpKernel :
 
     private Task SetValueAsync(string valueName, object value, Type? declaredType = null)
     {
-        if(value is (HttpVariableDeclarationAndAssignmentNode))
-        {
-            var variable = (HttpVariableDeclarationAndAssignmentNode) value;
-            if(variable.ValueNode is not null)
-            {
-                var bindingResult = variable.ValueNode.TryGetValue(BindExpressionValues);
-                if (bindingResult.IsSuccessful && bindingResult.Value is not null)
-                {
-                    _variables[valueName] = bindingResult.Value;
-                }
-            }
-            
-        } 
-        else
-        {
-            _variables[valueName] = value;
-        }
+        _variables[valueName] = value;
         return Task.CompletedTask;
     }
 
     async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
+        string? doc = "";
+        if (command.Parameters.TryGetValue("Document", out doc))
+        {
+            var parsedDoc = HttpRequestParser.Parse(doc);
+            foreach (DeclaredVariable dv in parsedDoc.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
+            {
+                _variables[dv.Name] = dv.Value;
+            }
+        }
+
         var parseResult = HttpRequestParser.Parse(command.Code);
 
         var requestNodes = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>();
@@ -168,7 +163,7 @@ public class HttpKernel :
             }
         }
 
-        
+
         var diagnostics = httpBoundResults.SelectMany(n => n.Diagnostics).Concat(httpNamedBoundResults.SelectMany(n => n.bindingResult.Diagnostics)).ToArray();
 
         PublishDiagnostics(context, command, diagnostics);

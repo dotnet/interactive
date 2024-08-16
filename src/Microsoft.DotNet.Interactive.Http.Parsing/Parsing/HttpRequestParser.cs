@@ -137,7 +137,7 @@ internal class HttpRequestParser
             {
                 if (node is null)
                 {
-                    if (CurrentToken is { Kind: TokenKind.Word } or ({ Kind: TokenKind.Punctuation} and { Text: "/"}))
+                    if (CurrentToken is { Kind: TokenKind.Word } or ({ Kind: TokenKind.Punctuation } and { Text: "/" }))
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
 
@@ -268,7 +268,7 @@ internal class HttpRequestParser
                     foreach (var commentNode in ParseComments())
                     {
                         node.Add(commentNode, addBefore: true);
-                        
+
                     }
                 }
                 else
@@ -668,25 +668,21 @@ internal class HttpRequestParser
                 node.AddDiagnostic(diagnostic);
             }
             bool wordParsedOnce = false;
-            while (MoreTokens() && CurrentToken is not {Kind: TokenKind.NewLine })
-                {
+            while (MoreTokens() && CurrentToken is not { Kind: TokenKind.NewLine })
+            {
 
-                    if (CurrentToken is not null && (!(CurrentToken is { Kind: TokenKind.Word or TokenKind.Whitespace} or { Text: "_" or "@" or "."}) || CurrentToken is {Kind: TokenKind.Word } && wordParsedOnce)) 
-                    {
-                        var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
-                        node.AddDiagnostic(diagnostic);
-                        wordParsedOnce = false;
-                    }
-
-                    if (CurrentToken is { Kind: TokenKind.Word })
-                    {
-                        wordParsedOnce = true;
-                    }
-                    ConsumeCurrentTokenInto(node);
-                /*if (CurrentToken is { Kind: TokenKind.Whitespace })
+                if (CurrentToken is not null && (!(CurrentToken is { Kind: TokenKind.Word or TokenKind.Whitespace } or { Text: "_" or "@" or "." }) || CurrentToken is { Kind: TokenKind.Word } && wordParsedOnce))
                 {
-                    ParseTrailingWhitespace(node, stopBeforeNewLine: true);
-                }*/
+                    var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
+                    node.AddDiagnostic(diagnostic);
+                    wordParsedOnce = false;
+                }
+
+                if (CurrentToken is { Kind: TokenKind.Word })
+                {
+                    wordParsedOnce = true;
+                }
+                ConsumeCurrentTokenInto(node);
 
             }
 
@@ -697,7 +693,7 @@ internal class HttpRequestParser
         {
             var nextTokenIndicatesName = CurrentTokenPlus(1) != null ? CurrentTokenPlus(1)!.Text.StartsWith("name") : false;
             return (CurrentToken is { Text: "@" } &&
-                nextTokenIndicatesName  &&
+                nextTokenIndicatesName &&
                 CurrentTokenPlus(2) is { Kind: TokenKind.Whitespace }
                     );
         }
