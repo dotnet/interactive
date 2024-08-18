@@ -102,3 +102,19 @@ Or, you can get similar experience by adding `condaenvpython3.9` as a kernel spe
 ```
 #!connect jupyter --kernel-name pythonkernel --conda-env base --kernel-spec condaenvpython3.9
 ```
+
+## Using DevContainers 
+
+The default Python3 configuration does not include the kernel, so you need to modify the devcontainer.json file to use a Dockerfile:
+
+```
+FROM mcr.microsoft.com/devcontainers/dotnet:1-8.0
+
+RUN apt update
+RUN apt install -y python3 python3-pip python3-ipykernel
+```
+
+After loading the DevContainer, run the following command in a cell:
+```
+#!connect jupyter --kernel-name pythonkernel --conda-env base --kernel-spec python3
+```
