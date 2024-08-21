@@ -99,6 +99,8 @@ extends:
           LclSource: lclFilesfromPackage
           LclPackageId: 'LCL-JUNO-PROD-INTERACTIVE'
           CreatePr: $(LocPRCreationEnabled)
+          AutocompletePr: true
+          ReusePr : true
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:
           enableMicrobuild: true
