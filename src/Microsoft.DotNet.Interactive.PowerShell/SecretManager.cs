@@ -6,6 +6,7 @@
 using System;
 
 namespace Microsoft.DotNet.Interactive.PowerShell;
+using System.Diagnostics.CodeAnalysis;
 
 public class SecretManager
 {
@@ -36,7 +37,8 @@ public class SecretManager
         if (!_kernel.RunLocally(code, out var errorMessage, true))
         {
             // initialize the SecretVault
-
+            // [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification = "This is a default value used to bootstrap the secret manager.")]
+            const string defaultPassword = "P@ssW0rD!";
             var registrationCode =
                 $$"""
                   Register-SecretVault -Name {{VaultName}} -ModuleName Microsoft.PowerShell.SecretStore
@@ -44,7 +46,7 @@ public class SecretManager
                   $storeConfiguration = @{
                       Authentication = 'None'
                       Interaction = 'None'
-                      Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
+                      Password = ConvertTo-SecureString "{{defaultPassword}}" -AsPlainText -Force
                       Confirm = $false
                   }
                   Set-SecretStoreConfiguration @storeConfiguration
