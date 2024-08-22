@@ -112,7 +112,7 @@ extends:
               name: $(DncEngInternalBuildPool)
               demands: ImageOverride -equals 1es-windows-2022
               os: windows
-            timeoutInMinutes: 120
+            timeoutInMinutes: 180
             variables:
               - group: DotNet-Symbol-Server-Pats
               - name: _SignType
