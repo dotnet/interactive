@@ -68,6 +68,13 @@ When you do this locally while authenticated, any packages _not_ on the internal
 
 The signed build produces three versions of the VS Code extension, 2 against Stable VS Code and 1 against Insiders.  Both versions against Stable append a `"0"` character to the extension version number and Insiders appends a `"1"` character.
 
+### Pre-requisite to publish
+
+This is **temporary**. Before you invoke any of the pipelines below, please create a new PAT token with the following scope:
+![image](https://github.com/user-attachments/assets/87f2ad02-594c-440d-bbec-92332b12d864) [here]([url](https://dev.azure.com/dnceng/_usersSettings/tokens)) 
+and replace the value of "vscode-marketplace-dotnet-tools-publish-token" [here]([url](https://dev.azure.com/dnceng/internal/_apps/hub/ms.vss-distributed-task.hub-library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=107&path=dotnet-interactive-api-keys)). Please make sure to set it as a secret! These PAT tokens hold good for 7 days. 
+NOTE: You should have access to publish to VS Marketplace for your PAT to work.
+
 ### Stable with locked tool version
 
 The Stable extension with the locked tool version can be published via [this](https://dev.azure.com/dnceng/internal/_release?_a=releases&view=mine&definitionId=86) release definition.  **This will also immediately publish the corresponding Insiders version of the extension.**
