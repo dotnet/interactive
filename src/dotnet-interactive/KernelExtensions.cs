@@ -149,7 +149,7 @@ public static class KernelExtensions
                      Using saved value '{requestInput.SaveAs}'. To remove this value, run the following command in a PowerShell cell:
                      
                      ```powershell
-                         Remove-Secret -Name {requestInput.SaveAs} -Vault {secretManager.VaultName}
+                         Remove-Secret -Name "{requestInput.SaveAs}" -Vault {secretManager.VaultName}
                      ```
                      """;
                 context.Publish(new DisplayedValueProduced(
@@ -170,7 +170,7 @@ public static class KernelExtensions
                              Saving your response for value '{saveAs}'. To remove this value, run the following command in a PowerShell cell:
 
                              ```powershell
-                                 Remove-Secret -Name {requestInput.SaveAs} -Vault {secretManager.VaultName}
+                                 Remove-Secret -Name "{requestInput.SaveAs}" -Vault {secretManager.VaultName}
                              ```
                              """;
                         context.Publish(new DisplayedValueProduced(
