@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="Magics_import_file_Description">
         <source>The path to the file to be imported. Supported file extensions include notebooks (.ipynb, .dib) as well as source code for supported languages (.cs, .csx, .fs, .fsx, .ps1, .html, .http, .js).</source>
-        <target state="new">The path to the file to be imported. Supported file extensions include notebooks (.ipynb, .dib) as well as source code for supported languages (.cs, .csx, .fs, .fsx, .ps1, .html, .http, .js).</target>
+        <target state="translated">가져올 파일의 경로입니다. 지원되는 파일 확장명에는 지원되는 언어(.cs, .csx, .fs, .fsx, .ps1, .html, .http, .js)에 대한 소스 코드뿐만 아니라 Notebook(.ipynb, .dib)이 포함됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="Magics_log_Description">
