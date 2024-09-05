@@ -262,6 +262,23 @@ csharpVarFromInput
 
 #!markdown
 
+Run the following cell twice. The first time you run it, it should prompt for input and then display the input. The second time you run it, it should display the same input without a user prompt.
+
+#!csharp
+
+#!set --name rememberMe --value @password:{ "prompt": "Please enter a value", "saveAs": "rememberMe" }
+rememberMe
+
+#!markdown
+
+Run the following cell twice. The first time it should not display an error. The second time, it should display an error.
+
+#!pwsh
+
+Remove-Secret -Name rememberMe -Vault DotnetInteractive
+
+#!markdown
+
 # Run mermaid markdown:
 Execute the markadown in the cell, this should produce a graphic visualization.
 
