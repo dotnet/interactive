@@ -73,7 +73,7 @@ public class RequestInputTests
               .Which
               .Value
               .Should()
-              .Contain($"Saving your response for value '{saveAs}'. To remove this value, run the following command in a PowerShell cell:");
+              .Match($"Your response for value `{saveAs}` has been saved and will be reused without a prompt in the future.*To remove this value *, run the following command in a PowerShell cell:*");
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class RequestInputTests
               .Which
               .Value
               .Should()
-              .Contain($"Using saved value '{saveAs}'. To remove this value, run the following command in a PowerShell cell:");
+              .Match($"Using previously saved value for `{saveAs}`.*To remove this value *, run the following command in a PowerShell cell:*");
     }
 
     private static CompositeKernel CreateKernel()
