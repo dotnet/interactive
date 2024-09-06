@@ -283,5 +283,35 @@ public partial class HttpParserTests
 
             result.SyntaxTree.RootNode.ChildNodes.Count().Should().Be(1);
         }
+
+        [Fact]
+        public void single_quotes_in_variable_values_are_supported()
+        {
+            var result = Parse(
+                """
+
+                @host='https://httpbin.org'
+                """
+                );
+
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
+            variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("'https://httpbin.org'");
+
+        }
+
+        [Fact]
+        public void double_quotes_in_variable_values_are_supported()
+        {
+            var result = Parse(
+                """
+
+                @host="https://httpbin.org"
+                """
+                );
+
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
+            variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("\"https://httpbin.org\"");
+
+        }
     }
 }

@@ -38,7 +38,6 @@ public class HttpKernel :
     private readonly long _contentByteLengthThreshold;
 
     private readonly Dictionary<string, object> _variables = new(StringComparer.InvariantCultureIgnoreCase);
-    private string _currentDocument;
 
     /// <summary>
     /// Gets or sets a timeout for HTTP requests that are issued using this <see cref="HttpKernel"/>.
@@ -83,7 +82,6 @@ public class HttpKernel :
         _client = client ?? new HttpClient() { Timeout = Timeout.InfiniteTimeSpan };
         _responseDelayThresholdInMilliseconds = responseDelayThresholdInMilliseconds;
         _contentByteLengthThreshold = contentByteLengthThreshold;
-        _currentDocument = string.Empty;
 
         RegisterForDisposal(_client);
     }
@@ -141,16 +139,25 @@ public class HttpKernel :
 
         if (command.Parameters.TryGetValue("Document", out var doc))
         {
-            if (doc is not null && !string.Equals(doc, _currentDocument))
+            var parsedDoc = HttpRequestParser.Parse(doc);
+            foreach (DeclaredVariable dv in parsedDoc.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
             {
-                _currentDocument = doc;
-                var parsedDoc = HttpRequestParser.Parse(doc);
-                foreach (DeclaredVariable dv in parsedDoc.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
-                {
-                    _variables[dv.Name] = dv.Value;
-                }
+                _variables[dv.Name] = dv.Value;
+            }  
+        }
+        else
+        {
+            foreach (DeclaredVariable dv in parseResult.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
+            {
+                _variables[dv.Name] = dv.Value;
             }
         }
+        //add an else here to look at the result of try get declared variables from the parseResult and do binding there 
+        //remove the current document checker 
+        // add a check for the declared variables in the parse result and add them to the variables dictionary
+        // add a check for the named requests in the parse result and add them to the variables dictionary
+        // remove the stopwatch
+        // ask bill and phil about the introduction of a delay every time we have changes 
 
         var httpBoundResults = new List<HttpBindingResult<HttpRequestMessage>>();
         var httpNamedBoundResults = new List<(HttpRequestNode requestNode, HttpBindingResult<HttpRequestMessage> bindingResult)>();

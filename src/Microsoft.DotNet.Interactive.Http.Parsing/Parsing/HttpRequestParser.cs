@@ -137,7 +137,7 @@ internal class HttpRequestParser
             {
                 if (node is null)
                 {
-                    if (CurrentToken is { Kind: TokenKind.Word } or ({ Kind: TokenKind.Punctuation } and { Text: "/" }))
+                    if (CurrentToken is { Kind: TokenKind.Word } or ({ Kind: TokenKind.Punctuation } and ({ Text: "/" } or {Text: "'" } or { Text: "\""})))
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
 

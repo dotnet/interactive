@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -2196,8 +2197,26 @@ public class HttpKernelTests
         // Request Variables
         // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
+        const int ContentByteLengthThreshold = 100;
+
+        var largeResponseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var builder = new StringBuilder();
+            for (int i = 0; i < ContentByteLengthThreshold + 1; ++i)
+            {
+                builder.Append('a');
+            }
+            response.Content = JsonContent.Create(builder.ToString());  
+            return Task.FromResult(response);
+        });
+
+        var client = new HttpClient(largeResponseHandler);
+        using var kernel = new HttpKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
+
+        /*var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);*/
 
         var code = """
             @baseUrl = https://httpbin.org/anything
@@ -2241,8 +2260,39 @@ public class HttpKernelTests
         // Request Variables
         // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
+        var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var contentString = @"
+                        {
+              ""slideshow"": {
+                ""author"": ""Yours Truly"",
+                ""date"": ""date of publication"",
+                ""slides"": [
+                  {
+                    ""title"": ""Wake up to WonderWidgets!"",
+                    ""type"": ""all""
+                  },
+                  {
+                    ""items"": [
+                      ""Why <em>WonderWidgets</em> are great"",
+                      ""Who <em>buys</em> WonderWidgets""
+                    ],
+                    ""title"": ""Overview"",
+                    ""type"": ""all""
+                  }
+                ],
+                ""title"": ""Sample Slide Show""
+              }
+            }
+            ";
+            response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(responseHandler);
+       // var client = new HttpClient();
+        using var kernel = new HttpKernel("http", client);
 
         var code = """
             @baseUrl = https://httpbin.org/json

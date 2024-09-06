@@ -152,7 +152,9 @@ internal class HttpNamedRequest
 
                         try
                         {
-                            var responseJSON = JsonNode.Parse(Response.Content.Raw);
+                            var jsonOptions = new JsonNodeOptions { PropertyNameCaseInsensitive = true};
+
+                            var responseJSON = JsonNode.Parse(Response.Content.Raw, jsonOptions);
 
                             if (responseJSON is not null)
                             {
@@ -242,7 +244,7 @@ internal class HttpNamedRequest
                 case JsonObject jsonObject:
                     return jsonObject[path[currentIndex]]?.ToString();
                 default:
-                    return null;
+                    return responseJSON.ToString();
             }
         }
 
