@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="Magics_import_file_Description">
         <source>The path to the file to be imported. Supported file extensions include notebooks (.ipynb, .dib) as well as source code for supported languages (.cs, .csx, .fs, .fsx, .ps1, .html, .http, .js).</source>
-        <target state="new">The path to the file to be imported. Supported file extensions include notebooks (.ipynb, .dib) as well as source code for supported languages (.cs, .csx, .fs, .fsx, .ps1, .html, .http, .js).</target>
+        <target state="translated">Путь к файлу для импорта. Поддерживаемые расширения файлов включают записные книжки (IPYNB, DIB), а также исходный код для поддерживаемых языков (CS, CSX, FS, FSX, PS1, HTML, HTTP, JS).</target>
         <note />
       </trans-unit>
       <trans-unit id="Magics_log_Description">
