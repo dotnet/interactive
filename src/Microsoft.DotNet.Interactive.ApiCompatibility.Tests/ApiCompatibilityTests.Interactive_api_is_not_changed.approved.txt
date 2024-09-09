@@ -164,8 +164,6 @@ Microsoft.DotNet.Interactive
   public class KernelCommandScheduler : KernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult>, IKernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult>, System.IDisposable
     .ctor()
     protected System.Boolean IsChildOperation(Microsoft.DotNet.Interactive.Commands.KernelCommand current, Microsoft.DotNet.Interactive.Commands.KernelCommand incoming)
-  public class KernelException : System.Exception, System.Runtime.Serialization.ISerializable
-    .ctor(System.String message)
   public class KernelExtensionLoadException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(System.Exception innerException)
   public static class KernelExtensions
