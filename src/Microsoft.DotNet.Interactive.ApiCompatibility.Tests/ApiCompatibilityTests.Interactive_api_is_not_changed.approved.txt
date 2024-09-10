@@ -234,6 +234,7 @@ Microsoft.DotNet.Interactive
     public T CurrentValue { get;}
     public System.Void CancelCurrentOperation()
     public System.Void Dispose()
+    public System.Threading.Tasks.Task IdleAsync()
     protected System.Boolean IsChildOperation(T current, T incoming)
     public System.Void RegisterDeferredOperationSource(GetDeferredOperationsDelegate getDeferredOperations, KernelSchedulerDelegate<T,TResult> kernelSchedulerOnExecuteAsync)
     public Task<TResult> RunAsync(T value, KernelSchedulerDelegate<T,TResult> onExecuteAsync, System.String scope = default, System.Threading.CancellationToken cancellationToken = null)

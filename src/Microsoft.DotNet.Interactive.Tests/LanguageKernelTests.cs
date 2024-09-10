@@ -7,6 +7,7 @@ using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -14,9 +15,12 @@ using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket.For.Xunit;
 using Xunit;
@@ -1250,5 +1254,65 @@ System.Threading.Thread.Sleep(1000);
             .Command
             .Should()
             .Be(command);
+    }
+
+    [Fact]
+    public async Task Racing_commands_on_fast_track_and_main_track_does_not_throw()
+    {
+        using var kernel = new CompositeKernel
+        {
+            new CSharpKernel(),
+            new FSharpKernel()
+        };
+
+        var fast1 = kernel.SendAsync(new RequestKernelInfo("csharp"));
+        var fast2 = kernel.SendAsync(new RequestKernelInfo("fsharp"));
+        var fast3 = kernel.SendAsync(new RequestDiagnostics("var x = 123;", "csharp"));
+        var main1 = await kernel.SendAsync(new SubmitCode("123", "csharp"));
+
+        foreach (var dp in main1.Events.OfType<DiagnosticsProduced>())
+        {
+            dp.Diagnostics.Should().BeEmpty();
+        }
+
+        (await fast1).Events.Should().NotContainErrors();
+        (await fast2).Events.Should().NotContainErrors();
+        (await fast3).Events.Should().NotContainErrors();
+        main1.Events.Should().NotContainErrors();
+    }
+
+    [Fact]
+    public void Parallel_calls_to_IdleAsync_do_not_throw()
+    {
+        using var scheduler = new KernelScheduler<int, int>();
+        using var startBarrier = new Barrier(3);
+        using var doneBarrier = new Barrier(4);
+        Exception exception = null;
+
+        ThreadStart idleAsync = () =>
+        {
+            startBarrier.SignalAndWait();
+
+            try
+            {
+                 scheduler.IdleAsync().GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+                throw;
+            }
+
+            doneBarrier.SignalAndWait();
+        };
+
+        foreach (var _ in Enumerable.Range(1, 3))
+        {
+            new Thread(idleAsync).Start();
+        }
+
+        doneBarrier.SignalAndWait();
+
+        exception.Should().BeNull();
     }
 }

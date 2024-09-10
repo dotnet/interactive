@@ -37,6 +37,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             _schedulerDisposalSource.Cancel,
             _schedulerDisposalSource,
             _topLevelScheduledOperations,
+            _childOperationsBarrier
         };
     }
 
@@ -95,14 +96,36 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         return operation.TaskCompletionSource.Task;
     }
 
-    internal async Task IdleAsync()
+    public async Task IdleAsync()
     {
         if (_currentlyRunningTopLevelOperation is { IsCompleted: false } currentlyRunning)
         {
             await currentlyRunning.TaskCompletionSource.Task;
         }
 
-        _childOperationsBarrier.SignalAndWait();
+        // FIX: (IdleAsync) 
+        Log.Info($"{nameof(IdleAsync)}: SignalAndWait on thread {Thread.CurrentThread.ManagedThreadId} with {_childOperationsBarrier.ParticipantCount} participants, {_childOperationsBarrier.ParticipantsRemaining} remaining");
+
+        switch (_childOperationsBarrier.ParticipantCount)
+        {
+            case 0: 
+                break;
+            case 1: 
+                break;
+            case 2: 
+                break;
+            case 3: 
+                break;
+        }
+
+        try
+        {
+            _childOperationsBarrier.SignalAndWait();
+        }
+        catch (InvalidOperationException exception)
+        {
+            Log.Warning($"Top level operations: {_topLevelScheduledOperations.Count} / {_currentlyRunningOperation}: {_currentlyRunningOperation}", exception);
+        }
     }
 
     private void ScheduledOperationRunLoop()

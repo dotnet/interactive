@@ -486,7 +486,16 @@ public abstract partial class Kernel :
 
         if (currentCommandOwnsContext)
         {
-            await Scheduler.IdleAsync();
+            try
+            {
+                await Scheduler.IdleAsync();
+            }
+            catch (InvalidOperationException ex)
+            {
+                // FIX: (SendAsync) 
+                Log.Warning($"Error while awaiting idle after sending {command}", ex);
+                throw;
+            }
             context.Dispose();
         }
 
