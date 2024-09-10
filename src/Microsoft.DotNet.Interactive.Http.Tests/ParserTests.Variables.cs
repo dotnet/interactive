@@ -313,5 +313,20 @@ public partial class HttpParserTests
             variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("\"https://httpbin.org\"");
 
         }
+
+        [Fact]
+        public void spaces_in_variable_values_are_supported()
+        {
+            var result = Parse(
+                """
+
+                @host = one two three
+                """
+                );
+
+            var variables = result.SyntaxTree.RootNode.TryGetDeclaredVariables().declaredVariables;
+            variables.Should().Contain(n => n.Key == "host").Which.Value.Should().BeOfType<DeclaredVariable>().Which.Value.Should().Be("one two three");
+
+        }
     }
 }

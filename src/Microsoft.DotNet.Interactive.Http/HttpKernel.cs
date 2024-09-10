@@ -133,17 +133,29 @@ public class HttpKernel :
     {
         var parseResult = HttpRequestParser.Parse(command.Code);
         var requestNodes = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>();
-        var lastSpan = requestNodes.Select(n => n.Span).LastOrDefault();
+        //var lastSpan = requestNodes.Select(n => n.Span).LastOrDefault();
 
 
 
         if (command.Parameters.TryGetValue("Document", out var doc))
         {
             var parsedDoc = HttpRequestParser.Parse(doc);
-            foreach (DeclaredVariable dv in parsedDoc.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
+            var lastSpan = parsedDoc.SyntaxTree.RootNode.ChildNodes
+                .OfType<HttpRequestNode>()
+                .FirstOrDefault(n => n.Text == requestNodes.Last().Text)?.Span;
+            if(lastSpan != null)
             {
-                _variables[dv.Name] = dv.Value;
-            }  
+                var docVariableNodes = parsedDoc.SyntaxTree.RootNode.ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
+                var docVariableNames = docVariableNodes.Where(n => n.Span.Start < lastSpan?.Start).Select(n => n.DeclarationNode?.VariableName).ToHashSet();
+                foreach (DeclaredVariable dv in parsedDoc.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
+                {
+                    if (docVariableNames.Contains(dv.Name))
+                    {
+                        _variables[dv.Name] = dv.Value;
+                    }
+                }
+            }
+              
         }
         else
         {
@@ -152,12 +164,6 @@ public class HttpKernel :
                 _variables[dv.Name] = dv.Value;
             }
         }
-        //add an else here to look at the result of try get declared variables from the parseResult and do binding there 
-        //remove the current document checker 
-        // add a check for the declared variables in the parse result and add them to the variables dictionary
-        // add a check for the named requests in the parse result and add them to the variables dictionary
-        // remove the stopwatch
-        // ask bill and phil about the introduction of a delay every time we have changes 
 
         var httpBoundResults = new List<HttpBindingResult<HttpRequestMessage>>();
         var httpNamedBoundResults = new List<(HttpRequestNode requestNode, HttpBindingResult<HttpRequestMessage> bindingResult)>();

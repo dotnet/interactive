@@ -671,7 +671,7 @@ internal class HttpRequestParser
             while (MoreTokens() && CurrentToken is not { Kind: TokenKind.NewLine })
             {
 
-                if (CurrentToken is not null && (!(CurrentToken is { Kind: TokenKind.Word or TokenKind.Whitespace } or { Text: "_" or "@" or "." }) || CurrentToken is { Kind: TokenKind.Word } && wordParsedOnce))
+                if (CurrentToken is not ({ Kind: TokenKind.Word or TokenKind.Whitespace } or { Text: "_" or "@" or "." }) || CurrentToken is { Kind: TokenKind.Word } && wordParsedOnce)
                 {
                     var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
                     node.AddDiagnostic(diagnostic);
