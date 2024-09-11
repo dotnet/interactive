@@ -112,158 +112,65 @@ public class HttpKernelTests
     }
 
     [Fact]
-    public async Task variables_in_submit_request_are_saved()
+    public async Task binding_for_variables_that_have_been_sent_work_well()
     {
         HttpRequestMessage request = null;
-        HttpRequestMessage requestTwo = null;
-
-        Boolean firstRequest = true;
-
         var handler = new InterceptingHttpMessageHandler((message, _) =>
         {
-            if(firstRequest)
-            {
-                request = message;
-                firstRequest = false;
-                var response = new HttpResponseMessage(HttpStatusCode.OK);
-                return Task.FromResult(response);
-            }
-            else
-            {
-                requestTwo = message;
-                var response = new HttpResponseMessage(HttpStatusCode.OK);
-                return Task.FromResult(response);
-            }
-            
-        });
-        var client = new HttpClient(handler);
-        using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
-
-        var code = """
-            @hostname=httpbin.org
-            @host=https://{{hostname}}
-
-            Get {{host}}
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-
-        result.Events.Should().NotContainErrors();
-        request.RequestUri.Should().Be($"https://httpbin.org");
-
-        var secondCode = """
-            GET {{host}}
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-        secondResult.Events.Should().NotContainErrors();
-        requestTwo.RequestUri.Should().Be($"https://httpbin.org");
-    }
-
-    [Fact]
-    public async Task variables_submited_in_requests_that_are_not_used_are_valid()
-    {
-        HttpRequestMessage request = null;
-        HttpRequestMessage requestTwo = null;
-
-        Boolean firstRequest = true;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            if (firstRequest)
-            {
-                request = message;
-                firstRequest = false;
-                var response = new HttpResponseMessage(HttpStatusCode.OK);
-                return Task.FromResult(response);
-            }
-            else
-            {
-                requestTwo = message;
-                var response = new HttpResponseMessage(HttpStatusCode.OK);
-                return Task.FromResult(response);
-            }
-
-        });
-        var client = new HttpClient(handler);
-        using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
-
-        var code = """
-            @hostname=httpbin.org
-            @host=https://{{hostname}}
-            @alternative_host=https://httpbin.org
-
-            Get {{host}}
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-
-        result.Events.Should().NotContainErrors();
-        request.RequestUri.Should().Be($"https://httpbin.org");
-
-        var secondCode = """
-            GET {{alternative_host}}
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-        secondResult.Events.Should().NotContainErrors();
-        requestTwo.RequestUri.Should().Be($"https://httpbin.org");
-    }
-
-    [Fact]
-    public async Task variables_submited_in_requests_are_not_valid_across_clients()
-    {
-        HttpRequestMessage request = null;
-        HttpRequestMessage requestTwo = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-                request = message;
-                var response = new HttpResponseMessage(HttpStatusCode.OK);
-                return Task.FromResult(response);
-        });
-
-        var secondHandler = new InterceptingHttpMessageHandler((message, _) =>
-        {
-            requestTwo = message;
+            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
-
         var client = new HttpClient(handler);
         using var kernel = new HttpKernel(client: client);
 
-        var clientTwo = new HttpClient(secondHandler);
-        using var kernelTwo = new HttpKernel(client: clientTwo);
+        using var _ = new AssertionScope();
+
+        var result = await kernel.SendAsync(new SendValue("my_host", "my.host.com"));
+        result.Events.Should().NotContainErrors();
+
+        result = await kernel.SendAsync(new SubmitCode("get  https://{{my_host}}:1200/endpoint"));
+        result.Events.Should().NotContainErrors();
+
+        request.RequestUri.Should().Be("https://my.host.com:1200/endpoint");
+    }
+
+    [Fact]
+    public async Task send_request_and_variables_are_saved()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
 
         using var _ = new AssertionScope();
 
         var code = """
-            @hostname=httpbin.org
-            @host=https://{{hostname}}
-            @alternative_host=https://httpbin.org
+            @host=https://httpbin.org
 
             Get {{host}}
             """;
 
-        var result = await kernel.SendAsync(new SubmitCode(code));
+        await kernel.SendAsync(new SubmitCode(code));
+
+
+        var result = await kernel.SendAsync(new RequestValueInfos());
 
         result.Events.Should().NotContainErrors();
-        request.RequestUri.Should().Be($"https://httpbin.org");
-
-        var secondCode = """
-            GET {{alternative_host}}
-            """;
-
-        var secondResult = await kernelTwo.SendAsync(new SubmitCode(secondCode));
-        secondResult.Events.Should().ContainSingle<DiagnosticsProduced>();
+        var valueInfo = result.Events.Should().ContainSingle<ValueInfosProduced>()
+                              .Which
+                              .ValueInfos.Should().ContainSingle()
+                              .Which;
+        valueInfo.Name.Should().Be("host");
+        valueInfo.FormattedValue.Should().BeEquivalentTo(new FormattedValue(PlainTextSummaryFormatter.MimeType, "https://httpbin.org"));
     }
 
-    [Fact]
+        [Fact]
     public async Task can_set_request_headers()
     {
         HttpRequestMessage request = null;

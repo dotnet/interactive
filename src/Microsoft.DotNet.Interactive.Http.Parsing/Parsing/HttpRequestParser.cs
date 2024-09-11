@@ -668,12 +668,13 @@ internal class HttpRequestParser
                 node.AddDiagnostic(diagnostic);
             }
             bool wordParsedOnce = false;
-            while (MoreTokens() && CurrentToken is not { Kind: TokenKind.NewLine })
+            while (MoreTokens() && CurrentToken is not { Kind: TokenKind.NewLine } or null)
             {
-
-                if (CurrentToken is not ({ Kind: TokenKind.Word or TokenKind.Whitespace } or { Text: "_" or "@" or "." }) || CurrentToken is { Kind: TokenKind.Word } && wordParsedOnce)
+                var currentToken = CurrentToken;
+                if (currentToken is not null && (currentToken is not ({ Kind: TokenKind.Word or TokenKind.Whitespace } or 
+                    { Text: "_" or "@" or "." }) || currentToken is { Kind: TokenKind.Word } && wordParsedOnce))
                 {
-                    var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
+                    var diagnostic = currentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
                     node.AddDiagnostic(diagnostic);
                     wordParsedOnce = false;
                 }
