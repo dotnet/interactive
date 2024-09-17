@@ -341,4 +341,145 @@ for ($j = 0; $j -le 4; $j += 4 ) {
               .Should()
               .Be("theAnswer");
     }
+
+    [Fact]
+    public async Task Powershell_custommimetype_works()
+    {
+      var kernel = CreateKernel(Language.PowerShell);
+
+      var vegaLightRequest =
+      """
+            {
+              "`$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+              "description": "Horizon Graph with 2 layers. (See https://idl.cs.washington.edu/papers/horizon/ for more details on Horizon Graphs.)",
+              "width": 600,
+              "height": 100,
+              "data": {
+                "values": [
+                  {"x": 1,  "y": 28}, {"x": 2,  "y": 55},
+                  {"x": 3,  "y": 43}, {"x": 4,  "y": 91},
+                  {"x": 5,  "y": 81}, {"x": 6,  "y": 53},
+                  {"x": 7,  "y": 19}, {"x": 8,  "y": 87},
+                  {"x": 9,  "y": 52}, {"x": 10, "y": 48},
+                  {"x": 11, "y": 24}, {"x": 12, "y": 49},
+                  {"x": 13, "y": 87}, {"x": 14, "y": 66},
+                  {"x": 15, "y": 17}, {"x": 16, "y": 27},
+                  {"x": 17, "y": 68}, {"x": 18, "y": 16},
+                  {"x": 19, "y": 49}, {"x": 20, "y": 15}
+                ]
+              },
+              "encoding": {
+                "x": {
+                  "field": "x", "type": "quantitative",
+                  "scale": {"zero": false, "nice": false}
+                },
+                "y": {
+                  "field": "y", "type": "quantitative",
+                  "scale": {"domain": [0,50]},
+                  "axis": {"title": "y"}
+                }
+              },
+              "layer": [{
+                "mark": {"type": "area", "clip": true, "orient": "vertical", "opacity": 0.6}
+              }, {
+                "transform": [{"calculate": "datum.y - 50", "as": "ny"}],
+                "mark": {"type": "area", "clip": true, "orient": "vertical"},
+                "encoding": {
+                  "y": {
+                    "field": "ny", "type": "quantitative",
+                    "scale": {"domain": [0,50]}
+                  },
+                  "opacity": {"value": 0.3}
+                }
+              }],
+              "config": {
+                "area": {"interpolate": "monotone"}
+              }
+            }
+          """;
+      var result = await kernel.SendAsync(new SubmitCode($"\'{vegaLightRequest}\' | Out-Display -CustomMimeType 'application/vnd.vegalite.v5+json'"));
+
+      result.Events.Should()
+            .ContainSingle<DisplayedValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.MimeType == "application/vnd.vegalite.v5+json")
+            .Which
+            .Value.RemoveStyleElement()
+            .Should()
+            .Be(vegaLightRequest);
+    }
+
+    //this test is to verify that after we added processing for the -CustomMimeType parameter, the original -MimeType still works as expected when supplied explicitly
+    [Fact]
+    public async Task Powershell_mimetype_works_as_expected()
+    {
+      var kernel = CreateKernel(Language.PowerShell);
+      var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display -MimeType 'text/html'"));
+
+      var formattedHtml =
+          """
+              <table>
+                <thead>
+                  <tr>
+                    <th>
+                      <i>key</i>
+                    </th>
+                    <th>value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="dni-plaintext">
+                        <pre>prop1</pre>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="dni-plaintext">
+                        <pre>value1</pre>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="dni-plaintext">
+                        <pre>prop2</pre>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="dni-plaintext">
+                        <pre>value2</pre>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="dni-plaintext">
+                        <pre>prop3</pre>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="dni-plaintext">
+                        <pre>value3</pre>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+          """;
+
+      result.Events.Should()
+            .ContainSingle<DisplayedValueProduced>()
+            .Which
+            .FormattedValues
+            .Should()
+            .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+            .Which
+            .Value.RemoveStyleElement()
+            .Should()
+            .BeEquivalentHtmlTo(formattedHtml);
+    }
+
 }
