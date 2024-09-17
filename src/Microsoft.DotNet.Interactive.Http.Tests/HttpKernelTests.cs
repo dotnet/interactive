@@ -2312,7 +2312,7 @@ public class HttpKernelTests
     }
 
     [Fact]
-    public async Task headers_for_named_requests_can_be_accessed_correctly()
+    public async Task Response_headers_for_named_requests_can_be_accessed_correctly()
     {
 
         var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
