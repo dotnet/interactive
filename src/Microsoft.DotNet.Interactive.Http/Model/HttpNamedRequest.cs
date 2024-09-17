@@ -152,7 +152,7 @@ internal class HttpNamedRequest
 
                         try
                         {
-                            var jsonOptions = new JsonNodeOptions { PropertyNameCaseInsensitive = true};
+                            var jsonOptions = new JsonNodeOptions { PropertyNameCaseInsensitive = true };
 
                             var responseJSON = JsonNode.Parse(Response.Content.Raw, jsonOptions);
 
@@ -219,7 +219,19 @@ internal class HttpNamedRequest
 
                 if (Response.Headers.TryGetValue(path[3], out var header) && header is not null)
                 {
-                    return node.CreateBindingSuccess(header);
+                    //If the path is response.headers.<headerName> and the header value is an array, return the first element
+                    if (path.Length == 4)
+                    {
+                        return node.CreateBindingSuccess(header.First());
+                    }
+                    else if (path.Length == 5)
+                    {
+                        var headerValue = header.FirstOrDefault(h => h == path[4]);
+                        if (headerValue != null)
+                        {
+                            return node.CreateBindingSuccess(headerValue);
+                        }
+                    }
                 }
                 else
                 {

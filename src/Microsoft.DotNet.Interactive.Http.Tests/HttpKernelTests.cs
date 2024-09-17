@@ -170,7 +170,7 @@ public class HttpKernelTests
         valueInfo.FormattedValue.Should().BeEquivalentTo(new FormattedValue(PlainTextSummaryFormatter.MimeType, "https://httpbin.org"));
     }
 
-        [Fact]
+    [Fact]
     public async Task can_set_request_headers()
     {
         HttpRequestMessage request = null;
@@ -2267,7 +2267,7 @@ public class HttpKernelTests
             {
                 builder.Append('a');
             }
-            response.Content = JsonContent.Create(builder.ToString());  
+            response.Content = JsonContent.Create(builder.ToString());
             return Task.FromResult(response);
         });
 
@@ -2311,6 +2311,73 @@ public class HttpKernelTests
         secondResult.Events.Should().NotContainErrors();
     }
 
+    [Fact]
+    public async Task headers_for_named_requests_can_be_accessed_correctly()
+    {
+
+        var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var contentString = @"
+             {
+    ""headers"": {
+        ""Accept"": ""text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"",
+        ""Accept-Encoding"": ""gzip, deflate, br, zstd"",
+        ""Accept-Language"": ""en-US,en;q=0.9"",
+        ""Host"": ""httpbin.org"",
+        ""Priority"": ""u=0, i"",
+        ""Sec-Ch-Ua"": ""\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"""",
+        ""Sec-Ch-Ua-Mobile"": ""?0"",
+        ""Sec-Ch-Ua-Platform"": ""\""Windows\"""",
+        ""Sec-Fetch-Dest"": ""document"",
+        ""Sec-Fetch-Mode"": ""navigate"",
+        ""Sec-Fetch-Site"": ""none"",
+        ""Sec-Fetch-User"": ""?1"",
+        ""Upgrade-Insecure-Requests"": ""1"",
+        ""User-Agent"": ""Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0"",
+        ""X-Amzn-Trace-Id"": ""Root=1-66e9f16e-7afea6f643e754f854c57d85""
+    }
+}
+            ";
+            response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
+            response.Headers.Add("server", "gunicorn/19.9.0");
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(responseHandler);
+        // var client = new HttpClient();
+        using var kernel = new HttpKernel("http", client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/headers
+
+            # @name binHeader
+            GET {{baseUrl}}
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+
+        var secondCode = $$$"""
+            GET https://httpbin.org/headers
+            Detectedserver: {{binHeader.response.headers.Server}}
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+
+        var returnValue = secondResult.Events.OfType<ReturnValueProduced>().First();
+
+        var response = (HttpResponse)returnValue.Value;
+
+        response.Headers.GetValueOrDefault("Server").First().Should().Be("gunicorn/19.9.0");
+    }
+
     [Theory]
     [InlineData("json.response.body.$.slideshow.slides.title", "Wake up to WonderWidgets!")]
     [InlineData("json.response.body.$.slideshow.slides.type", "all")]
@@ -2350,7 +2417,7 @@ public class HttpKernelTests
             return Task.FromResult(response);
         });
         var client = new HttpClient(responseHandler);
-       // var client = new HttpClient();
+        // var client = new HttpClient();
         using var kernel = new HttpKernel("http", client);
 
         var code = """
