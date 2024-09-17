@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -111,6 +112,65 @@ public class HttpKernelTests
     }
 
     [Fact]
+    public async Task binding_for_variables_that_have_been_sent_work_well()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var result = await kernel.SendAsync(new SendValue("my_host", "my.host.com"));
+        result.Events.Should().NotContainErrors();
+
+        result = await kernel.SendAsync(new SubmitCode("get  https://{{my_host}}:1200/endpoint"));
+        result.Events.Should().NotContainErrors();
+
+        request.RequestUri.Should().Be("https://my.host.com:1200/endpoint");
+    }
+
+    [Fact]
+    public async Task send_request_and_variables_are_saved()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @host=https://httpbin.org
+
+            Get {{host}}
+            """;
+
+        await kernel.SendAsync(new SubmitCode(code));
+
+
+        var result = await kernel.SendAsync(new RequestValueInfos());
+
+        result.Events.Should().NotContainErrors();
+        var valueInfo = result.Events.Should().ContainSingle<ValueInfosProduced>()
+                              .Which
+                              .ValueInfos.Should().ContainSingle()
+                              .Which;
+        valueInfo.Name.Should().Be("host");
+        valueInfo.FormattedValue.Should().BeEquivalentTo(new FormattedValue(PlainTextSummaryFormatter.MimeType, "https://httpbin.org"));
+    }
+
+        [Fact]
     public async Task can_set_request_headers()
     {
         HttpRequestMessage request = null;
@@ -2196,8 +2256,26 @@ public class HttpKernelTests
         // Request Variables
         // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
+        const int ContentByteLengthThreshold = 100;
+
+        var largeResponseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var builder = new StringBuilder();
+            for (int i = 0; i < ContentByteLengthThreshold + 1; ++i)
+            {
+                builder.Append('a');
+            }
+            response.Content = JsonContent.Create(builder.ToString());  
+            return Task.FromResult(response);
+        });
+
+        var client = new HttpClient(largeResponseHandler);
+        using var kernel = new HttpKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
+
+        /*var client = new HttpClient();
+        using var kernel = new HttpKernel(client: client);*/
 
         var code = """
             @baseUrl = https://httpbin.org/anything
@@ -2231,6 +2309,89 @@ public class HttpKernelTests
         var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
         secondResult.Events.Should().NotContainErrors();
+    }
+
+    [Theory]
+    [InlineData("json.response.body.$.slideshow.slides.title", "Wake up to WonderWidgets!")]
+    [InlineData("json.response.body.$.slideshow.slides.type", "all")]
+    public async Task json_named_requests_with_sub_routes_can_be_accessed_correctly(string path, string end)
+    {
+        // Request Variables
+        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
+
+        var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.RequestMessage = message;
+            var contentString = @"
+                        {
+              ""slideshow"": {
+                ""author"": ""Yours Truly"",
+                ""date"": ""date of publication"",
+                ""slides"": [
+                  {
+                    ""title"": ""Wake up to WonderWidgets!"",
+                    ""type"": ""all""
+                  },
+                  {
+                    ""items"": [
+                      ""Why <em>WonderWidgets</em> are great"",
+                      ""Who <em>buys</em> WonderWidgets""
+                    ],
+                    ""title"": ""Overview"",
+                    ""type"": ""all""
+                  }
+                ],
+                ""title"": ""Sample Slide Show""
+              }
+            }
+            ";
+            response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(responseHandler);
+       // var client = new HttpClient();
+        using var kernel = new HttpKernel("http", client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/json
+
+            # @name json
+            GET {{baseUrl}}
+            Content-Type: application/json
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+        var secondCode = $$$"""
+
+            @pathContents = {{{{{path}}}}}
+            
+            
+            # @name createComment
+            POST https://example.com/api/comments HTTP/1.1
+            Content-Type: application/json
+            
+            {
+                "path" :{{pathContents}}
+            }
+            
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+
+        var returnValue = secondResult.Events.OfType<ReturnValueProduced>().First();
+
+        var response = (HttpResponse)returnValue.Value;
+
+        response.Request.Content.Raw.Split(":").Last().TrimEnd("\r\n}".ToCharArray()).Should().Be(end);
+
     }
 
     [Theory]

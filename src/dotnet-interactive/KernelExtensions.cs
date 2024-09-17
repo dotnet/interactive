@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Directives;
@@ -126,7 +125,7 @@ public static class KernelExtensions
 
             if (secretManager is null)
             {
-                powerShellKernel = kernel.ChildKernels.OfType<PowerShellKernel>().SingleOrDefault();
+                powerShellKernel = kernel.ChildKernels.OfType<PowerShellKernel>().FirstOrDefault();
 
                 if (powerShellKernel is not null)
                 {
@@ -146,11 +145,9 @@ public static class KernelExtensions
 
                 var message =
                     $"""
-                     Using saved value '{requestInput.SaveAs}'. To remove this value, run the following command in a PowerShell cell:
+                     Using previously saved value for `{requestInput.SaveAs}`.
                      
-                     ```powershell
-                         Remove-Secret -Name "{requestInput.SaveAs}" -Vault {secretManager.VaultName}
-                     ```
+                     {MoreInfoMessage()}
                      """;
                 context.Publish(new DisplayedValueProduced(
                                     message,
@@ -161,17 +158,16 @@ public static class KernelExtensions
             {
                 using var _ = context.KernelEvents.Subscribe(@event =>
                 {
-                    if (@event is InputProduced inputProduced && inputProduced.Command.GetOrCreateToken() == requestInput.GetOrCreateToken())
+                    if (@event is InputProduced inputProduced && 
+                        inputProduced.Command.GetOrCreateToken() == requestInput.GetOrCreateToken())
                     {
                         secretManager.SetSecret(requestInput.SaveAs, inputProduced.Value);
 
                         var message =
                             $"""
-                             Saving your response for value '{saveAs}'. To remove this value, run the following command in a PowerShell cell:
-
-                             ```powershell
-                                 Remove-Secret -Name "{requestInput.SaveAs}" -Vault {secretManager.VaultName}
-                             ```
+                             Your response for value `{saveAs}` has been saved and will be reused without a prompt in the future. 
+                             
+                             {MoreInfoMessage()}
                              """;
                         context.Publish(new DisplayedValueProduced(
                                             message,
@@ -182,6 +178,17 @@ public static class KernelExtensions
 
                 await next(command, context);
             }
+
+            string MoreInfoMessage() =>
+                $"""
+                 > 💡 To remove this value from your [SecretStore](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.secretstore/?view=ps-modules), run the following command in a PowerShell cell:
+                 > 
+                 > ```powershell
+                 >     Remove-Secret -Name "{requestInput.SaveAs}" -Vault {secretManager.VaultName}
+                 > ```
+
+                 > 📝 For more information, see [SecretManagement](https://learn.microsoft.com/en-us/powershell/utility-modules/secretmanagement/overview?view=ps-modules).
+                 """;
         });
 
         return kernel;

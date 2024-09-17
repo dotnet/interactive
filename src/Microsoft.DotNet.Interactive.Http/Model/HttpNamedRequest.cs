@@ -10,6 +10,7 @@ using System.Text.Json.Nodes;
 using System.Reactive.Concurrency;
 using System.Xml.XPath;
 using System.Xml;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -100,7 +101,7 @@ internal class HttpNamedRequest
                             {
                                 return node.CreateBindingFailure(HttpDiagnostics.InvalidXmlNodeInNamedRequest(path[3]));
                             }
-                            
+
                         }
                         catch (XmlException)
                         {
@@ -151,7 +152,9 @@ internal class HttpNamedRequest
 
                         try
                         {
-                            var responseJSON = JsonNode.Parse(Response.Content.Raw);
+                            var jsonOptions = new JsonNodeOptions { PropertyNameCaseInsensitive = true};
+
+                            var responseJSON = JsonNode.Parse(Response.Content.Raw, jsonOptions);
 
                             if (responseJSON is not null)
                             {
@@ -233,11 +236,28 @@ internal class HttpNamedRequest
     {
         if (currentIndex + 1 == path.Length)
         {
-            var result = responseJSON[path[currentIndex]];
-            return result?.ToString();
+            switch (responseJSON)
+            {
+                case JsonArray jsonArray:
+                    var node = jsonArray.FirstOrDefault(n => n?[path[currentIndex]] != null);
+                    return node?[path[currentIndex]]?.ToString();
+                case JsonObject jsonObject:
+                    return jsonObject[path[currentIndex]]?.ToString();
+                default:
+                    return responseJSON.ToString();
+            }
         }
 
-        var newResponseJSON = responseJSON[path[currentIndex + 1]];
+        JsonNode? newResponseJSON = null;
+        try
+        {
+            newResponseJSON = responseJSON[path[currentIndex]];
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+
         if (newResponseJSON is null)
         {
             return null;

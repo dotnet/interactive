@@ -55,7 +55,7 @@ internal class HttpRootSyntaxNode : HttpSyntaxNode
                 var embeddedExpressionNodes = node.ValueNode.ChildNodes.OfType<HttpEmbeddedExpressionNode>();
                 if (!embeddedExpressionNodes.Any())
                 {
-                    foundVariableValues.Add(node.DeclarationNode.VariableName, node.ValueNode.Text);
+                    foundVariableValues[node.DeclarationNode.VariableName] = node.ValueNode.Text;
                     declaredVariables[node.DeclarationNode.VariableName] = new DeclaredVariable(node.DeclarationNode.VariableName, node.ValueNode.Text, HttpBindingResult<string>.Success(Text));
                 }
                 else
