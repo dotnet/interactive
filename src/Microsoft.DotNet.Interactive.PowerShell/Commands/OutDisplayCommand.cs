@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+using System;
 using System.Management.Automation;
+using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Kernel;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Commands;
@@ -53,8 +55,19 @@ public sealed class OutDisplayCommand : PSCmdlet
     protected override void ProcessRecord()
     {
         object obj = InputObject is PSObject psObj ? psObj.Unwrap() : InputObject;
-        DisplayedValue displayedValue = display(obj, MimeType);
-            
+
+        DisplayedValue displayedValue = default;
+
+        if (ParameterSetName == "MimeType")
+        {
+            displayedValue = display(obj, MimeType);
+        }
+
+        if (ParameterSetName == "CustomMimeType")
+        {
+            displayedValue = Formatting.Formatter.ToDisplayString(obj).DisplayAs(CustomMimeType);
+        }
+
         if (PassThru.IsPresent)
         {
             WriteObject(displayedValue);
