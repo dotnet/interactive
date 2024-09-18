@@ -23,6 +23,58 @@ public class PowerShellKernelTests : LanguageKernelTestBase
 {
     private readonly string _allUsersCurrentHostProfilePath = Path.Combine(Path.GetDirectoryName(typeof(PSObject).Assembly.Location), "Microsoft.dotnet-interactive_profile.ps1");
 
+    private readonly string _tableOutputOfCustomObjectTest =
+        """
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <i>key</i>
+              </th>
+              <th>value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="dni-plaintext">
+                  <pre>prop1</pre>
+                </div>
+              </td>
+              <td>
+                <div class="dni-plaintext">
+                  <pre>value1</pre>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="dni-plaintext">
+                  <pre>prop2</pre>
+                </div>
+              </td>
+              <td>
+                <div class="dni-plaintext">
+                  <pre>value2</pre>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="dni-plaintext">
+                  <pre>prop3</pre>
+                </div>
+              </td>
+              <td>
+                <div class="dni-plaintext">
+                  <pre>value3</pre>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        """;
+
     public PowerShellKernelTests(ITestOutputHelper output) : base(output)
     {
     }
@@ -252,76 +304,6 @@ for ($j = 0; $j -le 4; $j += 4 ) {
     }
 
     [Fact]
-    public async Task Powershell_customobject_is_formatted_for_outdisplay()
-    {
-        var kernel = CreateKernel(Language.PowerShell);
-        var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
-
-        var formattedHtml =
-            """
-                <table>
-                  <thead>
-                    <tr>
-                      <th>
-                        <i>key</i>
-                      </th>
-                      <th>value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="dni-plaintext">
-                          <pre>prop1</pre>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="dni-plaintext">
-                          <pre>value1</pre>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="dni-plaintext">
-                          <pre>prop2</pre>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="dni-plaintext">
-                          <pre>value2</pre>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="dni-plaintext">
-                          <pre>prop3</pre>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="dni-plaintext">
-                          <pre>value3</pre>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                """;
-
-        result.Events.Should()
-              .ContainSingle<DisplayedValueProduced>()
-              .Which
-              .FormattedValues
-              .Should()
-              .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
-              .Which
-              .Value.RemoveStyleElement()
-              .Should()
-              .BeEquivalentHtmlTo(formattedHtml);
-    }
-
-    [Fact]
     public async Task RequestValueInfos_only_returns_user_defined_values()
     {
         using var kernel = CreateKernel(Language.PowerShell);
@@ -343,7 +325,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
     }
 
     [Fact]
-    public async Task Powershell_custommimetype_works()
+    public async Task Powershell_non_standard_mimetypes_work()
     {
       var kernel = CreateKernel(Language.PowerShell);
 
@@ -397,7 +379,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
               }
             }
           """;
-      var result = await kernel.SendAsync(new SubmitCode($"\'{vegaLightRequest}\' | Out-Display -CustomMimeType 'application/vnd.vegalite.v5+json'"));
+      var result = await kernel.SendAsync(new SubmitCode($"\'{vegaLightRequest}\' | Out-Display -MimeType 'application/vnd.vegalite.v5+json'"));
 
       result.Events.Should()
             .ContainSingle<DisplayedValueProduced>()
@@ -411,75 +393,28 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             .Be(vegaLightRequest);
     }
 
-    //this test is to verify that after we added processing for the -CustomMimeType parameter, the original -MimeType still works as expected when supplied explicitly
-    [Fact]
-    public async Task Powershell_mimetype_works_as_expected()
+    [Theory]
+    [InlineData(" -MimeType 'text/html'")]
+    [InlineData("")]
+    public async Task Powershell_CustomObject_Is_Formatted_Correctly(string mimeTypeParameter)
     {
-      var kernel = CreateKernel(Language.PowerShell);
-      var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display -MimeType 'text/html'"));
+        // Arrange
+        var kernel = CreateKernel(Language.PowerShell);
+        var code = "[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display" + mimeTypeParameter;
 
-      var formattedHtml =
-          """
-              <table>
-                <thead>
-                  <tr>
-                    <th>
-                      <i>key</i>
-                    </th>
-                    <th>value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <div class="dni-plaintext">
-                        <pre>prop1</pre>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="dni-plaintext">
-                        <pre>value1</pre>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="dni-plaintext">
-                        <pre>prop2</pre>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="dni-plaintext">
-                        <pre>value2</pre>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="dni-plaintext">
-                        <pre>prop3</pre>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="dni-plaintext">
-                        <pre>value3</pre>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-          """;
+        // Act
+        var result = await kernel.SendAsync(new SubmitCode(code));
 
-      result.Events.Should()
-            .ContainSingle<DisplayedValueProduced>()
-            .Which
-            .FormattedValues
-            .Should()
-            .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
-            .Which
-            .Value.RemoveStyleElement()
-            .Should()
-            .BeEquivalentHtmlTo(formattedHtml);
+        // Assert
+        result.Events.Should()
+              .ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+              .Which
+              .Value.RemoveStyleElement()
+              .Should()
+              .BeEquivalentHtmlTo(_tableOutputOfCustomObjectTest);
     }
-
 }

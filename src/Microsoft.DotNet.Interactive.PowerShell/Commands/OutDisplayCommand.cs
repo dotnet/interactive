@@ -27,21 +27,7 @@ public sealed class OutDisplayCommand : PSCmdlet
     /// The MimeType to use.
     /// </summary>
     [Parameter(Position = 1, ParameterSetName = "MimeType")]
-    [ValidateSet(
-        "application/javascript",
-        "application/json",
-        "text/html",
-        "text/markdown",
-        "text/plain"
-    )]
     public string MimeType { get; set; } = "text/html";
-
-    /// <summary>
-    /// If the user wants to send back a MimeType that isn't in the MimeType parameter,
-    /// they can use this.
-    /// </summary>
-    [Parameter(Position = 1, ParameterSetName = "CustomMimeType")]
-    public string CustomMimeType { get; set; }
 
     /// <summary>
     /// Determines whether the DisplayedValue should get written to the pipeline.
@@ -58,14 +44,17 @@ public sealed class OutDisplayCommand : PSCmdlet
 
         DisplayedValue displayedValue = default;
 
-        if (ParameterSetName == "MimeType")
+        if (MimeType is "application/javascript" or
+                        "application/json" or
+                        "text/html" or
+                        "text/markdown" or
+                        "text/plain")
         {
             displayedValue = display(obj, MimeType);
         }
-
-        if (ParameterSetName == "CustomMimeType")
+        else
         {
-            displayedValue = Formatting.Formatter.ToDisplayString(obj).DisplayAs(CustomMimeType);
+            displayedValue = Formatter.ToDisplayString(obj).DisplayAs(MimeType);
         }
 
         if (PassThru.IsPresent)
