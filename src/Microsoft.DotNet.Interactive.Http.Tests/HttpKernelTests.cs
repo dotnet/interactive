@@ -14,13 +14,17 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Humanizer;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
+using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.FSharp.Data.UnitSystems.SI.UnitNames;
 using Microsoft.Net.Http.Headers;
 using Xunit;
+using static Microsoft.DotNet.Interactive.Http.Tests.HttpParserTests;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
@@ -2318,11 +2322,11 @@ public class HttpKernelTests
         var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
         {
             var response = new HttpResponseMessage(HttpStatusCode.OK);
-            if(message.Headers.TryGetValues("Detectedserver", out var values))
+            if (message.Headers.TryGetValues("Detectedserver", out var values))
             {
                 headerValue = values.First();
             }
-                
+
             response.RequestMessage = message;
             var contentString = """
              {
@@ -2380,6 +2384,210 @@ public class HttpKernelTests
         var response = (HttpResponse)returnValue.Value;
 
         headerValue.Should().Be("gunicorn/19.9.0");
+    }
+
+    [Fact]
+    public async Task Response_headers_for_named_requests_with_additional_header_can_be_accessed_correctly()
+    {
+        var headerValue = string.Empty;
+        var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            if (message.Headers.TryGetValues("X-Custom", out var values))
+            {
+                headerValue = values.First(n => n.Equals("theme=dark; Path=/; Expires=Wed, 09 Jun 2023 10:18:14 GMT"));
+            }
+
+            response.RequestMessage = message;
+            var contentString = """
+             {
+                "headers": {
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                    "Accept-Encoding": "gzip, deflate, br, zstd",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Host": "httpbin.org",
+                    "Priority": "u=0, i",
+                    "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
+                    "Sec-Ch-Ua-Mobile": "?0",
+                    "Sec-Ch-Ua-Platform": "\""Windows\"",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "none",
+                    "Sec-Fetch-User": "?1",
+                    "Upgrade-Insecure-Requests": "1",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
+                    "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
+                }
+            }
+            """;
+            response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
+            response.Headers.Add("Set-Cookie", "sessionId=abc123; Path=/; HttpOnly");
+            response.Headers.Add("Set-Cookie", "userId=789xyz; Path=/; Secure");
+            response.Headers.Add("Set-Cookie", "theme=dark; Path=/; Expires=Wed, 09 Jun 2023 10:18:14 GMT");
+
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(responseHandler);
+        using var kernel = new HttpKernel("http", client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/headers
+
+            # @name binHeader
+            GET {{baseUrl}}
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+
+        var secondCode = $$$"""
+            GET https://httpbin.org/headers
+            X-Custom: {{binHeader.response.headers.Set-Cookie.theme=dark; Path=/; Expires=Wed, 09 Jun 2023 10:18:14 GMT}}
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+
+        secondResult.Events.Should().NotContainErrors();
+
+        var returnValue = secondResult.Events.OfType<ReturnValueProduced>().First();
+
+        var response = (HttpResponse)returnValue.Value;
+
+        headerValue.Should().Be("theme=dark; Path=/; Expires=Wed, 09 Jun 2023 10:18:14 GMT");
+    }
+
+    [Fact]
+    public async Task Response_headers_for_named_requests_with_too_many_additional_headers_will_produce_an_error()
+    {
+        var headerValue = string.Empty;
+        var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            if (message.Headers.TryGetValues("Detectedserver", out var values))
+            {
+                headerValue = values.First();
+            }
+
+            response.RequestMessage = message;
+            var contentString = """
+             {
+                "headers": {
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                    "Accept-Encoding": "gzip, deflate, br, zstd",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Host": "httpbin.org",
+                    "Priority": "u=0, i",
+                    "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
+                    "Sec-Ch-Ua-Mobile": "?0",
+                    "Sec-Ch-Ua-Platform": "\""Windows\"",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "none",
+                    "Sec-Fetch-User": "?1",
+                    "Upgrade-Insecure-Requests": "1",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
+                    "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
+                }
+            }
+            """;
+            response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
+            response.Headers.Add("server", "gunicorn/19.9.0");
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(responseHandler);
+        using var kernel = new HttpKernel("http", client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/headers
+
+            # @name binHeader
+            GET {{baseUrl}}
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+
+        var secondCode = $$$"""
+            GET https://httpbin.org/headers
+            Detectedserver: {{binHeader.response.headers.Server.gunicorn}}
+            ###
+            """
+        ;
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression 'binHeader.response.headers.Server.gunicorn' does not follow the correct pattern. The expression should adhere to the following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""");
+    }
+
+    [Fact]
+    public async Task Response_headers_for_named_requests_that_do_not_exist_will_produce_an_error()
+    {
+        var headerValue = string.Empty;
+        var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            if (message.Headers.TryGetValues("Detectedserver", out var values))
+            {
+                headerValue = values.First();
+            }
+
+            response.RequestMessage = message;
+            var contentString = """
+             {
+                "headers": {
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                    "Accept-Encoding": "gzip, deflate, br, zstd",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Host": "httpbin.org",
+                    "Priority": "u=0, i",
+                    "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
+                    "Sec-Ch-Ua-Mobile": "?0",
+                    "Sec-Ch-Ua-Platform": "\""Windows\"",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "none",
+                    "Sec-Fetch-User": "?1",
+                    "Upgrade-Insecure-Requests": "1",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
+                    "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
+                }
+            }
+            """;
+            response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
+            response.Headers.Add("server", "gunicorn/19.9.0");
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(responseHandler);
+        using var kernel = new HttpKernel("http", client);
+
+        var code = """
+            @baseUrl = https://httpbin.org/headers
+
+            # @name binHeader
+            GET {{baseUrl}}
+
+            ###
+            """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+        result.Events.Should().NotContainErrors();
+
+
+        var secondCode = $$$"""
+            GET https://httpbin.org/headers
+            Detectedserver: {{binHeader.response.headers.Accept}}
+            ###
+            """;
+
+        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
+        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name 'Accept' does not exist in the named request.""");
     }
 
     [Theory]
