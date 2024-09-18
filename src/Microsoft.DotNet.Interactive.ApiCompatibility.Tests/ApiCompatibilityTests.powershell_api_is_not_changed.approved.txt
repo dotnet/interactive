@@ -21,7 +21,6 @@ Microsoft.DotNet.Interactive.PowerShell.Commands
     protected System.Void ProcessRecord()
   public class OutDisplayCommand : System.Management.Automation.PSCmdlet
     .ctor()
-    public System.String CustomMimeType { get; set;}
     public System.Object InputObject { get; set;}
     public System.String MimeType { get; set;}
     public System.Management.Automation.SwitchParameter PassThru { get; set;}
