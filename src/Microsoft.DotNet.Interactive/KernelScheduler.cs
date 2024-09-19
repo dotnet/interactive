@@ -103,21 +103,6 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             await currentlyRunning.TaskCompletionSource.Task;
         }
 
-        // FIX: (IdleAsync) 
-        Log.Info($"{nameof(IdleAsync)}: SignalAndWait on thread {Thread.CurrentThread.ManagedThreadId} with {_childOperationsBarrier.ParticipantCount} participants, {_childOperationsBarrier.ParticipantsRemaining} remaining");
-
-        switch (_childOperationsBarrier.ParticipantCount)
-        {
-            case 0: 
-                break;
-            case 1: 
-                break;
-            case 2: 
-                break;
-            case 3: 
-                break;
-        }
-
         try
         {
             _childOperationsBarrier.SignalAndWait();

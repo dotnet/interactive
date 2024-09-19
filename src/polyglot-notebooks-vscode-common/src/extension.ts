@@ -151,10 +151,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const environmentVariables = { ...polyglotConfig.get<{ [key: string]: string }>('kernelEnvironmentVariables'), 'DOTNET_CLI_CULTURE': getCurrentCulture(), 'DOTNET_CLI_UI_LANGUAGE': getCurrentCulture() };
 
         const processStart = processArguments(argsTemplate, workingDirectory, DotNetPathManager.getDotNetPath(), launchOptions!.workingDirectory, environmentVariables);
-        let notification = {
-            displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
-            displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
-        };
+
         const channel = new StdioDotnetInteractiveChannel(notebookUri.toString(), processStart, diagnosticsChannel, (pid, code, signal) => {
             clientMapper.closeClient(notebookUri, false);
         });
@@ -170,7 +167,6 @@ export async function activate(context: vscode.ExtensionContext) {
         return vscode.env.language;
     }
 
-
     function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {
         compositeKernel.setDefaultTargetKernelNameForCommand(commandsAndEvents.RequestInputType, compositeKernel.name);
         compositeKernel.setDefaultTargetKernelNameForCommand(commandsAndEvents.SendEditableCodeType, compositeKernel.name);
@@ -178,7 +174,8 @@ export async function activate(context: vscode.ExtensionContext) {
         This allows adding new cells to the notebook and prompting user for input.`;
 
         compositeKernel.registerCommandHandler({
-            commandType: commandsAndEvents.RequestInputType, handle: async (commandInvocation) => {
+            commandType: commandsAndEvents.RequestInputType,
+            handle: async (commandInvocation) => {
                 const requestInput = <commandsAndEvents.RequestInput>commandInvocation.commandEnvelope.command;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
