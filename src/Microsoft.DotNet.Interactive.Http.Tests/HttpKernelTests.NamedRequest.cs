@@ -52,37 +52,34 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 var client = new HttpClient(largeResponseHandler);
                 using var kernel = new HttpKernel("http", client, contentByteLengthThreshold: ContentByteLengthThreshold);
 
-                /*var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);*/
-
                 var firstCode = """
-            @baseUrl = https://httpbin.org/anything
+                    @baseUrl = https://httpbin.org/anything
 
-            # @name login
-            POST {{baseUrl}}
-            Content-Type: application/json
+                    # @name login
+                    POST {{baseUrl}}
+                    Content-Type: application/json
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = """
 
-            @origin = {{login.response.body.$.origin}}
+                    @origin = {{login.response.body.$.origin}}
             
             
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Content-Type: application/json
             
-            {
-                "origin" : {{origin}}
-            }
+                    {
+                        "origin" : {{origin}}
+                    }
             
-            ###
-            """;
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -103,26 +100,26 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                     response.RequestMessage = message;
                     var contentString = """
-             {
-                "headers": {
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "Accept-Encoding": "gzip, deflate, br, zstd",
-                    "Accept-Language": "en-US,en;q=0.9",
-                    "Host": "httpbin.org",
-                    "Priority": "u=0, i",
-                    "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
-                    "Sec-Ch-Ua-Mobile": "?0",
-                    "Sec-Ch-Ua-Platform": "\""Windows\"",
-                    "Sec-Fetch-Dest": "document",
-                    "Sec-Fetch-Mode": "navigate",
-                    "Sec-Fetch-Site": "none",
-                    "Sec-Fetch-User": "?1",
-                    "Upgrade-Insecure-Requests": "1",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
-                    "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
-                }
-            }
-            """;
+                         {
+                            "headers": {
+                                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                                "Accept-Encoding": "gzip, deflate, br, zstd",
+                                "Accept-Language": "en-US,en;q=0.9",
+                                "Host": "httpbin.org",
+                                "Priority": "u=0, i",
+                                "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
+                                "Sec-Ch-Ua-Mobile": "?0",
+                                "Sec-Ch-Ua-Platform": "\""Windows\"",
+                                "Sec-Fetch-Dest": "document",
+                                "Sec-Fetch-Mode": "navigate",
+                                "Sec-Fetch-Site": "none",
+                                "Sec-Fetch-User": "?1",
+                                "Upgrade-Insecure-Requests": "1",
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
+                                "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
+                            }
+                        }
+                        """;
                     response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
                     response.Headers.Add("server", "gunicorn/19.9.0");
                     return Task.FromResult(response);
@@ -131,13 +128,13 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel("http", client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/headers
+                    @baseUrl = https://httpbin.org/headers
 
-            # @name binHeader
-            GET {{baseUrl}}
+                    # @name binHeader
+                    GET {{baseUrl}}
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -152,10 +149,6 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
                 secondResult.Events.Should().NotContainErrors();
-
-                var returnValue = secondResult.Events.OfType<ReturnValueProduced>().First();
-
-                var response = (HttpResponse)returnValue.Value;
 
                 headerValue.Should().Be("gunicorn/19.9.0");
             }
@@ -174,26 +167,26 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                     response.RequestMessage = message;
                     var contentString = """
-             {
-                "headers": {
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "Accept-Encoding": "gzip, deflate, br, zstd",
-                    "Accept-Language": "en-US,en;q=0.9",
-                    "Host": "httpbin.org",
-                    "Priority": "u=0, i",
-                    "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
-                    "Sec-Ch-Ua-Mobile": "?0",
-                    "Sec-Ch-Ua-Platform": "\""Windows\"",
-                    "Sec-Fetch-Dest": "document",
-                    "Sec-Fetch-Mode": "navigate",
-                    "Sec-Fetch-Site": "none",
-                    "Sec-Fetch-User": "?1",
-                    "Upgrade-Insecure-Requests": "1",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
-                    "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
-                }
-            }
-            """;
+                            {
+                            "headers": {
+                                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                                "Accept-Encoding": "gzip, deflate, br, zstd",
+                                "Accept-Language": "en-US,en;q=0.9",
+                                "Host": "httpbin.org",
+                                "Priority": "u=0, i",
+                                "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
+                                "Sec-Ch-Ua-Mobile": "?0",
+                                "Sec-Ch-Ua-Platform": "\""Windows\"",
+                                "Sec-Fetch-Dest": "document",
+                                "Sec-Fetch-Mode": "navigate",
+                                "Sec-Fetch-Site": "none",
+                                "Sec-Fetch-User": "?1",
+                                "Upgrade-Insecure-Requests": "1",
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
+                                "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
+                            }
+                        }
+                        """;
                     response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
                     response.Headers.Add("Set-Cookie", "sessionId=abc123; Path=/; HttpOnly");
                     response.Headers.Add("Set-Cookie", "userId=789xyz; Path=/; Secure");
@@ -205,13 +198,13 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel("http", client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/headers
+                    @baseUrl = https://httpbin.org/headers
 
-            # @name binHeader
-            GET {{baseUrl}}
+                    # @name binHeader
+                    GET {{baseUrl}}
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -226,10 +219,6 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
                 secondResult.Events.Should().NotContainErrors();
-
-                var returnValue = secondResult.Events.OfType<ReturnValueProduced>().First();
-
-                var response = (HttpResponse)returnValue.Value;
 
                 headerValue.Should().Be("theme=dark; Path=/; Expires=Wed, 09 Jun 2023 10:18:14 GMT");
             }
@@ -248,26 +237,26 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                     response.RequestMessage = message;
                     var contentString = """
-             {
-                "headers": {
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "Accept-Encoding": "gzip, deflate, br, zstd",
-                    "Accept-Language": "en-US,en;q=0.9",
-                    "Host": "httpbin.org",
-                    "Priority": "u=0, i",
-                    "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
-                    "Sec-Ch-Ua-Mobile": "?0",
-                    "Sec-Ch-Ua-Platform": "\""Windows\"",
-                    "Sec-Fetch-Dest": "document",
-                    "Sec-Fetch-Mode": "navigate",
-                    "Sec-Fetch-Site": "none",
-                    "Sec-Fetch-User": "?1",
-                    "Upgrade-Insecure-Requests": "1",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
-                    "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
-                }
-            }
-            """;
+                         {
+                            "headers": {
+                                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                                "Accept-Encoding": "gzip, deflate, br, zstd",
+                                "Accept-Language": "en-US,en;q=0.9",
+                                "Host": "httpbin.org",
+                                "Priority": "u=0, i",
+                                "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
+                                "Sec-Ch-Ua-Mobile": "?0",
+                                "Sec-Ch-Ua-Platform": "\""Windows\"",
+                                "Sec-Fetch-Dest": "document",
+                                "Sec-Fetch-Mode": "navigate",
+                                "Sec-Fetch-Site": "none",
+                                "Sec-Fetch-User": "?1",
+                                "Upgrade-Insecure-Requests": "1",
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
+                                "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
+                            }
+                        }
+                        """;
                     response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
                     response.Headers.Add("server", "gunicorn/19.9.0");
                     return Task.FromResult(response);
@@ -276,13 +265,13 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel("http", client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/headers
+                    @baseUrl = https://httpbin.org/headers
 
-            # @name binHeader
-            GET {{baseUrl}}
+                    # @name binHeader
+                    GET {{baseUrl}}
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -313,26 +302,26 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                     response.RequestMessage = message;
                     var contentString = """
-             {
-                "headers": {
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "Accept-Encoding": "gzip, deflate, br, zstd",
-                    "Accept-Language": "en-US,en;q=0.9",
-                    "Host": "httpbin.org",
-                    "Priority": "u=0, i",
-                    "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
-                    "Sec-Ch-Ua-Mobile": "?0",
-                    "Sec-Ch-Ua-Platform": "\""Windows\"",
-                    "Sec-Fetch-Dest": "document",
-                    "Sec-Fetch-Mode": "navigate",
-                    "Sec-Fetch-Site": "none",
-                    "Sec-Fetch-User": "?1",
-                    "Upgrade-Insecure-Requests": "1",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
-                    "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
-                }
-            }
-            """;
+                         {
+                            "headers": {
+                                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                                "Accept-Encoding": "gzip, deflate, br, zstd",
+                                "Accept-Language": "en-US,en;q=0.9",
+                                "Host": "httpbin.org",
+                                "Priority": "u=0, i",
+                                "Sec-Ch-Ua": "\""Chromium\"";v=\""128\"", \""Not;A=Brand\"";v=\""24\"", \""Microsoft Edge\"";v=\""128\"",
+                                "Sec-Ch-Ua-Mobile": "?0",
+                                "Sec-Ch-Ua-Platform": "\""Windows\"",
+                                "Sec-Fetch-Dest": "document",
+                                "Sec-Fetch-Mode": "navigate",
+                                "Sec-Fetch-Site": "none",
+                                "Sec-Fetch-User": "?1",
+                                "Upgrade-Insecure-Requests": "1",
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
+                                "X-Amzn-Trace-Id": "Root=1-66e9f16e-7afea6f643e754f854c57d85"
+                            }
+                        }
+                        """;
                     response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
                     response.Headers.Add("server", "gunicorn/19.9.0");
                     return Task.FromResult(response);
@@ -341,13 +330,13 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel("http", client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/headers
+                    @baseUrl = https://httpbin.org/headers
 
-            # @name binHeader
-            GET {{baseUrl}}
+                    # @name binHeader
+                    GET {{baseUrl}}
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -367,7 +356,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Theory]
             [InlineData("json.response.body.$.slideshow.slides.title", "Wake up to WonderWidgets!")]
             [InlineData("json.response.body.$.slideshow.slides.type", "all")]
-            public async Task json_with_additional_syntax_depths_can_be_accessed_correctly(string path, string end)
+            public async Task json_with_additional_syntax_depths_can_be_accessed_correctly(string path, string expectedValue)
             {
                 // Request Variables
                 // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
@@ -376,29 +365,29 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 {
                     var response = new HttpResponseMessage(HttpStatusCode.OK);
                     response.RequestMessage = message;
-                    var contentString = @"
-                        {
-              ""slideshow"": {
-                ""author"": ""Yours Truly"",
-                ""date"": ""date of publication"",
-                ""slides"": [
-                  {
-                    ""title"": ""Wake up to WonderWidgets!"",
-                    ""type"": ""all""
-                  },
-                  {
-                    ""items"": [
-                      ""Why <em>WonderWidgets</em> are great"",
-                      ""Who <em>buys</em> WonderWidgets""
-                    ],
-                    ""title"": ""Overview"",
-                    ""type"": ""all""
-                  }
-                ],
-                ""title"": ""Sample Slide Show""
-              }
-            }
-            ";
+                    var contentString = """
+                                {
+                      "slideshow": {
+                        "author": "Yours Truly",
+                        "date": "date of publication",
+                        "slides": [
+                          {
+                            "title": "Wake up to WonderWidgets!",
+                            "type": "all"
+                          },
+                          {
+                            "items": [
+                              "Why <em>WonderWidgets</em> are great",
+                              "Who <em>buys</em> WonderWidgets"
+                            ],
+                            "title": "Overview",
+                            "type": "all"
+                          }
+                        ],
+                        "title": "Sample Slide Show"
+                      }
+                    }
+                    """;
                     response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
                     return Task.FromResult(response);
                 });
@@ -406,14 +395,14 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel("http", client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/json
+                    @baseUrl = https://httpbin.org/json
 
-            # @name json
-            GET {{baseUrl}}
-            Content-Type: application/json
+                    # @name json
+                    GET {{baseUrl}}
+                    Content-Type: application/json
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -442,7 +431,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                 var response = (HttpResponse)returnValue.Value;
 
-                response.Request.Content.Raw.Split(":").Last().TrimEnd("\r\n}".ToCharArray()).Should().Be(end);
+                response.Request.Content.Raw.Split(":").Last().TrimEnd("\r\n}".ToCharArray()).Should().Be(expectedValue);
 
             }
 
@@ -460,14 +449,14 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel(client: client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/anything
+                    @baseUrl = https://httpbin.org/anything
 
-            # @name login
-            POST {{baseUrl}}
-            Content-Type: application/json
+                    # @name login
+                    POST {{baseUrl}}
+                    Content-Type: application/json
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -643,13 +632,13 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel(client: client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/anything
+                    @baseUrl = https://httpbin.org/anything
 
-            # @name login
-            POST {{baseUrl}}
+                    # @name login
+                    POST {{baseUrl}}
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -689,14 +678,14 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var _ = new AssertionScope();
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/xml
+                    @baseUrl = https://httpbin.org/xml
 
-            # @name sampleXml
-            GET {{baseUrl}}
-            Content-Type: application/xml
+                    # @name sampleXml
+                    GET {{baseUrl}}
+                    Content-Type: application/xml
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -723,17 +712,17 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel(client: client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/anything
+                    @baseUrl = https://httpbin.org/anything
 
-            # @name example
-            POST {{baseUrl}}
-            Accept: application/json
+                    # @name example
+                    POST {{baseUrl}}
+                    Accept: application/json
 
-            {
-                "sample" : "text"
-            }
-            ###
-            """;
+                    {
+                        "sample" : "text"
+                    }
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -764,25 +753,25 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var _ = new AssertionScope();
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/xml
+                    @baseUrl = https://httpbin.org/xml
 
-            # @name sampleXml
-            GET {{baseUrl}}
-            Content-Type: application/xml
+                    # @name sampleXml
+                    GET {{baseUrl}}
+                    Content-Type: application/xml
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = """
 
-            POST https://example.com/api/comments HTTP/1.1
-            X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
+                    POST https://example.com/api/comments HTTP/1.1
+                    X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
             
-            ###
-            """;
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -801,25 +790,25 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var _ = new AssertionScope();
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org
+                    @baseUrl = https://httpbin.org
 
-            # @name sample
-            GET {{baseUrl}}
-            Content-Type: application/json
+                    # @name sample
+                    GET {{baseUrl}}
+                    Content-Type: application/json
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = """
 
-            POST https://example.com/api/comments HTTP/1.1
-            Server: {{sample.response.headers.Server}}
+                    POST https://example.com/api/comments HTTP/1.1
+                    Server: {{sample.response.headers.Server}}
             
-            ###
-            """;
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -836,36 +825,36 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var _ = new AssertionScope();
 
                 var firstCode = """
-            @baseUrl = https://example.com/api
+                    @baseUrl = https://example.com/api
 
-            # @name login
-            POST {{baseUrl}}/api/login HTTP/1.1
-            Content-Type: application/x-www-form-urlencoded
+                    # @name login
+                    POST {{baseUrl}}/api/login HTTP/1.1
+                    Content-Type: application/x-www-form-urlencoded
 
-            name=foo&password=bar
+                    name=foo&password=bar
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = """
 
-            @authToken = {{login.response.headers.X-AuthToken}}
+                    @authToken = {{login.response.headers.X-AuthToken}}
             
             
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Authorization: {{authToken}}
-            Content-Type: application/json
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Authorization: {{authToken}}
+                    Content-Type: application/json
             
-            {
-                "content": "fake content"
-            }
+                    {
+                        "content": "fake content"
+                    }
             
-            ###
-            """;
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -875,20 +864,20 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Theory]
             [InlineData("example.request.headers.*")]
             [InlineData("example.response.headers.*")]
-            public async Task content_body_after_headers_for_named_request_is_not_supported_and_produces_errors(string path)
+            public async Task Accessing_content_body_after_headers_is_not_supported_and_produces_errors(string path)
             {
                 var client = new HttpClient();
                 using var kernel = new HttpKernel(client: client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/anything
+                    @baseUrl = https://httpbin.org/anything
 
-            # @name example
-            POST {{baseUrl}}
-            Accept: application/json
+                    # @name example
+                    POST {{baseUrl}}
+                    Accept: application/json
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -912,20 +901,20 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Theory]
             [InlineData("example.request.headers.Content-Type", "Content-Type")]
             [InlineData("example.response.headers.Authorization", "Authorization")]
-            public async Task accessing_non_existant_header_names_produces_an_error(string path, string headerName)
+            public async Task accessing_non_existent_header_names_produces_an_error(string path, string headerName)
             {
                 var client = new HttpClient();
                 using var kernel = new HttpKernel(client: client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/anything
+                    @baseUrl = https://httpbin.org/anything
 
-            # @name example
-            POST {{baseUrl}}
-            Accept: application/json
+                    # @name example
+                    POST {{baseUrl}}
+                    Accept: application/json
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -960,13 +949,13 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel(client: client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/anything
+                    @baseUrl = https://httpbin.org/anything
 
-            # @name example
-            POST {{baseUrl}}
+                    # @name example
+                    POST {{baseUrl}}
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
@@ -1001,13 +990,13 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 using var kernel = new HttpKernel(client: client);
 
                 var firstCode = """
-            @baseUrl = https://httpbin.org/anything
+                    @baseUrl = https://httpbin.org/anything
 
-            # @name example
-            POST {{baseUrl}}
+                    # @name example
+                    POST {{baseUrl}}
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
