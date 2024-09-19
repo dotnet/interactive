@@ -60,7 +60,6 @@ public static class KernelExtensions
             })
             .LastOrDefault();
 
-
         return root switch
         {
             CompositeKernel c => predicate(c) ? new[] { kernel }.Concat(c.ChildKernels.Where(predicate)) : c.ChildKernels.Where(predicate),

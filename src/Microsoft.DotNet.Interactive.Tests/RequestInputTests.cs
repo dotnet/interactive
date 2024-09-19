@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -106,6 +107,48 @@ public class RequestInputTests
               .Value
               .Should()
               .Match($"Using previously saved value for `{saveAs}`.*To remove this value *, run the following command in a PowerShell cell:*");
+    }
+
+    [Fact]
+    public async Task Multiple_inputs_can_be_requested_together()
+    {
+        var requestInputs = new RequestInputs
+        {
+            Inputs =
+            [
+                new("Fruit"),
+                new("Tastiness"),
+                new("Color")
+            ]
+        };
+
+        using var kernel = CreateKernel()
+            .UseFormsForMultipleInputs();
+
+        var formValues = new Dictionary<string, string>
+        {
+            ["Fruit"] = "cherry",
+            ["Tastiness"] = "9000",
+            ["Color"] = "red"
+        };
+
+        kernel.RespondToRequestInputsFormWith(formValues);
+
+        var result = await kernel.SendAsync(requestInputs);
+
+        result.Events.Should().NotContainErrors();
+
+        result.Events.Should().ContainSingle<InputsProduced>()
+              .Which.Values.Should().BeEquivalentTo(formValues);
+    }
+
+    [Fact]
+    public void When_RequestInputs_is_not_supported_then_it_falls_back_to_sending_multiple_RequestInput_commands()
+    {
+        
+
+        // TODO (When_RequestInputs_is_not_supported_then_multiple_RequestInput_commands_are_sent) write test
+        throw new NotImplementedException();
     }
 
     private static CompositeKernel CreateKernel()

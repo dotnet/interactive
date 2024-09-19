@@ -2,9 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -21,6 +24,87 @@ namespace Microsoft.DotNet.Interactive.App;
 
 public static class KernelExtensions
 {
+    public static TKernel UseFormsForMultipleInputs<TKernel>(
+        this TKernel kernel, 
+        SecretManager secretManager = null)
+        where TKernel : Kernel
+    {
+        var barrier = new Barrier(2);
+        kernel.RegisterForDisposal(barrier);
+        ConcurrentDictionary<string, FormattedValue> receivedValues = new(StringComparer.OrdinalIgnoreCase);
+
+        kernel.RegisterCommandHandler<RequestInputs>(async (requestInputs, context) =>
+        {
+            var formId = Guid.NewGuid().ToString("N");
+
+            var inputs = requestInputs.Inputs;
+
+            PocketView html = div(
+                form[id: formId](
+                    inputs.Select(GetHtmlForSingleInput),
+                    button[onclick: $"event.preventDefault(); sendSendValueCommand(document.getElementById('{formId}'));"]("Ok")
+                    )
+            );
+
+            PocketView GetHtmlForSingleInput(InputDescription inputDescription)
+            {
+                var inputName = inputDescription.Name.Replace("-", "");
+
+                var value = "";
+
+                // FIX: (UseFormsForMultipleInputs) secret management
+
+                return div(
+                    label[@for: inputName](inputDescription.Prompt),
+                    br,
+                    input[
+                        "required",
+                        type: inputDescription.TypeHint,
+                        id: inputName,
+                        name: inputName,
+                        value: value,
+                        onkeydown: "event.stopPropagation()" // prevent event bubbling from triggering (for example) key commands in VS Code
+                    ]());
+            }
+
+            context.Display(html);
+
+            await Task.Yield();
+
+            barrier.SignalAndWait(context.CancellationToken);
+
+            if (receivedValues.TryGetValue(formId, out var formattedValue))
+            {
+                var values = JsonSerializer.Deserialize<Dictionary<string, string>>(formattedValue.Value);
+
+                context.Publish(new InputsProduced(
+                                    values,
+                                    requestInputs));
+            }
+            else
+            {
+                context.Fail(requestInputs, message: "No input received.");
+            }
+        });
+
+        // FIX: (UseFormsForMultipleInputs) what if there's already a handler for this?
+        kernel.RegisterCommandHandler<SendValue>((sendValue, context) =>
+        {
+            receivedValues[sendValue.Name] = sendValue.FormattedValue;
+
+            // don't wait on the barrier if the form hasn't been displayed 
+            if (barrier.ParticipantsRemaining == 1)
+            {
+                barrier.SignalAndWait(context.CancellationToken);
+            }
+
+            return Task.CompletedTask;
+        });
+
+        return kernel;
+    }
+
+
     public static CSharpKernel UseNugetDirective(this CSharpKernel kernel, bool forceRestore = false)
     {
         kernel.UseNugetDirective((k, resolvedPackageReference) =>

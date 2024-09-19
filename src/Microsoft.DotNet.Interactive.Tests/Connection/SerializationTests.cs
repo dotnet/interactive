@@ -230,7 +230,7 @@ public class SerializationTests
 
             yield return new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp");
 
-            yield return new RequestInput(prompt: "provide answer", inputTypeHint: "password", targetKernelName: "vscode");
+            yield return new RequestInput(prompt: "provide answer", inputTypeHint: "password");
 
             yield return new SendValue(
                 "name",
@@ -454,7 +454,7 @@ public class SerializationTests
                     "<span>raw value</span>"),
                 new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp"));
 
-            yield return new InputProduced("user input", new RequestInput(prompt: "What is the path to the log file?", inputTypeHint: "file", targetKernelName: "vscode"));
+            yield return new InputProduced("user input", new RequestInput(prompt: "What is the path to the log file?", inputTypeHint: "file"));
         }
     }
 

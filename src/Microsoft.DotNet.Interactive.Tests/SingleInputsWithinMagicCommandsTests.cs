@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -15,7 +16,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-public class InputsWithinMagicCommandsTests : IDisposable
+public class SingleInputsWithinMagicCommandsTests : IDisposable
 {
     private readonly CompositeKernel _kernel;
 
@@ -27,7 +28,7 @@ public class InputsWithinMagicCommandsTests : IDisposable
 
     private readonly Queue<string> _responses = new();
 
-    public InputsWithinMagicCommandsTests()
+    public SingleInputsWithinMagicCommandsTests()
     {
         _kernel = CreateKernel();
 
@@ -46,6 +47,9 @@ public class InputsWithinMagicCommandsTests : IDisposable
             Parameters =
             {
                 new("--value")
+                {
+                    AllowImplicitName = true
+                }
             }
         };
 
@@ -67,10 +71,19 @@ public class InputsWithinMagicCommandsTests : IDisposable
         _kernel.Dispose();
     }
 
-    [Fact]
-    public async Task Input_token_in_magic_command_prompts_user_for_input()
+    [Theory]
+    [InlineData("#!shim @input")]
+    [InlineData("#!shim @input:input-please")]
+    [InlineData("#!shim --value @input:input-please")]
+    public async Task Input_token_in_magic_command_prompts_user_for_input_using_the_associated_parameter_name(string code)
     {
-        await _kernel.SendAsync(new SubmitCode("#!shim --value @input:input-please", "csharp"));
+        _responses.Enqueue("one");
+
+        var result = await _kernel.SendAsync(new SubmitCode(code, "csharp"));
+
+        using var _ = new AssertionScope();
+
+        result.Events.Should().NotContainErrors();
 
         _receivedRequestInput.IsPassword.Should().BeFalse();
 
@@ -80,17 +93,7 @@ public class InputsWithinMagicCommandsTests : IDisposable
             .Which
             .Prompt
             .Should()
-            .Be("Please enter a value for field \"input-please\".");
-    }
-
-    [Fact]
-    public async Task Input_token_in_magic_command_prompts_user_passes_user_input_to_directive_to_handler()
-    {
-        _responses.Enqueue("one");
-
-        var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @input:input-please", "csharp"));
-
-        result.Events.Should().NotContainErrors();
+            .Be("Please enter a value for parameter: --value");
         _receivedUserInput.Should().ContainSingle().Which.Should().Be("one");
     }
 
@@ -122,7 +125,7 @@ public class InputsWithinMagicCommandsTests : IDisposable
             .Which
             .Prompt
             .Should()
-            .Be("Please enter a value for field \"input-please\".");
+            .Be("Please enter a value for parameter: --value");
     }
 
     [Fact]
@@ -225,22 +228,11 @@ public class InputsWithinMagicCommandsTests : IDisposable
     [MemberData(nameof(LanguageServiceCommands))]
     public async Task Language_service_commands_do_not_trigger_input_requests(KernelCommand command)
     {
-        using var kernel = new CSharpKernel().UseValueSharing();
-
-        bool requestInputWasSent = false;
-
-        kernel.RegisterCommandHandler<RequestInput>((input, _) =>
-        {
-            requestInputWasSent = true;
-
-            return Task.CompletedTask;
-        });
-
-        var result = await kernel.SendAsync(command);
+        var result = await _kernel.SendAsync(command);
 
         result.Events.Should().NotContainErrors();
 
-        requestInputWasSent.Should().BeFalse();
+        _receivedRequestInput.Should().BeNull();
     }
 
     public static IEnumerable<object[]> LanguageServiceCommands()
@@ -248,17 +240,17 @@ public class InputsWithinMagicCommandsTests : IDisposable
         // Testing with both one and multiple inputs in a single magic command
         var code = "#!set --name @input:name --value 123";
 
-        yield return [new RequestCompletions(code, new LinePosition(0, code.Length))];
-        yield return [new RequestHoverText(code, new LinePosition(0, 3))];
-        yield return [new RequestDiagnostics(code)];
-        yield return [new RequestSignatureHelp(code, new LinePosition(0, 3))];
+        yield return [new RequestCompletions(code, new LinePosition(0, code.Length), targetKernelName: "csharp")];
+        yield return [new RequestHoverText(code, new LinePosition(0, 3), targetKernelName: "csharp")];
+        yield return [new RequestDiagnostics(code, targetKernelName: "csharp")];
+        yield return [new RequestSignatureHelp(code, new LinePosition(0, 3), targetKernelName: "csharp")];
         
         code = "#!set --name @input:name --value @password:password ";
 
-        yield return [new RequestCompletions(code, new LinePosition(0, code.Length))];
-        yield return [new RequestHoverText(code, new LinePosition(0, 3))];
-        yield return [new RequestDiagnostics(code)];
-        yield return [new RequestSignatureHelp(code, new LinePosition(0, 3))];
+        yield return [new RequestCompletions(code, new LinePosition(0, code.Length), targetKernelName: "csharp")];
+        yield return [new RequestHoverText(code, new LinePosition(0, 3), targetKernelName: "csharp")];
+        yield return [new RequestDiagnostics(code, targetKernelName: "csharp")];
+        yield return [new RequestSignatureHelp(code, new LinePosition(0, 3), targetKernelName: "csharp")];
     }
 
     internal class TestCommand : KernelCommand
@@ -267,12 +259,12 @@ public class InputsWithinMagicCommandsTests : IDisposable
     }
 
     private static CompositeKernel CreateKernel() =>
-        new()
+        new CompositeKernel
         {
             new CSharpKernel()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseValueSharing(),
             new KeyValueStoreKernel()
-        };
+        }.UseFormsForMultipleInputs();
 }

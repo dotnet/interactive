@@ -206,7 +206,8 @@ export async function activate(context: vscode.ExtensionContext) {
         });
 
         compositeKernel.registerCommandHandler({
-            commandType: commandsAndEvents.SendEditableCodeType, handle: async commandInvocation => {
+            commandType: commandsAndEvents.SendEditableCodeType,
+            handle: async commandInvocation => {
                 const addCell = <commandsAndEvents.SendEditableCode>commandInvocation.commandEnvelope.command;
                 const kernelName = addCell.kernelName;
                 const contents = addCell.code;

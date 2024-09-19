@@ -8,6 +8,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Pocket;
@@ -19,13 +20,13 @@ namespace Microsoft.DotNet.Interactive.Connection;
 
 public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDisposable
 {
-    private readonly ReadCommandOrEvent _readCommandOrEvent;
+    private readonly ReadCommandOrEventAsync _readCommandOrEvent;
     private readonly Subject<CommandOrEvent> _subject = new();
     private readonly IObservable<CommandOrEvent> _observable;
     private readonly CompositeDisposable _disposables = new();
     private CancellationTokenSource _cancellationTokenSource;
 
-    public KernelCommandAndEventReceiver(ReadCommandOrEvent readCommandOrEvent)
+    public KernelCommandAndEventReceiver(ReadCommandOrEventAsync readCommandOrEvent)
     {
         _readCommandOrEvent = readCommandOrEvent ?? throw new ArgumentNullException(nameof(readCommandOrEvent));
 
@@ -57,6 +58,23 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
                                 .RefCount();
     }
 
+    public KernelCommandAndEventReceiver(ReadCommandOrEvent readCommandOrEvent) :
+        this(async token =>
+        {
+            if (!token.IsCancellationRequested)
+            {
+                var commandOrEvent = readCommandOrEvent();
+
+                return await Task.FromResult(commandOrEvent);
+            }
+            else
+            {
+                return default;
+            }
+        })
+    {
+    }
+
     private KernelCommandAndEventReceiver(IObservable<string> messages) =>
         _observable = messages
             .Select(s =>
@@ -79,7 +97,7 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
         {
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                var message = _readCommandOrEvent(_cancellationTokenSource.Token);
+                var message = _readCommandOrEvent(_cancellationTokenSource.Token).GetAwaiter().GetResult();
 
                 if (message is not null)
                 {
@@ -122,11 +140,16 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
         new(messages);
 
     public static KernelCommandAndEventReceiver FromTextReader(TextReader reader) =>
-        new(_ =>
+        new(async token =>
         {
             try
             {
-                var json = reader.ReadLine();
+#if NETSTANDARD2_0
+                var json = await reader.ReadLineAsync();
+#else
+                var timedCts = new CancellationTokenSource(1000);
+                var json = await reader.ReadLineAsync(timedCts.Token);
+#endif
 
                 if (!string.IsNullOrWhiteSpace(json))
                 {
@@ -147,11 +170,11 @@ public class KernelCommandAndEventReceiver : IKernelCommandAndEventReceiver, IDi
         });
 
     public static KernelCommandAndEventReceiver FromNamedPipe(PipeStream stream) =>
-        new(token =>
+        new(async token =>
         {
             if (stream.CanRead)
             {
-                var json = stream.ReadMessageAsync(token).GetAwaiter().GetResult();
+                var json = await stream.ReadMessageAsync(token);
 
                 var commandOrEvent = Serializer.DeserializeCommandOrEvent(json);
 

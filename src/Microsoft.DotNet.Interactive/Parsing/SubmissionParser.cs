@@ -129,7 +129,7 @@ public class SubmissionParser
                         {
                             case { Kind: DirectiveNodeKind.Action }:
 
-                                if (await CreateActionDirectiveCommand(directiveNode, targetKernelName) is { } actionDirectiveCommand)
+                                if (await CreateActionDirectiveCommand(directiveNode) is { } actionDirectiveCommand)
                                 {
                                     commands.Add(actionDirectiveCommand);
                                 }
@@ -142,10 +142,9 @@ public class SubmissionParser
                                                              .OfType<DirectiveParameterValueNode>()
                                                              .SingleOrDefault();
 
-                                if (valueNode.ChildTokens.FirstOrDefault(t => t is { Kind: TokenKind.Word }) is SyntaxToken firstWordToken &&
-                                    firstWordToken.Text is "nuget")
+                                if (valueNode.ChildTokens.FirstOrDefault(t => t is { Kind: TokenKind.Word }) is { Text: "nuget" })
                                 {
-                                    if (await CreateActionDirectiveCommand(directiveNode, targetKernelName) is { } actionDirectiveCmd)
+                                    if (await CreateActionDirectiveCommand(directiveNode) is { } actionDirectiveCmd)
                                     {
                                         directiveCommand = actionDirectiveCmd;
                                         directiveCommand.SchedulingScope = lastCommandScope;
@@ -175,7 +174,7 @@ public class SubmissionParser
                                     kernelSpecifierDirective.TryGetKernelCommandAsync is not null)
                                 {
                                     directiveCommand = await kernelSpecifierDirective.TryGetKernelCommandAsync(
-                                                           directiveNode, 
+                                                           directiveNode,
                                                            await RequestAllInputsAndKernelValues(directiveNode, originalCommand),
                                                            _kernel);
 
@@ -335,7 +334,7 @@ public class SubmissionParser
                 }));
         }
 
-        async Task<KernelCommand> CreateActionDirectiveCommand(DirectiveNode directiveNode, string targetKernelName)
+        async Task<KernelCommand> CreateActionDirectiveCommand(DirectiveNode directiveNode)
         {
             if (!directiveNode.TryGetActionDirective(out var directive))
             {
@@ -356,7 +355,7 @@ public class SubmissionParser
                 }
             }
 
-            if (directive.TryGetKernelCommandAsync is not null &&
+            if (directive.TryGetKernelCommandAsync is not null && // This indicates that JSON serialization/deserialization of the command from the directive syntax is overridden by custom binding.
                 await directive.TryGetKernelCommandAsync(
                     directiveNode,
                     await RequestAllInputsAndKernelValues(directiveNode, originalCommand),
@@ -375,23 +374,34 @@ public class SubmissionParser
                 }
             }
 
+            var formBindingResult = await RequestMultipleInputsIfAppropriate(directiveNode, originalCommand);
+
+            DirectiveBindingResult<string> serializedCommandResult
+                = await directiveNode.TryGetJsonAsync(
+                      async expressionNode =>
+                      {
+                          if (formBindingResult is not null)
+                          {
+                              if (formBindingResult.BoundValues.FirstOrDefault(v => v.Key.ExpressionNode == expressionNode) is var boundValue)
+                              {
+                                  return DirectiveBindingResult<object>.Success(boundValue.Value);
+                              }
+                          }
+
+                          var (bindingResult, _, _) = await RequestSingleValueOrInputAsync(
+                                                          expressionNode,
+                                                          originalCommand,
+                                                          targetKernelName);
+
+                          return bindingResult;
+                      });
+
             // Get command JSON and deserialize.
-            var directiveJsonResult = await directiveNode.TryGetJsonAsync(
-                                          async expressionNode =>
-                                          {
-                                              var (boundValue, _, _) = await RequestSingleValueOrInputAsync(
-                                                                           expressionNode,
-                                                                           originalCommand,
-                                                                           targetKernelName);
-
-                                              return boundValue;
-                                          });
-
-            if (directiveJsonResult.IsSuccessful)
+            if (serializedCommandResult.IsSuccessful)
             {
                 try
                 {
-                    var commandEnvelope = KernelCommandEnvelope.Deserialize(directiveJsonResult.Value);
+                    var commandEnvelope = KernelCommandEnvelope.Deserialize(serializedCommandResult.Value);
 
                     var directiveCommand = commandEnvelope.Command;
 
@@ -421,7 +431,7 @@ public class SubmissionParser
                 }
             }
 
-            ClearCommandsAndFail(directiveJsonResult.Diagnostics.ToArray());
+            ClearCommandsAndFail(serializedCommandResult.Diagnostics.ToArray());
             return null;
         }
     }
@@ -472,7 +482,54 @@ public class SubmissionParser
         return (targetKernelName, valueName);
     }
 
-    internal async Task<(DirectiveBindingResult<object> boundValue, ValueProduced valueProduced, InputProduced inputProduced)> RequestSingleValueOrInputAsync(
+    private async Task<ExpressionBindingResult> RequestMultipleInputsIfAppropriate(
+        DirectiveNode directiveNode, 
+        KernelCommand sourceCommand)
+    {
+        if (sourceCommand is not SubmitCode)
+        {
+            return null;
+        }
+
+        ExpressionBindingResult formBindingResult = null;
+
+        var expressionNodes = directiveNode.DescendantNodesAndTokens()
+                                           .OfType<DirectiveExpressionNode>()
+                                           .ToArray();
+
+        if (expressionNodes.Length > 1)
+        {
+            formBindingResult = new ExpressionBindingResult();
+
+            var requestInputs = new RequestInputs
+            {
+                Inputs = expressionNodes.Where(n => n.TypeNode?.Type is "input" or "password")
+                                        .Select(InputDescription.Parse)
+                                        .ToList()
+            };
+
+            requestInputs.SetParent(sourceCommand);
+
+            var result = await _kernel.SendAsync(requestInputs);
+
+            if (result.Events.OfType<InputsProduced>().SingleOrDefault() is { } inputsProduced)
+            {
+                foreach (var input in requestInputs.Inputs)
+                {
+                    var inputName = input.Name.Replace("-", "");
+                    if (inputsProduced.Values.TryGetValue(inputName, out var value))
+                    {
+                        var directiveParameterValueNode = (DirectiveParameterValueNode)input.ExpressionNode.Parent!;
+                        formBindingResult.BoundValues.Add(directiveParameterValueNode, value);
+                    }
+                }
+            }
+        }
+
+        return formBindingResult;
+    }
+
+    internal async Task<(DirectiveBindingResult<object> bindingResult, ValueProduced valueProduced, InputProduced inputProduced)> RequestSingleValueOrInputAsync(
         DirectiveExpressionNode expressionNode,
         KernelCommand command,
         string targetKernelName)
@@ -488,9 +545,8 @@ public class SubmissionParser
         {
             if (command is SubmitCode)
             {
-                var parametersNode = expressionNode.ChildNodes.OfType<DirectiveExpressionParametersNode>().SingleOrDefault();
-
-                var (bindingResult, inputProduced) = await RequestSingleInput(expressionNode, parametersNode, expressionType);
+                var requestInput = RequestInput.Parse(expressionNode);
+                var (bindingResult, inputProduced) = await RequestSingleInput(requestInput, expressionNode);
                 return (bindingResult, null, inputProduced);
             }
             else
@@ -658,54 +714,9 @@ public class SubmissionParser
     }
 
     private async Task<(DirectiveBindingResult<object> boundValue, InputProduced inputProduced)> RequestSingleInput(
-        DirectiveExpressionNode expressionNode, 
-        DirectiveExpressionParametersNode parametersNode, 
-        string expressionType)
+        RequestInput requestInput,
+        DirectiveExpressionNode expressionNode)
     {
-        var parametersNodeText = parametersNode?.Text;
-
-        RequestInput requestInput;
-
-        if (parametersNodeText?[0] is '{')
-        {
-            requestInput = JsonSerializer.Deserialize<RequestInput>(parametersNode.Text, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-        }
-        else
-        {
-            if (parametersNodeText?[0] is '"')
-            {
-                parametersNodeText = JsonSerializer.Deserialize<string>(parametersNode.Text);
-            }
-
-            if (parametersNodeText?.Contains(" ") is true)
-            {
-                requestInput = new(prompt: parametersNodeText);
-            }
-            else
-            {
-                requestInput = new(prompt: $"Please enter a value for field \"{parametersNodeText}\".");
-            }
-        }
-
-        if (expressionType is "password")
-        {
-            requestInput.InputTypeHint = "password";
-        }
-        else if (string.IsNullOrEmpty(requestInput.InputTypeHint))
-        {
-            if (expressionNode.Parent?.Parent is DirectiveParameterNode parameterValueNode)
-            {
-                if (parameterValueNode.TryGetParameter(out var parameter) &&
-                    parameter.TypeHint is { } typeHint)
-                {
-                    requestInput.InputTypeHint = typeHint;
-                }
-            }
-        }
-
         var result = await _kernel.SendAsync(requestInput);
 
         switch (result.Events[^1])
@@ -748,10 +759,20 @@ public class SubmissionParser
         Dictionary<string, InputProduced> inputsProduced = null;
         Dictionary<string, ValueProduced> valuesProduced = null;
 
+        var formBindindResult = await RequestMultipleInputsIfAppropriate(directiveNode, sourceCommand);
+
         var (boundValues, diagnostics) =
             await directiveNode.TryBindExpressionsAsync(
                 async expressionNode =>
                 {
+                    if (formBindindResult is not null)
+                    {
+                        if (formBindindResult.BoundValues.FirstOrDefault(v => v.Key.ExpressionNode == expressionNode) is var boundValue)
+                        {
+                            return DirectiveBindingResult<object>.Success(boundValue.Value);
+                        }
+                    }
+
                     var (bindingResult, valueProduced, inputProduced) =
                         await RequestSingleValueOrInputAsync(
                             expressionNode,
@@ -779,7 +800,7 @@ public class SubmissionParser
         var result = new ExpressionBindingResult
         {
             BoundValues = boundValues,
-            Diagnostics = diagnostics,
+            Diagnostics = diagnostics
         };
 
         if (inputsProduced is not null)

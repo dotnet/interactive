@@ -3,16 +3,25 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive;
 
 internal class ImmediateScheduler<T, TResult> : IKernelScheduler<T, TResult>
 {
+    private static readonly Logger Log = new("KernelScheduler (fast)");
+
     public async Task<TResult> RunAsync(
         T value, KernelSchedulerDelegate<T, TResult> onExecuteAsync,
         string scope = "default",
         CancellationToken cancellationToken = default)
     {
-        return await onExecuteAsync(value);
+        using var logOp = Log.OnEnterAndConfirmOnExit(arg: value);
+
+        var result = await onExecuteAsync(value);
+
+        logOp.Succeed();
+
+        return result;
     }
 }
