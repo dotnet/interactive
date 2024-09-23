@@ -2,7 +2,6 @@
 param (
     [string]$artifactsPath,
     [string[]]$vscodeTargets,
-    [string]$vscodeToken,
     [string]$nugetToken,
     [switch]$simulate
 )
@@ -11,6 +10,7 @@ Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
 try {
+    # Install vsce globally if not already installed
     npm install -g @vscode/vsce
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
@@ -22,7 +22,7 @@ try {
         # find extension vsix
         $extension = Get-ChildItem "$artifactsPath\vscode\$vscodeTarget\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
 
-        # verify
+        # Verify the extension
         if (-Not $simulate) {
             . "$PSScriptRoot\VerifyVSCodeExtension.ps1" -extensionPath $extension
             if ($LASTEXITCODE -ne 0) {
@@ -30,7 +30,7 @@ try {
             }
         }
 
-        # publish nuget
+        # Publish to NuGet (only for "stable" target)
         if ($vscodeTarget -eq "stable") {
             $packagestoPublish = @(
                 "Microsoft.dotnet-interactive",
@@ -42,7 +42,7 @@ try {
                 "Microsoft.DotNet.Interactive.ExtensionLab",
                 "Microsoft.DotNet.Interactive.Formatting",
                 "Microsoft.DotNet.Interactive.FSharp",
-                "Microsoft.DotNet.Interactive.Http,",
+                "Microsoft.DotNet.Interactive.Http",
                 "Microsoft.DotNet.Interactive.Journey",
                 "Microsoft.DotNet.Interactive.Jupyter",
                 "Microsoft.DotNet.Interactive.Kql",
@@ -56,8 +56,8 @@ try {
 
             Get-ChildItem "$artifactsPath\packages\Shipping\Microsoft.DotNet*.nupkg" | ForEach-Object {
                 $nugetPackagePath = $_.ToString()
-                $nugetPacakgeName = $_.Name
-                if ($nugetPacakgeName -match '(?<=(?<id>.+))\.(?<version>((\d+\.\d+(\.\d+)?))(?<suffix>(-.*)?))\.nupkg')
+                $nugetPackageName = $_.Name
+                if ($nugetPackageName -match '(?<=(?<id>.+))\.(?<version>((\d+\.\d+(\.\d+)?))(?<suffix>(-.*)?))\.nupkg')
                 {
                     $packageId = $Matches.id
                     $packageVersion = $Matches.version
@@ -65,7 +65,9 @@ try {
                     # publish only listed packages
                     if ($packagestoPublish.Contains($packageId)) {
                         Write-Host "Publishing $nugetPackagePath"
-                        if (-Not $simulate) {
+                        if ($simulate) {
+                            Write-Host "Simulated command: dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols"
+                        } else {
                             dotnet nuget push $nugetPackagePath --source https://api.nuget.org/v3/index.json --api-key $nugetToken --no-symbols
                             if ($LASTEXITCODE -ne 0) {
                                 exit $LASTEXITCODE
@@ -76,16 +78,20 @@ try {
             }
         }
 
-        # publish vs code marketplace
+        # Publish to VS Code Marketplace using Managed Identity
         Write-Host "Publishing $extension"
-        if (-Not $simulate) {
+        if ($simulate) {
             if ($vscodeTarget -eq "insiders") {
-                vsce publish --pre-release --packagePath $extension --pat $vscodeToken --noVerify
+                Write-Host "Simulated command: vsce publish --pre-release --packagePath $extension --noVerify --azure-credential"
+            } else {
+                Write-Host "Simulated command: vsce publish --packagePath $extension --noVerify --azure-credential"
             }
-            else{
-                vsce publish --packagePath $extension --pat $vscodeToken --noVerify
+        } else {
+            if ($vscodeTarget -eq "insiders") {
+                vsce publish --pre-release --packagePath $extension --noVerify --azure-credential
+            } else {
+                vsce publish --packagePath $extension --noVerify --azure-credential
             }
-           
         }
     }
 }
