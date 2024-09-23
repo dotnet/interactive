@@ -1,0 +1,37 @@
+trigger: none
+pr: none
+
+variables:
+  ArtifactsPath: '$(System.DefaultWorkingDirectory)\interactive-ci'
+
+pool:
+  vmImage: 'windows-2022'
+
+stages:
+- stage: Publish
+  jobs:
+  - job: PublishExtension
+    displayName: 'Publish VS Code Extension'
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Authenticate with Azure'
+      inputs:
+        azureSubscription: 'VSCode Marketplace Publishing'
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: 'echo "Azure CLI authenticated."'
+
+    - pwsh: |
+            npm install --global @vscode/vsce
+      displayName: 'Install VSCE'
+
+    - task: PowerShell@2
+      displayName: 'Publish Extension'
+      inputs:
+        targetType: 'filePath'
+        filePath: './$(ArtifactsPath)\vscode\PublishVSCodeExtensionUsingMI.ps1'
+        arguments: '-artifactsPath $(ArtifactsPath) -vscodeTargets "stable-locked","insiders" -nugetToken $(DotNetNugetApiKey-A1)'
+
+    - upload: artifacts
+      displayName: 'Upload Artifacts'
+      artifact: interactive-ci
