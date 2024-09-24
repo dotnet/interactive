@@ -118,6 +118,7 @@ export interface RequestHoverText extends LanguageServiceCommand {
 export interface RequestInput extends KernelCommand {
     inputTypeHint: string;
     isPassword: boolean;
+    parameterName: string;
     prompt: string;
     saveAs: string;
 }
@@ -349,8 +350,7 @@ export interface InputProduced extends KernelEvent {
 }
 
 export interface InputsProduced extends KernelEvent {
-    name: string;
-    value: string;
+    values: { [key: string]: string; };
 }
 
 export interface KernelExtensionLoaded extends KernelEvent {
@@ -454,6 +454,7 @@ export interface FormattedValue {
 
 export interface InputDescription {
     name: string;
+    prompt: string;
     saveAs: string;
     typeHint: string;
 }

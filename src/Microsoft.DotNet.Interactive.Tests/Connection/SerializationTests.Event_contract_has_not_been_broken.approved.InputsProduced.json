@@ -1,17 +1,22 @@
 {
   "event": {
-    "value": "user input"
+    "values": {
+      "value": "tops3kr1tstuff"
+    }
   },
-  "eventType": "InputProduced",
+  "eventType": "InputsProduced",
   "command": {
     "token": "the-token",
-    "commandType": "RequestInput",
+    "commandType": "RequestInputs",
     "command": {
-      "parameterName": "filePath",
-      "prompt": "What is the path to the log file?",
-      "isPassword": false,
-      "saveAs": "the-file",
-      "type": "file",
+      "inputs": [
+        {
+          "name": "value",
+          "prompt": "Please enter a value.",
+          "saveAs": "the-password",
+          "type": "password"
+        }
+      ],
       "targetKernelName": null,
       "originUri": null,
       "destinationUri": null

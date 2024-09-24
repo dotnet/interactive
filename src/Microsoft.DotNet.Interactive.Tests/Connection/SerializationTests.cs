@@ -201,6 +201,20 @@ public class SerializationTests
 
             yield return new RequestHoverText("document-contents", new LinePosition(1, 2));
 
+            yield return new RequestInput(prompt: "provide answer", inputTypeHint: "password");
+
+            yield return new RequestInputs
+            {
+                Inputs =
+                [
+                    new InputDescription("value", "Please enter a value.")
+                    {
+                        TypeHint = "password",
+                        SaveAs = "the-password"
+                    }
+                ]
+            };
+
             yield return new RequestSignatureHelp("sig-help-contents", new LinePosition(1, 2));
 
             yield return new SendEditableCode("someKernelName", "code");
@@ -229,8 +243,6 @@ public class SerializationTests
             yield return new RequestValueInfos("csharp");
 
             yield return new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp");
-
-            yield return new RequestInput(prompt: "provide answer", inputTypeHint: "password");
 
             yield return new SendValue(
                 "name",
@@ -364,8 +376,7 @@ public class SerializationTests
                     OriginUri = new("kernel://pid-1234/csharp")
                 });
 
-            yield return new KernelReady(new[]
-            {
+            yield return new KernelReady([
                 new KernelInfo("javascript", aliases: new[] { "js" })
                 {
                     LanguageName = "JavaScript",
@@ -389,7 +400,7 @@ public class SerializationTests
                         new KernelCommandInfo(nameof(SubmitCode))
                     }
                 }
-            });
+            ]);
 
             yield return new PackageAdded(
                 new ResolvedPackageReference(
@@ -454,7 +465,25 @@ public class SerializationTests
                     "<span>raw value</span>"),
                 new RequestValue("a", mimeType: HtmlFormatter.MimeType, targetKernelName: "csharp"));
 
-            yield return new InputProduced("user input", new RequestInput(prompt: "What is the path to the log file?", inputTypeHint: "file"));
+            yield return new InputProduced("user input", new RequestInput(prompt: "What is the path to the log file?", inputTypeHint: "file")
+            {
+                ParameterName = "filePath",
+                SaveAs = "the-file"
+            });
+
+            yield return new InputsProduced(
+                new Dictionary<string, string> { ["value"] = "tops3kr1tstuff" },
+                new RequestInputs
+                {
+                    Inputs =
+                    [
+                        new InputDescription("value", "Please enter a value.")
+                        {
+                            TypeHint = "password",
+                            SaveAs = "the-password"
+                        }
+                    ]
+                });
         }
     }
 
