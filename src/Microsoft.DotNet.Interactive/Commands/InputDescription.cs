@@ -25,6 +25,8 @@ public class InputDescription
 
     internal DirectiveExpressionNode ExpressionNode { get; set; }
 
+    public string GetPropertyNameForJsonSerialization() => DirectiveNode.FromPosixStyleToCamelCase(Name); 
+
     internal static InputDescription Parse(DirectiveExpressionNode expressionNode)
     {
         var requestInput = RequestInput.Parse(expressionNode);

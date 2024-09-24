@@ -6,7 +6,6 @@
 using System;
 
 namespace Microsoft.DotNet.Interactive.PowerShell;
-using System.Diagnostics.CodeAnalysis;
 
 public class SecretManager
 {

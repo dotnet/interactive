@@ -491,6 +491,11 @@ public class SubmissionParser
             return null;
         }
 
+        if (!_kernel.RootKernel.SupportsCommandType(typeof(RequestInputs)))
+        {
+            return null;
+        }
+
         ExpressionBindingResult formBindingResult = null;
 
         var expressionNodes = directiveNode.DescendantNodesAndTokens()
@@ -516,7 +521,7 @@ public class SubmissionParser
             {
                 foreach (var input in requestInputs.Inputs)
                 {
-                    var inputName = input.Name.Replace("-", "");
+                    var inputName = input.GetPropertyNameForJsonSerialization();
                     if (inputsProduced.Values.TryGetValue(inputName, out var value))
                     {
                         var directiveParameterValueNode = (DirectiveParameterValueNode)input.ExpressionNode.Parent!;

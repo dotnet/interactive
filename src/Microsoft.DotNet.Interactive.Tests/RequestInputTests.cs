@@ -142,15 +142,6 @@ public class RequestInputTests
               .Which.Values.Should().BeEquivalentTo(formValues);
     }
 
-    [Fact]
-    public void When_RequestInputs_is_not_supported_then_it_falls_back_to_sending_multiple_RequestInput_commands()
-    {
-        
-
-        // TODO (When_RequestInputs_is_not_supported_then_multiple_RequestInput_commands_are_sent) write test
-        throw new NotImplementedException();
-    }
-
     private static CompositeKernel CreateKernel()
     {
         var kernel = new CompositeKernel

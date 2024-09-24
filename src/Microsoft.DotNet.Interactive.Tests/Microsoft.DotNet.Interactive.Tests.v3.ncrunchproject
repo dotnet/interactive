@@ -73,6 +73,12 @@ var x = 123; // with some intervening code
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.RequestInputTests.When_Save_is_specified_then_subsequent_requests_reuse_the_saved_value</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.MultipleInputsWithinMagicCommandsTests.Previously_stored_values_are_used_to_prepopulate_input_fields</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.MultipleInputsWithinMagicCommandsTests.Input_field_values_can_be_stored_using_SecretManager</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

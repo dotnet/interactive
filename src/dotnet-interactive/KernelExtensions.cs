@@ -29,6 +29,11 @@ public static class KernelExtensions
         SecretManager secretManager = null)
         where TKernel : Kernel
     {
+        if (kernel.SupportsCommandType(typeof(SendValue)))
+        {
+            throw new InvalidOperationException($"A command handler for {nameof(SendValue)} is already registered on kernel {kernel.Name}.");
+        }
+
         var barrier = new Barrier(2);
         kernel.RegisterForDisposal(barrier);
         ConcurrentDictionary<string, FormattedValue> receivedValues = new(StringComparer.OrdinalIgnoreCase);
@@ -37,22 +42,24 @@ public static class KernelExtensions
         {
             var formId = Guid.NewGuid().ToString("N");
 
-            var inputs = requestInputs.Inputs;
+            var inputDescriptions = requestInputs.Inputs;
 
             PocketView html = div(
                 form[id: formId](
-                    inputs.Select(GetHtmlForSingleInput),
-                    button[onclick: $"event.preventDefault(); sendSendValueCommand(document.getElementById('{formId}'));"]("Ok")
-                    )
-            );
+                    inputDescriptions.Select(GetHtmlForSingleInput),
+                    button[onclick: $"event.preventDefault(); sendSendValueCommand(document.getElementById('{formId}'));"]("Ok")));
 
             PocketView GetHtmlForSingleInput(InputDescription inputDescription)
             {
-                var inputName = inputDescription.Name.Replace("-", "");
+                var inputName = inputDescription.GetPropertyNameForJsonSerialization();
 
                 var value = "";
 
-                // FIX: (UseFormsForMultipleInputs) secret management
+                if (inputDescription.SaveAs is not null && 
+                    secretManager is not null)
+                {
+                    secretManager.TryGetSecret(inputDescription.SaveAs, out value);
+                }  
 
                 return div(
                     label[@for: inputName](inputDescription.Prompt),
@@ -77,6 +84,20 @@ public static class KernelExtensions
             {
                 var values = JsonSerializer.Deserialize<Dictionary<string, string>>(formattedValue.Value);
 
+                if (secretManager is not null)
+                {
+                    foreach (var inputDescription in inputDescriptions)
+                    {
+                        if (inputDescription.SaveAs is not null)
+                        {
+                            if (values.TryGetValue(inputDescription.GetPropertyNameForJsonSerialization(), out var value))
+                            {
+                                secretManager.SetSecret(inputDescription.SaveAs, value);
+                            }
+                        }
+                    }
+                }
+
                 context.Publish(new InputsProduced(
                                     values,
                                     requestInputs));
@@ -86,8 +107,6 @@ public static class KernelExtensions
                 context.Fail(requestInputs, message: "No input received.");
             }
         });
-
-        // FIX: (UseFormsForMultipleInputs) what if there's already a handler for this?
         kernel.RegisterCommandHandler<SendValue>((sendValue, context) =>
         {
             receivedValues[sendValue.Name] = sendValue.FormattedValue;

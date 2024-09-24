@@ -74,7 +74,6 @@ public class RequestInput : KernelCommand
 
             if (string.IsNullOrWhiteSpace(requestInput.Prompt))
             {
-                // FIX: (Parse) prompt doesn't get set properly if it was not specified
                 requestInput.Prompt = $"Please enter a value for parameter: {parameterName}";
             }
         }

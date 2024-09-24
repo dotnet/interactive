@@ -116,8 +116,8 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
 
         var receiver = new KernelCommandAndEventReceiver(t =>
         {
-            var commandOrEvent = _messageQueue.Take(t);
             readCount++;
+            var commandOrEvent = _messageQueue.Take(t);
             return commandOrEvent;
         });
 

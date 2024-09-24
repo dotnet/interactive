@@ -10,6 +10,8 @@ using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Directives;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -20,10 +22,23 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
     private readonly CompositeKernel _kernel;
     private readonly KernelActionDirective _shimCommand;
     private readonly List<ShimCommand> _receivedShimCommands = new();
+    private readonly SecretManager _secretManager;
 
     public MultipleInputsWithinMagicCommandsTests()
     {
-        _kernel = CreateKernel();
+        var powerShellKernel = new PowerShellKernel();
+
+        _secretManager = new SecretManager(powerShellKernel);
+
+        _kernel = new CompositeKernel
+        {
+            new CSharpKernel()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseValueSharing(),
+            powerShellKernel, 
+            new KeyValueStoreKernel()
+        }.UseFormsForMultipleInputs(_secretManager);
 
         _shimCommand = new("#!shim")
         {
@@ -34,7 +49,8 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
                 new("--value")
                 {
                     AllowImplicitName = true
-                }
+                },
+                new("--another-value")
             }
         };
 
@@ -51,6 +67,8 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         public string Name { get; set; }
 
         public string Value { get; set; }
+
+        public string AnotherValue { get; set; }
     }
 
     public void Dispose()
@@ -64,12 +82,13 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
         {
             ["name"] = "age",
-            ["value"] = "123"
+            ["value"] = "123",
+            ["anotherValue"] = "456"
         });
 
         var result = await _kernel.SendAsync(
                          new SubmitCode("""
-                                        #!shim --name @input --value @input:{"type": "date"}
+                                        #!shim --name @input --value @input:{"type": "date"} --another-value 456
                                         """, "csharp"));
 
         result.Events.Should().NotContainErrors();
@@ -79,6 +98,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         var receivedCommand=  _receivedShimCommands.Should().ContainSingle().Which;
         receivedCommand.Name.Should().Be("age");
         receivedCommand.Value.Should().Be("123");
+        receivedCommand.AnotherValue.Should().Be("456");
     }
 
     [Fact]
@@ -100,6 +120,65 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         _kernel.FindKernelByName("csharp").As<CSharpKernel>().TryGetValue<string>("age", out var boundValue);
 
         boundValue.Should().Be("123");
+    }
+
+    [Fact]
+    public async Task Input_field_values_can_be_stored_using_SecretManager()
+    {
+        // make the secret name unique across runs
+        var secretName = nameof(Previously_stored_values_are_used_to_prepopulate_input_fields) + DateTime.UtcNow.Ticks;
+
+        _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
+        {
+            ["name"] = "age",
+            ["value"] = "123"
+        });
+
+        var result = await _kernel.SendAsync(
+                         new SubmitCode($$"""
+                                          #!set --name @input --value @input:{"saveAs": "{{secretName}}"}
+                                          """, "csharp"));
+
+        result.Events.Should().NotContainErrors();
+
+        _secretManager.TryGetSecret(secretName, out var storedValue).Should().BeTrue();
+
+        storedValue.Should().Be("123");
+    }
+
+    [Fact]
+    public async Task Previously_stored_values_are_used_to_prepopulate_input_fields()
+    {
+        // make the secret name unique across runs
+        var secretName = nameof(Previously_stored_values_are_used_to_prepopulate_input_fields) + DateTime.UtcNow.Ticks;
+
+        var theStoredValue = "the stored value";
+        _secretManager.SetSecret(name: secretName, value: theStoredValue);
+
+        _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
+        {
+            ["name"] = "age",
+            ["value"] = "123"
+        });
+
+        using var events = _kernel.KernelEvents.ToSubscribedList();
+
+        await _kernel.SendAsync(
+            new SubmitCode($$"""
+                             #!shim --name @input --value @input:{"saveAs": "{{secretName}}"}
+                             """, "csharp"));
+
+        events.Should().NotContainErrors();
+
+        events.Should().ContainSingle<DisplayedValueProduced>()
+              .Which
+              .FormattedValues
+              .Should()
+              .ContainSingle()
+              .Which
+              .Value
+              .Should()
+              .Match($"*<input * name=\"value\" value=\"{theStoredValue}\"*");
     }
 
     [Fact]
@@ -158,6 +237,45 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         requestInputSent.Should().BeNull();
     }
 
+    [Fact]
+    public async Task When_RequestInputs_is_not_supported_then_it_falls_back_to_sending_multiple_RequestInput_commands()
+    {
+        using var kernel = new CompositeKernel
+        {
+            new CSharpKernel()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseValueSharing(),
+            new KeyValueStoreKernel()
+        };
+        List<RequestInput> receivedRequestInputs = [];
+        Queue<string> responses = new();
+        responses.Enqueue("one");
+        responses.Enqueue("two");
+
+        kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+        {
+            receivedRequestInputs.Add(requestInput);
+            context.Publish(new InputProduced(responses.Dequeue(), requestInput));
+            return Task.CompletedTask;
+        });
+
+        kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), _kernel.Name);
+
+        var result = await kernel.SendAsync(
+                         new SubmitCode("""
+                                        #!set --name @input --value @password
+                                        """, "csharp"));
+
+        result.Events.Should().NotContainErrors();
+
+        using var _ = new AssertionScope();
+
+        receivedRequestInputs.Should().HaveCount(2);
+        receivedRequestInputs[0].ParameterName.Should().Be("--name");
+        receivedRequestInputs[1].ParameterName.Should().Be("--value");
+    }
+
     [Theory]
     [MemberData(nameof(LanguageServiceCommands))]
     public async Task Language_service_commands_do_not_trigger_input_requests(KernelCommand command)
@@ -202,14 +320,4 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         yield return [new RequestDiagnostics(code, targetKernelName: "csharp")];
         yield return [new RequestSignatureHelp(code, new LinePosition(0, 3), targetKernelName: "csharp")];
     }
-
-    private static CompositeKernel CreateKernel() =>
-        new CompositeKernel
-        {
-            new CSharpKernel()
-                .UseNugetDirective()
-                .UseKernelHelpers()
-                .UseValueSharing(),
-            new KeyValueStoreKernel()
-        }.UseFormsForMultipleInputs();
 }
