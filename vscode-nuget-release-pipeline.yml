@@ -1,0 +1,61 @@
+﻿trigger: none
+pr: none
+
+resources:
+  pipelines:
+    - pipeline: interactive-ci  # alias
+      source: dotnet/interactive/interactive-ci
+      branch: main
+
+variables:
+  simulate: $(isSimulated)
+  DotNetNugetApiKey: $(DotNetNugetApiKey-A1)
+  vscodeTargets: $(listVSCodeTargets)
+
+pool:
+  vmImage: 'windows-2022'
+
+stages:
+- stage: Publish
+  jobs:
+  - job: PublishExtension
+    displayName: 'Publish VS Code Extension'
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Authenticate with Azure'
+      inputs:
+        azureSubscription: 'VSCode Marketplace Publishing'
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: 'echo "Azure CLI authenticated."'
+
+    # Download pipeline artifacts
+    - task: DownloadPipelineArtifact@2
+      displayName: '📦 Download artifacts from build pipeline'
+      inputs:
+        buildType: 'specific'
+        project: 'internal'
+        definition: 743
+        buildVersionToDownload: 'specific'
+        buildId: '$(resources.pipeline.interactive-ci.runID)'  # Dynamically fetch the latest build ID
+        branchName: '$(resources.pipeline.officialBuildCI.sourceBranch)'
+        path: '$(Pipeline.Workspace)/artifacts'  # Specify a clear download path
+
+    # List files and folders under ArtifactsDirectory for debugging
+    - pwsh: |
+        Get-ChildItem -Path '$(Pipeline.Workspace)/artifacts' -Recurse
+      displayName: 'List files and folders under ArtifactsDirectory'
+
+    - pwsh: |
+        npm install --global @vscode/vsce
+      displayName: 'Install VSCE'
+
+    # Publish Extension using the downloaded artifacts
+    - task: PowerShell@2
+      displayName: 'Publish Extension'
+      inputs:
+        targetType: 'filePath'
+        filePath: '$(Pipeline.Workspace)\artifacts\vscode\PublishVSCodeExtensionUsingMI.ps1'
+        arguments: '-artifactsPath $(Pipeline.Workspace)\artifacts -vscodeTargetsList "$(vscodeTargets)" -nugetToken "$(DotNetNugetApiKey)" -isSimulated $(simulate)'
+        pwsh: true
+        verbose: true
