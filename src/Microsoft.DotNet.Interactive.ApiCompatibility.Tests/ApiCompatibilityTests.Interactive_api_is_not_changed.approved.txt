@@ -372,6 +372,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.String Prompt { get;}
     public System.String SaveAs { get; set;}
     public System.String TypeHint { get; set;}
+    public System.String GetPropertyNameForJsonSerialization()
   public abstract class KernelCommand, System.IEquatable<KernelCommand>
     public System.Uri DestinationUri { get; set;}
     public Microsoft.DotNet.Interactive.KernelCommandInvocation Handler { get; set;}
