@@ -451,7 +451,7 @@ public static class CommandLineParser
         }
     }
 
-    private static CompositeKernel CreateKernel(
+    internal static CompositeKernel CreateKernel(
         string defaultKernelName,
         FrontendEnvironment frontendEnvironment,
         StartupOptions startupOptions,
@@ -485,10 +485,11 @@ public static class CommandLineParser
                 .UseValueSharing(),
             new[] { "f#", "F#" });
 
+        var powerShellKernel = new PowerShellKernel()
+                               .UseProfiles()
+                               .UseValueSharing();
         compositeKernel.Add(
-            new PowerShellKernel()
-                .UseProfiles()
-                .UseValueSharing(),
+            powerShellKernel,
             new[] { "powershell" });
 
         compositeKernel.Add(
@@ -505,13 +506,15 @@ public static class CommandLineParser
             new HttpKernel()
                 .UseValueSharing());
 
+        var secretManager = new SecretManager(powerShellKernel);
+
         var kernel = compositeKernel
-            .UseDefaultMagicCommands()
-            .UseAboutMagicCommand()
-            .UseImportMagicCommand()
-            .UseSecretManager()
-            .UseFormsForMultipleInputs()
-            .UseNuGetExtensions(telemetrySender);
+                     .UseDefaultMagicCommands()
+                     .UseAboutMagicCommand()
+                     .UseImportMagicCommand()
+                     .UseSecretManager(secretManager)
+                     .UseFormsForMultipleInputs(secretManager)
+                     .UseNuGetExtensions(telemetrySender);
 
         kernel.AddKernelConnector(new ConnectSignalRDirective());
         kernel.AddKernelConnector(new ConnectStdIoDirective(startupOptions.KernelHost));

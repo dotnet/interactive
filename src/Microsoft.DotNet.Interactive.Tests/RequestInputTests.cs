@@ -144,15 +144,17 @@ public class RequestInputTests
 
     private static CompositeKernel CreateKernel()
     {
+        var powerShellKernel = new PowerShellKernel();
+
         var kernel = new CompositeKernel
         {
             new CSharpKernel()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseValueSharing(),
-            new PowerShellKernel(),
+            powerShellKernel,
             new KeyValueStoreKernel()
-        }.UseSecretManager();
+        }.UseSecretManager(new SecretManager(powerShellKernel));
 
         kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), kernel.Name);
 

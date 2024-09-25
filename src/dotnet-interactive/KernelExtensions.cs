@@ -213,10 +213,12 @@ public static class KernelExtensions
         return kernel;
     }
 
-    public static CompositeKernel UseSecretManager(this CompositeKernel kernel)
+    public static CompositeKernel UseSecretManager(this CompositeKernel kernel, SecretManager secretManager)
     {
-        PowerShellKernel powerShellKernel = null;
-        SecretManager secretManager = null;
+        if (secretManager is null)
+        {
+            throw new ArgumentNullException(nameof(secretManager));
+        }
 
         kernel.AddMiddleware(async (command, context, next) =>
         {
@@ -224,22 +226,6 @@ public static class KernelExtensions
             {
                 await next(command, context);
                 return;
-            }
-
-            if (secretManager is null)
-            {
-                powerShellKernel = kernel.ChildKernels.OfType<PowerShellKernel>().FirstOrDefault();
-
-                if (powerShellKernel is not null)
-                {
-                    secretManager = new(powerShellKernel);
-                }
-                else
-                {
-                    // FIX: (UseSecretManager) what's the best thing to do here? maybe silently ignore? display a warning?
-                    await next(command, context);
-                    return;
-                }
             }
 
             if (secretManager.TryGetSecret(requestInput.SaveAs, out var value))
