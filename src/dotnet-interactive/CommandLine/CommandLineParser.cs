@@ -212,7 +212,7 @@ public static class CommandLineParser
             async Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
             {
                 var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
-                var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
+                var kernel = KernelBuilder.CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
                 cancellationToken.Register(kernel.Dispose);
 
                 await JupyterClientKernelExtension.LoadAsync(kernel);
@@ -330,7 +330,7 @@ public static class CommandLineParser
                                                                   ? new HtmlNotebookFrontendEnvironment()
                                                                   : new BrowserFrontendEnvironment();
 
-                    var kernel = CreateKernel(
+                    var kernel = KernelBuilder.CreateKernel(
                         options.DefaultKernel,
                         frontendEnvironment,
                         startupOptions,
@@ -449,88 +449,6 @@ public static class CommandLineParser
             var pr = new HttpPortRange(start, end);
             return pr;
         }
-    }
-
-    internal static CompositeKernel CreateKernel(
-        string defaultKernelName,
-        FrontendEnvironment frontendEnvironment,
-        StartupOptions startupOptions,
-        TelemetrySender telemetrySender)
-    {
-        using var _ = Log.OnEnterAndExit("Creating Kernels");
-
-        var compositeKernel = new CompositeKernel();
-        compositeKernel.FrontendEnvironment = frontendEnvironment;
-
-        // TODO: temporary measure to support vscode integrations
-        compositeKernel.Add(new SqlDiscoverabilityKernel());
-        compositeKernel.Add(new KqlDiscoverabilityKernel());
-
-        compositeKernel.Add(
-            new CSharpKernel()
-                .UseNugetDirective()
-                .UseKernelHelpers()
-                .UseWho()
-                .UseMathAndLaTeX()
-                .UseValueSharing(),
-            new[] { "c#", "C#" });
-
-        compositeKernel.Add(
-            new FSharpKernel()
-                .UseDefaultFormatting()
-                .UseNugetDirective()
-                .UseKernelHelpers()
-                .UseWho()
-                .UseMathAndLaTeX()
-                .UseValueSharing(),
-            new[] { "f#", "F#" });
-
-        var powerShellKernel = new PowerShellKernel()
-                               .UseProfiles()
-                               .UseValueSharing();
-        compositeKernel.Add(
-            powerShellKernel,
-            new[] { "powershell" });
-
-        compositeKernel.Add(
-            new HtmlKernel());
-
-        compositeKernel.Add(
-            new KeyValueStoreKernel()
-                .UseWho());
-
-        compositeKernel.Add(
-            new MermaidKernel());
-
-        compositeKernel.Add(
-            new HttpKernel()
-                .UseValueSharing());
-
-        var secretManager = new SecretManager(powerShellKernel);
-
-        var kernel = compositeKernel
-                     .UseDefaultMagicCommands()
-                     .UseAboutMagicCommand()
-                     .UseImportMagicCommand()
-                     .UseSecretManager(secretManager)
-                     .UseFormsForMultipleInputs(secretManager)
-                     .UseNuGetExtensions(telemetrySender);
-
-        kernel.AddKernelConnector(new ConnectSignalRDirective());
-        kernel.AddKernelConnector(new ConnectStdIoDirective(startupOptions.KernelHost));
-
-        kernel.AddKernelConnector(
-            new ConnectJupyterKernelDirective()
-            .AddConnectionOptions(new JupyterHttpKernelConnectionOptions())
-            .AddConnectionOptions(new JupyterLocalKernelConnectionOptions()));
-
-        SetUpFormatters(frontendEnvironment);
-
-        kernel.DefaultKernelName = defaultKernelName;
-
-        kernel.UseTelemetrySender(telemetrySender);
-
-        return kernel;
     }
 
     public static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
