@@ -35,11 +35,38 @@ export function createHost(
     });
 
     // use composite kernel as root
-
     global.kernel = {
         get root() {
             return compositeKernel;
         }
+    };
+
+    global.sendSendValueCommand = (form: any) => {
+        let formValues: any = {};
+
+        for (var i = 0; i < form.elements.length; i++) {
+            var e = form.elements[i];
+
+            if (e.name && e.name !== '') {
+                let name = e.name.replace('-', '');
+                formValues[name] = e.value;
+            }
+        }
+
+        let command = {
+            formattedValue: {
+                mimeType: 'application/json',
+                value: JSON.stringify(formValues)
+            },
+            name: form.id,
+            targetKernelName: '.NET'
+        };
+
+        let envelope = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SendValueType, command);
+
+        form.remove();
+
+        compositeKernel.send(envelope);
     };
 
     global[compositeKernelName] = {

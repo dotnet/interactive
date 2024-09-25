@@ -1,12 +1,15 @@
 {
   "token": "the-token",
-  "commandType": "RequestInput",
+  "commandType": "RequestInputs",
   "command": {
-    "parameterName": null,
-    "prompt": "provide answer",
-    "isPassword": true,
-    "saveAs": null,
-    "type": "password",
+    "inputs": [
+      {
+        "name": "value",
+        "prompt": "Please enter a value.",
+        "saveAs": "the-password",
+        "type": "password"
+      }
+    ],
     "targetKernelName": null,
     "originUri": null,
     "destinationUri": null

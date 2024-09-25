@@ -72,6 +72,7 @@ public abstract class KernelEventEnvelope : IKernelEventEnvelope
             [nameof(IncompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<IncompleteCodeSubmissionReceived>),
             [nameof(HoverTextProduced)] = typeof(KernelEventEnvelope<HoverTextProduced>),
             [nameof(InputProduced)] = typeof(KernelEventEnvelope<InputProduced>),
+            [nameof(InputsProduced)] = typeof(KernelEventEnvelope<InputsProduced>),
             [nameof(KernelInfoProduced)] = typeof(KernelEventEnvelope<KernelInfoProduced>),
             [nameof(KernelReady)] = typeof(KernelEventEnvelope<KernelReady>),
             [nameof(PackageAdded)] = typeof(KernelEventEnvelope<PackageAdded>),

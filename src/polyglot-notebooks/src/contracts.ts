@@ -19,6 +19,7 @@ export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
 export const RequestInputType = "RequestInput";
+export const RequestInputsType = "RequestInputs";
 export const RequestKernelInfoType = "RequestKernelInfo";
 export const RequestSignatureHelpType = "RequestSignatureHelp";
 export const RequestValueType = "RequestValue";
@@ -43,6 +44,7 @@ export type KernelCommandType =
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
     | typeof RequestInputType
+    | typeof RequestInputsType
     | typeof RequestKernelInfoType
     | typeof RequestSignatureHelpType
     | typeof RequestValueType
@@ -116,8 +118,13 @@ export interface RequestHoverText extends LanguageServiceCommand {
 export interface RequestInput extends KernelCommand {
     inputTypeHint: string;
     isPassword: boolean;
+    parameterName: string;
     prompt: string;
     saveAs: string;
+}
+
+export interface RequestInputs extends KernelCommand {
+    inputs: Array<InputDescription>;
 }
 
 export interface RequestKernelInfo extends KernelCommand {
@@ -235,6 +242,7 @@ export const ErrorProducedType = "ErrorProduced";
 export const HoverTextProducedType = "HoverTextProduced";
 export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionReceived";
 export const InputProducedType = "InputProduced";
+export const InputsProducedType = "InputsProduced";
 export const KernelExtensionLoadedType = "KernelExtensionLoaded";
 export const KernelInfoProducedType = "KernelInfoProduced";
 export const KernelReadyType = "KernelReady";
@@ -262,6 +270,7 @@ export type KernelEventType =
     | typeof HoverTextProducedType
     | typeof IncompleteCodeSubmissionReceivedType
     | typeof InputProducedType
+    | typeof InputsProducedType
     | typeof KernelExtensionLoadedType
     | typeof KernelInfoProducedType
     | typeof KernelReadyType
@@ -338,6 +347,10 @@ export interface IncompleteCodeSubmissionReceived extends KernelEvent {
 
 export interface InputProduced extends KernelEvent {
     value: string;
+}
+
+export interface InputsProduced extends KernelEvent {
+    values: { [key: string]: string; };
 }
 
 export interface KernelExtensionLoaded extends KernelEvent {
@@ -437,6 +450,13 @@ export interface FormattedValue {
     mimeType: string;
     suppressDisplay: boolean;
     value: string;
+}
+
+export interface InputDescription {
+    name: string;
+    prompt: string;
+    saveAs: string;
+    typeHint: string;
 }
 
 export interface InteractiveDocument {

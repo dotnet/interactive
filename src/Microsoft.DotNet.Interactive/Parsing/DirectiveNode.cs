@@ -439,7 +439,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     private static readonly Regex _kebabCaseRegex = new("-[\\w]", RegexOptions.Compiled);
 
-    private static string FromPosixStyleToCamelCase(string value) =>
+    internal static string FromPosixStyleToCamelCase(string value) =>
         _kebabCaseRegex.Replace(
             value.TrimStart('-'),
             m => m.ToString().TrimStart('-').ToUpper());

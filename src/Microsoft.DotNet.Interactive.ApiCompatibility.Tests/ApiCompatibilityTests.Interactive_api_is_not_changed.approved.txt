@@ -366,6 +366,13 @@ Microsoft.DotNet.Interactive.Commands
   public class ImportDocument : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String filePath, System.String targetKernelName = null)
     public System.String FilePath { get;}
+  public class InputDescription
+    .ctor(System.String name, System.String prompt = null)
+    public System.String Name { get;}
+    public System.String Prompt { get;}
+    public System.String SaveAs { get; set;}
+    public System.String TypeHint { get; set;}
+    public System.String GetPropertyNameForJsonSerialization()
   public abstract class KernelCommand, System.IEquatable<KernelCommand>
     public System.Uri DestinationUri { get; set;}
     public Microsoft.DotNet.Interactive.KernelCommandInvocation Handler { get; set;}
@@ -396,11 +403,15 @@ Microsoft.DotNet.Interactive.Commands
   public class RequestHoverText : LanguageServiceCommand, System.IEquatable<KernelCommand>
     .ctor(System.String code, Microsoft.DotNet.Interactive.LinePosition linePosition, System.String targetKernelName = null)
   public class RequestInput : KernelCommand, System.IEquatable<KernelCommand>
-    .ctor(System.String prompt, System.String targetKernelName = null, System.String inputTypeHint = null)
+    .ctor(System.String prompt, System.String inputTypeHint = null)
     public System.String InputTypeHint { get; set;}
     public System.Boolean IsPassword { get;}
+    public System.String ParameterName { get; set;}
     public System.String Prompt { get;}
     public System.String SaveAs { get; set;}
+  public class RequestInputs : KernelCommand, System.IEquatable<KernelCommand>
+    .ctor()
+    public System.Collections.Generic.List<InputDescription> Inputs { get; set;}
   public class RequestKernelInfo : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String targetKernelName = null)
     .ctor(System.Uri destinationUri)
@@ -464,6 +475,7 @@ Microsoft.DotNet.Interactive.Connection
     public static KernelCommandAndEventReceiver FromNamedPipe(System.IO.Pipes.PipeStream stream)
     public static KernelCommandAndEventReceiver FromObservable(System.IObservable<System.String> messages)
     public static KernelCommandAndEventReceiver FromTextReader(System.IO.TextReader reader)
+    .ctor(ReadCommandOrEventAsync readCommandOrEvent)
     .ctor(ReadCommandOrEvent readCommandOrEvent)
     public System.Void Dispose()
     public System.IDisposable Subscribe(System.IObserver<CommandOrEvent> observer)
@@ -518,6 +530,11 @@ Microsoft.DotNet.Interactive.Connection
     public System.IAsyncResult BeginInvoke(System.Threading.CancellationToken cancellationToken, System.AsyncCallback callback, System.Object object)
     public CommandOrEvent EndInvoke(System.IAsyncResult result)
     public CommandOrEvent Invoke(System.Threading.CancellationToken cancellationToken = null)
+  public delegate ReadCommandOrEventAsync : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
+    .ctor(System.Object object, System.IntPtr method)
+    public System.IAsyncResult BeginInvoke(System.Threading.CancellationToken cancellationToken, System.AsyncCallback callback, System.Object object)
+    public System.Threading.Tasks.Task<CommandOrEvent> EndInvoke(System.IAsyncResult result)
+    public System.Threading.Tasks.Task<CommandOrEvent> Invoke(System.Threading.CancellationToken cancellationToken = null)
   public static class Serializer
     public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
     public static CommandOrEvent DeserializeCommandOrEvent(System.String json)
@@ -622,6 +639,9 @@ Microsoft.DotNet.Interactive.Events
   public class InputProduced : KernelEvent
     .ctor(System.String value, Microsoft.DotNet.Interactive.Commands.RequestInput command)
     public System.String Value { get;}
+  public class InputsProduced : KernelEvent
+    .ctor(System.Collections.Generic.Dictionary<System.String,System.String> values, Microsoft.DotNet.Interactive.Commands.RequestInputs command)
+    public System.Collections.Generic.Dictionary<System.String,System.String> Values { get;}
   public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     PlainText=1
     Snippet=2

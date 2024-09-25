@@ -2,9 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -21,6 +24,106 @@ namespace Microsoft.DotNet.Interactive.App;
 
 public static class KernelExtensions
 {
+    public static TKernel UseFormsForMultipleInputs<TKernel>(
+        this TKernel kernel, 
+        SecretManager secretManager = null)
+        where TKernel : Kernel
+    {
+        if (kernel.SupportsCommandType(typeof(SendValue)))
+        {
+            throw new InvalidOperationException($"A command handler for {nameof(SendValue)} is already registered on kernel {kernel.Name}.");
+        }
+
+        var barrier = new Barrier(2);
+        kernel.RegisterForDisposal(barrier);
+        ConcurrentDictionary<string, FormattedValue> receivedValues = new(StringComparer.OrdinalIgnoreCase);
+
+        kernel.RegisterCommandHandler<RequestInputs>(async (requestInputs, context) =>
+        {
+            var formId = Guid.NewGuid().ToString("N");
+
+            var inputDescriptions = requestInputs.Inputs;
+
+            PocketView html = div(
+                form[id: formId](
+                    inputDescriptions.Select(GetHtmlForSingleInput),
+                    button[onclick: $"event.preventDefault(); sendSendValueCommand(document.getElementById('{formId}'));"]("Ok")));
+
+            PocketView GetHtmlForSingleInput(InputDescription inputDescription)
+            {
+                var inputName = inputDescription.GetPropertyNameForJsonSerialization();
+
+                var value = "";
+
+                if (inputDescription.SaveAs is not null && 
+                    secretManager is not null)
+                {
+                    secretManager.TryGetSecret(inputDescription.SaveAs, out value);
+                }  
+
+                return div(
+                    label[@for: inputName](inputDescription.Prompt),
+                    br,
+                    input[
+                        "required",
+                        type: inputDescription.TypeHint,
+                        id: inputName,
+                        name: inputName,
+                        value: value,
+                        onkeydown: "event.stopPropagation()" // prevent event bubbling from triggering (for example) key commands in VS Code
+                    ]());
+            }
+
+            context.Display(html);
+
+            await Task.Yield();
+
+            barrier.SignalAndWait(context.CancellationToken);
+
+            if (receivedValues.TryGetValue(formId, out var formattedValue))
+            {
+                var values = JsonSerializer.Deserialize<Dictionary<string, string>>(formattedValue.Value);
+
+                if (secretManager is not null)
+                {
+                    foreach (var inputDescription in inputDescriptions)
+                    {
+                        if (inputDescription.SaveAs is not null)
+                        {
+                            if (values.TryGetValue(inputDescription.GetPropertyNameForJsonSerialization(), out var value))
+                            {
+                                secretManager.SetSecret(inputDescription.SaveAs, value);
+                            }
+                        }
+                    }
+                }
+
+                context.Publish(new InputsProduced(
+                                    values,
+                                    requestInputs));
+            }
+            else
+            {
+                context.Fail(requestInputs, message: "No input received.");
+            }
+        });
+        kernel.RegisterCommandHandler<SendValue>((sendValue, context) =>
+        {
+            receivedValues[sendValue.Name] = sendValue.FormattedValue;
+
+            // don't wait on the barrier if the form hasn't been displayed 
+            if (barrier.ParticipantsRemaining == 1)
+            {
+                barrier.SignalAndWait(context.CancellationToken);
+            }
+
+            return Task.CompletedTask;
+        });
+
+        return kernel;
+    }
+
+
     public static CSharpKernel UseNugetDirective(this CSharpKernel kernel, bool forceRestore = false)
     {
         kernel.UseNugetDirective((k, resolvedPackageReference) =>
@@ -110,10 +213,12 @@ public static class KernelExtensions
         return kernel;
     }
 
-    public static CompositeKernel UseSecretManager(this CompositeKernel kernel)
+    public static CompositeKernel UseSecretManager(this CompositeKernel kernel, SecretManager secretManager)
     {
-        PowerShellKernel powerShellKernel = null;
-        SecretManager secretManager = null;
+        if (secretManager is null)
+        {
+            throw new ArgumentNullException(nameof(secretManager));
+        }
 
         kernel.AddMiddleware(async (command, context, next) =>
         {
@@ -121,22 +226,6 @@ public static class KernelExtensions
             {
                 await next(command, context);
                 return;
-            }
-
-            if (secretManager is null)
-            {
-                powerShellKernel = kernel.ChildKernels.OfType<PowerShellKernel>().FirstOrDefault();
-
-                if (powerShellKernel is not null)
-                {
-                    secretManager = new(powerShellKernel);
-                }
-                else
-                {
-                    // FIX: (UseSecretManager) what's the best thing to do here? maybe silently ignore? display a warning?
-                    await next(command, context);
-                    return;
-                }
             }
 
             if (secretManager.TryGetSecret(requestInput.SaveAs, out var value))
