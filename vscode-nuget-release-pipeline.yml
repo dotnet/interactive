@@ -8,9 +8,13 @@ resources:
       branch: main
 
 variables:
-  simulate: $(isSimulated)
-  DotNetNugetApiKey: $(DotNetNugetApiKey-A1)
-  vscodeTargets: $(listVSCodeTargets)
+- group: '.NET Core Nuget API Keys'
+- name : simulate
+  value: $(isSimulated)
+- name : DotNetNugetApiKey
+  value: $(DotNetNugetApiKey-A1)
+- name : vscodeTargets
+  value: $(listVSCodeTargets)
 
 pool:
   vmImage: 'windows-2022'
