@@ -89,9 +89,9 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
 
         // FIX: (InitializeDbContextAsync) package versions to make them reference the ones that are already referenced at build time
         var submission1 = $$"""
-            #r "nuget: Microsoft.Data.SqlClient, 5.2.0"
-            #r "nuget: Microsoft.EntityFrameworkCore.Design, 8.0.6"
-            #r "nuget: Microsoft.EntityFrameworkCore.SqlServer, 8.0.6"
+            #r "nuget: Microsoft.Data.SqlClient, 5.2.2"
+            #r "nuget: Microsoft.EntityFrameworkCore.Design, 8.0.8"
+            #r "nuget: Microsoft.EntityFrameworkCore.SqlServer, 8.0.8"
             #r "nuget: Humanizer.Core, 2.14.1"
             #r "nuget: Humanizer, 2.14.1"
             #r "nuget: Microsoft.Identity.Client, 4.61.3"
