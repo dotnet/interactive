@@ -57,6 +57,11 @@ public class PolyglotParserConfigurationTests
                             Parameters =
                             {
                                 new KernelDirectiveParameter("file")
+                                {
+                                    AllowImplicitName = true,
+                                    Required = true,
+                                    TypeHint = "file"
+                                }
                             }
                         },
                         new KernelActionDirective("#!connect")
@@ -105,6 +110,10 @@ public class PolyglotParserConfigurationTests
                                         {
                                             AllowImplicitName = true,
                                             Required = true
+                                        },
+                                        new KernelDirectiveParameter("--create-dbcontext")
+                                        {
+                                            Flag = true
                                         }
                                     },
                                     KernelCommandType = typeof(ConnectMsSql)
@@ -188,6 +197,8 @@ internal class KernelCommand
 internal class ConnectMsSql : KernelCommand
 {
     public string ConnectionString { get; set; }
+
+    public bool CreateDbContext { get; set; }
 }
 
 internal class SendValue : KernelCommand

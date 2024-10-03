@@ -131,10 +131,13 @@ public class InterfaceGenerator
 
         var emittedTypes = new HashSet<Type>(WellKnownTypes.Keys);
 
-        builder.AppendLine(@"// Copyright (c) .NET Foundation and contributors. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+        builder.AppendLine(
+            """
+            // Copyright (c) .NET Foundation and contributors. All rights reserved.
+            // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// Generated TypeScript interfaces and types.");
+            // Generated TypeScript interfaces and types.
+            """);
 
         var requiredTypes = new List<Type>();
 
@@ -271,6 +274,12 @@ public class InterfaceGenerator
                          OptionalFields.Contains($"{type.Name}.{propertyInfo.Name}");
 
         var propertyName = propertyInfo.Name.CamelCase();
+
+        if (propertyInfo.GetCustomAttribute<JsonPropertyNameAttribute>() is {} jsonPropertyNameAttribute)
+        {
+            propertyName = jsonPropertyNameAttribute.Name;
+        }
+
         return isOptional
             ? propertyName + "?"
             : propertyName;
