@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -83,7 +84,8 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         {
             ["name"] = "age",
             ["value"] = "123",
-            ["anotherValue"] = "456"
+            ["anotherValue"] = "456",
+            ["fileValue"] = @"c:\temp\some-file.txt",
         });
 
         var result = await _kernel.SendAsync(
@@ -120,6 +122,120 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         _kernel.FindKernelByName("csharp").As<CSharpKernel>().TryGetValue<string>("age", out var boundValue);
 
         boundValue.Should().Be("123");
+    }
+
+    [Fact]
+    public async Task An_input_type_hint_is_set_when_the_expected_parameter_specifies_it()
+    {
+        _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file")
+        {
+            TypeHint = "file"
+        });
+
+        RequestInputs requestInputsSent = null;
+        _kernel.AddMiddleware(async (command, context, next) =>
+        {
+            if (command is RequestInputs requestInput)
+            {
+                requestInputsSent = requestInput;
+            }
+
+            await next(command, context);
+        });
+
+        var fileValue = @"c:\temp\some-file.txt";
+        _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
+        {
+            ["name"] = "theFile",
+            ["file"] = fileValue
+        });
+
+        var result = await _kernel.SendAsync(
+                         new SubmitCode("""
+                                        #!shim --name @input --file @input
+                                        """, "csharp"));
+
+        result.Events.Should().NotContainErrors();
+
+        requestInputsSent.Inputs.Where(description => description.Name == "--file")
+                         .Should().ContainSingle()
+                         .Which
+                         .TypeHint.Should()
+                         .Be("file");
+    }
+
+    [Fact]
+    public async Task Type_hint_is_set_based_on_inline_JSON_configuration_of_the_input_token()
+    {
+        RequestInputs requestInputsSent = null;
+        _kernel.AddMiddleware(async (command, context, next) =>
+        {
+            if (command is RequestInputs requestInput)
+            {
+                requestInputsSent = requestInput;
+            }
+
+            await next(command, context);
+        });
+
+        _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
+        {
+            ["name"] = "theFile",
+            ["date"] = "2022-01-01"
+        });
+
+        var result = await _kernel.SendAsync(
+                         new SubmitCode("""
+                                        #!shim --name @input --value @input{"type": "date"}
+                                        """, "csharp"));
+
+        result.Events.Should().NotContainErrors();
+
+        requestInputsSent.Inputs.Where(description => description.Name == "--value")
+                         .Should().ContainSingle()
+                         .Which
+                         .TypeHint.Should()
+                         .Be("date");
+    }
+
+    [Fact]
+    public async Task Type_hint_is_overridden_based_on_inline_JSON_configuration_of_the_input_token()
+    {
+        _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file")
+        {
+            TypeHint = "file"
+        });
+
+        RequestInputs requestInputsSent = null;
+        _kernel.AddMiddleware(async (command, context, next) =>
+        {
+            if (command is RequestInputs requestInput)
+            {
+                requestInputsSent = requestInput;
+            }
+
+            await next(command, context);
+        });
+
+        var fileValue = @"c:\temp\some-file.txt";
+        _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
+        {
+            ["name"] = "theFile",
+            ["file"] = fileValue
+        });
+
+        var result = await _kernel.SendAsync(
+                         new SubmitCode("""
+                                        #!shim --name @input --file @input{"type": "date"}
+                                        """, "csharp"));
+
+        result.Events.Should().NotContainErrors();
+
+        requestInputsSent.Inputs.Where(description => description.Name == "--file")
+                         .Should().ContainSingle()
+                         .Which
+                         .TypeHint.Should()
+                         .Be("date");
     }
 
     [Fact]

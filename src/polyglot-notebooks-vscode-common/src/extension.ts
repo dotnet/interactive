@@ -181,14 +181,25 @@ export async function activate(context: vscode.ExtensionContext) {
                 const password = requestInput.isPassword;
 
                 let value;
-                let customInputRequest = await vscodeNotebookManagement.handleCustomInputRequest(prompt, requestInput.inputTypeHint, password);
+                let customInputRequest = await vscodeNotebookManagement.handleCustomInputRequest(prompt, requestInput.type, password);
                 if (customInputRequest.handled) {
                     value = customInputRequest.result;
                 } else {
-                    value = (requestInput.inputTypeHint === "file")
-                        ? await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, title: prompt, canSelectMany: false })
-                            .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath)
-                        : await vscode.window.showInputBox({ prompt, password, ignoreFocusOut: true });
+                    switch (requestInput.type) {
+                        case "file":
+                            value = await vscode.window.showOpenDialog({
+                                canSelectFiles: true,
+                                canSelectFolders: false,
+                                title: prompt,
+                                canSelectMany: false
+                            })
+                                .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath);
+                            break;
+
+                        default:
+                            value = await vscode.window.showInputBox({ prompt, password, ignoreFocusOut: true });
+                            break;
+                    }
                 }
 
                 if (!value) {

@@ -85,7 +85,7 @@ export interface DisplayValue extends KernelCommand {
 }
 
 export interface ImportDocument extends KernelCommand {
-    filePath: string;
+    file: string;
 }
 
 export interface OpenDocument extends KernelCommand {
@@ -116,7 +116,7 @@ export interface RequestHoverText extends LanguageServiceCommand {
 }
 
 export interface RequestInput extends KernelCommand {
-    inputTypeHint: string;
+    type: string;
     isPassword: boolean;
     parameterName: string;
     prompt: string;
@@ -456,7 +456,7 @@ export interface InputDescription {
     name: string;
     prompt: string;
     saveAs: string;
-    typeHint: string;
+    type: string;
 }
 
 export interface InteractiveDocument {

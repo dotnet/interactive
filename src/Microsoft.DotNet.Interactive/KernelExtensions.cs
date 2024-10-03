@@ -92,7 +92,8 @@ public static class KernelExtensions
                 {
                     AllowImplicitName = true,
                     Required = true,
-                    Description = LocalizationResources.Magics_import_file_Description()
+                    Description = LocalizationResources.Magics_import_file_Description(),
+                    TypeHint = "file"
                 }
             },
             TryGetKernelCommandAsync = ImportDocument.TryParseImportDirectiveAsync

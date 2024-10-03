@@ -145,6 +145,33 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
     }
 
     [Fact]
+    public async Task Type_hint_is_set_based_on_inline_JSON_configuration_of_the_input_token()
+    {
+        _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file"));
+
+        await _kernel.SendAsync(new SubmitCode("""
+                                               #!shim --file @input:{"type":"file"}
+                                               """, "csharp"));
+
+        _receivedRequestInput.InputTypeHint.Should().Be("file");
+    }
+
+    [Fact]
+    public async Task Type_hint_is_overridden_based_on_inline_JSON_configuration_of_the_input_token()
+    {
+        _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file")
+        {
+            TypeHint = "file"
+        });
+
+        await _kernel.SendAsync(new SubmitCode("""
+                                               #!shim --file @input:{"type":"number"}
+                                               """, "csharp"));
+
+        _receivedRequestInput.InputTypeHint.Should().Be("number");
+    }
+
+    [Fact]
     public async Task multiple_set_commands_with_inputs_can_be_used_in_single_submission()
     {
         using var kernel = new CompositeKernel
