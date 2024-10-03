@@ -2,15 +2,11 @@
 
 ## Test Script
 
-Open the VS Code extension test script in VS Code - Insiders
+The test script notebook is used to verify hard-to-automate end-to-end scenarios.
 
-```
-vscode-insiders://ms-dotnettools.dotnet-interactive-vscode/openNotebook?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdotnet%2Finteractive%2Fmain%2FNotebookTestScript.dib
-```
+To use it, open the [test script notebook](vscode-insiders://ms-dotnettools.dotnet-interactive-vscode/openNotebook?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdotnet%2Finteractive%2Fmain%2FNotebookTestScript.dib) in VS Code - Insiders
 
-If the URL provided does not end in the notebook file's extension, you can specify the `notebookFormat` query parameter as an override with the supported values of 'dib' and 'ipynb'.
-
-E.g.,
+If the URL provided does not end in the notebook file's extension, you can specify the `notebookFormat` query parameter as an override with the supported values of `.dib` and `.ipynb`m e.g.:
 
 ```
 vscode-insiders://ms-dotnettools.dotnet-interactive-vscode/openNotebook?notebookFormat=ipynb&url=https://contoso.com/myNotebook
@@ -68,12 +64,18 @@ When you do this locally while authenticated, any packages _not_ on the internal
 
 The signed build produces three versions of the VS Code extension, 2 against Stable VS Code and 1 against Insiders.  Both versions against Stable append a `"0"` character to the extension version number and Insiders appends a `"1"` character.
 
-### Pre-requisite to publish
+### Prerequisite to publish
 
-This is **temporary**. Before you invoke any of the pipelines below, please create a new PAT token with the following scope:
-![image](https://github.com/user-attachments/assets/87f2ad02-594c-440d-bbec-92332b12d864) [here]([url](https://dev.azure.com/dnceng/_usersSettings/tokens)) 
-and replace the value of "vscode-marketplace-dotnet-tools-publish-token" [here]([url](https://dev.azure.com/dnceng/internal/_apps/hub/ms.vss-distributed-task.hub-library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=107&path=dotnet-interactive-api-keys)). Please make sure to set it as a secret! These PAT tokens hold good for 7 days. 
-NOTE: You should have access to publish to VS Marketplace for your PAT to work.
+This is **temporary**. Before you invoke any of the pipelines below: 
+
+* Create a new PAT token with the following scope [here](https://dev.azure.com/dnceng/_usersSettings/tokens):
+
+   ![image](https://github.com/user-attachments/assets/87f2ad02-594c-440d-bbec-92332b12d864) 
+
+* In the variable group [`dotnet-interactive-api-keys`](https://dev.azure.com/dnceng/internal/_apps/hub/ms.vss-distributed-task.hub-library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=107&path=dotnet-interactive-api-keys), replace the value of `vscode-marketplace-dotnet-tools-publish-token`. *Please make sure to set it as a secret!* These PAT tokens hold good for 7 days. 
+**NOTE**: You should have access to publish to VS Marketplace for your PAT to work.
+
+* If publish fails because a PAT has expired, a new build will be needed after updating the PAT.
 
 ### Stable with locked tool version
 
@@ -90,14 +92,6 @@ The Insiders extension with the latest tool can be published via [this](https://
 Once any of those release definitions are invoked, the new extension will appear in the VS Code marketplace approximately 10 minutes later, after the marketplace has run their own internal validation.
 
 The publish/verification script is located in this repo at [`eng/publish/PublishVSCodeExtension.ps1`](eng/publish/PublishVSCodeExtension.ps1).
-
-### Publish token for VS Code Marketplace
-
-The variable group [`dotnet-interactive-api-keys`](https://dev.azure.com/dnceng/internal/_apps/hub/ms.vss-distributed-task.hub-library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=107&path=dotnet-interactive-api-keys) contains the secret `vscode-marketplace-dotnet-tools-publish-token` which holds the PAT used to upload the `.vsix` to the VS Code Marketplace.  If this PAT needs to be regenerated:
-
-1. Download the latest `vsm.mac.pat` package from `https://dev.azure.com/devdiv/OnlineServices/_artifacts/feed/vsmarketplace`
-2. From a `pwsh` prompt run `dotnet tool install --global --add-source "$env:USERPROFILE\Downloads" vsm.mac.pat`
-3. Run `vsmpat generate`.  You'll be prompted to login through a web browser and 8-10 seconds later the PAT will appear on the console.
 
 ### Setting up a branch for package publishing
 
