@@ -8,13 +8,13 @@ resources:
       branch: main
 
 variables:
-- group: '.NET Core Nuget API Keys'
-- name : simulate
-  value: $(isSimulated)
-- name : DotNetNugetApiKey
-  value: $(DotNetNugetApiKey-A1)
-- name : vscodeTargets
-  value: $(listVSCodeTargets)
+  - group: '.NET Core Nuget API Keys'
+  - name: simulate
+    value: $(isSimulated)
+  - name: DotNetNugetApiKey
+    value: $(DotNetNugetApiKey-A1)
+  - name: vscodeTargets
+    value: $(listVSCodeTargets)
 
 pool:
   vmImage: 'windows-2022'
@@ -25,14 +25,6 @@ stages:
   - job: PublishExtension
     displayName: 'Publish VS Code Extension'
     steps:
-    - task: AzureCLI@2
-      displayName: 'Authenticate with Azure'
-      inputs:
-        azureSubscription: 'VSCode Marketplace Publishing'
-        scriptType: 'pscore'
-        scriptLocation: 'inlineScript'
-        inlineScript: 'echo "Azure CLI authenticated."'
-
     # Download pipeline artifacts
     - task: DownloadPipelineArtifact@2
       displayName: '📦 Download artifacts from build pipeline'
@@ -54,12 +46,12 @@ stages:
         npm install --global @vscode/vsce
       displayName: 'Install VSCE'
 
-    # Publish Extension using the downloaded artifacts
-    - task: PowerShell@2
-      displayName: 'Publish Extension'
+    # Authenticate with Azure and publish extension
+    - task: AzureCLI@2
+      displayName: 'Authenticate with Azure and Publish Extension'
       inputs:
-        targetType: 'filePath'
-        filePath: '$(Pipeline.Workspace)\artifacts\vscode\PublishVSCodeExtensionUsingMI.ps1'
+        azureSubscription: 'VSCode Marketplace Publishing'
+        scriptType: 'pscore'
+        scriptLocation: 'scriptPath'
+        scriptPath: '$(Pipeline.Workspace)\artifacts\vscode\PublishVSCodeExtensionUsingMI.ps1'
         arguments: '-artifactsPath $(Pipeline.Workspace)\artifacts -vscodeTargetsList "$(vscodeTargets)" -nugetToken "$(DotNetNugetApiKey)" -isSimulated $(simulate)'
-        pwsh: true
-        verbose: true
