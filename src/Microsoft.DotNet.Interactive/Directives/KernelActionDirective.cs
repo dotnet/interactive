@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Directives;
 
@@ -81,7 +82,9 @@ public partial class KernelActionDirective : KernelDirective
 
     public override async Task<IReadOnlyList<CompletionItem>> GetChildCompletionsAsync()
     {
-        var baseCompletions = await base.GetChildCompletionsAsync();
+        List<CompletionItem> completions = [];
+
+        completions.AddRange(await base.GetChildCompletionsAsync());
 
         var subcommandCompletions = Subcommands.Select(s => new CompletionItem(s.Name, WellKnownTags.Method)
         {
@@ -89,7 +92,18 @@ public partial class KernelActionDirective : KernelDirective
             Documentation = s.Description
         });
 
-        return subcommandCompletions.Concat(baseCompletions).ToArray();
+        completions.AddRange(subcommandCompletions);
+
+        if (Parent is KernelDirective parent)
+        {
+            var parameterCompletionsFromParentDirective =
+                (await parent.GetChildCompletionsAsync())
+                .Where(c => c.AssociatedSymbol is KernelDirectiveParameter);
+
+            completions.AddRange(parameterCompletionsFromParentDirective);
+        }
+
+        return completions;
     }
 
     internal override bool TryGetParameter(

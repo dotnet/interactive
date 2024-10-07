@@ -21,7 +21,7 @@ public static class KernelExtensions
             var result = await kernel.SendAsync(new RequestValueInfos());
 
             var candidateResult = result.Events.OfType<ValueInfosProduced>().FirstOrDefault();
-            if (candidateResult is { })
+            if (candidateResult is not null)
             {
                 return (true, candidateResult);
             }

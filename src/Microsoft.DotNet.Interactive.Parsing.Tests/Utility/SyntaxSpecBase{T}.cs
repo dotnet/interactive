@@ -30,7 +30,7 @@ internal abstract class SyntaxSpecBase<T> : ISyntaxSpec
     {
         if (Text is not null)
         {
-            syntaxNode.Text.Should().Be(Text, because: $"{syntaxNode.GetType()}.Text");
+            syntaxNode.Text.Should().Be(Text, because: $"{syntaxNode.GetType()}.Text should reproduce parsed text.");
         }
 
         if (_assertions is not null)
