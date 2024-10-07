@@ -193,6 +193,9 @@ internal class PolyglotSyntaxParser
                     case DirectiveParameterValueNode valueNode when subcommandNode is null:
                         directiveNode.Add(valueNode);
                         break;
+                    case DirectiveParameterValueNode valueNode when subcommandNode is not null:
+                        subcommandNode.Add(valueNode);
+                        break;
 
                     case DirectiveParameterValueNode valueNode when subcommandNode is not null:
                         subcommandNode.Add(valueNode);
