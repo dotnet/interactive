@@ -20,6 +20,8 @@ If you're looking for the latest pre-release version, you can specify it like th
 #r "nuget:System.Text.Json,*-*"
 ```
 
+If you want the notebook to behave in a stable way, we strongly recommend always specifying your package versions explicitly.
+
 ## Adding a Nuget Source
 
 If your nuget package is not hosted on the main Nuget feed you can specify an alternative nuget source using `#i`. 
