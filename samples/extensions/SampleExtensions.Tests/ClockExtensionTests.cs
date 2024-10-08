@@ -25,61 +25,48 @@ namespace SampleExtensions.Tests
             };
 
             ClockKernelExtension.Load(_kernel);
-
-            KernelEvents = _kernel.KernelEvents.ToSubscribedList();
         }
-
-        public SubscribedList<KernelEvent> KernelEvents { get; }
 
         public void Dispose()
         {
             _kernel.Dispose();
-            KernelEvents.Dispose();
         }
 
         [Fact]
         public async Task It_formats_DateTime()
         {
-            using var events = _kernel.KernelEvents.ToSubscribedList();
+            var result = await _kernel.SubmitCodeAsync("DateTime.Now");
 
-            await _kernel.SubmitCodeAsync("DateTime.Now");
-
-            AssertThatClockWasRendered();
+            AssertThatClockWasRendered(result);
         }
 
         [Fact]
         public async Task It_formats_DateTimeOffset()
         {
-            using var events = _kernel.KernelEvents.ToSubscribedList();
+            var result = await _kernel.SubmitCodeAsync("DateTimeOffset.Now");
 
-            await _kernel.SubmitCodeAsync("DateTimeOffset.Now");
-
-            AssertThatClockWasRendered();
+            AssertThatClockWasRendered(result);
         }
 
         [Fact]
         public async Task It_adds_a_clock_magic_command()
         {
-            using var events = _kernel.KernelEvents.ToSubscribedList();
+            var result = await _kernel.SubmitCodeAsync("#!clock");
 
-            await _kernel.SubmitCodeAsync("#!clock");
-
-            AssertThatClockWasRendered();
+            AssertThatClockWasRendered(result);
         }
 
-        private void AssertThatClockWasRendered()
-        {
-            KernelEvents
-                .Should()
-                .ContainSingle<DisplayEvent>()
-                .Which
-                .FormattedValues
-                .Should()
-                .ContainSingle(v => v.MimeType == "text/html")
-                .Which
-                .Value
-                .Should()
-                .Contain("<circle");
-        }
+        private void AssertThatClockWasRendered(KernelCommandResult result) =>
+            result.Events
+                  .Should()
+                  .ContainSingle<DisplayEvent>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v => v.MimeType == "text/html")
+                  .Which
+                  .Value
+                  .Should()
+                  .Contain("<circle");
     }
 }
