@@ -95,6 +95,12 @@ public class KeyValueStoreKernel :
                 ExpressionBindingResult expressionBindingResult,
                 Kernel keyValueStoreKernel)
             {
+                if (expressionBindingResult.Diagnostics.FirstOrDefault(d => d.Severity == DiagnosticSeverity.Error) is { } diagnostic)
+                {
+                    directiveNode.AddDiagnostic(diagnostic);
+                    return Task.FromResult<KernelCommand>(null);
+                }
+
                 var parameterValues = directiveNode
                                       .GetParameterValues(directive, expressionBindingResult.BoundValues)
                                       .ToDictionary(t => t.Name, t => (t.Value, t.ParameterNode));

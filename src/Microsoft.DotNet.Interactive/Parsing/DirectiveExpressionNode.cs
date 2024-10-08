@@ -16,6 +16,9 @@ internal class DirectiveExpressionNode : SyntaxNode
 
     public DirectiveExpressionParametersNode? ParametersNode { get; private set; }
 
+    public bool IsInputExpression => 
+        TypeNode?.Type is "input" or "password";
+
     public void Add(DirectiveExpressionTypeNode node)
     {
         AddInternal(node);

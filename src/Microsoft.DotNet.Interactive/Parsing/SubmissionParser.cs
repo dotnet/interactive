@@ -784,7 +784,8 @@ public class SubmissionParser
                             sourceCommand,
                             directiveNode.TargetKernelName);
 
-                    if (expressionNode.Parent is { Parent: DirectiveParameterNode { NameNode.Text: { } parameterName } })
+                    if (bindingResult?.IsSuccessful == true &&
+                        expressionNode.Parent is { Parent: DirectiveParameterNode { NameNode.Text: { } parameterName } })
                     {
                         if (inputProduced is not null)
                         {
@@ -796,6 +797,14 @@ public class SubmissionParser
                         {
                             valuesProduced ??= new();
                             valuesProduced.Add(parameterName, valueProduced);
+                        }
+                    }
+                    else
+                    {
+                        if (directiveNode.DescendantNodesAndTokens().OfType<DirectiveExpressionNode>().Any(node => node.IsInputExpression) &&
+                            KernelInvocationContext.Current is { Command: SubmitCode } context)
+                        {
+                            context.Fail(sourceCommand, message: "Input not provided.");
                         }
                     }
 
