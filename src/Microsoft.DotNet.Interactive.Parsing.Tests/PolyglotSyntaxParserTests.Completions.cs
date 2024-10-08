@@ -64,7 +64,10 @@ public partial class PolyglotSyntaxParserTests
 
             [Theory]
             [InlineData("#!connect jupyter $$")]
-            [InlineData("#!connect   jupyter       $$")]
+            [InlineData("#!connect jupyter       $$")]
+            [InlineData("#!connect mssql  $$ --create-dbcontext")]
+            [InlineData("#!connect mssql --create-dbcontext      $$")]
+            [InlineData("""#!connect mssql --connection-string @input:{"saveAs":"mydbconnectionstring"}  $$""")]
             public async Task produce_completions_for_parameter_names(string markupCode)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);
@@ -199,6 +202,8 @@ public partial class PolyglotSyntaxParserTests
             [Theory]
             [InlineData("#!connect mssql $$")]
             [InlineData("#!connect mssql         $$")]
+            [InlineData("#!connect mssql --connection-string   @input $$")]
+            [InlineData("#!connect mssql --create-dbcontext  $$  @input")]
             public async Task do_not_produce_completions_for_sibling_subcommands(string markupCode)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);

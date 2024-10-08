@@ -72,7 +72,7 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
     {
         CSharpKernel csharpKernel = null;
 
-        context.HandlingKernel.VisitSubkernelsAndSelf(k =>
+        context.HandlingKernel.RootKernel.VisitSubkernelsAndSelf(k =>
         {
             if (k is CSharpKernel csk)
             {

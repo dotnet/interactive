@@ -182,19 +182,22 @@ internal class PolyglotSyntaxParser
             {
                 switch (node)
                 {
-                    case DirectiveNameNode nameNode when subcommandNode is null:
+                     case DirectiveNameNode nameNode when subcommandNode is null:
                         directiveNode.Add(nameNode);
                         break;
+
                     case DirectiveParameterNode parameterNode when subcommandNode is null:
                         directiveNode.Add(parameterNode);
                         break;
+
                     case DirectiveParameterValueNode valueNode when subcommandNode is null:
                         directiveNode.Add(valueNode);
                         break;
 
-                    case DirectiveNameNode nameNode when subcommandNode is not null:
-                        subcommandNode.Add(nameNode);
+                    case DirectiveParameterValueNode valueNode when subcommandNode is not null:
+                        subcommandNode.Add(valueNode);
                         break;
+
                     case DirectiveParameterNode parameterNode when subcommandNode is not null:
                         subcommandNode.Add(parameterNode);
                         break;

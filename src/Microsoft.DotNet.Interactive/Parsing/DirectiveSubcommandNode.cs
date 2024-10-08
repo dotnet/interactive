@@ -30,6 +30,12 @@ internal class DirectiveSubcommandNode : SyntaxNode
         HasParameters = true;
     }
 
+    public void Add(DirectiveParameterValueNode node)
+    {
+        AddInternal(node);
+        HasParameters = true;
+    }
+
     public bool TryGetSubcommand([NotNullWhen(true)] out KernelActionDirective? subcommandDirective)
     {
         if (Parent is DirectiveNode parentDirectiveNode)

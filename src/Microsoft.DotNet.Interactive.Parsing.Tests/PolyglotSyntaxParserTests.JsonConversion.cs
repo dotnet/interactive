@@ -43,6 +43,7 @@ public partial class PolyglotSyntaxParserTests
                 {
                   "commandType": "ConnectMsSql",
                   "command": {
+                    "createDbcontext": false,
                     "invokedDirective": "#!connect mssql",
                     "kernelName": "sql-adventureworks",
                     "connectionString": "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false",

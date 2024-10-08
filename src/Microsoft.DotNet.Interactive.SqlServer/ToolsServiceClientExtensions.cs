@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
-public static class ToolsServiceClientExtensions
+internal static class ToolsServiceClientExtensions
 {
     internal static async Task<bool> ConnectAsync(this ToolsServiceClient serviceClient, Uri ownerUri, string connectionStr)
     {

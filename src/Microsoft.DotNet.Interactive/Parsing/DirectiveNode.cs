@@ -3,7 +3,6 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -378,7 +377,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                             $"When bindings are present then a {nameof(DirectiveBindingDelegate)} must be provided.",
                             DiagnosticSeverity.Error));
 
-                    return (boundExpressionValues, new[] { diagnostic });
+                    return (boundExpressionValues, [diagnostic]);
                 }
             }
             else
@@ -405,7 +404,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
             }
         }
 
-        return (boundExpressionValues, Array.Empty<CodeAnalysis.Diagnostic>());
+        return (boundExpressionValues, []);
     }
 
     internal bool TryGetSubcommand(
@@ -484,16 +483,35 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 if (directiveParameterNameNode.Parent is DirectiveParameterNode pn &&
                     pn.TryGetParameter(out var parameter))
                 {
-                    var completions = await parameter.GetValueCompletionsAsync();
-                    return completions;
+                    if (!parameter.Flag)
+                    {
+                        var completions = await parameter.GetValueCompletionsAsync();
+                        return completions;
+                    }
+                    else
+                    {
+                        var parentDirectiveNode = pn.Ancestors().OfType<DirectiveNode>().First();
+                        if (parentDirectiveNode.TryGetDirective(out var parentDirective))
+                        {
+                            // Since flags have no child nodes, we can return all completions for the parent directive.
+                            var completions = await parentDirective.GetChildCompletionsAsync();
+
+                            // If there's already a subcommand node, then skip subcommand completions
+                            if (parentDirectiveNode.SubcommandNode is not null)
+                            {
+                                completions = completions.Where(c => c.AssociatedSymbol is not KernelActionDirective).ToList();
+                            }
+
+                            return completions.ToArray();
+                        }
+                    }
                 }
 
                 if (TryGetDirective(out var directive))
                 {
                     var completions = await directive.GetChildCompletionsAsync();
                     return completions
-                           .Where(c => c.AssociatedSymbol is KernelDirectiveParameter p &&
-                                       p.Name.StartsWith(node.Text))
+                           .Where(c => c.InsertText.StartsWith(node.Text))
                            .ToArray();
                 }
             }
@@ -552,6 +570,16 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 break;
 
             case DirectiveExpressionParametersNode directiveExpressionParametersNode:
+            {
+                if (directiveExpressionParametersNode.Ancestors()
+                                                     .OfType<DirectiveSubcommandNode>()
+                                                     .FirstOrDefault() is { } parentDirectiveNode &&
+                    parentDirectiveNode.TryGetSubcommand(out var subcommandDirective))
+                {
+                    var completions = await subcommandDirective.GetChildCompletionsAsync();
+                    return completions.ToArray();
+                }
+            }
                 break;
 
             case DirectiveExpressionTypeNode directiveExpressionTypeNode:
