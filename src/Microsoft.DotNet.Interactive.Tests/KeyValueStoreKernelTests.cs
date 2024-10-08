@@ -445,6 +445,33 @@ public class KeyValueStoreKernelTests
               .Contain("--name", "--from-url", "--from-file", "--mime-type");
     }
 
+    [Fact]
+    public async Task Canceled_input_request_does_not_record_input_token_as_value()
+    {
+        using var kernel = CreateKernel();
+
+        kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+        {
+            context.Fail(requestInput);
+            return Task.CompletedTask;
+        });
+
+        kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), kernel.Name);
+
+        var result = await kernel.SubmitCodeAsync(
+                         """
+                         #!value --from-value @input:{"type": "file"} --name file
+                         """);
+
+        result.Events.Should().ContainSingle<CommandFailed>();
+
+        var keyValueStoreKernel = kernel.FindKernelByName("value");
+
+        var (_, valueInfosProduced) = await keyValueStoreKernel.TryRequestValueInfosAsync();
+
+        valueInfosProduced.ValueInfos.Should().BeEmpty();
+    }
+
     private static CompositeKernel CreateKernel() =>
         new()
         {
