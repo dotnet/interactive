@@ -19,7 +19,7 @@ Microsoft.DotNet.Interactive
     public System.String DefaultKernelName { get; set;}
     public KernelHost Host { get;}
     public System.Void Add(Kernel kernel, System.Collections.Generic.IEnumerable<System.String> aliases = null)
-    public System.Void AddKernelConnector<T>(ConnectKernelDirective<T> connectDirective)
+    public System.Void AddConnectDirective<T>(ConnectKernelDirective<T> connectDirective)
     public System.Collections.Generic.IEnumerator<Kernel> GetEnumerator()
      Kernel GetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
      System.Threading.Tasks.Task HandleRequestKernelInfoAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, KernelInvocationContext context)

@@ -74,7 +74,7 @@ public class HoverTextTests : LanguageKernelTestBase
         string expectedContent)
     {
         using var kernel = CreateKernel();
-        kernel.AddKernelConnector(new ConnectSignalRDirective());
+        kernel.AddConnectDirective(new ConnectSignalRDirective());
 
         MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
