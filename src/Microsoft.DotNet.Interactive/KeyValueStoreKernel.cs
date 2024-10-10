@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
@@ -25,12 +26,14 @@ public class KeyValueStoreKernel :
     IKernelCommandHandler<SendValue>,
     IKernelCommandHandler<SubmitCode>
 {
+    private readonly HttpClient _httpClient;
     internal const string DefaultKernelName = "value";
 
     private readonly ConcurrentDictionary<string, FormattedValue> _values = new();
 
-    public KeyValueStoreKernel(string name = DefaultKernelName) : base(name)
+    public KeyValueStoreKernel(string name = DefaultKernelName, HttpClient httpClient = null) : base(name)
     {
+        _httpClient = httpClient;
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - Raw Value Storage";
     }
 
@@ -202,7 +205,13 @@ public class KeyValueStoreKernel :
                         }
                         else if (fromUrl is not null)
                         {
-                            valueToStore = await GetValueFromUrlAsync();
+                            (valueToStore, var responseMimeType) = await GetValueFromUrlAsync(
+                                                                   fromUrl,
+                                                                   context.CancellationToken);
+                            if (mimeType is null)
+                            {
+                                mimeType = responseMimeType;
+                            }
                         }
 
                         var formattedValue = new FormattedValue(mimeType ?? PlainTextFormatter.MimeType, valueToStore);
@@ -216,13 +225,6 @@ public class KeyValueStoreKernel :
                             return await IOExtensions.ReadAllTextAsync(fromFile);
                         }
 
-                        async Task<string> GetValueFromUrlAsync()
-                        {
-                            var client = new HttpClient();
-                            var response = await client.GetAsync(fromUrl, context.CancellationToken);
-                            mimeType ??= response.Content.Headers?.ContentType?.MediaType;
-                            return await response.Content.ReadAsStringAsync();
-                        }
                     }));
                 }
 
@@ -274,4 +276,19 @@ public class KeyValueStoreKernel :
     }
 
     internal override bool AcceptsUnknownDirectives => true;
+
+    private async Task<(string content, string mimeType)> GetValueFromUrlAsync(
+        string fromUrl,
+        CancellationToken cancellationToken)
+    {
+        var client = _httpClient ?? new HttpClient();
+        var response = await client.GetAsync(fromUrl, cancellationToken);
+        var mimeType = response.Content.Headers.ContentType?.MediaType;
+
+#if NETSTANDARD2_0
+        return (await response.Content.ReadAsStringAsync(), mimeType);
+#else
+        return (await response.Content.ReadAsStringAsync(cancellationToken), mimeType);
+#endif
+    }
 }

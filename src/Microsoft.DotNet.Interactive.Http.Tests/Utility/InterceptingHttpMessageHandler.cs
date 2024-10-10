@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.Http.Tests;
+namespace Microsoft.DotNet.Interactive.Http.Tests.Utility;
 
 internal class InterceptingHttpMessageHandler : HttpMessageHandler
 {
