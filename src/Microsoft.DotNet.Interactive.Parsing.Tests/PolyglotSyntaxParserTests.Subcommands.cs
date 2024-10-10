@@ -161,7 +161,7 @@ public partial class PolyglotSyntaxParserTests
         [InlineData("sub-command")]
         [InlineData("sub_command")]
         [InlineData("sub_com-mand")]
-        public async Task Subcommands_can_contain_hyphens_and_underscores(string subcommandName)
+        public void Subcommands_can_contain_hyphens_and_underscores(string subcommandName)
         {
             var tree = Parse($"""
                              #!test {subcommandName} --opt 123
