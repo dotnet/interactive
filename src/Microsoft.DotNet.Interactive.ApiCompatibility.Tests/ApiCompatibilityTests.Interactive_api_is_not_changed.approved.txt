@@ -249,7 +249,7 @@ Microsoft.DotNet.Interactive
     public Task<TResult> EndInvoke(System.IAsyncResult result)
     public Task<TResult> Invoke(T value)
   public class KeyValueStoreKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
-    .ctor(System.String name = value)
+    .ctor(System.String name = value, System.Net.Http.HttpClient httpClient = null)
     public Microsoft.DotNet.Interactive.Directives.KernelSpecifierDirective KernelSpecifierDirective { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,FormattedValue> Values { get;}
   public class KqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable

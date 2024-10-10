@@ -562,12 +562,6 @@ internal class PolyglotSyntaxParser
         if (CurrentToken is { Kind: TokenKind.Word } word &&
             _currentlyScopedDirective is KernelActionDirective actionDirective)
         {
-            if (actionDirective.TryGetSubcommand(word.Text, out subcommand))
-            {
-                numberOfTokensToConsume = 1;
-                return true;
-            }
-
             var tokens = new List<SyntaxToken> { word };
             while (_tokens!.Count - _currentTokenIndex > tokens.Count)
             {
@@ -584,14 +578,16 @@ internal class PolyglotSyntaxParser
                 }
 
                 tokens.Add(nextToken);
+            }
 
-                var candidateSubcommand = _sourceText.ToString(new(word.Span.Start, tokens[^1].Span.End - word.Span.Start));
+            var textSpan = new TextSpan(word.Span.Start, tokens[^1].Span.End - word.Span.Start);
 
-                if (actionDirective.TryGetSubcommand(candidateSubcommand, out subcommand))
-                {
-                    numberOfTokensToConsume = tokens.Count;
-                    return true;
-                }
+            var candidateSubcommand = _sourceText.ToString(textSpan);
+
+            if (actionDirective.TryGetSubcommand(candidateSubcommand, out subcommand))
+            {
+                numberOfTokensToConsume = tokens.Count;
+                return true;
             }
         }
 

@@ -1,30 +1,24 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Humanizer;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Microsoft.DotNet.Interactive.Jupyter.Messaging;
+using Microsoft.DotNet.Interactive.Http.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.FSharp.Data.UnitSystems.SI.UnitNames;
-using Microsoft.Net.Http.Headers;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using Xunit;
-using static Microsoft.DotNet.Interactive.Http.Tests.HttpParserTests;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
@@ -142,10 +136,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task send_request_and_variables_are_saved()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -271,10 +263,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task invalid_header_value_produces_error()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -491,11 +481,8 @@ public partial class HttpKernelTests
     [InlineData("$randomInt ")]
     public async Task can_bind_expression_with_various_spaces(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -523,11 +510,8 @@ public partial class HttpKernelTests
     [InlineData("$guidabc")]
     public async Task cant_bind_invalid_guid_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -550,7 +534,6 @@ public partial class HttpKernelTests
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.First().Message.Should().Be($"Unable to evaluate expression '{expression}'.");
-
     }
 
     [Theory]
@@ -559,11 +542,8 @@ public partial class HttpKernelTests
     [InlineData("$datetimeabc")]
     public async Task cant_bind_invalid_datetime_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -595,11 +575,8 @@ public partial class HttpKernelTests
     [InlineData("$localDatetimeabc")]
     public async Task cant_bind_invalid_local_datetime_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -631,11 +608,8 @@ public partial class HttpKernelTests
     [InlineData("$timestampabc")]
     public async Task cant_bind_invalid_timestamp_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -667,11 +641,8 @@ public partial class HttpKernelTests
     [InlineData("$randomIntabc")]
     public async Task cant_bind_invalid_random_int_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -703,11 +674,8 @@ public partial class HttpKernelTests
     [InlineData("$timestamp$localDatetime")]
     public async Task cant_bind_multiples_in_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -739,11 +707,8 @@ public partial class HttpKernelTests
     [InlineData("$RANDOMINT")]
     public async Task cant_bind_capital_versions_of_expressions(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -877,10 +842,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task cant_bind_timestamp_offset_without_option()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -907,10 +870,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task cant_bind_timestamp_offset_with_invalid_option()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -939,10 +900,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task cant_bind_timestamp_offset_with_invalid_offset()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -969,10 +928,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task cant_bind_timestamp_with_invalid_chars_in_the_arguments()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1175,10 +1132,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task cant_bind_random_int_with_min_greater_than_max()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1202,10 +1157,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task cant_bind_random_int_with_non_integer_max()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1275,10 +1228,8 @@ public partial class HttpKernelTests
     [InlineData("m")]
     public async Task binding_with_various_datetime_options_doesnt_produce_errors(string option)
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1302,10 +1253,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task invalid_option_produces_error()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1599,10 +1548,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task several_system_variables_in_single_request()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1660,10 +1607,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task incorrect_datetime_syntax_produces_error()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1689,10 +1634,8 @@ public partial class HttpKernelTests
     [Fact]
     public async Task incorrect_datetime_produces_error()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1927,10 +1870,8 @@ public partial class HttpKernelTests
     public async Task when_response_is_slow_final_displayed_value_includes_response_details()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
-        HttpRequestMessage request = null;
         var slowResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
