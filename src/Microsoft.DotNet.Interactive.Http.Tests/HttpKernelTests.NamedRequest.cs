@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentAssertions;
@@ -24,8 +24,6 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task responses_can_be_accessed_as_symbols_in_later_requests()
             {
-                // Request Variables
-                // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
                 const int ContentByteLengthThreshold = 100;
 
@@ -133,11 +131,11 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
 
-                var secondCode = $$$"""
-            GET https://httpbin.org/headers
-            Detectedserver: {{binHeader.response.headers.Server}}
-            ###
-            """;
+                var secondCode = """
+                    GET https://httpbin.org/headers
+                    Detectedserver: {{binHeader.response.headers.Server}}
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -203,11 +201,11 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
 
-                var secondCode = $$$"""
-            GET https://httpbin.org/headers
-            X-Custom: {{binHeader.response.headers.Set-Cookie.theme=dark; Path=/; Expires=Wed, 09 Jun 2023 10:18:14 GMT}}
-            ###
-            """;
+                var secondCode = """
+                    GET https://httpbin.org/headers
+                    X-Custom: {{binHeader.response.headers.Set-Cookie.theme=dark; Path=/; Expires=Wed, 09 Jun 2023 10:18:14 GMT}}
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -270,11 +268,11 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
 
-                var secondCode = $$$"""
-            GET https://httpbin.org/headers
-            Detectedserver: {{binHeader.response.headers.Server.gunicorn}}
-            ###
-            """
+                var secondCode = """
+                    GET https://httpbin.org/headers
+                    Detectedserver: {{binHeader.response.headers.Server.gunicorn}}
+                    ###
+                    """
                 ;
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
                 var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
@@ -335,11 +333,11 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
 
-                var secondCode = $$$"""
-            GET https://httpbin.org/headers
-            Detectedserver: {{binHeader.response.headers.Accept}}
-            ###
-            """;
+                var secondCode = """
+                    GET https://httpbin.org/headers
+                    Detectedserver: {{binHeader.response.headers.Accept}}
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
                 var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
@@ -351,8 +349,6 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [InlineData("json.response.body.$.slideshow.slides.type", "all")]
             public async Task json_with_additional_syntax_depths_can_be_accessed_correctly(string path, string expectedValue)
             {
-                // Request Variables
-                // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
                 var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
                 {
@@ -401,20 +397,19 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = $$$"""
-
-            @pathContents = {{{{{path}}}}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "path" :{{pathContents}}
-            }
-            
-            ###
-            """;
+                    @pathContents = {{{{{path}}}}}
+                    
+                    
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Content-Type: application/json
+                    
+                    {
+                        "path" :{{pathContents}}
+                    }
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -435,11 +430,8 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [InlineData("login.request.//")]
             public async Task responses_with_incomplete_paths_produces_errors(string path)
             {
-                // Request Variables
-                // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/anything
@@ -455,20 +447,19 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = $$$"""
-
-            @origin = {{{{{path}}}}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
+                    @origin = {{{{{path}}}}}
+                    
+                    
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Content-Type: application/json
+                    
+                    {
+                        "origin" : {{origin}}
+                    }
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -483,42 +474,39 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [InlineData("login.request.body.//test", "application/xml")]
             public async Task incomplete_syntax_depths_produces_errors(string path, string contentType)
             {
-
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 var firstCode = $$$"""
-            @baseUrl = https://httpbin.org/anything
+                    @baseUrl = https://httpbin.org/anything
 
-            # @name login
-            POST {{baseUrl}}
-            Content-Type: {{{contentType}}}
+                    # @name login
+                    POST {{baseUrl}}
+                    Content-Type: {{{contentType}}}
 
-            {
-                "test": testing
-            }
+                    {
+                        "test": testing
+                    }
 
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = $$$"""
-
-            @origin = {{{{{path}}}}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
+                    @origin = {{{{{path}}}}}
+                    
+                    
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Content-Type: application/json
+                    
+                    {
+                        "origin" : {{origin}}
+                    }
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -530,36 +518,33 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task json_with_xml_content_type_produces_errors()
             {
+                using var kernel = new HttpKernel();
 
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                var firstCode = """
+                    @baseUrl = https://httpbin.org/xml
 
-                var firstCode = $$$"""
-            @baseUrl = https://httpbin.org/xml
+                    # @name login
+                    GET {{baseUrl}}
+                    
 
-            # @name login
-            GET {{baseUrl}}
-            
-
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
 
-                var secondCode = $$$"""
-
-            @origin = {{login.response.body.$.test}}
-            
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
+                var secondCode = """
+                    @origin = {{login.response.body.$.test}}
+                    
+                    POST https://example.com/api/comments HTTP/1.1
+                    Content-Type: application/json
+                    
+                    {
+                        "origin" : {{origin}}
+                    }
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -571,42 +556,39 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task xml_with_json_content_type_produces_errors()
             {
+                using var kernel = new HttpKernel();
 
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                var firstCode = """
+                    @baseUrl = https://httpbin.org/anything
 
-                var firstCode = $$$"""
-            @baseUrl = https://httpbin.org/anything
+                    # @name login
+                    POST {{baseUrl}}
+                    Content-Type: application/json
 
-            # @name login
-            POST {{baseUrl}}
-            Content-Type: application/json
+                    {
+                        "test": testing
+                    }
 
-            {
-                "test": testing
-            }
-
-            ###
-            """;
+                    ###
+                    """;
 
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
 
-                var secondCode = $$$"""
-
-            @origin = {{login.response.body.//test}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
+                var secondCode = """
+                    @origin = {{login.response.body.//test}}
+                    
+                    
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Content-Type: application/json
+                    
+                    {
+                        "origin" : {{origin}}
+                    }
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -620,9 +602,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [InlineData("login.request.body.//")]
             public async Task no_body_produces_errors_when_trying_to_access(string path)
             {
-
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/anything
@@ -637,20 +617,19 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = $$$"""
-
-            @origin = {{{{{path}}}}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
+                    @origin = {{{{{path}}}}}
+                    
+                    
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Content-Type: application/json
+                    
+                    {
+                        "origin" : {{origin}}
+                    }
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -662,11 +641,8 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task responses_can_be_accessed_as_xml_in_later_requests()
             {
-                // Request Variables
-                // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
 
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 using var _ = new AssertionScope();
 
@@ -684,12 +660,11 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = """
-
-            POST https://example.com/api/comments HTTP/1.1
-            X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
-            
-            ###
-            """;
+                    POST https://example.com/api/comments HTTP/1.1
+                    X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -701,8 +676,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [InlineData("example.response.body.*")]
             public async Task body_content_produces_the_entirety_of_the_body_content(string path)
             {
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/anything
@@ -721,13 +695,12 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = $$$"""            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            {{{{{path}}}}}
-            
-            ###
-            """;
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    {{{{{path}}}}}
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -737,11 +710,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task improper_xml_path_produces_errors()
             {
-                // Request Variables
-                // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
-
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 using var _ = new AssertionScope();
 
@@ -774,11 +743,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task responses_can_be_accessed_through_headers_in_later_requests()
             {
-                // Request Variables
-                // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
-
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 using var _ = new AssertionScope();
 
@@ -812,8 +777,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task invalid_named_request_property_produces_errors()
             {
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 using var _ = new AssertionScope();
 
@@ -851,7 +815,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
-                secondResult.Events.Count().Should().Be(2);
+                secondResult.Events.Count.Should().Be(2);
             }
 
             [Theory]
@@ -859,8 +823,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [InlineData("example.response.headers.*")]
             public async Task Accessing_content_body_after_headers_is_not_supported_and_produces_errors(string path)
             {
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/anything
@@ -876,13 +839,12 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = $$$"""            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            {{{{{path}}}}}
-            
-            ###
-            """;
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    {{{{{path}}}}}
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -896,8 +858,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [InlineData("example.response.headers.Authorization", "Authorization")]
             public async Task accessing_non_existent_header_names_produces_an_error(string path, string headerName)
             {
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/anything
@@ -913,20 +874,19 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 firstResult.Events.Should().NotContainErrors();
 
                 var secondCode = $$$"""
-
-            @headerName = {{{{{path}}}}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "headerName" : {{headerName}}
-            }
-            
-            ###
-            """;
+                    @headerName = {{{{{path}}}}}
+                    
+                    
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Content-Type: application/json
+                    
+                    {
+                        "headerName" : {{headerName}}
+                    }
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -938,8 +898,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task attempting_to_access_headers_that_do_not_exist_will_produce_an_error()
             {
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/anything
@@ -953,34 +912,32 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
 
-                var secondCode = $$$"""
-
-            @headerName = {{example.request.headers.Content-Type}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "headerName" : {{headerName}}
-            }
-            
-            ###
-            """;
+                var secondCode = """
+                    @headerName = {{example.request.headers.Content-Type}}
+                    
+                    
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Content-Type: application/json
+                    
+                    {
+                        "headerName" : {{headerName}}
+                    }
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
                 var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-                diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request 'example' does not have any headers.""");
+                diagnostics.Diagnostics.First().Message.Should().Be("The supplied named request 'example' does not have any headers.");
             }
 
             [Fact]
             public async Task variables_have_precedence_over_named_requests()
             {
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/anything
@@ -994,21 +951,20 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 var firstResult = await kernel.SendAsync(new SubmitCode(firstCode));
                 firstResult.Events.Should().NotContainErrors();
 
-                var secondCode = $$$"""
-
-            @example.response.headers.Accept = application/xml
-            @headerName = {{example.response.headers.Accept}}
-           
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Accept: {{example.response.headers.Accept}}
-            
-            {
-                "headerName" : {{example.response.headers.Accept}}
-            }
-            
-            ###
-            """;
+                var secondCode = """
+                    @example.response.headers.Accept = application/xml
+                    @headerName = {{example.response.headers.Accept}}
+                   
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    Accept: {{example.response.headers.Accept}}
+                    
+                    {
+                        "headerName" : {{example.response.headers.Accept}}
+                    }
+                    
+                    ###
+                    """;
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
@@ -1018,27 +974,26 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task attempting_to_use_named_request_prior_to_run_will_cause_failure()
             {
-                var client = new HttpClient();
-                using var kernel = new HttpKernel(client: client);
+                using var kernel = new HttpKernel();
 
-                var firstCode = $$$"""
-            @baseUrl = https://httpbin.org/anything
-            
-            # @name example
-            POST {{baseUrl}}
-            
-            ###
-           
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            
-            
-            {
-                "Server" : {{example.response.headers.Server}}
-            }
-            
-            ###
-            """;
+                var firstCode = """
+                    @baseUrl = https://httpbin.org/anything
+                    
+                    # @name example
+                    POST {{baseUrl}}
+                    
+                    ###
+                   
+                    # @name createComment
+                    POST https://example.com/api/comments HTTP/1.1
+                    
+                    
+                    {
+                        "Server" : {{example.response.headers.Server}}
+                    }
+                    
+                    ###
+                    """;
 
                 var result = await kernel.SendAsync(new SubmitCode(firstCode));
 
