@@ -1,0 +1,57 @@
+﻿trigger: none
+pr: none
+
+resources:
+  pipelines:
+    - pipeline: interactive-ci  # alias
+      source: dotnet/interactive/interactive-ci
+      branch: main
+
+variables:
+  - group: '.NET Core Nuget API Keys'
+  - name: simulate
+    value: $(isSimulated)
+  - name: DotNetNugetApiKey
+    value: $(DotNetNugetApiKey-A1)
+  - name: vscodeTargets
+    value: insiders
+
+pool:
+  vmImage: 'windows-2022'
+
+stages:
+- stage: Publish
+  jobs:
+  - job: PublishExtension
+    displayName: 'Publish VS Code Extension'
+    steps:
+    # Download pipeline artifacts
+    - task: DownloadPipelineArtifact@2
+      displayName: '📦 Download artifacts from build pipeline'
+      inputs:
+        buildType: 'specific'
+        project: 'internal'
+        definition: 743
+        buildVersionToDownload: 'specific'
+        buildId: '$(resources.pipeline.interactive-ci.runID)'  # Dynamically fetch the latest build ID
+        branchName: '$(resources.pipeline.officialBuildCI.sourceBranch)'
+        path: '$(Pipeline.Workspace)/artifacts'  # Specify a clear download path
+
+    # List files and folders under ArtifactsDirectory for debugging
+    - pwsh: |
+        Get-ChildItem -Path '$(Pipeline.Workspace)/artifacts' -Recurse
+      displayName: 'List files and folders under ArtifactsDirectory'
+
+    - pwsh: |
+        npm install --global @vscode/vsce
+      displayName: 'Install VSCE'
+
+    # Authenticate with Azure and publish extension
+    - task: AzureCLI@2
+      displayName: 'Authenticate with Azure and Publish Extension'
+      inputs:
+        azureSubscription: 'VSCode Marketplace Publishing'
+        scriptType: 'pscore'
+        scriptLocation: 'scriptPath'
+        scriptPath: '$(Pipeline.Workspace)\artifacts\vscode\PublishVSCodeExtensionUsingMI.ps1'
+        arguments: '-artifactsPath $(Pipeline.Workspace)\artifacts -vscodeTargetsList "$(vscodeTargets)" -nugetToken "$(DotNetNugetApiKey)" -isSimulated $(simulate)'
