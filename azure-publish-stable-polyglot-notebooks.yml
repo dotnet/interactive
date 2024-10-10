@@ -14,7 +14,7 @@ variables:
   - name: DotNetNugetApiKey
     value: $(DotNetNugetApiKey-A1)
   - name: vscodeTargets
-    value: $(listVSCodeTargets)
+    value: stable
 
 pool:
   vmImage: 'windows-2022'
