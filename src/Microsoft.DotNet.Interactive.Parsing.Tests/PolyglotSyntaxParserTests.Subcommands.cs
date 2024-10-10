@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Directives;
@@ -160,7 +161,7 @@ public partial class PolyglotSyntaxParserTests
         [InlineData("sub-command")]
         [InlineData("sub_command")]
         [InlineData("sub_com-mand")]
-        public void Subcommands_can_contain_hyphens_and_underscores(string subcommandName)
+        public async Task Subcommands_can_contain_hyphens_and_underscores(string subcommandName)
         {
             var tree = Parse($"""
                              #!test {subcommandName} --opt 123

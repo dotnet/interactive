@@ -2,10 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
@@ -445,5 +447,96 @@ i");
               .Command
               .Should()
               .Be(submitCode);
+    }
+
+    [Fact]
+    public async Task Partial_match_does_not_invoke_incorrect_subcommand()
+    {
+        using var compositeKernel = new CompositeKernel();
+
+        var firstWasCalledWith = "";
+        var secondWasCalledWith = "";
+
+        compositeKernel.AddKernelConnector(new ConnectCustomDirective(s =>
+        {
+            firstWasCalledWith = s;
+            return Task.FromResult<Kernel>(new FakeKernel(s));
+        }));
+        compositeKernel.AddKernelConnector(new ConnectCustomKernelTwoDirective(s =>
+        {
+            secondWasCalledWith = s;
+            return Task.FromResult<Kernel>(new FakeKernel(s));
+        }));
+
+        await compositeKernel.SubmitCodeAsync(
+            """
+            #!connect custom --kernel-name one
+            """);
+
+        await compositeKernel.SubmitCodeAsync(
+            """
+            #!connect custom-two --kernel-name two
+            """);
+
+        firstWasCalledWith.Should().Be("one");
+        secondWasCalledWith.Should().Be("two");
+    }
+
+    public class ConnectCustomDirective : ConnectKernelDirective<ConnectCustomKernel>
+    {
+        private readonly Func<string, Task<Kernel>> _createKernel;
+
+        public ConnectCustomDirective(
+            Func<string, Task<Kernel>> createKernel) : base("custom", "this is the description")
+        {
+            ConnectedKernelDescription = "this is the description";
+
+            _createKernel = createKernel;
+        }
+
+        public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
+            ConnectCustomKernel command,
+            KernelInvocationContext context)
+        {
+            var kernel = await _createKernel(command.ConnectedKernelName);
+
+            return new[] { kernel };
+        }
+    }
+
+    public class ConnectCustomKernel : ConnectKernelCommand
+    {
+        public ConnectCustomKernel(string connectedKernelName) : base(connectedKernelName)
+        {
+        }
+    }
+
+    public class ConnectCustomKernelTwoDirective : ConnectKernelDirective<ConnectCustomKernelTwo>
+    {
+        private readonly Func<string, Task<Kernel>> _createKernel;
+
+        public ConnectCustomKernelTwoDirective(
+            Func<string, Task<Kernel>> createKernel) : base("custom-two", "this is the description")
+        {
+            ConnectedKernelDescription = "this is the description";
+
+            _createKernel = createKernel;
+        }
+
+        public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
+            ConnectCustomKernelTwo command,
+            KernelInvocationContext context)
+        {
+            var kernel = await _createKernel(command.ConnectedKernelName);
+
+            return new[] { kernel };
+        }
+    }
+
+    public class ConnectCustomKernelTwo : ConnectKernelCommand
+    {
+        public ConnectCustomKernelTwo(string connectedKernelName) : base(connectedKernelName)
+        {
+        }
     }
 }
