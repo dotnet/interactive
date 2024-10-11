@@ -78,7 +78,6 @@ internal class SetDirectiveCommand : KernelCommand
 
         if (bindingResult.InputsProduced.TryGetValue("--value", out var inputProduced))
         {
-            // FIX: (TryParseSetDirectiveCommandAsync) can this be a BoundValue and remove InputsProduced property?
             if (((RequestInput)inputProduced.Command).IsPassword)
             {
                 command.ReferenceValue = new PasswordString(inputProduced.Value);

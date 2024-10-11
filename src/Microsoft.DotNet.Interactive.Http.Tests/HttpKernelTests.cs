@@ -1439,7 +1439,7 @@ public partial class HttpKernelTests
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
-        var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var currentDate = DateTime.Now.ToString("yyyy-MM-dd");
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
@@ -1472,11 +1472,11 @@ public partial class HttpKernelTests
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
-        var currentDate = DateTimeOffset.UtcNow;
+        var currentDateTime = DateTimeOffset.Now;
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
-        DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDate, TimeSpan.FromSeconds(10));
+        DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDateTime, TimeSpan.FromSeconds(10));
     }
 
     [Fact]
@@ -1505,7 +1505,7 @@ public partial class HttpKernelTests
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
-        var currentDate = DateTimeOffset.UtcNow.AddDays(-1);
+        var currentDate = DateTimeOffset.Now.AddDays(-1);
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
@@ -1538,7 +1538,7 @@ public partial class HttpKernelTests
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
-        var currentDate = DateTimeOffset.UtcNow;
+        var currentDate = DateTimeOffset.Now;
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));

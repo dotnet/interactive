@@ -66,10 +66,6 @@ public class PolyglotParserConfigurationTests
                         },
                         new KernelActionDirective("#!connect")
                         {
-                            Parameters =
-                            {
-                                new KernelDirectiveParameter("--kernel-name")
-                            },
                             Subcommands =
                             {
                                 new KernelActionDirective("named-pipe")
@@ -77,6 +73,10 @@ public class PolyglotParserConfigurationTests
                                     Parameters =
                                     {
                                         new("--pipe-name")
+                                        {
+                                            Required = true
+                                        },
+                                        new("--kernel-name")
                                         {
                                             Required = true
                                         }
@@ -88,7 +88,11 @@ public class PolyglotParserConfigurationTests
                                     {
                                         new("--working-directory"),
                                         new("--command"),
-                                        new("--kernel-host")
+                                        new("--kernel-host"),
+                                        new("--kernel-name")
+                                        {
+                                            Required = true
+                                        }
                                     }
                                 },
                                 new KernelActionDirective("signalr")
@@ -98,10 +102,28 @@ public class PolyglotParserConfigurationTests
                                         new("--hub-url")
                                         {
                                             Required = true
+                                        },
+                                        new("--kernel-name")
+                                        {
+                                            Required = true
                                         }
                                     }
                                 },
-                                new KernelActionDirective("jupyter"),
+                                new KernelActionDirective("jupyter")
+                                {
+                                    Parameters =
+                                    {
+                                        new("--kernel-name")
+                                        {
+                                            Required = true
+                                        },
+                                        new("--kernel-spec", "The kernel spec to connect to")
+                                        {
+                                            Required = true
+                                        },
+                                        new("--init-script", "Script to run on kernel initialization")
+                                    }
+                                },
                                 new KernelActionDirective("mssql")
                                 {
                                     Parameters =
@@ -109,15 +131,20 @@ public class PolyglotParserConfigurationTests
                                         new KernelDirectiveParameter("--connection-string")
                                         {
                                             AllowImplicitName = true,
-                                            Required = true
+                                            Required = true,
+                                            TypeHint = "connectionstring-mssql"
                                         },
                                         new KernelDirectiveParameter("--create-dbcontext")
                                         {
                                             Flag = true
+                                        },
+                                        new("--kernel-name")
+                                        {
+                                            Required = true
                                         }
                                     },
                                     KernelCommandType = typeof(ConnectMsSql)
-                                },
+                                }
                             }
                         },
                         new KernelSpecifierDirective("#!javascript", "javascript")

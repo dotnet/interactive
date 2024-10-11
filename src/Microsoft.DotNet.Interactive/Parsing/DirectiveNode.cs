@@ -463,7 +463,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         completions = completions.Where(c => c.AssociatedSymbol is KernelDirective).ToList();
                     }
 
-                    return FilterOutParametersWithMaxOccurrencesReached(completions);
+                    return FilterOutCompletionsWithMaxOccurrencesReached(completions);
                 }
                 
                 if (currentToken is not { Kind: TokenKind.Whitespace })
@@ -488,22 +488,33 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         var completions = await parameter.GetValueCompletionsAsync();
                         return completions;
                     }
-                    else
+
+                    var parentDirectiveNode = pn.Ancestors().OfType<DirectiveNode>().First();
+
+                    if (parentDirectiveNode.TryGetDirective(out var parentDirective))
                     {
-                        var parentDirectiveNode = pn.Ancestors().OfType<DirectiveNode>().First();
-                        if (parentDirectiveNode.TryGetDirective(out var parentDirective))
+                        // Since flags have no child nodes, we can return all completions for the parent directive.
+                        List<CompletionItem> completions = [];
+                        completions.AddRange(await parentDirective.GetChildCompletionsAsync());
+
+                        if (parentDirective is KernelActionDirective parentActionDirective)
                         {
-                            // Since flags have no child nodes, we can return all completions for the parent directive.
-                            var completions = await parentDirective.GetChildCompletionsAsync();
+                            // Include parameter names from the subcommand
+                            var subcommandDirective = parentActionDirective.Subcommands.FirstOrDefault(s => s.Name == parentDirectiveNode.SubcommandNode?.NameNode?.Text);
 
-                            // If there's already a subcommand node, then skip subcommand completions
-                            if (parentDirectiveNode.SubcommandNode is not null)
+                            if (subcommandDirective is not null)
                             {
-                                completions = completions.Where(c => c.AssociatedSymbol is not KernelActionDirective).ToList();
+                                completions.AddRange(subcommandDirective.Parameters.Select(p => new CompletionItem(p.Name, WellKnownTags.Property)
+                                {
+                                    AssociatedSymbol = p,
+                                    Documentation = p.Description
+                                }));
                             }
-
-                            return completions.ToArray();
                         }
+
+                        completions = FilterOutCompletionsWithMaxOccurrencesReached(completions);
+
+                        return completions.ToArray();
                     }
                 }
 
@@ -560,7 +571,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     // This could also be a partial subcommand, so...
                     var completions = await directive.GetChildCompletionsAsync();
 
-                    return FilterOutParametersWithMaxOccurrencesReached(completions);
+                    return FilterOutCompletionsWithMaxOccurrencesReached(completions);
                 }
             }
 
@@ -609,7 +620,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                        .ToArray();
         }
 
-        List<CompletionItem> FilterOutParametersWithMaxOccurrencesReached(IReadOnlyList<CompletionItem> completions)
+        List<CompletionItem> FilterOutCompletionsWithMaxOccurrencesReached(IReadOnlyList<CompletionItem> completions)
         {
             var filteredCompletions = new List<CompletionItem>();
 
@@ -619,6 +630,8 @@ internal class DirectiveNode : TopLevelSyntaxNode
                                      .GroupBy(n => n.NameNode!.Text)
                                      .ToDictionary(g => g.Key, g => g.Count());
 
+            var subcommandWasProvided = DescendantNodesAndTokens().OfType<DirectiveSubcommandNode>().Any();
+
             for (var i = 0; i < completions.Count; i++)
             {
                 var completion = completions[i];
@@ -626,7 +639,11 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     !parametersProvided.TryGetValue(completion.InsertText, out var count) ||
                     count < p.MaxOccurrences)
                 {
-                    filteredCompletions.Add(completion);
+                    if (!subcommandWasProvided ||
+                        completion.AssociatedSymbol is not KernelActionDirective)
+                    {
+                        filteredCompletions.Add(completion);
+                    }
                 }
             }
 
