@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Directives;
 
@@ -34,6 +36,22 @@ internal class DirectiveSubcommandNode : SyntaxNode
     {
         AddInternal(node);
         HasParameters = true;
+    }
+
+    public override IEnumerable<CodeAnalysis.Diagnostic> GetDiagnostics()
+    {
+        foreach (var diagnostic in base.GetDiagnostics())
+        {
+            yield return diagnostic;
+        }
+
+        if (TryGetSubcommand(out var directive))
+        {
+            foreach (var diagnostic in DirectiveNode.GetDiagnosticsForMissingParameters(directive, this))
+            {
+                yield return diagnostic;
+            }
+        }
     }
 
     public bool TryGetSubcommand([NotNullWhen(true)] out KernelActionDirective? subcommandDirective)
