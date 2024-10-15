@@ -299,6 +299,38 @@ public partial class PolyglotSyntaxParserTests
                 .Be("Missing value for required parameter '--required'");
         }
 
+        [Fact]
+        public void When_a_required_parameter_on_a_subcommand_is_missing_then_an_error_is_produced()
+        {
+            var tree = Parse("#!connect jupyter --kernel-spec .net-csharp");
+
+            tree.RootNode
+                .GetDiagnostics()
+                .Should()
+                .ContainSingle()
+                .Which
+                .GetMessage()
+                .Should()
+                .Be("Missing required parameter '--kernel-name'");
+        }
+
+        [Theory]
+        [InlineData("#!connect jupyter --kernel-spec .net-csharp --kernel-name")]
+        [InlineData("#!connect jupyter --kernel-name --kernel-spec .net-csharp")]
+        public void When_the_value_for_a_required_parameter_on_a_subcommand_is_missing_then_an_error_is_produced(string code)
+        {
+            var tree = Parse(code);
+
+            tree.RootNode
+                .GetDiagnostics()
+                .Should()
+                .ContainSingle()
+                .Which
+                .GetMessage()
+                .Should()
+                .Be("Missing value for required parameter '--kernel-name'");
+        }
+
         [Theory]
         [InlineData("""
                     "just a JSON string"

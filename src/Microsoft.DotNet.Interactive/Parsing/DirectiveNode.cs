@@ -47,39 +47,9 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         if (TryGetDirective(out var directive))
         {
-            foreach (var namedParameter in directive.Parameters)
+            foreach (var diagnostic in GetDiagnosticsForMissingParameters(directive, this))
             {
-                if (namedParameter.Required)
-                {
-                    var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
-                                                  .Where(p => p.NameNode is null
-                                                                  ? namedParameter.AllowImplicitName
-                                                                  : p.NameNode?.Text == namedParameter.Name)
-                                                  .ToArray();
-
-                    if (!matchingNodes.Any())
-                    {
-                        yield return CreateDiagnostic(
-                            new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
-                                "Missing required parameter '{0}'",
-                                DiagnosticSeverity.Error,
-                                namedParameter.Name));
-                    }
-                    else
-                    {
-                        foreach (var parameterNode in matchingNodes)
-                        {
-                            if (parameterNode.ValueNode is null)
-                            {
-                                yield return CreateDiagnostic(
-                                    new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
-                                        "Missing value for required parameter '{0}'",
-                                        DiagnosticSeverity.Error,
-                                        namedParameter.Name));
-                            }
-                        }
-                    }
-                }
+                yield return diagnostic;
             }
         }
 
@@ -99,6 +69,46 @@ internal class DirectiveNode : TopLevelSyntaxNode
             else if (childNode is DirectiveParameterNode)
             {
                 foundParameter = true;
+            }
+        }
+    }
+
+    internal static IEnumerable<CodeAnalysis.Diagnostic> GetDiagnosticsForMissingParameters(
+        KernelDirective directive,
+        SyntaxNode node)
+    {
+        foreach (var namedParameter in directive.Parameters)
+        {
+            if (namedParameter.Required)
+            {
+                var matchingNodes = node.ChildNodes.OfType<DirectiveParameterNode>()
+                                        .Where(p => p.NameNode is null
+                                                        ? namedParameter.AllowImplicitName
+                                                        : p.NameNode?.Text == namedParameter.Name)
+                                        .ToArray();
+
+                if (!matchingNodes.Any())
+                {
+                    yield return node.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
+                            "Missing required parameter '{0}'",
+                            DiagnosticSeverity.Error,
+                            namedParameter.Name));
+                }
+                else
+                {
+                    foreach (var parameterNode in matchingNodes)
+                    {
+                        if (parameterNode.ValueNode is null)
+                        {
+                            yield return node.CreateDiagnostic(
+                                new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
+                                    "Missing value for required parameter '{0}'",
+                                    DiagnosticSeverity.Error,
+                                    namedParameter.Name));
+                        }
+                    }
+                }
             }
         }
     }

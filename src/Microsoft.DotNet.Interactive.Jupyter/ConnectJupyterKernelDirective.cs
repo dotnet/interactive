@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Connection;
@@ -31,7 +31,10 @@ public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyt
         };
 
     public KernelDirectiveParameter InitScriptParameter { get; } =
-        new("--init-script", "Script to run on kernel initialization");
+        new("--init-script", "Script to run on kernel initialization")
+        {
+            TypeHint = "file"
+        };
 
     public ConnectJupyterKernelDirective AddConnectionOptions(IJupyterKernelConnectionOptions connectionOptions)
     {

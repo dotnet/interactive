@@ -11,7 +11,6 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Directives;
 
