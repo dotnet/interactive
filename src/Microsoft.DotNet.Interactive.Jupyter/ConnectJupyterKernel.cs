@@ -19,8 +19,10 @@ public class ConnectJupyterKernel : ConnectKernelCommand
 
     public string InitScript { get; set; }
 
+    [JsonPropertyName("url")]
     public string TargetUrl { get; set; }
-    
+
+    [JsonPropertyName("bearer")]
     public bool UseBearerAuth { get; set; }
     
     public string Token { get; set; }
