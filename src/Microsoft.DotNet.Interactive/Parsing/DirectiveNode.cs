@@ -47,9 +47,9 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         if (TryGetDirective(out var directive))
         {
-            foreach (var diagnostic1 in GetDiagnosticsForMissingParameters(directive, this))
+            foreach (var diagnostic in GetDiagnosticsForMissingParameters(directive, this))
             {
-                yield return diagnostic1;
+                yield return diagnostic;
             }
         }
 
