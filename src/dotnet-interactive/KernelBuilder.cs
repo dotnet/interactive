@@ -1,9 +1,13 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
@@ -11,6 +15,7 @@ using Microsoft.DotNet.Interactive.Mermaid;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Pocket;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.App;
 
@@ -36,7 +41,6 @@ public static class KernelBuilder
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseWho()
-                .UseMathAndLaTeX()
                 .UseValueSharing(),
             new[] { "c#", "C#" });
 
@@ -46,7 +50,6 @@ public static class KernelBuilder
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseWho()
-                .UseMathAndLaTeX()
                 .UseValueSharing(),
             new[] { "f#", "F#" });
 
@@ -89,12 +92,22 @@ public static class KernelBuilder
                 .AddConnectionOptions(new JupyterHttpKernelConnectionOptions())
                 .AddConnectionOptions(new JupyterLocalKernelConnectionOptions()));
 
-        CommandLineParser.SetUpFormatters(frontendEnvironment);
+        SetUpFormatters(frontendEnvironment);
 
         kernel.DefaultKernelName = defaultKernelName;
 
         kernel.UseTelemetrySender(telemetrySender);
 
         return kernel;
+    }
+
+    internal static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
+    {
+        if (frontendEnvironment is BrowserFrontendEnvironment)
+        {
+            Formatter.DefaultMimeType = HtmlFormatter.MimeType;
+            Formatter.SetPreferredMimeTypesFor(typeof(string), PlainTextFormatter.MimeType);
+            Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
+        }
     }
 }

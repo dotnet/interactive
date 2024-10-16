@@ -143,6 +143,10 @@ Microsoft.DotNet.Interactive.Formatting
     public System.Boolean Format(T instance, FormatContext context)
   public class JsonString : Microsoft.AspNetCore.Html.HtmlString, Microsoft.AspNetCore.Html.IHtmlContent
     .ctor(System.String json)
+  public class LaTeXString
+    public static LaTeXString op_Implicit(System.String source)
+    .ctor(System.String latexCode)
+    public System.String ToString()
   public static class PlainTextFormatter
     public static ITypeFormatter GetPreferredFormatterFor(System.Type type)
     public static ITypeFormatter GetPreferredFormatterFor<T>()
