@@ -122,6 +122,15 @@ public class PolyglotParserConfigurationTests
                                             Required = true
                                         },
                                         new("--init-script", "Script to run on kernel initialization")
+                                        {
+                                            TypeHint = "file"
+                                        },
+                                        new("--conda-env"),
+                                        new("--url"),
+                                        new("--bearer")
+                                        {
+                                            Flag = true
+                                        }
                                     }
                                 },
                                 new KernelActionDirective("mssql")
