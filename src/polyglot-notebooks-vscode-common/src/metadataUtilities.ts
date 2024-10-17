@@ -96,7 +96,7 @@ export function getNotebookCellMetadataFromNotebookCellElement(notebookCell: vsc
 
 export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDocument: commandsAndEvents.InteractiveDocument): NotebookDocumentMetadata {
     const notebookMetadata = createDefaultNotebookDocumentMetadata();
-    const kernelInfo = interactiveDocument.metadata.kernelInfo || interactiveDocument.metadata.plyglot_notebook.kernelInfo;
+    const kernelInfo = interactiveDocument.metadata?.kernelInfo || interactiveDocument.metadata.polyglot_notebook?.kernelInfo;
     if (typeof kernelInfo === 'object') {
         if (typeof kernelInfo.defaultKernelName === 'string') {
             notebookMetadata.kernelInfo.defaultKernelName = kernelInfo.defaultKernelName;
