@@ -5,6 +5,7 @@ using System;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Formatting;
 
+[Obsolete("This type will be removed in a future version. You can use LaTeXString instead.")]
 public class MathString
 {
     private readonly string _math;

@@ -10,24 +10,16 @@ using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.App.ParserServer;
 using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
-using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
-using Microsoft.DotNet.Interactive.Jupyter.Formatting;
-using Microsoft.DotNet.Interactive.Mermaid;
-using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.VSCode;
 using Microsoft.Extensions.DependencyInjection;
@@ -448,39 +440,6 @@ public static class CommandLineParser
 
             var pr = new HttpPortRange(start, end);
             return pr;
-        }
-    }
-
-    public static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
-    {
-        switch (frontendEnvironment)
-        {
-            case AutomationEnvironment automationEnvironment:
-                break;
-
-            case BrowserFrontendEnvironment browserFrontendEnvironment:
-                Formatter.DefaultMimeType = HtmlFormatter.MimeType;
-                Formatter.SetPreferredMimeTypesFor(typeof(LaTeXString), "text/latex");
-                Formatter.SetPreferredMimeTypesFor(typeof(MathString), "text/latex");
-                Formatter.SetPreferredMimeTypesFor(typeof(string), PlainTextFormatter.MimeType);
-                Formatter.SetPreferredMimeTypesFor(typeof(ScriptContent), HtmlFormatter.MimeType);
-                Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
-
-                Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
-                Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");
-                Formatter.Register<ScriptContent>((script, writer) =>
-                {
-                    IHtmlContent content =
-                        PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());
-                    content.WriteTo(writer, HtmlEncoder.Default);
-                }, HtmlFormatter.MimeType);
-
-                HttpResponseMessageFormattingExtensions.RegisterFormatters();
-
-                break;
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
         }
     }
 }

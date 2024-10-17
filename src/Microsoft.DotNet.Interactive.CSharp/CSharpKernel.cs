@@ -98,10 +98,10 @@ public class CSharpKernel :
 
     public ScriptState ScriptState { get; private set; }
 
-    private Task<bool> IsCompleteSubmissionAsync(string code)
+    private bool IsCompleteSubmissionAsync(string code)
     {
         var syntaxTree = SyntaxFactory.ParseSyntaxTree(code, _csharpParseOptions);
-        return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
+        return SyntaxFactory.IsCompleteSubmission(syntaxTree);
     }
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
@@ -257,7 +257,7 @@ public class CSharpKernel :
         context.Publish(codeSubmissionReceived);
 
         var code = submitCode.Code;
-        var isComplete = await IsCompleteSubmissionAsync(submitCode.Code);
+        var isComplete = IsCompleteSubmissionAsync(submitCode.Code);
 
         if (isComplete)
         {

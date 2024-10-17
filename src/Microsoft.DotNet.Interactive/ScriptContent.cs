@@ -4,9 +4,11 @@
 using System.IO;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive;
 
+[TypeFormatterSource(typeof(ScriptContentFormatterSource))]
 public class ScriptContent : IHtmlContent
 {
     public string ScriptValue { get; }

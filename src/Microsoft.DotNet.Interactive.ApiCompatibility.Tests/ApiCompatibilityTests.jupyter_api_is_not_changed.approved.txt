@@ -98,9 +98,6 @@ Microsoft.DotNet.Interactive.Jupyter
     public static T UseDefaultMagicCommands<T>()
     public static Microsoft.DotNet.Interactive.CSharp.CSharpKernel UseJupyterHelpers()
     public static Microsoft.DotNet.Interactive.PowerShell.PowerShellKernel UseJupyterHelpers()
-  public static class KernelFormattingExtensions
-    public static Microsoft.DotNet.Interactive.CSharp.CSharpKernel UseMathAndLaTeX()
-    public static Microsoft.DotNet.Interactive.FSharp.FSharpKernel UseMathAndLaTeX()
   public class KernelSpec
     .ctor()
     public System.Collections.Generic.IReadOnlyList<System.String> CommandArguments { get; set;}
@@ -144,10 +141,6 @@ Microsoft.DotNet.Interactive.Jupyter.Connection
     public IJupyterConnection GetConnection(Microsoft.DotNet.Interactive.Jupyter.ConnectJupyterKernel connectCommand)
     public System.Collections.Generic.IReadOnlyCollection<Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter> GetParameters()
 Microsoft.DotNet.Interactive.Jupyter.Formatting
-  public class LaTeXString
-    public static LaTeXString op_Implicit(System.String source)
-    .ctor(System.String latexCode)
-    public System.String ToString()
   public class MathString
     public static MathString op_Implicit(System.String source)
     .ctor(System.String latexCode)

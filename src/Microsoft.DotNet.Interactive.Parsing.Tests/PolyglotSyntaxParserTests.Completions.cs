@@ -81,7 +81,34 @@ public partial class PolyglotSyntaxParserTests
 
                 var completions = await node.GetCompletionsAtPositionAsync(position.Value);
 
-                completions.Select(c => c.DisplayText).Should().Contain(["--kernel-name"]);
+                completions.Select(c => c.DisplayText).Should().Contain("--kernel-name");
+            }
+
+            [Theory]
+            [InlineData("#!connect jupyter --kernel-name asdf $$")]
+            [InlineData("#!connect jupyter --kernel-name @input $$")]
+            [InlineData("""#!connect jupyter --kernel-name @input:{"saveAs":"xyz"} $$""")]
+            [InlineData("#!connect jupyter $$ --kernel-name")]
+            public async Task produce_completions_for_parameter_names_2(string markupCode)
+            {
+                MarkupTestFile.GetPosition(markupCode, out var code, out var position);
+
+                var tree = Parse(code, PolyglotParserConfigurationTests.GetDefaultConfiguration());
+
+                var node = tree.RootNode.FindNode(position.Value)
+                               .AncestorsAndSelf()
+                               .OfType<DirectiveNode>()
+                               .First();
+
+                var completions = await node.GetCompletionsAtPositionAsync(position.Value);
+
+                completions.Select(c => c.DisplayText).Should().Contain([
+                    "--url", 
+                    "--kernel-spec",
+                    "--init-script",
+                    "--conda-env",
+                    "--bearer"
+                ]);
             }
 
             [Fact]
