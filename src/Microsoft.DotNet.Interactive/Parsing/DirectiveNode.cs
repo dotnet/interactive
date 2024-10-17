@@ -568,20 +568,33 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
             case DirectiveParameterValueNode directiveParameterValueNode:
             {
-                if (directiveParameterValueNode.Parent is DirectiveParameterNode pn &&
-                    currentToken is not { Kind: TokenKind.Whitespace } &&
-                    pn.TryGetParameter(out var parameter))
+                if (directiveParameterValueNode.Parent is DirectiveParameterNode pn)
                 {
-                    var completions = await parameter.GetValueCompletionsAsync();
-                    return completions;
+                    if (currentToken is not { Kind: TokenKind.Whitespace })
+                    {
+                        if (pn.TryGetParameter(out var parameter))
+                        {
+                            var completions = await parameter.GetValueCompletionsAsync();
+                            return completions;
+                        }
+                    }
+                    else
+                    {
+                    }
                 }
 
                 if (TryGetDirective(out var directive))
                 {
-                    // This could also be a partial subcommand, so...
-                    var completions = await directive.GetChildCompletionsAsync();
-
-                    return FilterOutCompletionsWithMaxOccurrencesReached(completions);
+                    if (TryGetSubcommand(directive, out var subcommand))
+                    {
+                        var completions = await subcommand.GetChildCompletionsAsync();
+                        return FilterOutCompletionsWithMaxOccurrencesReached(completions);
+                    }
+                    else
+                    {
+                        var completions = await directive.GetChildCompletionsAsync();
+                        return FilterOutCompletionsWithMaxOccurrencesReached(completions);
+                    }
                 }
             }
 
