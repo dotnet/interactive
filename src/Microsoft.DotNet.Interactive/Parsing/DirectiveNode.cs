@@ -568,18 +568,13 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
             case DirectiveParameterValueNode directiveParameterValueNode:
             {
-                if (directiveParameterValueNode.Parent is DirectiveParameterNode pn)
+                if (directiveParameterValueNode.Parent is DirectiveParameterNode pn &&
+                    currentToken is not { Kind: TokenKind.Whitespace })
                 {
-                    if (currentToken is not { Kind: TokenKind.Whitespace })
+                    if (pn.TryGetParameter(out var parameter))
                     {
-                        if (pn.TryGetParameter(out var parameter))
-                        {
-                            var completions = await parameter.GetValueCompletionsAsync();
-                            return completions;
-                        }
-                    }
-                    else
-                    {
+                        var completions = await parameter.GetValueCompletionsAsync();
+                        return completions;
                     }
                 }
 

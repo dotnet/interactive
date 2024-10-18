@@ -98,7 +98,7 @@ public class CSharpKernel :
 
     public ScriptState ScriptState { get; private set; }
 
-    private bool IsCompleteSubmissionAsync(string code)
+    private bool IsCompleteSubmission(string code)
     {
         var syntaxTree = SyntaxFactory.ParseSyntaxTree(code, _csharpParseOptions);
         return SyntaxFactory.IsCompleteSubmission(syntaxTree);
@@ -257,7 +257,7 @@ public class CSharpKernel :
         context.Publish(codeSubmissionReceived);
 
         var code = submitCode.Code;
-        var isComplete = IsCompleteSubmissionAsync(submitCode.Code);
+        var isComplete = IsCompleteSubmission(submitCode.Code);
 
         if (isComplete)
         {
