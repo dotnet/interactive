@@ -8,7 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.23403.1" />
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.Interactive.NamedPipeConnector\Microsoft.DotNet.Interactive.NamedPipeConnector.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.Interactive.PackageManagement\Microsoft.DotNet.Interactive.PackageManagement.csproj" />
   </ItemGroup>
 
 </Project>
