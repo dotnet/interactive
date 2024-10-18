@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Microsoft PostgreSQL support for .NET Interactive</PackageDescription>
+    <PackageTags>polyglot notebook dotnet interactive SQL PostgreSQL Data</PackageTags>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn>
+    <!-- dll outside of lib/ folder -->
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="8.0.4" />
+    <PackageReference Include="Pocket.Disposable" Version="1.2.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="PocketLogger" Version="0.9.1">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+</Project>
