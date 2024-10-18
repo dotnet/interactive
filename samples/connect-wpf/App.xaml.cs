@@ -1,12 +1,16 @@
 using System;
 using System.CommandLine;
 using System.IO.Pipes;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Directives;
+using Microsoft.DotNet.Interactive.NamedPipeConnector;
+using Microsoft.DotNet.Interactive.PackageManagement;
 
 namespace WpfConnect
 {
@@ -41,7 +45,7 @@ using {nameof(WpfConnect)};"));
                 await csharpKernel.SetValueAsync("App", this, GetType());
 
                 //Start named pipe
-                _kernel.AddKernelConnector(new ConnectNamedPipeCommand());
+                _kernel.AddKernelConnector(new ConnectNamedPipeDirective());
             });
         }
 
@@ -76,23 +80,39 @@ using {nameof(WpfConnect)};"));
 
         private void AddDispatcherMagicCommand(Kernel kernel)
         {
-            var enabledOption = new Option<bool>("--enabled", getDefaultValue: () => true);
-            var dispatcherCommand = new Command("#!dispatcher", "Enable or disable running code on the Dispatcher")
+            //// var enabledOption = new KernelDirectiveParameter<bool>("--enabled", getDefaultValue: () => true);
+            var dispatcherCommand = new KernelActionDirective("#!dispatcher")
             {
-                enabledOption
+                Description = "Enable or disable running code on the Dispatcher",
+                Parameters = [ 
+                    new("--enabled")
+                    {
+                        TypeHint = "bool",
+                    }
+                ],
             };
 
-            dispatcherCommand.SetHandler(
+            /*dispatcherCommand.SetHandler(
                 enabled => RunOnDispatcher = enabled,
-                enabledOption);
+                enabledOption);*/
+            
+            kernel.AddDirective<DispatcherCommand>(dispatcherCommand, (k, kc) => {
+                RunOnDispatcher = bool.Parse(k.Enabled);
 
-            kernel.AddDirective(dispatcherCommand);
+                return Task.CompletedTask;
+            });
         }
 
         private CSharpKernel RegisterCSharpKernel()
         {
             var csharpKernel = new CSharpKernel()
-                               .UseNugetDirective()
+                               .UseNugetDirective((k, resolvedPackageReference) =>
+                               {
+
+                                   k.AddAssemblyReferences(resolvedPackageReference
+                                       .SelectMany(r => r.AssemblyPaths));
+                                   return Task.CompletedTask;
+                               }, false)
                                .UseKernelHelpers()
                                .UseWho()
                                .UseValueSharing()
