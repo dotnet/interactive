@@ -14,7 +14,7 @@ public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnecti
 
     public JupyterLocalKernelConnectionOptions()
     {
-        CondaEnv.AddCompletions(_ => CondaEnvironment.GetEnvironments());
+        CondaEnv.AddCompletions(CondaEnvironment.GetEnvironments);
 
         _parameters = new List<KernelDirectiveParameter>
         {

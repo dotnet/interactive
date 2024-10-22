@@ -43,10 +43,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                         AllowImplicitName = true
                     };
 
-                    variableNameParameter.AddCompletions(_ => cSharpKernel.ScriptState
-                                                                          .Variables
-                                                                          .Where(v => v.Value is DataFrame)
-                                                                          .Select(v => new CompletionItem(v.Name, WellKnownTags.Parameter)));
+                    variableNameParameter.AddCompletions(_ =>
+                    {
+                        var completionItems = cSharpKernel.ScriptState
+                                                          .Variables
+                                                          .Where(v => v.Value is DataFrame)
+                                                          .Select(v => new CompletionItem(v.Name, WellKnownTags.Parameter));
+                        return Task.FromResult(completionItems);
+                    });
 
                     var directive = new KernelActionDirective("#!linqify")
                     {

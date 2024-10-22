@@ -562,7 +562,7 @@ Microsoft.DotNet.Interactive.Directives
     public System.String ToString()
   public class KernelDirectiveCompletionContext
     .ctor()
-    public System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Events.CompletionItem> Completions { get;}
+    public System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Events.CompletionItem> CompletionItems { get;}
   public class KernelDirectiveParameter
     .ctor(System.String name, System.String description = null)
     public System.Boolean AllowImplicitName { get; set;}
@@ -572,9 +572,8 @@ Microsoft.DotNet.Interactive.Directives
     public System.String Name { get;}
     public System.Boolean Required { get; set;}
     public System.String TypeHint { get; set;}
-    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.CompletionItem>> getCompletions)
-    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.CompletionItem>>> getCompletions)
-    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Collections.Generic.IEnumerable<System.String>> getCompletions)
+    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Threading.Tasks.Task> getCompletions)
+    public KernelDirectiveParameter AddCompletions(System.Func<System.Collections.Generic.IEnumerable<System.String>> getCompletions)
     public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Events.CompletionItem>> GetValueCompletionsAsync()
     public System.String ToString()
   public class KernelSpecifierDirective : KernelDirective

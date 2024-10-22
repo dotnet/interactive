@@ -9,5 +9,5 @@ namespace Microsoft.DotNet.Interactive.Directives;
 
 public class KernelDirectiveCompletionContext
 {
-    public IList<CompletionItem> Completions { get; } = new List<CompletionItem>();
+    public IList<CompletionItem> CompletionItems { get; } = new List<CompletionItem>();
 }
