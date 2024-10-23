@@ -43,7 +43,7 @@ public class ConnectNamedPipeDirective : ConnectKernelDirective<ConnectNamedPipe
         if (KernelInvocationContext.Current is { } context &&
             context.HandlingKernel.RootKernel is CompositeKernel root)
         {
-            root.AddKernelConnector(new ConnectNamedPipeDirective());
+            root.AddConnectDirective(new ConnectNamedPipeDirective());
         }
     }
 }
