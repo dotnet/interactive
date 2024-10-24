@@ -94,6 +94,7 @@ Microsoft.DotNet.Interactive
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
     public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text)
+    public static System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<System.String,System.String>> GetInputsAsync(System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Commands.InputDescription> inputDescriptions)
     public static System.Threading.Tasks.Task<PasswordString> GetPasswordAsync(System.String prompt = )
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)

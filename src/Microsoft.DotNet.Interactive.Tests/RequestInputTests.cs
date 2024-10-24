@@ -110,7 +110,7 @@ public class RequestInputTests
     }
 
     [Fact]
-    public async Task Multiple_inputs_can_be_requested_together()
+    public async Task Multiple_inputs_can_be_requested_together_using_command()
     {
         var requestInputs = new RequestInputs
         {
@@ -140,6 +140,43 @@ public class RequestInputTests
 
         result.Events.Should().ContainSingle<InputsProduced>()
               .Which.Values.Should().BeEquivalentTo(formValues);
+    }
+
+    [Fact]
+    public async Task Multiple_inputs_can_be_requested_together_using_GetInputsAsync()
+    {
+        using var kernel = CreateKernel()
+            .UseFormsForMultipleInputs();
+
+        var formValues = new Dictionary<string, string>
+        {
+            ["Fruit"] = "cherry",
+            ["Tastiness"] = "9000",
+            ["Color"] = "red"
+        };
+
+        kernel.RespondToRequestInputsFormWith(formValues);
+
+        var result = await kernel.SendAsync(
+                         new SubmitCode(
+                             """
+                             using Microsoft.DotNet.Interactive;
+
+                             var inputResult = await Kernel.GetInputsAsync(
+                             [
+                                 new("Fruit"),
+                                 new("Tastiness"),
+                                 new("Color")
+                             ]);
+                             """, "csharp"));
+
+        result.Events.Should().NotContainErrors();
+
+        var csharpKernel = (CSharpKernel)kernel.FindKernelByName("csharp");
+
+        csharpKernel.TryGetValue<IDictionary<string, string>>("inputResult", out var inputResult).Should().BeTrue();
+
+        inputResult.Should().BeEquivalentTo(formValues);
     }
 
     private static CompositeKernel CreateKernel()
