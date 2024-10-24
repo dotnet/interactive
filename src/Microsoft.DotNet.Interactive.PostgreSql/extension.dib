@@ -1,0 +1,3 @@
+#!csharp
+
+Microsoft.DotNet.Interactive.PostgreSql.PostgreSqlKernel.AddPostgreSqlKernelConnectorToCurrentRoot();
