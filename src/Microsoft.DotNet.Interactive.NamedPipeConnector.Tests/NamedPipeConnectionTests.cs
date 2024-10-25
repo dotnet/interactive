@@ -31,7 +31,7 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
     {
         using var compositeKernel = new CompositeKernel();
 
-        compositeKernel.AddKernelConnector(new ConnectNamedPipeDirective());
+        compositeKernel.AddConnectDirective(new ConnectNamedPipeDirective());
 
         compositeKernel
             .KernelInfo
@@ -60,7 +60,7 @@ public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
     {
         CreateRemoteKernelTopology(_pipeName);
 
-        compositeKernel.AddKernelConnector(new ConnectNamedPipeDirective());
+        compositeKernel.AddConnectDirective(new ConnectNamedPipeDirective());
     }
    
     private void CreateRemoteKernelTopology(string pipeName)

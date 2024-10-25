@@ -84,10 +84,10 @@ public static class KernelBuilder
                      .UseFormsForMultipleInputs(secretManager)
                      .UseNuGetExtensions(telemetrySender);
 
-        kernel.AddKernelConnector(new ConnectSignalRDirective());
-        kernel.AddKernelConnector(new ConnectStdIoDirective(startupOptions.KernelHost));
+        kernel.AddConnectDirective(new ConnectSignalRDirective());
+        kernel.AddConnectDirective(new ConnectStdIoDirective(startupOptions.KernelHost));
 
-        kernel.AddKernelConnector(
+        kernel.AddConnectDirective(
             new ConnectJupyterKernelDirective()
                 .AddConnectionOptions(new JupyterHttpKernelConnectionOptions())
                 .AddConnectionOptions(new JupyterLocalKernelConnectionOptions()));

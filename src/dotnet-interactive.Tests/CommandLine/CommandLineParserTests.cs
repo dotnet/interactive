@@ -118,7 +118,7 @@ public class CommandLineParserTests : IDisposable
 
         using (var kernel = new CompositeKernel())
         {
-            kernel.AddKernelConnector(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
+            kernel.AddConnectDirective(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
 
             string[] args = [Dotnet.Path.FullName, typeof(Program).Assembly.Location, "stdio", "--log-path", logPath.Directory.FullName, "--verbose"];
 

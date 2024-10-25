@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.Http;
 
 [TypeFormatterSource(
     typeof(HttpResponseFormatterSource),
-    PreferredMimeTypes = new[] { HtmlFormatter.MimeType })]
+    PreferredMimeTypes = [HtmlFormatter.MimeType])]
 public class PartialHttpResponse : EmptyHttpResponse
 {
     public int StatusCode { get; }

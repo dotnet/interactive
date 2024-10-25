@@ -127,8 +127,10 @@ public partial class PolyglotSyntaxParserTests
                                     Parameters =
                                     [
                                         new KernelDirectiveParameter("--parameter")
-                                                { AllowImplicitName = true }
-                                            .AddCompletions(_ => ["one", "two", "three"]),
+                                            {
+                                                AllowImplicitName = true
+                                            }
+                                            .AddCompletions(() => ["one", "two", "three"]),
                                         new("--other-parameter")
                                     ]
                                 }
@@ -271,7 +273,7 @@ public partial class PolyglotSyntaxParserTests
                                             [
                                                 new KernelDirectiveParameter("--parameter")
                                                         { AllowImplicitName = true }
-                                                    .AddCompletions(_ => ["one", "two", "three"]),
+                                                    .AddCompletions(() => ["one", "two", "three"]),
                                                 new("--other-parameter")
                                             ]
                                         }
@@ -314,7 +316,7 @@ public partial class PolyglotSyntaxParserTests
                                 {
                                     Parameters =
                                     [
-                                        new KernelDirectiveParameter("--parameter").AddCompletions(_ => ["one", "two", "three"])
+                                        new KernelDirectiveParameter("--parameter").AddCompletions(() => ["one", "two", "three"])
                                     ]
                                 }
                             ]

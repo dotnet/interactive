@@ -114,7 +114,7 @@ hello!
     {
         using var compositeKernel = new CompositeKernel();
 
-        compositeKernel.AddKernelConnector(
+        compositeKernel.AddConnectDirective(
             new ConnectFakeKernelDirective("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
 
         await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake1");
@@ -131,7 +131,7 @@ hello!
     {
         var compositeKernel = new CompositeKernel();
 
-        compositeKernel.AddKernelConnector(
+        compositeKernel.AddConnectDirective(
             new ConnectFakeKernelDirective("fake", "Connects the fake kernel", _ => Task.FromResult<Kernel>(fakeKernel)));
 
         return compositeKernel;

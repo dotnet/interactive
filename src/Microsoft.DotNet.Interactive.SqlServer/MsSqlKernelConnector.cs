@@ -8,6 +8,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer;
 
 internal class MsSqlKernelConnector
 {
+    // FIX: (MsSqlKernelConnector) dead code?
     public MsSqlKernelConnector(bool createDbContext, string connectionString)
     {
         CreateDbContext = createDbContext;

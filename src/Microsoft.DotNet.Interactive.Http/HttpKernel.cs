@@ -144,6 +144,7 @@ public class HttpKernel :
             {
                 var docVariableNodes = parsedDoc.SyntaxTree.RootNode.ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
                 var docVariableNames = docVariableNodes.Where(n => n.Span.Start < lastSpan?.Start).Select(n => n.DeclarationNode?.VariableName).ToHashSet();
+
                 foreach (DeclaredVariable dv in parsedDoc.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
                 {
                     if (docVariableNames.Contains(dv.Name))
@@ -152,7 +153,6 @@ public class HttpKernel :
                     }
                 }
             }
-
         }
         else
         {

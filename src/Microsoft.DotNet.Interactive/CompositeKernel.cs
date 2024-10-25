@@ -217,7 +217,7 @@ public sealed class CompositeKernel :
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public void AddKernelConnector<T>(ConnectKernelDirective<T> connectDirective)
+    public void AddConnectDirective<T>(ConnectKernelDirective<T> connectDirective)
         where T : ConnectKernelCommand
     {
         if (_rootConnectDirective is null)

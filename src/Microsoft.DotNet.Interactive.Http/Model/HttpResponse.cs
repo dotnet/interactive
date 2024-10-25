@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Http;
 
 [TypeFormatterSource(
     typeof(HttpResponseFormatterSource),
-    PreferredMimeTypes = new[] { HtmlFormatter.MimeType })]
+    PreferredMimeTypes = [HtmlFormatter.MimeType])]
 public sealed class HttpResponse : PartialHttpResponse
 {
     public Dictionary<string, string[]> Headers { get; }

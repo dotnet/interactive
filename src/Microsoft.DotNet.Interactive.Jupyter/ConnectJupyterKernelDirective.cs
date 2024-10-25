@@ -5,6 +5,7 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
@@ -89,28 +90,31 @@ public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyt
         return null;
     }
 
-    private async Task<IEnumerable<CompletionItem>> GetKernelSpecsCompletionsAsync(KernelDirectiveCompletionContext ctx)
+    private async Task GetKernelSpecsCompletionsAsync(KernelDirectiveCompletionContext context)
     {
-        var hash = GetParseResultHash(ctx);
+        var hash = GetParseResultHash(context);
         if (_mruKernelSpecSuggestions.Key == hash)
         {
-            return _mruKernelSpecSuggestions.Value;
-        }
+            foreach (var item in _mruKernelSpecSuggestions.Value)
+            {
+                context.CompletionItems.Add(item);
+            }
 
-        IEnumerable<CompletionItem> completions = [];
+            return;
+        }
 
         var connection = GetJupyterConnection(new ConnectJupyterKernel(""));
         using (connection as IDisposable)
         {
-            completions = await GetKernelSpecsCompletionsAsync(connection);
-        }
+            var completions = (await GetKernelSpecsCompletionsAsync(connection)).ToArray();
 
-        if (completions is not null)
-        {
             _mruKernelSpecSuggestions = new(hash, completions);
-        }
 
-        return completions;
+            foreach (var item in completions)
+            {
+                context.CompletionItems.Add(item);
+            }
+        }
     }
 
     private async Task<IEnumerable<CompletionItem>> GetKernelSpecsCompletionsAsync(IJupyterConnection connection)

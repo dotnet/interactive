@@ -20,7 +20,7 @@ public class KqlKernelExtension
 
             var kqlToolPath = Path.Combine(Paths.DotnetToolsPath, kqlToolName);
             compositeKernel
-                .AddKernelConnector(new ConnectKqlDirective(kqlToolPath));
+                .AddConnectDirective(new ConnectKqlDirective(kqlToolPath));
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString(@"<details><summary>Query Microsoft Kusto Server databases.</summary>

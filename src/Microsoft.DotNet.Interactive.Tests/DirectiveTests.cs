@@ -457,12 +457,12 @@ i");
         var firstWasCalledWith = "";
         var secondWasCalledWith = "";
 
-        compositeKernel.AddKernelConnector(new ConnectCustomDirective(s =>
+        compositeKernel.AddConnectDirective(new ConnectCustomDirective(s =>
         {
             firstWasCalledWith = s;
             return Task.FromResult<Kernel>(new FakeKernel(s));
         }));
-        compositeKernel.AddKernelConnector(new ConnectCustomKernelTwoDirective(s =>
+        compositeKernel.AddConnectDirective(new ConnectCustomKernelTwoDirective(s =>
         {
             secondWasCalledWith = s;
             return Task.FromResult<Kernel>(new FakeKernel(s));

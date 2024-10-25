@@ -1,20 +1,16 @@
-﻿#nullable enable
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis.Text;
-using System;
+#nullable enable
+
 using Microsoft.DotNet.Interactive.Http.Parsing;
-using Microsoft.CodeAnalysis;
+using System;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Reactive.Concurrency;
-using System.Xml.XPath;
 using System.Xml;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.Interactive.Http;
-
-using Diagnostic = CodeAnalysis.Diagnostic;
 
 internal class HttpNamedRequest
 {
@@ -25,7 +21,7 @@ internal class HttpNamedRequest
         Response = response;
     }
 
-    public string? Name { get; private set; }
+    public string? Name { get; }
 
     private readonly HttpRequestNode RequestNode;
 

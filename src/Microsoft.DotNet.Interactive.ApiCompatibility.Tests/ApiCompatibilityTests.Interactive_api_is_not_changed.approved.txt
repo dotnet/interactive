@@ -19,7 +19,7 @@ Microsoft.DotNet.Interactive
     public System.String DefaultKernelName { get; set;}
     public KernelHost Host { get;}
     public System.Void Add(Kernel kernel, System.Collections.Generic.IEnumerable<System.String> aliases = null)
-    public System.Void AddKernelConnector<T>(ConnectKernelDirective<T> connectDirective)
+    public System.Void AddConnectDirective<T>(ConnectKernelDirective<T> connectDirective)
     public System.Collections.Generic.IEnumerator<Kernel> GetEnumerator()
      Kernel GetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
      System.Threading.Tasks.Task HandleRequestKernelInfoAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, KernelInvocationContext context)
@@ -94,6 +94,7 @@ Microsoft.DotNet.Interactive
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
     public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text)
+    public static System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<System.String,System.String>> GetInputsAsync(System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Commands.InputDescription> inputDescriptions)
     public static System.Threading.Tasks.Task<PasswordString> GetPasswordAsync(System.String prompt = )
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
@@ -562,7 +563,7 @@ Microsoft.DotNet.Interactive.Directives
     public System.String ToString()
   public class KernelDirectiveCompletionContext
     .ctor()
-    public System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Events.CompletionItem> Completions { get;}
+    public System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Events.CompletionItem> CompletionItems { get;}
   public class KernelDirectiveParameter
     .ctor(System.String name, System.String description = null)
     public System.Boolean AllowImplicitName { get; set;}
@@ -572,9 +573,8 @@ Microsoft.DotNet.Interactive.Directives
     public System.String Name { get;}
     public System.Boolean Required { get; set;}
     public System.String TypeHint { get; set;}
-    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.CompletionItem>> getCompletions)
-    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.CompletionItem>>> getCompletions)
-    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Collections.Generic.IEnumerable<System.String>> getCompletions)
+    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Threading.Tasks.Task> getCompletions)
+    public KernelDirectiveParameter AddCompletions(System.Func<System.Collections.Generic.IEnumerable<System.String>> getCompletions)
     public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Events.CompletionItem>> GetValueCompletionsAsync()
     public System.String ToString()
   public class KernelSpecifierDirective : KernelDirective

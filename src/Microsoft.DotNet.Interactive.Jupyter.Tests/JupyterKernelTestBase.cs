@@ -50,7 +50,7 @@ public abstract class JupyterKernelTestBase : IDisposable
             jupyterKernelCommand.AddConnectionOptions(options);
         }
 
-        kernel.AddKernelConnector(jupyterKernelCommand);
+        kernel.AddConnectDirective(jupyterKernelCommand);
         _disposables.Add(kernel);
         return kernel;
     }
