@@ -28,7 +28,7 @@ public class InspectExtension
         inspect.Parameters.Add(new KernelDirectiveParameter("--configuration")
                                    {
                                        Description = "Build configuration to use. Debug or Release."
-                                   }.AddCompletions(_ => [ "Debug", "Release" ]));
+                                   }.AddCompletions(() => [ "Debug", "Release" ]));
         inspect.Parameters.Add(new KernelDirectiveParameter("--kind")
                                    {
                                        Description = "Source code kind. Script or Regular."

@@ -403,7 +403,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
         using var kernel = new CompositeKernel();
 
-        kernel.AddKernelConnector(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
+        kernel.AddConnectDirective(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
 
         string[] args = [Dotnet.Path.FullName, typeof(Program).Assembly.Location, "stdio", "--http-port", port.ToString()];
 

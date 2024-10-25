@@ -556,7 +556,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task xml_with_json_content_type_produces_errors()
             {
-                using var kernel = new HttpKernel();
+                using var kernel = new HttpKernel("http");
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/anything
@@ -594,7 +594,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                 var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-                diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request has content type of 'application/json' which differs from the required content type of 'application/xml'.""");
+                diagnostics.Diagnostics.First().Message.Should().Be("""The supplied named request has content type of 'application/json' which differs from the required content type of 'application/xml'.""");
             }
 
             [Theory]

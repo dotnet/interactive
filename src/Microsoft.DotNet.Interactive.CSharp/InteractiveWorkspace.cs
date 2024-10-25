@@ -29,22 +29,7 @@ internal class InteractiveWorkspace : Workspace
     private readonly List<MetadataReference> _packageManagerReferences = new();
     private readonly SemaphoreSlim _workspaceLock = new(1, 1);
 
-    public InteractiveWorkspace() : base(MefHostServices.DefaultHost, WorkspaceKind.Interactive)
-    {
-        _parseOptions = new CSharpParseOptions(
-            LanguageVersion.Latest,
-            DocumentationMode.Parse,
-            SourceCodeKind.Script);
-
-        _referenceAssemblies = ResolveRefAssemblies();
-
-        _disposables.Add(Disposable.Create(() =>
-        {
-            _currentCompilation = null;
-        }));
-    }
-
-    private static string ResolveRefAssemblyPath()
+    private static readonly Lazy<string> _referenceAssembliesPath = new(() =>
     {
         var runtimeDir = Path.GetDirectoryName(typeof(object).Assembly.Location);
         var refAssemblyDir = runtimeDir; // if any of the below path probing fails, fall back to the runtime so we can still run
@@ -75,6 +60,21 @@ internal class InteractiveWorkspace : Workspace
         }
 
         return refAssemblyDir;
+    });
+
+    public InteractiveWorkspace() : base(MefHostServices.DefaultHost, WorkspaceKind.Interactive)
+    {
+        _parseOptions = new CSharpParseOptions(
+            LanguageVersion.Latest,
+            DocumentationMode.Parse,
+            SourceCodeKind.Script);
+
+        _referenceAssemblies = ResolveRefAssemblies();
+
+        _disposables.Add(Disposable.Create(() =>
+        {
+            _currentCompilation = null;
+        }));
     }
 
     private static bool TryParseVersion(string versionString, out Version v)
@@ -92,7 +92,7 @@ internal class InteractiveWorkspace : Workspace
     private static IReadOnlyCollection<MetadataReference> ResolveRefAssemblies()
     {
         var assemblyRefs = new List<MetadataReference>();
-        foreach (var assemblyRef in Directory.EnumerateFiles(ResolveRefAssemblyPath(), "*.dll"))
+        foreach (var assemblyRef in Directory.EnumerateFiles(_referenceAssembliesPath.Value, "*.dll"))
         {
             try
             {
@@ -149,7 +149,19 @@ internal class InteractiveWorkspace : Workspace
             _referenceAssemblies
                 .Concat(_packageManagerReferences)
                 .Concat(compilation.DirectiveReferences)
-                .ToArray();
+                .ToHashSet();
+
+        foreach (var reference in compilation.ExternalReferences.Distinct())
+        {
+            if (reference.Display is { } display)
+            {
+                if (!display.Contains("Microsoft.NETCore.App"))
+                {
+                    references.Add(reference);
+                }
+            }
+        }
+
         return references;
     }
 

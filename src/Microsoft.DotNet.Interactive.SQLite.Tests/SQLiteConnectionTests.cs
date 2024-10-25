@@ -25,7 +25,7 @@ public class SQLiteConnectionTests
             new KeyValueStoreKernel()
         };
 
-        kernel.AddKernelConnector(new ConnectSQLiteDirective());
+        kernel.AddConnectDirective(new ConnectSQLiteDirective());
 
         using var _ = CreateInMemorySQLiteDb(out var connectionString);
 
@@ -67,7 +67,7 @@ SELECT * FROM fruit
             new KeyValueStoreKernel()
         };
 
-        kernel.AddKernelConnector(new ConnectSQLiteDirective());
+        kernel.AddConnectDirective(new ConnectSQLiteDirective());
 
         using var _ = CreateInMemorySQLiteDb(out var connectionString);
 

@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Directives;
 
 public class KernelDirectiveParameter
 {
-    List<Func<KernelDirectiveCompletionContext, Task<IEnumerable<CompletionItem>>>>? _completionSources;
+    List<Func<KernelDirectiveCompletionContext, Task>>? _completionSources;
 
     public KernelDirectiveParameter(string name, string? description = null)
     {
@@ -35,16 +35,8 @@ public class KernelDirectiveParameter
 
     public bool Flag { get; set; }
 
-    public KernelDirectiveParameter AddCompletions(Func<KernelDirectiveCompletionContext, IEnumerable<CompletionItem>> getCompletions)
-    {
-        _completionSources ??= new();
-
-        _completionSources.Add(context => Task.FromResult(getCompletions(context)));
-
-        return this;
-    }
-
-    public KernelDirectiveParameter AddCompletions(Func<KernelDirectiveCompletionContext, Task<IEnumerable<CompletionItem>>> getCompletions)
+    public KernelDirectiveParameter AddCompletions(
+        Func<KernelDirectiveCompletionContext, Task> getCompletions)
     {
         _completionSources ??= new();
 
@@ -53,13 +45,20 @@ public class KernelDirectiveParameter
         return this;
     }
 
-    public KernelDirectiveParameter AddCompletions(Func<KernelDirectiveCompletionContext, IEnumerable<string>> getCompletions)
+    public KernelDirectiveParameter AddCompletions(Func<IEnumerable<string>> getCompletions)
     {
         _completionSources ??= new();
 
         _completionSources.Add(context =>
-                                   Task.FromResult(getCompletions(context)
-                                                       .Select(s => new CompletionItem(s, WellKnownTags.Parameter))));
+        {
+            var completionItems = getCompletions().Select(s => new CompletionItem(s, WellKnownTags.Parameter));
+            foreach (var item in completionItems)
+            {
+                context.CompletionItems.Add(item);
+            }
+
+            return Task.CompletedTask;
+        });
 
         return this;
     }
@@ -75,20 +74,16 @@ public class KernelDirectiveParameter
 
         foreach (var source in _completionSources)
         {
-            var completionItems = await source(context);
-            foreach (var item in completionItems)
-            {
-                context.Completions.Add(item);
-            }
+            await source(context);
         }
 
-        foreach (var completion in context.Completions)
+        foreach (var completion in context.CompletionItems)
         {
             completion.AssociatedSymbol = this;
             completion.Documentation = Description;
         }
 
-        return context.Completions.ToArray();
+        return context.CompletionItems.ToArray();
     }
 
     public override string ToString() => Name;

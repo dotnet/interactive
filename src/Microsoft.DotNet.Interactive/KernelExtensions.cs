@@ -185,7 +185,7 @@ public static class KernelExtensions
                 {
                     Description = LocalizationResources.Magics_set_value_Description(),
                     Required = true
-                }.AddCompletions(async _ =>
+                }.AddCompletions(async context =>
                 {
                     if (destinationKernel.ParentKernel is { } composite)
                     {
@@ -197,7 +197,7 @@ public static class KernelExtensions
 
                         var tasks = await Task.WhenAll(getValueTasks);
 
-                        var x = tasks
+                        var completionItems = tasks
                                 .Select(t => t.Events.OfType<ValueInfosProduced>())
                                 .SelectMany(events => events.Select(e => new { e.Command, e.ValueInfos }))
                                 .SelectMany(x =>
@@ -218,10 +218,11 @@ public static class KernelExtensions
                                 .Select(n => new CompletionItem(n, WellKnownTags.Parameter))
                                 .ToArray();
 
-                        return x;
+                        foreach (var item in completionItems)
+                        {
+                            context.CompletionItems.Add(item);
+                        }
                     }
-
-                    return Array.Empty<CompletionItem>();
                 }),
                 new("--byref")
                 {
@@ -232,7 +233,7 @@ public static class KernelExtensions
                 {
                     Description = LocalizationResources.Magics_set_mime_type_Description()
                 }.AddCompletions(
-                    _ =>
+                    () =>
                     [
                         JsonFormatter.MimeType,
                         HtmlFormatter.MimeType,
@@ -258,7 +259,7 @@ public static class KernelExtensions
                 {
                     AllowImplicitName = true,
                     Description = LocalizationResources.Magics_share_name_Description(),
-                }.AddCompletions(async _ =>
+                }.AddCompletions(async context =>
                 {
                     if (kernel.ParentKernel is { } composite)
                     {
@@ -270,34 +271,42 @@ public static class KernelExtensions
 
                         var tasks = await Task.WhenAll(getValueTasks);
 
-                        return tasks
+                        var completionItems = tasks
                                .Select(t => t.Events.OfType<ValueInfosProduced>())
                                .SelectMany(events => events.SelectMany(e => e.ValueInfos))
                                .Select(vi => vi.Name)
                                .OrderBy(x => x)
                                .Select(n => new CompletionItem(n, WellKnownTags.Parameter))
                                .ToArray();
-                    }
 
-                    return Array.Empty<CompletionItem>();
+                        foreach (var item in completionItems)
+                        {
+                            context.CompletionItems.Add(item);
+                        }
+                    }
                 }),
                 new KernelDirectiveParameter("--from")
                 {
                     Description = LocalizationResources.Magics_share_from_Description(),
                     Required = true
-                }.AddCompletions(ctx =>
+                }.AddCompletions(context =>
                 {
                     if (kernel.ParentKernel is { } composite)
                     {
-                        return composite.ChildKernels
-                                        .Where(k =>
-                                                   k != kernel &&
-                                                   k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
-                                                   k.KernelInfo.SupportsCommand(nameof(RequestValue)))
-                                        .Select(k => new CompletionItem(k.Name, WellKnownTags.Parameter));
+                        var completionItems = composite.ChildKernels
+                                                       .Where(k =>
+                                                                  k != kernel &&
+                                                                  k.KernelInfo.SupportsCommand(nameof(RequestValueInfos)) &&
+                                                                  k.KernelInfo.SupportsCommand(nameof(RequestValue)))
+                                                       .Select(k => new CompletionItem(k.Name, WellKnownTags.Parameter));
+
+                        foreach (var item in completionItems)
+                        {
+                            context.CompletionItems.Add(item);
+                        }
                     }
 
-                    return Array.Empty<CompletionItem>();
+                    return Task.CompletedTask;
                 }),
                 new("--as")
                 {
@@ -307,7 +316,7 @@ public static class KernelExtensions
                 {
                     Description = LocalizationResources.Magics_share_mime_type_Description()
                 }.AddCompletions(
-                    _ =>
+                    () =>
                     [
                         JsonFormatter.MimeType,
                         HtmlFormatter.MimeType,
