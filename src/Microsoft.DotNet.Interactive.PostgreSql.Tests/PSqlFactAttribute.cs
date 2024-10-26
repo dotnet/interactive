@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Data.SqlClient;
+using Npgsql;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
@@ -36,7 +36,7 @@ public sealed class PSqlFactAttribute : FactAttribute
 
         try
         {
-            using var connection = new SqlConnection(connectionString);
+            using var connection = new NpgsqlConnection(connectionString);
             connection.Open();
         }
         catch (Exception e)
@@ -51,8 +51,8 @@ public sealed class PSqlFactAttribute : FactAttribute
 
     public static string GetConnectionStringForTests()
     {
-        // example:
-        // Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=postgres
-        return Environment.GetEnvironmentVariable(TEST_PSQL_CONNECTION_STRING);
+        const string fallbackConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=Adventureworks";
+
+        return Environment.GetEnvironmentVariable(TEST_PSQL_CONNECTION_STRING) ?? fallbackConnectionString;
     }
 }
