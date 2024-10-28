@@ -156,6 +156,35 @@ stages:
           inputs:
             versionSpec: $(NodeJSVersion)
 
+        - task: PowerShell@2
+          displayName: List Installed .NET SDKs and Runtimes
+          inputs:
+            targetType: 'inline'
+            script: |
+              Write-Host "Listing Installed .NET SDKs:"
+              dotnet --list-sdks
+              Write-Host "Listing Installed .NET Runtimes:"
+              dotnet --list-runtimes
+          condition: succeededOrFailed() # Runs this step even if previous steps fail
+
+        - task: UseDotNet@2
+          displayName: Install .NET SDK 9.0.100-rc.2
+          inputs:
+            packageType: sdk
+            version: '9.0.100-rc.2.24474.11' # Specifies the exact SDK version
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+
+        - task: PowerShell@2
+          displayName: List Installed .NET SDKs and Runtimes
+          inputs:
+            targetType: 'inline'
+            script: |
+              Write-Host "Listing Installed .NET SDKs:"
+              dotnet --list-sdks
+              Write-Host "Listing Installed .NET Runtimes:"
+              dotnet --list-runtimes
+          condition: succeededOrFailed() # Runs this step even if previous steps fail
+
         # - task: UseDotNet@2
         #   displayName: Use .NET SDK
         #   inputs:
