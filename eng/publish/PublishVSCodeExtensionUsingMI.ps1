@@ -66,7 +66,7 @@ try {
                 if ($nugetPackageName -like '*.symbols.nupkg') {
                     Write-Host "Skipping publishing symbol package $nugetPackagePath"
                     # Use 'continue' to skip to the next iteration
-                    continue
+                    return
                 }
 
                 if ($nugetPackageName -match '(?<=(?<id>.+))\.(?<version>((\d+\.\d+(\.\d+)?))(?<suffix>(-.*)?))\.nupkg')
