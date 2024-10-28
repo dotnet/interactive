@@ -72,8 +72,6 @@ public class JupyterInstallCommand
         return errorCount;
     }
 
-        
-
     private static void ComputeKernelSpecArgs(HttpPortRange httpPortRange, DirectoryInfo directory)
     {
         var kernelSpecs = directory.GetFiles("kernel.json", SearchOption.AllDirectories);
