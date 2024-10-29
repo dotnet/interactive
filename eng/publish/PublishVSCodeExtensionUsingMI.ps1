@@ -58,16 +58,9 @@ try {
                 "Microsoft.DotNet.Interactive.SqlServer"
             )
 
-            Get-ChildItem "$artifactsPath\packages\Shipping\Microsoft.DotNet*.nupkg" | ForEach-Object {
+            Get-ChildItem "$artifactsPath\packages\Shipping\Microsoft.DotNet*.nupkg" -Exclude '*.symbols.nupkg' | ForEach-Object {
                 $nugetPackagePath = $_.ToString()
                 $nugetPackageName = $_.Name
-
-                # Check if the package is a symbol package
-                if ($nugetPackageName -like '*.symbols.nupkg') {
-                    Write-Host "Skipping publishing symbol package $nugetPackagePath"
-                    # Use 'continue' to skip to the next iteration
-                    return
-                }
 
                 if ($nugetPackageName -match '(?<=(?<id>.+))\.(?<version>((\d+\.\d+(\.\d+)?))(?<suffix>(-.*)?))\.nupkg')
                 {
