@@ -5,16 +5,16 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
 
-public sealed class PSqlTheoryAttribute : TheoryAttribute
+public sealed class PostgreSqlTheoryAttribute : TheoryAttribute
 {
     private static readonly string _skipReason;
 
-    static PSqlTheoryAttribute()
+    static PostgreSqlTheoryAttribute()
     {
-        _skipReason = PSqlFactAttribute.TestConnectionAndReturnSkipReason();
+        _skipReason = PostgreSqlFactAttribute.TestConnectionAndReturnSkipReason();
     }
 
-    public PSqlTheoryAttribute()
+    public PostgreSqlTheoryAttribute()
     {
         if (_skipReason is not null)
         {

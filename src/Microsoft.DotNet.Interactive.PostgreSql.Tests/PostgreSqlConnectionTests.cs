@@ -15,7 +15,7 @@ using FluentAssertions;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
 
-public class PSqlConnectionTests : IDisposable
+public class PostgreSqlConnectionTests : IDisposable
 {
     private static CompositeKernel CreateKernel()
     {
@@ -31,16 +31,16 @@ public class PSqlConnectionTests : IDisposable
 
         kernel.DefaultKernelName = csharpKernel.Name;
 
-        PSqlKernelExtension.Load(kernel);
+        PostgreSqlKernelExtension.Load(kernel);
 
         return kernel;
     }
 
 
-    [PSqlFact]
+    [PostgreSqlFact]
     public async Task It_can_connect_and_query_data()
     {
-        var connectionString = PSqlFactAttribute.GetConnectionStringForTests();
+        var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();
         using var kernel = CreateKernel();
         var connect = $"#!connect psql --kernel-name adventureworks \"{connectionString}\"";
         var result = await kernel.SubmitCodeAsync(connect);
@@ -60,10 +60,10 @@ public class PSqlConnectionTests : IDisposable
             .BeEquivalentTo(HtmlFormatter.MimeType, CsvFormatter.MimeType);
     }
 
-    [PSqlFact]
+    [PostgreSqlFact]
     public async Task It_returns_error_if_query_is_not_valid()
     {
-        var connectionString = PSqlFactAttribute.GetConnectionStringForTests();
+        var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();
         using var kernel = CreateKernel();
         var connect = $"#!connect psql --kernel-name adventureworks \"{connectionString}\"";
         var result = await kernel.SubmitCodeAsync(connect);

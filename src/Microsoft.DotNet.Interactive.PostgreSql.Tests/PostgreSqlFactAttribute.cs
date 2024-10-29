@@ -7,17 +7,17 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
 
-public sealed class PSqlFactAttribute : FactAttribute
+public sealed class PostgreSqlFactAttribute : FactAttribute
 {
     private const string TEST_PSQL_CONNECTION_STRING = nameof(TEST_PSQL_CONNECTION_STRING);
     private static readonly string _skipReason;
 
-    static PSqlFactAttribute()
+    static PostgreSqlFactAttribute()
     {
         _skipReason = TestConnectionAndReturnSkipReason();
     }
 
-    public PSqlFactAttribute()
+    public PostgreSqlFactAttribute()
     {
         if (_skipReason is not null)
         {

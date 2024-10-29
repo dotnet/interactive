@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
 
-public class PSqlKernelExtension
+public class PostgreSqlKernelExtension
 {
     public static void Load(Kernel kernel)
     {
