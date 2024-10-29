@@ -112,7 +112,7 @@ public class PostgreSqlKernel :
 
     public static void AddPostgreSqlKernelConnectorTo(CompositeKernel kernel)
     {
-        kernel.AddKernelConnector(new ConnectPostgreSqlDirective());
+        kernel.AddConnectDirective(new ConnectPostgreSqlDirective());
 
         KernelInvocationContext.Current?.Display(
             new HtmlString(@"<details><summary>Query PostgreSql databases.</summary>

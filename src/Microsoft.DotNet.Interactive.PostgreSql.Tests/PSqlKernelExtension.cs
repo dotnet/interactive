@@ -12,7 +12,7 @@ public class PSqlKernelExtension
         if (kernel is CompositeKernel compositeKernel)
         {
             compositeKernel
-                .AddKernelConnector(new ConnectPostgreSqlDirective());
+                .AddConnectDirective(new ConnectPostgreSqlDirective());
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString(@"<details><summary>Query Posgres databases.</summary>
