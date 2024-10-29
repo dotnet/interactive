@@ -19,7 +19,7 @@ variables:
   - name: DotNetNugetApiKey
     value: $(DotNetNugetApiKey-A1)
   - name: vscodeTargets
-    value: stable
+    value: stable,insiders
   - template: /eng/common/templates-official/variables/pool-providers.yml@self
     
 
