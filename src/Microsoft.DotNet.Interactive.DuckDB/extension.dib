@@ -1,0 +1,3 @@
+#!csharp
+
+Microsoft.DotNet.Interactive.DuckDB.KernelExtension.Load(Microsoft.DotNet.Interactive.KernelInvocationContext.Current.HandlingKernel.RootKernel);

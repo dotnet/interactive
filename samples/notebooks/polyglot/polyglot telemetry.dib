@@ -4,7 +4,7 @@
 
 #!csharp
 
-#r "nuget: Microsoft.DotNet.Interactive.Kql, *-*"
+#r "nuget: Microsoft.DotNet.Interactive.Kql, 1.0.0-beta.24229.4"
 
 #!csharp
 

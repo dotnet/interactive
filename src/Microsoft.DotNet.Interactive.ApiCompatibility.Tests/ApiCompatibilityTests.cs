@@ -6,6 +6,7 @@ using Assent;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.CSharpProject;
 using Microsoft.DotNet.Interactive.Documents;
+using Microsoft.DotNet.Interactive.DuckDB;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
@@ -136,6 +137,13 @@ public class ApiCompatibilityTests
     public void httpRequest_api_is_not_changed()
     {
         var contract = ApiContract.GenerateContract<HttpKernel>();
+        this.Assent(contract, _configuration);
+    }
+
+    [FactSkipLinux("Testing api contract changes, not needed on Linux too")]
+    public void DuckDB_api_is_not_changed()
+    {
+        var contract = ApiContract.GenerateContract<DuckDBKernel>();
         this.Assent(contract, _configuration);
     }
 }
