@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -63,12 +62,49 @@ public partial class PolyglotSyntaxParserTests
             }
 
             [Theory]
-            [InlineData("#!connect jupyter $$")]
-            [InlineData("#!connect jupyter       $$")]
-            [InlineData("#!connect mssql  $$ --create-dbcontext")]
-            [InlineData("#!connect mssql --create-dbcontext      $$")]
-            [InlineData("""#!connect mssql --connection-string @input:{"saveAs":"mydbconnectionstring"}  $$""")]
-            public async Task produce_completions_for_parameter_names(string markupCode)
+            [InlineData("#!connect jupyter $$",
+                        new[] { "--kernel-name" })]
+            [InlineData("#!connect jupyter       $$",
+                        new[] { "--kernel-name" })]
+            [InlineData("#!connect mssql  $$ --create-dbcontext",
+                        new[] { "--kernel-name" })]
+            [InlineData("#!connect mssql --create-dbcontext      $$",
+                        new[] { "--kernel-name" })]
+            [InlineData("""#!connect mssql --connection-string @input:{"saveAs":"mydbconnectionstring"}  $$""",
+                        new[] { "--kernel-name" })]
+            [InlineData("#!connect jupyter --kernel-name asdf $$",
+                        new[]
+                        {
+                            "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
+                        })]
+            [InlineData("#!connect jupyter --kernel-name @input $$",
+                        new[]
+                        {
+                            "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
+                        })]
+            [InlineData("""#!connect jupyter --kernel-name @input:{"saveAs":"xyz"} $$""",
+                        new[]
+                        {
+                            "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
+                        })]
+            [InlineData("#!connect jupyter $$ --kernel-name",
+                        new[]
+                        {
+                            "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
+                        })]
+            [InlineData("#!set --name @input $$",
+                        new[]
+                        {
+                            "--value", "--byref", "--mime-type"
+                        })]
+            [InlineData("""#!set --name @input:{"saveAs":"xyz"} $$""",
+                        new[]
+                        {
+                            "--value", "--byref", "--mime-type"
+                        })]
+            public async Task produce_completions_for_parameter_names(
+                string markupCode,
+                string[] expectedParameterNames)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);
 
@@ -81,34 +117,7 @@ public partial class PolyglotSyntaxParserTests
 
                 var completions = await node.GetCompletionsAtPositionAsync(position.Value);
 
-                completions.Select(c => c.DisplayText).Should().Contain("--kernel-name");
-            }
-
-            [Theory]
-            [InlineData("#!connect jupyter --kernel-name asdf $$")]
-            [InlineData("#!connect jupyter --kernel-name @input $$")]
-            [InlineData("""#!connect jupyter --kernel-name @input:{"saveAs":"xyz"} $$""")]
-            [InlineData("#!connect jupyter $$ --kernel-name")]
-            public async Task produce_completions_for_parameter_names_2(string markupCode)
-            {
-                MarkupTestFile.GetPosition(markupCode, out var code, out var position);
-
-                var tree = Parse(code, PolyglotParserConfigurationTests.GetDefaultConfiguration());
-
-                var node = tree.RootNode.FindNode(position.Value)
-                               .AncestorsAndSelf()
-                               .OfType<DirectiveNode>()
-                               .First();
-
-                var completions = await node.GetCompletionsAtPositionAsync(position.Value);
-
-                completions.Select(c => c.DisplayText).Should().Contain([
-                    "--url", 
-                    "--kernel-spec",
-                    "--init-script",
-                    "--conda-env",
-                    "--bearer"
-                ]);
+                completions.Select(c => c.DisplayText).Should().Contain(expectedParameterNames);
             }
 
             [Fact]

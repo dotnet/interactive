@@ -179,7 +179,12 @@ public class PolyglotParserConfigurationTests
                                 new("--value")
                                 {
                                     Required = true
-                                }, 
+                                },
+                                new("--byref")
+                                {
+                                    Flag = true
+                                },
+                                new("--mime-type")
                             },
                             KernelCommandType = typeof(SendValue)
                         }

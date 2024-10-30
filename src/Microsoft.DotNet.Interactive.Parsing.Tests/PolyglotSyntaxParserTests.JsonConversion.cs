@@ -79,6 +79,7 @@ public partial class PolyglotSyntaxParserTests
                         "one": 1,
                         "many": [1, 2, 3] 
                     },
+                    "byref": false,
                     "invokedDirective": "#!set",
                     "targetKernelName": "csharp"
                   }

@@ -598,14 +598,23 @@ internal class DirectiveNode : TopLevelSyntaxNode
             case DirectiveExpressionNode directiveExpressionNode:
                 break;
 
-            case DirectiveExpressionParametersNode directiveExpressionParametersNode:
+            case DirectiveExpressionParametersNode parametersNode:
             {
-                if (directiveExpressionParametersNode.Ancestors()
-                                                     .OfType<DirectiveSubcommandNode>()
-                                                     .FirstOrDefault() is { } parentDirectiveNode &&
-                    parentDirectiveNode.TryGetSubcommand(out var subcommandDirective))
+                if (parametersNode.Ancestors()
+                                  .OfType<DirectiveSubcommandNode>()
+                                  .FirstOrDefault() is { } parentSubcommandNode &&
+                    parentSubcommandNode.TryGetSubcommand(out var subcommandDirective))
                 {
                     var completions = await subcommandDirective.GetChildCompletionsAsync();
+                    return completions.ToArray();
+                }
+
+                if (parametersNode.Ancestors()
+                                  .OfType<DirectiveNode>()
+                                  .FirstOrDefault() is { } parentDirectiveNode &&
+                    parentDirectiveNode.TryGetDirective(out var directive))
+                {
+                    var completions = await directive.GetChildCompletionsAsync();
                     return completions.ToArray();
                 }
             }
