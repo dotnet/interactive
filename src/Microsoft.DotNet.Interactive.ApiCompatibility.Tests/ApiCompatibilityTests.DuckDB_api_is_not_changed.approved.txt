@@ -9,9 +9,6 @@ Microsoft.DotNet.Interactive.DuckDB
     .ctor(System.String name, System.String connectionString)
     .ctor(System.String name, DuckDB.NET.Data.DuckDBConnection connection)
     public Microsoft.DotNet.Interactive.Directives.KernelSpecifierDirective KernelSpecifierDirective { get;}
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValue command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-    public System.Threading.Tasks.Task HandleAsync(Microsoft.DotNet.Interactive.Commands.RequestValueInfos command, Microsoft.DotNet.Interactive.KernelInvocationContext context)
     public System.Boolean TryGetValue<T>(System.String name, ref T& value)
   public class DuckDBKernelConnector
     .ctor(System.String connectionString)

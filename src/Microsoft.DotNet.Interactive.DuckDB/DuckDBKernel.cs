@@ -19,6 +19,7 @@ public class DuckDBKernel : Kernel,
     IKernelCommandHandler<SubmitCode>,
     IKernelCommandHandler<RequestValueInfos>,
     IKernelCommandHandler<RequestValue>
+    
 
 {
     private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>>? _tables;
@@ -50,7 +51,7 @@ public class DuckDBKernel : Kernel,
         }
     }
 
-    public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
+    async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
     {
         if (_connection.State != ConnectionState.Open)
         {
@@ -153,7 +154,7 @@ public class DuckDBKernel : Kernel,
         return false;
     }
 
-    public Task HandleAsync(RequestValue command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
     {
         if (TryGetValue<object>(command.Name, out var value))
         {
@@ -167,7 +168,7 @@ public class DuckDBKernel : Kernel,
         return Task.CompletedTask;
     }
 
-    public Task HandleAsync(RequestValueInfos command, KernelInvocationContext context)
+    Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
     {
         var valueInfos = CreateKernelValueInfos(_variables, command.MimeType).Concat(CreateKernelValueInfos(_resultSets, command.MimeType)).ToArray();
 

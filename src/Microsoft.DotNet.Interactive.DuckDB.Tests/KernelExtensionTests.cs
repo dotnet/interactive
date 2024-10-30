@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using DuckDB.NET.Data;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
@@ -24,8 +23,6 @@ public class DuckDbConnectionTests
     public async Task It_can_connect_and_query_data()
     {
         using var kernel = new CompositeKernel();
-        kernel.Add(new CSharpKernel());
-        kernel.Add(new KeyValueStoreKernel());
 
         kernel.AddConnectDirective(new ConnectDuckDBDirective());
 
@@ -58,7 +55,6 @@ SELECT SUM(deliciousness) FROM fruit GROUP BY color
     {
         using var kernel = new CompositeKernel
         {
-            new CSharpKernel(),
             new KeyValueStoreKernel()
         };
 
@@ -114,7 +110,6 @@ SHOW ALL TABLES;
     {
         using var kernel = new CompositeKernel
         {
-            new CSharpKernel(),
             new KeyValueStoreKernel()
         };
 
@@ -159,7 +154,6 @@ SELECT * FROM fruit
     {
         using var kernel = new CompositeKernel
         {
-            new CSharpKernel(),
             new KeyValueStoreKernel()
         };
 
@@ -191,7 +185,6 @@ SELECT SUM(deliciousness) FROM fruit GROUP BY name;
     {
         using var kernel = new CompositeKernel
         {
-            new CSharpKernel(),
             new KeyValueStoreKernel()
         };
 
