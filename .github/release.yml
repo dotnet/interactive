@@ -51,9 +51,9 @@ changelog:
     - title: Jupyter
       labels:
         - Area-Jupyter
-    - title: Jupyter subkernels
+    - title: Jupyter subkernels (Python, R, Julia, etc.)
       labels:
-        - Area-Jupyter subkernels (Python, R, Julia, etc.)
+        - Area-Jupyter subkernels
     - title: Language Services
       labels:
         - Area-Language Services
@@ -83,7 +83,7 @@ changelog:
         - Area-SQL / data querying
     - title: Magic Commands & Submission Parsing
       labels:
-        - Area-Area-Submission Parsing & Magic Commands
+        - Area-Submission Parsing & Magic Commands
     - title: Try .NET
       labels:
         - Area-Try .NET
