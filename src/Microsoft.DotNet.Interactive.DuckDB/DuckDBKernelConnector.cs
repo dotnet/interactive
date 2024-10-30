@@ -5,14 +5,9 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.DuckDB;
 
-public class DuckDBKernelConnector
+public class DuckDBKernelConnector(string connectionString)
 {
-    public DuckDBKernelConnector(string connectionString)
-    {
-        ConnectionString = connectionString;
-    }
-
-    public string ConnectionString { get; }
+    public string ConnectionString { get; } = connectionString;
 
     public Task<Kernel> CreateKernelAsync(string kernelName)
     {

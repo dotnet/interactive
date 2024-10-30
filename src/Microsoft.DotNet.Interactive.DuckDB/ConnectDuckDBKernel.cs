@@ -5,11 +5,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.DuckDB;
 
-public class ConnectDuckDBKernel : ConnectKernelCommand
+public class ConnectDuckDBKernel(string connectedKernelName) : ConnectKernelCommand(connectedKernelName)
 {
-    public ConnectDuckDBKernel(string connectedKernelName) : base(connectedKernelName)
-    {
-    }
-
-    public string ConnectionString { get; set; }
+    public string? ConnectionString { get; set; }
 }
