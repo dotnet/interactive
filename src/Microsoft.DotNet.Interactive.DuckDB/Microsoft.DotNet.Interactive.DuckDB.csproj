@@ -11,6 +11,7 @@
     <IsPackable>true</IsPackable>
     <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for DuckDB</PackageDescription>
     <PackageTags>polyglot notebook dotnet interactive data DuckDB</PackageTags>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
