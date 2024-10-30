@@ -18,79 +18,81 @@ changelog:
     - title: Bug fixes🛠️
       labels:
         - bug
-    - title: Area-Accessibility
+    - title: Accessibility
       labels:
         - Area-Accessibility
-    - title: Area-Automation
+    - title: Automation
       labels:
         - Area-Automation
-    - title: Area-Auth
+    - title: Auth
       labels:
         - Area-Auth
-    - title: Area-API
+    - title: API
       labels:
         - Area-API
-    - title: Area-C#
+    - title: C#
       labels:
         - Area-C#
-    - title: Area-Documentation
+    - title: Documentation
       labels:
         - Area-Documentation
-    - title: Area-F#
+    - title: F#
       labels:
         - Area-F#
-    - title: Area-Formatting
+    - title: Formatting
       labels:
         - Area-Formatting
-    - title: Area-HTTP
+    - title: HttpKernel, Visual Studio HTTP Editor
       labels:
-        - Area-HTTP (HttpKernel, Visual Studio HTTP Editor)
-    - title: Area-JavaScript HTML CSS
+        - Area-HTTP
+    - title: JavaScript HTML CSS
       labels:
         - Area-JavaScript HTML CSS
-    - title: Area-Jupyter
+    - title: Jupyter
       labels:
         - Area-Jupyter
-    - title: Area-Jupyter subkernels
+    - title: Jupyter subkernels
       labels:
         - Area-Jupyter subkernels (Python, R, Julia, etc.)
-    - title: Area-Language Services
+    - title: Language Services
       labels:
         - Area-Language Services
-    - title: Area-Localization and Globalization
+    - title: Localization and Globalization
       labels:
         - Area-Localization and Globalization
-    - title: Area-Messaging, Comms, and Scheduling
+    - title: Messaging, Comms, and Scheduling
       labels:
-        - Area-Messaging and Comms
         - Area-Messaging / scheduling / comms
-    - title: Area-Packages and Extensions
+    - title: Packages and Extensions
       labels:
         - Area-Packages and Extensions
-    - title: Area-Performance
+    - title: Performance
       labels:
         - Area-Performance
-    - title: Area-Polyglot Notebooks Extension
+    - title: Polyglot Notebooks Extension
       labels:
         - Area-Polyglot Notebooks Extension
-    - title: Area-PowerShell
+    - title: PowerShell
       labels:
         - Area-PowerShell
-    - title: Area-Python
+    - title: Python
       labels:
         - Area-Python
-    - title: Area-SQL / data querying
+    - title: SQL, KQL, and data querying
       labels:
         - Area-SQL / data querying
-    - title: Area-Variable sharing
+    - title: Magic Commands & Submission Parsing
+      labels:
+        - Area-Area-Submission Parsing & Magic Commands
+    - title: Try .NET
+      labels:
+        - Area-Try .NET
+    - title: Variable sharing
       labels:
         - Area-Variable sharing
-    - title: Area-Visualization
+    - title: Visualization
       labels:
         - Area-Visualization
-    - title: Area-VisualStudio
-      labels:
-        - Area-VisualStudio
     - title: Other Changes
       labels:
         - "*"
