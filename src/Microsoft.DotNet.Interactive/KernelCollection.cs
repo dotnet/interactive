@@ -28,7 +28,7 @@ public class KernelCollection : IReadOnlyCollection<Kernel>
     {
         if (kernel.KernelInfo.NameAndAliases.FirstOrDefault(a => _kernelsByNameOrAlias.ContainsKey(a)) is { } collidingAlias)
         {
-            throw new ArgumentException($"Alias '#!{collidingAlias}' is already in use.");
+            throw new ArgumentException($"Alias '{collidingAlias}' is already in use.");
         }
 
         UpdateKernelInfoAndIndex(kernel);
