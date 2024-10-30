@@ -6,6 +6,7 @@ changelog:
       - ignore-for-release
       - dependencies
       - Area-Build & Infrastructure
+      - External
   categories:
     - title: Breaking Changes 🧨
       labels:
@@ -17,6 +18,9 @@ changelog:
     - title: Bug fixes🛠️
       labels:
         - bug
+    - title: Area-Accessibility
+      labels:
+        - Area-Accessibility
     - title: Area-Automation
       labels:
         - Area-Automation
@@ -29,9 +33,6 @@ changelog:
     - title: Area-C#
       labels:
         - Area-C#
-    - title: Area-Python
-      labels:
-        - Area-Python
     - title: Area-Documentation
       labels:
         - Area-Documentation
@@ -43,16 +44,22 @@ changelog:
         - Area-Formatting
     - title: Area-HTTP
       labels:
-        - Area-HTTP
+        - Area-HTTP (HttpKernel, Visual Studio HTTP Editor)
     - title: Area-JavaScript HTML CSS
       labels:
         - Area-JavaScript HTML CSS
     - title: Area-Jupyter
       labels:
         - Area-Jupyter
+    - title: Area-Jupyter subkernels
+      labels:
+        - Area-Jupyter subkernels (Python, R, Julia, etc.)
     - title: Area-Language Services
       labels:
         - Area-Language Services
+    - title: Area-Localization and Globalization
+      labels:
+        - Area-Localization and Globalization
     - title: Area-Messaging, Comms, and Scheduling
       labels:
         - Area-Messaging and Comms
@@ -63,6 +70,9 @@ changelog:
     - title: Area-Performance
       labels:
         - Area-Performance
+    - title: Area-Polyglot Notebooks Extension
+      labels:
+        - Area-Polyglot Notebooks Extension
     - title: Area-PowerShell
       labels:
         - Area-PowerShell
@@ -81,27 +91,6 @@ changelog:
     - title: Area-VisualStudio
       labels:
         - Area-VisualStudio
-    - title: Area-VS Code Extension
-      labels:
-        - Area-VS Code Extension
-    - title: Area-Polyglot Notebooks Extension
-      labels:
-        - Area-Polyglot Notebooks Extension
-    - title: Area-VS Code Jupyter Extension Interop
-      labels:
-        - Area-VS Code Jupyter Extension Interop
-    - title: Area-WebAssembly
-      labels:
-        - Area-WebAssembly
-    - title: Area-Accessibility
-      labels:
-        - Area-Accessibility
-    - title: Area-Jupyter sub-kernels
-      labels:
-        - Area-Jupyter sub-kernels
-    - title: Area-Localization and Globalization
-      labels:
-        - Area-Localization and Globalization
     - title: Other Changes
       labels:
         - "*"
