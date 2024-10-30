@@ -38,11 +38,11 @@ try {
 
             $packagestoPublish = @(
                 "Microsoft.dotnet-interactive",
-                "Microsoft.DotNet.Interactive",
                 "Microsoft.DotNet.Interactive.AspNetCore",                
                 "Microsoft.DotNet.Interactive.Browser",
                 "Microsoft.DotNet.Interactive.CSharp",
                 "Microsoft.DotNet.Interactive.Documents",
+                "Microsoft.DotNet.Interactive.DuckDB",
                 "Microsoft.DotNet.Interactive.ExtensionLab",
                 "Microsoft.DotNet.Interactive.Formatting",
                 "Microsoft.DotNet.Interactive.FSharp",
@@ -56,6 +56,7 @@ try {
                 "Microsoft.DotNet.Interactive.PowerShell",
                 "Microsoft.DotNet.Interactive.SQLite",
                 "Microsoft.DotNet.Interactive.SqlServer"
+                "Microsoft.DotNet.Interactive",
             )
 
             Get-ChildItem "$artifactsPath\packages\Shipping\*.nupkg" -Exclude '*.symbols.nupkg' | ForEach-Object {
