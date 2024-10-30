@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -150,7 +150,7 @@ new [] {1,2,3}");
 
         var results = await kernel.SendAsync(
             new SubmitCode(
-                @"var x = 123;",
+                "var x = 123;",
                 "unregistered kernel name"));
 
         results.Events
@@ -172,7 +172,7 @@ new [] {1,2,3}");
             .Which
             .Message
             .Should()
-            .Be("The kernel name or alias '#!csharp' is already in use.");
+            .Be("The kernel name or alias 'csharp' is already in use.");
     }
 
     [Fact]

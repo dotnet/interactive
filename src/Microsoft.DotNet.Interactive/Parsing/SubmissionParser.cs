@@ -405,9 +405,10 @@ public class SubmissionParser
 
                     var directiveCommand = commandEnvelope.Command;
 
-                    if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand)
+                    if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand &&
+                        _kernel is CompositeKernel compositeKernel)
                     {
-                        var errors = kernelDirectiveCommand.GetValidationErrors().ToArray();
+                        var errors = kernelDirectiveCommand.GetValidationErrors(compositeKernel).ToArray();
 
                         if (errors.Length > 0)
                         {

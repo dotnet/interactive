@@ -354,8 +354,9 @@ Microsoft.DotNet.Interactive.Commands
   public class Cancel : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String targetKernelName = null)
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public abstract class ConnectKernelCommand : KernelCommand, System.IEquatable<KernelCommand>
+  public abstract class ConnectKernelCommand : KernelDirectiveCommand, System.IEquatable<KernelCommand>
     public System.String ConnectedKernelName { get;}
+    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors(Microsoft.DotNet.Interactive.CompositeKernel kernel)
   public class DisplayError : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String message)
     public System.String Message { get;}
@@ -387,7 +388,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.Void SetParent(KernelCommand parent, System.Boolean bubbleEvents = False)
     public System.Void SetToken(System.String token)
   public abstract class KernelDirectiveCommand : KernelCommand, System.IEquatable<KernelCommand>
-    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors()
+    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors(Microsoft.DotNet.Interactive.CompositeKernel kernel)
   public abstract class LanguageServiceCommand : KernelCommand, System.IEquatable<KernelCommand>
     public System.String Code { get;}
     public Microsoft.DotNet.Interactive.LinePosition LinePosition { get;}
