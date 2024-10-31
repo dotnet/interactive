@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
 
 public sealed class PostgreSqlFactAttribute : FactAttribute
 {
-    private const string TEST_PSQL_CONNECTION_STRING = nameof(TEST_PSQL_CONNECTION_STRING);
+    private const string TEST_POSTGRESQL_CONNECTION_STRING = nameof(TEST_POSTGRESQL_CONNECTION_STRING);
     private static readonly string _skipReason;
 
     static PostgreSqlFactAttribute()
@@ -30,7 +30,7 @@ public sealed class PostgreSqlFactAttribute : FactAttribute
         string connectionString = GetConnectionStringForTests();
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            return $"Environment variable {TEST_PSQL_CONNECTION_STRING} is not set. To run tests that require "
+            return $"Environment variable {TEST_POSTGRESQL_CONNECTION_STRING} is not set. To run tests that require "
                    + "SQL Server, this environment variable must be set to a valid connection string value.";
         }
 
@@ -42,7 +42,7 @@ public sealed class PostgreSqlFactAttribute : FactAttribute
         catch (Exception e)
         {
             return $"A connection could not be established to SQL Server. Verify the connection string value used " +
-                   $"for environment variable {TEST_PSQL_CONNECTION_STRING} targets a running SQL Server instance. " +
+                   $"for environment variable {TEST_POSTGRESQL_CONNECTION_STRING} targets a running SQL Server instance. " +
                    $"Connection failed failed with error: {e}";
         }
 
@@ -53,6 +53,6 @@ public sealed class PostgreSqlFactAttribute : FactAttribute
     {
         const string fallbackConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=Adventureworks";
 
-        return Environment.GetEnvironmentVariable(TEST_PSQL_CONNECTION_STRING) ?? fallbackConnectionString;
+        return Environment.GetEnvironmentVariable(TEST_POSTGRESQL_CONNECTION_STRING) ?? fallbackConnectionString;
     }
 }

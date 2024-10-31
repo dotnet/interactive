@@ -42,7 +42,7 @@ public class PostgreSqlConnectionTests : IDisposable
     {
         var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();
         using var kernel = CreateKernel();
-        var connect = $"#!connect psql --kernel-name adventureworks \"{connectionString}\"";
+        var connect = $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"";
         var result = await kernel.SubmitCodeAsync(connect);
         result.Events.Should().NotContainErrors();
 
@@ -65,7 +65,7 @@ public class PostgreSqlConnectionTests : IDisposable
     {
         var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();
         using var kernel = CreateKernel();
-        var connect = $"#!connect psql --kernel-name adventureworks \"{connectionString}\"";
+        var connect = $"#!connect postgres --kernel-name adventureworks \"{connectionString}\"";
         var result = await kernel.SubmitCodeAsync(connect);
         result.Events.Should().NotContainErrors();
 

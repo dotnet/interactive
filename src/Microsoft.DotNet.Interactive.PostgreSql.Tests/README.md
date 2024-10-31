@@ -22,5 +22,5 @@ podman run -d -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:54
 Setup connection string as environment variable:
 
 ```bash
-export TEST_PSQL_CONNECTION_STRING='Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=Adventureworks'
+export TEST_POSTGRESQL_CONNECTION_STRING='Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=Adventureworks'
 ```
