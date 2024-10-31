@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.PostgreSql;
 public class ConnectPostgreSqlDirective : ConnectKernelDirective<ConnectPostgreSqlKernel>
 {
     public ConnectPostgreSqlDirective()
-        : base("psql", "Connects to a PostgreSQL database")
+        : base("postgres", "Connects to a PostgreSQL database")
     {
         Parameters.Add(ConnectionStringParameter);
     }
@@ -21,7 +21,7 @@ public class ConnectPostgreSqlDirective : ConnectKernelDirective<ConnectPostgreS
         {
             AllowImplicitName = true,
             Required = true,
-            TypeHint = "connectionstring-psql"
+            TypeHint = "connectionstring-postgresql"
         };
 
     public override Task<IEnumerable<Kernel>> ConnectKernelsAsync(
