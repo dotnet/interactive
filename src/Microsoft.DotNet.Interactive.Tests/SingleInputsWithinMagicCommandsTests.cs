@@ -73,8 +73,7 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
 
     [Theory]
     [InlineData("#!shim @input")]
-    [InlineData("#!shim @input:input-please")]
-    [InlineData("#!shim --value @input:input-please")]
+    [InlineData("#!shim --value @input")]
     public async Task Input_token_in_magic_command_prompts_user_for_input_using_the_associated_parameter_name(string code)
     {
         _responses.Enqueue("one");
@@ -94,6 +93,32 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
             .Prompt
             .Should()
             .Be("Please enter a value for parameter: --value");
+        _receivedUserInput.Should().ContainSingle().Which.Should().Be("one");
+    }
+
+    [Theory]
+    [InlineData("#!shim @input:input-please")]
+    [InlineData("#!shim --value @input:input-please")]
+    [InlineData("#!shim --value @input:\"input-please\"")]
+    public async Task Input_token_in_magic_command_prompts_user_for_input_using_prompt_shorthand(string code)
+    {
+        _responses.Enqueue("one");
+
+        var result = await _kernel.SendAsync(new SubmitCode(code, "csharp"));
+
+        using var _ = new AssertionScope();
+
+        result.Events.Should().NotContainErrors();
+
+        _receivedRequestInput.IsPassword.Should().BeFalse();
+
+        _receivedRequestInput
+            .Should()
+            .BeOfType<RequestInput>()
+            .Which
+            .Prompt
+            .Should()
+            .Be("input-please");
         _receivedUserInput.Should().ContainSingle().Which.Should().Be("one");
     }
 

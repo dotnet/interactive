@@ -692,6 +692,7 @@ Microsoft.DotNet.Interactive.Http
 Microsoft.DotNet.Interactive.Parsing
   public class SubmissionParser
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
+    public Microsoft.DotNet.Interactive.Documents.DirectiveParseResult ParseDirectiveLine(System.String directiveLine)
     public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.KernelCommand>> SplitSubmission(Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode)
     public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.KernelCommand>> SplitSubmission(Microsoft.DotNet.Interactive.Commands.RequestDiagnostics requestDiagnostics)
 Microsoft.DotNet.Interactive.Utility

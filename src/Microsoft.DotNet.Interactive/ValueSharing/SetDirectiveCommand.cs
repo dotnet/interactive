@@ -48,7 +48,6 @@ internal class SetDirectiveCommand : KernelCommand
 
         var parameterValues = directiveNode
                               .GetParameterValues(
-                                  directive,
                                   bindingResult.BoundValues)
                               .ToDictionary(t => t.Name, t => (t.Value, t.ParameterNode));
 

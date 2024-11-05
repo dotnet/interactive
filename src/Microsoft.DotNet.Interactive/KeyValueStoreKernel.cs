@@ -105,7 +105,7 @@ public class KeyValueStoreKernel :
                 }
 
                 var parameterValues = directiveNode
-                                      .GetParameterValues(directive, expressionBindingResult.BoundValues)
+                                      .GetParameterValues(expressionBindingResult.BoundValues)
                                       .ToDictionary(t => t.Name, t => (t.Value, t.ParameterNode));
 
                 string name = null;

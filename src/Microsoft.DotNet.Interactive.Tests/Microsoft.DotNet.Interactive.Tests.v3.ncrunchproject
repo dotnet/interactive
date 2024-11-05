@@ -79,6 +79,9 @@ var x = 123; // with some intervening code
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.Tests.MultipleInputsWithinMagicCommandsTests.Input_field_values_can_be_stored_using_SecretManager</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Tests.SingleInputsWithinMagicCommandsTests.Input_token_in_magic_command_prompts_user_for_password</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

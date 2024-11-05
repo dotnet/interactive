@@ -190,10 +190,14 @@ internal class DirectiveNode : TopLevelSyntaxNode
     }
 
     public IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> GetParameterValues(
-        KernelDirective directive,
         Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
     {
         var parameterNodes = ChildNodes.OfType<DirectiveParameterNode>().ToArray();
+
+        if (!TryGetDirective(out var directive))
+        {
+            yield break;
+        }
 
         var parameters = directive.Parameters;
 
@@ -312,7 +316,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         writer.WriteStartObject();
 
-        IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> parameterValues = GetParameterValues(directive, boundExpressionValues).ToArray();
+        IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> parameterValues = GetParameterValues(boundExpressionValues).ToArray();
 
         foreach (var parameter in parameterValues)
         {

@@ -84,14 +84,7 @@ public class RequestInput : KernelCommand
                 parametersNodeText = JsonSerializer.Deserialize<string>(parametersNode.Text);
             }
 
-            if (parametersNodeText?.Contains(" ") is true)
-            {
-                requestInput = new(prompt: parametersNodeText);
-            }
-            else
-            {
-                requestInput = new(prompt: $"Please enter a value for parameter: {parameterName}");
-            }
+            requestInput = new(prompt: parametersNodeText);
         }
 
         requestInput.ParameterName = parameterName;

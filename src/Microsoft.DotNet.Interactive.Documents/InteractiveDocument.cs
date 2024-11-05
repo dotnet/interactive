@@ -4,9 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Builder;
-using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -36,18 +33,10 @@ public class InteractiveDocument : IEnumerable
                 new ByteArrayConverter(),
                 new DataDictionaryConverter(),
                 new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
-                new InteractiveDocumentConverter(),
+                new InteractiveDocumentConverter()
             }
         };
     }
-
-    private static Parser? _importFieldsParser;
-    private static Argument<FileInfo>? _importedFileArgument;
-
-    private static Parser? _inputFieldsParser;
-    private static Option<string>? _valueNameOption;
-    private static Option<string[]>? _discoveredInputPrompts;
-    private static Option<string[]>? _discoveredPasswordPrompts;
 
     private IDictionary<string, object>? _metadata;
 
@@ -61,10 +50,10 @@ public class InteractiveDocument : IEnumerable
     public IDictionary<string, object> Metadata =>
         _metadata ??= new Dictionary<string, object>();
 
-    public async IAsyncEnumerable<InteractiveDocument> GetImportsAsync(bool recursive = false)
+    public async IAsyncEnumerable<InteractiveDocument> GetImportsAsync(
+        Func<string, DirectiveParseResult> parseDirective,
+        bool recursive = false)
     {
-        EnsureImportFieldParserIsInitialized();
-
         if (!TryGetKernelInfosFromMetadata(Metadata, out var kernelInfos))
         {
             kernelInfos = new();
@@ -72,13 +61,13 @@ public class InteractiveDocument : IEnumerable
 
         foreach (var line in GetMagicCommandLines())
         {
-            var parseResult = _importFieldsParser!.Parse(line);
+            var parseResult = parseDirective(line);
 
-            if (parseResult.CommandResult.Command.Name == "#!import")
+            if (parseResult.CommandName is "#!import")
             {
                 if (!parseResult.Errors.Any())
                 {
-                    var file = parseResult.GetValueForArgument(_importedFileArgument!);
+                    var file = new FileInfo(parseResult.Parameters["--file"]);
 
                     var interactiveDocument = await LoadAsync(file, kernelInfos);
 
@@ -86,61 +75,33 @@ public class InteractiveDocument : IEnumerable
 
                     if (recursive)
                     {
-                        await foreach (var import in interactiveDocument.GetImportsAsync(recursive))
+                        await foreach (var import in interactiveDocument.GetImportsAsync(
+                                           parseDirective,
+                                           recursive))
                         {
                             yield return import;
                         }
                     }
                 }
-                else if (parseResult.GetValueForArgument(_importedFileArgument!).FullName is { } file)
-                {
-                    throw new FileNotFoundException(file);
-                }
             }
         }
     }
 
-    public IEnumerable<InputField> GetInputFields()
+    public IEnumerable<InputField> GetInputFields(Func<string, DirectiveParseResult> parseDirectiveLine)
     {
-        EnsureInputFieldParserIsInitialized();
-
         var inputFields = new List<InputField>();
 
         foreach (var line in GetMagicCommandLines())
         {
-            foreach (var field in ParseInputFields(line))
+            var parseResult = parseDirectiveLine(line);
+
+            foreach (var field in parseResult.InputFields)
             {
                 inputFields.Add(field);
             }
         }
 
         return inputFields.Distinct().ToArray();
-
-        static IReadOnlyCollection<InputField> ParseInputFields(string line)
-        {
-            var inputFields = new List<InputField>();
-            var result = _inputFieldsParser!.Parse(line);
-
-            var nameOptionValue = result.GetValueForOption(_valueNameOption!);
-
-            if (result.GetValueForOption(_discoveredInputPrompts!) is { } inputNames)
-            {
-                foreach (var inputName in inputNames.Distinct())
-                {
-                    inputFields.Add(new InputField(nameOptionValue ?? inputName, "text"));
-                }
-            }
-
-            if (result.GetValueForOption(_discoveredPasswordPrompts!) is { } passwordNames)
-            {
-                foreach (var passwordName in passwordNames.Distinct())
-                {
-                    inputFields.Add(new InputField(nameOptionValue ?? passwordName, "password"));
-                }
-            }
-
-            return inputFields;
-        }
     }
 
     IEnumerator IEnumerable.GetEnumerator() => Elements.GetEnumerator();
@@ -356,87 +317,9 @@ public class InteractiveDocument : IEnumerable
         return false;
     }
 
-    public IEnumerable<string> GetMagicCommandLines() =>
+    private IEnumerable<string> GetMagicCommandLines() =>
         Elements.SelectMany(e => e.Contents.SplitIntoLines())
                 .Where(line => line.StartsWith("#!"));
-
-    private static void EnsureImportFieldParserIsInitialized()
-    {
-        if (_importFieldsParser is not null)
-        {
-            return;
-        }
-
-        _importedFileArgument = new Argument<FileInfo>("file")
-            .ExistingOnly();
-
-        var importCommand = new Command("#!import")
-        {
-            _importedFileArgument
-        };
-
-        var rootCommand = new RootCommand
-        {
-            importCommand
-        };
-
-        _importFieldsParser = new CommandLineBuilder(rootCommand).Build();
-    }
-
-    private static void EnsureInputFieldParserIsInitialized()
-    {
-        if (_inputFieldsParser is not null)
-        {
-            return;
-        }
-
-        _valueNameOption = new Option<string>("--name");
-
-        var valueCommand = new Command("#!value")
-        {
-            _valueNameOption
-        };
-        
-        var setCommand = new Command("#!set")
-        {
-            _valueNameOption
-        };
-
-        var rootCommand = new RootCommand
-        {
-            setCommand,
-            valueCommand
-        };
-
-        _discoveredInputPrompts = new Option<string[]>("--discovered-input-name");
-        _discoveredPasswordPrompts = new Option<string[]>("--discovered-password-name");
-        rootCommand.AddGlobalOption(_discoveredInputPrompts);
-        rootCommand.AddGlobalOption(_discoveredPasswordPrompts);
-
-        _inputFieldsParser = new CommandLineBuilder(rootCommand)
-                             .UseTokenReplacer((string replace, out IReadOnlyList<string>? tokens, out string? message) =>
-                             {
-                                 if (replace.StartsWith("input:"))
-                                 {
-                                     tokens = new[] { _discoveredInputPrompts.Aliases.First(), replace.Split(':')[1] };
-                                     message = null;
-                                     return true;
-                                 }
-                                 else if (replace.StartsWith("password:"))
-                                 {
-                                     tokens = new[] { _discoveredPasswordPrompts.Aliases.First(), replace.Split(':')[1] };
-                                     message = null;
-                                     return true;
-                                 }
-                                 else
-                                 {
-                                     tokens = null;
-                                     message = null;
-                                     return false;
-                                 }
-                             })
-                             .Build();
-    }
 
     internal static JsonSerializerOptions JsonSerializerOptions { get; }
 }

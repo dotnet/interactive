@@ -33,7 +33,6 @@
     <Compile Include="..\Microsoft.DotNet.Interactive.Http.Tests\Utility\InterceptingHttpMessageHandler.cs" Link="Utility\InterceptingHttpMessageHandler.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\(Recipes)\BareObjectConverter.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\(Recipes)\JsonSerializationExtensions.cs" Link="Utility\JsonSerializationExtensions.cs" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>

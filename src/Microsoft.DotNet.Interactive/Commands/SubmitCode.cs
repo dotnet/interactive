@@ -31,13 +31,9 @@ public class SubmitCode : KernelCommand
 
         if (directiveNode is { HasParameters: true, Kind: DirectiveNodeKind.KernelSelector })
         {
-            if (directiveNode.TryGetDirective(out var directive))
-            {
-                _parameters = directiveNode.GetParameterValues(
-                                               directive,
+            _parameters = directiveNode.GetParameterValues(
                                                new Dictionary<DirectiveParameterValueNode, object>())
                                            .ToDictionary(t => t.Name, t => t.Value?.ToString());
-            }
         }
         else if (syntaxNode is DirectiveNode { Kind: DirectiveNodeKind.Action } actionDirectiveNode)
         {

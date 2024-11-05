@@ -32,17 +32,14 @@ public class AddPackageSource : KernelCommand
     {
         AddPackageSource command = null;
 
-        if (directiveNode.TryGetActionDirective(out var directive))
+        var parameterValues = directiveNode.GetParameterValues(bindingResult.BoundValues).ToArray();
+
+        var packageSourceParameterResult = parameterValues.SingleOrDefault(v => v.Name is "");
+
+        if (packageSourceParameterResult.Value is string packageSource)
         {
-            var parameterValues = directiveNode.GetParameterValues(directive, bindingResult.BoundValues).ToArray();
-
-            var packageSourceParameterResult = parameterValues.SingleOrDefault(v => v.Name is "");
-
-            if (packageSourceParameterResult.Value is string packageSource)
-            {
-                packageSource = packageSource.Trim(['"']).Replace("nuget:", "");
-                command = new AddPackageSource(packageSource);
-            }
+            packageSource = packageSource.Trim(['"']).Replace("nuget:", "");
+            command = new AddPackageSource(packageSource);
         }
 
         return Task.FromResult<KernelCommand>(command);

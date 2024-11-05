@@ -6,6 +6,12 @@ Microsoft.DotNet.Interactive.Documents
 )
     public static System.Void Write(InteractiveDocument document, System.IO.Stream stream, KernelInfoCollection kernelInfos, System.String newline = 
 )
+  public class DirectiveParseResult
+    .ctor()
+    public System.String CommandName { get; set;}
+    public System.Collections.Generic.IList<System.String> Errors { get;}
+    public System.Collections.Generic.IList<InputField> InputFields { get;}
+    public System.Collections.Generic.IDictionary<System.String,System.String> Parameters { get;}
   public class DisplayElement : InteractiveDocumentOutputElement, IDataElement
     .ctor(System.Collections.Generic.IDictionary<System.String,System.Object> data)
     public System.Collections.Generic.IDictionary<System.String,System.Object> Data { get;}
@@ -16,7 +22,8 @@ Microsoft.DotNet.Interactive.Documents
     public System.String ErrorValue { get;}
     public System.String[] StackTrace { get;}
   public class InputField
-    .ctor(System.String valueName, System.String typeHint = text)
+    .ctor(System.String valueName, System.String typeHint = text, System.String prompt = null)
+    public System.String Prompt { get;}
     public System.String TypeHint { get; set;}
     public System.String ValueName { get; set;}
     public System.Boolean Equals(System.Object obj)
@@ -28,9 +35,8 @@ Microsoft.DotNet.Interactive.Documents
     public System.Collections.Generic.IDictionary<System.String,System.Object> Metadata { get;}
     public System.Void Add(InteractiveDocumentElement element)
     public System.String GetDefaultKernelName()
-    public System.Collections.Generic.IAsyncEnumerable<InteractiveDocument> GetImportsAsync(System.Boolean recursive = False)
-    public System.Collections.Generic.IEnumerable<InputField> GetInputFields()
-    public System.Collections.Generic.IEnumerable<System.String> GetMagicCommandLines()
+    public System.Collections.Generic.IAsyncEnumerable<InteractiveDocument> GetImportsAsync(System.Func<System.String,DirectiveParseResult> parseDirective, System.Boolean recursive = False)
+    public System.Collections.Generic.IEnumerable<InputField> GetInputFields(System.Func<System.String,DirectiveParseResult> parseDirectiveLine)
   public class InteractiveDocumentElement
     .ctor()
     .ctor(System.String contents = null, System.String kernelName = null, System.Collections.Generic.IEnumerable<InteractiveDocumentOutputElement> outputs = null)

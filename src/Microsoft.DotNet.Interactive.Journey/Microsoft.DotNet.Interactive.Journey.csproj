@@ -25,10 +25,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utilities\InvocationContextExtensions.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.Journey.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
