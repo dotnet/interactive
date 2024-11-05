@@ -9,7 +9,6 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Telemetry;
 using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.App.PackageDirectoryExtensionLoader>;
 
@@ -17,16 +16,10 @@ namespace Microsoft.DotNet.Interactive.App;
 
 internal class PackageDirectoryExtensionLoader
 {
-    private readonly TelemetrySender _telemetrySender;
     private const string ExtensionScriptName = "extension.dib";
 
     private readonly HashSet<AssemblyName> _loadedAssemblies = new();
     private readonly object _lock = new();
-
-    public PackageDirectoryExtensionLoader(TelemetrySender telemetrySender = null)
-    {
-        _telemetrySender = telemetrySender;
-    }
 
     public async Task LoadFromDirectoryAsync(
         DirectoryInfo directory,

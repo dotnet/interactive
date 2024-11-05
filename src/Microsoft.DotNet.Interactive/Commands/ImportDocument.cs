@@ -2,11 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Directives;
-using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands;
 
@@ -24,28 +20,5 @@ public class ImportDocument : KernelCommand
         FilePath = filePath;
     }
 
-    [JsonPropertyName("file")]
-    public string FilePath { get; }
-
-    internal static Task<KernelCommand> TryParseImportDirectiveAsync(
-        DirectiveNode directiveNode,
-        ExpressionBindingResult bindingResult,
-        Kernel kernel)
-    {
-        ImportDocument command = null;
-
-        if (directiveNode.TryGetActionDirective(out var directive))
-        {
-            var parameterValues = directiveNode.GetParameterValues(directive, bindingResult.BoundValues).ToArray();
-
-            var parameterResult = parameterValues.SingleOrDefault(v => v.Name is "");
-
-            if (parameterResult.Value is string filePath)
-            {
-                command = new ImportDocument(filePath);
-            }
-        }
-
-        return Task.FromResult<KernelCommand>(command);
-    }
+    [JsonPropertyName("file")] public string FilePath { get; }
 }

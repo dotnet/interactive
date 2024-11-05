@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Directives;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
@@ -38,6 +39,71 @@ public class SubmissionParser
             configuration);
 
         return parser.Parse(defaultKernelName);
+    }
+
+    public DirectiveParseResult ParseDirectiveLine(string directiveLine)
+    {
+        var tree = Parse(directiveLine);
+
+        DirectiveParseResult parseResult = new();
+
+        if (tree.RootNode.ChildNodes.FirstOrDefault() is DirectiveNode directiveNode)
+        {
+            parseResult.CommandName = directiveNode.NameNode?.Text;
+
+            if (directiveNode.TryGetDirective(out var directive))
+            {
+                var parameterValues = directiveNode.GetParameterValues(new());
+                foreach (var (name, value, _) in parameterValues)
+                {
+                    parseResult.Parameters[name] = value?.ToString();
+                }
+            }
+
+            foreach (var expressionNode in directiveNode
+                                           .DescendantNodesAndTokens()
+                                           .OfType<DirectiveExpressionNode>())
+            {
+                if (expressionNode.IsInputExpression)
+                {
+                    var requestInput = RequestInput.Parse(expressionNode);
+
+                    var valueName = requestInput.ParameterName;
+                    var prompt = requestInput.Prompt;
+
+                    if (parseResult.CommandName is "#!value" or "#!set" or "#!share")
+                    {
+                        // valueName should be the value passed to the --name parameter
+                        var nameParameterValue = directiveNode
+                                                 .DescendantNodesAndTokens()
+                                                 .OfType<DirectiveParameterNode>()
+                                                 .FirstOrDefault(p => p.NameNode?.Text == "--name")
+                                                 ?.DescendantNodesAndTokens()
+                                                 .OfType<DirectiveParameterValueNode>()
+                                                 .SingleOrDefault()
+                                                 ?.Text;
+                        if (!string.IsNullOrWhiteSpace(nameParameterValue))
+                        {
+                            valueName = nameParameterValue;
+                        }
+                    }
+
+                    if (!prompt.Contains(" "))
+                    {
+                        valueName = prompt;
+                    }
+
+                    var inputField = new InputField(
+                        valueName: valueName,
+                        prompt: prompt,
+                        typeHint: requestInput.InputTypeHint);
+
+                    parseResult.InputFields.Add(inputField);
+                }
+            }
+        }
+
+        return parseResult;
     }
 
     public async Task<IReadOnlyList<KernelCommand>> SplitSubmission(SubmitCode submitCode) =>

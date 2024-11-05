@@ -95,8 +95,7 @@ public static class KernelExtensions
                     Description = LocalizationResources.Magics_import_file_Description(),
                     TypeHint = "file"
                 }
-            },
-            TryGetKernelCommandAsync = ImportDocument.TryParseImportDirectiveAsync
+            }
         };
 
         kernel.AddDirective<ImportDocument>(

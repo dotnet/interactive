@@ -59,7 +59,7 @@ public class ImportNotebookTests : DocumentFormatTestsBase
             ".ipynb" => Notebook.Parse(importingNotebookText, DefaultKernelInfos)
         };
 
-        var importedDocuments = await document.GetImportsAsync().ToArrayAsync();
+        var importedDocuments = await document.GetImportsAsync(ParseDirectiveLine).ToArrayAsync();
 
         importedDocuments.Should().ContainSingle()
                          .Which
@@ -97,7 +97,7 @@ public class ImportNotebookTests : DocumentFormatTestsBase
 
         var document = Notebook.Parse(importingNotebookText, DefaultKernelInfos);
 
-        var importedDocuments = await document.GetImportsAsync().ToArrayAsync();
+        var importedDocuments = await document.GetImportsAsync(ParseDirectiveLine).ToArrayAsync();
 
         var importedElement = importedDocuments.Should().ContainSingle()
                                                .Which
@@ -139,7 +139,7 @@ public class ImportNotebookTests : DocumentFormatTestsBase
         // round trip notebook1 through the parser
         notebook1 = CodeSubmission.Parse(notebook1.ToCodeSubmissionContent(), DefaultKernelInfos);
 
-        var importedDocuments = await notebook1.GetImportsAsync(recursive: true).ToArrayAsync();
+        var importedDocuments = await notebook1.GetImportsAsync(ParseDirectiveLine, recursive: true).ToArrayAsync();
 
         importedDocuments.Should().HaveCount(2);
 
@@ -157,7 +157,7 @@ public class ImportNotebookTests : DocumentFormatTestsBase
     {
         var missingNotebookPath = "not-found.dib";
 
-        var notebook1 =
+        var notebook =
             new InteractiveDocument
             {
                 new InteractiveDocumentElement($"#!import {missingNotebookPath}"),
@@ -165,11 +165,11 @@ public class ImportNotebookTests : DocumentFormatTestsBase
             };
 
         // round trip notebook1 through the parser
-        notebook1 = CodeSubmission.Parse(notebook1.ToCodeSubmissionContent(), DefaultKernelInfos);
+        notebook = CodeSubmission.Parse(notebook.ToCodeSubmissionContent(), DefaultKernelInfos);
 
-        await notebook1.Invoking(async n => await n.GetImportsAsync().ToArrayAsync())
-                       .Should()
-                       .ThrowAsync<FileNotFoundException>()
-                       .WithMessage("*not-found.dib");
+        await notebook.Invoking(async n => await n.GetImportsAsync(ParseDirectiveLine).ToArrayAsync())
+                      .Should()
+                      .ThrowAsync<FileNotFoundException>()
+                      .WithMessage("Could not find file*not-found.dib*");
     }
 }

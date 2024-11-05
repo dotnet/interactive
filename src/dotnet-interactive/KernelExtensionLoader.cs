@@ -75,7 +75,7 @@ public static class KernelExtensionLoader
         KernelInvocationContext context,
         TelemetrySender telemetrySender = null)
     {
-        await new PackageDirectoryExtensionLoader(telemetrySender).LoadFromDirectoryAsync(
+        await new PackageDirectoryExtensionLoader().LoadFromDirectoryAsync(
             extensionDir,
             kernel,
             context);

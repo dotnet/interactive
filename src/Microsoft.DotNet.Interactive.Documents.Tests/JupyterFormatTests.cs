@@ -1618,7 +1618,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
 
         var document = Notebook.Parse(ipynbJson);
 
-        document.GetInputFields()
+        document.GetInputFields(ParseDirectiveLine)
                 .Should()
                 .ContainSingle()
                 .Which
