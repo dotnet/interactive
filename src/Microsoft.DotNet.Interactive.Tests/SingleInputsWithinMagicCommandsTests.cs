@@ -150,7 +150,7 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
             .Which
             .Prompt
             .Should()
-            .Be("Please enter a value for parameter: --value");
+            .Be("input-please");
     }
 
     [Fact]
