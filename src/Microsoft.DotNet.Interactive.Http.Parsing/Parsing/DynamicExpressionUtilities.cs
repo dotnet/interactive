@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing
@@ -183,6 +184,13 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                     else if (string.Equals(type.Value, "iso8601", StringComparison.OrdinalIgnoreCase))
                     {
                         format = "o";
+                        if (currentDateTimeOffset.Offset.TotalMinutes == 0)
+                        {
+                            // for $datetime, format the DateTime in order to eliminate the +00:00 offset and use Z
+                            string text = currentDateTimeOffset.UtcDateTime.ToString(format, formatProvider);
+
+                            return node.CreateBindingSuccess(text);
+                        }
                     }
                     else
                     {
