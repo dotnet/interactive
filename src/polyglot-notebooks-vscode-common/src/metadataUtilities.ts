@@ -29,7 +29,7 @@ export function isDotNetNotebook(notebook: vscodeLike.NotebookDocument): boolean
         return true;
     }
 
-    const kernelspecMetadata = getKernelspecMetadataFromIpynbNotebookDocument(notebook); //?
+    const kernelspecMetadata = getKernelspecMetadataFromIpynbNotebookDocument(notebook);
     if (kernelspecMetadata.name.startsWith('.net-')) {
         return true;
     }
@@ -115,7 +115,7 @@ export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDo
 
 let _useLegacyMetadata = true;
 export function useLegacyMetadata() {
-    return _useLegacyMetadata;//?
+    return _useLegacyMetadata;
 }
 
 export function setUseLegacyMetadata(value: boolean) {
@@ -213,7 +213,7 @@ export function getKernelspecMetadataFromIpynbNotebookDocument(notebook: vscodeL
         name: ''
     };
 
-    const metadata = useLegacyMetadata() ? notebook.metadata.custom?.metadata : notebook.metadata.metadata; //?
+    const metadata = useLegacyMetadata() ? notebook.metadata.custom?.metadata : notebook.metadata.metadata;
 
 
     if (typeof metadata === 'object') {
@@ -380,15 +380,12 @@ export function sortAndMerge(destination: { [key: string]: any }, source: { [key
         }
     }
     else {
-        sortInPlace(destination);//?
-        sortInPlace(source);//?
+        sortInPlace(destination);
+        sortInPlace(source);
 
-        const sourceKeys = Object.keys(source);//?
+        const sourceKeys = Object.keys(source);
         for (const key of sourceKeys) {
-            key;//?
-            destination[key];//?
             if (destination[key] === undefined) {
-                destination;
                 destination[key] = source[key];
 
             } else {
@@ -402,16 +399,12 @@ export function sortAndMerge(destination: { [key: string]: any }, source: { [key
             }
         }
     }
-
-    destination;//?
 }
 
 function mergeArray(destination: any[], source: any[]) {
-    source;//?
     for (let i = 0; i < source.length; i++) {
         let srcValue = source[i];
         if (srcValue !== null) {
-            srcValue;//?
             if (isKernelInfo(srcValue)) {
                 const found = destination.find(e => srcValue.localName.localeCompare(e.localName) === 0);
                 if (found) {
@@ -422,8 +415,6 @@ function mergeArray(destination: any[], source: any[]) {
             } else if (isDocumentKernelInfo(srcValue)) {
                 const found = destination.find(e => srcValue.name.localeCompare(e.name) === 0);
                 if (found) {
-                    found;//?
-                    srcValue;//?
                     sortAndMerge(found, srcValue);
                 } else {
                     destination.push(srcValue);
@@ -436,7 +427,6 @@ function mergeArray(destination: any[], source: any[]) {
                     destination.push(srcValue);
                 }
             }
-            destination;//?
         }
     }
 }
@@ -566,19 +556,18 @@ export function areEquivalentObjects(object1: { [key: string]: any }, object2: {
     }
 
     for (const key of object1Keys) {
-        key;//?
-        const value1 = object1[key];//?
-        const value2 = object2[key];//?
-        const bothAreObjects = isObject(value1) && isObject(value2); //?
+        const value1 = object1[key];
+        const value2 = object2[key];
+        const bothAreObjects = isObject(value1) && isObject(value2);
         const bothAreArrays = Array.isArray(value1) && Array.isArray(value2);
 
         if (bothAreArrays) {
-            if (value1.length !== value2.length) {//?
+            if (value1.length !== value2.length) {
                 return false;
             }
             for (let index = 0; index < value1.length; index++) {
-                const element1 = value1[index];//?
-                const element2 = value2[index];//?
+                const element1 = value1[index];
+                const element2 = value2[index];
                 if (!areEquivalentObjects(element1, element2)) {
                     return false;
                 }
@@ -588,10 +577,7 @@ export function areEquivalentObjects(object1: { [key: string]: any }, object2: {
             if (!equivalent) {
                 return false;
             }
-        } else if (value1 !== value2) //?
-        {
-            value1;//?
-            value2;//?
+        } else if (value1 !== value2) {
             return false;
         }
     }
