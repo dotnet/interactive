@@ -112,15 +112,13 @@ internal static class HttpResponseFormattingExtensions
 
     private static PocketView FormatAsHtml(this HttpResponse response)
     {
-        PocketView? output;
-        dynamic? requestDiv;
+        PocketView? requestDiv;
         if (response.Request is { } request)
         {
-            var requestUriString = request.Uri?.ToString();
             var requestHyperLink =
-                string.IsNullOrWhiteSpace(requestUriString)
+                string.IsNullOrWhiteSpace(request.Uri)
                     ? "[Unknown]"
-                    : a[href: requestUriString](requestUriString);
+                    : a[href: request.Uri](request.Uri);
 
             var requestLine =
                 h3(
@@ -181,7 +179,7 @@ internal static class HttpResponseFormattingExtensions
         }
 
         var responseBody =
-            details[open: true](
+            details(
                 summary($"Body ({responseContentTypePrefix}{responseBodyLength} bytes)"),
                 responseObjToFormat);
 
@@ -193,7 +191,7 @@ internal static class HttpResponseFormattingExtensions
                 responseHeaders,
                 responseBody);
 
-        output =
+        PocketView output =
             div[@class: ContainerClass](
                 style[type: "text/css"](CSS),
                 requestDiv,
@@ -276,11 +274,13 @@ internal static class HttpResponseFormattingExtensions
         }
     }
 
-    private static dynamic HeaderTable(Dictionary<string, string[]> headers, Dictionary<string, string[]>? contentHeaders = null)
+    private static PocketView HeaderTable(Dictionary<string, string[]> headers, Dictionary<string, string[]>? contentHeaders = null)
     {
-        var allHeaders = contentHeaders is null ? headers : headers.Concat(contentHeaders);
+        var allHeaders = contentHeaders is null
+                             ? headers
+                             : headers.Concat(contentHeaders);
 
-        var headerTable =
+        PocketView headerTable =
             table(
                 thead(
                     tr(
