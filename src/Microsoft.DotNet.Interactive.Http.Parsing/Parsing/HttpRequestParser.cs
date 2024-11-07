@@ -250,37 +250,6 @@ internal class HttpRequestParser
 
         private void ParseLeadingWhitespaceAndComments(HttpSyntaxNode node)
         {
-            // FIX: (ParseLeadingWhitespaceAndComments) 
-            switch (node)
-            {
-                case HttpCommentBodyNode httpCommentBodyNode:
-                    break;
-                case HttpExpressionNode httpExpressionNode:
-                    break;
-                case HttpHeaderNameNode httpHeaderNameNode:
-                    break;
-                case HttpHeaderSeparatorNode httpHeaderSeparatorNode:
-                    break;
-                case HttpHeaderValueNode httpHeaderValueNode:
-                    break;
-                case HttpMethodNode httpMethodNode:
-                    break;
-                case HttpRequestNode httpRequestNode:
-                    break;
-                case HttpRequestSeparatorNode httpRequestSeparatorNode:
-                    break;
-                case HttpUrlNode httpUrlNode:
-                    break;
-                case HttpVariableAssignmentNode httpVariableAssignmentNode:
-                    break;
-                case HttpVariableDeclarationNode httpVariableDeclarationNode:
-                    break;
-                case HttpVariableValueNode httpVariableValueNode:
-                    break;
-                case HttpVersionNode httpVersionNode:
-                    break;
-            }
-
             while (MoreTokens())
             {
                 if (CurrentToken?.Kind is TokenKind.Whitespace or TokenKind.NewLine)
@@ -667,7 +636,7 @@ internal class HttpRequestParser
 
         private HttpNamedRequestNode? ParseNamedRequestNode()
         {
-            if (!isCommentNamedRequest())
+            if (!IsCommentNamedRequest())
             {
                 return null;
             }
@@ -692,12 +661,15 @@ internal class HttpRequestParser
                 var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
                 node.AddDiagnostic(diagnostic);
             }
+
             bool wordParsedOnce = false;
             while (MoreTokens() && CurrentToken is not { Kind: TokenKind.NewLine } or null)
             {
                 var currentToken = CurrentToken;
-                if (currentToken is not null && (currentToken is not ({ Kind: TokenKind.Word or TokenKind.Whitespace } or 
-                    { Text: "_" or "@" or "." }) || currentToken is { Kind: TokenKind.Word } && wordParsedOnce))
+                if (currentToken is not null &&
+                    (wordParsedOnce &&
+                     currentToken is { Kind: TokenKind.Word } ||
+                     currentToken is not ({ Kind: TokenKind.Word or TokenKind.Whitespace } or { Text: "_" or "@" or "." })))
                 {
                     var diagnostic = currentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
                     node.AddDiagnostic(diagnostic);
@@ -708,21 +680,17 @@ internal class HttpRequestParser
                 {
                     wordParsedOnce = true;
                 }
-                ConsumeCurrentTokenInto(node);
 
+                ConsumeCurrentTokenInto(node);
             }
 
             return ParseTrailingWhitespace(node, stopAfterNewLine: true);
         }
 
-        private bool isCommentNamedRequest()
-        {
-            var nextTokenIndicatesName = CurrentTokenPlus(1) != null ? CurrentTokenPlus(1)!.Text.StartsWith("name") : false;
-            return (CurrentToken is { Text: "@" } &&
-                nextTokenIndicatesName &&
-                CurrentTokenPlus(2) is { Kind: TokenKind.Whitespace }
-                    );
-        }
+        private bool IsCommentNamedRequest() =>
+            CurrentToken is { Text: "@" } &&
+            CurrentTokenPlus(1)?.Text.StartsWith("name") is true &&
+            CurrentTokenPlus(2) is { Kind: TokenKind.Whitespace };
 
         private HttpHeaderNode ParseHeader()
         {
