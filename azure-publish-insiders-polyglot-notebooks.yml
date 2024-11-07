@@ -18,8 +18,6 @@ variables:
     value: $(isSimulated)
   - name: DotNetNugetApiKey
     value: $(DotNetNugetApiKey-A1)
-  - name: vscodeTargets
-    value: insiders
   - template: /eng/common/templates-official/variables/pool-providers.yml@self
     
 
@@ -78,5 +76,5 @@ extends:
             azureSubscription: 'VSCode Marketplace Publishing'
             scriptType: 'pscore'
             scriptLocation: 'scriptPath'
-            scriptPath: '$(Pipeline.Workspace)\artifacts\vscode\PublishVSCodeExtensionUsingMI.ps1'
-            arguments: '-artifactsPath $(Pipeline.Workspace)\artifacts -vscodeTargetsList "$(vscodeTargets)" -nugetToken "$(DotNetNugetApiKey)" -isSimulated $(simulate)'
+            scriptPath: '$(Pipeline.Workspace)\artifacts\vscode\PublishInsidersPolyglotNotebooks.ps1'
+            arguments: '-artifactsPath $(Pipeline.Workspace)\artifacts -nugetToken "$(DotNetNugetApiKey)" -isSimulated $(simulate)'
