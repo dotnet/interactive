@@ -15,4 +15,22 @@ internal class HttpSyntaxNode : SyntaxNode
     }
 
     internal void Add(HttpCommentNode node, bool addBefore) => AddInternal(node, addBefore);
+
+    protected bool TextContainsWhitespace()
+    {
+        // We ignore whitespace if it's the first or last token, OR ignore the first or last token if it's not whitespace.  For this reason, the first and last tokens aren't interesting.
+        for (var i = 1; i < ChildNodesAndTokens.Count - 1; i++)
+        {
+            var nodeOrToken = ChildNodesAndTokens[i];
+            if (nodeOrToken is SyntaxToken { Kind: TokenKind.Whitespace })
+            {
+                if (nodeOrToken.Span.OverlapsWith(Span))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
