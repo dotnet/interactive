@@ -7,24 +7,22 @@ import { KernelCommandOrEventEnvelope, isKernelCommandEnvelope } from './connect
 
 
 export function createKernelUri(kernelUri: string): string {
-    kernelUri;//?
     const uri = URI.parse(kernelUri);
-    uri.authority;//?
-    uri.path;//?
+    uri.authority;
+    uri.path;
     let absoluteUri = `${uri.scheme}://${uri.authority}${uri.path || "/"}`;
-    return absoluteUri;//?
+    return absoluteUri;
 }
 
 export function createKernelUriWithQuery(kernelUri: string): string {
-    kernelUri;//?
     const uri = URI.parse(kernelUri);
-    uri.authority;//?
-    uri.path;//?
+    uri.authority;
+    uri.path;
     let absoluteUri = `${uri.scheme}://${uri.authority}${uri.path || "/"}`;
     if (uri.query) {
         absoluteUri += `?${uri.query}`;
     }
-    return absoluteUri;//?
+    return absoluteUri;
 }
 export function getTag(kernelUri: string): string | undefined {
     const uri = URI.parse(kernelUri);
@@ -169,7 +167,7 @@ export class EventRoutingSlip extends RoutingSlip {
         const canAdd = !this.uris.find(e => createKernelUriWithQuery(e) === normalizedUri);
         if (canAdd) {
             this.uris.push(normalizedUri);
-            this.uris;//?
+            this.uris;
         } else {
             throw new Error(`The uri ${normalizedUri} is already in the routing slip [${this.uris}]`);
         }

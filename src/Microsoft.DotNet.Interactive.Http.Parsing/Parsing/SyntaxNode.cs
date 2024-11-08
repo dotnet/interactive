@@ -46,8 +46,6 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
             position--;
         }
 
-        // var candidate = _childNodesAndTokens.FirstOrDefault(n => n.FullSpan.Contains(position));
-
         for (var i = 0; i < _childNodesAndTokens.Count; i++)
         {
             var nodeOrToken = _childNodesAndTokens[i];
@@ -71,24 +69,6 @@ internal abstract class SyntaxNode : SyntaxNodeOrToken
         }
 
         return null;
-    }
-
-    protected bool TextContainsWhitespace()
-    {
-        // We ignore whitespace if it's the first or last token, OR ignore the first or last token if it's not whitespace.  For this reason, the first and last tokens aren't interesting.
-        for (var i = 1; i < _childNodesAndTokens.Count - 1; i++)
-        {
-            var nodeOrToken = _childNodesAndTokens[i];
-            if (nodeOrToken is SyntaxToken { Kind: TokenKind.Whitespace })
-            {
-                if (nodeOrToken.Span.OverlapsWith(_span))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     private void GrowSpan(SyntaxNodeOrToken child)
