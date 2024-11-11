@@ -53,16 +53,6 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                         return item;
                     });
 
-                // const mruConnectionItems = [{
-                //     description: 'Connect to sql-adventureworks (MSSQL)',
-                //     label: 'sql-adventureworks',
-                //     iconPath: new vscode.ThemeIcon('plug')
-                // }];
-
-                // const allItems = [...kernelSelectorItems,
-                // { description: '', label: '', kind: vscode.QuickPickItemKind.Separator },
-                // ...mruConnectionItems];
-
                 const selectedDisplayOption = await vscode.window.showQuickPick(kernelSelectorItems, { title: 'Select cell kernel' });
 
                 if (selectedDisplayOption) {
