@@ -25,8 +25,7 @@ public class PostgreSqlKernel :
     {
         KernelInfo.LanguageName = "PostgreSQL";
         KernelInfo.Description = """
-            This kernel is backed by a PostgreSQL database.
-            It can execute SQL statements against the database and display the results as tables.
+            Query a PostgreSQL database
             """;
 
         _connectionString = connectionString;

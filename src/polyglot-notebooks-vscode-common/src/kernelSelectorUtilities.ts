@@ -10,6 +10,7 @@ export interface KernelSelectorOption {
     kernelName: string;
     displayValue: string;
     languageName?: string;
+    description?: string;
 }
 
 export function getKernelInfoDisplayValue(kernelInfo: { localName: string, displayName: string }): string {
@@ -26,13 +27,14 @@ function extractInfo(kernelInfo: commandsAndEvents.KernelInfo) {
     return {
         localName: kernelInfo.localName,
         displayName: kernelInfo.displayName,
+        description: kernelInfo.description,
         languageName: kernelInfo.languageName,
         supportedKernelCommands: Array.from(kernelInfo.supportedKernelCommands.map(c => c.name))
     };
 }
 
 export function getKernelSelectorOptions(kernel: CompositeKernel, document: vscodeLike.NotebookDocument, requiredSupportedCommandType: commandsAndEvents.KernelCommandType): KernelSelectorOption[] {
-    const kernelInfos: Map<string, { localName: string, displayName: string, languageName?: string, supportedKernelCommands: string[] }> = new Map();
+    const kernelInfos: Map<string, { localName: string, displayName: string, languageName?: string, description?: string, supportedKernelCommands: string[] }> = new Map();
 
     // create and collect all `KernelInfo`s from document metadata...
     const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
@@ -64,7 +66,8 @@ export function getKernelSelectorOptions(kernel: CompositeKernel, document: vsco
     const selectorOptions: KernelSelectorOption[] = filteredKernels.map(kernelInfo => {
         const result: KernelSelectorOption = {
             kernelName: kernelInfo.localName,
-            displayValue: getKernelInfoDisplayValue(kernelInfo)
+            displayValue: getKernelInfoDisplayValue(kernelInfo),
+            description: kernelInfo.description
         };
         if (kernelInfo.languageName) {
             result.languageName = kernelInfo.languageName;

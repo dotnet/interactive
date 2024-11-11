@@ -14,9 +14,7 @@ public class MermaidKernel : Kernel,
     {
         KernelInfo.LanguageName = "Mermaid";
         KernelInfo.Description = """
-                                 This Kernel uses the Mermaid library to render diagrams. 
-                                 
-                                 For more information about Mermaid, see https://mermaid.js.org/intro.
+                                 Render diagrams using the Mermaid language (https://mermaid.js.org/intro)
                                  """;
     }
 
