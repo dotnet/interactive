@@ -144,10 +144,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const environmentVariables = { ...polyglotConfig.get<{ [key: string]: string }>('kernelEnvironmentVariables'), 'DOTNET_CLI_CULTURE': getCurrentCulture(), 'DOTNET_CLI_UI_LANGUAGE': getCurrentCulture() };
 
         const processStart = processArguments(argsTemplate, workingDirectory, DotNetPathManager.getDotNetPath(), launchOptions!.workingDirectory, environmentVariables);
-        let notification = {
-            displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
-            displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
-        };
+
         const channel = new StdioDotnetInteractiveChannel(notebookUri.toString(), processStart, diagnosticsChannel, (pid, code, signal) => {
             clientMapper.closeClient(notebookUri, false);
         });
@@ -163,28 +160,38 @@ export async function activate(context: vscode.ExtensionContext) {
         return vscode.env.language;
     }
 
-
     function configureKernel(compositeKernel: CompositeKernel, notebookUri: vscodeLike.Uri) {
         compositeKernel.setDefaultTargetKernelNameForCommand(commandsAndEvents.RequestInputType, compositeKernel.name);
         compositeKernel.setDefaultTargetKernelNameForCommand(commandsAndEvents.SendEditableCodeType, compositeKernel.name);
-        compositeKernel.kernelInfo.description = `This Kernel is provided by the .NET Interactive Extension.
-        This allows adding new cells to the notebook and prompting user for input.`;
+        compositeKernel.kernelInfo.description = `Composes a group of subkernels`;
 
         compositeKernel.registerCommandHandler({
-            commandType: commandsAndEvents.RequestInputType, handle: async (commandInvocation) => {
+            commandType: commandsAndEvents.RequestInputType,
+            handle: async (commandInvocation) => {
                 const requestInput = <commandsAndEvents.RequestInput>commandInvocation.commandEnvelope.command;
                 const prompt = requestInput.prompt;
                 const password = requestInput.isPassword;
 
                 let value;
-                let customInputRequest = await vscodeNotebookManagement.handleCustomInputRequest(prompt, requestInput.inputTypeHint, password);
+                let customInputRequest = await vscodeNotebookManagement.handleCustomInputRequest(prompt, requestInput.type, password);
                 if (customInputRequest.handled) {
                     value = customInputRequest.result;
                 } else {
-                    value = (requestInput.inputTypeHint === "file")
-                        ? await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, title: prompt, canSelectMany: false })
-                            .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath)
-                        : await vscode.window.showInputBox({ prompt, password, ignoreFocusOut: true });
+                    switch (requestInput.type) {
+                        case "file":
+                            value = await vscode.window.showOpenDialog({
+                                canSelectFiles: true,
+                                canSelectFolders: false,
+                                title: prompt,
+                                canSelectMany: false
+                            })
+                                .then(v => typeof v?.[0].fsPath === 'undefined' ? null : v[0].fsPath);
+                            break;
+
+                        default:
+                            value = await vscode.window.showInputBox({ prompt, password, ignoreFocusOut: true });
+                            break;
+                    }
                 }
 
                 if (!value) {
@@ -202,7 +209,8 @@ export async function activate(context: vscode.ExtensionContext) {
         });
 
         compositeKernel.registerCommandHandler({
-            commandType: commandsAndEvents.SendEditableCodeType, handle: async commandInvocation => {
+            commandType: commandsAndEvents.SendEditableCodeType,
+            handle: async commandInvocation => {
                 const addCell = <commandsAndEvents.SendEditableCode>commandInvocation.commandEnvelope.command;
                 const kernelName = addCell.kernelName;
                 const contents = addCell.code;

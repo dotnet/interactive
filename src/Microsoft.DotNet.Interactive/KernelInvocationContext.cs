@@ -245,7 +245,7 @@ public class KernelInvocationContext : IDisposable
 
         var command = @event.Command;
 
-        if (HandlingKernel is { })
+        if (HandlingKernel is not null)
         {
             @event.StampRoutingSlipAndLog(HandlingKernel.KernelInfo.Uri);
         }

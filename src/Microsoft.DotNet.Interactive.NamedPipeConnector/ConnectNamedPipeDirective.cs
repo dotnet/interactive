@@ -37,4 +37,13 @@ public class ConnectNamedPipeDirective : ConnectKernelDirective<ConnectNamedPipe
 
         return new Kernel[] { proxyKernel };
     }
+
+    public static void AddToRootKernel()
+    {
+        if (KernelInvocationContext.Current is { } context &&
+            context.HandlingKernel.RootKernel is CompositeKernel root)
+        {
+            root.AddConnectDirective(new ConnectNamedPipeDirective());
+        }
+    }
 }

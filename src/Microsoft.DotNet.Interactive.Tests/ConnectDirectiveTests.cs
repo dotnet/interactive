@@ -3,9 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -117,7 +114,7 @@ hello!
     {
         using var compositeKernel = new CompositeKernel();
 
-        compositeKernel.AddKernelConnector(
+        compositeKernel.AddConnectDirective(
             new ConnectFakeKernelDirective("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
 
         await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake1");
@@ -130,11 +127,32 @@ hello!
             .ContainSingle(k => k.Name == "fake2");
     }
 
+    [Fact] // https://github.com/dotnet/interactive/issues/3711
+    public async Task When_a_duplicate_name_is_used_then_a_friendly_error_is_shown()
+    {
+        using var compositeKernel = new CompositeKernel();
+
+        compositeKernel.AddConnectDirective(
+            new ConnectFakeKernelDirective("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
+
+        var result = await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name myFake");
+        result.Events.Should().NotContainErrors();
+
+        result = await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name myFake");
+        result.Events
+              .Should()
+              .ContainSingle<CommandFailed>()
+              .Which
+              .Message
+              .Should()
+              .Be("(1,1): error DNI211: The kernel name or alias 'myFake' is already in use.");
+    }
+
     private static Kernel CreateKernelWithConnectableFakeKernel(FakeKernel fakeKernel)
     {
         var compositeKernel = new CompositeKernel();
 
-        compositeKernel.AddKernelConnector(
+        compositeKernel.AddConnectDirective(
             new ConnectFakeKernelDirective("fake", "Connects the fake kernel", _ => Task.FromResult<Kernel>(fakeKernel)));
 
         return compositeKernel;

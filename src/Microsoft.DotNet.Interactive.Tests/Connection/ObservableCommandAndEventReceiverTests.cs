@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -111,13 +111,13 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
 
         for (int i = 0; i < 2; i++)
         {
-            _messageQueue.Add(new CommandOrEvent(new SubmitCode("")));
+            _messageQueue.Add(new CommandOrEvent(new SubmitCode(i.ToString())));
         }
 
-        using var receiver = new KernelCommandAndEventReceiver(t =>
+        var receiver = new KernelCommandAndEventReceiver(t =>
         {
-            var commandOrEvent = _messageQueue.Take(t);
             readCount++;
+            var commandOrEvent = _messageQueue.Take(t);
             return commandOrEvent;
         });
 

@@ -19,7 +19,7 @@ Microsoft.DotNet.Interactive
     public System.String DefaultKernelName { get; set;}
     public KernelHost Host { get;}
     public System.Void Add(Kernel kernel, System.Collections.Generic.IEnumerable<System.String> aliases = null)
-    public System.Void AddKernelConnector<T>(ConnectKernelDirective<T> connectDirective)
+    public System.Void AddConnectDirective<T>(ConnectKernelDirective<T> connectDirective)
     public System.Collections.Generic.IEnumerator<Kernel> GetEnumerator()
      Kernel GetHandlingKernel(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context)
      System.Threading.Tasks.Task HandleRequestKernelInfoAsync(Microsoft.DotNet.Interactive.Commands.RequestKernelInfo command, KernelInvocationContext context)
@@ -94,6 +94,7 @@ Microsoft.DotNet.Interactive
     public static System.Void CSS(System.String content)
     public static DisplayedValue display(System.Object value, System.String[] mimeTypes)
     public static System.Threading.Tasks.Task<System.String> GetInputAsync(System.String prompt = , System.String typeHint = text)
+    public static System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<System.String,System.String>> GetInputsAsync(System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Commands.InputDescription> inputDescriptions)
     public static System.Threading.Tasks.Task<PasswordString> GetPasswordAsync(System.String prompt = )
     public static Microsoft.AspNetCore.Html.IHtmlContent HTML(System.String content)
     public static System.Void Javascript(System.String scriptContent)
@@ -164,8 +165,6 @@ Microsoft.DotNet.Interactive
   public class KernelCommandScheduler : KernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult>, IKernelScheduler<Microsoft.DotNet.Interactive.Commands.KernelCommand,KernelCommandResult>, System.IDisposable
     .ctor()
     protected System.Boolean IsChildOperation(Microsoft.DotNet.Interactive.Commands.KernelCommand current, Microsoft.DotNet.Interactive.Commands.KernelCommand incoming)
-  public class KernelException : System.Exception, System.Runtime.Serialization.ISerializable
-    .ctor(System.String message)
   public class KernelExtensionLoadException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(System.Exception innerException)
   public static class KernelExtensions
@@ -236,6 +235,7 @@ Microsoft.DotNet.Interactive
     public T CurrentValue { get;}
     public System.Void CancelCurrentOperation()
     public System.Void Dispose()
+    public System.Threading.Tasks.Task IdleAsync()
     protected System.Boolean IsChildOperation(T current, T incoming)
     public System.Void RegisterDeferredOperationSource(GetDeferredOperationsDelegate getDeferredOperations, KernelSchedulerDelegate<T,TResult> kernelSchedulerOnExecuteAsync)
     public Task<TResult> RunAsync(T value, KernelSchedulerDelegate<T,TResult> onExecuteAsync, System.String scope = default, System.Threading.CancellationToken cancellationToken = null)
@@ -250,7 +250,7 @@ Microsoft.DotNet.Interactive
     public Task<TResult> EndInvoke(System.IAsyncResult result)
     public Task<TResult> Invoke(T value)
   public class KeyValueStoreKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestValueInfos>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SendValue>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
-    .ctor(System.String name = value)
+    .ctor(System.String name = value, System.Net.Http.HttpClient httpClient = null)
     public Microsoft.DotNet.Interactive.Directives.KernelSpecifierDirective KernelSpecifierDirective { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,FormattedValue> Values { get;}
   public class KqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
@@ -354,8 +354,9 @@ Microsoft.DotNet.Interactive.Commands
   public class Cancel : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String targetKernelName = null)
     public System.Threading.Tasks.Task InvokeAsync(Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public abstract class ConnectKernelCommand : KernelCommand, System.IEquatable<KernelCommand>
+  public abstract class ConnectKernelCommand : KernelDirectiveCommand, System.IEquatable<KernelCommand>
     public System.String ConnectedKernelName { get;}
+    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors(Microsoft.DotNet.Interactive.CompositeKernel kernel)
   public class DisplayError : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String message)
     public System.String Message { get;}
@@ -367,6 +368,13 @@ Microsoft.DotNet.Interactive.Commands
   public class ImportDocument : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String filePath, System.String targetKernelName = null)
     public System.String FilePath { get;}
+  public class InputDescription
+    .ctor(System.String name, System.String prompt = null)
+    public System.String Name { get;}
+    public System.String Prompt { get;}
+    public System.String SaveAs { get; set;}
+    public System.String TypeHint { get; set;}
+    public System.String GetPropertyNameForJsonSerialization()
   public abstract class KernelCommand, System.IEquatable<KernelCommand>
     public System.Uri DestinationUri { get; set;}
     public Microsoft.DotNet.Interactive.KernelCommandInvocation Handler { get; set;}
@@ -380,7 +388,7 @@ Microsoft.DotNet.Interactive.Commands
     public System.Void SetParent(KernelCommand parent, System.Boolean bubbleEvents = False)
     public System.Void SetToken(System.String token)
   public abstract class KernelDirectiveCommand : KernelCommand, System.IEquatable<KernelCommand>
-    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors()
+    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors(Microsoft.DotNet.Interactive.CompositeKernel kernel)
   public abstract class LanguageServiceCommand : KernelCommand, System.IEquatable<KernelCommand>
     public System.String Code { get;}
     public Microsoft.DotNet.Interactive.LinePosition LinePosition { get;}
@@ -397,11 +405,15 @@ Microsoft.DotNet.Interactive.Commands
   public class RequestHoverText : LanguageServiceCommand, System.IEquatable<KernelCommand>
     .ctor(System.String code, Microsoft.DotNet.Interactive.LinePosition linePosition, System.String targetKernelName = null)
   public class RequestInput : KernelCommand, System.IEquatable<KernelCommand>
-    .ctor(System.String prompt, System.String targetKernelName = null, System.String inputTypeHint = null)
+    .ctor(System.String prompt, System.String inputTypeHint = null)
     public System.String InputTypeHint { get; set;}
     public System.Boolean IsPassword { get;}
+    public System.String ParameterName { get; set;}
     public System.String Prompt { get;}
     public System.String SaveAs { get; set;}
+  public class RequestInputs : KernelCommand, System.IEquatable<KernelCommand>
+    .ctor()
+    public System.Collections.Generic.List<InputDescription> Inputs { get; set;}
   public class RequestKernelInfo : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String targetKernelName = null)
     .ctor(System.Uri destinationUri)
@@ -465,6 +477,7 @@ Microsoft.DotNet.Interactive.Connection
     public static KernelCommandAndEventReceiver FromNamedPipe(System.IO.Pipes.PipeStream stream)
     public static KernelCommandAndEventReceiver FromObservable(System.IObservable<System.String> messages)
     public static KernelCommandAndEventReceiver FromTextReader(System.IO.TextReader reader)
+    .ctor(ReadCommandOrEventAsync readCommandOrEvent)
     .ctor(ReadCommandOrEvent readCommandOrEvent)
     public System.Void Dispose()
     public System.IDisposable Subscribe(System.IObserver<CommandOrEvent> observer)
@@ -519,6 +532,11 @@ Microsoft.DotNet.Interactive.Connection
     public System.IAsyncResult BeginInvoke(System.Threading.CancellationToken cancellationToken, System.AsyncCallback callback, System.Object object)
     public CommandOrEvent EndInvoke(System.IAsyncResult result)
     public CommandOrEvent Invoke(System.Threading.CancellationToken cancellationToken = null)
+  public delegate ReadCommandOrEventAsync : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
+    .ctor(System.Object object, System.IntPtr method)
+    public System.IAsyncResult BeginInvoke(System.Threading.CancellationToken cancellationToken, System.AsyncCallback callback, System.Object object)
+    public System.Threading.Tasks.Task<CommandOrEvent> EndInvoke(System.IAsyncResult result)
+    public System.Threading.Tasks.Task<CommandOrEvent> Invoke(System.Threading.CancellationToken cancellationToken = null)
   public static class Serializer
     public static System.Text.Json.JsonSerializerOptions JsonSerializerOptions { get;}
     public static CommandOrEvent DeserializeCommandOrEvent(System.String json)
@@ -546,7 +564,7 @@ Microsoft.DotNet.Interactive.Directives
     public System.String ToString()
   public class KernelDirectiveCompletionContext
     .ctor()
-    public System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Events.CompletionItem> Completions { get;}
+    public System.Collections.Generic.IList<Microsoft.DotNet.Interactive.Events.CompletionItem> CompletionItems { get;}
   public class KernelDirectiveParameter
     .ctor(System.String name, System.String description = null)
     public System.Boolean AllowImplicitName { get; set;}
@@ -556,9 +574,8 @@ Microsoft.DotNet.Interactive.Directives
     public System.String Name { get;}
     public System.Boolean Required { get; set;}
     public System.String TypeHint { get; set;}
-    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.CompletionItem>> getCompletions)
-    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Events.CompletionItem>>> getCompletions)
-    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Collections.Generic.IEnumerable<System.String>> getCompletions)
+    public KernelDirectiveParameter AddCompletions(System.Func<KernelDirectiveCompletionContext,System.Threading.Tasks.Task> getCompletions)
+    public KernelDirectiveParameter AddCompletions(System.Func<System.Collections.Generic.IEnumerable<System.String>> getCompletions)
     public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Events.CompletionItem>> GetValueCompletionsAsync()
     public System.String ToString()
   public class KernelSpecifierDirective : KernelDirective
@@ -623,6 +640,9 @@ Microsoft.DotNet.Interactive.Events
   public class InputProduced : KernelEvent
     .ctor(System.String value, Microsoft.DotNet.Interactive.Commands.RequestInput command)
     public System.String Value { get;}
+  public class InputsProduced : KernelEvent
+    .ctor(System.Collections.Generic.Dictionary<System.String,System.String> values, Microsoft.DotNet.Interactive.Commands.RequestInputs command)
+    public System.Collections.Generic.Dictionary<System.String,System.String> Values { get;}
   public enum InsertTextFormat : System.Enum, System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
     PlainText=1
     Snippet=2
@@ -672,6 +692,7 @@ Microsoft.DotNet.Interactive.Http
 Microsoft.DotNet.Interactive.Parsing
   public class SubmissionParser
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel)
+    public Microsoft.DotNet.Interactive.Documents.DirectiveParseResult ParseDirectiveLine(System.String directiveLine)
     public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.KernelCommand>> SplitSubmission(Microsoft.DotNet.Interactive.Commands.SubmitCode submitCode)
     public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.DotNet.Interactive.Commands.KernelCommand>> SplitSubmission(Microsoft.DotNet.Interactive.Commands.RequestDiagnostics requestDiagnostics)
 Microsoft.DotNet.Interactive.Utility

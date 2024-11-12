@@ -32,14 +32,12 @@ public abstract class JupyterRequestHandlerTestBase : IDisposable
         _cSharpKernel = new CSharpKernel()
             .UseNugetDirective()
             .UseKernelHelpers()
-            .UseJupyterHelpers()
-            .UseMathAndLaTeX();
+            .UseJupyterHelpers();
 
         _fSharpKernel = new FSharpKernel()
             .UseNugetDirective()
             .UseDefaultFormatting()
-            .UseKernelHelpers()
-            .UseMathAndLaTeX();
+            .UseKernelHelpers();
 
         _psKernel = new PowerShellKernel()
             .UseJupyterHelpers();

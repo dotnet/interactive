@@ -25,6 +25,9 @@ public class KqlDiscoverabilityKernel :
             "MsKqlKernel"
         };
         KernelInfo.LanguageName = "KQL";
+        KernelInfo.Description = $"""
+                            Query a Kusto database
+                            """;
     }
 
     Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)

@@ -20,7 +20,7 @@ public class StartLesson : KernelDirectiveCommand
 
     public Uri FromUrl { get; }
 
-    public override IEnumerable<string> GetValidationErrors()
+    public override IEnumerable<string> GetValidationErrors(CompositeKernel kernel)
     {
         if (FromFile is not null && 
             FromUrl is not null)

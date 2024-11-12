@@ -7,5 +7,5 @@ namespace Microsoft.DotNet.Interactive.Commands;
 
 public abstract class KernelDirectiveCommand : KernelCommand
 {
-    public virtual IEnumerable<string> GetValidationErrors() => [];
+    public virtual IEnumerable<string> GetValidationErrors(CompositeKernel kernel) => [];
 }

@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -19,27 +20,26 @@ public static class ClockKernelExtension
         Formatter.Register<DateTimeOffset>((date, writer) => writer.Write(date.DrawSvgClock()), "text/html");
 
         // Next, define a magic command that will render a clock.
-        var hourOption = new Option<int>(new[] { "-o", "--hour" },
-                                         "The position of the hour hand");
-        var minuteOption = new Option<int>(new[] { "-m", "--minute" },
-                                           "The position of the minute hand");
-        var secondOption = new Option<int>(new[] { "-s", "--second" },
-                                           "The position of the second hand");
+        var hourParameter = new KernelDirectiveParameter("--hour", "The position of the hour hand");
+        var minuteParameter = new KernelDirectiveParameter("--minute", "The position of the minute hand");
+        var secondParameter = new KernelDirectiveParameter("--second", "The position of the second hand");
 
-        var clockCommand = new Command("#!clock", "Displays a clock showing the current or specified time.")
+        var clockDirective = new KernelActionDirective("#!clock")
         {
-            hourOption,
-            minuteOption,
-            secondOption
+            Description = "Displays a clock showing the current or specified time.",
+            Parameters =
+            [
+                hourParameter,
+                minuteParameter,
+                secondParameter
+            ]
         };
 
-        clockCommand.SetHandler(
-            (hour, minute, second) => KernelInvocationContext.Current.Display(SvgClock.DrawSvgClock(hour, minute, second)),
-            hourOption,
-            minuteOption,
-            secondOption);
-
-        kernel.AddDirective(clockCommand);
+        kernel.AddDirective<DisplayClock>(clockDirective, (displayClock, context) =>
+        {
+            context.Display(SvgClock.DrawSvgClock(displayClock.Hour, displayClock.Minute, displayClock.Second));
+            return Task.CompletedTask;
+        });
 
         // Finally, display some information to the user so they can see how to use the extension.
         PocketView view = div(
@@ -49,9 +49,7 @@ public static class ClockKernelExtension
             " and ",
             code(typeof(DateTimeOffset)),
             ". Try it by running: ",
-            code("DateTime.Now"),
-            " or ",
-            code("#!clock -h")
+            code("DateTime.Now")
         );
 
         KernelInvocationContext.Current?.Display(view);

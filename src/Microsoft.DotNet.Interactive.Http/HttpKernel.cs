@@ -15,6 +15,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -75,7 +76,7 @@ public class HttpKernel :
         KernelInfo.LanguageName = "HTTP";
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - HTTP Request";
         KernelInfo.Description = """
-                                 This Kernel is able to execute http requests and display the results.
+                                 Send HTTP requests
                                  """;
 
         _client = client ?? new HttpClient() { Timeout = Timeout.InfiniteTimeSpan };
@@ -124,31 +125,42 @@ public class HttpKernel :
 
     private Task SetValueAsync(string valueName, object value, Type? declaredType = null)
     {
-        if(value is (HttpVariableDeclarationAndAssignmentNode))
-        {
-            var variable = (HttpVariableDeclarationAndAssignmentNode) value;
-            if(variable.ValueNode is not null)
-            {
-                var bindingResult = variable.ValueNode.TryGetValue(BindExpressionValues);
-                if (bindingResult.IsSuccessful && bindingResult.Value is not null)
-                {
-                    _variables[valueName] = bindingResult.Value;
-                }
-            }
-            
-        } 
-        else
-        {
-            _variables[valueName] = value;
-        }
+        _variables[valueName] = value;
         return Task.CompletedTask;
     }
 
     async Task IKernelCommandHandler<SubmitCode>.HandleAsync(SubmitCode command, KernelInvocationContext context)
     {
         var parseResult = HttpRequestParser.Parse(command.Code);
-
         var requestNodes = parseResult.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestNode>();
+
+        if (command.Parameters.TryGetValue("Document", out var doc))
+        {
+            var parsedDoc = HttpRequestParser.Parse(doc);
+            var lastSpan = parsedDoc.SyntaxTree.RootNode.ChildNodes
+                .OfType<HttpRequestNode>()
+                .FirstOrDefault(n => n.Text == requestNodes.Last().Text)?.Span;
+            if (lastSpan is not null)
+            {
+                var docVariableNodes = parsedDoc.SyntaxTree.RootNode.ChildNodes.OfType<HttpVariableDeclarationAndAssignmentNode>();
+                var docVariableNames = docVariableNodes.Where(n => n.Span.Start < lastSpan?.Start).Select(n => n.DeclarationNode?.VariableName).ToHashSet();
+
+                foreach (DeclaredVariable dv in parsedDoc.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
+                {
+                    if (docVariableNames.Contains(dv.Name))
+                    {
+                        _variables[dv.Name] = dv.Value;
+                    }
+                }
+            }
+        }
+        else
+        {
+            foreach (DeclaredVariable dv in parseResult.SyntaxTree.RootNode.TryGetDeclaredVariables(BindExpressionValues).declaredVariables.Values)
+            {
+                _variables[dv.Name] = dv.Value;
+            }
+        }
 
         var httpBoundResults = new List<HttpBindingResult<HttpRequestMessage>>();
         var httpNamedBoundResults = new List<(HttpRequestNode requestNode, HttpBindingResult<HttpRequestMessage> bindingResult)>();
@@ -168,7 +180,7 @@ public class HttpKernel :
             }
         }
 
-        
+
         var diagnostics = httpBoundResults.SelectMany(n => n.Diagnostics).Concat(httpNamedBoundResults.SelectMany(n => n.bindingResult.Diagnostics)).ToArray();
 
         PublishDiagnostics(context, command, diagnostics);

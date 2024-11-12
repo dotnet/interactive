@@ -3,7 +3,6 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -48,39 +47,9 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         if (TryGetDirective(out var directive))
         {
-            foreach (var namedParameter in directive.Parameters)
+            foreach (var diagnostic in GetDiagnosticsForMissingParameters(directive, this))
             {
-                if (namedParameter.Required)
-                {
-                    var matchingNodes = ChildNodes.OfType<DirectiveParameterNode>()
-                                                  .Where(p => p.NameNode is null
-                                                                  ? namedParameter.AllowImplicitName
-                                                                  : p.NameNode?.Text == namedParameter.Name)
-                                                  .ToArray();
-
-                    if (!matchingNodes.Any())
-                    {
-                        yield return CreateDiagnostic(
-                            new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
-                                "Missing required parameter '{0}'",
-                                DiagnosticSeverity.Error,
-                                namedParameter.Name));
-                    }
-                    else
-                    {
-                        foreach (var parameterNode in matchingNodes)
-                        {
-                            if (parameterNode.ValueNode is null)
-                            {
-                                yield return CreateDiagnostic(
-                                    new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
-                                        "Missing value for required parameter '{0}'",
-                                        DiagnosticSeverity.Error,
-                                        namedParameter.Name));
-                            }
-                        }
-                    }
-                }
+                yield return diagnostic;
             }
         }
 
@@ -100,6 +69,46 @@ internal class DirectiveNode : TopLevelSyntaxNode
             else if (childNode is DirectiveParameterNode)
             {
                 foundParameter = true;
+            }
+        }
+    }
+
+    internal static IEnumerable<CodeAnalysis.Diagnostic> GetDiagnosticsForMissingParameters(
+        KernelDirective directive,
+        SyntaxNode node)
+    {
+        foreach (var namedParameter in directive.Parameters)
+        {
+            if (namedParameter.Required)
+            {
+                var matchingNodes = node.ChildNodes.OfType<DirectiveParameterNode>()
+                                        .Where(p => p.NameNode is null
+                                                        ? namedParameter.AllowImplicitName
+                                                        : p.NameNode?.Text == namedParameter.Name)
+                                        .ToArray();
+
+                if (!matchingNodes.Any())
+                {
+                    yield return node.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
+                            "Missing required parameter '{0}'",
+                            DiagnosticSeverity.Error,
+                            namedParameter.Name));
+                }
+                else
+                {
+                    foreach (var parameterNode in matchingNodes)
+                    {
+                        if (parameterNode.ValueNode is null)
+                        {
+                            yield return node.CreateDiagnostic(
+                                new(PolyglotSyntaxParser.ErrorCodes.MissingRequiredParameter,
+                                    "Missing value for required parameter '{0}'",
+                                    DiagnosticSeverity.Error,
+                                    namedParameter.Name));
+                        }
+                    }
+                }
             }
         }
     }
@@ -181,10 +190,14 @@ internal class DirectiveNode : TopLevelSyntaxNode
     }
 
     public IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> GetParameterValues(
-        KernelDirective directive,
         Dictionary<DirectiveParameterValueNode, object?> boundExpressionValues)
     {
         var parameterNodes = ChildNodes.OfType<DirectiveParameterNode>().ToArray();
+
+        if (!TryGetDirective(out var directive))
+        {
+            yield break;
+        }
 
         var parameters = directive.Parameters;
 
@@ -303,7 +316,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
         writer.WriteStartObject();
 
-        IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> parameterValues = GetParameterValues(directive, boundExpressionValues).ToArray();
+        IEnumerable<(string Name, object? Value, DirectiveParameterNode? ParameterNode)> parameterValues = GetParameterValues(boundExpressionValues).ToArray();
 
         foreach (var parameter in parameterValues)
         {
@@ -378,7 +391,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                             $"When bindings are present then a {nameof(DirectiveBindingDelegate)} must be provided.",
                             DiagnosticSeverity.Error));
 
-                    return (boundExpressionValues, new[] { diagnostic });
+                    return (boundExpressionValues, [diagnostic]);
                 }
             }
             else
@@ -405,7 +418,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
             }
         }
 
-        return (boundExpressionValues, Array.Empty<CodeAnalysis.Diagnostic>());
+        return (boundExpressionValues, []);
     }
 
     internal bool TryGetSubcommand(
@@ -439,7 +452,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
 
     private static readonly Regex _kebabCaseRegex = new("-[\\w]", RegexOptions.Compiled);
 
-    private static string FromPosixStyleToCamelCase(string value) =>
+    internal static string FromPosixStyleToCamelCase(string value) =>
         _kebabCaseRegex.Replace(
             value.TrimStart('-'),
             m => m.ToString().TrimStart('-').ToUpper());
@@ -464,7 +477,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                         completions = completions.Where(c => c.AssociatedSymbol is KernelDirective).ToList();
                     }
 
-                    return FilterOutParametersWithMaxOccurrencesReached(completions);
+                    return FilterOutCompletionsWithMaxOccurrencesReached(completions);
                 }
                 
                 if (currentToken is not { Kind: TokenKind.Whitespace })
@@ -484,16 +497,46 @@ internal class DirectiveNode : TopLevelSyntaxNode
                 if (directiveParameterNameNode.Parent is DirectiveParameterNode pn &&
                     pn.TryGetParameter(out var parameter))
                 {
-                    var completions = await parameter.GetValueCompletionsAsync();
-                    return completions;
+                    if (!parameter.Flag)
+                    {
+                        var completions = await parameter.GetValueCompletionsAsync();
+                        return completions;
+                    }
+
+                    var parentDirectiveNode = pn.Ancestors().OfType<DirectiveNode>().First();
+
+                    if (parentDirectiveNode.TryGetDirective(out var parentDirective))
+                    {
+                        // Since flags have no child nodes, we can return all completions for the parent directive.
+                        List<CompletionItem> completions = [];
+                        completions.AddRange(await parentDirective.GetChildCompletionsAsync());
+
+                        if (parentDirective is KernelActionDirective parentActionDirective)
+                        {
+                            // Include parameter names from the subcommand
+                            var subcommandDirective = parentActionDirective.Subcommands.FirstOrDefault(s => s.Name == parentDirectiveNode.SubcommandNode?.NameNode?.Text);
+
+                            if (subcommandDirective is not null)
+                            {
+                                completions.AddRange(subcommandDirective.Parameters.Select(p => new CompletionItem(p.Name, WellKnownTags.Property)
+                                {
+                                    AssociatedSymbol = p,
+                                    Documentation = p.Description
+                                }));
+                            }
+                        }
+
+                        completions = FilterOutCompletionsWithMaxOccurrencesReached(completions);
+
+                        return completions.ToArray();
+                    }
                 }
 
                 if (TryGetDirective(out var directive))
                 {
                     var completions = await directive.GetChildCompletionsAsync();
                     return completions
-                           .Where(c => c.AssociatedSymbol is KernelDirectiveParameter p &&
-                                       p.Name.StartsWith(node.Text))
+                           .Where(c => c.InsertText.StartsWith(node.Text))
                            .ToArray();
                 }
             }
@@ -530,19 +573,27 @@ internal class DirectiveNode : TopLevelSyntaxNode
             case DirectiveParameterValueNode directiveParameterValueNode:
             {
                 if (directiveParameterValueNode.Parent is DirectiveParameterNode pn &&
-                    currentToken is not { Kind: TokenKind.Whitespace } &&
-                    pn.TryGetParameter(out var parameter))
+                    currentToken is not { Kind: TokenKind.Whitespace })
                 {
-                    var completions = await parameter.GetValueCompletionsAsync();
-                    return completions;
+                    if (pn.TryGetParameter(out var parameter))
+                    {
+                        var completions = await parameter.GetValueCompletionsAsync();
+                        return completions;
+                    }
                 }
 
                 if (TryGetDirective(out var directive))
                 {
-                    // This could also be a partial subcommand, so...
-                    var completions = await directive.GetChildCompletionsAsync();
-
-                    return FilterOutParametersWithMaxOccurrencesReached(completions);
+                    if (TryGetSubcommand(directive, out var subcommand))
+                    {
+                        var completions = await subcommand.GetChildCompletionsAsync();
+                        return FilterOutCompletionsWithMaxOccurrencesReached(completions);
+                    }
+                    else
+                    {
+                        var completions = await directive.GetChildCompletionsAsync();
+                        return FilterOutCompletionsWithMaxOccurrencesReached(completions);
+                    }
                 }
             }
 
@@ -551,7 +602,26 @@ internal class DirectiveNode : TopLevelSyntaxNode
             case DirectiveExpressionNode directiveExpressionNode:
                 break;
 
-            case DirectiveExpressionParametersNode directiveExpressionParametersNode:
+            case DirectiveExpressionParametersNode parametersNode:
+            {
+                if (parametersNode.Ancestors()
+                                  .OfType<DirectiveSubcommandNode>()
+                                  .FirstOrDefault() is { } parentSubcommandNode &&
+                    parentSubcommandNode.TryGetSubcommand(out var subcommandDirective))
+                {
+                    var completions = await subcommandDirective.GetChildCompletionsAsync();
+                    return completions.ToArray();
+                }
+
+                if (parametersNode.Ancestors()
+                                  .OfType<DirectiveNode>()
+                                  .FirstOrDefault() is { } parentDirectiveNode &&
+                    parentDirectiveNode.TryGetDirective(out var directive))
+                {
+                    var completions = await directive.GetChildCompletionsAsync();
+                    return completions.ToArray();
+                }
+            }
                 break;
 
             case DirectiveExpressionTypeNode directiveExpressionTypeNode:
@@ -581,7 +651,7 @@ internal class DirectiveNode : TopLevelSyntaxNode
                        .ToArray();
         }
 
-        List<CompletionItem> FilterOutParametersWithMaxOccurrencesReached(IReadOnlyList<CompletionItem> completions)
+        List<CompletionItem> FilterOutCompletionsWithMaxOccurrencesReached(IReadOnlyList<CompletionItem> completions)
         {
             var filteredCompletions = new List<CompletionItem>();
 
@@ -591,6 +661,8 @@ internal class DirectiveNode : TopLevelSyntaxNode
                                      .GroupBy(n => n.NameNode!.Text)
                                      .ToDictionary(g => g.Key, g => g.Count());
 
+            var subcommandWasProvided = DescendantNodesAndTokens().OfType<DirectiveSubcommandNode>().Any();
+
             for (var i = 0; i < completions.Count; i++)
             {
                 var completion = completions[i];
@@ -598,7 +670,11 @@ internal class DirectiveNode : TopLevelSyntaxNode
                     !parametersProvided.TryGetValue(completion.InsertText, out var count) ||
                     count < p.MaxOccurrences)
                 {
-                    filteredCompletions.Add(completion);
+                    if (!subcommandWasProvided ||
+                        completion.AssociatedSymbol is not KernelActionDirective)
+                    {
+                        filteredCompletions.Add(completion);
+                    }
                 }
             }
 

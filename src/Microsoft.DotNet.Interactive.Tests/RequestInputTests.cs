@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -73,7 +74,7 @@ public class RequestInputTests
               .Which
               .Value
               .Should()
-              .Contain($"Saving your response for value '{saveAs}'. To remove this value, run the following command in a PowerShell cell:");
+              .Match($"Your response for value `{saveAs}` has been saved and will be reused without a prompt in the future.*To remove this value *, run the following command in a PowerShell cell:*");
     }
 
     [Fact]
@@ -105,20 +106,92 @@ public class RequestInputTests
               .Which
               .Value
               .Should()
-              .Contain($"Using saved value '{saveAs}'. To remove this value, run the following command in a PowerShell cell:");
+              .Match($"Using previously saved value for `{saveAs}`.*To remove this value *, run the following command in a PowerShell cell:*");
+    }
+
+    [Fact]
+    public async Task Multiple_inputs_can_be_requested_together_using_command()
+    {
+        var requestInputs = new RequestInputs
+        {
+            Inputs =
+            [
+                new("Fruit"),
+                new("Tastiness"),
+                new("Color")
+            ]
+        };
+
+        using var kernel = CreateKernel()
+            .UseFormsForMultipleInputs();
+
+        var formValues = new Dictionary<string, string>
+        {
+            ["Fruit"] = "cherry",
+            ["Tastiness"] = "9000",
+            ["Color"] = "red"
+        };
+
+        kernel.RespondToRequestInputsFormWith(formValues);
+
+        var result = await kernel.SendAsync(requestInputs);
+
+        result.Events.Should().NotContainErrors();
+
+        result.Events.Should().ContainSingle<InputsProduced>()
+              .Which.Values.Should().BeEquivalentTo(formValues);
+    }
+
+    [Fact]
+    public async Task Multiple_inputs_can_be_requested_together_using_GetInputsAsync()
+    {
+        using var kernel = CreateKernel()
+            .UseFormsForMultipleInputs();
+
+        var formValues = new Dictionary<string, string>
+        {
+            ["Fruit"] = "cherry",
+            ["Tastiness"] = "9000",
+            ["Color"] = "red"
+        };
+
+        kernel.RespondToRequestInputsFormWith(formValues);
+
+        var result = await kernel.SendAsync(
+                         new SubmitCode(
+                             """
+                             using Microsoft.DotNet.Interactive;
+
+                             var inputResult = await Kernel.GetInputsAsync(
+                             [
+                                 new("Fruit"),
+                                 new("Tastiness"),
+                                 new("Color")
+                             ]);
+                             """, "csharp"));
+
+        result.Events.Should().NotContainErrors();
+
+        var csharpKernel = (CSharpKernel)kernel.FindKernelByName("csharp");
+
+        csharpKernel.TryGetValue<IDictionary<string, string>>("inputResult", out var inputResult).Should().BeTrue();
+
+        inputResult.Should().BeEquivalentTo(formValues);
     }
 
     private static CompositeKernel CreateKernel()
     {
+        var powerShellKernel = new PowerShellKernel();
+
         var kernel = new CompositeKernel
         {
             new CSharpKernel()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseValueSharing(),
-            new PowerShellKernel(),
+            powerShellKernel,
             new KeyValueStoreKernel()
-        }.UseSecretManager();
+        }.UseSecretManager(new SecretManager(powerShellKernel));
 
         kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), kernel.Name);
 

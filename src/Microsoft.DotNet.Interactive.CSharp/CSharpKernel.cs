@@ -62,8 +62,7 @@ public class CSharpKernel :
         KernelInfo.LanguageVersion = "12.0";
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - C# Script";
         KernelInfo.Description = """
-                                 This Kernel can compile and execute C# code and display the results.
-                                 The language is C# Script, a dialect of C# used for interactive programming.
+                                 Compile and run C# Script
                                  """;
         _workspace = new InteractiveWorkspace();
 
@@ -98,10 +97,10 @@ public class CSharpKernel :
 
     public ScriptState ScriptState { get; private set; }
 
-    private Task<bool> IsCompleteSubmissionAsync(string code)
+    private bool IsCompleteSubmission(string code)
     {
         var syntaxTree = SyntaxFactory.ParseSyntaxTree(code, _csharpParseOptions);
-        return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
+        return SyntaxFactory.IsCompleteSubmission(syntaxTree);
     }
 
     Task IKernelCommandHandler<RequestValueInfos>.HandleAsync(RequestValueInfos command, KernelInvocationContext context)
@@ -257,7 +256,7 @@ public class CSharpKernel :
         context.Publish(codeSubmissionReceived);
 
         var code = submitCode.Code;
-        var isComplete = await IsCompleteSubmissionAsync(submitCode.Code);
+        var isComplete = IsCompleteSubmission(submitCode.Code);
 
         if (isComplete)
         {

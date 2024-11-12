@@ -1,0 +1,80 @@
+﻿trigger: none
+pr: none
+
+resources:
+  pipelines:
+    - pipeline: interactive-ci  # alias
+      source: dotnet/interactive/interactive-ci
+      branch: main
+  repositories:
+    - repository: 1esPipelines
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
+
+variables:
+  - group: '.NET Core Nuget API Keys'
+  - name: simulate
+    value: $(isSimulated)
+  - name: DotNetNugetApiKey
+    value: $(DotNetNugetApiKey-A1)
+  - template: /eng/common/templates-official/variables/pool-providers.yml@self
+    
+
+extends:
+  # The pipeline extends the 1ES PT which will inject different SDL and compliance tasks.
+  # For non-production pipelines, use "Unofficial" as defined below.
+  # For productions pipelines, use "Official".
+  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+  parameters:
+    # Update the pool with your team's 1ES hosted pool.
+    pool:
+      name: $(DncEngInternalBuildPool)  # Name of your hosted pool
+      image: 1es-windows-2022  # Name of the image in your pool. If not specified, first image of the pool is used
+      os: windows  # OS of the image. This value cannot be a variable. Allowed values: windows, linux, macOS
+
+    # Build Tags
+    customBuildTags:
+    - DotnetInteractive
+    - $(Build.BuildNumber)
+
+    sdl:
+      git:
+        longpaths: true
+
+    stages:
+    - stage: Publish
+      jobs:
+      - job: PublishExtension
+        displayName: 'Publish VS Code Extension'
+        steps:
+        # Download pipeline artifacts
+        - task: DownloadPipelineArtifact@2
+          displayName: '📦 Download artifacts from build pipeline'
+          inputs:
+            buildType: 'specific'
+            project: 'internal'
+            definition: 743
+            buildVersionToDownload: 'specific'
+            buildId: '$(resources.pipeline.interactive-ci.runID)'  # Dynamically fetch the latest build ID
+            branchName: '$(resources.pipeline.officialBuildCI.sourceBranch)'
+            path: '$(Pipeline.Workspace)/artifacts'  # Specify a clear download path
+
+        # List files and folders under ArtifactsDirectory for debugging
+        - pwsh: |
+            Get-ChildItem -Path '$(Pipeline.Workspace)/artifacts' -Recurse
+          displayName: 'List files and folders under ArtifactsDirectory'
+
+        - pwsh: |
+            npm install --global @vscode/vsce
+          displayName: 'Install VSCE'
+
+        # Authenticate with Azure and publish extension
+        - task: AzureCLI@2
+          displayName: 'Authenticate with Azure and Publish Extension'
+          inputs:
+            azureSubscription: 'VSCode Marketplace Publishing'
+            scriptType: 'pscore'
+            scriptLocation: 'scriptPath'
+            scriptPath: '$(Pipeline.Workspace)\artifacts\vscode\PublishInsidersPolyglotNotebooks.ps1'
+            arguments: '-artifactsPath $(Pipeline.Workspace)\artifacts -nugetToken "$(DotNetNugetApiKey)" -isSimulated $(simulate)'

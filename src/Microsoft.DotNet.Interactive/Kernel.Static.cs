@@ -44,7 +44,32 @@ public partial class Kernel
     {
         return await GetInputAsync(prompt, false, typeHint);
     }
-        
+
+    public static async Task<IDictionary<string, string>> GetInputsAsync(
+        IEnumerable<InputDescription> inputDescriptions)
+    {
+        if (inputDescriptions is null || inputDescriptions.Count() is 0)
+        {
+            throw new ArgumentException("You must provide at least one input description.");
+        }
+
+        var command = new RequestInputs();
+
+        foreach (var inputDescription in inputDescriptions)
+        {
+            command.Inputs.Add(inputDescription);
+        }
+
+        var result = await Root.SendAsync(command, CancellationToken.None);
+
+        if (result.Events.OfType<InputsProduced>().SingleOrDefault() is { } inputsProduced)
+        {
+            return inputsProduced.Values;
+        }
+
+        throw new OperationCanceledException("Input request canceled.");
+    }
+
     public static async Task<PasswordString> GetPasswordAsync(string prompt = "")
     {
         var password = await GetInputAsync(prompt, true);
@@ -76,20 +101,20 @@ public partial class Kernel
 
     public static void CSS(string content) =>
         // From https://stackoverflow.com/questions/524696/how-to-create-a-style-tag-with-javascript
-        Javascript($@"
-            var css = `{content}`,
-            head = document.head || document.getElementsByTagName('head')[0],
-            style = document.createElement('style');
-
-            head.appendChild(style);
-
-            style.type = 'text/css';
-            if (style.styleSheet){{
-              // This is required for IE8 and below.
-              style.styleSheet.cssText = css;
-            }} else {{
-              style.appendChild(document.createTextNode(css));
-            }}");
+        Javascript($$"""
+                     var css = `{{content}}`,
+                     head = document.head || document.getElementsByTagName('head')[0],
+                     style = document.createElement('style');
+         
+                     head.appendChild(style);
+         
+                     style.type = 'text/css';
+                     if (style.styleSheet) {
+                       style.styleSheet.cssText = css;
+                     } else {
+                       style.appendChild(document.createTextNode(css));
+                     }
+                     """);
 
     public static void Javascript(string scriptContent)
     {

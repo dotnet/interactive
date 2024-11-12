@@ -190,7 +190,7 @@ internal partial class JupyterKernel
     {
         switch (message)
         {
-            case (DisplayData displayData):
+            case DisplayData displayData:
                 context.Publish(new DisplayedValueProduced(displayData.Data,
                                                         command,
                                                         GetFormattedValuesFromMimeBundle(displayData.Data),
@@ -198,18 +198,18 @@ internal partial class JupyterKernel
                                                         ));
                 break;
 
-            case (UpdateDisplayData updateDisplayData):
+            case UpdateDisplayData updateDisplayData:
                 context.Publish(new DisplayedValueUpdated(updateDisplayData.Data,
                                                           GetDisplayIdFromTransientData(updateDisplayData.Transient),
                                                           command,
                                                           GetFormattedValuesFromMimeBundle(updateDisplayData.Data)));
                 break;
-            case (ExecuteResult result):
+            case ExecuteResult result:
                 context.Publish(new ReturnValueProduced(result.Data,
                                                         command,
                                                         GetFormattedValuesFromMimeBundle(result.Data)));
                 break;
-            case (Stream streamResult):
+            case Stream streamResult:
                 if (streamResult.Name == Stream.StandardOutput)
                 {
                     context.Publish(
@@ -226,7 +226,7 @@ internal partial class JupyterKernel
                             new[] { new FormattedValue(PlainTextFormatter.MimeType, streamResult.Text) }));
                 }
                 break;
-            case (Error error):
+            case Error error:
 
                 StringBuilder builder = new StringBuilder();
                 foreach (var item in error.Traceback)
@@ -243,7 +243,7 @@ internal partial class JupyterKernel
 
                 context.Fail(command, null, error.EName);
                 break;
-            case (InputRequest inputRequest):
+            case InputRequest inputRequest:
 
                 string input = await GetInputAsync(inputRequest, context);
                 var reply = new InputReply(input);

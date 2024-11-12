@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Compile Include="..\Microsoft.DotNet.Interactive.Formatting\JsonConverter.cs" Link="Protocol\JsonConverter.cs" />
-    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\InvocationContextExtensions.cs" Link="Utility\InvocationContextExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>

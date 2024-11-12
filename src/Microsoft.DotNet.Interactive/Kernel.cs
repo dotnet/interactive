@@ -315,7 +315,7 @@ public abstract partial class Kernel :
     public virtual KernelSpecifierDirective KernelSpecifierDirective => _kernelSpecifierDirective ??= new($"#!{Name}", Name);
 
     private void RegisterDirectiveCommandHandler(
-        KernelActionDirective directive, 
+        KernelActionDirective directive,
         KernelCommandInvocation handler)
     {
         var fullDirectiveName = FullDirectiveName(directive);
@@ -458,9 +458,10 @@ public abstract partial class Kernel :
                     case RequestKernelInfo _:
                     case RequestValue _:
                     case RequestValueInfos _:
+                    case SendValue _:
                     case UpdateDisplayedValue _:
 
-                        await RunOnFastPath(context, c, cancellationToken);
+                        await RunOnFastPath(context, c, cancellationToken, skipDeferredCommands: true);
                         break;
 
                     default:
@@ -486,7 +487,15 @@ public abstract partial class Kernel :
 
         if (currentCommandOwnsContext)
         {
-            await Scheduler.IdleAsync();
+            try
+            {
+                await Scheduler.IdleAsync();
+            }
+            catch (InvalidOperationException ex)
+            {
+                Log.Warning($"Error while awaiting idle after sending {command}", ex);
+                throw;
+            }
             context.Dispose();
         }
 
@@ -511,22 +520,26 @@ public abstract partial class Kernel :
     private async Task RunOnFastPath(
         KernelInvocationContext context,
         KernelCommand command,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool skipDeferredCommands = false)
     {
-        await RunDeferredCommandsAsync(context);
+        if (!skipDeferredCommands)
+        {
+            await RunDeferredCommandsAsync(context);
+        }
 
         await _fastPathScheduler.RunAsync(
-                command,
-                InvokePipelineAndCommandHandler,
-                command.SchedulingScope.ToString(),
-                cancellationToken: cancellationToken)
-            .ContinueWith(t =>
-            {
-                if (t.IsCanceled)
-                {
-                    context.Cancel();
-                }
-            }, cancellationToken);
+                                    command,
+                                    InvokePipelineAndCommandHandler,
+                                    command.SchedulingScope.ToString(),
+                                    cancellationToken: cancellationToken)
+                                .ContinueWith(t =>
+                                {
+                                    if (t.IsCanceled)
+                                    {
+                                        context.Cancel();
+                                    }
+                                }, cancellationToken);
     }
 
     private async Task RunDeferredCommandsAsync(KernelInvocationContext context)
@@ -614,18 +627,23 @@ public abstract partial class Kernel :
         _commandScheduler = scheduler;
 
         _commandScheduler.RegisterDeferredOperationSource(
-            GetDeferredCommands,
+            GetDeferredCommandsAsync,
             InvokePipelineAndCommandHandler);
     }
 
-    private async Task<IReadOnlyList<KernelCommand>> GetDeferredCommands(KernelCommand command, string scope)
+    private bool IsInSchedulingScope(KernelCommand command)
     {
         if (command.SchedulingScope is null)
         {
-            return Array.Empty<KernelCommand>();
+            return false;
         }
 
-        if (!command.SchedulingScope.Contains(SchedulingScope))
+        return command.SchedulingScope.Contains(SchedulingScope);
+    }
+
+    private async Task<IReadOnlyList<KernelCommand>> GetDeferredCommandsAsync(KernelCommand command, string scope)
+    {
+        if (!IsInSchedulingScope(command))
         {
             return Array.Empty<KernelCommand>();
         }

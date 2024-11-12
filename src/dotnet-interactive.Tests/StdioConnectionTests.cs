@@ -122,7 +122,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 
     protected override void AddConnectDirectiveTo(CompositeKernel compositeKernel)
     {
-        compositeKernel.AddKernelConnector(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
+        compositeKernel.AddConnectDirective(new ConnectStdIoDirective(new Uri("kernel://test-kernel")));
     }
 }
 

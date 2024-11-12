@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <PackageId Condition="'$(PackageId)'==''">Microsoft.DotNet.Interactive.DuckDB</PackageId>
+    <NoWarn>$(NoWarn);8002;CS8002</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for DuckDB</PackageDescription>
+    <PackageTags>polyglot notebook dotnet interactive data DuckDB</PackageTags>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DuckDB.NET.Data.Full" Version="1.1.2.1" />
+    <PackageReference Include="DuckDB.NET.Data" Version="1.1.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+
+</Project>

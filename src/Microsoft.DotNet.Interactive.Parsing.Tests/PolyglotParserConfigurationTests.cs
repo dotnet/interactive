@@ -57,14 +57,15 @@ public class PolyglotParserConfigurationTests
                             Parameters =
                             {
                                 new KernelDirectiveParameter("file")
+                                {
+                                    AllowImplicitName = true,
+                                    Required = true,
+                                    TypeHint = "file"
+                                }
                             }
                         },
                         new KernelActionDirective("#!connect")
                         {
-                            Parameters =
-                            {
-                                new KernelDirectiveParameter("--kernel-name")
-                            },
                             Subcommands =
                             {
                                 new KernelActionDirective("named-pipe")
@@ -72,6 +73,10 @@ public class PolyglotParserConfigurationTests
                                     Parameters =
                                     {
                                         new("--pipe-name")
+                                        {
+                                            Required = true
+                                        },
+                                        new("--kernel-name")
                                         {
                                             Required = true
                                         }
@@ -83,7 +88,11 @@ public class PolyglotParserConfigurationTests
                                     {
                                         new("--working-directory"),
                                         new("--command"),
-                                        new("--kernel-host")
+                                        new("--kernel-host"),
+                                        new("--kernel-name")
+                                        {
+                                            Required = true
+                                        }
                                     }
                                 },
                                 new KernelActionDirective("signalr")
@@ -93,10 +102,37 @@ public class PolyglotParserConfigurationTests
                                         new("--hub-url")
                                         {
                                             Required = true
+                                        },
+                                        new("--kernel-name")
+                                        {
+                                            Required = true
                                         }
                                     }
                                 },
-                                new KernelActionDirective("jupyter"),
+                                new KernelActionDirective("jupyter")
+                                {
+                                    Parameters =
+                                    {
+                                        new("--kernel-name")
+                                        {
+                                            Required = true
+                                        },
+                                        new("--kernel-spec", "The kernel spec to connect to")
+                                        {
+                                            Required = true
+                                        },
+                                        new("--init-script", "Script to run on kernel initialization")
+                                        {
+                                            TypeHint = "file"
+                                        },
+                                        new("--conda-env"),
+                                        new("--url"),
+                                        new("--bearer")
+                                        {
+                                            Flag = true
+                                        }
+                                    }
+                                },
                                 new KernelActionDirective("mssql")
                                 {
                                     Parameters =
@@ -104,11 +140,20 @@ public class PolyglotParserConfigurationTests
                                         new KernelDirectiveParameter("--connection-string")
                                         {
                                             AllowImplicitName = true,
+                                            Required = true,
+                                            TypeHint = "connectionstring-mssql"
+                                        },
+                                        new KernelDirectiveParameter("--create-dbcontext")
+                                        {
+                                            Flag = true
+                                        },
+                                        new("--kernel-name")
+                                        {
                                             Required = true
                                         }
                                     },
                                     KernelCommandType = typeof(ConnectMsSql)
-                                },
+                                }
                             }
                         },
                         new KernelSpecifierDirective("#!javascript", "javascript")
@@ -134,7 +179,12 @@ public class PolyglotParserConfigurationTests
                                 new("--value")
                                 {
                                     Required = true
-                                }, 
+                                },
+                                new("--byref")
+                                {
+                                    Flag = true
+                                },
+                                new("--mime-type")
                             },
                             KernelCommandType = typeof(SendValue)
                         }
@@ -188,6 +238,8 @@ internal class KernelCommand
 internal class ConnectMsSql : KernelCommand
 {
     public string ConnectionString { get; set; }
+
+    public bool CreateDbContext { get; set; }
 }
 
 internal class SendValue : KernelCommand

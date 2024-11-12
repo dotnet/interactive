@@ -4,11 +4,16 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Mime;
+using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Http.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.LanguageServices;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -191,7 +196,16 @@ public class KeyValueStoreKernelTests
     [Fact]
     public async Task It_can_import_URL_contents_as_strings()
     {
-        using var kernel = CreateKernel();
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StringContent("<p>hi!</p>",
+                                                 Encoding.UTF8,
+                                                 "text/html");
+            return Task.FromResult(response);
+        });
+
+        using var kernel = CreateKernel(new HttpClient(handler));
 
         await kernel.SubmitCodeAsync("#!value --name hi --from-url https://bing.com");
 
@@ -201,13 +215,22 @@ public class KeyValueStoreKernelTests
 
         valueProduced.FormattedValue.Value
             .Should()
-            .Contain("<html");
+            .Contain("<p>hi!</p>");
     }
 
     [Fact]
-    public async Task When_import_URL_contents_the_mimetype_is_preserved()
+    public async Task When_importing_URL_contents_the_mimetype_is_preserved()
     {
-        using var kernel = CreateKernel();
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StringContent("<p>hi!</p>",
+                                                 Encoding.UTF8,
+                                                 "text/html");
+            return Task.FromResult(response);
+        });
+
+        using var kernel = CreateKernel(new HttpClient(handler));
 
         await kernel.SubmitCodeAsync("#!value --name hi --from-url https://bing.com");
 
@@ -445,10 +468,37 @@ public class KeyValueStoreKernelTests
               .Contain("--name", "--from-url", "--from-file", "--mime-type");
     }
 
-    private static CompositeKernel CreateKernel() =>
+    [Fact]
+    public async Task Canceled_input_request_does_not_record_input_token_as_value()
+    {
+        using var kernel = CreateKernel();
+
+        kernel.RegisterCommandHandler<RequestInput>((requestInput, context) =>
+        {
+            context.Fail(requestInput);
+            return Task.CompletedTask;
+        });
+
+        kernel.SetDefaultTargetKernelNameForCommand(typeof(RequestInput), kernel.Name);
+
+        var result = await kernel.SubmitCodeAsync(
+                         """
+                         #!value --from-value @input:{"type": "file"} --name file
+                         """);
+
+        result.Events.Should().ContainSingle<CommandFailed>();
+
+        var keyValueStoreKernel = kernel.FindKernelByName("value");
+
+        var (_, valueInfosProduced) = await keyValueStoreKernel.TryRequestValueInfosAsync();
+
+        valueInfosProduced.ValueInfos.Should().BeEmpty();
+    }
+
+    private static CompositeKernel CreateKernel(HttpClient httpClient = null) =>
         new()
         {
-            new KeyValueStoreKernel().UseValueSharing(),
+            new KeyValueStoreKernel(httpClient: httpClient).UseValueSharing(),
             new FakeKernel("fake")
         };
 }

@@ -49,6 +49,13 @@
         "/src/Microsoft.DotNet.Interactive.Jupyter.Tests/JupyterKernelVariableSharingTests.can_share_primitives_to_and_from_kernel.python3.json"
       ],
       "_justification": "False positive on serialized commands, tokens and ids are idempotency tokens"
+    },
+    {
+      "file": [
+        "src/Microsoft.DotNet.Interactive.PostgreSql.Tests/README.md",
+        "src/Microsoft.DotNet.Interactive.PostgreSql.Tests/PostgreSqlFactAttribute.cs"
+      ],
+      "_justification": "Default connection string is used for developer test setup and is not a secret."
     }
   ]
 }

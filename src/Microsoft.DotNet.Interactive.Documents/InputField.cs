@@ -7,15 +7,18 @@ namespace Microsoft.DotNet.Interactive.Documents;
 
 public class InputField
 {
-    public InputField(string valueName, string typeHint = "text")
+    public InputField(string valueName, string typeHint = "text", string? prompt = null)
     {
         ValueName = valueName;
-        TypeHint = typeHint;
+        Prompt = prompt ?? valueName;
+        TypeHint = typeHint ?? "text";
     }
 
-    public string ValueName { get; set; }
-
     public string TypeHint { get; set; }
+
+    public string Prompt { get; }
+
+    public string ValueName { get; set; }
 
     public override bool Equals(object? obj)
     {

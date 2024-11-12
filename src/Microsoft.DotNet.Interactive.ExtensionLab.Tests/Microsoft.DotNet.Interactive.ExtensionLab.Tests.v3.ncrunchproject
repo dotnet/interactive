@@ -14,6 +14,9 @@
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.ExtensionLab.Tests.DataFrameTypeGeneratorTests</FixtureName>
       </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.ExtensionLab.Tests.InspectTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

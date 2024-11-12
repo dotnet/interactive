@@ -2,11 +2,12 @@
   "token": "the-token",
   "commandType": "RequestInput",
   "command": {
+    "parameterName": null,
     "prompt": "provide answer",
     "isPassword": true,
-    "type": "password",
     "saveAs": null,
-    "targetKernelName": "vscode",
+    "type": "password",
+    "targetKernelName": null,
     "originUri": null,
     "destinationUri": null
   },

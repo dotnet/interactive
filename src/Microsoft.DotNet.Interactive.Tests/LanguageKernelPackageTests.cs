@@ -869,6 +869,8 @@ tInput.Length
 
         var result = await SubmitCode(kernel, source);
 
+        result.Events.Should().NotContainErrors();
+
         result.Events
               .Should()
               .ContainSingle<ReturnValueProduced>()

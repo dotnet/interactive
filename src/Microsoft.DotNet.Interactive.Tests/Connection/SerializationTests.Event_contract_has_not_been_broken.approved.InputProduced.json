@@ -7,11 +7,12 @@
     "token": "the-token",
     "commandType": "RequestInput",
     "command": {
+      "parameterName": "filePath",
       "prompt": "What is the path to the log file?",
       "isPassword": false,
+      "saveAs": "the-file",
       "type": "file",
-      "saveAs": null,
-      "targetKernelName": "vscode",
+      "targetKernelName": null,
       "originUri": null,
       "destinationUri": null
     },

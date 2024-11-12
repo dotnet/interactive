@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,7 +25,7 @@ public class ExplainCodeExtension
 
         if (mermaidKernel is null)
         {
-            throw new KernelException($"{nameof(ExplainCodeExtension)} requires a kernel that supports Mermaid language");
+            throw new InvalidOperationException($"{nameof(ExplainCodeExtension)} requires a kernel that supports Mermaid language");
         }
 
         var kernelInfo = mermaidKernel.KernelInfo;

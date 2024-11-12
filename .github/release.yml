@@ -6,6 +6,7 @@ changelog:
       - ignore-for-release
       - dependencies
       - Area-Build & Infrastructure
+      - External
   categories:
     - title: Breaking Changes 🧨
       labels:
@@ -17,91 +18,81 @@ changelog:
     - title: Bug fixes🛠️
       labels:
         - bug
-    - title: Area-Automation
-      labels:
-        - Area-Automation
-    - title: Area-Auth
-      labels:
-        - Area-Auth
-    - title: Area-API
-      labels:
-        - Area-API
-    - title: Area-C#
-      labels:
-        - Area-C#
-    - title: Area-Python
-      labels:
-        - Area-Python
-    - title: Area-Documentation
-      labels:
-        - Area-Documentation
-    - title: Area-F#
-      labels:
-        - Area-F#
-    - title: Area-Formatting
-      labels:
-        - Area-Formatting
-    - title: Area-HTTP
-      labels:
-        - Area-HTTP
-    - title: Area-JavaScript HTML CSS
-      labels:
-        - Area-JavaScript HTML CSS
-    - title: Area-Jupyter
-      labels:
-        - Area-Jupyter
-    - title: Area-Language Services
-      labels:
-        - Area-Language Services
-    - title: Area-Messaging, Comms, and Scheduling
-      labels:
-        - Area-Messaging and Comms
-        - Area-Messaging / scheduling / comms
-    - title: Area-Packages and Extensions
-      labels:
-        - Area-Packages and Extensions
-    - title: Area-Performance
-      labels:
-        - Area-Performance
-    - title: Area-PowerShell
-      labels:
-        - Area-PowerShell
-    - title: Area-Python
-      labels:
-        - Area-Python
-    - title: Area-SQL / data querying
-      labels:
-        - Area-SQL / data querying
-    - title: Area-Variable sharing
-      labels:
-        - Area-Variable sharing
-    - title: Area-Visualization
-      labels:
-        - Area-Visualization
-    - title: Area-VisualStudio
-      labels:
-        - Area-VisualStudio
-    - title: Area-VS Code Extension
-      labels:
-        - Area-VS Code Extension
-    - title: Area-Polyglot Notebooks Extension
-      labels:
-        - Area-Polyglot Notebooks Extension
-    - title: Area-VS Code Jupyter Extension Interop
-      labels:
-        - Area-VS Code Jupyter Extension Interop
-    - title: Area-WebAssembly
-      labels:
-        - Area-WebAssembly
-    - title: Area-Accessibility
+    - title: Accessibility
       labels:
         - Area-Accessibility
-    - title: Area-Jupyter sub-kernels
+    - title: Automation
       labels:
-        - Area-Jupyter sub-kernels
-    - title: Area-Localization and Globalization
+        - Area-Automation
+    - title: Auth
+      labels:
+        - Area-Auth
+    - title: API
+      labels:
+        - Area-API
+    - title: C#
+      labels:
+        - Area-C#
+    - title: Documentation
+      labels:
+        - Area-Documentation
+    - title: F#
+      labels:
+        - Area-F#
+    - title: Formatting
+      labels:
+        - Area-Formatting
+    - title: HttpKernel, Visual Studio HTTP Editor
+      labels:
+        - Area-HTTP
+    - title: JavaScript HTML CSS
+      labels:
+        - Area-JavaScript HTML CSS
+    - title: Jupyter
+      labels:
+        - Area-Jupyter
+    - title: Jupyter subkernels (Python, R, Julia, etc.)
+      labels:
+        - Area-Jupyter subkernels
+    - title: Language Services
+      labels:
+        - Area-Language Services
+    - title: Localization and Globalization
       labels:
         - Area-Localization and Globalization
+    - title: Messaging, Comms, and Scheduling
+      labels:
+        - Area-Messaging / scheduling / comms
+    - title: Packages and Extensions
+      labels:
+        - Area-Packages and Extensions
+    - title: Performance
+      labels:
+        - Area-Performance
+    - title: Polyglot Notebooks Extension
+      labels:
+        - Area-Polyglot Notebooks Extension
+    - title: PowerShell
+      labels:
+        - Area-PowerShell
+    - title: Python
+      labels:
+        - Area-Python
+    - title: SQL, KQL, and data querying
+      labels:
+        - Area-SQL / data querying
+    - title: Magic Commands & Submission Parsing
+      labels:
+        - Area-Submission Parsing & Magic Commands
+    - title: Try .NET
+      labels:
+        - Area-Try .NET
+    - title: Variable sharing
+      labels:
+        - Area-Variable sharing
+    - title: Visualization
+      labels:
+        - Area-Visualization
     - title: Other Changes
       labels:
         - "*"

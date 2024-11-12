@@ -1,30 +1,29 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Net;
-using System.Net.Http;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
+using Microsoft.DotNet.Interactive.Http.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.Net.Http.Headers;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
-public class HttpKernelTests
+public partial class HttpKernelTests
 {
     public HttpKernelTests()
     {
@@ -108,6 +107,63 @@ public class HttpKernelTests
         result.Events.Should().NotContainErrors();
 
         requests.Select(r => r.RequestUri.AbsoluteUri).ToArray().Should().BeEquivalentTo(new[] { "https://location1.com:1200/endpoint", "https://location2.com:1200/endpoint" });
+    }
+
+    [Fact]
+    public async Task binding_for_variables_that_have_been_sent_work_well()
+    {
+        HttpRequestMessage request = null;
+        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        {
+            request = message;
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var result = await kernel.SendAsync(new SendValue("my_host", "my.host.com"));
+        result.Events.Should().NotContainErrors();
+
+        result = await kernel.SendAsync(new SubmitCode("get  https://{{my_host}}:1200/endpoint"));
+        result.Events.Should().NotContainErrors();
+
+        request.RequestUri.Should().Be("https://my.host.com:1200/endpoint");
+    }
+
+    [Fact]
+    public async Task send_request_and_variables_are_saved()
+    {
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(response);
+        });
+        var client = new HttpClient(handler);
+        using var kernel = new HttpKernel(client: client);
+
+        using var _ = new AssertionScope();
+
+        var code = """
+            @host=https://httpbin.org
+
+            Get {{host}}
+            """;
+
+        await kernel.SendAsync(new SubmitCode(code));
+
+
+        var result = await kernel.SendAsync(new RequestValueInfos());
+
+        result.Events.Should().NotContainErrors();
+        var valueInfo = result.Events.Should().ContainSingle<ValueInfosProduced>()
+                              .Which
+                              .ValueInfos.Should().ContainSingle()
+                              .Which;
+        valueInfo.Name.Should().Be("host");
+        valueInfo.FormattedValue.Should().BeEquivalentTo(new FormattedValue(PlainTextSummaryFormatter.MimeType, "https://httpbin.org"));
     }
 
     [Fact]
@@ -207,10 +263,8 @@ public class HttpKernelTests
     [Fact]
     public async Task invalid_header_value_produces_error()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -427,11 +481,8 @@ public class HttpKernelTests
     [InlineData("$randomInt ")]
     public async Task can_bind_expression_with_various_spaces(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -459,11 +510,8 @@ public class HttpKernelTests
     [InlineData("$guidabc")]
     public async Task cant_bind_invalid_guid_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -486,7 +534,6 @@ public class HttpKernelTests
         var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
         diagnostics.Diagnostics.First().Message.Should().Be($"Unable to evaluate expression '{expression}'.");
-
     }
 
     [Theory]
@@ -495,11 +542,8 @@ public class HttpKernelTests
     [InlineData("$datetimeabc")]
     public async Task cant_bind_invalid_datetime_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -531,11 +575,8 @@ public class HttpKernelTests
     [InlineData("$localDatetimeabc")]
     public async Task cant_bind_invalid_local_datetime_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -567,11 +608,8 @@ public class HttpKernelTests
     [InlineData("$timestampabc")]
     public async Task cant_bind_invalid_timestamp_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -603,11 +641,8 @@ public class HttpKernelTests
     [InlineData("$randomIntabc")]
     public async Task cant_bind_invalid_random_int_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -639,11 +674,8 @@ public class HttpKernelTests
     [InlineData("$timestamp$localDatetime")]
     public async Task cant_bind_multiples_in_expression(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -675,11 +707,8 @@ public class HttpKernelTests
     [InlineData("$RANDOMINT")]
     public async Task cant_bind_capital_versions_of_expressions(string expression)
     {
-        HttpRequestMessage request = null;
-
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -813,10 +842,8 @@ public class HttpKernelTests
     [Fact]
     public async Task cant_bind_timestamp_offset_without_option()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -843,10 +870,8 @@ public class HttpKernelTests
     [Fact]
     public async Task cant_bind_timestamp_offset_with_invalid_option()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -875,10 +900,8 @@ public class HttpKernelTests
     [Fact]
     public async Task cant_bind_timestamp_offset_with_invalid_offset()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -905,10 +928,8 @@ public class HttpKernelTests
     [Fact]
     public async Task cant_bind_timestamp_with_invalid_chars_in_the_arguments()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1111,10 +1132,8 @@ public class HttpKernelTests
     [Fact]
     public async Task cant_bind_random_int_with_min_greater_than_max()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1138,10 +1157,8 @@ public class HttpKernelTests
     [Fact]
     public async Task cant_bind_random_int_with_non_integer_max()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1211,10 +1228,8 @@ public class HttpKernelTests
     [InlineData("m")]
     public async Task binding_with_various_datetime_options_doesnt_produce_errors(string option)
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1238,10 +1253,8 @@ public class HttpKernelTests
     [Fact]
     public async Task invalid_option_produces_error()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1426,7 +1439,7 @@ public class HttpKernelTests
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
-        var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var currentDate = DateTime.Now.ToString("yyyy-MM-dd");
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split(":").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
@@ -1459,11 +1472,11 @@ public class HttpKernelTests
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
-        var currentDate = DateTimeOffset.UtcNow;
+        var currentDateTime = DateTimeOffset.Now;
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
-        DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDate, TimeSpan.FromSeconds(10));
+        DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDateTime, TimeSpan.FromSeconds(10));
     }
 
     [Fact]
@@ -1492,7 +1505,7 @@ public class HttpKernelTests
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
-        var currentDate = DateTimeOffset.UtcNow.AddDays(-1);
+        var currentDate = DateTimeOffset.Now.AddDays(-1);
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
@@ -1525,7 +1538,7 @@ public class HttpKernelTests
         var result = await kernel.SendAsync(new SubmitCode(code));
         result.Events.Should().NotContainErrors();
 
-        var currentDate = DateTimeOffset.UtcNow;
+        var currentDate = DateTimeOffset.Now;
         var bodyAsString = await request.Content.ReadAsStringAsync();
         var readDateSubstring = bodyAsString.Split("\"local_custom_date\" : ").Last().Trim().Substring(1);
         var readDateValue = readDateSubstring.Substring(0, readDateSubstring.IndexOf("\""));
@@ -1535,10 +1548,8 @@ public class HttpKernelTests
     [Fact]
     public async Task several_system_variables_in_single_request()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1596,10 +1607,8 @@ public class HttpKernelTests
     [Fact]
     public async Task incorrect_datetime_syntax_produces_error()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1625,10 +1634,8 @@ public class HttpKernelTests
     [Fact]
     public async Task incorrect_datetime_produces_error()
     {
-        HttpRequestMessage request = null;
-        var handler = new InterceptingHttpMessageHandler((message, _) =>
+        var handler = new InterceptingHttpMessageHandler((_, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             return Task.FromResult(response);
         });
@@ -1863,10 +1870,8 @@ public class HttpKernelTests
     public async Task when_response_is_slow_final_displayed_value_includes_response_details()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
-        HttpRequestMessage request = null;
         var slowResponseHandler = new InterceptingHttpMessageHandler(async (message, _) =>
         {
-            request = message;
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.RequestMessage = message;
             await Task.Delay(2 * ResponseDelayThresholdInMilliseconds);
@@ -2187,669 +2192,6 @@ public class HttpKernelTests
 
         result.Events.Should().ContainSingle<CommandFailed>().Which.Message.Should().Contain(
             "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
-    }
-
-    [Fact]
-
-    public async Task responses_to_named_requests_can_be_accessed_as_symbols_in_later_requests()
-    {
-        // Request Variables
-        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
-
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = """
-            @baseUrl = https://httpbin.org/anything
-
-            # @name login
-            POST {{baseUrl}}
-            Content-Type: application/json
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = """
-
-            @origin = {{login.response.body.$.origin}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        secondResult.Events.Should().NotContainErrors();
-    }
-
-    [Theory]
-    [InlineData("login.response.$")]
-    [InlineData("login.response.//")]
-    [InlineData("login.request.$")]
-    [InlineData("login.request.//")]
-    public async Task responses_to_named_requests_with_incomplete_paths_produces_errors(string path)
-    {
-        // Request Variables
-        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
-
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = """
-            @baseUrl = https://httpbin.org/anything
-
-            # @name login
-            POST {{baseUrl}}
-            Content-Type: application/json
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""
-
-            @origin = {{{{{path}}}}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
-
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression '{{{path}}}' does not follow the correct pattern. The expression should adhere to the following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""");
-    }
-
-
-    [Theory]
-    [InlineData("login.request.body.$.test", "application/json")]
-    [InlineData("login.request.body.//test", "application/xml")]
-    public async Task named_requests_with_incomplete_content_produces_errors(string path, string contentType)
-    {
-
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = $$$"""
-            @baseUrl = https://httpbin.org/anything
-
-            # @name login
-            POST {{baseUrl}}
-            Content-Type: {{{contentType}}}
-
-            {
-                "test": testing
-            }
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""
-
-            @origin = {{{{{path}}}}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
-
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The named request does not contain any content at this path '{{{path}}}'.""");
-    }
-
-    [Fact]
-    public async Task json_named_requests_with_xml_content_type_produces_errors()
-    {
-
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = $$$"""
-            @baseUrl = https://httpbin.org/xml
-
-            # @name login
-            GET {{baseUrl}}
-            
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""
-
-            @origin = {{login.response.body.$.test}}
-            
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
-
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request has content type of 'application/xml' which differs from the required content type of 'application/json'.""");
-    }
-
-    [Fact]
-    public async Task xml_named_request_with_json_content_type_produces_errors()
-    {
-
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = $$$"""
-            @baseUrl = https://httpbin.org/anything
-
-            # @name login
-            POST {{baseUrl}}
-            Content-Type: application/json
-
-            {
-                "test": testing
-            }
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""
-
-            @origin = {{login.response.body.//test}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
-
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request has content type of 'application/json' which differs from the required content type of 'application/xml'.""");
-    }
-
-    [Theory]
-    [InlineData("login.request.body.$")]
-    [InlineData("login.request.body.//")]
-    public async Task named_requests_with_no_body_produces_errors_when_trying_to_access(string path)
-    {
-
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = """
-            @baseUrl = https://httpbin.org/anything
-
-            # @name login
-            POST {{baseUrl}}
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""
-
-            @origin = {{{{{path}}}}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "origin" : {{origin}}
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
-
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request 'login' does not have a request body.""");
-    }
-
-    [Fact]
-    public async Task responses_to_named_requests_can_be_accessed_as_xml_in_later_requests()
-    {
-        // Request Variables
-        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
-
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
-
-        var code = """
-            @baseUrl = https://httpbin.org/xml
-
-            # @name sampleXml
-            GET {{baseUrl}}
-            Content-Type: application/xml
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = """
-
-            POST https://example.com/api/comments HTTP/1.1
-            X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        secondResult.Events.Should().NotContainErrors();
-    }
-
-    [Theory]
-    [InlineData("example.request.body.*")]
-    [InlineData("example.response.body.*")]
-    public async Task asterick_after_body_for_named_request_uses_the_entirety_of_the_body_content(string path)
-    {
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = """
-            @baseUrl = https://httpbin.org/anything
-
-            # @name example
-            POST {{baseUrl}}
-            Accept: application/json
-
-            {
-                "sample" : "text"
-            }
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            {{{{{path}}}}}
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        secondResult.Events.Should().NotContainErrors();
-    }
-
-    [Fact]
-    public async Task named_requests_with_improper_xml_path_produces_errors()
-    {
-        // Request Variables
-        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
-
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
-
-        var code = """
-            @baseUrl = https://httpbin.org/xml
-
-            # @name sampleXml
-            GET {{baseUrl}}
-            Content-Type: application/xml
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = """
-
-            POST https://example.com/api/comments HTTP/1.1
-            X-ValFromPrevious: {{sampleXml.response.body.//slideshow/slide[2]/title}}
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        secondResult.Events.Should().NotContainErrors();
-    }
-
-    [Fact]
-    public async Task responses_to_named_requests_can_be_accessed_through_headers_in_later_requests()
-    {
-        // Request Variables
-        // Request variables are similar to file variables in some aspects like scope and definition location.However, they have some obvious differences.The definition syntax of request variables is just like a single-line comment, and follows // @name requestName or # @name requestName just before the desired request url. 
-
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
-
-        var code = """
-            @baseUrl = https://httpbin.org
-
-            # @name sample
-            GET {{baseUrl}}
-            Content-Type: application/json
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = """
-
-            POST https://example.com/api/comments HTTP/1.1
-            Server: {{sample.response.headers.Server}}
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        secondResult.Events.Should().NotContainErrors();
-    }
-
-
-    [Fact]
-    public async Task Invalid_named_request_property_produces_errors()
-    {
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        using var _ = new AssertionScope();
-
-        var code = """
-            @baseUrl = https://example.com/api
-
-            # @name login
-            POST {{baseUrl}}/api/login HTTP/1.1
-            Content-Type: application/x-www-form-urlencoded
-
-            name=foo&password=bar
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = """
-
-            @authToken = {{login.response.headers.X-AuthToken}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Authorization: {{authToken}}
-            Content-Type: application/json
-            
-            {
-                "content": "fake content"
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        secondResult.Events.Count().Should().Be(2);
-    }
-
-    [Theory]
-    [InlineData("example.request.headers.*")]
-    [InlineData("example.response.headers.*")]
-    public async Task asterick_after_headers_for_named_request_is_not_supported_and_produces_errors(string path)
-    {
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = """
-            @baseUrl = https://httpbin.org/anything
-
-            # @name example
-            POST {{baseUrl}}
-            Accept: application/json
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            {{{{{path}}}}}
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
-
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name '*' does not exist in the named request.""");
-    }
-
-    [Theory]
-    [InlineData("example.request.headers.Content-Type", "Content-Type")]
-    [InlineData("example.response.headers.Authorization", "Authorization")]
-    public async Task non_existant_header_names_produces_an_error(string path, string headerName)
-    {
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = """
-            @baseUrl = https://httpbin.org/anything
-
-            # @name example
-            POST {{baseUrl}}
-            Accept: application/json
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""
-
-            @headerName = {{{{{path}}}}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "headerName" : {{headerName}}
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
-
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name '{{{headerName}}}' does not exist in the named request.""");
-    }
-
-    [Fact]
-    public async Task no_headers_in_named_requqest_produces_an_error_when_attempted_to_access()
-    {
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = """
-            @baseUrl = https://httpbin.org/anything
-
-            # @name example
-            POST {{baseUrl}}
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""
-
-            @headerName = {{example.request.headers.Content-Type}}
-            
-            
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Content-Type: application/json
-            
-            {
-                "headerName" : {{headerName}}
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
-
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request 'example' does not have any headers.""");
-    }
-
-    [Fact]
-    public async Task variables_have_precedence_over_named_requests()
-    {
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = """
-            @baseUrl = https://httpbin.org/anything
-
-            # @name example
-            POST {{baseUrl}}
-
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-        result.Events.Should().NotContainErrors();
-
-        var secondCode = $$$"""
-
-            @example.response.headers.Accept = application/xml
-            @headerName = {{example.response.headers.Accept}}
-           
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            Accept: {{example.response.headers.Accept}}
-            
-            {
-                "headerName" : {{example.response.headers.Accept}}
-            }
-            
-            ###
-            """;
-
-        var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
-
-        secondResult.Events.Should().NotContainErrors();
-    }
-
-    [Fact]
-    public async Task attempting_to_use_named_request_prior_to_run_will_cause_failure()
-    {
-        var client = new HttpClient();
-        using var kernel = new HttpKernel(client: client);
-
-        var code = $$$"""
-            @baseUrl = https://httpbin.org/anything
-            
-            # @name example
-            POST {{baseUrl}}
-            
-            ###
-           
-            # @name createComment
-            POST https://example.com/api/comments HTTP/1.1
-            
-            
-            {
-                "Server" : {{example.response.headers.Server}}
-            }
-            
-            ###
-            """;
-
-        var result = await kernel.SendAsync(new SubmitCode(code));
-
-        var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
-
-        diagnostics.Diagnostics.First().Message.Should().Be($$$"""Unable to evaluate expression 'example.response.headers.Server'.""");
     }
 
     [Fact(Skip = "Requires updates to HTTP parser")]

@@ -123,7 +123,7 @@ Microsoft.DotNet.Interactive.Journey
     .ctor(System.IO.FileInfo fromFile = null, System.Uri fromUrl = null)
     public System.IO.FileInfo FromFile { get;}
     public System.Uri FromUrl { get;}
-    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors()
+    public System.Collections.Generic.IEnumerable<System.String> GetValidationErrors(Microsoft.DotNet.Interactive.CompositeKernel kernel)
 Microsoft.DotNet.Interactive.Journey.Utilities
   public class OrderedTable<T>, ICollection<T>, IEnumerable<T>, System.Collections.IEnumerable
     .ctor()

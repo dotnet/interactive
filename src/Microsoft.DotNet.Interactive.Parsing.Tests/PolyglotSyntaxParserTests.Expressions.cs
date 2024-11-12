@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Directives;
@@ -27,9 +28,9 @@ public partial class PolyglotSyntaxParserTests
             "blah")]
         [InlineData(
             """
-            #!set --name myVar --value @input:{ "prompt": "Please enter the fruit name", "typeHint": "text", "recall": true }
+            #!set --name myVar --value @input:{ "prompt": "Please enter the fruit name", "type": "text", "saveAs": "fruitName" }
             """,
-            """{ "prompt": "Please enter the fruit name", "typeHint": "text", "recall": true }""")]
+            """{ "prompt": "Please enter the fruit name", "type": "text", "saveAs": "fruitName" }""")]
         public void Input_tokens_are_parsed_as_input_token_name_nodes(string code, string expectedParameters)
         {
             var tree = Parse(code);

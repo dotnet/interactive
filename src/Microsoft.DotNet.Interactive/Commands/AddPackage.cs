@@ -37,29 +37,26 @@ public class AddPackage : KernelCommand
     {
         AddPackage command = null;
 
-        if (directiveNode.TryGetActionDirective(out var directive))
+        var parameterValues = directiveNode.GetParameterValues(bindingResult.BoundValues).ToArray();
+
+        var parameterResult = parameterValues.SingleOrDefault(v => v.Name is "");
+
+        if (parameterResult.Value is string packageAndVersionValue)
         {
-            var parameterValues = directiveNode.GetParameterValues(directive, bindingResult.BoundValues).ToArray();
-
-            var parameterResult = parameterValues.SingleOrDefault(v => v.Name is "");
-
-            if (parameterResult.Value is string packageAndVersionValue)
+            if (PackageReference.TryParse(packageAndVersionValue, out var packageReference))
             {
-                if (PackageReference.TryParse(packageAndVersionValue, out var packageReference))
-                {
-                    command = new AddPackage(packageReference.PackageName, packageReference.PackageVersion);
-                }
-                else
-                {
-                    var parameterNode = parameterResult.ParameterNode;
-                    parameterNode.AddDiagnostic(
-                        parameterNode.CreateDiagnostic(
-                            new DiagnosticInfo(
-                                PolyglotSyntaxParser.ErrorCodes.InvalidPackageAndVersionFormat,
-                                "Unable to parse package reference: {0}",
-                                DiagnosticSeverity.Error,
-                                parameterNode.Text)));
-                }
+                command = new AddPackage(packageReference.PackageName, packageReference.PackageVersion);
+            }
+            else
+            {
+                var parameterNode = parameterResult.ParameterNode;
+                parameterNode.AddDiagnostic(
+                    parameterNode.CreateDiagnostic(
+                        new DiagnosticInfo(
+                            PolyglotSyntaxParser.ErrorCodes.InvalidPackageAndVersionFormat,
+                            "Unable to parse package reference: {0}",
+                            DiagnosticSeverity.Error,
+                            parameterNode.Text)));
             }
         }
 

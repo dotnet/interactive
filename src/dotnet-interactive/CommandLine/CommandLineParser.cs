@@ -10,24 +10,16 @@ using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.App.ParserServer;
 using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
-using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
-using Microsoft.DotNet.Interactive.Jupyter.Formatting;
-using Microsoft.DotNet.Interactive.Mermaid;
-using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.VSCode;
 using Microsoft.Extensions.DependencyInjection;
@@ -212,7 +204,7 @@ public static class CommandLineParser
             async Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
             {
                 var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
-                var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
+                var kernel = KernelBuilder.CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, telemetrySender);
                 cancellationToken.Register(kernel.Dispose);
 
                 await JupyterClientKernelExtension.LoadAsync(kernel);
@@ -330,7 +322,7 @@ public static class CommandLineParser
                                                                   ? new HtmlNotebookFrontendEnvironment()
                                                                   : new BrowserFrontendEnvironment();
 
-                    var kernel = CreateKernel(
+                    var kernel = KernelBuilder.CreateKernel(
                         options.DefaultKernel,
                         frontendEnvironment,
                         startupOptions,
@@ -448,117 +440,6 @@ public static class CommandLineParser
 
             var pr = new HttpPortRange(start, end);
             return pr;
-        }
-    }
-
-    private static CompositeKernel CreateKernel(
-        string defaultKernelName,
-        FrontendEnvironment frontendEnvironment,
-        StartupOptions startupOptions,
-        TelemetrySender telemetrySender)
-    {
-        using var _ = Log.OnEnterAndExit("Creating Kernels");
-
-        var compositeKernel = new CompositeKernel();
-        compositeKernel.FrontendEnvironment = frontendEnvironment;
-
-        // TODO: temporary measure to support vscode integrations
-        compositeKernel.Add(new SqlDiscoverabilityKernel());
-        compositeKernel.Add(new KqlDiscoverabilityKernel());
-
-        compositeKernel.Add(
-            new CSharpKernel()
-                .UseNugetDirective()
-                .UseKernelHelpers()
-                .UseWho()
-                .UseMathAndLaTeX()
-                .UseValueSharing(),
-            new[] { "c#", "C#" });
-
-        compositeKernel.Add(
-            new FSharpKernel()
-                .UseDefaultFormatting()
-                .UseNugetDirective()
-                .UseKernelHelpers()
-                .UseWho()
-                .UseMathAndLaTeX()
-                .UseValueSharing(),
-            new[] { "f#", "F#" });
-
-        compositeKernel.Add(
-            new PowerShellKernel()
-                .UseProfiles()
-                .UseValueSharing(),
-            new[] { "powershell" });
-
-        compositeKernel.Add(
-            new HtmlKernel());
-
-        compositeKernel.Add(
-            new KeyValueStoreKernel()
-                .UseWho());
-
-        compositeKernel.Add(
-            new MermaidKernel());
-
-        compositeKernel.Add(
-            new HttpKernel()
-                .UseValueSharing());
-
-        var kernel = compositeKernel
-            .UseDefaultMagicCommands()
-            .UseAboutMagicCommand()
-            .UseImportMagicCommand()
-            .UseSecretManager()
-            .UseNuGetExtensions(telemetrySender);
-
-        kernel.AddKernelConnector(new ConnectSignalRDirective());
-        kernel.AddKernelConnector(new ConnectStdIoDirective(startupOptions.KernelHost));
-
-        kernel.AddKernelConnector(
-            new ConnectJupyterKernelDirective()
-            .AddConnectionOptions(new JupyterHttpKernelConnectionOptions())
-            .AddConnectionOptions(new JupyterLocalKernelConnectionOptions()));
-
-        SetUpFormatters(frontendEnvironment);
-
-        kernel.DefaultKernelName = defaultKernelName;
-
-        kernel.UseTelemetrySender(telemetrySender);
-
-        return kernel;
-    }
-
-    public static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
-    {
-        switch (frontendEnvironment)
-        {
-            case AutomationEnvironment automationEnvironment:
-                break;
-
-            case BrowserFrontendEnvironment browserFrontendEnvironment:
-                Formatter.DefaultMimeType = HtmlFormatter.MimeType;
-                Formatter.SetPreferredMimeTypesFor(typeof(LaTeXString), "text/latex");
-                Formatter.SetPreferredMimeTypesFor(typeof(MathString), "text/latex");
-                Formatter.SetPreferredMimeTypesFor(typeof(string), PlainTextFormatter.MimeType);
-                Formatter.SetPreferredMimeTypesFor(typeof(ScriptContent), HtmlFormatter.MimeType);
-                Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
-
-                Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
-                Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");
-                Formatter.Register<ScriptContent>((script, writer) =>
-                {
-                    IHtmlContent content =
-                        PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());
-                    content.WriteTo(writer, HtmlEncoder.Default);
-                }, HtmlFormatter.MimeType);
-
-                HttpResponseMessageFormattingExtensions.RegisterFormatters();
-
-                break;
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
         }
     }
 }

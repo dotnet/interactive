@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -20,7 +19,7 @@ public partial class PolyglotSyntaxParserTests
             [Theory]
             [InlineData("#!$$", new[]{"#!connect", "#!set", "#!who"})]
             [InlineData("#!conn$$", new[]{"#!connect"})]
-            public async Task produce_completions_for_partiaL_text(string markupCode, string[] expectedCompletions)
+            public async Task produce_completions_for_partial_text(string markupCode, string[] expectedCompletions)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);
 
@@ -63,9 +62,49 @@ public partial class PolyglotSyntaxParserTests
             }
 
             [Theory]
-            [InlineData("#!connect jupyter $$")]
-            [InlineData("#!connect   jupyter       $$")]
-            public async Task produce_completions_for_parameter_names(string markupCode)
+            [InlineData("#!connect jupyter $$",
+                        new[] { "--kernel-name" })]
+            [InlineData("#!connect jupyter       $$",
+                        new[] { "--kernel-name" })]
+            [InlineData("#!connect mssql  $$ --create-dbcontext",
+                        new[] { "--kernel-name" })]
+            [InlineData("#!connect mssql --create-dbcontext      $$",
+                        new[] { "--kernel-name" })]
+            [InlineData("""#!connect mssql --connection-string @input:{"saveAs":"mydbconnectionstring"}  $$""",
+                        new[] { "--kernel-name" })]
+            [InlineData("#!connect jupyter --kernel-name asdf $$",
+                        new[]
+                        {
+                            "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
+                        })]
+            [InlineData("#!connect jupyter --kernel-name @input $$",
+                        new[]
+                        {
+                            "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
+                        })]
+            [InlineData("""#!connect jupyter --kernel-name @input:{"saveAs":"xyz"} $$""",
+                        new[]
+                        {
+                            "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
+                        })]
+            [InlineData("#!connect jupyter $$ --kernel-name",
+                        new[]
+                        {
+                            "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
+                        })]
+            [InlineData("#!set --name @input $$",
+                        new[]
+                        {
+                            "--value", "--byref", "--mime-type"
+                        })]
+            [InlineData("""#!set --name @input:{"saveAs":"xyz"} $$""",
+                        new[]
+                        {
+                            "--value", "--byref", "--mime-type"
+                        })]
+            public async Task produce_completions_for_parameter_names(
+                string markupCode,
+                string[] expectedParameterNames)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);
 
@@ -78,7 +117,7 @@ public partial class PolyglotSyntaxParserTests
 
                 var completions = await node.GetCompletionsAtPositionAsync(position.Value);
 
-                completions.Select(c => c.DisplayText).Should().Contain(["--kernel-name"]);
+                completions.Select(c => c.DisplayText).Should().Contain(expectedParameterNames);
             }
 
             [Fact]
@@ -97,8 +136,10 @@ public partial class PolyglotSyntaxParserTests
                                     Parameters =
                                     [
                                         new KernelDirectiveParameter("--parameter")
-                                                { AllowImplicitName = true }
-                                            .AddCompletions(_ => ["one", "two", "three"]),
+                                            {
+                                                AllowImplicitName = true
+                                            }
+                                            .AddCompletions(() => ["one", "two", "three"]),
                                         new("--other-parameter")
                                     ]
                                 }
@@ -199,6 +240,9 @@ public partial class PolyglotSyntaxParserTests
             [Theory]
             [InlineData("#!connect mssql $$")]
             [InlineData("#!connect mssql         $$")]
+            [InlineData("#!connect mssql --connection-string   @input $$")]
+            [InlineData("#!connect mssql --connection-string abc $$")]
+            [InlineData("#!connect mssql --create-dbcontext  $$  @input")]
             public async Task do_not_produce_completions_for_sibling_subcommands(string markupCode)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);
@@ -238,7 +282,7 @@ public partial class PolyglotSyntaxParserTests
                                             [
                                                 new KernelDirectiveParameter("--parameter")
                                                         { AllowImplicitName = true }
-                                                    .AddCompletions(_ => ["one", "two", "three"]),
+                                                    .AddCompletions(() => ["one", "two", "three"]),
                                                 new("--other-parameter")
                                             ]
                                         }
@@ -281,7 +325,7 @@ public partial class PolyglotSyntaxParserTests
                                 {
                                     Parameters =
                                     [
-                                        new KernelDirectiveParameter("--parameter").AddCompletions(_ => ["one", "two", "three"])
+                                        new KernelDirectiveParameter("--parameter").AddCompletions(() => ["one", "two", "three"])
                                     ]
                                 }
                             ]

@@ -133,11 +133,13 @@ internal class HttpRequestParser
             HttpVariableValueNode? node = null;
 
             while (MoreTokens() &&
-                CurrentToken is not { Kind: TokenKind.NewLine })
+                   CurrentToken is not { Kind: TokenKind.NewLine })
             {
                 if (node is null)
                 {
-                    if (CurrentToken is { Kind: TokenKind.Word } or ({ Kind: TokenKind.Punctuation} and { Text: "/"}))
+                    if (CurrentToken is
+                        { Kind: TokenKind.Word } or
+                        { Kind: TokenKind.Punctuation } and ({ Text: "/" } or { Text: "'" } or { Text: "\"" }))
                     {
                         node = new HttpVariableValueNode(_sourceText, _syntaxTree);
 
@@ -246,20 +248,15 @@ internal class HttpRequestParser
             }
         }
 
-        private T ParseLeadingWhitespaceAndComments<T>(T node) where T : HttpSyntaxNode
+        private void ParseLeadingWhitespaceAndComments(HttpSyntaxNode node)
         {
             while (MoreTokens())
             {
-                if (CurrentToken is { Kind: TokenKind.Punctuation }
-                and { Text: "@" })
+                if (CurrentToken?.Kind is TokenKind.Whitespace or TokenKind.NewLine)
                 {
                     ConsumeCurrentTokenInto(node);
                 }
-                else if (CurrentToken?.Kind is TokenKind.Whitespace)
-                {
-                    ConsumeCurrentTokenInto(node);
-                }
-                else if (CurrentToken?.Kind is TokenKind.NewLine)
+                else if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "@" })
                 {
                     ConsumeCurrentTokenInto(node);
                 }
@@ -268,7 +265,6 @@ internal class HttpRequestParser
                     foreach (var commentNode in ParseComments())
                     {
                         node.Add(commentNode, addBefore: true);
-                        
                     }
                 }
                 else
@@ -276,8 +272,6 @@ internal class HttpRequestParser
                     break;
                 }
             }
-
-            return node;
         }
 
         private T ParseTrailingWhitespace<T>(T node, bool stopAfterNewLine = false, bool stopBeforeNewLine = false) where T : SyntaxNode
@@ -642,7 +636,7 @@ internal class HttpRequestParser
 
         private HttpNamedRequestNode? ParseNamedRequestNode()
         {
-            if (!isCommentNamedRequest())
+            if (!IsCommentNamedRequest())
             {
                 return null;
             }
@@ -667,40 +661,36 @@ internal class HttpRequestParser
                 var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
                 node.AddDiagnostic(diagnostic);
             }
+
             bool wordParsedOnce = false;
-            while (MoreTokens() && CurrentToken is not {Kind: TokenKind.NewLine })
+            while (MoreTokens() && CurrentToken is not { Kind: TokenKind.NewLine } or null)
+            {
+                var currentToken = CurrentToken;
+                if (currentToken is not null &&
+                    (wordParsedOnce &&
+                     currentToken is { Kind: TokenKind.Word } ||
+                     currentToken is not ({ Kind: TokenKind.Word or TokenKind.Whitespace } or { Text: "_" or "@" or "." })))
                 {
+                    var diagnostic = currentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
+                    node.AddDiagnostic(diagnostic);
+                    wordParsedOnce = false;
+                }
 
-                    if (CurrentToken is not null && (!(CurrentToken is { Kind: TokenKind.Word or TokenKind.Whitespace} or { Text: "_" or "@" or "."}) || CurrentToken is {Kind: TokenKind.Word } && wordParsedOnce)) 
-                    {
-                        var diagnostic = CurrentToken.CreateDiagnostic(HttpDiagnostics.InvalidNamedRequestName());
-                        node.AddDiagnostic(diagnostic);
-                        wordParsedOnce = false;
-                    }
-
-                    if (CurrentToken is { Kind: TokenKind.Word })
-                    {
-                        wordParsedOnce = true;
-                    }
-                    ConsumeCurrentTokenInto(node);
-                /*if (CurrentToken is { Kind: TokenKind.Whitespace })
+                if (CurrentToken is { Kind: TokenKind.Word })
                 {
-                    ParseTrailingWhitespace(node, stopBeforeNewLine: true);
-                }*/
+                    wordParsedOnce = true;
+                }
 
+                ConsumeCurrentTokenInto(node);
             }
 
             return ParseTrailingWhitespace(node, stopAfterNewLine: true);
         }
 
-        private bool isCommentNamedRequest()
-        {
-            var nextTokenIndicatesName = CurrentTokenPlus(1) != null ? CurrentTokenPlus(1)!.Text.StartsWith("name") : false;
-            return (CurrentToken is { Text: "@" } &&
-                nextTokenIndicatesName  &&
-                CurrentTokenPlus(2) is { Kind: TokenKind.Whitespace }
-                    );
-        }
+        private bool IsCommentNamedRequest() =>
+            CurrentToken is { Text: "@" } &&
+            CurrentTokenPlus(1)?.Text.StartsWith("name") is true &&
+            CurrentTokenPlus(2) is { Kind: TokenKind.Whitespace };
 
         private HttpHeaderNode ParseHeader()
         {
@@ -834,7 +824,6 @@ internal class HttpRequestParser
                 }
                 else
                 {
-
                     var commentBodyNode = ParseCommentBody();
                     if (commentBodyNode is not null)
                     {
@@ -867,26 +856,37 @@ internal class HttpRequestParser
             return node;
         }
 
-        private HttpCommentStartNode? ParseCommentStart()
+        private HttpCommentStartNode ParseCommentStart()
         {
-            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "#" })
+            var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
+
+            while (true)
             {
-                var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
-                ConsumeCurrentTokenInto(node);
-                return ParseTrailingWhitespace(node, stopBeforeNewLine: true);
+                var foundCommentToken = false;
+
+                if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "#" })
+                {
+                    ConsumeCurrentTokenInto(node);
+                    foundCommentToken = true;
+                }
+
+                if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "/" } &&
+                    CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "/" })
+                {
+                    ConsumeCurrentTokenInto(node);
+                    ConsumeCurrentTokenInto(node);
+                    foundCommentToken = true;
+                }
+
+                ParseTrailingWhitespace(node, stopBeforeNewLine: true);
+
+                if (!foundCommentToken)
+                {
+                    break;
+                }
             }
 
-            if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "/" } &&
-                CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "/" })
-            {
-                var node = new HttpCommentStartNode(_sourceText, _syntaxTree);
-
-                ConsumeCurrentTokenInto(node);
-                ConsumeCurrentTokenInto(node);
-                return ParseTrailingWhitespace(node, stopBeforeNewLine: true);
-            }
-
-            return null;
+            return node;
         }
 
         private bool IsComment()

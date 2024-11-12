@@ -53,25 +53,15 @@ public static class Serializer
             var kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(jsonObject);
             return new CommandOrEvent(kernelCommandEnvelope.Command);
         }
-    }
 
-    private static bool IsEventEnvelope(JsonElement jsonObject)
-    {
-        if (jsonObject.TryGetProperty("eventType", out var eventType))
+        static bool IsEventEnvelope(JsonElement jsonObject)
         {
-            return !string.IsNullOrWhiteSpace(eventType.GetString());
+            if (jsonObject.TryGetProperty("eventType", out var eventType))
+            {
+                return !string.IsNullOrWhiteSpace(eventType.GetString());
+            }
+
+            return false;
         }
-
-        return false;
-    }
-
-    private static bool IsCommandEnvelope(JsonElement jsonObject)
-    {
-        if (jsonObject.TryGetProperty("commandType", out var commandType))
-        {
-            return !string.IsNullOrWhiteSpace(commandType.GetString());
-        }
-
-        return false;
     }
 }
