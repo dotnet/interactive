@@ -1,11 +1,10 @@
-Import-Module "$PSScriptRoot\PublishPolyglotNotebooksHelper.psm1"
-
-[CmdletBinding(PositionalBinding = $false)]
 param (
     [string]$artifactsPath,
     [string]$nugetToken,
     [string]$isSimulated
 )
+
+Import-Module "$PSScriptRoot\PublishPolyglotNotebooksHelper.psm1"
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
