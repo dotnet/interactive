@@ -62,8 +62,7 @@ public class CSharpKernel :
         KernelInfo.LanguageVersion = "12.0";
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - C# Script";
         KernelInfo.Description = """
-                                 This Kernel can compile and execute C# code and display the results.
-                                 The language is C# Script, a dialect of C# used for interactive programming.
+                                 Compile and run C# Script
                                  """;
         _workspace = new InteractiveWorkspace();
 

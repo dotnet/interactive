@@ -14,6 +14,17 @@ import { ServiceCollection } from './serviceCollection';
 
 const selectKernelCommandName = 'polyglot-notebook.selectCellKernel';
 
+class KernelSelectorItem implements vscode.QuickPickItem {
+    constructor(label: string) {
+        this.label = label;
+    }
+
+    label: string;
+    description?: string | undefined;
+    detail?: string | undefined;
+    iconPath?: vscode.ThemeIcon;
+}
+
 export function registerNotbookCellStatusBarItemProvider(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
     const cellItemProvider = new DotNetNotebookCellStatusBarItemProvider(clientMapper);
     clientMapper.onClientCreate((_uri, client) => {
@@ -31,18 +42,28 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
         if (cell) {
             const client = await clientMapper.tryGetClient(cell.notebook.uri);
             if (client) {
-                const availableOptions = kernelSelectorUtilities.getKernelSelectorOptions(client.kernel, cell.notebook, commandsAndEvents.SubmitCodeType);
-                const availableDisplayOptions = availableOptions.map(o => o.displayValue);
-                const selectedDisplayOption = await vscode.window.showQuickPick(availableDisplayOptions, { title: 'Select cell kernel' });
+                const kernelSelectorOptions = kernelSelectorUtilities
+                    .getKernelSelectorOptions(client.kernel, cell.notebook, commandsAndEvents.SubmitCodeType);
+
+                const kernelSelectorItems = kernelSelectorOptions
+                    .map(o => {
+                        const item = new KernelSelectorItem(o.displayValue);
+                        item.description = o.description;
+                        item.iconPath = new vscode.ThemeIcon('notebook-kernel-select');
+                        return item;
+                    });
+
+                const selectedDisplayOption = await vscode.window.showQuickPick(kernelSelectorItems, { title: 'Select cell kernel' });
+
                 if (selectedDisplayOption) {
-                    const selectedValueIndex = availableDisplayOptions.indexOf(selectedDisplayOption);
+                    const selectedValueIndex = kernelSelectorItems.indexOf(selectedDisplayOption);
                     if (selectedValueIndex >= 0) {
-                        const selectedKernelData = availableOptions[selectedValueIndex];
+                        const selectedKernelItem = kernelSelectorOptions[selectedValueIndex];
                         const codeCell = await vscodeUtilities.ensureCellKernelKind(cell, vscode.NotebookCellKind.Code);
                         const notebookCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
-                        if (notebookCellMetadata.kernelName !== selectedKernelData.kernelName) {
+                        if (notebookCellMetadata.kernelName !== selectedKernelItem.kernelName) {
                             // update metadata
-                            notebookCellMetadata.kernelName = selectedKernelData.kernelName;
+                            notebookCellMetadata.kernelName = selectedKernelItem.kernelName;
                             const newRawMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
                             const mergedMetadata = metadataUtilities.mergeRawMetadata(cell.metadata, newRawMetadata);
                             const _succeeded = await vscodeNotebookManagement.replaceNotebookCellMetadata(codeCell.notebook.uri, codeCell.index, mergedMetadata);

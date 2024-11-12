@@ -76,7 +76,7 @@ public class HttpKernel :
         KernelInfo.LanguageName = "HTTP";
         KernelInfo.DisplayName = $"{KernelInfo.LocalName} - HTTP Request";
         KernelInfo.Description = """
-                                 This Kernel is able to execute http requests and display the results.
+                                 Send HTTP requests
                                  """;
 
         _client = client ?? new HttpClient() { Timeout = Timeout.InfiniteTimeSpan };

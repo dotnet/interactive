@@ -25,8 +25,7 @@ public class SQLiteKernel :
     {
         KernelInfo.LanguageName = "SQLite";
         KernelInfo.Description ="""
-                                This kernel is backed by a SQLite database.
-                                It can execute SQL statements against the database and display the results as tables.
+                                Query a SQLite database
                                 """;
                                 
         _connectionString = connectionString;
