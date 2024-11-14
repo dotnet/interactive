@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing
@@ -169,6 +168,8 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                 var formatProvider = Thread.CurrentThread.CurrentUICulture;
                 var type = match.Groups["type"];
 
+                string? text = null;
+
                 // $datetime and $localDatetime MUST have either rfc1123, iso8601 or some other parameter.
                 // $datetime or $localDatetime alone should result in a binding error.
                 if (type is not null && !string.IsNullOrWhiteSpace(type.Value))
@@ -180,6 +181,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                         // we should explicitly set the format provider to invariant culture
                         formatProvider = CultureInfo.InvariantCulture;
                         format = "r";
+
                     }
                     else if (string.Equals(type.Value, "iso8601", StringComparison.OrdinalIgnoreCase))
                     {
@@ -187,9 +189,7 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
                         if (currentDateTimeOffset.Offset.TotalMinutes == 0)
                         {
                             // for $datetime, format the DateTime in order to eliminate the +00:00 offset and use Z
-                            string text = currentDateTimeOffset.UtcDateTime.ToString(format, formatProvider);
-
-                            return node.CreateBindingSuccess(text);
+                            text = currentDateTimeOffset.UtcDateTime.ToString(format, formatProvider);
                         }
                     }
                     else
@@ -200,7 +200,11 @@ namespace Microsoft.DotNet.Interactive.Http.Parsing
 
                     try
                     {
-                        string text = currentDateTimeOffset.ToString(format, formatProvider);
+                        if(text is null)
+                        {
+                            text = currentDateTimeOffset.ToString(format, formatProvider);
+                        }
+                        
                         return node.CreateBindingSuccess(text);
                     }
                     catch (FormatException)
