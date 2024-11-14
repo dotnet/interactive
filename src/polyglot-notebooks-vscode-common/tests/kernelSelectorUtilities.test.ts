@@ -14,6 +14,7 @@ describe('kernel selector utility tests', async () => {
 
         // add C# kernel that supports `SubmitCode`
         const cs = new Kernel('csharp', 'csharp', '10.0', 'See Sharp');
+        cs.kernelInfo.description = 'Do C# stuff';
         cs.kernelInfo.supportedKernelCommands = [{ name: commandsAndEvents.SubmitCodeType }];
         kernel.add(cs);
 
@@ -50,11 +51,13 @@ describe('kernel selector utility tests', async () => {
             {
                 kernelName: 'csharp',
                 displayValue: 'See Sharp',
-                languageName: 'csharp'
+                languageName: 'csharp',
+                description: 'Do C# stuff'
             },
             {
                 kernelName: 'fsharp',
-                displayValue: 'fsharp'
+                displayValue: 'fsharp',
+                description: undefined
             }
         ]);
     });

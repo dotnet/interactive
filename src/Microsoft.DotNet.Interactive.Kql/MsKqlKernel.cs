@@ -20,8 +20,7 @@ internal class MsKqlKernel : ToolsServiceKernel
     {
         _connectionDetails = connectionDetails ?? throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionDetails));
         KernelInfo.Description = $"""
-                                  This Kernel can execute KQL queries against a Kusto database. 
-                                  This instance is connected to cluster {connectionDetails.Cluster} and database {connectionDetails.Database}.
+                                  Query Kusto cluster {connectionDetails.Cluster} and database {connectionDetails.Database}
                                   """;
     }
 

@@ -137,8 +137,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 LanguageVersion = csharpKernelInfo.LanguageVersion,
                 RemoteUri = csharpKernelInfo.Uri,
                 Description = """
-                              This Kernel can compile and execute C# code and display the results.
-                              The language is C# Script, a dialect of C# used for interactive programming.
+                              Compile and run C# Script
                               """
             };
 
@@ -161,7 +160,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 LanguageVersion = fsharpKernelInfo.LanguageVersion,
                 RemoteUri = fsharpKernelInfo.Uri,
                 Description = """
-                              This kernel can compile and execute F# code and display the results.
+                              Compile and run F# code
                               """
             };
 
