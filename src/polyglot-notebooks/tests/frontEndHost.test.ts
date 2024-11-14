@@ -71,7 +71,7 @@ describe("frontEndHost", () => {
                     },
                     {
                         aliases: ['js'],
-                        description: 'This Kernel is for executing JavaScript code.',
+                        description: 'Run JavaScript code',
                         displayName: 'javascript - JavaScript',
                         isComposite: false,
                         isProxy: false,
