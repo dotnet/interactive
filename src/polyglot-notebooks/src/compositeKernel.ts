@@ -102,14 +102,14 @@ export class CompositeKernel extends Kernel {
         const invocationContext = KernelInvocationContext.current;
 
         if (invocationContext) {
-            invocationContext.commandEnvelope;//?
+            invocationContext.commandEnvelope;
             const event = new commandsAndEvents.KernelEventEnvelope(
                 commandsAndEvents.KernelInfoProducedType,
                 <commandsAndEvents.KernelInfoProduced>{
                     kernelInfo: kernel.kernelInfo
                 },
                 invocationContext.commandEnvelope
-            );//?
+            );
             invocationContext.publish(event);
         } else {
             const event = new commandsAndEvents.KernelEventEnvelope(
@@ -117,7 +117,7 @@ export class CompositeKernel extends Kernel {
                 <commandsAndEvents.KernelInfoProduced>{
                     kernelInfo: kernel.kernelInfo
                 }
-            );//?
+            );
             this.publishEvent(event);
         }
     }
@@ -272,7 +272,7 @@ class KernelCollection implements Iterable<Kernel> {
             next: () => {
                 return {
                     value: this._kernels[counter++],
-                    done: counter > this._kernels.length //?
+                    done: counter > this._kernels.length
                 };
             }
         };
@@ -336,7 +336,7 @@ class KernelCollection implements Iterable<Kernel> {
             baseUri += "/";
 
         }
-        kernel.kernelInfo.uri = routingslip.createKernelUri(`${baseUri}${kernel.kernelInfo.localName}`);//?
+        kernel.kernelInfo.uri = routingslip.createKernelUri(`${baseUri}${kernel.kernelInfo.localName}`);
         this._kernelsByLocalUri.set(kernel.kernelInfo.uri, kernel);
 
 

@@ -1,8 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
@@ -15,35 +13,56 @@ public partial class HttpParserTests
 {
     public class Comments
     {
-        [Fact]
-        public void line_comment_before_method_and_url_is_parsed_correctly()
+        [Theory]
+        [InlineData("""
+                    // #This is a comment
+                    GET https://example.com
+                    """)]
+        [InlineData("""
+                    // // // // This is a comment
+                    GET https://example.com
+                    """)]  
+        [InlineData("""
+                    # // This is a comment
+                    GET https://example.com
+                    """)]
+        [InlineData("""
+                    # This is a comment
+                    GET https://example.com
+                    """)]
+        public void line_comment_before_method_and_url_is_parsed_correctly(string code)
         {
-            var code = """
-                # This is a comment
-                GET https://example.com
-                """;
-
             var result = Parse(code);
 
-            result.SyntaxTree.RootNode.ChildNodes
-                  .Should().ContainSingle<HttpRequestNode>()
-                  .Which.ChildNodes.Should().ContainSingle<HttpCommentNode>()
-                  .Which.Text.Should().Be("# This is a comment");
+            var expectedCommentText = code.Split(['\n', '\r'])[0];
+
+            var requestNode = result.SyntaxTree.RootNode.ChildNodes
+                                    .Should().ContainSingle<HttpRequestNode>()
+                                    .Which;
+
+            requestNode.UrlNode.Text.Should().Be("https://example.com");
+
+            requestNode.ChildNodes.Should().ContainSingle<HttpCommentNode>()
+                       .Which.Text.Should().Be(expectedCommentText);
         }
 
-        [Fact]
-        public void comment_without_text_at_end_of_request_is_parsed_correctly()
+        [Theory]
+        [InlineData("""
+                    https://example.com
+                    #
+                    """, "#")]
+        [InlineData("""
+                    https://example.com
+                    //
+                    """, "//")]
+        public void comment_without_text_at_end_of_request_is_parsed_correctly(string code, string expectedCommentText)
         {
-            var code = """
-                https://example.com
-                #
-                """;
 
             var result = Parse(code);
 
             result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should()
                   .ContainSingle<HttpCommentNode>()
-                  .Which.Text.Should().Be("#");
+                  .Which.Text.Should().Be(expectedCommentText);
         }
 
         [Fact]

@@ -315,7 +315,7 @@ describe('Miscellaneous tests', () => {
                 'key2': "value"
             };
 
-            const d = areEquivalentObjects(data1, data2); //?
+            const d = areEquivalentObjects(data1, data2);
             expect(d).to.be.true;
         });
 
@@ -330,7 +330,7 @@ describe('Miscellaneous tests', () => {
                 'key2': "value"
             };
 
-            const d = areEquivalentObjects(data1, data2); //?
+            const d = areEquivalentObjects(data1, data2);
             expect(d).to.be.true;
         });
 
@@ -350,7 +350,7 @@ describe('Miscellaneous tests', () => {
             const ingoreKeys = new Set<string>();
             ingoreKeys.add("key4");
             ingoreKeys.add("key5");
-            const d = areEquivalentObjects(data1, data2, ingoreKeys); //?
+            const d = areEquivalentObjects(data1, data2, ingoreKeys);
             expect(d).to.be.true;
         });
 
@@ -365,7 +365,7 @@ describe('Miscellaneous tests', () => {
                 'key2': "value"
             };
 
-            const d = areEquivalentObjects(data1, data2); //?
+            const d = areEquivalentObjects(data1, data2);
             expect(d).to.be.false;
         });
 
@@ -380,7 +380,7 @@ describe('Miscellaneous tests', () => {
                 'key22': "value"
             };
 
-            const d = areEquivalentObjects(data1, data2); //?
+            const d = areEquivalentObjects(data1, data2);
             expect(d).to.be.false;
         });
     });

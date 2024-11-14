@@ -116,7 +116,7 @@ public class PostgreSqlKernel :
 
         KernelInvocationContext.Current?.Display(
             new HtmlString(@"<details><summary>Query PostgreSql databases.</summary>
-    <p>This extension adds support for connecting to PostgreSql databases using the <code>#!connect sqlite</code> magic command. For more information, run a cell using the <code>#!sql</code> magic command.</p>
+    <p>This extension adds support for connecting to PostgreSql databases using the <code>#!connect postgres</code> magic command. For more information, run a cell using the <code>#!sql</code> magic command.</p>
     </details>"),
             "text/html");
     }
@@ -126,11 +126,7 @@ public class PostgreSqlKernel :
         if (KernelInvocationContext.Current is { } context &&
             context.HandlingKernel.RootKernel is CompositeKernel root)
         {
-            PostgreSqlKernel.AddPostgreSqlKernelConnectorTo(root);
+            AddPostgreSqlKernelConnectorTo(root);
         }
     }
-}
-
-public class SqlRow : Dictionary<string, object>
-{
 }
