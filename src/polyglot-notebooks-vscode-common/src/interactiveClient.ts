@@ -64,6 +64,8 @@ import { KernelCommandAndEventChannel } from './DotnetInteractiveChannel';
 import * as connection from './polyglot-notebooks/connection';
 import { DisposableSubscription } from './polyglot-notebooks/disposables';
 import { Logger } from './polyglot-notebooks';
+import { NotebookCellMetadata } from './metadataUtilities';
+import { NotebookCellExecution } from 'vscode';
 
 export interface ErrorOutputCreator {
     (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
@@ -73,6 +75,11 @@ export interface InteractiveClientConfiguration {
     readonly channel: KernelCommandAndEventChannel,
     readonly createErrorOutput: ErrorOutputCreator,
     readonly kernelInfos: Array<KernelInfo>
+}
+
+export interface NotebookCellSubmission {
+    kernelName: string;
+    index?: number;
 }
 
 export class InteractiveClient {
@@ -139,7 +146,11 @@ export class InteractiveClient {
         clearDebounce(`sighelp-${requestId}`);
     }
 
-    execute(source: string, language: string, outputReporter: { (output: vscodeLike.NotebookCellOutput): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration?: { token?: string | undefined, id?: string | undefined }): Promise<boolean> {
+    execute(source: string,
+        cell: NotebookCellSubmission,
+        outputReporter: { (output: vscodeLike.NotebookCellOutput): void },
+        diagnosticObserver: (diags: Array<Diagnostic>) => void,
+        configuration?: { token?: string | undefined, id?: string | undefined }): Promise<boolean> {
         if (configuration !== undefined && configuration.id !== undefined) {
             this.clearExistingLanguageServiceRequests(configuration.id);
         }
@@ -155,14 +166,17 @@ export class InteractiveClient {
                 SubmitCodeType,
                 <SubmitCode>{
                     code: source,
-                    targetKernelName: language
+                    targetKernelName: cell.kernelName,
+                    parameters: {
+                        cellIndex: cell.index?.toString()
+                    }
                 }
             );
 
             const commandToken = command.getOrCreateToken();
 
             try {
-                return this.submitCode(command, language, eventEnvelope => {
+                return this.submitCode(command, eventEnvelope => {
                     if (this.deferredOutput.length > 0) {
                         for (const output of this.deferredOutput) {
                             outputReporter(output);
@@ -324,7 +338,9 @@ export class InteractiveClient {
         return diagsProduced.diagnostics;
     }
 
-    private async submitCode(command: KernelCommandEnvelope, language: string, observer: KernelEventEnvelopeObserver): Promise<DisposableSubscription> {
+    private async submitCode(
+        command: KernelCommandEnvelope,
+        observer: KernelEventEnvelopeObserver): Promise<DisposableSubscription> {
         if (command.commandType !== SubmitCodeType) {
             throw new Error(`Commandm ust be SubmitCpde.`);
         }
@@ -575,6 +591,4 @@ export class InteractiveClient {
     private getNextOutputId(): string {
         return (this.nextOutputId++).toString();
     }
-
-
 }

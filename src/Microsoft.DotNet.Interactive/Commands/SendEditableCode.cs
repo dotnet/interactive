@@ -10,9 +10,20 @@ public class SendEditableCode : KernelCommand
     {
         KernelName = kernelName;
         Code = code;
+
+        if (KernelInvocationContext.Current is { Command: SubmitCode submitCode })
+        {
+            if (submitCode.Parameters.TryGetValue("cellIndex", out var cellIndexString) &&
+                int.TryParse(cellIndexString, out var cellIndex))
+            {
+                InsertAtPosition = cellIndex + 1;
+            }
+        }
     }
 
     public string KernelName { get; }
 
     public string Code { get; }
+
+    public int? InsertAtPosition { get; set; }
 }

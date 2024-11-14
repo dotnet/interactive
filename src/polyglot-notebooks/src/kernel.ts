@@ -25,7 +25,6 @@ export interface IKernelEventObserver {
     (kernelEvent: commandsAndEvents.KernelEventEnvelope): void;
 }
 
-
 export class Kernel {
     private _kernelInfo: commandsAndEvents.KernelInfo;
     private _commandHandlers = new Map<string, IKernelCommandHandler>();
@@ -33,7 +32,6 @@ export class Kernel {
     public rootKernel: Kernel = this;
     public parentKernel: CompositeKernel | null = null;
     private _scheduler?: KernelScheduler<commandsAndEvents.KernelCommandEnvelope> | null = null;
-
 
     public get kernelInfo(): commandsAndEvents.KernelInfo {
 
