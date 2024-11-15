@@ -38,7 +38,7 @@ public class HttpKernel :
     private readonly int _responseDelayThresholdInMilliseconds;
     private readonly long _contentByteLengthThreshold;
 
-    private readonly Dictionary<string, object> _variables = new(StringComparer.InvariantCultureIgnoreCase);
+    private readonly ConcurrentDictionary<string, object> _variables = new(StringComparer.InvariantCultureIgnoreCase);
 
     /// <summary>
     /// Gets or sets a timeout for HTTP requests that are issued using this <see cref="HttpKernel"/>.
