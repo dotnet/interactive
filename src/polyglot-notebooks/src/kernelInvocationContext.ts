@@ -9,9 +9,11 @@ import { PromiseCompletionSource } from "./promiseCompletionSource";
 
 
 export class KernelInvocationContext implements Disposable {
-    public get promise(): void | PromiseLike<void> {
-        return this.completionSource.promise;
+
+    constructor(kernelCommandInvocation: commandsAndEvents.KernelCommandEnvelope) {
+        this._commandEnvelope = kernelCommandInvocation;
     }
+
     private static _current: KernelInvocationContext | null = null;
     private readonly _commandEnvelope: commandsAndEvents.KernelCommandEnvelope;
     private readonly _childCommands: commandsAndEvents.KernelCommandEnvelope[] = [];
@@ -19,6 +21,7 @@ export class KernelInvocationContext implements Disposable {
 
     private _isComplete = false;
     private _handlingKernel: Kernel | null = null;
+    private _completionSource = new PromiseCompletionSource<void>();
 
     public get handlingKernel() {
         return this._handlingKernel;
@@ -32,7 +35,10 @@ export class KernelInvocationContext implements Disposable {
         this._handlingKernel = value;
     }
 
-    private completionSource = new PromiseCompletionSource<void>();
+    public get promise(): void | PromiseLike<void> {
+        return this._completionSource.promise;
+    }
+
     static getOrCreateAmbientContext(command: commandsAndEvents.KernelCommandEnvelope): KernelInvocationContext {
         let current = KernelInvocationContext._current;
         if (!current || current._isComplete) {
@@ -56,9 +62,6 @@ export class KernelInvocationContext implements Disposable {
     static get current(): KernelInvocationContext | null { return this._current; }
     get command(): commandsAndEvents.KernelCommand { return this._commandEnvelope.command; }
     get commandEnvelope(): commandsAndEvents.KernelCommandEnvelope { return this._commandEnvelope; }
-    constructor(kernelCommandInvocation: commandsAndEvents.KernelCommandEnvelope) {
-        this._commandEnvelope = kernelCommandInvocation;
-    }
 
     complete(command: commandsAndEvents.KernelCommandEnvelope) {
         if (commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(command, this._commandEnvelope)) {
@@ -71,13 +74,7 @@ export class KernelInvocationContext implements Disposable {
             );
 
             this.internalPublish(eventEnvelope);
-            this.completionSource.resolve();
-            // TODO: C# version has completion callbacks - do we need these?
-            // if (!_events.IsDisposed)
-            // {
-            //     _events.OnCompleted();
-            // }
-
+            this._completionSource.resolve();
         }
         else {
             let pos = this._childCommands.indexOf(command);
@@ -86,7 +83,6 @@ export class KernelInvocationContext implements Disposable {
     }
 
     fail(message?: string) {
-        // TODO:
         // The C# code accepts a message and/or an exception. Do we need to add support
         // for exceptions? (The TS CommandFailed interface doesn't have a place for it right now.)
         this._isComplete = true;
@@ -98,7 +94,7 @@ export class KernelInvocationContext implements Disposable {
         );
 
         this.internalPublish(eventEnvelope);
-        this.completionSource.resolve();
+        this._completionSource.resolve();
     }
 
     publish(kernelEvent: commandsAndEvents.KernelEventEnvelope) {

@@ -429,6 +429,7 @@ Microsoft.DotNet.Interactive.Commands
   public class SendEditableCode : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String kernelName, System.String code, System.String targetKernelName = null)
     public System.String Code { get;}
+    public System.Nullable<System.Int32> InsertAtPosition { get; set;}
     public System.String KernelName { get;}
   public class SendValue : KernelCommand, System.IEquatable<KernelCommand>
     .ctor(System.String name, System.Object value, Microsoft.DotNet.Interactive.FormattedValue formattedValue = null, System.String targetKernelName = null)

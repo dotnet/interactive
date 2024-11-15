@@ -144,6 +144,7 @@ export interface RequestValueInfos extends KernelCommand {
 
 export interface SendEditableCode extends KernelCommand {
     code: string;
+    insertAtPosition?: number;
     kernelName: string;
 }
 

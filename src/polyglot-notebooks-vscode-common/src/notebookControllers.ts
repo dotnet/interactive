@@ -206,21 +206,27 @@ export class DotNetNotebookKernel {
                     diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== commandsAndEvents.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
                 }
 
-                return client.execute(source, vscodeUtilities.getCellKernelName(cell), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(async (success) => {
-                    await outputUpdatePromise;
+                return client.execute(
+                    source,
+                    { kernelName: vscodeUtilities.getCellKernelName(cell), index: cell.index },
+                    outputObserver,
+                    diagnosticObserver,
+                    { id: cell.document.uri.toString() })
+                    .then(async (success) => {
+                        await outputUpdatePromise;
 
-                    const isIpynb = metadataUtilities.isIpynbNotebook(cell.notebook);
-                    const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(cell.notebook);
-                    const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
-                    const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
-                    const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, cell.notebook.metadata, isIpynb);
+                        const isIpynb = metadataUtilities.isIpynbNotebook(cell.notebook);
+                        const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(cell.notebook);
+                        const kernelNotebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
+                        const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebookMetadata);
+                        const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, cell.notebook.metadata, isIpynb);
 
-                    await vscodeNotebookManagement.replaceNotebookMetadata(cell.notebook.uri, rawNotebookDocumentMetadata);
-                    endExecution(client, cell, success);
-                }).catch(async () => {
-                    await outputUpdatePromise;
-                    endExecution(client, cell, false);
-                });
+                        await vscodeNotebookManagement.replaceNotebookMetadata(cell.notebook.uri, rawNotebookDocumentMetadata);
+                        endExecution(client, cell, success);
+                    }).catch(async () => {
+                        await outputUpdatePromise;
+                        endExecution(client, cell, false);
+                    });
             } catch (err) {
                 const errorOutput = new vscode.NotebookCellOutput(this.config.createErrorOutput(`Error executing cell: ${err}`).items.map(oi => generateVsCodeNotebookCellOutputItem(oi.data, oi.mime, oi.stream)));
                 await executionTask.appendOutput(errorOutput);

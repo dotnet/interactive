@@ -29,7 +29,7 @@ import * as vscodeLike from '../../src/vscode-common/interfaces/vscode-like';
 
 describe('Notebook tests', () => {
 
-    for (const language of ['csharp', 'fsharp'])
+    for (const language of ['csharp', 'fsharp']) {
         it(`executes and returns expected value: ${language}`, async () => {
             const code = '1+1';
             const config = createChannelConfig(async (_notebookPath) =>
@@ -68,7 +68,7 @@ describe('Notebook tests', () => {
             const clientMapper = new ClientMapper(config);
             const client = await clientMapper.getOrAddClient(createUri('test/path'));
             const outputs: Array<vscodeLike.NotebookCellOutput> = [];
-            await client.execute(code, language, output => outputs.push(output), _ => { });
+            await client.execute(code, { kernelName: language }, output => outputs.push(output), _ => { });
             const decodedResults = decodeNotebookCellOutputs(outputs);
             expect(decodedResults).to.deep.equal([
                 {
@@ -82,6 +82,7 @@ describe('Notebook tests', () => {
                 }
             ]);
         });
+    }
 
     it('multiple stdout values cause the output to grow', async () => {
         const code = `
@@ -161,7 +162,7 @@ Console.WriteLine(3);
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         const outputs: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', output => outputs.push(output), _ => { });
+        await client.execute(code, { kernelName: 'csharp' }, output => outputs.push(output), _ => { });
         const decodedResults = decodeNotebookCellOutputs(outputs);
         expect(decodedResults).to.deep.equal([
             {
@@ -243,7 +244,7 @@ Console.WriteLine(3);
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         const outputs: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', output => outputs.push(output), _ => { });
+        await client.execute(code, { kernelName: 'csharp' }, output => outputs.push(output), _ => { });
         const decodedResults = decodeNotebookCellOutputs(outputs);
         expect(decodedResults).to.deep.equal([
             {
@@ -310,7 +311,7 @@ Console.WriteLine(3);
         const clientMapper = new ClientMapper(config);
         clientMapper.getOrAddClient(createUri('test/path')).then(client => {
             let diagnostics: Array<Diagnostic> = [];
-            client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags).then(result => {
+            client.execute(code, { kernelName: 'csharp' }, _ => { }, diags => diagnostics = diags).then(result => {
                 done(`expected execution to fail, but it passed with: ${result}`);
             }).catch(_err => {
                 expect(diagnostics).to.deep.equal([
@@ -383,7 +384,7 @@ Console.WriteLine(3);
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let diagnostics: Array<Diagnostic> = [];
-        await client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags);
+        await client.execute(code, { kernelName: 'csharp' }, _ => { }, diags => diagnostics = diags);
         expect(diagnostics).to.deep.equal([
             {
                 linePositionSpan: {

@@ -68,7 +68,7 @@ describe('InteractiveClient tests', () => {
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
         const outputs: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', output => outputs.push(output), _ => { });
+        await client.execute(code, { kernelName: 'csharp' }, output => outputs.push(output), _ => { });
         const decodedResults = decodeNotebookCellOutputs(outputs);
         expect(decodedResults).to.deep.equal([
             {
@@ -124,7 +124,7 @@ describe('InteractiveClient tests', () => {
 
         // execute first command
         const outputs1: Array<vscodeLike.NotebookCellOutput> = [];
-        await client.execute(code, 'csharp', output => outputs1.push(output), _ => { });
+        await client.execute(code, { kernelName: 'csharp' }, output => outputs1.push(output), _ => { });
         let decodedResults1 = decodeNotebookCellOutputs(outputs1);
         expect(decodedResults1).to.deep.equal([
             {
@@ -157,7 +157,7 @@ describe('InteractiveClient tests', () => {
         }));
         const clientMapper = new ClientMapper(config);
         const client = await clientMapper.getOrAddClient(createUri('test/path'));
-        const result = await client.execute('1+1', 'csharp', _ => { }, _ => { });
+        const result = await client.execute('1+1', { kernelName: 'csharp' }, _ => { }, _ => { });
         expect(result).to.be.equal(false);
     });
 
@@ -172,7 +172,7 @@ describe('InteractiveClient tests', () => {
         }));
         const clientMapper = new ClientMapper(config);
         clientMapper.getOrAddClient(createUri('test/path')).then(client => {
-            client.execute('bad-code-that-will-fail', 'csharp', _ => { }, _ => { }).then(result => {
+            client.execute('bad-code-that-will-fail', { kernelName: 'csharp' }, _ => { }, _ => { }).then(result => {
                 done(`expected execution to fail promise, but passed with: ${result}`);
             }).catch(_err => {
                 done();
@@ -234,7 +234,7 @@ describe('InteractiveClient tests', () => {
         });
 
         const client = await clientMapper.getOrAddClient(createUri('test-path.dib'));
-        await client.execute("1+1", "csharp", (_outputs) => { }, (_diagnostics) => { }, { id: "id0" });
+        await client.execute("1+1", { kernelName: 'csharp' }, (_outputs) => { }, (_diagnostics) => { }, { id: "id0" });
         await wait(1000);
         expect(diagnosticsCallbackFired).to.be.false;
     });
@@ -250,7 +250,7 @@ describe('InteractiveClient tests', () => {
         const clientMapper = new ClientMapper(config);
         let client = await clientMapper.getOrAddClient(createUri('test-path.dib'));
 
-        await expect(client.execute("1+1", "csharp", _outputs => { }, _diagnostics => { }))
+        await expect(client.execute("1+1", { kernelName: 'csharp' }, _outputs => { }, _diagnostics => { }))
             .eventually
             .rejectedWith('expected exception during submit');
     });
@@ -265,7 +265,7 @@ describe('InteractiveClient tests', () => {
         const clientMapper = new ClientMapper(config);
         const seenOutputs: Array<vscodeLike.NotebookCellOutput> = [];
         clientMapper.getOrAddClient(createUri('test-path.dib')).then(client => {
-            expect(client.execute("1+1", "csharp", output => seenOutputs.push(output), _diagnostics => { })).eventually.rejected.then(() => {
+            expect(client.execute("1+1", { kernelName: 'csharp' }, output => seenOutputs.push(output), _diagnostics => { })).eventually.rejected.then(() => {
                 try {
                     const decodedOutputs = decodeNotebookCellOutputs(seenOutputs);
                     expect(decodedOutputs).to.deep.equal([{

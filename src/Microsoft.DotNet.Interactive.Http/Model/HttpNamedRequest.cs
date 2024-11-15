@@ -143,7 +143,9 @@ internal class HttpNamedRequest
 
                         if (Response.Content.ContentType == null || !(Response.Content.ContentType.StartsWith("application/json")))
                         {
-                            return node.CreateBindingFailure(HttpDiagnostics.InvalidContentType(Response.Content.ContentType ?? "null", "application/json"));
+                            return node.CreateBindingFailure(HttpDiagnostics.InvalidContentType(
+                                                                 Response.Content.ContentType ?? "null", 
+                                                                 "application/json"));
                         }
 
                         try
@@ -182,7 +184,9 @@ internal class HttpNamedRequest
 
                         if (Response.Content.ContentType != "application/xml")
                         {
-                            return node.CreateBindingFailure(HttpDiagnostics.InvalidContentType(Response.Content.ContentType ?? "null", "application/xml"));
+                            return node.CreateBindingFailure(HttpDiagnostics.InvalidContentType(
+                                                                 Response.Content.ContentType ?? "null",
+                                                                 "application/xml"));
                         }
 
                         try

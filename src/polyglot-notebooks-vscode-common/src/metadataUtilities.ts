@@ -63,8 +63,6 @@ export function getNotebookCellMetadataFromInteractiveDocumentElement(interactiv
     return cellMetadata;
 }
 
-
-
 export function getNotebookCellMetadataFromNotebookCellElement(notebookCell: vscodeLike.NotebookCell): NotebookCellMetadata {
     const cellMetadata = createDefaultNotebookCellMetadata();
 
@@ -280,6 +278,8 @@ export function getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocume
 
 export function createNewIpynbMetadataWithNotebookDocumentMetadata(existingMetadata: { [key: string]: any }, notebookDocumentMetadata: NotebookDocumentMetadata): { [key: string]: any } {
     const resultMetadata: { [key: string]: any } = { ...existingMetadata };
+
+    // FIX: "custom" actually means just the bucket of things we don't persist, and therefore should not cause the document dirty state to be set
 
     // kernelspec
     const kernelspec = getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata);
