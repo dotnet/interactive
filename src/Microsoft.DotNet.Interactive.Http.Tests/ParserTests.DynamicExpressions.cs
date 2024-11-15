@@ -52,7 +52,7 @@ public partial class HttpParserTests
             var code = $@"@var = {{{{{expression}}}}}""";
 
             var result = HttpRequestParser.Parse(code);
-            var currentTime = DateTimeOffset.UtcNow;
+            var currentTime = DateTimeOffset.UtcNow.UtcDateTime;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
@@ -66,7 +66,7 @@ public partial class HttpParserTests
             var code = $@"@var = {{{{{expression}}}}}""";
 
             var result = HttpRequestParser.Parse(code);
-            var currentTime = DateTimeOffset.UtcNow;
+            var currentTime = DateTimeOffset.UtcNow.UtcDateTime;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
@@ -139,7 +139,7 @@ public partial class HttpParserTests
             var code = $@"@var = {{{{{expression}}}}}""";
 
             var result = HttpRequestParser.Parse(code);
-            var currentTime = DateTimeOffset.Now;
+            var currentTime = DateTimeOffset.UtcNow.UtcDateTime;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
@@ -153,7 +153,7 @@ public partial class HttpParserTests
             var code = $@"@var = {{{{{expression}}}}}""";
 
             var result = HttpRequestParser.Parse(code);
-            var currentTime = DateTimeOffset.Now;
+            var currentTime = DateTimeOffset.UtcNow.UtcDateTime;
             var node = result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpExpressionNode>().Single();
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
