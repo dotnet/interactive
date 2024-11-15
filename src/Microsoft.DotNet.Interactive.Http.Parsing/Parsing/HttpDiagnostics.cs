@@ -4,8 +4,6 @@
 #nullable enable
 
 using Microsoft.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Xml;
 using HttpDiagnosticInfo = Microsoft.DotNet.Interactive.Parsing.DiagnosticInfo;
 
 namespace Microsoft.DotNet.Interactive.Http.Parsing;
@@ -227,17 +225,19 @@ internal static class HttpDiagnostics
         var id = $"HTTP0026";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            """The supplied XML name '{0}' does not exist in the named request.""";
+            """The supplied XML path '{0}' does not exist in the named request.""";
         return new HttpDiagnosticInfo(id, messageFormat, severity, xmlNode);
     }
 
-    internal static HttpDiagnosticInfo InvalidContentType(string contentType, string content)
+    internal static HttpDiagnosticInfo InvalidContentType(string actualContentType, string expectedContentType)
     {
-        var id = $"HTTP0027";
+        var id = "HTTP0027";
         var severity = DiagnosticSeverity.Error;
         var messageFormat =
-            """The supplied named request has content type of '{0}' which differs from the required content type of '{1}'.""";
-        return new HttpDiagnosticInfo(id, messageFormat, severity, contentType, content);
+            """
+            The supplied named request has content type of '{0}' which differs from the required content type of '{1}'.
+            """;
+        return new HttpDiagnosticInfo(id, messageFormat, severity, actualContentType, expectedContentType);
     }
 
     internal static HttpDiagnosticInfo InvalidContentInNamedRequest(string path)

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
@@ -10,6 +11,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
@@ -512,20 +514,20 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                 var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-                diagnostics.Diagnostics.First().Message.Should().Be($$$"""The named request does not contain any content at this path '{{{path}}}'.""");
+                diagnostics.Diagnostics.First().Message.Should().Be($"The named request does not contain any content at this path '{path}'.");
             }
 
             [Fact]
             public async Task json_with_xml_content_type_produces_errors()
             {
-                using var kernel = new HttpKernel();
+                using var kernel = GetHttpKernelWithMockedResponses(
+                    ("<test>testing!</test>", "application/xml"));
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/xml
 
                     # @name login
                     GET {{baseUrl}}
-                    
 
                     ###
                     """;
@@ -550,13 +552,13 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                 var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-                diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request has content type of 'application/xml' which differs from the required content type of 'application/json'.""");
+                diagnostics.Diagnostics.First().Message.Should().Be("""The supplied named request has content type of 'application/xml' which differs from the required content type of 'application/json'.""");
             }
 
             [Fact]
             public async Task xml_with_json_content_type_produces_errors()
             {
-                using var kernel = new HttpKernel("http");
+                using var kernel = GetHttpKernelWithMockedResponses(("{}", "application/json"));
 
                 var firstCode = """
                     @baseUrl = https://httpbin.org/anything
@@ -594,7 +596,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                 var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-                diagnostics.Diagnostics.First().Message.Should().Be("""The supplied named request has content type of 'application/json' which differs from the required content type of 'application/xml'.""");
+                diagnostics.Diagnostics.First().Message.Should().Be("The supplied named request has content type of 'application/json' which differs from the required content type of 'application/xml'.");
             }
 
             [Theory]
@@ -635,14 +637,16 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                 var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-                diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied named request 'login' does not have a request body.""");
+                diagnostics.Diagnostics.First().Message.Should().Be("""The supplied named request 'login' does not have a request body.""");
             }
 
             [Fact]
             public async Task responses_can_be_accessed_as_xml_in_later_requests()
             {
-
-                using var kernel = new HttpKernel();
+                using var kernel = GetHttpKernelWithMockedResponses(("""
+                                                                     <?xml version='1.0' encoding='us-ascii'?> <!-- A SAMPLE set of slides --> <slideshow title="Sample Slide Show" date="Date of publication" author="Yours Truly" > <!-- TITLE SLIDE --> <slide type="all"> <title>Wake up to WonderWidgets!</title> </slide> <!-- OVERVIEW --> <slide type="all"> <title>Overview</title> <item>Why <em>WonderWidgets</em> are great</item> <item/> <item>Who <em>buys</em> WonderWidgets</item> </slide> </slideshow>
+                                                                     """, "application/xml"),
+                    ("", "application/xml"));
 
                 using var _ = new AssertionScope();
 
@@ -710,7 +714,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task improper_xml_path_produces_errors()
             {
-                using var kernel = new HttpKernel();
+                using var kernel = GetHttpKernelWithMockedResponses(("<test>testing!</test>", "application/xml"));
 
                 using var _ = new AssertionScope();
 
@@ -737,7 +741,11 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondCode));
 
-                secondResult.Events.Should().NotContainErrors();
+                var diagnostics = secondResult.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
+
+                diagnostics.Diagnostics.First().Message.Should().Be("""
+                                                                    The supplied XML path '//slideshow/slide[2]/title' does not exist in the named request.
+                                                                    """);
             }
 
             [Fact]
@@ -999,9 +1007,27 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
                 var diagnostics = result.Events.Should().ContainSingle<DiagnosticsProduced>().Which;
 
-                diagnostics.Diagnostics.First().Message.Should().Be($$$"""Unable to evaluate expression 'example.response.headers.Server'.""");
+                diagnostics.Diagnostics.First().Message.Should().Be("Unable to evaluate expression 'example.response.headers.Server'.");
             }
 
+            private static HttpKernel GetHttpKernelWithMockedResponses(
+                params (string content, string contentType)[] responses)
+            {
+                HttpKernel kernel = null;
+                var funcs = new Queue<(string content, string contentType)>(responses);
+                var handler = new InterceptingHttpMessageHandler((_, _) =>
+                {
+                    var t = funcs.Dequeue();
+                    var response = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(t.content, new MediaTypeHeaderValue(t.contentType))
+                    };
+                    return Task.FromResult(response);
+                });
+                var client = new HttpClient(handler);
+                kernel = new HttpKernel(client: client);
+                return kernel;
+            }
         }
     }
 }
