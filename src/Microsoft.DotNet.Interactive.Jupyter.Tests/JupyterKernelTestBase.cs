@@ -22,8 +22,8 @@ public abstract class JupyterKernelTestBase : IDisposable
 {
     protected CompositeDisposable _disposables = new();
 
-    // to re-record the tests for simulated playback with JuptyerTestData, set this to true
-    protected const bool RECORD_FOR_PLAYBACK = false;
+    // to re-record the tests for simulated playback with JupyterTestDataAttribute, set this to true
+    protected const bool RECORD_FOR_PLAYBACK = true;
     protected const string PythonKernelName = "python3";
     protected const string RKernelName = "ir";
 
@@ -80,7 +80,7 @@ public abstract class JupyterKernelTestBase : IDisposable
         return replies;
     }
 
-    protected async Task<Kernel> CreateJupyterKernelAsync(TestJupyterConnectionOptions options, string kernelSpecName = null, string connectionString = null)
+    protected async Task<Kernel> CreateJupyterKernelAsync(SimulatedJupyterConnectionOptions options, string kernelSpecName = null, string connectionString = null)
     {
         var kernel = CreateCompositeKernelAsync(options);
 

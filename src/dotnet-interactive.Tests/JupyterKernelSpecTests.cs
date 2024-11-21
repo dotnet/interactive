@@ -12,21 +12,15 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Tests.Utility.DirectoryUtility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
 public class JupyterKernelSpecTests
 {
-    private readonly List<DirectoryInfo> _kernelInstallations = new List<DirectoryInfo>();
-    private readonly ITestOutputHelper _output;
-    protected TestConsole Console { get; } = new TestConsole();
+    private readonly List<DirectoryInfo> _kernelInstallations = new();
 
-    public JupyterKernelSpecTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
+    private TestConsole Console { get; } = new();
 
 
     [Fact]
@@ -47,7 +41,6 @@ public class JupyterKernelSpecTests
         _kernelInstallations.Add(new DirectoryInfo(kernelDir.Name));
         output.Should().MatchEquivalentOf("*Installing using jupyter kernelspec module.*");
         output.Should().MatchEquivalentOf("*Installed * kernel.");
-
     }
 
     [Fact]

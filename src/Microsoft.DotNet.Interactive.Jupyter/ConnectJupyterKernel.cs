@@ -12,7 +12,7 @@ public class ConnectJupyterKernel : ConnectKernelCommand
     {
     }
 
-    public string CondaEnv { get; set; }
+    public string CondaEnv { get; set; } = CondaEnvironment.BASE_ENV;
 
     [JsonPropertyName("kernelSpec")]
     public string KernelSpecName { get; set; }

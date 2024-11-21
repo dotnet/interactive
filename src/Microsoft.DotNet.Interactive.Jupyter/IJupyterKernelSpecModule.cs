@@ -10,8 +10,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public interface IJupyterKernelSpecModule
 {
-    Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory);
+    Task<CommandLineResult> InstallKernelAsync(DirectoryInfo sourceDirectory);
     DirectoryInfo GetDefaultKernelSpecDirectory();
-    Task<IReadOnlyDictionary<string, KernelSpec>> ListKernels();
+    Task<IReadOnlyDictionary<string, KernelSpec>> ListKernelsAsync();
     IJupyterEnvironment GetEnvironment();
 }

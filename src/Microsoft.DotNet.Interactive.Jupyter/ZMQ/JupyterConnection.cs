@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 internal class JupyterConnection : IJupyterConnection
 {
     private readonly IJupyterKernelSpecModule _kernelSpecModule;
-    private readonly Task<IReadOnlyDictionary<string, KernelSpec>> _getKernelSpecs;
+    private IReadOnlyDictionary<string, KernelSpec> _kernelSpecs;
 
     public JupyterConnection(IJupyterKernelSpecModule kernelSpecModule)
     {
@@ -28,19 +28,19 @@ internal class JupyterConnection : IJupyterConnection
         }
 
         _kernelSpecModule = kernelSpecModule;
-        _getKernelSpecs = Task.Run(() => kernelSpecModule.ListKernels());
     }
 
     public async Task<IEnumerable<KernelSpec>> GetKernelSpecsAsync()
     {
-        var specs = await _getKernelSpecs;
+        var specs = _kernelSpecs ??= await _kernelSpecModule.ListKernelsAsync();
         return specs?.Values;
     }
 
     public async Task<IJupyterKernelConnection> CreateKernelConnectionAsync(string kernelSpecName)
     {
         // find the related kernel spec for the kernel type 
-        var spec = await GetKernelSpecAsync(kernelSpecName);
+        var installedSpecs = await GetKernelSpecsAsync();
+        var spec = installedSpecs.FirstOrDefault(s => s.Name == kernelSpecName);
 
         if (spec is null)
         {
@@ -57,7 +57,7 @@ internal class JupyterConnection : IJupyterConnection
         {
             var reservedPorts = tcpPortReservation.Ports;
 
-            connectionInfo = new ConnectionInformation()
+            connectionInfo = new ConnectionInformation
             {
                 ShellPort = reservedPorts[0],
                 IOPubPort = reservedPorts[1],
@@ -90,14 +90,14 @@ internal class JupyterConnection : IJupyterConnection
         }
 
         var kernelProcess = CreateKernelProcess(spec, connectionFilePath);
-        if (kernelProcess == null)
+        if (kernelProcess is null)
         {
-            throw new KernelStartException(kernelSpecName, "count not create process.");
+            throw new KernelStartException(kernelSpecName, "Failed to create kernel process.");
         }
 
         await Task.Yield();
 
-        if (connectionInfo == null || kernelProcess.HasExited)
+        if (connectionInfo is null || kernelProcess.HasExited)
         {
             throw new KernelStartException(kernelSpecName, $"Process Exited with exit code {kernelProcess.ExitCode}. Ensure you are running in the correct environment.");
         }
@@ -110,7 +110,7 @@ internal class JupyterConnection : IJupyterConnection
     {
         List<string> kernelArgs = new(spec?.CommandArguments);
 
-        if (kernelArgs.Count == 0)
+        if (kernelArgs.Count is 0)
         {
             return null;
         }
@@ -131,16 +131,5 @@ internal class JupyterConnection : IJupyterConnection
                                                      o => kernelLog.Info(o),
                                                      err => kernelLog.Error(err));
         return kernelProcess;
-    }
-
-    private async Task<KernelSpec> GetKernelSpecAsync(string kernelSpecName)
-    {
-        var installedSpecs = await _getKernelSpecs;
-        if (installedSpecs.ContainsKey(kernelSpecName))
-        {
-            return installedSpecs[kernelSpecName];
-        }
-
-        return null;
     }
 }

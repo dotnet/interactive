@@ -91,7 +91,7 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
 
     private async Task SendToSocketAsync(byte[] payload)
     {
-        if (_socket.State != WebSocketState.Open)
+        if (_socket.State is not WebSocketState.Open)
         {
             string message = _socket.State switch
             {
@@ -114,6 +114,7 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
 
     private Task StartListeningAsync(ClientWebSocket socket, CancellationToken cancellationToken)
     {
+        // FIX: (StartListeningAsync) make sure this is correctly handled
         Task.Run(async () =>
         {
             while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)

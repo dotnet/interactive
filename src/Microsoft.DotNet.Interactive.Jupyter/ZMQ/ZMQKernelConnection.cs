@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 
 internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, IMessageReceiver
 {
-    private readonly DealerSocket _shell;
+    private readonly DealerSocket _shellSocket;
     private readonly SubscriberSocket _ioSubSocket;
     private readonly string _shellAddress;
     private readonly string _ioSubAddress;
@@ -29,13 +29,16 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
     private readonly StdInChannel _stdInChannel;
     private readonly string _stdInAddress;
     private readonly string _controlAddress;
-    private readonly DealerSocket _stdIn;
-    private readonly DealerSocket _control;
+    private readonly DealerSocket _stdInSocket;
+    private readonly DealerSocket _controlSocket;
     private readonly Subject<JupyterMessage> _subject;
     private readonly CancellationTokenSource _cancellationTokenSource;
-    private Process _kernelProcess;
+    private readonly Process _kernelProcess;
 
-    public ZMQKernelConnection(ConnectionInformation connectionInformation, Process kernelProcess, string kernelSpecName)
+    public ZMQKernelConnection(
+        ConnectionInformation connectionInformation, 
+        Process kernelProcess, 
+        string kernelSpecName)
     {
         if (connectionInformation is null)
         {
@@ -50,26 +53,30 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
 
         var signatureAlgorithm = connectionInformation.SignatureScheme.Replace("-", string.Empty).ToUpperInvariant();
         var signatureValidator = new SignatureValidator(connectionInformation.Key, signatureAlgorithm);
-        _shell = new DealerSocket();
+        _shellSocket = new DealerSocket();
         _ioSubSocket = new SubscriberSocket();
-        _stdIn = new DealerSocket();
-        _control = new DealerSocket();
+        _stdInSocket = new DealerSocket();
+        _controlSocket = new DealerSocket();
 
-        _shellChannel = new RequestReplyChannel(new MessageSender(_shell, signatureValidator));
-        _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
-        _controlChannel = new RequestReplyChannel(new MessageSender(_control, signatureValidator));
+        _shellChannel = new RequestReplyChannel(new MessageSender(_shellSocket, signatureValidator));
+        _stdInChannel = new StdInChannel(new MessageSender(_stdInSocket, signatureValidator), new MessageReceiver(_stdInSocket));
+        _controlChannel = new RequestReplyChannel(new MessageSender(_controlSocket, signatureValidator));
 
         _cancellationTokenSource = new CancellationTokenSource();
         _subject = new Subject<JupyterMessage>();
 
         _disposables = new CompositeDisposable
                        {
-                           _shell,
+                           _shellSocket,
                            _ioSubSocket,
-                           _stdIn,
-                           _control,
+                           _stdInSocket,
+                           _controlSocket,
                            _cancellationTokenSource,
-                           _kernelProcess
+                           Disposable.Create(() =>
+                           {
+                               _kernelProcess.Kill(true);
+                               _kernelProcess.Dispose();
+                           })
                        };
 
         Uri = new($"kernel://pid-{kernelProcess.Id}/{kernelSpecName}");
@@ -115,16 +122,16 @@ internal class ZMQKernelConnection : IJupyterKernelConnection, IMessageSender, I
 
     public Task StartAsync()
     {
-        _shell.Connect(_shellAddress);
+        _shellSocket.Connect(_shellAddress);
         _ioSubSocket.Connect(_ioSubAddress);
         _ioSubSocket.SubscribeToAnyTopic();
-        _stdIn.Connect(_stdInAddress);
-        _control.Connect(_controlAddress);
+        _stdInSocket.Connect(_stdInAddress);
+        _controlSocket.Connect(_controlAddress);
 
         StartListening(_ioSubSocket, _cancellationTokenSource.Token);
-        StartListening(_stdIn, _cancellationTokenSource.Token);
-        StartListening(_control, _cancellationTokenSource.Token);
-        StartListening(_shell, _cancellationTokenSource.Token);
+        StartListening(_stdInSocket, _cancellationTokenSource.Token);
+        StartListening(_controlSocket, _cancellationTokenSource.Token);
+        StartListening(_shellSocket, _cancellationTokenSource.Token);
         return Task.CompletedTask;
     }
 
