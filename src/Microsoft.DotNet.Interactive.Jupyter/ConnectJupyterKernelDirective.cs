@@ -5,7 +5,6 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
@@ -16,11 +15,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyterKernel>
 {
     private readonly List<IJupyterKernelConnectionOptions> _connectionCreators = new();
-    private KeyValuePair<int, IEnumerable<CompletionItem>> _mruKernelSpecSuggestions;
 
     public ConnectJupyterKernelDirective() : base("jupyter", "Connects a Jupyter kernel as a .NET Interactive subkernel.")
     {
-        KernelSpecNameParameter.AddCompletions(GetKernelSpecsCompletionsAsync);
+        KernelSpecNameParameter.AddCompletions(GetKernelSpecNameCompletionsAsync);
         Parameters.Add(KernelSpecNameParameter);
         Parameters.Add(InitScriptParameter);
     }
@@ -90,60 +88,23 @@ public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyt
         return null;
     }
 
-    private async Task GetKernelSpecsCompletionsAsync(KernelDirectiveCompletionContext context)
+    private async Task GetKernelSpecNameCompletionsAsync(KernelDirectiveCompletionContext context)
     {
-        var hash = GetParseResultHash(context);
-        if (_mruKernelSpecSuggestions.Key == hash)
-        {
-            foreach (var item in _mruKernelSpecSuggestions.Value)
-            {
-                context.CompletionItems.Add(item);
-            }
-
-            return;
-        }
-
         var connection = GetJupyterConnection(new ConnectJupyterKernel(""));
-        using (connection as IDisposable)
-        {
-            var completions = (await GetKernelSpecsCompletionsAsync(connection)).ToArray();
-
-            _mruKernelSpecSuggestions = new(hash, completions);
-
-            foreach (var item in completions)
-            {
-                context.CompletionItems.Add(item);
-            }
-        }
-    }
-
-    private async Task<IEnumerable<CompletionItem>> GetKernelSpecsCompletionsAsync(IJupyterConnection connection)
-    {
+        using var disposable = connection as IDisposable;
         var completions = new List<CompletionItem>();
         var specs = await connection.GetKernelSpecsAsync();
         if (specs is not null)
         {
-            foreach (var s in specs)
+            foreach (var spec in specs)
             {
-                completions.Add(new CompletionItem(s.Name, WellKnownTags.Parameter));
+                completions.Add(new CompletionItem(spec.Name, WellKnownTags.Parameter));
             }
         }
 
-        return completions;
-    }
-
-    private int GetParseResultHash(KernelDirectiveCompletionContext context)
-    {
-        string values = string.Empty;
-
-        foreach (var option in Parameters)
+        foreach (var item in completions)
         {
-            if (option != KernelSpecNameParameter)
-            {
-                // FIX: (GetParseResultHash)        values += parseResult.GetValueForOption(option);
-            }
+            context.CompletionItems.Add(item);
         }
-
-        return (values).GetHashCode();
     }
 }

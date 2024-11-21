@@ -1,18 +1,18 @@
 [
   {
     "header": {
-      "msg_id": "f12c9f60-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94e37d9e-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
-      "date": "2023-03-21T23:56:05.296088Z",
+      "session": "bbe1656a-537a-4f7b-b386-0df9bd6337aa",
+      "date": "2024-11-20T19:13:53.300916Z",
       "msg_type": "status",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "dd40f229-f8f3-4476-aa59-0221e8ea704a",
+      "msg_id": "0f3713d7-74fc-4e80-849c-58f22dbad9c9",
       "username": "dotnet_kernel",
-      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
-      "date": "2023-03-21T23:56:05.2228700Z",
+      "session": "bbe1656a-537a-4f7b-b386-0df9bd6337aa",
+      "date": "2024-11-20T19:13:53.2382283Z",
       "msg_type": "kernel_info_request",
       "version": "5.3"
     },
@@ -25,18 +25,18 @@
   },
   {
     "header": {
-      "msg_id": "f12cc670-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94e6b20c-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
-      "date": "2023-03-21T23:56:05.298088Z",
+      "session": "bbe1656a-537a-4f7b-b386-0df9bd6337aa",
+      "date": "2024-11-20T19:13:53.302917Z",
       "msg_type": "kernel_info_reply",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "dd40f229-f8f3-4476-aa59-0221e8ea704a",
+      "msg_id": "0f3713d7-74fc-4e80-849c-58f22dbad9c9",
       "username": "dotnet_kernel",
-      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
-      "date": "2023-03-21T23:56:05.2228700Z",
+      "session": "bbe1656a-537a-4f7b-b386-0df9bd6337aa",
+      "date": "2024-11-20T19:13:53.2382283Z",
       "msg_type": "kernel_info_request",
       "version": "5.3"
     },
@@ -62,18 +62,18 @@
   },
   {
     "header": {
-      "msg_id": "f12d1490-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94e70018-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
-      "date": "2023-03-21T23:56:05.299090Z",
+      "session": "bbe1656a-537a-4f7b-b386-0df9bd6337aa",
+      "date": "2024-11-20T19:13:53.302917Z",
       "msg_type": "status",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "dd40f229-f8f3-4476-aa59-0221e8ea704a",
+      "msg_id": "0f3713d7-74fc-4e80-849c-58f22dbad9c9",
       "username": "dotnet_kernel",
-      "session": "bfc56089-89a3-47d6-bdfe-48d66b7be2a3",
-      "date": "2023-03-21T23:56:05.2228700Z",
+      "session": "bbe1656a-537a-4f7b-b386-0df9bd6337aa",
+      "date": "2024-11-20T19:13:53.2382283Z",
       "msg_type": "kernel_info_request",
       "version": "5.3"
     },
@@ -86,18 +86,18 @@
   },
   {
     "header": {
-      "msg_id": "f12dd7e0-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94e7c368-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
-      "date": "2023-03-21T23:56:05.304088Z",
+      "session": "b953d5fb-a1b7-4a19-9413-d5b1f8e23294",
+      "date": "2024-11-20T19:13:53.307915Z",
       "msg_type": "status",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "2e9c96cf-8747-49e7-87bb-bcefb693c77b",
+      "msg_id": "fb757a53-d0a5-4abd-8b1b-6cff54ed9df9",
       "username": "dotnet_kernel",
-      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
-      "date": "2023-03-21T23:56:05.2998779Z",
+      "session": "b953d5fb-a1b7-4a19-9413-d5b1f8e23294",
+      "date": "2024-11-20T19:13:53.3047196Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -110,24 +110,24 @@
   },
   {
     "header": {
-      "msg_id": "f12e2646-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94e8119c-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
-      "date": "2023-03-21T23:56:05.307102Z",
+      "session": "b953d5fb-a1b7-4a19-9413-d5b1f8e23294",
+      "date": "2024-11-20T19:13:53.310918Z",
       "msg_type": "execute_input",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "2e9c96cf-8747-49e7-87bb-bcefb693c77b",
+      "msg_id": "fb757a53-d0a5-4abd-8b1b-6cff54ed9df9",
       "username": "dotnet_kernel",
-      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
-      "date": "2023-03-21T23:56:05.2998779Z",
+      "session": "b953d5fb-a1b7-4a19-9413-d5b1f8e23294",
+      "date": "2024-11-20T19:13:53.3047196Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
     "metadata": {},
     "content": {
-      "code": "# Copyright (c) .NET Foundation and contributors. All rights reserved.\n# Licensed under the MIT license. See LICENSE file in the project root for full license information.\n\nlibrary(IRkernel);\nlibrary(jsonlite);\n\n.dotnet_coe_comm_hander_env <- new.env();\n\n.dotnet_coe_comm_hander_env$emptyEvent <- fromJSON(\"{}\")\n\n# events\n.dotnet_coe_comm_hander_env$KernelReady <- 'KernelReady';\n.dotnet_coe_comm_hander_env$CommandSucceeded <- 'CommandSucceeded';\n.dotnet_coe_comm_hander_env$CommandFailed <- 'CommandFailed';\n.dotnet_coe_comm_hander_env$ValueProduced <- 'ValueProduced';\n.dotnet_coe_comm_hander_env$ValueInfosProduced <- 'ValueInfosProduced';\n\n#commands\n.dotnet_coe_comm_hander_env$SendValue <- 'SendValue';\n.dotnet_coe_comm_hander_env$RequestValue <- 'RequestValue';\n.dotnet_coe_comm_hander_env$RequestValueInfos <- 'RequestValueInfos';\n\n.dotnet_coe_comm_hander_env$json <- function(value) {\n    return (toJSON(value, auto_unbox = TRUE, null=\"null\", force = TRUE))\n}\n    \n.dotnet_coe_comm_hander_env$payload <- function(envelope, type) {\n    payload <- list(commandOrEvent = .dotnet_coe_comm_hander_env$json(envelope), type = type);\n    return (payload);\n}\n\n.dotnet_coe_comm_hander_env$eventEnvelope <- function(event, eventType, command = NA) {\n    if (!is.na(command) && !is.null(command)) {\n        # we don't care about routing slip here and there are some json serialization issues with R un-boxing\n        # for now, let's remove it or make it empty\n        command$routingSlip <- list()\n    }\n    envelope <- list(event=event, eventType=eventType, command=command);\n    return (.dotnet_coe_comm_hander_env$payload(envelope, 'event'));\n}\n\n.dotnet_coe_comm_hander_env$is_ready <- function() {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                list(kernelInfos=list()), \n                .dotnet_coe_comm_hander_env$KernelReady)\n    );\n}\n\n.dotnet_coe_comm_hander_env$fail <- function(message = NA, command = NA) {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                list(message=message), \n                .dotnet_coe_comm_hander_env$CommandFailed, \n                command)\n    );\n}\n\n.dotnet_coe_comm_hander_env$pass <- function(command = NA) {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                .dotnet_coe_comm_hander_env$emptyEvent, \n                .dotnet_coe_comm_hander_env$CommandSucceeded, \n                command)\n    );\n}\n\n.dotnet_coe_comm_hander_env$get_formatted_value <- function(value, mimeType = 'application/json') {\n    formattedValue = NULL\n    if (is.data.frame(value)) {\n        mimeType <- 'application/table-schema+json'\n        formattedValue <- .dotnet_coe_comm_hander_env$json(head(value))\n    } else if (mimeType == 'application/json') {\n        formattedValue <- .dotnet_coe_comm_hander_env$json(value)\n    }\n    return (list(\n        mimeType=mimeType,\n        value=formattedValue\n       ))\n}\n\n.dotnet_coe_comm_hander_env$handle_request_value_infos <- function(commandOrEvent) {\n    variables <- ls(all=TRUE, globalenv()) # we only retrieve the global variables \n    results <- list();\n    \n    for (var in variables) {\n        if (!startsWith(var, '.')) {\n            value <- get(var);\n            type <- if (is.data.frame(value)) 'data.frame' else toString(typeof(value));\n            if (type != 'closure') {\n                formattedValue <- .dotnet_coe_comm_hander_env$get_formatted_value(value);\n                results <- append(results, list(list(name=var, formattedValue=formattedValue, typeName=type)));\n            }\n        };\n    };\n                \n    \n    valueInfosProduced = list(valueInfos=results)\n    \n    response <- .dotnet_coe_comm_hander_env$eventEnvelope(\n                valueInfosProduced, \n                .dotnet_coe_comm_hander_env$ValueInfosProduced, \n                commandOrEvent)\n}\n\n.dotnet_coe_comm_hander_env$handle_request_value <- function(commandOrEvent) {\n    requestValue <- commandOrEvent$command\n    mimeType <- requestValue$mimeType\n    name <- requestValue$name\n    \n    if (is.na(name) || name == '' || !exists(name)) {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                    sprintf('Variable \"%s\" not found.', name))\n        )\n    }\n    \n    rawValue <- get(name);\n    mimeType <- if (is.data.frame(rawValue)) 'application/table-schema+json' else mimeType;\n    formattedValue <- .dotnet_coe_comm_hander_env$get_formatted_value(rawValue, mimeType);\n\n    valueProduced = list(\n                        name=name, \n                        value=rawValue, \n                        formattedValue=formattedValue\n                    )\n    response <- .dotnet_coe_comm_hander_env$eventEnvelope(\n                valueProduced, \n                .dotnet_coe_comm_hander_env$ValueProduced, \n                commandOrEvent)\n    \n    return (response)\n}\n\n.dotnet_coe_comm_hander_env$handle_send_value <- function(commandOrEvent) {\n    sendValue <- commandOrEvent$command\n    mimeType <- sendValue$formattedValue$mimeType\n    name <- sendValue$name\n    rawValue <- sendValue$formattedValue$value\n    resultValue = NA\n    \n    if (make.names(name) != name) {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                    sprintf('Invalid Identifier: \"%s\"', name))\n        )\n    }\n    \n    if (mimeType == 'application/table-schema+json') {\n        resultValue <- fromJSON(rawValue)\n        resultValue <- data.frame(resultValue$data)\n    } else if (mimeType == 'application/json') {\n        resultValue <- fromJSON(rawValue)\n    } else {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                        sprintf('Failed to set value for \"%s\". \"%s\" mimetype not supported.', name, mimeType))\n        )\n    }\n    \n    \n    assign(name, resultValue, globalenv());\n    return (.dotnet_coe_comm_hander_env$pass())\n}\n\n.dotnet_coe_comm_hander_env$handle_command <- function(commandOrEvent) {\n    commandType <- commandOrEvent$commandType\n\n    result <- .dotnet_coe_comm_hander_env$fail(\n                sprintf('command \"%s\" not supported', commandType)\n            )\n\n    if (commandType == .dotnet_coe_comm_hander_env$SendValue) {\n        result <- .dotnet_coe_comm_hander_env$handle_send_value(commandOrEvent)\n    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValue) {\n        result <- .dotnet_coe_comm_hander_env$handle_request_value(commandOrEvent)\n    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValueInfos) {\n        result <- .dotnet_coe_comm_hander_env$handle_request_value_infos(commandOrEvent)\n    }\n\n    return (result)\n}\n\n.dotnet_coe_comm_hander_env$handle_command_or_event <- function(msg) {\n    response <- tryCatch({\n            msg_type <- msg$type\n            commandOrEvent <- fromJSON(msg$commandOrEvent)\n        \n            if (msg_type == 'command') {\n                return (.dotnet_coe_comm_hander_env$handle_command(commandOrEvent))\n            } \n        },\n        error=function(cond) {\n            return (\n                .dotnet_coe_comm_hander_env$fail(\n                    sprintf('failed to process comm data. %s', cond$message))\n                )\n        })    \n    \n    return(response)\n}\n\n.dotnet_coe_comm_hander_env$coe_handler_connect_to_comm <- function(comm, data) {\n    comm$on_msg(function(msg) {\n        # assign('.debug.onmsg', msg, globalenv());\n        response <- .dotnet_coe_comm_hander_env$handle_command_or_event(msg);\n        comm$send(response);  \n    })\n\n    ready <- .dotnet_coe_comm_hander_env$is_ready()\n    comm$send(ready);  \n    \n};\n\ncomm_manager()$register_target('dotnet_coe_handler_comm', .dotnet_coe_comm_hander_env$coe_handler_connect_to_comm);\n",
+      "code": "# Copyright (c) .NET Foundation and contributors. All rights reserved.\n# Licensed under the MIT license. See LICENSE file in the project root for full license information.\n\nlibrary(IRkernel);\nlibrary(jsonlite);\n\n.dotnet_coe_comm_hander_env <- new.env();\n\n.dotnet_coe_comm_hander_env$emptyEvent <- fromJSON(\"{}\")\n\n# events\n.dotnet_coe_comm_hander_env$KernelReady <- 'KernelReady';\n.dotnet_coe_comm_hander_env$CommandSucceeded <- 'CommandSucceeded';\n.dotnet_coe_comm_hander_env$CommandFailed <- 'CommandFailed';\n.dotnet_coe_comm_hander_env$ValueProduced <- 'ValueProduced';\n.dotnet_coe_comm_hander_env$ValueInfosProduced <- 'ValueInfosProduced';\n\n#commands\n.dotnet_coe_comm_hander_env$SendValue <- 'SendValue';\n.dotnet_coe_comm_hander_env$RequestValue <- 'RequestValue';\n.dotnet_coe_comm_hander_env$RequestValueInfos <- 'RequestValueInfos';\n\n.dotnet_coe_comm_hander_env$json <- function(value) {\n    return (toJSON(value, auto_unbox = TRUE, null=\"null\", force = TRUE))\n}\n    \n.dotnet_coe_comm_hander_env$payload <- function(envelope, type) {\n    payload <- list(commandOrEvent = .dotnet_coe_comm_hander_env$json(envelope), type = type);\n    return (payload);\n}\n\n.dotnet_coe_comm_hander_env$eventEnvelope <- function(event, eventType, command = NA) {\n    if (!is.na(command) && !is.null(command)) {\n        # we don't care about routing slip here and there are some json serialization issues with R un-boxing\n        # for now, let's remove it or make it empty\n        command$routingSlip <- list()\n    }\n    envelope <- list(event=event, eventType=eventType, command=command);\n    return (.dotnet_coe_comm_hander_env$payload(envelope, 'event'));\n}\n\n.dotnet_coe_comm_hander_env$is_ready <- function() {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                list(kernelInfos=list()), \n                .dotnet_coe_comm_hander_env$KernelReady)\n    );\n}\n\n.dotnet_coe_comm_hander_env$fail <- function(message = NA, command = NA) {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                list(message=message), \n                .dotnet_coe_comm_hander_env$CommandFailed, \n                command)\n    );\n}\n\n.dotnet_coe_comm_hander_env$pass <- function(command = NA) {\n    return (\n        .dotnet_coe_comm_hander_env$eventEnvelope(\n                .dotnet_coe_comm_hander_env$emptyEvent, \n                .dotnet_coe_comm_hander_env$CommandSucceeded, \n                command)\n    );\n}\n\n.dotnet_coe_comm_hander_env$get_formatted_value <- function(value, mimeType = 'application/json') {\n    formattedValue = NULL\n    if (is.data.frame(value)) {\n        mimeType <- 'application/table-schema+json'\n        formattedValue <- .dotnet_coe_comm_hander_env$json(head(value))\n    } else if (mimeType == 'application/json') {\n        formattedValue <- .dotnet_coe_comm_hander_env$json(value)\n    }\n    return (list(\n        mimeType=mimeType,\n        value=formattedValue\n       ))\n}\n\n.dotnet_coe_comm_hander_env$handle_request_value_infos <- function(commandOrEvent) {\n    variables <- ls(all=TRUE, globalenv()) # we only retrieve the global variables \n    results <- list();\n    \n    for (var in variables) {\n        if (!startsWith(var, '.')) {\n            value <- get(var);\n            type <- if (is.data.frame(value)) 'data.frame' else toString(typeof(value));\n            if (type != 'closure') {\n                formattedValue <- .dotnet_coe_comm_hander_env$get_formatted_value(value);\n                results <- append(results, list(list(name=var, formattedValue=formattedValue, typeName=type)));\n            }\n        };\n    };\n                \n    \n    valueInfosProduced = list(valueInfos=results)\n    \n    response <- .dotnet_coe_comm_hander_env$eventEnvelope(\n                valueInfosProduced, \n                .dotnet_coe_comm_hander_env$ValueInfosProduced, \n                commandOrEvent)\n}\n\n.dotnet_coe_comm_hander_env$handle_request_value <- function(commandOrEvent) {\n    requestValue <- commandOrEvent$command\n    mimeType <- requestValue$mimeType\n    name <- requestValue$name\n    \n    if (is.na(name) || name == '' || !exists(name)) {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                    sprintf('Variable \"%s\" not found.', name))\n        )\n    }\n    \n    rawValue <- get(name);\n    mimeType <- if (is.data.frame(rawValue)) 'application/table-schema+json' else mimeType;\n    formattedValue <- .dotnet_coe_comm_hander_env$get_formatted_value(rawValue, mimeType);\n\n    valueProduced = list(\n                        name=name, \n                        value=rawValue, \n                        formattedValue=formattedValue\n                    )\n    response <- .dotnet_coe_comm_hander_env$eventEnvelope(\n                valueProduced, \n                .dotnet_coe_comm_hander_env$ValueProduced, \n                commandOrEvent)\n    \n    return (response)\n}\n\n.dotnet_coe_comm_hander_env$handle_send_value <- function(commandOrEvent) {\n    sendValue <- commandOrEvent$command\n    mimeType <- sendValue$formattedValue$mimeType\n    name <- sendValue$name\n    rawValue <- sendValue$formattedValue$value\n    resultValue = NA\n    \n    if (make.names(name) != name) {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                    sprintf('Invalid Identifier: \"%s\"', name))\n        )\n    }\n    \n    if (mimeType == 'application/table-schema+json') {\n        resultValue <- fromJSON(rawValue)\n        resultValue <- data.frame(resultValue$data)\n    } else if (mimeType == 'application/json') {\n        resultValue <- fromJSON(rawValue)\n    } else {\n        return (\n            .dotnet_coe_comm_hander_env$fail(\n                        sprintf('Failed to set value for \"%s\". \"%s\" mimetype not supported.', name, mimeType))\n        )\n    }\n    \n    \n    assign(name, resultValue, globalenv());\n    return (.dotnet_coe_comm_hander_env$pass())\n}\n\n.dotnet_coe_comm_hander_env$handle_command <- function(commandOrEvent) {\n    commandType <- commandOrEvent$commandType\n\n    result <- .dotnet_coe_comm_hander_env$fail(\n                sprintf('command \"%s\" not supported', commandType)\n            )\n\n    if (commandType == .dotnet_coe_comm_hander_env$SendValue) {\n        result <- .dotnet_coe_comm_hander_env$handle_send_value(commandOrEvent)\n    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValue) {\n        result <- .dotnet_coe_comm_hander_env$handle_request_value(commandOrEvent)\n    } else if (commandType == .dotnet_coe_comm_hander_env$RequestValueInfos) {\n        result <- .dotnet_coe_comm_hander_env$handle_request_value_infos(commandOrEvent)\n    }\n\n    return (result)\n}\n\n.dotnet_coe_comm_hander_env$handle_command_or_event <- function(msg) {\n    response <- tryCatch({\n            msg_type <- msg$type\n            commandOrEvent <- fromJSON(msg$commandOrEvent)\n        \n            if (msg_type == 'command') {\n                return (.dotnet_coe_comm_hander_env$handle_command(commandOrEvent))\n            } \n        },\n        error=function(cond) {\n            return (\n                .dotnet_coe_comm_hander_env$fail(\n                    sprintf('failed to process comm data. %s', cond$message))\n                )\n        })    \n    \n    return(response)\n}\n\n.dotnet_coe_comm_hander_env$coe_handler_connect_to_comm <- function(comm, data) {\n    comm$on_msg(function(msg) {\n        # assign('.debug.onmsg', msg, globalenv());\n        response <- .dotnet_coe_comm_hander_env$handle_command_or_event(msg);\n        comm$send(response);  \n    })\n\n    ready <- .dotnet_coe_comm_hander_env$is_ready()\n    comm$send(ready);  \n    \n};\n\nif(!is.null(comm_manager())) {\n    comm_manager()$register_target('dotnet_coe_handler_comm', .dotnet_coe_comm_hander_env$coe_handler_connect_to_comm);\n}\n",
       "execution_count": 1
     },
     "buffers": [],
@@ -135,18 +135,18 @@
   },
   {
     "header": {
-      "msg_id": "f13e0890-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94f4a9fc-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
-      "date": "2023-03-21T23:56:05.410191Z",
+      "session": "b953d5fb-a1b7-4a19-9413-d5b1f8e23294",
+      "date": "2024-11-20T19:13:53.392462Z",
       "msg_type": "execute_reply",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "2e9c96cf-8747-49e7-87bb-bcefb693c77b",
+      "msg_id": "fb757a53-d0a5-4abd-8b1b-6cff54ed9df9",
       "username": "dotnet_kernel",
-      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
-      "date": "2023-03-21T23:56:05.2998779Z",
+      "session": "b953d5fb-a1b7-4a19-9413-d5b1f8e23294",
+      "date": "2024-11-20T19:13:53.3047196Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -162,18 +162,18 @@
   },
   {
     "header": {
-      "msg_id": "f13e2f96-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94f4d10c-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
-      "date": "2023-03-21T23:56:05.412191Z",
+      "session": "b953d5fb-a1b7-4a19-9413-d5b1f8e23294",
+      "date": "2024-11-20T19:13:53.393460Z",
       "msg_type": "status",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "2e9c96cf-8747-49e7-87bb-bcefb693c77b",
+      "msg_id": "fb757a53-d0a5-4abd-8b1b-6cff54ed9df9",
       "username": "dotnet_kernel",
-      "session": "9bc45a57-5f3f-4930-b198-757ea2017d19",
-      "date": "2023-03-21T23:56:05.2998779Z",
+      "session": "b953d5fb-a1b7-4a19-9413-d5b1f8e23294",
+      "date": "2024-11-20T19:13:53.3047196Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -186,18 +186,18 @@
   },
   {
     "header": {
-      "msg_id": "f13edfe0-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94f5451a-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
-      "date": "2023-03-21T23:56:05.415703Z",
+      "session": "141bbb42-d97e-4493-9d38-fb566a9596e1",
+      "date": "2024-11-20T19:13:53.396466Z",
       "msg_type": "status",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "893821b9-d8d3-4565-a39f-268abc299f7b",
+      "msg_id": "662947b9-0a2e-4000-9b31-3243c9dadb23",
       "username": "dotnet_kernel",
-      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
-      "date": "2023-03-21T23:56:05.4126453Z",
+      "session": "141bbb42-d97e-4493-9d38-fb566a9596e1",
+      "date": "2024-11-20T19:13:53.3945341Z",
       "msg_type": "comm_open",
       "version": "5.3"
     },
@@ -210,24 +210,24 @@
   },
   {
     "header": {
-      "msg_id": "f13f7c20-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94f5e286-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
-      "date": "2023-03-21T23:56:05.420704Z",
+      "session": "141bbb42-d97e-4493-9d38-fb566a9596e1",
+      "date": "2024-11-20T19:13:53.400464Z",
       "msg_type": "comm_msg",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "893821b9-d8d3-4565-a39f-268abc299f7b",
+      "msg_id": "662947b9-0a2e-4000-9b31-3243c9dadb23",
       "username": "dotnet_kernel",
-      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
-      "date": "2023-03-21T23:56:05.4126453Z",
+      "session": "141bbb42-d97e-4493-9d38-fb566a9596e1",
+      "date": "2024-11-20T19:13:53.3945341Z",
       "msg_type": "comm_open",
       "version": "5.3"
     },
     "metadata": {},
     "content": {
-      "comm_id": "0be2a9a7-b8fc-460d-8667-4e8ff204cc27",
+      "comm_id": "188dd7fa-a73e-4074-adfd-4d70009be280",
       "data": {
         "commandOrEvent": "{\"event\":{\"kernelInfos\":[]},\"eventType\":\"KernelReady\",\"command\":null}",
         "type": "event"
@@ -238,18 +238,18 @@
   },
   {
     "header": {
-      "msg_id": "f13fa330-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94f5e287-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
-      "date": "2023-03-21T23:56:05.421706Z",
+      "session": "141bbb42-d97e-4493-9d38-fb566a9596e1",
+      "date": "2024-11-20T19:13:53.401429Z",
       "msg_type": "status",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "893821b9-d8d3-4565-a39f-268abc299f7b",
+      "msg_id": "662947b9-0a2e-4000-9b31-3243c9dadb23",
       "username": "dotnet_kernel",
-      "session": "aff26447-f13c-41aa-952f-1ec17a72acae",
-      "date": "2023-03-21T23:56:05.4126453Z",
+      "session": "141bbb42-d97e-4493-9d38-fb566a9596e1",
+      "date": "2024-11-20T19:13:53.3945341Z",
       "msg_type": "comm_open",
       "version": "5.3"
     },
@@ -262,18 +262,18 @@
   },
   {
     "header": {
-      "msg_id": "f14066a8-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "94f67d72-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
-      "date": "2023-03-21T23:56:05.426704Z",
+      "session": "be2650c8-80d9-4528-997d-62dc1618aa3f",
+      "date": "2024-11-20T19:13:53.404433Z",
       "msg_type": "status",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "ba875301-16ad-4d8b-ace2-ab2c513912bd",
+      "msg_id": "22ecb140-89c2-4fe8-923c-90a8343d4d83",
       "username": "dotnet_kernel",
-      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
-      "date": "2023-03-21T23:56:05.4239063Z",
+      "session": "be2650c8-80d9-4528-997d-62dc1618aa3f",
+      "date": "2024-11-20T19:13:53.4022168Z",
       "msg_type": "inspect_request",
       "version": "5.3"
     },
@@ -286,18 +286,18 @@
   },
   {
     "header": {
-      "msg_id": "f15df39e-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "950ba314-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
-      "date": "2023-03-21T23:56:05.620371Z",
+      "session": "be2650c8-80d9-4528-997d-62dc1618aa3f",
+      "date": "2024-11-20T19:13:53.544019Z",
       "msg_type": "inspect_reply",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "ba875301-16ad-4d8b-ace2-ab2c513912bd",
+      "msg_id": "22ecb140-89c2-4fe8-923c-90a8343d4d83",
       "username": "dotnet_kernel",
-      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
-      "date": "2023-03-21T23:56:05.4239063Z",
+      "session": "be2650c8-80d9-4528-997d-62dc1618aa3f",
+      "date": "2024-11-20T19:13:53.4022168Z",
       "msg_type": "inspect_request",
       "version": "5.3"
     },
@@ -317,18 +317,18 @@
   },
   {
     "header": {
-      "msg_id": "f15e41be-c843-11ed-93eb-eb53504a5a3c",
+      "msg_id": "950bf13e-a773-11ef-af9a-9baf00f224df",
       "username": "dotnet_kernel",
-      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
-      "date": "2023-03-21T23:56:05.621372Z",
+      "session": "be2650c8-80d9-4528-997d-62dc1618aa3f",
+      "date": "2024-11-20T19:13:53.545019Z",
       "msg_type": "status",
       "version": "5.0"
     },
     "parent_header": {
-      "msg_id": "ba875301-16ad-4d8b-ace2-ab2c513912bd",
+      "msg_id": "22ecb140-89c2-4fe8-923c-90a8343d4d83",
       "username": "dotnet_kernel",
-      "session": "34f5487d-e255-4fc8-9d24-d9d9d22c2625",
-      "date": "2023-03-21T23:56:05.4239063Z",
+      "session": "be2650c8-80d9-4528-997d-62dc1618aa3f",
+      "date": "2024-11-20T19:13:53.4022168Z",
       "msg_type": "inspect_request",
       "version": "5.3"
     },

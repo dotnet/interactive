@@ -48,7 +48,7 @@ internal static class JupyterCommonDirectories
     public static DirectoryInfo GetDataDirectory()
     {
         var directory = GetDefaultDataDirectoryFromEnv();
-        if (directory != null && directory.Exists)
+        if (directory is { Exists: true })
         {
             return directory;
         }

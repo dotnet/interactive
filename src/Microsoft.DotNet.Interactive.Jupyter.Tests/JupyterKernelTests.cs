@@ -25,7 +25,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     [Fact]
     public async Task variable_sharing_not_enabled_for_unsupported_languages()
     {
-        var options = new TestJupyterConnectionOptions(GenerateReplies(null, "unsupportedLanguage"));
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(null, "unsupportedLanguage"));
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var kernel = await CreateJupyterKernelAsync(options);
@@ -52,7 +52,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     [Fact]
     public async Task variable_sharing_not_enabled_for_when_target_not_found()
     {
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new ExecuteReplyOk(), Message.Create(new ExecuteRequest("target_setup"))),
                 Message.Create(new CommClose("commId"), Message.Create(new CommOpen("commId", "target_setup", null)).Header)
         }, "python"));
@@ -77,7 +77,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     public async Task can_setup_kernel_using_script()
     {
         string initScript = "kernel_setup_script";
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new ExecuteReplyOk(), Message.Create(new ExecuteRequest(initScript))),
         }));
 
@@ -104,7 +104,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             new() { Name = "sampleSpec", DisplayName = "Sample Spec", Language = "sampleLanguage" }
         };
 
-        var options = new TestJupyterConnectionOptions(new TestJupyterConnection(new TestJupyterKernelConnection(null), specs));
+        var options = new SimulatedJupyterConnectionOptions(new TestJupyterConnection(new TestJupyterKernelConnection(null), specs));
         var jupyterKernelCommand = new ConnectJupyterKernelDirective();
         jupyterKernelCommand.AddConnectionOptions(options);
 
@@ -120,7 +120,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     [Fact]
     public async Task jupyter_and_kernel_connection_is_disposed_on_dispose()
     {
-        var options = new TestJupyterConnectionOptions(GenerateReplies());
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies());
         var kernel = CreateCompositeKernelAsync(options);
 
         var result = await kernel.SubmitCodeAsync($"#!connect jupyter --kernel-name testKernel --kernel-spec testKernelSpec");
@@ -141,7 +141,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     [Fact]
     public async Task can_cancel_submit_code_and_interrupt_kernel()
     {
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest())),
         }));
 
@@ -181,7 +181,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     {
         string code = "\r\ntest\r\ncode\r\n\n";
 
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
             Message.CreateReply(new ExecuteReplyOk(), Message.Create(new ExecuteRequest(code)))
         }));
 
@@ -215,7 +215,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
                 Message.CreatePubSub(new Stream(Stream.StandardError, "line2"), request),
                 Message.CreatePubSub(new Status(StatusValues.Idle), request, "id"),
         });
-        var options = new TestJupyterConnectionOptions(replies);
+        var options = new SimulatedJupyterConnectionOptions(replies);
 
         var kernel = await CreateJupyterKernelAsync(options);
 
@@ -238,7 +238,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     [Fact]
     public async Task can_cancel_hover_text_without_kernel_interrupt()
     {
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
             Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest()))
         }));
 
@@ -277,7 +277,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     public async Task can_handle_hover_text_not_found()
     {
         var code = "test";
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InspectReply(StatusValues.Ok, false), Message.Create(new InspectRequest(code, 1, 0))),
         }));
 
@@ -301,7 +301,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     public async Task can_fail_on_hover_text_status_error()
     {
         var code = "test";
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InspectReply(StatusValues.Error,
                                                      true,
                                                      new Dictionary<string, object>{ { "text/plain", "doc-comment"} } ),
@@ -333,7 +333,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             "\u001b[1mBold,\u001b[4mUnderline,\u001b[7mReversed," +
             "\u001b[1mm\u001b[3009567mi\u001b[30m\u001B[1mc";
         var code = "test";
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InspectReply(StatusValues.Ok,
                                                      true,
                                                      new Dictionary<string, object>{ 
@@ -370,7 +370,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     [Fact]
     public async Task can_cancel_signature_help_without_kernel_interrupt()
     {
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest())),
         }));
 
@@ -409,7 +409,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     public async Task can_handle_signature_help_not_found()
     {
         var code = "test";
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InspectReply(StatusValues.Ok, false), Message.Create(new InspectRequest(code, 1, 0))),
         }));
 
@@ -433,7 +433,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     public async Task can_fail_on_signature_help_status_error()
     {
         var code = "test";
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InspectReply(StatusValues.Error,
                                                      true,
                                                      new Dictionary<string, object>{ { "text/plain", "doc-comment"} } ),
@@ -465,7 +465,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             "\u001b[1mBold,\u001b[4mUnderline,\u001b[7mReversed," +
             "\u001b[1mm\u001b[3009567mi\u001b[30m\u001B[1mc";
         var code = "test";
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InspectReply(StatusValues.Ok,
                                                      true,
                                                      new Dictionary<string, object>{
@@ -503,7 +503,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     [Fact]
     public async Task can_cancel_completions_without_kernel_interrupt()
     {
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new InterruptReply(), Message.Create(new InterruptRequest())),
         }));
 
@@ -541,7 +541,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     public async Task can_fail_on_completions_status_error()
     {
         var code = "test";
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new CompleteReply(0, 1, new[] {"test1", "test2"}, null, StatusValues.Error),
                 Message.Create(new CompleteRequest(code, 1))),
         }));
@@ -576,7 +576,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
                 }
             }
         };
-        var options = new TestJupyterConnectionOptions(GenerateReplies(new[] {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
                 Message.CreateReply(new CompleteReply(0, 1, new[] {"test1", "test2"}, metadata, StatusValues.Ok),
                 Message.Create(new CompleteRequest(code, 1))),
         }));

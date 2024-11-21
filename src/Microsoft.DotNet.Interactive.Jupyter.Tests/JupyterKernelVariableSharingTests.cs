@@ -19,36 +19,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 {
-    private async Task SharedValueShouldBeReturnedBackSame<T>(T expectedValue, string csharpDeclaration, Kernel kernel, TestJupyterConnectionOptions options)
-    {
-        var result = await kernel.SubmitCodeAsync(csharpDeclaration);
-        var events = result.Events;
-
-        events.Should().NotContainErrors();
-
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        result = await kernel.SubmitCodeAsync($"#!testKernel\n#!share --from csharp x");
-        events = result.Events;
-
-        events.Should().NotContainErrors();
-        sentMessages.ShouldContainCommMsgWithValues("SendValue", "x");
-
-        result = await kernel.SubmitCodeAsync($"#!share --from testKernel x");
-        events = result.Events;
-
-        events
-            .Should()
-            .NotContainErrors();
-
-        events
-            .Should()
-            .ContainSingle<ValueProduced>()
-            .Which
-            .Value
-            .Should()
-            .Be(expectedValue);
-    }
-
     [Theory]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
@@ -63,32 +33,32 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
         using (new AssertionScope())
         {
-            await SharedValueShouldBeReturnedBackSame((long)2, $"var x = 2;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)2, "var x = 2;", kernel, options);
             await SharedValueShouldBeReturnedBackSame(int.MinValue, $"int x = {int.MinValue};", kernel, options);
             await SharedValueShouldBeReturnedBackSame(int.MaxValue, $"int x = {int.MaxValue};", kernel, options);
             await SharedValueShouldBeReturnedBackSame(-123456789012345, $"long x = -123456789012345;", kernel, options);
             await SharedValueShouldBeReturnedBackSame(123456789012345, $"long x = 123456789012345;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame(true, $"bool x = true;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame("hi!", $"var x = \"hi!\";", kernel, options);
-            await SharedValueShouldBeReturnedBackSame("hi!", $"string x = \"hi!\";", kernel, options);
-            await SharedValueShouldBeReturnedBackSame("", $"string x = \"\";", kernel, options);
-            await SharedValueShouldBeReturnedBackSame("«ταБЬℓσ»", $"string x = \"«ταБЬℓσ»\";", kernel, options);
-            await SharedValueShouldBeReturnedBackSame(-123456.789, $"double x = -123456.789;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame(123456.789, $"double x = 123456.789;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame(123.789, $"float x = 123.789f;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame(123456.789, $"decimal x = 123456.789M;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame("a", $"char x = 'a';", kernel, options);
-            await SharedValueShouldBeReturnedBackSame("'", $"char x = '\\'';", kernel, options);
-            await SharedValueShouldBeReturnedBackSame((long)123, $"byte x = 123;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame((long)123, $"short x = 123;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame((long)123, $"sbyte x = 123;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame((long)123, $"ushort x = 123;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame((long)123456, $"uint x = 123456;", kernel, options);
-            await SharedValueShouldBeReturnedBackSame(123456789012345, $"ulong x = 123456789012345;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(true, "bool x = true;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("hi!", "var x = \"hi!\";", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("hi!", "string x = \"hi!\";", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("", "string x = \"\";", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("«ταБЬℓσ»", "string x = \"«ταБЬℓσ»\";", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(-123456.789, "double x = -123456.789;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(123456.789, "double x = 123456.789;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(123.789, "float x = 123.789f;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(123456.789, "decimal x = 123456.789M;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("a", "char x = 'a';", kernel, options);
+            await SharedValueShouldBeReturnedBackSame("'", "char x = '\\'';", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123, "byte x = 123;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123, "short x = 123;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123, "sbyte x = 123;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123, "ushort x = 123;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame((long)123456, "uint x = 123456;", kernel, options);
+            await SharedValueShouldBeReturnedBackSame(123456789012345, "ulong x = 123456789012345;", kernel, options);
         }
 
         options.SaveState();
@@ -108,21 +78,23 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
-        var df = JsonDocument.Parse(@"
-[
-  {
-        ""name"": ""Granny Smith apple"",
-        ""deliciousness"": 0,
-        ""color"":""red""
-  },
-  {
-        ""name"": ""Rainier cherry"",
-        ""deliciousness"": 9000,
-        ""color"":""yellow""
-  }
-]").ToTabularDataResource();
+        var df = JsonDocument.Parse("""
+
+                                    [
+                                      {
+                                            "name": "Granny Smith apple",
+                                            "deliciousness": 0,
+                                            "color":"red"
+                                      },
+                                      {
+                                            "name": "Rainier cherry",
+                                            "deliciousness": 9000,
+                                            "color":"yellow"
+                                      }
+                                    ]
+                                    """).ToTabularDataResource();
 
         var result = await kernel.SendAsync(new SendValue("df", df, null, "csharp"));
         var events = result.Events;
@@ -133,7 +105,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
 
-        result = await kernel.SubmitCodeAsync($"#!testKernel\n#!share --from csharp df --as df_in_kernel");
+        result = await kernel.SubmitCodeAsync("#!testKernel\n#!share --from csharp df --as df_in_kernel");
         events = result.Events;
 
         events
@@ -220,6 +192,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     }
 
     // for validating the kernel side logic, this test is intended to be run against a jupyter connection that and not just a test connection
+
     [Theory]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
@@ -231,33 +204,37 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
         var dfs = new[] {
-            JsonDocument.Parse(@"
-[
-  {
-        ""name"": ""Granny Smith apple"",
-        ""deliciousness"": 0,
-        ""color"":""red""
-  },
-  {
-        ""name"": ""Rainier cherry"",
-        ""deliciousness"": 9000,
-        ""color"":""yellow""
-  }
-]").ToTabularDataResource(),
-            JsonDocument.Parse(@"
-[
-  {
-        ""a"": ""1"",
-        ""b"": 1
-  },
-  {
-        ""a"": ""2"",
-        ""b"": 2
-  }
-]").ToTabularDataResource()
+            JsonDocument.Parse("""
+
+                               [
+                                 {
+                                       "name": "Granny Smith apple",
+                                       "deliciousness": 0,
+                                       "color":"red"
+                                 },
+                                 {
+                                       "name": "Rainier cherry",
+                                       "deliciousness": 9000,
+                                       "color":"yellow"
+                                 }
+                               ]
+                               """).ToTabularDataResource(),
+            JsonDocument.Parse("""
+
+                               [
+                                 {
+                                       "a": "1",
+                                       "b": 1
+                                 },
+                                 {
+                                       "a": "2",
+                                       "b": 2
+                                 }
+                               ]
+                               """).ToTabularDataResource()
         };
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
@@ -339,6 +316,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     }
 
     // for validating the kernel side logic, this test is intended to be run against a jupyter connection that and not just a test connection
+
     [Theory]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
@@ -350,22 +328,24 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
         var dfs = new[] {
-            JsonDocument.Parse(@"
-[
-  {
-        ""name"": ""Granny Smith apple"",
-        ""deliciousness"": 0,
-        ""color"":""red""
-  },
-  {
-        ""name"": ""Rainier cherry"",
-        ""deliciousness"": 9000,
-        ""color"":""yellow""
-  }
-]").ToTabularDataResource()
+            JsonDocument.Parse("""
+
+                               [
+                                 {
+                                       "name": "Granny Smith apple",
+                                       "deliciousness": 0,
+                                       "color":"red"
+                                 },
+                                 {
+                                       "name": "Rainier cherry",
+                                       "deliciousness": 9000,
+                                       "color":"yellow"
+                                 }
+                               ]
+                               """).ToTabularDataResource()
         };
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
@@ -407,6 +387,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     }
 
     // for validating the kernel side logic, this test is intended to be run against a jupyter connection that and not just a test connection
+
     [Theory]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
@@ -418,21 +399,23 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
-        var df = JsonDocument.Parse(@"
-[
-  {
-        ""name"": ""Granny Smith apple"",
-        ""deliciousness"": 0,
-        ""color"":""red""
-  },
-  {
-        ""name"": ""Rainier cherry"",
-        ""deliciousness"": 9000,
-        ""color"":""yellow""
-  }
-]").ToTabularDataResource();
+        var df = JsonDocument.Parse("""
+
+                                    [
+                                      {
+                                            "name": "Granny Smith apple",
+                                            "deliciousness": 0,
+                                            "color":"red"
+                                      },
+                                      {
+                                            "name": "Rainier cherry",
+                                            "deliciousness": 9000,
+                                            "color":"yellow"
+                                      }
+                                    ]
+                                    """).ToTabularDataResource();
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var sendCommand = new SendValue("df", df, new FormattedValue("application/json", null));
@@ -483,7 +466,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
         var sendCommand = new SendValue(invalidId, "1", new FormattedValue("application/json", "1"));
         var result = await kernel.SendAsync(sendCommand);
@@ -511,7 +494,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
         var result = await kernel.SendAsync(new RequestValue("unknownVar"));
         var events = result.Events;
@@ -528,37 +511,57 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     }
 
     [Theory]
-    [JupyterHttpTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName)]
-    [JupyterTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "              name  deliciousness  color\nGranny Smith apple              0    red\n    Rainier cherry           9000 yellow" }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName)]
-    [JupyterHttpTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "[{\"name\":\"Granny Smith apple\",\"deliciousness\":0,\"color\":\"red\"},{\"name\":\"Rainier cherry\",\"deliciousness\":9000,\"color\":\"yellow\"}]" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
-    [JupyterZMQTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "[{\"name\":\"Granny Smith apple\",\"deliciousness\":0,\"color\":\"red\"},{\"name\":\"Rainier cherry\",\"deliciousness\":9000,\"color\":\"yellow\"}]" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName)]
-    [JupyterTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", "[{\"name\":\"Granny Smith apple\",\"deliciousness\":0,\"color\":\"red\"},{\"name\":\"Rainier cherry\",\"deliciousness\":9000,\"color\":\"yellow\"}]" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName)]
-    public async Task can_request_value_infos_for_shared_and_kernel_variables(JupyterConnectionTestData connectionData, string kernelVarDeclare, string[] variables, string[] mimeTypes, string[] formattedValues, string[] typeNames)
+    [JupyterHttpTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "text/plain+summary", "text/plain+summary", "text/plain+summary" }, new[] { "12345", "6789", """
+                                              name  deliciousness   color
+                             0  Granny Smith apple              0     red
+                             1      Rainier cherry           9000  yellow
+                             """ }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "text/plain+summary", "text/plain+summary", "text/plain+summary" }, new[] { "12345", "6789", """
+                                             name  deliciousness   color
+                            0  Granny Smith apple              0     red
+                            1      Rainier cherry           9000  yellow
+                            """ }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName)]
+    [JupyterTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "text/plain+summary", "text/plain+summary", "text/plain+summary" }, new[] { "12345", "6789", """
+                                          name  deliciousness   color
+                         0  Granny Smith apple              0     red
+                         1      Rainier cherry           9000  yellow
+                         """ }, new[] { "<class \'int\'>", "<class \'int\'>", "<class \'pandas.core.frame.DataFrame\'>" }, KernelSpecName = PythonKernelName)]
+    [JupyterHttpTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", """[{"name":"Granny Smith apple","deliciousness":0,"color":"red"},{"name":"Rainier cherry","deliciousness":9000,"color":"yellow"}]""" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
+    [JupyterZMQTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", """[{"name":"Granny Smith apple","deliciousness":0,"color":"red"},{"name":"Rainier cherry","deliciousness":9000,"color":"yellow"}]""" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName)]
+    [JupyterTestData("a <- 12345", new[] { "a", "b", "df" }, new[] { "application/json", "application/json", "application/table-schema+json" }, new[] { "12345", "6789", """[{"name":"Granny Smith apple","deliciousness":0,"color":"red"},{"name":"Rainier cherry","deliciousness":9000,"color":"yellow"}]""" }, new[] { "double", "integer", "data.frame" }, KernelSpecName = RKernelName)]
+    public async Task can_request_value_infos_for_shared_and_kernel_variables(
+        JupyterConnectionTestData connectionData,
+        string variableDeclaration, 
+        string[] variables,
+        string[] mimeTypes,
+        string[] formattedValues,
+        string[] typeNames)
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
         // setting variable on kernel
-        await kernel.SubmitCodeAsync(kernelVarDeclare);
+        await kernel.SubmitCodeAsync(variableDeclaration);
 
         // share a variable
         await kernel.SendAsync(new SendValue("b", 6789, new FormattedValue("application/json", "6789")));
 
-        var df = JsonDocument.Parse(@"
-[
-  {
-        ""name"": ""Granny Smith apple"",
-        ""deliciousness"": 0,
-        ""color"":""red""
-  },
-  {
-        ""name"": ""Rainier cherry"",
-        ""deliciousness"": 9000,
-        ""color"":""yellow""
-  }
-]").ToTabularDataResource();
+        var df = JsonDocument.Parse("""
+
+                                    [
+                                      {
+                                            "name": "Granny Smith apple",
+                                            "deliciousness": 0,
+                                            "color":"red"
+                                      },
+                                      {
+                                            "name": "Rainier cherry",
+                                            "deliciousness": 9000,
+                                            "color":"yellow"
+                                      }
+                                    ]
+                                    """).ToTabularDataResource();
 
         // share a dataframe
         await kernel.SendAsync(new SendValue("df", df,
@@ -586,7 +589,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
             .Should()
             .Contain("a", "b", "df");
 
-        Assert.Equal(variables.Length, valueInfos.Count());
+         valueInfos.Count.Should().Be(variables.Length);
 
         for (int i = 0; i < variables.Length; i++)
         {
@@ -595,9 +598,39 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
                 .Should()
                 .BeEquivalentTo(
                     new KernelValueInfo(variables[i],
-                            new FormattedValue(mimeTypes[i], formattedValues[i]),
+                            new FormattedValue(mimeTypes[i], formattedValues[i].Replace("\r", "")),
                             null, typeNames[i]));
         }
         options.SaveState();
+    }
+
+    private async Task SharedValueShouldBeReturnedBackSame<T>(T expectedValue, string csharpDeclaration, Kernel kernel, SimulatedJupyterConnectionOptions options)
+    {
+        var result = await kernel.SubmitCodeAsync(csharpDeclaration);
+        var events = result.Events;
+
+        events.Should().NotContainErrors();
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        result = await kernel.SubmitCodeAsync("#!testKernel\n#!share --from csharp x");
+        events = result.Events;
+
+        events.Should().NotContainErrors();
+        sentMessages.ShouldContainCommMsgWithValues("SendValue", "x");
+
+        result = await kernel.SubmitCodeAsync("#!share --from testKernel x");
+        events = result.Events;
+
+        events
+            .Should()
+            .NotContainErrors();
+
+        events
+            .Should()
+            .ContainSingle<ValueProduced>()
+            .Which
+            .Value
+            .Should()
+            .Be(expectedValue);
     }
 }

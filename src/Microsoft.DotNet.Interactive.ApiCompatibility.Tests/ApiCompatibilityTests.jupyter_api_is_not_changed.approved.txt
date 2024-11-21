@@ -39,13 +39,13 @@ Microsoft.DotNet.Interactive.Jupyter
     public System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellationToken)
     public System.Threading.Tasks.Task StopAsync(System.Threading.CancellationToken cancellationToken)
   public abstract class IJupyterEnvironment
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> Execute(System.String command, System.String args, System.IO.DirectoryInfo workingDir = null, System.Nullable<System.TimeSpan> timeout = null)
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> ExecuteAsync(System.String command, System.String args, System.IO.DirectoryInfo workingDir = null, System.Nullable<System.TimeSpan> timeout = null)
     public System.Diagnostics.Process StartProcess(System.String command, System.String args, System.IO.DirectoryInfo workingDir, System.Action<System.String> output = null, System.Action<System.String> error = null)
   public abstract class IJupyterKernelSpecModule
     public System.IO.DirectoryInfo GetDefaultKernelSpecDirectory()
     public IJupyterEnvironment GetEnvironment()
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> InstallKernel(System.IO.DirectoryInfo sourceDirectory)
-    public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernels()
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> InstallKernelAsync(System.IO.DirectoryInfo sourceDirectory)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernelsAsync()
   public abstract class IJupyterMessageResponseSender
     public System.Void Send(Microsoft.DotNet.Interactive.Jupyter.Protocol.PubSubMessage message)
     public System.Void Send(Microsoft.DotNet.Interactive.Jupyter.Protocol.ReplyMessage message)
@@ -71,8 +71,8 @@ Microsoft.DotNet.Interactive.Jupyter
     .ctor(IJupyterEnvironment environment = null)
     public System.IO.DirectoryInfo GetDefaultKernelSpecDirectory()
     public IJupyterEnvironment GetEnvironment()
-    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> InstallKernel(System.IO.DirectoryInfo sourceDirectory)
-    public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernels()
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> InstallKernelAsync(System.IO.DirectoryInfo sourceDirectory)
+    public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<System.String,KernelSpec>> ListKernelsAsync()
   public class JupyterLocalKernelConnectionOptions, Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions
     .ctor()
     public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter CondaEnv { get;}

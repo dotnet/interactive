@@ -33,7 +33,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
         var events = result.Events;
 
@@ -112,7 +112,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
@@ -163,7 +163,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
@@ -219,7 +219,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
@@ -277,7 +277,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
@@ -327,7 +327,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
@@ -382,7 +382,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         var kernel = CreateCompositeKernelAsync(options);
 
         await kernel.SubmitCodeAsync(
-            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.GetConnectionString()}");
+            $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
@@ -451,7 +451,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
 
@@ -517,7 +517,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
 
@@ -581,7 +581,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
     {
         var options = connectionData.GetConnectionOptions();
 
-        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.GetConnectionString());
+        var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
         var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
         var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();

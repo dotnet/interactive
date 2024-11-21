@@ -1,18 +1,18 @@
 [
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_10",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_10",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.186783Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.351548Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "1e605c90-a4eb-4505-ac8a-58700fbe50ba",
+      "msg_id": "9aa42ba2-c7e9-4336-88f9-990c74dbfdcd",
       "username": "dotnet_kernel",
-      "session": "24690ce6-b10e-4a25-ab1c-d789c8723d2c",
-      "date": "2023-03-21T23:56:08.1691407Z",
+      "session": "d0ec0873-c606-4208-b32f-7003e2e42e79",
+      "date": "2024-11-20T19:14:04.3162302Z",
       "msg_type": "kernel_info_request",
       "version": "5.3"
     },
@@ -25,42 +25,18 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_12",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_11",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.187785Z",
-      "msg_type": "status",
-      "version": "5.3"
-    },
-    "parent_header": {
-      "msg_id": "1e605c90-a4eb-4505-ac8a-58700fbe50ba",
-      "username": "dotnet_kernel",
-      "session": "24690ce6-b10e-4a25-ab1c-d789c8723d2c",
-      "date": "2023-03-21T23:56:08.1691407Z",
-      "msg_type": "kernel_info_request",
-      "version": "5.3"
-    },
-    "metadata": {},
-    "content": {
-      "execution_state": "idle"
-    },
-    "buffers": [],
-    "channel": "shell"
-  },
-  {
-    "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_11",
-      "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.187785Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.352536Z",
       "msg_type": "kernel_info_reply",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "1e605c90-a4eb-4505-ac8a-58700fbe50ba",
+      "msg_id": "9aa42ba2-c7e9-4336-88f9-990c74dbfdcd",
       "username": "dotnet_kernel",
-      "session": "24690ce6-b10e-4a25-ab1c-d789c8723d2c",
-      "date": "2023-03-21T23:56:08.1691407Z",
+      "session": "d0ec0873-c606-4208-b32f-7003e2e42e79",
+      "date": "2024-11-20T19:14:04.3162302Z",
       "msg_type": "kernel_info_request",
       "version": "5.3"
     },
@@ -68,10 +44,10 @@
     "content": {
       "protocol_version": "5.3",
       "implementation": "ipython",
-      "implementation_version": "7.31.1",
+      "implementation_version": "8.12.0",
       "language_info": {
         "name": "python",
-        "version": "3.9.13",
+        "version": "3.11.4",
         "mimetype": "text/x-python",
         "file_extension": ".py",
         "pygments_lexer": "ipython3",
@@ -81,12 +57,12 @@
         },
         "nbconvert_exporter": "python"
       },
-      "banner": "Python 3.9.13 (main, Aug 25 2022, 23:51:50) [MSC v.1916 64 bit (AMD64)]\nType 'copyright', 'credits' or 'license' for more information\nIPython 7.31.1 -- An enhanced Interactive Python. Type '?' for help.\n",
+      "banner": "Python 3.11.4 | packaged by Anaconda, Inc. | (main, Jul  5 2023, 13:38:37) [MSC v.1916 64 bit (AMD64)]\nType 'copyright', 'credits' or 'license' for more information\nIPython 8.12.0 -- An enhanced Interactive Python. Type '?' for help.\n",
       "status": "ok",
       "help_links": [
         {
           "text": "Python Reference",
-          "url": "https://docs.python.org/3.9"
+          "url": "https://docs.python.org/3.11"
         },
         {
           "text": "IPython Reference",
@@ -119,18 +95,42 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_13",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_12",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.194295Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.352536Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "e861f067-6acc-4f28-8957-683b29cb3a96",
+      "msg_id": "9aa42ba2-c7e9-4336-88f9-990c74dbfdcd",
       "username": "dotnet_kernel",
-      "session": "54d7bcc9-5872-4f97-b363-2580e23fc98b",
-      "date": "2023-03-21T23:56:08.1913153Z",
+      "session": "d0ec0873-c606-4208-b32f-7003e2e42e79",
+      "date": "2024-11-20T19:14:04.3162302Z",
+      "msg_type": "kernel_info_request",
+      "version": "5.3"
+    },
+    "metadata": {},
+    "content": {
+      "execution_state": "idle"
+    },
+    "buffers": [],
+    "channel": "shell"
+  },
+  {
+    "header": {
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_13",
+      "username": "username",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.356503Z",
+      "msg_type": "status",
+      "version": "5.3"
+    },
+    "parent_header": {
+      "msg_id": "75d0c69b-06de-4944-9ba6-e6966710af6d",
+      "username": "dotnet_kernel",
+      "session": "6746d96a-8b0e-4d92-9bd3-07e0ce9de880",
+      "date": "2024-11-20T19:14:04.3553489Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -143,24 +143,24 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_14",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_14",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.194295Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.357504Z",
       "msg_type": "execute_input",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "e861f067-6acc-4f28-8957-683b29cb3a96",
+      "msg_id": "75d0c69b-06de-4944-9ba6-e6966710af6d",
       "username": "dotnet_kernel",
-      "session": "54d7bcc9-5872-4f97-b363-2580e23fc98b",
-      "date": "2023-03-21T23:56:08.1913153Z",
+      "session": "6746d96a-8b0e-4d92-9bd3-07e0ce9de880",
+      "date": "2024-11-20T19:14:04.3553489Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
     "metadata": {},
     "content": {
-      "code": "# Copyright (c) .NET Foundation and contributors. All rights reserved.\n# Licensed under the MIT license. See LICENSE file in the project root for full license information.\n\ntry:\n    get_ipython().__class__.__name__\nexcept NameError:\n    raise Exception(\"This script needs to be run in ipython\")\n    \nimport json\ndef __get_dotnet_coe_comm_handler(): \n\n    class CommandEventCommTarget:\n        __control_comm = None\n        __coe_handler = None\n\n        def handle_control_comm_opened(self, comm, msg):\n            if comm is None:\n                raise RuntimeError('Control comm required to open')\n                \n            self.__control_comm = comm\n            self.__control_comm.on_msg(self.handle_control_comm_msg)\n\n            self.__coe_handler = CommandEventHandler()\n            self.__control_comm.send(self.__coe_handler.is_ready())\n\n        def handle_control_comm_msg(self, msg):\n            # This shouldn't happen unless someone calls this method manually\n            if self.__control_comm is None and not self._is_debug:\n                raise RuntimeError('Control comm has not been properly opened')\n\n            data = msg['content']['data']\n            response = self.__coe_handler.handle_command_or_event(data)\n            self.__control_comm.send(response)\n            \n    \n    class CommandEventHandler:\n        __exclude_types = [\"<class 'module'>\"]\n\n        \n        def handle_command_or_event(self, data):\n            try:\n                msg_type = data['type']\n                commandOrEvent = json.loads(data['commandOrEvent'])\n                # self.__debugLog('handle_command_or_event.last_data_recv', commandOrEvent)\n                \n                if (msg_type == \"command\"):\n                    return self.__handle_command(commandOrEvent)\n                    \n            except Exception as e: \n                self. __debugLog('handle_command_or_event.commandFailed', e)\n                return EventEnvelope(CommandFailed(f'failed to process comm data. {str(e)}')).payload()\n        \n        def __handle_command(self, commandOrEvent):\n            commandType = commandOrEvent['commandType']\n\n            envelop = None\n            if (commandType == SendValue.__name__):\n                envelop = self.__handle_send_value(commandOrEvent)\n            elif (commandType == RequestValue.__name__):\n                envelop = self.__handle_request_value(commandOrEvent)\n            elif (commandType == RequestValueInfos.__name__):\n                envelop = self.__handle_request_value_infos(commandOrEvent)\n            else: \n                envelop = EventEnvelope(CommandFailed(f'command \"{commandType}\" not supported'))\n\n            return envelop.payload()\n\n        def __handle_request_value_infos(self, command):\n            results_who_ls = get_ipython().magic('who_ls')\n            variables = globals()\n            results = [KernelValueInfo(x, FormattedValue.fromValue(variables[x]), str(type(variables[x]))) \n                                    for x in results_who_ls \n                                    if x in variables and str(type(variables[x])) not in self.__exclude_types]\n\n\n            return EventEnvelope(ValueInfosProduced(results), command)\n            \n        def __handle_request_value(self, command):\n            requestValue = RequestValue(command['command'])\n            name = requestValue.name\n            mimeType = requestValue.mimeType\n            \n            if (name not in globals()):\n                return EventEnvelope(CommandFailed(f'Variable \"{name}\" not found.'))\n            \n            rawValue = globals()[name]\n            updatedValue = None\n\n            try: \n                import pandas as pd; \n                if (isinstance(rawValue, pd.DataFrame)):\n                    mimeType = 'application/table-schema+json'\n                    updatedValue = rawValue.to_dict('records')\n            except Exception as e: \n                self. __debugLog('__handle_request_value.dataframe.error', e)\n                pass\n\n            formattedValue = FormattedValue.fromValue(rawValue, mimeType) \n\n            return EventEnvelope(ValueProduced(name, rawValue if updatedValue is None else updatedValue, formattedValue), command)\n        \n        def __handle_send_value(self, command):\n            sendValue = SendValue(command['command'])\n            mimeType = sendValue.formattedValue['mimeType']\n            name = sendValue.name\n            rawValue = sendValue.formattedValue['value']\n            resultValue = None\n            \n            if (not str.isidentifier(name)):\n                return EventEnvelope(CommandFailed(f'Invalid Identifier: \"{name}\"'))\n        \n            if (mimeType == 'application/json'):\n                import json; resultValue = json.loads(rawValue)\n            elif (mimeType == 'application/table-schema+json'):\n                import json; resultValue = json.loads(rawValue)\n                try:\n                    import pandas as pd; resultValue = pd.DataFrame(data=resultValue['data'])\n                except Exception as e:\n                    self.__debugLog('__handle_send_value.dataframe.error', e)\n                    return EventEnvelope(CommandFailed(f'Cannot create pandas dataframe for: \"{name}\". {str(e)}'))\n                \n            if (resultValue is not None): \n                self.__setVariable(name, resultValue) \n                return EventEnvelope(CommandSucceeded())\n            \n            return EventEnvelope(CommandFailed(f'Failed to set value for \"{name}\". \"{mimeType}\" mimetype not supported.'))\n        \n        def is_ready(self):\n            return EventEnvelope(KernelReady()).payload()\n        \n        @staticmethod\n        def __setVariable(name, value):\n            globals()[name] = value\n        \n        @staticmethod\n        def __debugLog(event, message):\n            globals()[f'__log__coe_handler.{str(event)}'] = message\n    \n    \n    class KernelCommand: \n        pass\n\n    class SendValue(KernelCommand): \n        def __init__(self, entries):\n            self.__dict__.update(**entries)\n\n    class RequestValue(KernelCommand):\n        def __init__(self, entries):\n            self.__dict__.update(**entries)\n\n    class RequestValueInfos(KernelCommand):\n        def __init__(self, entries):\n            self.__dict__.update(**entries)\n            \n    class FormattedValue:\n        def __init__(self, mimeType = 'application/json', value = None):\n            self.mimeType = mimeType\n            self.value = value\n        \n        @staticmethod\n        def fromValue(value, mimeType = 'application/json'):\n            formattedValue = None\n            try: \n                import pandas as pd; \n                if (isinstance(value, pd.DataFrame)):\n                    mimeType = 'application/table-schema+json'\n            except Exception: \n                pass\n\n            if (mimeType == 'application/json'):\n                import json; formattedValue = json.dumps(value)\n            elif (mimeType == 'application/table-schema+json'):\n                formattedValue = value.to_string(index=False, max_rows=5)\n\n            return FormattedValue(mimeType, formattedValue)\n\n    class KernelValueInfo:\n        def __init__(self, name, formattedValue: FormattedValue, typeName = None):\n            self.name = name\n            self.formattedValue = formattedValue\n            self.typeName = typeName\n        \n    class KernelEvent:\n        pass\n\n    class KernelReady(KernelEvent):\n        def __init__(self, kernelInfos = []):\n            self.kernelInfos = kernelInfos\n\n    class CommandSucceeded(KernelEvent):\n        pass\n\n    class CommandFailed(KernelEvent):\n        def __init__(self, message = None):\n            self.message = message\n\n    class ValueProduced(KernelEvent):\n        def __init__(self, name, value, formattedValue: FormattedValue):\n            self.name = name\n            self.value = value \n            self.formattedValue = formattedValue\n    \n    class ValueInfosProduced(KernelEvent):\n        def __init__(self, valueInfos: list[KernelValueInfo]):\n            self.valueInfos = valueInfos\n            \n    class Envelope:\n        def payload(self):\n            return { 'commandOrEvent': self.__to_json_string(self) }\n\n        @staticmethod\n        def __to_json_string(obj):\n            return json.dumps(obj, default=lambda o: o.__dict__)\n\n    class EventEnvelope(Envelope):\n        def __init__(self, event: KernelEvent = None, command = None):\n            self.event = event\n            self.eventType = type(event).__name__\n            self.command = command\n\n        def payload(self):\n            ret = super().payload()\n            ret['type'] = 'event'\n            return ret\n    \n    return CommandEventCommTarget()\n\nif hasattr(get_ipython(), 'kernel'):\n    get_ipython().kernel.comm_manager.register_target('dotnet_coe_handler_comm', __get_dotnet_coe_comm_handler().handle_control_comm_opened)\n",
+      "code": "# Copyright (c) .NET Foundation and contributors. All rights reserved.\n# Licensed under the MIT license. See LICENSE file in the project root for full license information.\n\ntry:\n    get_ipython().__class__.__name__\nexcept NameError:\n    raise Exception(\"This script needs to be run in ipython\")\n    \nimport json\ndef __get_dotnet_coe_comm_handler(): \n\n    class CommandEventCommTarget:\n        __control_comm = None\n        __coe_handler = None\n\n        def handle_control_comm_opened(self, comm, msg):\n            if comm is None:\n                raise RuntimeError('Control comm required to open')\n                \n            self.__control_comm = comm\n            self.__control_comm.on_msg(self.handle_control_comm_msg)\n\n            self.__coe_handler = CommandEventHandler()\n            self.__control_comm.send(self.__coe_handler.is_ready())\n\n        def handle_control_comm_msg(self, msg):\n            # This shouldn't happen unless someone calls this method manually\n            if self.__control_comm is None and not self._is_debug:\n                raise RuntimeError('Control comm has not been properly opened')\n\n            data = msg['content']['data']\n            response = self.__coe_handler.handle_command_or_event(data)\n            self.__control_comm.send(response)\n            \n    \n    class CommandEventHandler:\n        __exclude_types = [\"<class 'module'>\", \"<class 'builtin_function_or_method'>\",\"<class 'function'>\"]\n\n        \n        def handle_command_or_event(self, data):\n            try:\n                msg_type = data['type']\n                commandOrEvent = json.loads(data['commandOrEvent'])\n                # self.__debugLog('handle_command_or_event.last_data_recv', commandOrEvent)\n                \n                if (msg_type == \"command\"):\n                    return self.__handle_command(commandOrEvent)\n                    \n            except Exception as e: \n                self. __debugLog('handle_command_or_event.commandFailed', e)\n                return EventEnvelope(CommandFailed(f'failed to process comm data. {str(e)}')).payload()\n        \n        def __handle_command(self, commandOrEvent):\n            commandType = commandOrEvent['commandType']\n\n            envelop = None\n            if (commandType == SendValue.__name__):\n                envelop = self.__handle_send_value(commandOrEvent)\n            elif (commandType == RequestValue.__name__):\n                envelop = self.__handle_request_value(commandOrEvent)\n            elif (commandType == RequestValueInfos.__name__):\n                envelop = self.__handle_request_value_infos(commandOrEvent)\n            else: \n                envelop = EventEnvelope(CommandFailed(f'command \"{commandType}\" not supported'))\n\n            return envelop.payload()\n\n        def __handle_request_value_infos(self, command):\n            results_who_ls = get_ipython().run_line_magic('who_ls', '')\n            variables = globals()\n            results = []\n            for x in results_who_ls:\n                valueType = str(type(variables[x]))\n                if (x in variables and valueType not in self.__exclude_types):\n                    try:\n                        formattedValue = FormattedValue('text/plain+summary', f'{variables[x]}')\n                        results.append(KernelValueInfo(x, formattedValue, valueType))\n                    except Exception as error: \n                        self. __debugLog('failed creating formattedValue for ' +x+ ' of type ' +valueType, error)\n                        pass\n\n            return EventEnvelope(ValueInfosProduced(results), command)\n            \n        def __handle_request_value(self, command):\n            requestValue = RequestValue(command['command'])\n            name = requestValue.name\n            mimeType = requestValue.mimeType\n            \n            if (name not in globals()):\n                return EventEnvelope(CommandFailed(f'Variable \"{name}\" not found.'))\n            \n            rawValue = globals()[name]\n            updatedValue = None\n\n            try: \n                import pandas as pd; \n                if (isinstance(rawValue, pd.DataFrame)):\n                    mimeType = 'application/table-schema+json'\n                    updatedValue = rawValue.to_dict('records')\n            except Exception as e: \n                self. __debugLog('__handle_request_value.dataframe.error', e)\n                pass\n\n            formattedValue = FormattedValue.fromValue(rawValue, mimeType) \n\n            return EventEnvelope(ValueProduced(name, rawValue if updatedValue is None else updatedValue, formattedValue), command)\n        \n        def __handle_send_value(self, command):\n            sendValue = SendValue(command['command'])\n            mimeType = sendValue.formattedValue['mimeType']\n            name = sendValue.name\n            rawValue = sendValue.formattedValue['value']\n            resultValue = None\n            \n            if (not str.isidentifier(name)):\n                return EventEnvelope(CommandFailed(f'Invalid Identifier: \"{name}\"'))\n        \n            if (mimeType == 'application/json'):\n                import json; resultValue = json.loads(rawValue)\n            elif (mimeType == 'application/table-schema+json'):\n                import json; resultValue = json.loads(rawValue)\n                try:\n                    import pandas as pd; resultValue = pd.DataFrame(data=resultValue['data'])\n                except Exception as e:\n                    self.__debugLog('__handle_send_value.dataframe.error', e)\n                    return EventEnvelope(CommandFailed(f'Cannot create pandas dataframe for: \"{name}\". {str(e)}'))\n                \n            if (resultValue is not None): \n                self.__setVariable(name, resultValue) \n                return EventEnvelope(CommandSucceeded())\n            \n            return EventEnvelope(CommandFailed(f'Failed to set value for \"{name}\". \"{mimeType}\" mimetype not supported.'))\n        \n        def is_ready(self):\n            return EventEnvelope(KernelReady()).payload()\n        \n        @staticmethod\n        def __setVariable(name, value):\n            globals()[name] = value\n        \n        @staticmethod\n        def __debugLog(event, message):\n            globals()[f'__log__coe_handler.{str(event)}'] = message\n    \n    \n    class KernelCommand: \n        pass\n\n    class SendValue(KernelCommand): \n        def __init__(self, entries):\n            self.__dict__.update(**entries)\n\n    class RequestValue(KernelCommand):\n        def __init__(self, entries):\n            self.__dict__.update(**entries)\n\n    class RequestValueInfos(KernelCommand):\n        def __init__(self, entries):\n            self.__dict__.update(**entries)\n            \n    class FormattedValue:\n        def __init__(self, mimeType = 'application/json', value = None):\n            self.mimeType = mimeType\n            self.value = value\n        \n        @staticmethod\n        def fromValue(value, mimeType = 'application/json'):\n            formattedValue = None\n            try: \n                import pandas as pd; \n                if (isinstance(value, pd.DataFrame)):\n                    mimeType = 'application/table-schema+json'\n            except Exception: \n                pass\n\n            if (mimeType == 'application/json'):\n                import json; formattedValue = json.dumps(value)\n            elif (mimeType == 'application/table-schema+json'):\n                formattedValue = value.to_string(index=False, max_rows=5)\n\n            return FormattedValue(mimeType, formattedValue)\n\n    class KernelValueInfo:\n        def __init__(self, name, formattedValue: FormattedValue, typeName = None):\n            self.name = name\n            self.formattedValue = formattedValue\n            self.typeName = typeName\n        \n    class KernelEvent:\n        pass\n\n    class KernelReady(KernelEvent):\n        def __init__(self, kernelInfos = []):\n            self.kernelInfos = kernelInfos\n\n    class CommandSucceeded(KernelEvent):\n        pass\n\n    class CommandFailed(KernelEvent):\n        def __init__(self, message = None):\n            self.message = message\n\n    class ValueProduced(KernelEvent):\n        def __init__(self, name, value, formattedValue: FormattedValue):\n            self.name = name\n            self.value = value \n            self.formattedValue = formattedValue\n    \n    class ValueInfosProduced(KernelEvent):\n        def __init__(self, valueInfos):\n            self.valueInfos = valueInfos\n            \n    class Envelope:\n        def payload(self):\n            return { 'commandOrEvent': self.__to_json_string(self) }\n\n        @staticmethod\n        def __to_json_string(obj):\n            return json.dumps(obj, default=lambda o: o.__dict__)\n\n    class EventEnvelope(Envelope):\n        def __init__(self, event: KernelEvent = None, command = None):\n            self.event = event\n            self.eventType = type(event).__name__\n            self.command = command\n\n        def payload(self):\n            ret = super().payload()\n            ret['type'] = 'event'\n            return ret\n    \n    return CommandEventCommTarget()\n\nif hasattr(get_ipython(), 'kernel'):\n    get_ipython().kernel.comm_manager.register_target('dotnet_coe_handler_comm', __get_dotnet_coe_comm_handler().handle_control_comm_opened)\n",
       "execution_count": 1
     },
     "buffers": [],
@@ -168,25 +168,25 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_15",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_15",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.226347Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.380720Z",
       "msg_type": "execute_reply",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "e861f067-6acc-4f28-8957-683b29cb3a96",
+      "msg_id": "75d0c69b-06de-4944-9ba6-e6966710af6d",
       "username": "dotnet_kernel",
-      "session": "54d7bcc9-5872-4f97-b363-2580e23fc98b",
-      "date": "2023-03-21T23:56:08.1913153Z",
+      "session": "6746d96a-8b0e-4d92-9bd3-07e0ce9de880",
+      "date": "2024-11-20T19:14:04.3553489Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
     "metadata": {
-      "started": "2023-03-21T23:56:08.194295Z",
+      "started": "2024-11-20T19:14:04.357504Z",
       "dependencies_met": true,
-      "engine": "455fc9ee-474b-430a-8f23-66eb6674c537",
+      "engine": "0d4419f9-499c-4caf-8bc9-0be29ce2efe7",
       "status": "ok"
     },
     "content": {
@@ -200,18 +200,18 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_16",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_16",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.227355Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.381231Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "e861f067-6acc-4f28-8957-683b29cb3a96",
+      "msg_id": "75d0c69b-06de-4944-9ba6-e6966710af6d",
       "username": "dotnet_kernel",
-      "session": "54d7bcc9-5872-4f97-b363-2580e23fc98b",
-      "date": "2023-03-21T23:56:08.1913153Z",
+      "session": "6746d96a-8b0e-4d92-9bd3-07e0ce9de880",
+      "date": "2024-11-20T19:14:04.3553489Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -224,18 +224,18 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_17",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_17",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.231343Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.383779Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "30367866-8d42-4a0f-8a87-bd9017c6a589",
+      "msg_id": "114e98f1-3ce6-4899-adce-0e633be57ef4",
       "username": "dotnet_kernel",
-      "session": "ff92848e-800c-4d39-9e0a-e435674f3f00",
-      "date": "2023-03-21T23:56:08.2294327Z",
+      "session": "5ad92b05-84fb-4920-8763-3f8342c79ead",
+      "date": "2024-11-20T19:14:04.3828855Z",
       "msg_type": "comm_open",
       "version": "5.3"
     },
@@ -248,24 +248,24 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_18",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_18",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.232342Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.383779Z",
       "msg_type": "comm_msg",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "30367866-8d42-4a0f-8a87-bd9017c6a589",
+      "msg_id": "114e98f1-3ce6-4899-adce-0e633be57ef4",
       "username": "dotnet_kernel",
-      "session": "ff92848e-800c-4d39-9e0a-e435674f3f00",
-      "date": "2023-03-21T23:56:08.2294327Z",
+      "session": "5ad92b05-84fb-4920-8763-3f8342c79ead",
+      "date": "2024-11-20T19:14:04.3828855Z",
       "msg_type": "comm_open",
       "version": "5.3"
     },
     "metadata": {},
     "content": {
-      "comm_id": "bb01e044-d2b3-4794-b1cd-a424f38b2175",
+      "comm_id": "37bf65f5-eef5-415e-98af-02ca175a91b8",
       "data": {
         "commandOrEvent": "{\"event\": {\"kernelInfos\": []}, \"eventType\": \"KernelReady\", \"command\": null}",
         "type": "event"
@@ -276,18 +276,18 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_19",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_19",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.233342Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.384741Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "30367866-8d42-4a0f-8a87-bd9017c6a589",
+      "msg_id": "114e98f1-3ce6-4899-adce-0e633be57ef4",
       "username": "dotnet_kernel",
-      "session": "ff92848e-800c-4d39-9e0a-e435674f3f00",
-      "date": "2023-03-21T23:56:08.2294327Z",
+      "session": "5ad92b05-84fb-4920-8763-3f8342c79ead",
+      "date": "2024-11-20T19:14:04.3828855Z",
       "msg_type": "comm_open",
       "version": "5.3"
     },
@@ -300,18 +300,18 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_20",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_20",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.237343Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.386742Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "8c38caac-2332-49ea-96d4-d3bb6f2db7c6",
+      "msg_id": "a69dcabb-54ac-4dae-8ef5-299dbdf86140",
       "username": "dotnet_kernel",
-      "session": "a4236672-308a-487a-bed3-c7c02b29f419",
-      "date": "2023-03-21T23:56:08.2362650Z",
+      "session": "0cfa6a60-4acd-424d-b0eb-1e75223b8ff1",
+      "date": "2024-11-20T19:14:04.3868772Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -324,18 +324,18 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_21",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_21",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.237343Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.387741Z",
       "msg_type": "execute_input",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "8c38caac-2332-49ea-96d4-d3bb6f2db7c6",
+      "msg_id": "a69dcabb-54ac-4dae-8ef5-299dbdf86140",
       "username": "dotnet_kernel",
-      "session": "a4236672-308a-487a-bed3-c7c02b29f419",
-      "date": "2023-03-21T23:56:08.2362650Z",
+      "session": "0cfa6a60-4acd-424d-b0eb-1e75223b8ff1",
+      "date": "2024-11-20T19:14:04.3868772Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -349,18 +349,18 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_22",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_22",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.243347Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.390742Z",
       "msg_type": "display_data",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "8c38caac-2332-49ea-96d4-d3bb6f2db7c6",
+      "msg_id": "a69dcabb-54ac-4dae-8ef5-299dbdf86140",
       "username": "dotnet_kernel",
-      "session": "a4236672-308a-487a-bed3-c7c02b29f419",
-      "date": "2023-03-21T23:56:08.2362650Z",
+      "session": "0cfa6a60-4acd-424d-b0eb-1e75223b8ff1",
+      "date": "2024-11-20T19:14:04.3868772Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
@@ -377,25 +377,25 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_23",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_23",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.257864Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.392741Z",
       "msg_type": "execute_reply",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "8c38caac-2332-49ea-96d4-d3bb6f2db7c6",
+      "msg_id": "a69dcabb-54ac-4dae-8ef5-299dbdf86140",
       "username": "dotnet_kernel",
-      "session": "a4236672-308a-487a-bed3-c7c02b29f419",
-      "date": "2023-03-21T23:56:08.2362650Z",
+      "session": "0cfa6a60-4acd-424d-b0eb-1e75223b8ff1",
+      "date": "2024-11-20T19:14:04.3868772Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },
     "metadata": {
-      "started": "2023-03-21T23:56:08.237343Z",
+      "started": "2024-11-20T19:14:04.387741Z",
       "dependencies_met": true,
-      "engine": "455fc9ee-474b-430a-8f23-66eb6674c537",
+      "engine": "0d4419f9-499c-4caf-8bc9-0be29ce2efe7",
       "status": "ok"
     },
     "content": {
@@ -409,18 +409,18 @@
   },
   {
     "header": {
-      "msg_id": "96e4356a-7861b296a127b7f3b8ca73a2_24356_24",
+      "msg_id": "2cb90f1a-2ae5b5009463bc511a3d7f9b_56480_24",
       "username": "username",
-      "session": "96e4356a-7861b296a127b7f3b8ca73a2",
-      "date": "2023-03-21T23:56:08.257864Z",
+      "session": "2cb90f1a-2ae5b5009463bc511a3d7f9b",
+      "date": "2024-11-20T19:14:04.392741Z",
       "msg_type": "status",
       "version": "5.3"
     },
     "parent_header": {
-      "msg_id": "8c38caac-2332-49ea-96d4-d3bb6f2db7c6",
+      "msg_id": "a69dcabb-54ac-4dae-8ef5-299dbdf86140",
       "username": "dotnet_kernel",
-      "session": "a4236672-308a-487a-bed3-c7c02b29f419",
-      "date": "2023-03-21T23:56:08.2362650Z",
+      "session": "0cfa6a60-4acd-424d-b0eb-1e75223b8ff1",
+      "date": "2024-11-20T19:14:04.3868772Z",
       "msg_type": "execute_request",
       "version": "5.3"
     },

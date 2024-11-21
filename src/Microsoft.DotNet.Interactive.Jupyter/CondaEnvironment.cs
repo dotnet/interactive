@@ -1,4 +1,7 @@
-﻿using Microsoft.DotNet.Interactive.Utility;
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.DotNet.Interactive.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,69 +9,74 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Pocket;
+using static System.Environment;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.CondaEnvironment>;
+using CommandLine = Microsoft.DotNet.Interactive.Utility.CommandLine;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
 internal class CondaEnvironment : IJupyterEnvironment
 {
-    private class EnvironmentListResults
-    {
-        public string[] envs { get; set; }
-    }
-
     public const string BASE_ENV = "base";
-    public string Name { get; set; }
 
-    public static string CondaPath;
-
-    private static IReadOnlyCollection<string> _environments = new List<string>();
+    private static IReadOnlyCollection<string> _environmentNames = null;
 
     static CondaEnvironment()
     {
         CondaPath = GetCondaPath();
-        Task.Run(async () => _environments = await GetEnvironmentsAsync());
     }
+
+    public static string CondaPath { get; }
 
     public CondaEnvironment(string name = BASE_ENV)
     {
         Name = name;
     }
 
-    public static IReadOnlyCollection<string> GetEnvironments()
-    {
-        return _environments;
-    }
+    public string Name { get; set; }
 
-    private static async Task<IReadOnlyCollection<string>> GetEnvironmentsAsync()
+    public static async Task<IReadOnlyCollection<string>> GetEnvironmentNamesAsync() =>
+        _environmentNames ??= await DiscoverEnvironmentNamesAsync();
+
+    private static async Task<IReadOnlyCollection<string>> DiscoverEnvironmentNamesAsync()
     {
-        var envList = await Execute("conda", "env list --json");
-        if (envList.ExitCode == 0)
+        var commandLineResult = await ExecuteAsync("conda", "env list --json");
+
+        if (commandLineResult.ExitCode is 0)
         {
-            var results = JsonSerializer.Deserialize<EnvironmentListResults>(string.Join(string.Empty, envList.Output));
-            return results.envs.Select(e =>
+            var results = JsonSerializer.Deserialize<EnvironmentListResult>(string.Join(string.Empty, commandLineResult.Output));
+
+            var envNames = results.envs.Select(e =>
             {
-                if (e.Contains("\\envs\\"))
+                if (e.Contains($"{Path.DirectorySeparatorChar}envs{Path.DirectorySeparatorChar}"))
                 {
-                    return e.Split("\\").LastOrDefault();
+                    var exeName = e.Split(Path.DirectorySeparatorChar).LastOrDefault();
+                    return exeName;
                 }
                 else
                 {
                     return BASE_ENV;
                 }
-            }).ToList();
-        }
+            }).ToArray();
 
-        return _environments;
+            return envNames;
+        }
+        else
+        {
+            Log.Warning("Failed to list Conda environments.", commandLineResult.Error);
+            return [BASE_ENV];
+        }
     }
 
-    private static async Task<CommandLineResult> Execute(string command, string args, string environmentName = BASE_ENV, DirectoryInfo workingDir = null, TimeSpan? timeout = null)
+    internal static async Task<CommandLineResult> ExecuteAsync(string command, string args, string environmentName = BASE_ENV)
     {
         return await CommandLine.Execute(CondaPath, $"activate {environmentName}&{command} {args}");
     }
 
-    public async Task<CommandLineResult> Execute(string command, string args, DirectoryInfo workingDir = null, TimeSpan? timeout = null)
+    public async Task<CommandLineResult> ExecuteAsync(string command, string args, DirectoryInfo workingDir = null, TimeSpan? timeout = null)
     {
-        return await Execute(command, args, Name, workingDir, timeout);
+        return await ExecuteAsync(command, args, Name);
     }
 
     public Process StartProcess(string command, string args, DirectoryInfo workingDir, Action<string> output = null, Action<string> error = null)
@@ -78,51 +86,61 @@ internal class CondaEnvironment : IJupyterEnvironment
 
     private static string GetCondaPath()
     {
-        string condaCommand = GetCondaExecutable();
-
-        string condaPath = Environment.GetEnvironmentVariable("CONDA_PATH");
-        if (condaPath != null)
+        string condaExecutableName = OSVersion.Platform switch
         {
-            return Path.Combine(condaPath, condaCommand);
+            PlatformID.Win32S or PlatformID.Win32Windows or PlatformID.Win32NT => "conda.bat",
+            _ => "conda"
+        };
+
+        if (GetEnvironmentVariable("CONDA_PATH") is {} envVar_CONDA_PATH)
+        {
+            Log.Info("Using environment variable CONDA_PATH for Conda at {path}", envVar_CONDA_PATH);
+            return Path.Combine(envVar_CONDA_PATH, condaExecutableName);
         }
 
-        string pathEnvVar = Environment.GetEnvironmentVariable("PATH");
-        if (pathEnvVar != null && pathEnvVar.Contains("conda"))
+        if (GetEnvironmentVariable("PATH") is { } envVar_PATH &&
+            envVar_PATH.Contains("conda"))
         {
-            return condaCommand;
+            Log.Info("Found Conda on path: {path}", envVar_PATH);
+            // QUESTION: (GetCondaPath) This seems like it could be less robust and/or vary in behavior from the fully qualified paths produced by the other code paths in this method.
+            return condaExecutableName;
         }
-
-        List<string> paths = new List<string>();
 
         // potential install paths for conda first and then miniconda
-        paths.AddRange(new string[] {
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "anaconda3", "condabin"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "anaconda3", "Scripts"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "anaconda3", "condabin"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "anaconda3", "Scripts"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "anaconda3", "condabin"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "anaconda3", "Scripts"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "miniconda3", "condabin"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "miniconda3", "Scripts"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "miniconda3", "condabin"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "miniconda3", "Scripts"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "miniconda3", "condabin"),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "miniconda3", "Scripts"),
-                    });
+        string[] searchDirectories =
+        [
+            Path.Combine(GetFolderPath(SpecialFolder.LocalApplicationData), "anaconda3", "condabin"),
+            Path.Combine(GetFolderPath(SpecialFolder.LocalApplicationData), "anaconda3", "Scripts"),
+            Path.Combine(GetFolderPath(SpecialFolder.UserProfile), "anaconda3", "condabin"),
+            Path.Combine(GetFolderPath(SpecialFolder.UserProfile), "anaconda3", "Scripts"),
+            Path.Combine(GetFolderPath(SpecialFolder.System), "anaconda3", "condabin"),
+            Path.Combine(GetFolderPath(SpecialFolder.System), "anaconda3", "Scripts"),
+            Path.Combine(GetFolderPath(SpecialFolder.LocalApplicationData), "miniconda3", "condabin"),
+            Path.Combine(GetFolderPath(SpecialFolder.LocalApplicationData), "miniconda3", "Scripts"),
+            Path.Combine(GetFolderPath(SpecialFolder.UserProfile), "miniconda3", "condabin"),
+            Path.Combine(GetFolderPath(SpecialFolder.UserProfile), "miniconda3", "Scripts"),
+            Path.Combine(GetFolderPath(SpecialFolder.System), "miniconda3", "condabin"),
+            Path.Combine(GetFolderPath(SpecialFolder.System), "miniconda3", "Scripts")
+        ];
 
-        return paths.Select(p => Path.Combine(p, condaCommand)).FirstOrDefault(File.Exists);
+        var path = searchDirectories
+                   .Select(p => Path.Combine(p, condaExecutableName))
+                   .FirstOrDefault(File.Exists);
+
+        if (path is not null)
+        {
+            Log.Info("Discovered Conda path: {path}", path);
+        }
+        else
+        {
+            Log.Warning("Conda not found.");
+        }
+
+        return path;
     }
 
-    private static string GetCondaExecutable()
+    private class EnvironmentListResult
     {
-        switch (Environment.OSVersion.Platform)
-        {
-            case PlatformID.Win32S:
-            case PlatformID.Win32Windows:
-            case PlatformID.Win32NT:
-                return "conda.bat";
-            default:
-                return "conda";
-        }
+        public string[] envs { get; init; }
     }
 }

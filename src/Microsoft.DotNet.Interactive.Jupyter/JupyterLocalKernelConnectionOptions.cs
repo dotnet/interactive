@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis.Tags;
 using Microsoft.DotNet.Interactive.Directives;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 
@@ -14,7 +16,13 @@ public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnecti
 
     public JupyterLocalKernelConnectionOptions()
     {
-        CondaEnv.AddCompletions(CondaEnvironment.GetEnvironments);
+        CondaEnv.AddCompletions(async context =>
+        {
+            foreach (var name in await CondaEnvironment.GetEnvironmentNamesAsync())
+            {
+                context.CompletionItems.Add(new CompletionItem(name, WellKnownTags.Parameter));
+            }
+        });
 
         _parameters = new List<KernelDirectiveParameter>
         {
@@ -22,7 +30,7 @@ public sealed class JupyterLocalKernelConnectionOptions : IJupyterKernelConnecti
         };
     }
 
-    public KernelDirectiveParameter CondaEnv { get; } = new("--conda-env", "Conda environment to use; Default is base");
+    public KernelDirectiveParameter CondaEnv { get; } = new("--conda-env", "The Conda environment to use. (The default is base.)");
 
     public IJupyterConnection GetConnection(ConnectJupyterKernel connectCommand)
     {

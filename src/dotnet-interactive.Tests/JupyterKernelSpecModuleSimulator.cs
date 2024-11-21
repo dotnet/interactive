@@ -17,16 +17,19 @@ internal class JupyterKernelSpecModuleSimulator : IJupyterKernelSpecModule
     private readonly DirectoryInfo _defaultKernelSpecDirectory;
     private readonly Exception _withException;
 
-    public JupyterKernelSpecModuleSimulator(bool success, DirectoryInfo defaultKernelSpecDirectory = null, Exception withException = null)
+    public JupyterKernelSpecModuleSimulator(
+        bool success, 
+        DirectoryInfo defaultKernelSpecDirectory = null, 
+        Exception withException = null)
     {
         _success = success;
         _defaultKernelSpecDirectory = defaultKernelSpecDirectory;
         _withException = withException;
     }
 
-    public List<string> InstalledKernelSpecs { get; } = new List<string>();
+    public List<string> InstalledKernelSpecs { get; } = new();
 
-    public Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory)
+    public Task<CommandLineResult> InstallKernelAsync(DirectoryInfo sourceDirectory)
     {
         foreach (var kernelSpec in sourceDirectory.GetFiles("kernel.json"))
         {
@@ -37,6 +40,7 @@ internal class JupyterKernelSpecModuleSimulator : IJupyterKernelSpecModule
         {
             throw _withException;
         }
+
         return Task.FromResult(new CommandLineResult(_success ? 0 : 1));
     }
 
@@ -47,7 +51,7 @@ internal class JupyterKernelSpecModuleSimulator : IJupyterKernelSpecModule
             : _defaultKernelSpecDirectory ?? new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetTempFileName()));
     }
 
-    public Task<IReadOnlyDictionary<string, KernelSpec>> ListKernels()
+    public Task<IReadOnlyDictionary<string, KernelSpec>> ListKernelsAsync()
     {
         throw new NotImplementedException();
     }
