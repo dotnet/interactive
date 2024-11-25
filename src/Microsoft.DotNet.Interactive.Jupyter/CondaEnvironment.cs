@@ -106,22 +106,25 @@ internal class CondaEnvironment : IJupyterEnvironment
             return condaExecutableName;
         }
 
-        // potential install paths for conda first and then miniconda
-        string[] searchDirectories =
-        [
-            Path.Combine(GetFolderPath(SpecialFolder.LocalApplicationData), "anaconda3", "condabin"),
-            Path.Combine(GetFolderPath(SpecialFolder.LocalApplicationData), "anaconda3", "Scripts"),
-            Path.Combine(GetFolderPath(SpecialFolder.UserProfile), "anaconda3", "condabin"),
-            Path.Combine(GetFolderPath(SpecialFolder.UserProfile), "anaconda3", "Scripts"),
-            Path.Combine(GetFolderPath(SpecialFolder.System), "anaconda3", "condabin"),
-            Path.Combine(GetFolderPath(SpecialFolder.System), "anaconda3", "Scripts"),
-            Path.Combine(GetFolderPath(SpecialFolder.LocalApplicationData), "miniconda3", "condabin"),
-            Path.Combine(GetFolderPath(SpecialFolder.LocalApplicationData), "miniconda3", "Scripts"),
-            Path.Combine(GetFolderPath(SpecialFolder.UserProfile), "miniconda3", "condabin"),
-            Path.Combine(GetFolderPath(SpecialFolder.UserProfile), "miniconda3", "Scripts"),
-            Path.Combine(GetFolderPath(SpecialFolder.System), "miniconda3", "condabin"),
-            Path.Combine(GetFolderPath(SpecialFolder.System), "miniconda3", "Scripts")
-        ];
+        var searchDirectories =
+            from basePath in new[]
+            {
+                GetFolderPath(SpecialFolder.LocalApplicationData),
+                GetFolderPath(SpecialFolder.UserProfile),
+                GetFolderPath(SpecialFolder.CommonApplicationData), // if installed for all users, this is where it will be
+                GetFolderPath(SpecialFolder.System)
+            }
+            from condaDir in new[]
+            {
+                "anaconda3",
+                "miniconda3"
+            }
+            from scriptDir in new[]
+            {
+                "Scripts",
+                "condabin"
+            }
+            select Path.Combine(basePath, condaDir, scriptDir);
 
         var path = searchDirectories
                    .Select(p => Path.Combine(p, condaExecutableName))

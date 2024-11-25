@@ -15,7 +15,6 @@ internal class DefaultJupyterEnvironment : IJupyterEnvironment
 
     public Process StartProcess(string command, string args, DirectoryInfo workingDir, Action<string> output = null, Action<string> error = null)
     {
-        // FIX: (StartProcess) make sure these are getting disposed
         return CommandLine.StartProcess(command, args, workingDir, output, error);
     }
 }
