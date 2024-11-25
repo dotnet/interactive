@@ -51,13 +51,10 @@ public class SubmissionParser
         {
             parseResult.CommandName = directiveNode.NameNode?.Text;
 
-            if (directiveNode.TryGetDirective(out var directive))
+            var parameterValues = directiveNode.GetParameterValues(new());
+            foreach (var (name, value, _) in parameterValues)
             {
-                var parameterValues = directiveNode.GetParameterValues(new());
-                foreach (var (name, value, _) in parameterValues)
-                {
-                    parseResult.Parameters[name] = value?.ToString();
-                }
+                parseResult.Parameters[name] = value?.ToString();
             }
 
             foreach (var expressionNode in directiveNode
@@ -77,7 +74,7 @@ public class SubmissionParser
                         var nameParameterValue = directiveNode
                                                  .DescendantNodesAndTokens()
                                                  .OfType<DirectiveParameterNode>()
-                                                 .FirstOrDefault(p => p.NameNode?.Text == "--name")
+                                                 .FirstOrDefault(p => p.NameNode?.Text is "--name")
                                                  ?.DescendantNodesAndTokens()
                                                  .OfType<DirectiveParameterValueNode>()
                                                  .SingleOrDefault()
@@ -363,7 +360,7 @@ public class SubmissionParser
             if (commands.Count > 0 &&
                 commands[^1] is SubmitCode previous)
             {
-                previous.Code += languageNode.Text;
+                previous.Code += Environment.NewLine + languageNode.FullText;
             }
             else
             {

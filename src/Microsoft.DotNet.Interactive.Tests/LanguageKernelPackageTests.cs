@@ -12,6 +12,7 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -944,15 +945,13 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 
         var command = new SubmitCode(code);
 
-        using var events = kernel.KernelEvents.ToSubscribedList();
-
         var result = await kernel.SendAsync(command);
 
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
 
         using var _ = new AssertionScope();
 
-        events
+        result.Events
             .Should()
             .ContainSingle<PackageAdded>()
             .Which
@@ -960,6 +959,33 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             .PackageName
             .Should()
             .Be("Newtonsoft.Json");
+    }
+
+    [Theory] // https://github.com/dotnet/interactive/issues/3753
+    [InlineData(Language.CSharp)]
+    [InlineData(Language.FSharp)]
+    public async Task Pound_r_works_immediately_after_pound_r_nuget(Language defaultLanguageKernel)
+    {
+        var kernel = CreateCompositeKernel(defaultLanguageKernel);
+
+        var prefix = defaultLanguageKernel switch
+        {
+            Language.CSharp => "",
+            Language.FSharp => "@"
+        };
+
+        var code = $"""
+                    #r "nuget: System.Text.Json, 9.0.0"
+
+                    #r {prefix}"{typeof(Formatter).Assembly.Location}"
+                    #r {prefix}"{typeof(InteractiveDocument).Assembly.Location}"
+                    """;
+
+        var command = new SubmitCode(code);
+
+        var result = await kernel.SendAsync(command);
+
+        result.Events.Should().NotContainErrors();
     }
 
     [Theory]
@@ -1146,7 +1172,6 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 #r ""nuget:Google.Protobuf, *-*""
 ";
 
-
         await kernel.SendAsync(new SubmitCode(codeFirstSubmission));
 
 
@@ -1166,7 +1191,7 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
     [Theory]
     [InlineData(Language.CSharp)]
     [InlineData(Language.FSharp)]
-    public async Task Pound_r_nuget_should__trying_to_load_again_same_package_with_wildcard_after_loading_a_specific_version_reuses_the_previously_resolved(Language defaultLanguageKernel)
+    public async Task Pound_r_nuget_should_succeed_when_trying_to_load_again_same_package_with_wildcard_after_loading_a_specific_version_reuses_the_previously_resolved(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);
 
