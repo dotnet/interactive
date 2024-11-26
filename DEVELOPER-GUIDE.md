@@ -209,6 +209,7 @@ Some tests require additional setup or will be skipped. `JupyterKernel` tests fo
 ### Run tests with a local Jupyter Server
 
 1. Install [Jupyter server](https://docs.jupyter.org/en/latest/install.html) or [Anaconda](https://www.anaconda.com/products/distribution)
+
 2. [Install R kernel](https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/) for R tests by calling the following in Anaconda Prompt (Windows) or the terminal (Mac/Linux)
 ```
 conda install -c r r-irkernel

@@ -21,15 +21,20 @@ internal class MessagePlayback : IMessageTracker
     private readonly ConcurrentQueue<Message> _processRequests = new();
     private readonly List<Message> _playbackMessages = new();
     private readonly CancellationTokenSource _cts = new();
-    public IObservable<Message> Messages => _receivedMessages;
+    private readonly Task _requestProcessingLoopTask;
 
     public MessagePlayback(IReadOnlyCollection<Message> messages)
     {
         _playbackMessages.AddRange(messages);
 
-        // FIX: (MessagePlayback) make sure this is awaited
-        var requestProcessing = Task.Run(() => ProcessRequestsAsync());
+        _requestProcessingLoopTask = Task.Factory.StartNew(
+            RequestProcessingLoop,
+            creationOptions: TaskCreationOptions.LongRunning,
+            cancellationToken: CancellationToken.None,
+            scheduler: TaskScheduler.Default);
     }
+
+    public IObservable<Message> Messages => _receivedMessages;
 
     public Task SendAsync(Message message)
     {
@@ -39,45 +44,41 @@ internal class MessagePlayback : IMessageTracker
         return Task.CompletedTask;
     }
 
-    private async Task ProcessRequestsAsync()
+    private async Task RequestProcessingLoop()
     {
-        await Task.Run(async () =>
+        while (!_cts.IsCancellationRequested)
         {
-            while (!_cts.IsCancellationRequested)
+            if (_processRequests.TryDequeue(out var message))
             {
-                if (_processRequests.TryDequeue(out var message))
+                // find appropriate message from playback to send back since we 
+                // can't match the messageIds.
+                var responses = _playbackMessages
+                                .GroupBy(m => new { MsgId = m.ParentHeader?.MessageId, MsgType = m.ParentHeader?.MessageType })
+                                .FirstOrDefault(g => g.Key.MsgType == message.Header.MessageType);
+
+                foreach (var m in responses)
                 {
-                    // find appropriate message from playback to send back since we 
-                    // can't match the messageIds.
-                    var responses = _playbackMessages
-                                    .GroupBy(m => new { MsgId = m.ParentHeader?.MessageId, MsgType = m.ParentHeader?.MessageType })
-                                    .FirstOrDefault(g => g.Key.MsgType == message.Header.MessageType);
+                    var replyMessage = new Message(
+                        m.Header,
+                        GetContent(message, m),
+                        new Header(
+                            m.ParentHeader?.MessageType,
+                            message.Header.MessageId, // reply back with the sent message id
+                            m.ParentHeader.Version,
+                            m.ParentHeader.Session,
+                            m.ParentHeader.Username,
+                            m.ParentHeader.Date),
+                        m.Signature, m.MetaData, m.Identifiers, m.Buffers, m.Channel);
 
-
-                    foreach (var m in responses)
-                    {
-                        var replyMessage = new Message(
-                            m.Header,
-                            GetContent(message, m),
-                            new Header(
-                                m.ParentHeader?.MessageType,
-                                message.Header.MessageId,  // reply back with the sent message id
-                                m.ParentHeader.Version,
-                                m.ParentHeader.Session,
-                                m.ParentHeader.Username,
-                                m.ParentHeader.Date),
-                            m.Signature, m.MetaData, m.Identifiers, m.Buffers, m.Channel);
-
-                        _receivedMessages.OnNext(replyMessage);
-                        _playbackMessages.Remove(m);
-                    }
-                }
-                else
-                {
-                    await Task.Delay(50);
+                    _receivedMessages.OnNext(replyMessage);
+                    _playbackMessages.Remove(m);
                 }
             }
-        }, _cts.Token);
+            else
+            {
+                await Task.Delay(50);
+            }
+        }
     }
 
     private Protocol.Message GetContent(Message message, Message m)
@@ -96,11 +97,11 @@ internal class MessagePlayback : IMessageTracker
         {
             if (m.Content is CommClose commClose)
             {
-                return new CommClose(commId, commClose.Data as IReadOnlyDictionary<string, object>);
+                return new CommClose(commId, commClose.Data);
             }
             else if (m.Content is CommMsg commMsg)
             {
-                return new CommMsg(commId, commMsg.Data as IReadOnlyDictionary<string, object>);
+                return new CommMsg(commId, commMsg.Data);
             }
         }
 
@@ -117,6 +118,7 @@ internal class MessagePlayback : IMessageTracker
         _cts.Cancel();
         _sentMessages.Dispose();
         _receivedMessages.Dispose();
+        _requestProcessingLoopTask.Dispose();
     }
 
     public IObservable<Message> SentMessages => _sentMessages;

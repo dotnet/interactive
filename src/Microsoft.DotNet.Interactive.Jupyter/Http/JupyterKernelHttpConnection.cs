@@ -9,13 +9,14 @@ using System.IO;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
 using JupyterMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Http.JupyterHttpConnection>;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Http;
 
@@ -27,6 +28,7 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
     private readonly Subject<JupyterMessage> _subject;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly CompositeDisposable _disposables;
+    private Task _messageLoopTask;
 
     public JupyterKernelHttpConnection(Uri serverUri, IAuthorizationProvider authProvider) :
         this(new HttpApiClient(serverUri, authProvider), authProvider)
@@ -41,19 +43,23 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
         _cancellationTokenSource = new CancellationTokenSource();
         _disposables = new CompositeDisposable
         {
+            Disposable.Create(() =>
+            {
+                if (_cancellationTokenSource.Token.CanBeCanceled)
+                {
+                    _cancellationTokenSource.Cancel();
+                }
+            }),
             _socket,
             _subject,
+            Disposable.Create(() => _messageLoopTask?.Dispose()),
             _cancellationTokenSource
         };
 
         Uri = _apiClient.BaseUri;
     }
 
-    public void Dispose()
-    {
-        _cancellationTokenSource.Cancel();
-        _disposables.Dispose();
-    }
+    public void Dispose() => _disposables.Dispose();
 
     public Uri Uri { get; }
 
@@ -66,7 +72,7 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
     public async Task StartAsync()
     {
         await ConnectSocketAsync();
-        await StartListeningAsync(_socket, _cancellationTokenSource.Token);
+        StartListening();
     }
 
     private async Task ConnectSocketAsync()
@@ -78,7 +84,7 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
 
     public async Task SendAsync(JupyterMessage message)
     {
-        if(await TryHandleAsync(message))
+        if (await TryHandleAsync(message))
         {
             // handled here. no need to send to kernel
             return;
@@ -112,49 +118,57 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
             CancellationToken.None);
     }
 
-    private Task StartListeningAsync(ClientWebSocket socket, CancellationToken cancellationToken)
+    private void StartListening()
     {
-        // FIX: (StartListeningAsync) make sure this is correctly handled
-        Task.Run(async () =>
+        if (_messageLoopTask is not null)
         {
-            while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
+            throw new InvalidOperationException("Already listening.");
+        }
+
+        _messageLoopTask = Task.Factory.StartNew(
+            MessageLoop,
+            creationOptions: TaskCreationOptions.LongRunning);
+
+        async Task MessageLoop()
+        {
+            while (!_cancellationTokenSource.Token.IsCancellationRequested &&
+                   _socket.State is WebSocketState.Open)
             {
                 var buffer = new ArraySegment<byte>(new byte[512]);
-                WebSocketReceiveResult result;
 
-                using (MemoryStream ms = new MemoryStream())
+                using MemoryStream ms = new MemoryStream();
+
+                try
                 {
-                    try
-                    {
-                        do
-                        {
-                            result = await socket.ReceiveAsync(buffer, cancellationToken);
-                            ms.Write(buffer.Array, buffer.Offset, result.Count);
-                        } while (!result.EndOfMessage);
+                    WebSocketReceiveResult result;
 
-                        if (result.MessageType == WebSocketMessageType.Close)
-                        {
-                            await socket.CloseAsync(
+                    do
+                    {
+                        result = await _socket.ReceiveAsync(buffer, _cancellationTokenSource.Token);
+                        ms.Write(buffer.Array, buffer.Offset, result.Count);
+                    } while (!result.EndOfMessage);
+
+                    if (result.MessageType is WebSocketMessageType.Close)
+                    {
+                        await _socket.CloseAsync(
                             WebSocketCloseStatus.NormalClosure,
                             "Close message received",
                             CancellationToken.None);
-                            break;
-                        }
-
-                        ms.Seek(0, SeekOrigin.Begin);
-
-                        var message = JsonSerializer.Deserialize<JupyterMessage>(ms, MessageFormatter.SerializerOptions);
-                        PostMessage(message);
+                        break;
                     }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
+
+                    ms.Seek(0, SeekOrigin.Begin);
+
+                    var message = JsonSerializer.Deserialize<JupyterMessage>(ms, MessageFormatter.SerializerOptions);
+                    PostMessage(message);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    Log.Error(e, "Error in Jupyter message loop", e);
                 }
             }
-        }, cancellationToken);
-
-        return Task.CompletedTask;
+        }
     }
 
     private async Task<bool> TryHandleAsync(JupyterMessage message)
@@ -174,19 +188,20 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
 
     private async Task<bool> InterruptKernelAsync()
     {
-        HttpResponseMessage response = await _apiClient.SendRequestAsync(
-                relativeApiPath: "interrupt",
-                content: null,
-                method: HttpMethod.Post
-            );
+        var response = await _apiClient.SendRequestAsync(
+                           relativeApiPath: "interrupt",
+                           content: null,
+                           method: HttpMethod.Post);
 
         return response.IsSuccessStatusCode;
     }
 
     private Uri GetWebSocketUri(Uri uri)
     {
-        UriBuilder uriBuilder = new UriBuilder(uri);
-        uriBuilder.Scheme = uri.Scheme == "http" ? "ws" : "wss";
+        var uriBuilder = new UriBuilder(uri)
+        {
+            Scheme = uri.Scheme == "http" ? "ws" : "wss"
+        };
 
         return uriBuilder.Uri;
     }
