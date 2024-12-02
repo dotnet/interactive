@@ -15,14 +15,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests;
 
 public class JupyterInstallCommandTests
 {
-
     [Fact]
     public async Task Appends_http_port_range_arguments()
     {
         var console = new TestConsole();
         var kernelSpecModule = new JupyterKernelSpecModuleSimulator(true);
         var kernelSpecInstaller = new JupyterKernelSpecInstaller(console,kernelSpecModule);
-        var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpecInstaller, new HttpPortRange(100, 400));
+        var jupyterCommandLine = new JupyterInstallCommand(kernelSpecInstaller, new HttpPortRange(100, 400));
 
         await jupyterCommandLine.InvokeAsync();
 
@@ -38,6 +37,7 @@ public class JupyterInstallCommandTests
     [InlineData(".NET (C#)")]
     [InlineData(".NET (F#)")]
     [InlineData(".NET (PowerShell)")]
+    [Trait("Category", "Contracts and serialization")]
     public async Task kernel_spec_is_not_broken(string displayName)
     {
         var _configuration = new Configuration()
@@ -47,14 +47,13 @@ public class JupyterInstallCommandTests
         var console = new TestConsole();
         var kernelSpecModule = new JupyterKernelSpecModuleSimulator(true);
         var kernelSpecInstaller = new JupyterKernelSpecInstaller(console, kernelSpecModule);
-        var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpecInstaller, new HttpPortRange(100, 400));
+        var jupyterCommandLine = new JupyterInstallCommand(kernelSpecInstaller, new HttpPortRange(100, 400));
 
         await jupyterCommandLine.InvokeAsync();
 
         var kernelSpec = kernelSpecModule.InstalledKernelSpecs.Single(k => k.Contains(displayName));
 
         this.Assent(kernelSpec, _configuration);
-
     }
 
     [Fact]
@@ -63,9 +62,7 @@ public class JupyterInstallCommandTests
         var console = new TestConsole();
         var kernelSpecModule = new JupyterKernelSpecModuleSimulator(false);
         var kernelSpecInstaller = new JupyterKernelSpecInstaller(console, kernelSpecModule);
-        var installCommand = new JupyterInstallCommand(
-            console,
-            kernelSpecInstaller);
+        var installCommand = new JupyterInstallCommand(kernelSpecInstaller);
 
         await installCommand.InvokeAsync();
         var consoleError = console.Error.ToString();
@@ -81,7 +78,7 @@ public class JupyterInstallCommandTests
         var console = new TestConsole();
         var kernelSpecModule = new JupyterKernelSpecModuleSimulator(true);
         var kernelSpecInstaller = new JupyterKernelSpecInstaller(console, kernelSpecModule);
-        var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpecInstaller);
+        var jupyterCommandLine = new JupyterInstallCommand(kernelSpecInstaller);
 
         await jupyterCommandLine.InvokeAsync();
 

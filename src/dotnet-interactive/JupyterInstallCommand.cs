@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
@@ -14,7 +14,6 @@ namespace Microsoft.DotNet.Interactive.App;
 
 public class JupyterInstallCommand
 {
-    private readonly IConsole _console;
     private readonly IJupyterKernelSpecInstaller _jupyterKernelSpecInstaller;
     private readonly HttpPortRange _httpPortRange;
     private readonly DirectoryInfo _path;
@@ -23,9 +22,11 @@ public class JupyterInstallCommand
         WriteIndented = true
     };
 
-    public JupyterInstallCommand(IConsole console, IJupyterKernelSpecInstaller jupyterKernelSpecInstaller, HttpPortRange httpPortRange = null, DirectoryInfo path = null)
+    public JupyterInstallCommand(
+        IJupyterKernelSpecInstaller jupyterKernelSpecInstaller, 
+        HttpPortRange httpPortRange = null, 
+        DirectoryInfo path = null)
     {
-        _console = console;
         _jupyterKernelSpecInstaller = jupyterKernelSpecInstaller;
         _httpPortRange = httpPortRange;
         _path = path;
@@ -33,46 +34,40 @@ public class JupyterInstallCommand
 
     public async Task<int> InvokeAsync()
     {
-        var errorCount = 0;
-        using (var disposableDirectory = DisposableDirectory.Create())
+        var assembly = typeof(Program).Assembly;
+
+        using var disposableDirectory = DisposableDirectory.Create();
+        await using var resourceStream = assembly.GetManifestResourceStream("dotnetKernel.zip");
+
+        var zipPath = Path.Combine(disposableDirectory.Directory.FullName, "dotnetKernel.zip");
+
+        using (var fileStream = new FileStream(zipPath, FileMode.Create, FileAccess.Write))
         {
-            var assembly = typeof(Program).Assembly;
+            resourceStream.CopyTo(fileStream);
+        }
 
-            using (var resourceStream = assembly.GetManifestResourceStream("dotnetKernel.zip"))
-            {
-                var zipPath = Path.Combine(disposableDirectory.Directory.FullName, "dotnetKernel.zip");
+        var dotnetDirectory = disposableDirectory.Directory;
+        ZipFile.ExtractToDirectory(zipPath, dotnetDirectory.FullName);
 
-                using (var fileStream = new FileStream(zipPath, FileMode.Create, FileAccess.Write))
-                {
-                    resourceStream.CopyTo(fileStream);
-                }
+        if (_httpPortRange is not null)
+        {
+            ComputeKernelSpecArgs(_httpPortRange, dotnetDirectory);
+        }
 
-                var dotnetDirectory = disposableDirectory.Directory;
-                ZipFile.ExtractToDirectory(zipPath, dotnetDirectory.FullName);
+        var errorCount = 0;
 
-                if (_httpPortRange is not null)
-                {
-                    ComputeKernelSpecArgs(_httpPortRange, dotnetDirectory);
-                }
-                   
-
-                foreach (var kernelSpecSourcePath in dotnetDirectory.GetDirectories())
-                {
-                    var succeeded = await _jupyterKernelSpecInstaller.TryInstallKernelAsync(kernelSpecSourcePath, _path);
+        foreach (var kernelSpecSourcePath in dotnetDirectory.GetDirectories())
+        {
+            var succeeded = await _jupyterKernelSpecInstaller.TryInstallKernelAsync(kernelSpecSourcePath, _path);
                         
-                    if (!succeeded)
-                    {
-                        errorCount++;
-                    }
-
-                }
+            if (!succeeded)
+            {
+                errorCount++;
             }
         }
 
         return errorCount;
     }
-
-        
 
     private static void ComputeKernelSpecArgs(HttpPortRange httpPortRange, DirectoryInfo directory)
     {
