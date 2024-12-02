@@ -28,7 +28,6 @@ public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
         _kernelSpecModule = jupyterKernelSpecModule;
     }
 
-
     public async Task<bool> TryInstallKernelAsync(DirectoryInfo sourceDirectory, DirectoryInfo destination = null)
     {
         var kernelDisplayName = GetKernelDisplayName(sourceDirectory);

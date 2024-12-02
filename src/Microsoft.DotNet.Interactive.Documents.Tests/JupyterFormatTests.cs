@@ -1591,6 +1591,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     }
 
     [Fact]
+    [Trait("Category", "Contracts and serialization")]
     public async Task ipynb_from_Jupyter_can_be_round_tripped_through_read_and_write_without_the_content_changing()
     {
         var path = GetNotebookFilePath();
@@ -1599,6 +1600,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     }
 
     [Fact]
+    [Trait("Category", "Contracts and serialization")]
     public async Task ipynb_from_VSCode_can_be_round_tripped_through_read_and_write_without_the_content_changing()
     {
         var path = GetNotebookFilePath();

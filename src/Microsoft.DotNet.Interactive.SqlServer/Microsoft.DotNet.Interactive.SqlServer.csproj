@@ -15,10 +15,13 @@
 
  <ItemGroup>
    <Compile Remove="bin\**" />
+   <Compile Remove="obj\**" />
    <Compile Remove="Utility\**" />
    <EmbeddedResource Remove="bin\**" />
+   <EmbeddedResource Remove="obj\**" />
    <EmbeddedResource Remove="Utility\**" />
    <None Remove="bin\**" />
+   <None Remove="obj\**" />
    <None Remove="Utility\**" />
  </ItemGroup>
 
@@ -47,5 +50,30 @@
   <ItemGroup>
     <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
+
+  <Target Name="GeneratePackageVersionsAsConstant" AfterTargets="BeforeBuild">
+    <PropertyGroup>
+      <SourceFile>DependencyVersions.g.cs</SourceFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Code Include="namespace $(RootNamespace)%3B" />
+      <Code Include="%20" />
+      <Code Include="/// &lt;summary&gt;Provides information about the package versions depended on by the current project. This class was code-generated.&lt;/summary&gt;" />
+      <Code Include="internal static class DependencyVersions" />
+      <Code Include="{" />
+
+      <Code Include="%20%20%20%20public const string HumanizerCoreVersion = &quot;$(HumanizerCoreVersion)&quot;%3B" />
+      <Code Include="%20%20%20%20public const string HumanizerVersion = &quot;$(HumanizerVersion)&quot;%3B" />
+      <Code Include="%20%20%20%20public const string MicrosoftDataSqlClientVersion = &quot;$(MicrosoftDataSqlClientVersion)&quot;%3B" />
+      <Code Include="%20%20%20%20public const string MicrosoftEntityFrameworkCoreDesignVersion = &quot;$(MicrosoftEntityFrameworkCoreDesignVersion)&quot;%3B" />
+      <Code Include="%20%20%20%20public const string MicrosoftEntityFrameworkCoreSqlServerVersion = &quot;$(MicrosoftEntityFrameworkCoreSqlServerVersion)&quot;%3B" />
+      <Code Include="%20%20%20%20public const string MicrosoftIdentityClientVersion = &quot;$(MicrosoftIdentityClientVersion)&quot;%3B" />
+
+      <Code Include="}" />
+    </ItemGroup>
+
+    <WriteLinesToFile File="$(SourceFile)" Lines="@(Code)" Overwrite="true" />
+  </Target>
 
 </Project>

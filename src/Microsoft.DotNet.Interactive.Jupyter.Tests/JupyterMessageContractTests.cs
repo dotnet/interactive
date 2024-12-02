@@ -15,6 +15,7 @@ using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[Trait("Category", "Contracts and serialization")]
 public class JupyterMessageContractTests
 {
     private readonly Configuration _configuration;

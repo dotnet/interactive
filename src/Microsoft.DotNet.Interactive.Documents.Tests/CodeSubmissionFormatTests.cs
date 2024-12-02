@@ -525,6 +525,7 @@ Console.Write(""hello"");
     }
 
     [Fact]
+    [Trait("Category", "Contracts and serialization")]
     public async Task dib_file_can_be_round_tripped_through_read_and_write_without_the_content_changing()
     {
         var path = GetNotebookFilePath();

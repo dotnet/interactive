@@ -8,6 +8,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Directives;
+using static Microsoft.DotNet.Interactive.SqlServer.DependencyVersions;
 
 namespace Microsoft.DotNet.Interactive.SqlServer;
 
@@ -87,14 +88,13 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
 
         context.DisplayAs($"Scaffolding a `DbContext` and initializing an instance of it called `{kernelName}` in the C# kernel.", "text/markdown");
 
-        // FIX: (InitializeDbContextAsync) package versions to make them reference the ones that are already referenced at build time
         var submission1 = $$"""
-            #r "nuget: Microsoft.Data.SqlClient, 5.2.2"
-            #r "nuget: Microsoft.EntityFrameworkCore.Design, 8.0.10"
-            #r "nuget: Microsoft.EntityFrameworkCore.SqlServer, 8.0.10"
-            #r "nuget: Humanizer.Core, 2.14.1"
-            #r "nuget: Humanizer, 2.14.1"
-            #r "nuget: Microsoft.Identity.Client, 4.65.0"
+            #r "nuget: Microsoft.Data.SqlClient, {{MicrosoftDataSqlClientVersion}}"
+            #r "nuget: Microsoft.EntityFrameworkCore.Design, {{MicrosoftEntityFrameworkCoreDesignVersion}}"
+            #r "nuget: Microsoft.EntityFrameworkCore.SqlServer, {{MicrosoftEntityFrameworkCoreSqlServerVersion}}"
+            #r "nuget: Humanizer.Core, {{HumanizerCoreVersion}}"
+            #r "nuget: Humanizer, {{HumanizerVersion}}"
+            #r "nuget: Microsoft.Identity.Client, {{MicrosoftIdentityClientVersion}}"
             
             using System;
             using System.Reflection;
