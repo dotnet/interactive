@@ -16,16 +16,22 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <HumanizerCoreVersion>2.14.1</HumanizerCoreVersion>
+    <HumanizerVersion>2.14.1</HumanizerVersion>
+    <MicrosoftCodeAnalysisCommonVersion>4.11.0</MicrosoftCodeAnalysisCommonVersion>
+    <MicrosoftDataSqlClientVersion>5.2.2</MicrosoftDataSqlClientVersion>
+    <MicrosoftEntityFrameworkCoreDesignVersion>8.0.10</MicrosoftEntityFrameworkCoreDesignVersion>
+    <MicrosoftEntityFrameworkCoreSqlServerVersion>8.0.10</MicrosoftEntityFrameworkCoreSqlServerVersion>
+    <MicrosoftIdentityClientVersion>4.65.0</MicrosoftIdentityClientVersion>
     <MicrosoftNETTestSdkVersion>17.4.0</MicrosoftNETTestSdkVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
-    <MicrosoftCodeAnalysisCommonVersion>4.11.0</MicrosoftCodeAnalysisCommonVersion>
     <SystemDrawingCommonVersion>8.0.11</SystemDrawingCommonVersion>
     <SystemReactiveVersion>6.0.0</SystemReactiveVersion>
-    <SystemSecurityCryptographyXmlVersion>8.0.1</SystemSecurityCryptographyXmlVersion>
     <SystemSecurityCryptographyPkcsVersion>8.0.0</SystemSecurityCryptographyPkcsVersion>
+    <SystemSecurityCryptographyXmlVersion>8.0.1</SystemSecurityCryptographyXmlVersion>
     <SystemTextJsonVersion>8.0.5</SystemTextJsonVersion>
-    <xunitVersion>2.7.0</xunitVersion>
     <xunitrunnervisualstudioVersion>2.5.7</xunitrunnervisualstudioVersion>
+    <xunitVersion>2.7.0</xunitVersion>
   </PropertyGroup>
 
   <!-- Prevent the following warning on .NET 8 SDK by preserving legacy behavior for
