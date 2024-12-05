@@ -16,9 +16,9 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.DuckDB.Tests;
 
+[Trait("Databases", "Data query tests")]
 public class DuckDbConnectionTests
 {
-
     [Fact]
     public async Task It_can_connect_and_query_data()
     {

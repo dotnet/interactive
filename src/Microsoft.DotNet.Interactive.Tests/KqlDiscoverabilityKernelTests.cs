@@ -3,6 +3,7 @@
 
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -78,9 +79,10 @@ public class KqlDiscoverabilityKernelTests
 
         var message = displayValue.Value.ToString();
 
-
         // Should contain instructions for how to install SqlServer extension package
-        message.Should().Contain(@"#r ""nuget:Microsoft.DotNet.Interactive.Kql,*-*""");
+        message.Should().Contain("""
+                                 #r "nuget:Microsoft.DotNet.Interactive.Kql,1.0.0
+                                 """);
 
         // Should contain instructions for how to get help message for MSSQL kernel
         message.Should().Contain("#!connect kql --kernel-name mydatabase --cluster \"https://help.kusto.windows.net\" --database \"Samples\"");

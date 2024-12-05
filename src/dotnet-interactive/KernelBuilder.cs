@@ -107,7 +107,6 @@ public static class KernelBuilder
         {
             Formatter.DefaultMimeType = HtmlFormatter.MimeType;
             Formatter.SetPreferredMimeTypesFor(typeof(string), PlainTextFormatter.MimeType);
-            Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
         }
     }
 }

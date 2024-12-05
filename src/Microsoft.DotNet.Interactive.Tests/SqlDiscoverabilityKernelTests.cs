@@ -4,6 +4,7 @@
 
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -13,7 +14,6 @@ namespace Microsoft.DotNet.Interactive.Tests;
 
 public class SqlDiscoverabilityKernelTests
 {
-
     [Fact]
     public async Task sql_kernel_does_not_execute_query()
     {
@@ -81,7 +81,9 @@ public class SqlDiscoverabilityKernelTests
             
 
         // Should contain instructions for how to install SqlServer extension package
-        message.Should().Contain(@"#r ""nuget:Microsoft.DotNet.Interactive.SqlServer,*-*""");
+        message.Should().Contain("""
+                                 #r "nuget:Microsoft.DotNet.Interactive.SqlServer,1.0.0
+                                 """);
 
         // Should contain instructions for how to get help message for MSSQL kernel
         message.Should().Contain("#!connect mssql --kernel-name");

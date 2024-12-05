@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Microsoft PostgreSQL support for .NET Interactive</PackageDescription>
+    <PackageDescription>PostgreSQL support for .NET Interactive</PackageDescription>
     <PackageTags>polyglot notebook dotnet interactive SQL PostgreSQL Data</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn>
@@ -11,7 +11,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="8.0.4" />
+    <PackageReference Include="Npgsql" Version="8.0.6" />
     <PackageReference Include="Pocket.Disposable" Version="1.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App;
+using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -20,14 +21,13 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests;
 
+[Trait("Databases", "Data query tests")]
 public class MsSqlConnectionTests : IDisposable
 {
     private async Task<CompositeKernel> CreateKernelAsync()
     {
-        Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
         var csharpKernel = new CSharpKernel().UseNugetDirective().UseValueSharing();
 
-        // TODO: remove SQLKernel it is used to test current patch
         var kernel = new CompositeKernel
         {
             new SqlDiscoverabilityKernel(),
@@ -584,6 +584,5 @@ select TOP(@testVar) * from sys.databases";
     public void Dispose()
     {
         DataExplorer.ResetToDefault();
-        Formatter.ResetToDefault();
     }
 }

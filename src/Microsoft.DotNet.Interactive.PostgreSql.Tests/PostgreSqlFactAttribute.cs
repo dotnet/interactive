@@ -30,8 +30,10 @@ public sealed class PostgreSqlFactAttribute : FactAttribute
         string connectionString = GetConnectionStringForTests();
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            return $"Environment variable {TEST_POSTGRESQL_CONNECTION_STRING} is not set. To run tests that require "
-                   + "SQL Server, this environment variable must be set to a valid connection string value.";
+            return
+                $"""
+                 Environment variable {TEST_POSTGRESQL_CONNECTION_STRING} is not set. To run tests that require PostgreSQL, this environment variable must be set to a valid connection string value.
+                 """;
         }
 
         try
@@ -41,9 +43,10 @@ public sealed class PostgreSqlFactAttribute : FactAttribute
         }
         catch (Exception e)
         {
-            return $"A connection could not be established to SQL Server. Verify the connection string value used " +
-                   $"for environment variable {TEST_POSTGRESQL_CONNECTION_STRING} targets a running SQL Server instance. " +
-                   $"Connection failed failed with error: {e}";
+            return
+                $"""
+                 A connection could not be established to a PostgreSQL server. Verify the connection string value used for environment variable {TEST_POSTGRESQL_CONNECTION_STRING} targets a running PostgreSQL instance. Connection failed failed with error: {e}
+                 """;
         }
 
         return null;
@@ -51,7 +54,7 @@ public sealed class PostgreSqlFactAttribute : FactAttribute
 
     public static string GetConnectionStringForTests()
     {
-        const string fallbackConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=Adventureworks";
+        const string fallbackConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=northwind";
 
         return Environment.GetEnvironmentVariable(TEST_POSTGRESQL_CONNECTION_STRING) ?? fallbackConnectionString;
     }

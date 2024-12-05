@@ -12,14 +12,16 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.App;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.App.Connection;
+using Xunit;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
 
+[Trait("Databases", "Data query tests")]
 public class PostgreSqlConnectionTests : IDisposable
 {
     private static CompositeKernel CreateKernel()
     {
-        Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
         var csharpKernel = new CSharpKernel().UseNugetDirective().UseValueSharing();
 
         var kernel = new CompositeKernel
@@ -48,7 +50,7 @@ public class PostgreSqlConnectionTests : IDisposable
 
         result = await kernel.SubmitCodeAsync("""
             #!sql-adventureworks
-            SELECT * FROM Person.Person LIMIT 100;
+            SELECT * FROM customers LIMIT 100;
             """);
 
         result.Events.Should().NotContainErrors();
@@ -71,7 +73,7 @@ public class PostgreSqlConnectionTests : IDisposable
 
         result = await kernel.SubmitCodeAsync("""
             #!sql-adventureworks
-            SELECT not_known_column FROM Person.Person LIMIT 100;
+            SELECT not_known_column FROM customers LIMIT 100;
             """);
 
         result.Events.Should()
@@ -85,6 +87,5 @@ public class PostgreSqlConnectionTests : IDisposable
     public void Dispose()
     {
         DataExplorer.ResetToDefault();
-        Formatter.ResetToDefault();
     }
 }

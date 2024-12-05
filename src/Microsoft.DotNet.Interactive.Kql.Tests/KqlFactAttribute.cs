@@ -26,8 +26,10 @@ public sealed class KqlFactAttribute : FactAttribute
         string clusterName = GetClusterForTests();
         if (string.IsNullOrWhiteSpace(clusterName))
         {
-            return $"Environment variable {TEST_KQL_CONNECTION_STRING} is not set. To run tests that require "
-                   + "KQL Cluster, this environment variable must be set to a valid connection string value.";
+            return
+                $"""
+                 Environment variable {TEST_KQL_CONNECTION_STRING} is not set. To run tests that require a KQL Cluster, this environment variable must be set to a valid connection string value.
+                 """;
         }
 
         return null;
