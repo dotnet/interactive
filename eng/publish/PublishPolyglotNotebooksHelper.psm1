@@ -70,6 +70,7 @@ function PublishStableExtensionAndNuGetPackages {
         "Microsoft.DotNet.Interactive.Mermaid",
         "Microsoft.DotNet.Interactive.NamedPipeConnector",
         "Microsoft.DotNet.Interactive.PackageManagement",
+        "Microsoft.DotNet.Interactive.PostgreSQL",
         "Microsoft.DotNet.Interactive.PowerShell",
         "Microsoft.DotNet.Interactive.SQLite",
         "Microsoft.DotNet.Interactive.SqlServer",
