@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
-namespace Microsoft.DotNet.Interactive;
+namespace Microsoft.DotNet.Interactive.App.Connection;
 
 /// <remarks>This kernel is used as a placeholder for the MSKQL kernel in order to enable KQL language coloring in the editor. Language grammars can only be defined for fixed kernel names, but MSKQL subkernels are user-defined via the #!connect magic command. So, this kernel is specified in addition to the user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability for KQL features. </remarks>
 public class KqlDiscoverabilityKernel :
@@ -25,7 +25,7 @@ public class KqlDiscoverabilityKernel :
             "MsKqlKernel"
         };
         KernelInfo.LanguageName = "KQL";
-        KernelInfo.Description = $"""
+        KernelInfo.Description = """
                             Query a Kusto database
                             """;
     }
@@ -45,33 +45,38 @@ public class KqlDiscoverabilityKernel :
         });
 
         var codeSample = !string.IsNullOrWhiteSpace(command.Code)
-            ? command.Code
-            : @"tableName | take 10";
+                             ? command.Code
+                             : "tableName | take 10";
 
-        if (connectedKqlKernelNames.Count == 0)
+        if (connectedKqlKernelNames.Count is 0)
         {
-            context.Display(HTML($@"
-<p>A KQL connection has not been established.</p>
-<p>To connect to a database, first add the KQL extension package by running the following in a C# cell:</p>
-<code>
-    <pre>
-    #r ""nuget:Microsoft.DotNet.Interactive.Kql,*-*""
-    </pre>
-</code>
-Now, you can connect to a Microsoft Kusto Server database by running the following in a C# cell:
-<code>
-    <pre>
-    #!connect kql --kernel-name mydatabase --cluster ""https://help.kusto.windows.net"" --database ""Samples""
-    </pre>
-</code>
-<p>Once a connection is established, you can send KQL statements by prefixing them with the magic command for your connection.</p>
-<code>
-    <pre>
-#!kql-mydatabase
-{codeSample}
-    </pre>
-</code>
-"), "text/html");
+            var version = PackageAcquisition.InferCompatiblePackageVersion();
+
+            context.Display(
+                HTML(
+                    $"""
+                     <p>A KQL connection has not been established.</p>
+                     <p>To connect to a database, first add the KQL extension package by running the following in a C# cell:</p>
+                     <code>
+                         <pre>
+                         #r "nuget:Microsoft.DotNet.Interactive.Kql,{version}"
+                         </pre>
+                     </code>
+                     Now, you can connect to a Microsoft Kusto Server database by running the following in a C# cell:
+                     <code>
+                         <pre>
+                         #!connect kql --kernel-name mydatabase --cluster "https://help.kusto.windows.net" --database "Samples"
+                         </pre>
+                     </code>
+                     <p>Once a connection is established, you can send KQL statements by prefixing them with the magic command for your connection.</p>
+                     <code>
+                         <pre>
+                     #!kql-mydatabase
+                     {codeSample}
+                         </pre>
+                     </code>
+
+                     """), "text/html");
         }
         else
         {

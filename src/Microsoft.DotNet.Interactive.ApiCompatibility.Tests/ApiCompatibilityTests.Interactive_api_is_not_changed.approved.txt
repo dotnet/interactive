@@ -253,8 +253,6 @@ Microsoft.DotNet.Interactive
     .ctor(System.String name = value, System.Net.Http.HttpClient httpClient = null)
     public Microsoft.DotNet.Interactive.Directives.KernelSpecifierDirective KernelSpecifierDirective { get;}
     public System.Collections.Generic.IReadOnlyDictionary<System.String,FormattedValue> Values { get;}
-  public class KqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
-    .ctor()
   public class LinePosition, System.IEquatable<LinePosition>
     public static LinePosition FromCodeAnalysisLinePosition(Microsoft.CodeAnalysis.Text.LinePosition linePosition)
     public static System.Boolean op_Equality(LinePosition left, LinePosition right)
@@ -338,8 +336,6 @@ Microsoft.DotNet.Interactive
     public FormattedValue Documentation { get;}
     public System.String Label { get;}
     public System.Collections.Generic.IReadOnlyList<ParameterInformation> Parameters { get;}
-  public class SqlDiscoverabilityKernel : Kernel, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.RequestKernelInfo>, IKernelCommandHandler<Microsoft.DotNet.Interactive.Commands.SubmitCode>, System.IDisposable
-    .ctor()
   public class TabularDataResourceSummaryExplorer : DataExplorer<Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource>
     .ctor(Microsoft.DotNet.Interactive.Formatting.TabularData.TabularDataResource data)
     protected Microsoft.AspNetCore.Html.IHtmlContent ToHtml()

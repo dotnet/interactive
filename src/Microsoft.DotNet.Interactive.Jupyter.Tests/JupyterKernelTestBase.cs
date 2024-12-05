@@ -3,9 +3,6 @@
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.Csv;
-using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -13,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
@@ -34,8 +30,6 @@ public abstract class JupyterKernelTestBase : IDisposable
 
     protected CompositeKernel CreateCompositeKernelAsync(params IJupyterKernelConnectionOptions[] optionsList)
     {
-        Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
-
         var csharpKernel = new CSharpKernel()
                                 .UseKernelHelpers()
                                 .UseValueSharing();

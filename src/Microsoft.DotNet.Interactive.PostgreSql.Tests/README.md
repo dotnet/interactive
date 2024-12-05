@@ -2,25 +2,10 @@
 
 ## Setup Test Database
 
-Take a look at [AdventureWorks-for-Postgres](https://github.com/lorint/AdventureWorks-for-Postgres) repository. It contains a script to create the AdventureWorks database on a PostgreSQL server.
+The tests use the sample [Northwind database](https://github.com/pthom/northwind_psql). You can create a blank database and install it using [this script](https://github.com/pthom/northwind_psql/blob/master/northwind.sql).
 
-You can use Docker to run a PostgreSQL server with the AdventureWorks database:
-
-Install repository:
+The tests will only run when the environment variable `TEST_POSTGRESQL_CONNECTION_STRING` has set to a valid connection string. Here's an example using a default Postgres installation:
 
 ```bash
-git clone https://github.com/lorint/AdventureWorks-for-Postgres
-```
-
-Run PostgreSQL server:
-
-```bash
-podman build -t adventure-postgres ./
-podman run -d -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 adventure-postgres
-```
-
-Setup connection string as environment variable:
-
-```bash
-export TEST_POSTGRESQL_CONNECTION_STRING='Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=Adventureworks'
+export TEST_POSTGRESQL_CONNECTION_STRING='Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=northwind'
 ```

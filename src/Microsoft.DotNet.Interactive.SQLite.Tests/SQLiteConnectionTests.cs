@@ -6,17 +6,20 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.DotNet.Interactive.App;
+using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SQLite.Tests;
 
+[Trait("Databases", "Data query tests")]
 public class SQLiteConnectionTests
 {
     [WindowsFact]
-    public async Task SQLKernel_suggests_SQLite_connection_when_statements_are_submitted_to_it()
+    public async Task SQLDiscoverabilityKernel_suggests_SQLite_connection_when_statements_are_submitted_to_it()
     {
         using var kernel = new CompositeKernel
         {

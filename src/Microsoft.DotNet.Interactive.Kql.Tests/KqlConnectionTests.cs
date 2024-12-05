@@ -1,13 +1,13 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App;
+using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -21,11 +21,11 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Kql.Tests;
 
-public class KqlConnectionTests : IDisposable
+[Trait("Databases", "Data query tests")]
+public class KqlConnectionTests
 {
     private static async Task<CompositeKernel> CreateKernelAsync()
     {
-        Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
         var csharpKernel = new CSharpKernel().UseNugetDirective();
 
         var kernel = new CompositeKernel
@@ -447,11 +447,5 @@ StormEvents | take testVar";
         kustoKernel.TryGetValue<IEnumerable<object>>("testQuery", out var resultSet);
 
         resultSet.Should().NotBeNull().And.HaveCount(1);
-    }
-
-    public void Dispose()
-    {
-        Formatter.ResetToDefault();
-        DataExplorer.ResetToDefault();
     }
 }

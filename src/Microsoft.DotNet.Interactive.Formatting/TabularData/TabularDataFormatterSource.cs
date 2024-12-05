@@ -14,6 +14,8 @@ internal class TabularDataFormatterSource : ITypeFormatterSource
 {
     public IEnumerable<ITypeFormatter> CreateTypeFormatters()
     {
+        Formatter.SetPreferredMimeTypesFor(typeof(TabularDataResource), HtmlFormatter.MimeType, CsvFormatter.MimeType);
+
         yield return new HtmlFormatter<TabularDataResource>((value, context) => FormatHtml(context, value));
 
         yield return new JsonFormatter<TabularDataResource>((value, context) =>
