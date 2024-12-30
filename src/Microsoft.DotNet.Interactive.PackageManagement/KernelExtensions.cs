@@ -96,7 +96,9 @@ public static class KernelExtensions
                 directive,
                 async (_, context) =>
                 {
-                    await context.ScheduleAsync(c => Restore(c, lazyPackageRestoreContext, onResolvePackageReferences));
+                    var command = new AnonymousKernelCommand((_, ctx) => Restore(ctx, lazyPackageRestoreContext, onResolvePackageReferences));
+                    command.SetParent(context.Command, true);
+                    await context.HandlingKernel.SendAsync(command);
                 }
             );
         }

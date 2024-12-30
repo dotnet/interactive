@@ -218,7 +218,6 @@ Microsoft.DotNet.Interactive
     public System.Void OnComplete(System.Action<KernelInvocationContext> onComplete)
     public System.Void Publish(Microsoft.DotNet.Interactive.Events.KernelEvent event)
     public System.Void Publish(Microsoft.DotNet.Interactive.Events.KernelEvent event, System.Boolean publishOnAmbientContextOnly)
-    public System.Threading.Tasks.Task ScheduleAsync(System.Func<KernelInvocationContext,System.Threading.Tasks.Task> func)
   public static class KernelInvocationContextExtensions
     public static DisplayedValue Display(System.Object value, System.String[] mimeTypes)
     public static DisplayedValue DisplayAs(System.String value, System.String mimeType)
