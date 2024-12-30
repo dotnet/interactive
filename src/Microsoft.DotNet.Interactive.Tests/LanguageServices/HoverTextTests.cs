@@ -304,7 +304,7 @@ public class SampleClass
     }
 
     [Theory]
-    [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17")]
+    [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 18")]
     [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "Exit the current hardware isolated process")]
     public async Task hover_text_commands_have_offsets_normalized_after_magic_commands(Language language, string markupCode, string expectedMimeType, string expectedContent)
     {
@@ -320,6 +320,8 @@ public class SampleClass
         MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
         var commandResult = await SendHoverRequest(kernel, code, line, character);
 
+        commandResult.Events.Should().NotContainErrors();
+
         commandResult.Events
                      .Should()
                      .ContainSingle<HoverTextProduced>()
@@ -330,7 +332,7 @@ public class SampleClass
     }
 
     [Theory]
-    [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17")]
+    [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 18")]
     [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "Exit the current hardware isolated process")]
     public async Task hover_text_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language, string markupCode, string expectedMimeType, string expectedContent)
     {
