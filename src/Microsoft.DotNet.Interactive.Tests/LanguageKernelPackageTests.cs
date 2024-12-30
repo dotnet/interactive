@@ -853,8 +853,9 @@ using NodaTime.Extensions;");
 
 open System
 open System.Numerics.Tensors
+
 let inputValues = [| 12.0; 10.0; 17.0; 5.0 |]
-let tInput = new DenseTensor<float>(inputValues.AsMemory(), new ReadOnlySpan<int>([|4|]))
+let tInput = new DenseTensor<float>(System.MemoryExtensions.AsMemory(inputValues), new ReadOnlySpan<int>([|4|]))
 tInput.Length
 """,
             Language.CSharp => """

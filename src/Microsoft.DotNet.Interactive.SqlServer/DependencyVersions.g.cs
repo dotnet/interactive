@@ -6,7 +6,7 @@ internal static class DependencyVersions
     public const string HumanizerCoreVersion = "2.14.1";
     public const string HumanizerVersion = "2.14.1";
     public const string MicrosoftDataSqlClientVersion = "5.2.2";
-    public const string MicrosoftEntityFrameworkCoreDesignVersion = "8.0.10";
-    public const string MicrosoftEntityFrameworkCoreSqlServerVersion = "8.0.10";
+    public const string MicrosoftEntityFrameworkCoreDesignVersion = "9.0.0";
+    public const string MicrosoftEntityFrameworkCoreSqlServerVersion = "9.0.0";
     public const string MicrosoftIdentityClientVersion = "4.65.0";
 }
