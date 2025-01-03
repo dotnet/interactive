@@ -257,7 +257,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
 
         result.Events.Should().NotContainErrors();
 
-        _secretManager.TryGetSecret(secretName, out var storedValue).Should().BeTrue();
+        _secretManager.TryGetValue(secretName, out var storedValue).Should().BeTrue();
 
         storedValue.Should().Be("123");
     }
@@ -269,7 +269,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         var secretName = nameof(Previously_stored_values_are_used_to_prepopulate_input_fields) + DateTime.UtcNow.Ticks;
 
         var theStoredValue = "the stored value";
-        _secretManager.SetSecret(name: secretName, value: theStoredValue);
+        _secretManager.SetValue(name: secretName, value: theStoredValue);
 
         _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
         {

@@ -78,7 +78,6 @@ public class SqlDiscoverabilityKernelTests
             .Which;
 
         var message = displayValue.Value.ToString();
-            
 
         // Should contain instructions for how to install SqlServer extension package
         message.Should().Contain("""

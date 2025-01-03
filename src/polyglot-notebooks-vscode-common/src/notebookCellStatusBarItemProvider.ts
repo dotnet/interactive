@@ -53,7 +53,19 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                         return item;
                     });
 
-                const selectedDisplayOption = await vscode.window.showQuickPick(kernelSelectorItems, { title: 'Select cell kernel' });
+                // FIX replace dummy with actual MRU items
+                const mruConnectionItems = [{
+                    description: 'Connect to sql-adventureworks (MSSQL)',
+                    label: 'sql-adventureworks',
+                    iconPath: new vscode.ThemeIcon('plug')
+                }];
+
+                const allItems = [
+                    ...kernelSelectorItems,
+                    { kind: vscode.QuickPickItemKind.Separator, description: '', label: '' },
+                    ...mruConnectionItems];
+
+                const selectedDisplayOption = await vscode.window.showQuickPick(allItems, { title: 'Select cell kernel' });
 
                 if (selectedDisplayOption) {
                     const selectedValueIndex = kernelSelectorItems.indexOf(selectedDisplayOption);
