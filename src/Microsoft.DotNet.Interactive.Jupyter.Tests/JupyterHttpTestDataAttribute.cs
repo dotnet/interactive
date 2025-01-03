@@ -26,11 +26,12 @@ internal sealed class JupyterHttpTestDataAttribute : JupyterTestDataAttribute
 
     internal static string TestConnectionAndReturnSkipReason()
     {
-        string connectionString = GetConnectionString();
+        var connectionString = GetConnectionString();
+
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            return $"Environment variable {TEST_DOTNET_JUPYTER_HTTP_CONN} is not set. To run tests that require "
-                   + "Jupyter server running, this environment variable must be set to a valid connection string value with --url and --token.";
+            return
+                $"Environment variable {TEST_DOTNET_JUPYTER_HTTP_CONN} is not set. To run tests that require Jupyter server running, this environment variable must be set to a valid connection string value with --url and --token.";
         }
 
         return null;
@@ -46,8 +47,7 @@ internal sealed class JupyterHttpTestDataAttribute : JupyterTestDataAttribute
     {
         return new JupyterConnectionTestData(JUPYTER_HTTP,
                                              new SimulatedJupyterConnectionOptions(new JupyterHttpKernelConnectionOptions(), KernelSpecName, AllowPlayback),
-                                             GetConnectionString()
-        );
+                                             GetConnectionString());
     }
 
     /// <summary>

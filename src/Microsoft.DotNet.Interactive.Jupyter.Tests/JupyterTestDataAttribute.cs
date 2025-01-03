@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 internal class JupyterTestDataAttribute : DataAttribute
 {
     private readonly object[] _data;
-    public const string JUPYTER_TEST = nameof(JUPYTER_TEST);
+    public const string JUPYTER_RECORDED_TEST = nameof(JUPYTER_RECORDED_TEST);
 
     public JupyterTestDataAttribute(params object[] data)
     {
@@ -30,7 +30,7 @@ internal class JupyterTestDataAttribute : DataAttribute
     }
     protected virtual JupyterConnectionTestData GetConnectionTestData()
     {
-        return new JupyterConnectionTestData(JUPYTER_TEST);
+        return new JupyterConnectionTestData(JUPYTER_RECORDED_TEST);
     }
 
     public string KernelSpecName { get; set; }
