@@ -42,6 +42,17 @@ public sealed class CompositeKernel :
 
     public void Add(Kernel kernel, IEnumerable<string> aliases = null)
     {
+        AddInternal(kernel, aliases);
+    }
+
+    private void AddConnectedKernel(Kernel kernel)
+    {
+        AddInternal(kernel, null);
+    }
+
+    
+    private void AddInternal(Kernel kernel, IEnumerable<string> aliases)
+    {
         if (kernel is null)
         {
             throw new ArgumentNullException(nameof(kernel));
@@ -235,7 +246,7 @@ public sealed class CompositeKernel :
         AddDirective<T>(connectDirective,
                      async (command, context) =>
                      {
-                         await ConnectKernel(
+                         await ConnectKernels(
                              command,
                              connectDirective,
                              context);
@@ -244,7 +255,7 @@ public sealed class CompositeKernel :
         SubmissionParser.ResetParser();
     }
 
-    private async Task ConnectKernel<TCommand>(
+    private async Task ConnectKernels<TCommand>(
         TCommand command,
         ConnectKernelDirective<TCommand> connectDirective,
         KernelInvocationContext context)
@@ -256,7 +267,7 @@ public sealed class CompositeKernel :
 
         foreach (var connectedKernel in connectedKernels)
         {
-            Add(connectedKernel);
+            AddConnectedKernel(connectedKernel);
 
             var kernelSpecifierDirective =
                 KernelInfo.SupportedDirectives.OfType<KernelSpecifierDirective>()
@@ -271,6 +282,8 @@ public sealed class CompositeKernel :
 
             context.Display($"Kernel added: #!{connectedKernel.Name}");
         }
+
+        // FIX: (ConnectKernels) add to MRU list 
     }
 
     public KernelHost Host => _host;

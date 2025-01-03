@@ -176,7 +176,7 @@ public class SerializationTests
                      return c;
                  }))
         {
-            yield return new object[] { command };
+            yield return [command];
         }
 
         IEnumerable<KernelCommand> commands()
@@ -217,7 +217,10 @@ public class SerializationTests
 
             yield return new RequestSignatureHelp("sig-help-contents", new LinePosition(1, 2));
 
-            yield return new SendEditableCode("someKernelName", "code");
+            yield return new SendEditableCode("someKernelName", "code")
+            {
+                InsertAtPosition = 123
+            };
 
             yield return new SubmitCode("123", "csharp")
             {
