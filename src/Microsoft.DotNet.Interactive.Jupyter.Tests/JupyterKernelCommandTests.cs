@@ -8,12 +8,14 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket.For.Xunit;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[LogToPocketLogger]
 public class JupyterKernelCommandTests : JupyterKernelTestBase
 {
     [Theory]

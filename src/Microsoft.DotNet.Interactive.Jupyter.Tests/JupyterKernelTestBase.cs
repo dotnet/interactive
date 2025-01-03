@@ -19,7 +19,7 @@ public abstract class JupyterKernelTestBase : IDisposable
     protected CompositeDisposable _disposables = new();
 
     // to re-record the tests for simulated playback with JupyterTestDataAttribute, set this to true
-    protected const bool RECORD_FOR_PLAYBACK = true;
+    protected const bool RECORD_FOR_PLAYBACK = false;
     protected const string PythonKernelName = "python3";
     protected const string RKernelName = "ir";
 
