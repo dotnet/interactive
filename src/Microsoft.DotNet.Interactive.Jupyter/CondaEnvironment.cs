@@ -16,7 +16,7 @@ using CommandLine = Microsoft.DotNet.Interactive.Utility.CommandLine;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
-internal class CondaEnvironment : IJupyterEnvironment
+public class CondaEnvironment : IJupyterEnvironment
 {
     public const string BASE_ENV = "base";
 
@@ -29,7 +29,7 @@ internal class CondaEnvironment : IJupyterEnvironment
 
     public static string CondaPath { get; }
 
-    public CondaEnvironment(string name = BASE_ENV)
+    internal CondaEnvironment(string name = BASE_ENV)
     {
         Name = name;
     }

@@ -58,7 +58,7 @@ public static class KernelExtensions
                 if (inputDescription.SaveAs is not null && 
                     secretManager is not null)
                 {
-                    secretManager.TryGetSecret(inputDescription.SaveAs, out value);
+                    secretManager.TryGetValue(inputDescription.SaveAs, out value);
                 }  
 
                 return div(
@@ -92,7 +92,7 @@ public static class KernelExtensions
                         {
                             if (values.TryGetValue(inputDescription.GetPropertyNameForJsonSerialization(), out var value))
                             {
-                                secretManager.SetSecret(inputDescription.SaveAs, value);
+                                secretManager.SetValue(inputDescription.SaveAs, value);
                             }
                         }
                     }
@@ -213,7 +213,9 @@ public static class KernelExtensions
         return kernel;
     }
 
-    public static CompositeKernel UseSecretManager(this CompositeKernel kernel, SecretManager secretManager)
+    public static CompositeKernel UseSecretManager(
+        this CompositeKernel kernel, 
+        SecretManager secretManager)
     {
         if (secretManager is null)
         {
@@ -228,7 +230,7 @@ public static class KernelExtensions
                 return;
             }
 
-            if (secretManager.TryGetSecret(requestInput.SaveAs, out var value))
+            if (secretManager.TryGetValue(requestInput.SaveAs, out var value))
             {
                 context.Publish(new InputProduced(value, requestInput));
 
@@ -250,7 +252,7 @@ public static class KernelExtensions
                     if (@event is InputProduced inputProduced && 
                         inputProduced.Command.GetOrCreateToken() == requestInput.GetOrCreateToken())
                     {
-                        secretManager.SetSecret(requestInput.SaveAs, inputProduced.Value);
+                        secretManager.SetValue(requestInput.SaveAs, inputProduced.Value);
 
                         var message =
                             $"""

@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -20,7 +18,6 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket.For.Xunit;
 using Xunit;
