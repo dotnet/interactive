@@ -134,7 +134,6 @@ extends:
               outputs:
                 - output: pipelineArtifact
                   displayName: 'Publish Test results and Blame dumps'
-                  condition: failed()
                   targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   artifactName: 'Windows_test_results_and_dumps'
                   publishLocation: Container
@@ -208,7 +207,7 @@ extends:
               displayName: Publish VS Code extension and npm test results
               inputs:
                 testResultsFormat: VSTest
-                testResultsFiles: '**/*.trx'
+                testResultsFiles: '**/*.*'
                 searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
               condition: always()
 
@@ -316,7 +315,7 @@ extends:
               displayName: Publish VS Code extension and npm test results
               inputs:
                 testResultsFormat: VSTest
-                testResultsFiles: '**/*.trx'
+                testResultsFiles: '**/*.*'
                 searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
               condition: always()
 
