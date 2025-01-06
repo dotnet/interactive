@@ -207,7 +207,7 @@ stages:
             pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
             artifactName: Windows_test_results_and_dumps
             artifactType: container
-          condition: failed()
+          condition: always()
 
         # publish VS Code and npm test results
         - task: PublishTestResults@2
@@ -354,7 +354,7 @@ stages:
             pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
             artifactName: Linux_test_results_and_dumps
             artifactType: container
-          condition: failed()
+          condition: always()
 
         # publish VS Code and npm test results
         - task: PublishTestResults@2
