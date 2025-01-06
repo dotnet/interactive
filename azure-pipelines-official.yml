@@ -255,7 +255,7 @@ extends:
               name: $(DncEngInternalBuildPool)
               os: linux
               demands: ImageOverride -equals 1es-ubuntu-2204
-            timeoutInMinutes: 120
+            timeoutInMinutes: 200
             templateContext:
               outputs:
                 - output: pipelineArtifact
