@@ -137,6 +137,7 @@ extends:
                   targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   artifactName: 'Windows_test_results_and_dumps'
                   publishLocation: Container
+                  condition: always()
                 - output: pipelineArtifact
                   displayName: 'Publish VSCode extension artifacts'
                   targetPath: '$(Build.ArtifactStagingDirectory)\vscode'
@@ -260,7 +261,7 @@ extends:
               outputs:
                 - output: pipelineArtifact
                   displayName: 'Publish Test results and Blame dumps'
-                  condition: failed()
+                  condition: always()
                   targetPath: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   artifactName: 'Linux_test_results_and_dumps'
                   publishLocation: Container
