@@ -8,8 +8,8 @@ try
 
     # build and pack dotnet-interactive 
     dotnet clean -c debug
-    dotnet build -c debug /p:Version=2.0.0
-    dotnet pack --no-build -c debug /p:PackageVersion=2.0.0 
+    # dotnet build -c debug /p:Version=2.0.0
+    dotnet pack -c debug /p:PackageVersion=2.0.0 
 
     # copy the dotnet-interactive packages to the temp directory
     $destinationPath = "C:\temp\packages"
