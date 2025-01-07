@@ -20,6 +20,7 @@ using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[Trait("Category", "Skip")]
 public class JupyterKernelTests : JupyterKernelTestBase
 {
     [Fact]

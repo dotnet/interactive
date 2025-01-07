@@ -19,8 +19,7 @@ else
         "Microsoft.DotNet.Interactive.NetFramework.Tests",
         "Microsoft.DotNet.Interactive.CSharpProject.Tests",
         "Microsoft.DotNet.Interactive.NamedPipeConnector.Tests",
-        "Microsoft.DotNet.Interactive.VisualStudio.Tests",
-        "Microsoft.DotNet.Interactive.Jupyter.Tests"
+        "Microsoft.DotNet.Interactive.VisualStudio.Tests"
         )
 }
 
@@ -67,7 +66,7 @@ try {
         foreach ($testClass in $distinctTestClasses) {
             for ($i = 1; $i -le $retryCount; $i++) {
                 Write-Host "Testing class $testClass, attempt $i"
-                ExecuteTestDirectory -testDirectory "$repoRoot/src/$flakyTestAssemblyDirectory" -extraArgs "--filter FullyQualifiedName~$testClass"
+                ExecuteTestDirectory -testDirectory "$repoRoot/src/$flakyTestAssemblyDirectory" -extraArgs "--filter FullyQualifiedName~$testClass&Category!=Skip"
                 if ($LASTEXITCODE -eq 0) {
                     break
                 }

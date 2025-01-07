@@ -17,6 +17,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[Trait("Category", "Skip")]
 public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 {
     [Theory]

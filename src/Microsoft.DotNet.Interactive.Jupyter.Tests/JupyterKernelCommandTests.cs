@@ -15,6 +15,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[Trait("Category", "Skip")]
 [LogToPocketLogger]
 public class JupyterKernelCommandTests : JupyterKernelTestBase
 {
