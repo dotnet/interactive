@@ -33,8 +33,7 @@ try {
     $flakyTestAssemblyDirectories = @(
         "Microsoft.DotNet.Interactive.Tests",
         "Microsoft.DotNet.Interactive.App.Tests",
-        "Microsoft.DotNet.Interactive.Browser.Tests",
-        "Microsoft.DotNet.Interactive.Jupyter.Tests"
+        "Microsoft.DotNet.Interactive.Browser.Tests"
         )
     
     $normalTestAssemblyDirectories = Get-ChildItem -Path "$repoRoot/src" -Directory -Filter *.Tests -Recurse | Where-Object { !$flakyTestAssemblyDirectories.contains($_.Name)}
