@@ -48,7 +48,7 @@ internal class JupyterConnection : IJupyterConnection
         }
 
         ConnectionInformation connectionInfo = null;
-        // create a connection file with available ports in jupyer runtime
+        // create a connection file with available ports in jupyter runtime
 
         // avoid potential port race conditions by reserving ports up front 
         // and releasing before kernel launch.
