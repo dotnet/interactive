@@ -19,7 +19,7 @@ public static class NetMQExtensions
         var delimiterAsBytes = Encoding.ASCII.GetBytes(Constants.DELIMITER);
 
         var identifiers = new List<byte[]>();
-        while (true)
+        while (!socket.IsDisposed)
         {
             var delimiter = socket.ReceiveFrameBytes();
             if (delimiter.SequenceEqual(delimiterAsBytes))

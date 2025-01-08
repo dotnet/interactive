@@ -10,10 +10,12 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests;
 using Pocket;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[Collection("Do not parallelize")]
 public abstract class JupyterRequestHandlerTestBase : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();

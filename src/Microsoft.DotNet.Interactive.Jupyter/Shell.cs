@@ -96,6 +96,7 @@ public class Shell : IHostedService
 
     private void ControlChannelLoop(CancellationToken cancellationToken)
     {
+        // FIX: (ControlChannelLoop) make sure this is disposed
         Task.Run(() =>
         {
             using var activity = Log.OnEnterAndExit();
@@ -121,6 +122,7 @@ public class Shell : IHostedService
 
     private void ShellChannelLoop(CancellationToken cancellationToken)
     {
+        // FIX: (ShellChannelLoop) make sure this is disposed
         Task.Run(async () =>
         {
             using var activity = Log.OnEnterAndExit();

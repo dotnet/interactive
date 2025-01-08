@@ -160,12 +160,17 @@ internal class JupyterKernelHttpConnection : IJupyterKernelConnection, IMessageS
                     ms.Seek(0, SeekOrigin.Begin);
 
                     var message = JsonSerializer.Deserialize<JupyterMessage>(ms, MessageFormatter.SerializerOptions);
+
                     PostMessage(message);
+                }
+                catch (TaskCanceledException)
+                {
+                    return;
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    Log.Error(e, "Error in Jupyter message loop", e);
+                    Log.Error(e, "Handled exception in Jupyter message loop", e, _socket);
                 }
             }
         }

@@ -53,14 +53,9 @@ internal class CommCommandEventChannelConfiguration : IJupyterKernelConfiguratio
         string language = kernel.KernelInfo.LanguageName?.ToLowerInvariant();
         if (_commDefinitions.TryGetValue(language, out string definition))
         {
-            var initialized = await kernel.RunOnKernelAsync(definition);
-            if (!initialized)
-            {
-                return null; // don't try to create a channel if we failed
-            }
+            await kernel.RunOnKernelAsync(definition);
 
-            var channel = await CreateCommandEventChannelAsync();
-            return channel;
+            return await CreateCommandEventChannelAsync();
         }
 
         return null;
