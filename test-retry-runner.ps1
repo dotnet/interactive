@@ -66,7 +66,7 @@ try {
         foreach ($testClass in $distinctTestClasses) {
             for ($i = 1; $i -le $retryCount; $i++) {
                 Write-Host "Testing class $testClass, attempt $i"
-                ExecuteTestDirectory -testDirectory "$repoRoot/src/$flakyTestAssemblyDirectory" -extraArgs "`"--filter FullyQualifiedName~$testClass&Category!=Skip`""
+                ExecuteTestDirectory -testDirectory "$repoRoot/src/$flakyTestAssemblyDirectory" -extraArgs "--filter `"FullyQualifiedName~$testClass&Category!=Skip`""
                 if ($LASTEXITCODE -eq 0) {
                     break
                 }
