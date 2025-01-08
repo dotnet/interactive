@@ -15,7 +15,6 @@ using Microsoft.DotNet.Interactive.Documents.Jupyter;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-[Trait("Category", "Skip")]
 public class IsCompleteRequestHandlerTests : JupyterRequestHandlerTestBase
 {
     public IsCompleteRequestHandlerTests(ITestOutputHelper output) : base(output)

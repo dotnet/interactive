@@ -17,7 +17,6 @@ using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-[Trait("Category", "Skip")]
 public class CompleteRequestHandlerTests : JupyterRequestHandlerTestBase
 {
     public CompleteRequestHandlerTests(ITestOutputHelper output) : base(output)
