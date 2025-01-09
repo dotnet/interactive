@@ -9,8 +9,7 @@ $ErrorActionPreference = "Stop"
 
 if ($IsWindows) {
     $projectsToSkip = @(
-        "Microsoft.DotNet.Interactive.CSharpProject.Tests",
-        "Microsoft.DotNet.Interactive.Jupyter.Tests"
+        "Microsoft.DotNet.Interactive.CSharpProject.Tests"
         )
 }
 else
