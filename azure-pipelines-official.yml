@@ -198,11 +198,6 @@ extends:
                 BUILDCONFIG: $(_BuildConfig)
               condition: ne(variables['SkipTests'], 'true')
 
-            - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
-              displayName: Delete dump files
-              workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-              condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
-
               # publish VS Code and npm test results
             - task: PublishTestResults@2
               displayName: Publish VS Code extension and npm test results
