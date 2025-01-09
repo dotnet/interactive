@@ -76,8 +76,8 @@ public class Header
         var newHeader = new Header(
             messageType: messageType,
             messageId: Guid.NewGuid().ToString(),
-            version: Constants.MESSAGE_PROTOCOL_VERSION,
-            username: Constants.USERNAME,
+            version: JupyterConstants.MESSAGE_PROTOCOL_VERSION,
+            username: JupyterConstants.USERNAME,
             session: session);
 
         return newHeader;

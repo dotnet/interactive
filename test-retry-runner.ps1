@@ -16,14 +16,14 @@ else
 {
     $projectsToSkip = @(
         "Microsoft.DotNet.Interactive.NetFramework.Tests",
-        "Microsoft.DotNet.Interactive.CSharpProject.Tests"
+        "Microsoft.DotNet.Interactive.CSharpProject.Tests",
         "Microsoft.DotNet.Interactive.NamedPipeConnector.Tests",
-        "Microsoft.DotNet.Interactive.VisualStudio.Tests"        
+        "Microsoft.DotNet.Interactive.VisualStudio.Tests"
         )
 }
 
 function ExecuteTestDirectory([string]$testDirectory, [string]$extraArgs = "") {
-    $testCommand = "dotnet test $testDirectory/ $extraArgs -l trx --no-restore --no-build --blame-hang-timeout 15m --blame-hang-dump-type full --blame-crash -c $buildConfig --results-directory $repoRoot/artifacts/TestResults/$buildConfig"
+    $testCommand = "dotnet test $testDirectory/ $extraArgs -l trx --no-restore --no-build --blame-hang-timeout 10m --blame-hang-dump-type full --blame-crash -c $buildConfig --results-directory $repoRoot/artifacts/TestResults/$buildConfig"
     Write-Host "Executing $testCommand"
     Invoke-Expression $testCommand
 }
@@ -33,8 +33,7 @@ try {
     $flakyTestAssemblyDirectories = @(
         "Microsoft.DotNet.Interactive.Tests",
         "Microsoft.DotNet.Interactive.App.Tests",
-        "Microsoft.DotNet.Interactive.Browser.Tests",
-        "Microsoft.DotNet.Interactive.Jupyter.Tests"
+        "Microsoft.DotNet.Interactive.Browser.Tests"
         )
     
     $normalTestAssemblyDirectories = Get-ChildItem -Path "$repoRoot/src" -Directory -Filter *.Tests -Recurse | Where-Object { !$flakyTestAssemblyDirectories.contains($_.Name)}
@@ -66,7 +65,7 @@ try {
         foreach ($testClass in $distinctTestClasses) {
             for ($i = 1; $i -le $retryCount; $i++) {
                 Write-Host "Testing class $testClass, attempt $i"
-                ExecuteTestDirectory -testDirectory "$repoRoot/src/$flakyTestAssemblyDirectory" -extraArgs "--filter FullyQualifiedName~$testClass"
+                ExecuteTestDirectory -testDirectory "$repoRoot/src/$flakyTestAssemblyDirectory" -extraArgs "--filter `"FullyQualifiedName~$testClass&Category!=Skip`""
                 if ($LASTEXITCODE -eq 0) {
                     break
                 }

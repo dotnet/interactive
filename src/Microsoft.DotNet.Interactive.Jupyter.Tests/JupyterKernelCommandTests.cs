@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-[LogToPocketLogger]
+[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public class JupyterKernelCommandTests : JupyterKernelTestBase
 {
     [Theory]

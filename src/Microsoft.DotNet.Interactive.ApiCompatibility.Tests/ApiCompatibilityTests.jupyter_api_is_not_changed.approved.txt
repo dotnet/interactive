@@ -29,7 +29,6 @@ Microsoft.DotNet.Interactive.Jupyter
     public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter KernelSpecNameParameter { get;}
     public ConnectJupyterKernelDirective AddConnectionOptions(Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions connectionOptions)
     public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(ConnectJupyterKernel connectCommand, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public static class Constants
   public class ExecuteRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.ExecuteRequest>, System.IDisposable
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
     public System.Threading.Tasks.Task Handle(JupyterRequestContext context)

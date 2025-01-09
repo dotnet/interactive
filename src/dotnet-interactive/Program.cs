@@ -56,7 +56,7 @@ public class Program
     {
         typeof(Startup).Assembly, // dotnet-interactive.dll
         typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
-        typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
+        typeof(JupyterRequestContext).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
         typeof(InteractiveDocument).Assembly, // Microsoft.DotNet.Interactive.Documents.dll
     };
 

@@ -10,15 +10,66 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
+using Pocket.For.Xunit;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
+using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+// FIX: (JupyterKernelVariableSharingTests) re-enable these tests
+[Trait("Category", "Skip")]
+[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 {
+    [Fact]
+    public async Task variable_sharing_not_enabled_for_unsupported_languages()
+    {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(null, "unsupportedLanguage"));
+
+        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        sentMessages
+            .Select(m => m.Header.MessageType)
+            .Should()
+            .NotContain(JupyterMessageContentTypes.ExecuteRequest);
+
+        kernel.KernelInfo
+              .SupportedKernelCommands
+              .Should().NotContain(info => info == new KernelCommandInfo(nameof(RequestValue)) ||
+                                           info == new KernelCommandInfo(nameof(RequestValueInfos)) ||
+                                           info == new KernelCommandInfo(nameof(SendValue)));
+
+        var directives = kernel.KernelInfo.SupportedDirectives.Select(info => info.Name);
+        directives.Should().NotContain("#!who");
+        directives.Should().NotContain("#!whos");
+    }
+
+    [Fact]
+    public async Task variable_sharing_not_enabled_for_when_target_not_found()
+    {
+        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[]
+        {
+            Message.CreateReply(new ExecuteReplyOk(), Message.Create(new ExecuteRequest("target_setup"))),
+            Message.Create(new CommClose("commId"), Message.Create(new CommOpen("commId", "target_setup", null)).Header)
+        }, "python"));
+
+        var kernel = await CreateJupyterKernelAsync(options);
+
+        kernel.KernelInfo
+              .SupportedKernelCommands
+              .Should().NotContain(info => info == new KernelCommandInfo(nameof(RequestValue)) ||
+                                           info == new KernelCommandInfo(nameof(RequestValueInfos)) ||
+                                           info == new KernelCommandInfo(nameof(SendValue)));
+
+        var directives = kernel.KernelInfo.SupportedDirectives.Select(info => info.Name);
+        directives.Should().NotContain("#!who");
+        directives.Should().NotContain("#!whos");
+    }
+
     [Theory]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]

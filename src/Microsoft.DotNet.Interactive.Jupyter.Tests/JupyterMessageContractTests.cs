@@ -34,7 +34,7 @@ public class JupyterMessageContractTests
         var socket = new TextSocket();
         var sender = new MessageSender(socket, new SignatureValidator("key", "HMACSHA256"));
         var kernelInfoReply = new KernelInfoReply(
-            Constants.MESSAGE_PROTOCOL_VERSION,
+            JupyterConstants.MESSAGE_PROTOCOL_VERSION,
             ".NET",
             "0.0.3",
             new LanguageInfo(
@@ -45,7 +45,7 @@ public class JupyterMessageContractTests
                 pygmentsLexer: "c#"
             ));
         var header = new Header(messageType: JupyterMessageContentTypes.KernelInfoReply, messageId: Guid.Empty.ToString(),
-            version: Constants.MESSAGE_PROTOCOL_VERSION, username: Constants.USERNAME, session: "test session",
+            version: JupyterConstants.MESSAGE_PROTOCOL_VERSION, username: JupyterConstants.USERNAME, session: "test session",
             date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
         var replyMessage = new Message(header, content: kernelInfoReply);
         sender.Send(replyMessage);
@@ -71,7 +71,7 @@ public class JupyterMessageContractTests
             });
 
         var header = new Header(messageType: JupyterMessageContentTypes.ExecuteResult, messageId: Guid.Empty.ToString(),
-            version: "5.3", username: Constants.USERNAME, session: "test session",
+            version: "5.3", username: JupyterConstants.USERNAME, session: "test session",
             date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
 
         var replyMessage = new Message(header, content: executeResult);
@@ -99,7 +99,7 @@ public class JupyterMessageContractTests
 
 
         var header = new Header(messageType: JupyterMessageContentTypes.DisplayData, messageId: Guid.Empty.ToString(),
-            version: "5.3", username: Constants.USERNAME, session: "test session",
+            version: "5.3", username: JupyterConstants.USERNAME, session: "test session",
             date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
         var replyMessage = new Message(header, content: displayData);
 
@@ -118,7 +118,7 @@ public class JupyterMessageContractTests
         var completeReply = new CompleteReply(0, 0, matches: new List<string> { "Write", "WriteLine" });
 
         var header = new Header(messageType: JupyterMessageContentTypes.CompleteReply, messageId: Guid.Empty.ToString(),
-            version: "5.3", username: Constants.USERNAME, session: "test session",
+            version: "5.3", username: JupyterConstants.USERNAME, session: "test session",
             date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
 
         var replyMessage = new Message(header, content: completeReply);
@@ -146,7 +146,7 @@ public class JupyterMessageContractTests
         );
 
         var header = new Header(messageType: JupyterMessageContentTypes.UpdateDisplayData, messageId: Guid.Empty.ToString(),
-            version: "5.3", username: Constants.USERNAME, session: "test session",
+            version: "5.3", username: JupyterConstants.USERNAME, session: "test session",
             date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
 
         var replyMessage = new Message(header, content: displayData);
@@ -173,7 +173,7 @@ public class JupyterMessageContractTests
             });
 
         var header = new Header(messageType: JupyterMessageContentTypes.ExecuteResult, messageId: Guid.Empty.ToString(),
-            version: "5.3", username: Constants.USERNAME, session: "test session",
+            version: "5.3", username: JupyterConstants.USERNAME, session: "test session",
             date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
 
         var metaData = new Dictionary<string, object>
@@ -206,7 +206,7 @@ public class JupyterMessageContractTests
             });
 
         var header = new Header(messageType: JupyterMessageContentTypes.ExecuteResult, messageId: Guid.Empty.ToString(),
-            version: "5.3", username: Constants.USERNAME, session: "test session",
+            version: "5.3", username: JupyterConstants.USERNAME, session: "test session",
             date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
 
         var metaData = new Dictionary<string, object>

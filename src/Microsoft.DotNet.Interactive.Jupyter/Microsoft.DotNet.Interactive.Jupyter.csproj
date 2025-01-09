@@ -6,6 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Utility\**" />
+    <EmbeddedResource Remove="Utility\**" />
+    <None Remove="Utility\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="CommandEvents\LanguageHandlers\coe_comm_adapter.py" />
     <None Remove="CommandEvents\LanguageHandlers\r\coe_comm_handler.r" />
   </ItemGroup>
@@ -54,8 +60,5 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Utility\" />
   </ItemGroup>
 </Project>

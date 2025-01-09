@@ -37,6 +37,9 @@ public class Shell : IHostedService
     private readonly RouterSocket _control;
     private readonly RequestReplyChannel _controlChannel;
     private string _kernelIdentity =  Guid.NewGuid().ToString();
+    private CancellationToken _cancellationToken;
+    private Task _shellChannelLoopTask;
+    private Task _controlChannelLoopTask;
 
     public Shell(
         Kernel kernel,
@@ -82,92 +85,89 @@ public class Shell : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        _cancellationToken = cancellationToken;
+
         _shell.Bind(_shellAddress);
         _ioPubSocket.Bind(_ioPubAddress);
         _stdIn.Bind(_stdInAddress);
         _control.Bind(_controlAddress);
-            
-        ShellChannelLoop(cancellationToken);
 
-        ControlChannelLoop(cancellationToken);
+        _shellChannelLoopTask = Task.Factory.StartNew(ShellChannelLoopAsync, creationOptions: TaskCreationOptions.LongRunning);
+
+        _controlChannelLoopTask = Task.Factory.StartNew(ControlChannelLoop, creationOptions: TaskCreationOptions.LongRunning);
 
         return Task.CompletedTask;
     }
 
-    private void ControlChannelLoop(CancellationToken cancellationToken)
+    private void ControlChannelLoop()
     {
-        Task.Run(() =>
+        using var activity = Log.OnEnterAndExit();
+        while (!_cancellationToken.IsCancellationRequested)
         {
-            using var activity = Log.OnEnterAndExit();
-            while (!cancellationToken.IsCancellationRequested)
+            var request = _control.GetMessage();
+
+            activity.Info("Received: {message}", request.ToJson());
+
+            SetBusy(request);
+
+            switch (request.Header.MessageType)
             {
-                var request = _control.GetMessage();
-
-                activity.Info("Received: {message}", request.ToJson());
-
-                SetBusy(request);
-
-                switch (request.Header.MessageType)
-                {
-                    case JupyterMessageContentTypes.KernelShutdownRequest:
-                        _controlChannel.Reply(new KernelShutdownReply(), request);
-                        SetIdle(request);
-                        _applicationLifetime.StopApplication();
-                        break;
-                }
+                case JupyterMessageContentTypes.KernelShutdownRequest:
+                    _controlChannel.Reply(new KernelShutdownReply(), request);
+                    SetIdle(request);
+                    _applicationLifetime.StopApplication();
+                    break;
             }
-        }, cancellationToken);
+        }
     }
 
-    private void ShellChannelLoop(CancellationToken cancellationToken)
+    private async Task ShellChannelLoopAsync()
     {
-        Task.Run(async () =>
+        using var activity = Log.OnEnterAndExit();
+
+        while (!_cancellationToken.IsCancellationRequested)
         {
-            using var activity = Log.OnEnterAndExit();
-            while (!cancellationToken.IsCancellationRequested)
+            var request = _shell.GetMessage();
+
+            activity.Info("Received: {message}", request.ToJson());
+
+            SetBusy(request);
+
+            switch (request.Header.MessageType)
             {
-                var request = _shell.GetMessage();
+                case JupyterMessageContentTypes.KernelInfoRequest:
+                    _kernelIdentity = Encoding.Unicode.GetString(request.Identifiers[0].ToArray());
+                    HandleKernelInfoRequest(request);
+                    SetIdle(request);
+                    break;
 
-                activity.Info("Received: {message}", request.ToJson());
+                case JupyterMessageContentTypes.KernelShutdownRequest:
+                    _shellChannel.Reply(new KernelShutdownReply(), request);
+                    SetIdle(request);
+                    _applicationLifetime.StopApplication();
+                    break;
 
-                SetBusy(request);
+                default:
+                    var context = new JupyterRequestContext(
+                        _shellChannel,
+                        _ioPubChannel,
+                        _stdInChannel,
+                        request,
+                        _kernelIdentity);
 
-                switch (request.Header.MessageType)
-                {
-                    case JupyterMessageContentTypes.KernelInfoRequest:
-                        _kernelIdentity = Encoding.Unicode.GetString(request.Identifiers[0].ToArray());
-                        HandleKernelInfoRequest(request);
-                        SetIdle(request);
-                        break;
+                    await _scheduler.Schedule(context);
 
-                    case JupyterMessageContentTypes.KernelShutdownRequest:
-                        _shellChannel.Reply(new KernelShutdownReply(), request);
-                        SetIdle(request);
-                        _applicationLifetime.StopApplication();
-                        break;
+                    await context.Done();
 
-                    default:
-                        var context = new JupyterRequestContext(
-                            _shellChannel,
-                            _ioPubChannel,
-                            _stdInChannel,
-                            request,
-                            _kernelIdentity);
+                    SetIdle(request);
 
-                        await _scheduler.Schedule(context);
-
-                        await context.Done();
-
-                        SetIdle(request);
-
-                        break;
-                }
+                    break;
             }
-        }, cancellationToken);
+        }
     }
-
 
     private void SetBusy(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Busy), request, _kernelIdentity);
+
     private void SetIdle(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Idle), request, _kernelIdentity);
         
     public Task StopAsync(CancellationToken cancellationToken)
@@ -179,7 +179,7 @@ public class Shell : IHostedService
     private void HandleKernelInfoRequest(ZeroMQMessage request)
     {
         var languageInfo = GetLanguageInfo();
-        var kernelInfoReply = new KernelInfoReply(Constants.MESSAGE_PROTOCOL_VERSION, ".NET", "5.1.0", languageInfo);
+        var kernelInfoReply = new KernelInfoReply(JupyterConstants.MESSAGE_PROTOCOL_VERSION, ".NET", "5.1.0", languageInfo);
         _shellChannel.Reply(kernelInfoReply, request);
     }
 

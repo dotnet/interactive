@@ -56,22 +56,25 @@ internal class MessagePlayback : IMessageTracker
                                 .GroupBy(m => new { MsgId = m.ParentHeader?.MessageId, MsgType = m.ParentHeader?.MessageType })
                                 .FirstOrDefault(g => g.Key.MsgType == message.Header.MessageType);
 
-                foreach (var m in responses)
+                if (responses is not null)
                 {
-                    var replyMessage = new Message(
-                        m.Header,
-                        GetContent(message, m),
-                        new Header(
-                            m.ParentHeader?.MessageType,
-                            message.Header.MessageId, // reply back with the sent message id
-                            m.ParentHeader.Version,
-                            m.ParentHeader.Session,
-                            m.ParentHeader.Username,
-                            m.ParentHeader.Date),
-                        m.Signature, m.MetaData, m.Identifiers, m.Buffers, m.Channel);
+                    foreach (var m in responses)
+                    {
+                        var replyMessage = new Message(
+                            m.Header,
+                            GetContent(message, m),
+                            new Header(
+                                m.ParentHeader?.MessageType,
+                                message.Header.MessageId, // reply back with the sent message id
+                                m.ParentHeader.Version,
+                                m.ParentHeader.Session,
+                                m.ParentHeader.Username,
+                                m.ParentHeader.Date),
+                            m.Signature, m.MetaData, m.Identifiers, m.Buffers, m.Channel);
 
-                    _receivedMessages.OnNext(replyMessage);
-                    _playbackMessages.Remove(m);
+                        _receivedMessages.OnNext(replyMessage);
+                        _playbackMessages.Remove(m);
+                    }
                 }
             }
             else
