@@ -38,8 +38,8 @@ public class Shell : IHostedService
     private readonly RequestReplyChannel _controlChannel;
     private string _kernelIdentity =  Guid.NewGuid().ToString();
     private CancellationToken _cancellationToken;
-    private Task _shellChannelLoop;
-    private Task _controlChannelLoop;
+    private Task _shellChannelLoopTask;
+    private Task _controlChannelLoopTask;
 
     public Shell(
         Kernel kernel,
@@ -92,9 +92,9 @@ public class Shell : IHostedService
         _stdIn.Bind(_stdInAddress);
         _control.Bind(_controlAddress);
 
-        _shellChannelLoop = Task.Factory.StartNew(ShellChannelLoop, creationOptions: TaskCreationOptions.LongRunning);
+        _shellChannelLoopTask = Task.Factory.StartNew(ShellChannelLoopAsync, creationOptions: TaskCreationOptions.LongRunning);
 
-        _controlChannelLoop = Task.Factory.StartNew(ControlChannelLoop, creationOptions: TaskCreationOptions.LongRunning);
+        _controlChannelLoopTask = Task.Factory.StartNew(ControlChannelLoop, creationOptions: TaskCreationOptions.LongRunning);
 
         return Task.CompletedTask;
     }
@@ -121,9 +121,10 @@ public class Shell : IHostedService
         }
     }
 
-    private async Task ShellChannelLoop()
+    private async Task ShellChannelLoopAsync()
     {
         using var activity = Log.OnEnterAndExit();
+
         while (!_cancellationToken.IsCancellationRequested)
         {
             var request = _shell.GetMessage();
