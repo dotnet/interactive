@@ -8,13 +8,19 @@
 export const AddPackageType = "AddPackage";
 export const AddPackageSourceType = "AddPackageSource";
 export const CancelType = "Cancel";
+export const ClearValuesType = "ClearValues";
 export const CompileProjectType = "CompileProject";
+export const ConnectJupyterKernelType = "ConnectJupyterKernel";
+export const ConnectSignalRType = "ConnectSignalR";
+export const ConnectStdioType = "ConnectStdio";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
+export const ExpandCodeType = "ExpandCode";
 export const ImportDocumentType = "ImportDocument";
 export const OpenDocumentType = "OpenDocument";
 export const OpenProjectType = "OpenProject";
 export const QuitType = "Quit";
+export const RequestCodeExpansionInfosType = "RequestCodeExpansionInfos";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
@@ -33,13 +39,19 @@ export type KernelCommandType =
       typeof AddPackageType
     | typeof AddPackageSourceType
     | typeof CancelType
+    | typeof ClearValuesType
     | typeof CompileProjectType
+    | typeof ConnectJupyterKernelType
+    | typeof ConnectSignalRType
+    | typeof ConnectStdioType
     | typeof DisplayErrorType
     | typeof DisplayValueType
+    | typeof ExpandCodeType
     | typeof ImportDocumentType
     | typeof OpenDocumentType
     | typeof OpenProjectType
     | typeof QuitType
+    | typeof RequestCodeExpansionInfosType
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
@@ -72,7 +84,35 @@ export interface AddPackageSource extends KernelCommand {
 export interface Cancel extends KernelCommand {
 }
 
+export interface ClearValues extends KernelCommand {
+}
+
 export interface CompileProject extends KernelCommand {
+}
+
+export interface ConnectJupyterKernel extends ConnectKernelCommand {
+    condaEnv: string;
+    initScript: string;
+    kernelSpec: string;
+    url: string;
+    token: string;
+    bearer: boolean;
+}
+
+export interface ConnectKernelCommand extends KernelDirectiveCommand {
+    kernelName: string;
+}
+
+export interface KernelDirectiveCommand extends KernelCommand {
+}
+
+export interface ConnectSignalR extends ConnectKernelCommand {
+    hubUrl: string;
+}
+
+export interface ConnectStdio extends ConnectKernelCommand {
+    command: Array<string>;
+    kernelHost: string;
 }
 
 export interface DisplayError extends KernelCommand {
@@ -82,6 +122,10 @@ export interface DisplayError extends KernelCommand {
 export interface DisplayValue extends KernelCommand {
     formattedValue: FormattedValue;
     valueId: string;
+}
+
+export interface ExpandCode extends KernelCommand {
+    identifier: string;
 }
 
 export interface ImportDocument extends KernelCommand {
@@ -98,6 +142,9 @@ export interface OpenProject extends KernelCommand {
 }
 
 export interface Quit extends KernelCommand {
+}
+
+export interface RequestCodeExpansionInfos extends KernelCommand {
 }
 
 export interface RequestCompletions extends LanguageServiceCommand {
@@ -230,6 +277,7 @@ export interface NotebookSerializeResponse extends NotebookParserServerResponse 
 // --------------------------------------------- Kernel events
 
 export const AssemblyProducedType = "AssemblyProduced";
+export const CodeExpansionInfosProducedType = "CodeExpansionInfosProduced";
 export const CodeSubmissionReceivedType = "CodeSubmissionReceived";
 export const CommandFailedType = "CommandFailed";
 export const CommandSucceededType = "CommandSucceeded";
@@ -258,6 +306,7 @@ export const ValueProducedType = "ValueProduced";
 
 export type KernelEventType =
       typeof AssemblyProducedType
+    | typeof CodeExpansionInfosProducedType
     | typeof CodeSubmissionReceivedType
     | typeof CommandFailedType
     | typeof CommandSucceededType
@@ -286,6 +335,10 @@ export type KernelEventType =
 
 export interface AssemblyProduced extends KernelEvent {
     assembly: Base64EncodedAssembly;
+}
+
+export interface CodeExpansionInfosProduced extends KernelEvent {
+    codeExpansionInfos: Array<CodeExpansionInfo>;
 }
 
 export interface CodeSubmissionReceived extends KernelEvent {
@@ -401,6 +454,12 @@ export interface ValueProduced extends KernelEvent {
 
 export interface Base64EncodedAssembly {
     value: string;
+}
+
+export interface CodeExpansionInfo {
+    description: string;
+    kind: string;
+    name: string;
 }
 
 export interface CompletionItem {

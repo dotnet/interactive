@@ -302,6 +302,11 @@
         "command": "polyglot-notebook.notebookEditor.openValueViewer",
         "title": "%command.openValueViewer%",
         "icon": "$(variable-group)"
+      },
+      {
+        "command": "polyglot-notebook.notebookEditor.connectSubkernel",
+        "title": "%command.connectSubkernel%",
+        "icon": "$(plug)"
       }
     ],
     "keybindings": [

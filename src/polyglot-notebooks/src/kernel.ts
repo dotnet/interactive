@@ -118,7 +118,7 @@ export class Kernel {
         } else {
             Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`);
         }
-        commandEnvelope.routingSlip;//?
+        commandEnvelope.routingSlip;
 
         return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value).finally(() => {
             if (!commandEnvelope.routingSlip.contains(kernelUri)) {
@@ -157,7 +157,7 @@ export class Kernel {
             context.handlingKernel = this;
             let isRootCommand = commandsAndEvents.KernelCommandEnvelope.areCommandsTheSame(context.commandEnvelope, commandEnvelope);
 
-            let eventSubscription: rxjs.Subscription | undefined = undefined;//?
+            let eventSubscription: rxjs.Subscription | undefined = undefined;
 
             if (isRootCommand) {
                 const kernelType = (this.kernelInfo.isProxy ? "proxy" : "") + (this.kernelInfo.isComposite ? "composite" : "");
@@ -170,7 +170,7 @@ export class Kernel {
                     if (!e.routingSlip.contains(kernelUri)) {
                         e.routingSlip.stamp(kernelUri);
                     } else {
-                        "should not get here";//?
+                        "should not get here";
                     }
                     return e;
                 }))
@@ -181,7 +181,9 @@ export class Kernel {
             if (handler) {
                 try {
                     Logger.default.info(`kernel ${this.name} about to handle command: ${JSON.stringify(commandEnvelope)}`);
-                    await handler.handle({ commandEnvelope: commandEnvelope, context });
+                    await handler.handle({ commandEnvelope: commandEnvelope, context }).catch(e => {
+                        Logger.default.error(`Error when handing command ${commandEnvelope}: ${e}`);
+                    });
                     context.complete(commandEnvelope);
                     context.handlingKernel = previoudHendlingKernel;
                     if (isRootCommand) {
@@ -220,8 +222,8 @@ export class Kernel {
             }
         });
     }
-    private shouldNoopCommand(commandEnvelope: commandsAndEvents.KernelCommandEnvelope, context: KernelInvocationContext): boolean {
 
+    private shouldNoopCommand(commandEnvelope: commandsAndEvents.KernelCommandEnvelope, context: KernelInvocationContext): boolean {
         let shouldNoop = false;
         switch (commandEnvelope.commandType) {
             case commandsAndEvents.RequestCompletionsType:
