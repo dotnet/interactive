@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Connection;
