@@ -44,9 +44,6 @@ public class CommandLineParserTests : IDisposable
 
     public CommandLineParserTests(ITestOutputHelper output)
     {
-        KernelCommandEnvelope.RegisterDefaults();
-        KernelEventEnvelope.RegisterDefaults();
-
         _output = output;
         _serviceCollection = new ServiceCollection();
         var firstTimeUseNoticeSentinel = new FakeFirstTimeUseNoticeSentinel

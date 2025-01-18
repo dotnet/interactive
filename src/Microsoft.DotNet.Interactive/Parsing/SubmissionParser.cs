@@ -294,7 +294,7 @@ public class SubmissionParser
         if (NoSplitWasNeeded())
         {
             originalCommand.TargetKernelName ??= targetKernelName;
-            return new[] { originalCommand };
+            return [originalCommand];
         }
 
         foreach (var command in commands)
