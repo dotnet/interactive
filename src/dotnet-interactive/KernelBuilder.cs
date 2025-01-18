@@ -1,13 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
+using System.Text.Json;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Connection;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.Csv;
-using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
@@ -42,7 +41,7 @@ public static class KernelBuilder
                 .UseKernelHelpers()
                 .UseWho()
                 .UseValueSharing(),
-            new[] { "c#", "C#" });
+            ["c#", "C#"]);
 
         compositeKernel.Add(
             new FSharpKernel()
@@ -51,14 +50,14 @@ public static class KernelBuilder
                 .UseKernelHelpers()
                 .UseWho()
                 .UseValueSharing(),
-            new[] { "f#", "F#" });
+            ["f#", "F#"]);
 
         var powerShellKernel = new PowerShellKernel()
                                .UseProfiles()
                                .UseValueSharing();
         compositeKernel.Add(
             powerShellKernel,
-            new[] { "powershell" });
+            ["powershell"]);
 
         compositeKernel.Add(
             new HtmlKernel());
@@ -82,7 +81,28 @@ public static class KernelBuilder
                      .UseImportMagicCommand()
                      .UseSecretManager(secretManager)
                      .UseFormsForMultipleInputs(secretManager)
-                     .UseNuGetExtensions(telemetrySender);
+                     .UseNuGetExtensions(telemetrySender)
+                     .UseCodeExpansions(() =>
+                     {
+                         // FIX: (CreateKernel) refactor this out
+
+                         RecentConnectionList recentlyConnections;
+
+                         if (secretManager.TryGetValue("dotnet-interactive.RecentlyUsedConnections", out var json))
+                         {
+                             recentlyConnections = JsonSerializer.Deserialize<RecentConnectionList>(json, Serializer.JsonSerializerOptions);
+                         }
+                         else
+                         {
+                             recentlyConnections = new();
+                         }
+
+                         return recentlyConnections;
+                     }, list =>
+                     {
+                         var json = JsonSerializer.Serialize(list, Serializer.JsonSerializerOptions);
+                         secretManager.SetValue("dotnet-interactive.RecentlyUsedConnections", json);
+                     });
 
         kernel.AddConnectDirective(new ConnectSignalRDirective());
         kernel.AddConnectDirective(new ConnectStdIoDirective(startupOptions.KernelHost));

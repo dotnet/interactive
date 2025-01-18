@@ -12,8 +12,8 @@ Microsoft.DotNet.Interactive.PowerShell
   public class SecretManager
     .ctor(PowerShellKernel kernel)
     public System.String VaultName { get;}
-    public System.Void SetSecret(System.String name, System.String value, System.String command = null, System.String source = null)
-    public System.Boolean TryGetSecret(System.String secretName, ref System.String& value)
+    public System.Void SetValue(System.String name, System.String value)
+    public System.Boolean TryGetValue(System.String name, ref System.String& value)
 Microsoft.DotNet.Interactive.PowerShell.Commands
   public class EnterAzShellCommand : System.Management.Automation.PSCmdlet
     .ctor()

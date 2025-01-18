@@ -39,5 +39,6 @@
   "_command.stopAllNotebookKernels.comment": "{Locked='Polyglot Notebook'}",
   "command.shareValueWith": "Share value with...",
   "command.restartKernel": "Restart",
-  "command.openValueViewer": "Variables"
+  "command.openValueViewer": "Variables",
+  "command.connectSubkernel": "Polyglot Notebook: Connect subkernel"
 }

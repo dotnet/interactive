@@ -15,9 +15,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.App.ParserServer;
 using Microsoft.DotNet.Interactive.Connection;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Formatting.Csv;
-using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Telemetry;
@@ -26,8 +23,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pocket;
 using static Pocket.Logger;
-
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine;
 

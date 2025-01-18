@@ -251,7 +251,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 const addedCell = notebookDocument.cellAt(insertAtIndex); // the newly added cell is always the last one
                 await vscodeUtilities.setCellKernelName(addedCell, kernelName);
 
-                // FIX this is not working
+                // FIX focus the new cell. this is not working.
                 vscode.window.activeNotebookEditor?.revealRange(range);
                 vscode.commands.executeCommand('notebook.cell.edit');
             }

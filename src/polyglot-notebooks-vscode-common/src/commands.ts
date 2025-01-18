@@ -18,6 +18,7 @@ import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { PromiseCompletionSource } from './polyglot-notebooks/promiseCompletionSource';
 
 import * as constants from './constants';
+import { KernelCommandEnvelope, RequestCodeExpansionInfos, RequestCodeExpansionInfosType } from './polyglot-notebooks';
 
 export async function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel): Promise<void> {
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
@@ -31,23 +32,12 @@ export async function registerAcquisitionCommands(context: vscode.ExtensionConte
         throw new Error(errorDetails);
     }
 
-    let cachedInstallArgs: InstallInteractiveArgs | undefined = undefined;
     let acquirePromise: Promise<InteractiveLaunchOptions> | undefined = undefined;
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | string | undefined): Promise<InteractiveLaunchOptions | undefined> => {
         try {
             const installArgs = computeToolInstallArguments(args);
             DotNetPathManager.setDotNetPath(installArgs.dotnetPath);
-
-            if (cachedInstallArgs) {
-
-                // todo: ask Brett
-                if (installArgs.dotnetPath !== cachedInstallArgs.dotnetPath ||
-                    installArgs.toolVersion !== cachedInstallArgs.toolVersion) {
-                    // if specified install args are different than what we previously computed, invalidate the acquisition
-                    acquirePromise = undefined;
-                }
-            }
 
             if (!acquirePromise) {
                 const installationPromiseCompletionSource = new PromiseCompletionSource<void>();
@@ -128,6 +118,64 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.notebookEditor.openValueViewer', async () => {
         // vscode creates a command named `<viewId>.focus` for all contributed views, so we need to match the id
         await vscode.commands.executeCommand('polyglot-notebook-panel-values.focus');
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.notebookEditor.connectSubkernel', async (notebook?: vscode.NotebookDocument) => {
+        // FIX: show connection shortcuts
+        notebook = notebook || getCurrentNotebookDocument();
+
+        if (!notebook) {
+            return;
+        }
+
+        const client = await clientMapper.getOrAddClient(notebook.uri);
+
+        const e = new KernelCommandEnvelope(
+            RequestCodeExpansionInfosType,
+            <RequestCodeExpansionInfos>{
+                targetKernelName: ".NET"
+            }
+        );
+
+        const result = await client.requestCodeExpansionInfos();
+
+        const wellKnownConnectionItems = result.codeExpansionInfos
+            .filter(i => i.kind === "WellKnownConnection")
+            .map(i => {
+                return {
+                    label: i.name,
+                    description: i.description,
+                    iconPath: new vscode.ThemeIcon('plug')
+                };
+            });
+
+        const python3 = {
+            label: "python3",
+            description: "python 3.11.4 (base)",
+            iconPath: new vscode.ThemeIcon('plug')
+        };
+
+        const r = {
+            label: "R",
+            description: "R 3.6.1 (base)",
+            iconPath: new vscode.ThemeIcon('plug')
+        };
+
+        const discoveredKernelConnectionItems = [
+            python3, r
+        ];
+
+        // FIX replace dummy with actual recently-used connection items
+        const recentlyUsedConnectionItems = [python3, r];
+
+        const allItems = [
+            ...wellKnownConnectionItems,
+            { kind: vscode.QuickPickItemKind.Separator, description: '', label: '' },
+            ...discoveredKernelConnectionItems,
+            { kind: vscode.QuickPickItemKind.Separator, description: '', label: '' },
+            ...recentlyUsedConnectionItems];
+
+        await vscode.window.showQuickPick(allItems, { title: 'Connect subkernel' });
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
