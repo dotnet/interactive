@@ -53,12 +53,12 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                         return item;
                     });
 
-                // FIX replace dummy with actual MRU items
-                const mruConnectionItems = [{
-                    description: 'Connect to sql-adventureworks (MSSQL)',
-                    label: 'sql-adventureworks',
+                const recentConnectionsOption = {
+                    label: 'Connect subkernel...',
                     iconPath: new vscode.ThemeIcon('plug')
-                }];
+                };
+
+                const mruConnectionItems = [recentConnectionsOption];
 
                 const allItems = [
                     ...kernelSelectorItems,
@@ -86,6 +86,8 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                             // update tokens
                             await vscode.commands.executeCommand('polyglot-notebook.refreshSemanticTokens');
                         }
+                    } else if (selectedDisplayOption === recentConnectionsOption) {
+                        await vscode.commands.executeCommand('polyglot-notebook.notebookEditor.connectSubkernel');
                     }
                 }
             }

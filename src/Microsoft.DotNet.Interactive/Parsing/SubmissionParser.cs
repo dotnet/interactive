@@ -468,20 +468,24 @@ public class SubmissionParser
 
                     var directiveCommand = commandEnvelope.Command;
 
-                    if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand &&
-                        _kernel is CompositeKernel compositeKernel)
+                    if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand)
                     {
-                        var errors = kernelDirectiveCommand.GetValidationErrors(compositeKernel).ToArray();
+                        kernelDirectiveCommand.DirectiveNode = directiveNode;
 
-                        if (errors.Length > 0)
+                        if (_kernel is CompositeKernel compositeKernel)
                         {
-                            var diagnostic = directiveNode.CreateDiagnostic(
-                                new(PolyglotSyntaxParser.ErrorCodes.CustomMagicCommandError,
-                                    errors[0], DiagnosticSeverity.Error));
-                            directiveNode.AddDiagnostic(diagnostic);
+                            var errors = kernelDirectiveCommand.GetValidationErrors(compositeKernel).ToArray();
 
-                            ClearCommandsAndFail(diagnostic);
-                            return null;
+                            if (errors.Length > 0)
+                            {
+                                var diagnostic = directiveNode.CreateDiagnostic(
+                                    new(PolyglotSyntaxParser.ErrorCodes.CustomMagicCommandError,
+                                        errors[0], DiagnosticSeverity.Error));
+                                directiveNode.AddDiagnostic(diagnostic);
+
+                                ClearCommandsAndFail(diagnostic);
+                                return null;
+                            }
                         }
                     }
 

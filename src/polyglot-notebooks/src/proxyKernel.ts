@@ -136,7 +136,7 @@ export class ProxyKernel extends Kernel {
                 commandInvocation.commandEnvelope.command.destinationUri ??= this.kernelInfo.remoteUri;
             }
 
-            commandInvocation.commandEnvelope.routingSlip;//?
+            commandInvocation.commandEnvelope.routingSlip;
 
             if (commandInvocation.commandEnvelope.commandType === commandsAndEvents.RequestKernelInfoType) {
                 const destinationUri = this.kernelInfo.remoteUri!;

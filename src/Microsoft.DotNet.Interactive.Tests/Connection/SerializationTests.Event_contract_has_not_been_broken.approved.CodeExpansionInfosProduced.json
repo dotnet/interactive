@@ -1,0 +1,33 @@
+{
+  "event": {
+    "codeExpansionInfos": [
+      {
+        "name": "Kusto Query Language",
+        "kind": "WellKnownConnection",
+        "description": null
+      },
+      {
+        "name": "Microsoft SQL Database",
+        "kind": "WellKnownConnection",
+        "description": null
+      }
+    ]
+  },
+  "eventType": "CodeExpansionInfosProduced",
+  "command": {
+    "token": "the-token",
+    "commandType": "RequestCodeExpansionInfos",
+    "command": {
+      "targetKernelName": null,
+      "originUri": null,
+      "destinationUri": null
+    },
+    "routingSlip": [
+      "kernel://somelocation/kernelName?tag=arrived",
+      "kernel://somelocation/kernelName"
+    ]
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "token": "the-token",
+  "commandType": "ConnectSignalR",
+  "command": {
+    "hubUrl": "https://example.com/hub",
+    "kernelName": "dotnet-interactive",
+    "targetKernelName": null,
+    "originUri": null,
+    "destinationUri": null
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName?tag=arrived",
+    "kernel://somelocation/kernelName"
+  ]
+}

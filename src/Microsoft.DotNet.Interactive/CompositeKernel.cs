@@ -12,6 +12,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -45,13 +46,10 @@ public sealed class CompositeKernel :
         AddInternal(kernel, aliases);
     }
 
-    private void AddConnectedKernel(Kernel kernel)
-    {
-        AddInternal(kernel, null);
-    }
-
-    
-    private void AddInternal(Kernel kernel, IEnumerable<string> aliases)
+    private void AddInternal(
+        Kernel kernel,
+        IEnumerable<string> aliases,
+        DirectiveNode connectDirectiveNode = null)
     {
         if (kernel is null)
         {
@@ -103,6 +101,10 @@ public sealed class CompositeKernel :
         if (KernelInvocationContext.Current is { } current)
         {
             var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, current.Command);
+            if (connectDirectiveNode is not null)
+            {
+                kernelInfoProduced.ConnectionShortcutCode = connectDirectiveNode.Text;
+            }
             current.Publish(kernelInfoProduced);
         }
         else
@@ -267,7 +269,7 @@ public sealed class CompositeKernel :
 
         foreach (var connectedKernel in connectedKernels)
         {
-            AddConnectedKernel(connectedKernel);
+            AddInternal(connectedKernel, aliases: null, command.DirectiveNode);
 
             var kernelSpecifierDirective =
                 KernelInfo.SupportedDirectives.OfType<KernelSpecifierDirective>()
@@ -282,8 +284,6 @@ public sealed class CompositeKernel :
 
             context.Display($"Kernel added: #!{connectedKernel.Name}");
         }
-
-        // FIX: (ConnectKernels) add to MRU list 
     }
 
     public KernelHost Host => _host;

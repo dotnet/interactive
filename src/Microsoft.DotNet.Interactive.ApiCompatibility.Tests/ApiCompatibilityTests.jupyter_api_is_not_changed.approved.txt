@@ -3,6 +3,12 @@ Microsoft.DotNet.Interactive.Jupyter
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
     public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
     protected System.Void OnKernelEventReceived(Microsoft.DotNet.Interactive.Events.KernelEvent event, JupyterRequestContext context)
+  public class CondaEnvironment, IJupyterEnvironment
+    public static System.String CondaPath { get;}
+    public static System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<System.String>> GetEnvironmentNamesAsync()
+    public System.String Name { get; set;}
+    public System.Threading.Tasks.Task<Microsoft.DotNet.Interactive.Utility.CommandLineResult> ExecuteAsync(System.String command, System.String args, System.IO.DirectoryInfo workingDir = null, System.Nullable<System.TimeSpan> timeout = null)
+    public System.Diagnostics.Process StartProcess(System.String command, System.String args, System.IO.DirectoryInfo workingDir, System.Action<System.String> output = null, System.Action<System.String> error = null)
   public class ConnectionInformation
     public static ConnectionInformation Load(System.IO.FileInfo file)
     .ctor()

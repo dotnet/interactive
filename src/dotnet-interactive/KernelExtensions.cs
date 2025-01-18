@@ -5,11 +5,15 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.App.Commands;
+using Microsoft.DotNet.Interactive.App.Events;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
@@ -18,6 +22,7 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PackageManagement;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
+using static Microsoft.DotNet.Interactive.App.CodeExpansionInfo;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.App;
@@ -209,6 +214,70 @@ public static class KernelExtensions
 
             writer.Write(html);
         }, HtmlFormatter.MimeType);
+
+        return kernel;
+    }
+
+    public static CompositeKernel UseCodeExpansions(
+        this CompositeKernel kernel,
+        Func<RecentConnectionList> getRecentConnections, 
+        Action<RecentConnectionList> saveRecentConnections)
+    {
+        if (kernel is null)
+        {
+            throw new ArgumentNullException(nameof(kernel));
+        }
+
+        KernelEventEnvelope.RegisterEvent<CodeExpansionInfosProduced>();
+
+        kernel.RegisterCommandHandler<RequestCodeExpansionInfos>((request, context) =>
+        {
+            List<CodeExpansionInfo> infos = new();
+
+            // FIX: (UseCodeExpansions) recent connections
+            var recentConnectionList = getRecentConnections();
+            infos.AddRange(recentConnectionList.Select(i => new CodeExpansionInfo(i.Name, i.Kind)));
+
+            // FIX: (UseCodeExpansions) kernelspecs
+
+
+            // FIX: (UseCodeExpansions) well-known connections
+            infos.AddRange([
+                new CodeExpansionInfo(
+                    "Kusto Query Language", 
+                    CodeExpansionKind.WellKnownConnection,
+                    "Query a Kusto cluster"),
+                new CodeExpansionInfo(
+                    "Microsoft SQL Database", 
+                    CodeExpansionKind.WellKnownConnection,
+                    "Query a Microsoft SQL database")
+            ]);
+
+            CodeExpansionInfosProduced infosProduced = new(infos, request);
+
+            context.Publish(infosProduced);
+
+            return Task.CompletedTask;
+        });
+
+        // Register for the event notifying us when a kernel connection is established
+        var subscription = kernel.KernelEvents
+                                 .OfType<KernelInfoProduced>()
+                                 .Subscribe(produced =>
+                                 {
+                                     if (produced.ConnectionShortcutCode is not null)
+                                     {
+                                         // FIX: (UseCodeExpansions) can we determine if there's a #r nuget needed for this to reproducible?
+                                         var recentConnectionList = getRecentConnections();
+                                         recentConnectionList.Add(
+                                             new(produced.KernelInfo.DisplayName,
+                                                 [produced.ConnectionShortcutCode],
+                                                 CodeExpansionKind.RecentConnection));
+                                         saveRecentConnections(recentConnectionList);
+                                     }
+                                 });
+
+        kernel.RegisterForDisposal(subscription);
 
         return kernel;
     }
