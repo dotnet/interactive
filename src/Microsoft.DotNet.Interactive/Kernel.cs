@@ -338,11 +338,11 @@ public abstract partial class Kernel :
     public void RegisterCommandType<TCommand>()
         where TCommand : KernelCommand
     {
-        // FIX: (RegisterCommandType) consider always automatically calling KernelCommandEnvelope.RegisterCommand<TCommand>();
-        // FIX: (RegisterCommandType) why is this a separate gesture from RegisterCommand? Does it even need to be public?
+        KernelCommandEnvelope.RegisterCommand<TCommand>();
+        
         if (_supportedCommandTypes.Add(typeof(TCommand)))
         {
-            var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
+            var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>();
 
             _dynamicHandlers[typeof(TCommand)] = (command, context) => defaultHandler((TCommand)command, context);
 
