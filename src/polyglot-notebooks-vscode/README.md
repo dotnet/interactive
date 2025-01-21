@@ -44,7 +44,7 @@ The following languages are supported by Polyglot Notebooks:
 ## Getting Started
 
 1.  Install the latest [Visual Studio Code](https://code.visualstudio.com/).
-2.  Install the latest [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download).
+2.  Install the latest [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download).
 3.  Install the Polyglot Notebooks extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
 ## Creating Notebooks
