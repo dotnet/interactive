@@ -12,11 +12,11 @@ If you would like to build `dotnet-interactive` tool and its associated librarie
 
     **N.b., using symbolic links in Windows requires the drive be formatted as NTFS.**
 
-This project depends on .NET 7.0. Before working on the project, check that the .NET prerequisites have been met:
+This project depends on .NET 9.0. Before working on the project, check that the .NET prerequisites have been met:
 
-- [Prerequisites for .NET on Windows](https://learn.microsoft.com/en-us/dotnet/core/install/windows?tabs=net70#dependencies)
-- [Prerequisites for .NET on Linux](https://learn.microsoft.com/en-us/dotnet/core/install/linux?tabs=net70#dependencies)
-- [Prerequisites for .NET on macOS](https://learn.microsoft.com/en-us/dotnet/core/install/macos?tabs=net70#dependencies)
+- [Prerequisites for .NET on Windows](https://learn.microsoft.com/en-us/dotnet/core/install/windows)
+- [Prerequisites for .NET on Linux](https://learn.microsoft.com/en-us/dotnet/core/install/linux)
+- [Prerequisites for .NET on macOS](https://learn.microsoft.com/en-us/dotnet/core/install/macos)
 
 ### First build
 
