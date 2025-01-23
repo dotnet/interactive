@@ -146,10 +146,9 @@ internal class InteractiveWorkspace : Workspace
     private IReadOnlyCollection<MetadataReference> GetReferenceSet(Compilation compilation)
     {
         var references =
-            _referenceAssemblies
+          new HashSet<MetadataReference>  (_referenceAssemblies
                 .Concat(_packageManagerReferences)
-                .Concat(compilation.DirectiveReferences)
-                .ToHashSet();
+                .Concat(compilation.DirectiveReferences));
 
         foreach (var reference in compilation.ExternalReferences.Distinct())
         {
