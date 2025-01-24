@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var toolAppDllPath =
                 currentAssemblyPath.Replace(currentAssemblyName, "Microsoft.DotNet.Interactive.App.dll");
             toolAppDllPath = toolAppDllPath.Replace(currentAssemblyProjectName, "dotnet-interactive");
-            toolAppDllPath = toolAppDllPath.Replace("net472", "net8.0");
+            toolAppDllPath = toolAppDllPath.Replace("net472", "net9.0");
 
             var hostUri = KernelHost.CreateHostUri("host");
             var connector = new StdIoKernelConnector(

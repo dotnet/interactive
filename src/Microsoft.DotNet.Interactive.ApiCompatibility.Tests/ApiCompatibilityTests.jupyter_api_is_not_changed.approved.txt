@@ -281,7 +281,7 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Transient { get;}
   public static class ExecutionStateValues
   public class FSharpLanguageInfo : LanguageInfo
-    .ctor(System.String version = 8.0)
+    .ctor(System.String version = 9.0)
   public abstract class HistoryElement
     public System.Int32 LineNumber { get;}
     public System.Int32 Session { get;}
