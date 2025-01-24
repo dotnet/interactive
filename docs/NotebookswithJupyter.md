@@ -13,7 +13,7 @@ Make sure you have the following installed:
 > jupyter kernelspec list
   python3        ~\jupyter\kernels\python3
 > dotnet --version
-  8.0.100
+  9.0.100
 ```
 
 (The `dotnet` minor version isn't important.)
