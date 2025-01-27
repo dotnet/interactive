@@ -301,8 +301,8 @@ public class SerializationTests
         IEnumerable<KernelEvent> events()
         {
             yield return new CodeExpansionInfosProduced([
-                new CodeExpansionInfo("Kusto Query Language", CodeExpansionInfo.CodeExpansionKind.WellKnownConnection),
-                new CodeExpansionInfo("Microsoft SQL Database", CodeExpansionInfo.CodeExpansionKind.WellKnownConnection)
+                new CodeExpansionInfo("Kusto Query Language", CodeExpansion.CodeExpansionKind.DataConnection),
+                new CodeExpansionInfo("Microsoft SQL Database", CodeExpansion.CodeExpansionKind.DataConnection)
             ], new RequestCodeExpansionInfos());
 
             yield return new CodeSubmissionReceived(

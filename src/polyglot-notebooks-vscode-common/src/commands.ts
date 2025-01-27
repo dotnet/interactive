@@ -18,7 +18,7 @@ import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { PromiseCompletionSource } from './polyglot-notebooks/promiseCompletionSource';
 
 import * as constants from './constants';
-import { KernelCommandEnvelope, RequestCodeExpansionInfos, RequestCodeExpansionInfosType } from './polyglot-notebooks';
+import { CodeExpansionInfo, KernelCommandEnvelope, RequestCodeExpansionInfos, RequestCodeExpansionInfosType } from './polyglot-notebooks';
 
 export async function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel): Promise<void> {
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
@@ -130,52 +130,46 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
         const client = await clientMapper.getOrAddClient(notebook.uri);
 
-        const e = new KernelCommandEnvelope(
-            RequestCodeExpansionInfosType,
-            <RequestCodeExpansionInfos>{
-                targetKernelName: ".NET"
-            }
-        );
-
         const result = await client.requestCodeExpansionInfos();
 
-        const wellKnownConnectionItems = result.codeExpansionInfos
-            .filter(i => i.kind === "WellKnownConnection")
-            .map(i => {
+        const dataConnectionOptions = mapCodeExpansionInfosToQuickPickOptions(
+            result.codeExpansionInfos
+                .filter(i => i.kind === "DataConnection"));
+        const kernelspecConnectionOptions = mapCodeExpansionInfosToQuickPickOptions(
+            result.codeExpansionInfos
+                .filter(i => i.kind === "KernelSpecConnection"));
+        const recentlyUsedConnectionOptions = mapCodeExpansionInfosToQuickPickOptions(
+            result.codeExpansionInfos
+                .filter(i => i.kind === "RecentConnection"));
+
+        const allOptions = [
+            { kind: vscode.QuickPickItemKind.Separator, label: 'Data kernels', description: '' },
+            ...dataConnectionOptions,
+            { kind: vscode.QuickPickItemKind.Separator, label: 'Jupyter kernels', description: '' },
+            ...kernelspecConnectionOptions,
+            { kind: vscode.QuickPickItemKind.Separator, label: 'Recent kernels', description: '' },
+            ...recentlyUsedConnectionOptions];
+
+        const selectedOption = await vscode.window.showQuickPick(allOptions, { title: 'Connect to new subkernel' });
+
+        if (selectedOption) {
+            const selection = vscode.window.activeNotebookEditor?.selection;
+
+            client.execute(
+                `#!expand "${selectedOption.label}"`,
+                { kernelName: ".NET", index: selection?.end },
+                output => { }, _ => { });
+        }
+
+        function mapCodeExpansionInfosToQuickPickOptions(infos: any[]) {
+            return infos.map(i => {
                 return {
                     label: i.name,
                     description: i.description,
                     iconPath: new vscode.ThemeIcon('plug')
                 };
             });
-
-        const python3 = {
-            label: "python3",
-            description: "python 3.11.4 (base)",
-            iconPath: new vscode.ThemeIcon('plug')
-        };
-
-        const r = {
-            label: "R",
-            description: "R 3.6.1 (base)",
-            iconPath: new vscode.ThemeIcon('plug')
-        };
-
-        const discoveredKernelConnectionItems = [
-            python3, r
-        ];
-
-        // FIX replace dummy with actual recently-used connection items
-        const recentlyUsedConnectionItems = [python3, r];
-
-        const allItems = [
-            ...wellKnownConnectionItems,
-            { kind: vscode.QuickPickItemKind.Separator, description: '', label: '' },
-            ...discoveredKernelConnectionItems,
-            { kind: vscode.QuickPickItemKind.Separator, description: '', label: '' },
-            ...recentlyUsedConnectionItems];
-
-        await vscode.window.showQuickPick(allItems, { title: 'Connect subkernel' });
+        }
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.restartCurrentNotebookKernel', async (notebook?: vscode.NotebookDocument | undefined) => {
@@ -317,11 +311,9 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
             'F#': 'fsharp',
             'HTML': 'html',
             'JavaScript': 'javascript',
-            'KQL': 'kql',
             'Markdown': 'markdown',
             'Mermaid': 'mermaid',
-            'PowerShell': 'pwsh',
-            'SQL': 'sql',
+            'PowerShell': 'pwsh'
         };
 
         const newLanguageOptions: string[] = [];

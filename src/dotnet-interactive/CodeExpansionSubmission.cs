@@ -3,7 +3,4 @@
 
 namespace Microsoft.DotNet.Interactive.App;
 
-public record CodeExpansionInfo(
-    string Name,
-    string Kind,
-    string Description = null);
+public record CodeExpansionSubmission(string Code, string TargetKernelName = null);

@@ -40,5 +40,5 @@
   "command.shareValueWith": "Share value with...",
   "command.restartKernel": "Restart",
   "command.openValueViewer": "Variables",
-  "command.connectSubkernel": "Polyglot Notebook: Connect subkernel"
+  "command.connectSubkernel": "Polyglot Notebook: Connect to new subkernel"
 }

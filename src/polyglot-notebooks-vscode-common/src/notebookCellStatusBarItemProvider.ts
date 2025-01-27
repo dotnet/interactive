@@ -54,7 +54,7 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                     });
 
                 const recentConnectionsOption = {
-                    label: 'Connect subkernel...',
+                    label: 'Connect to new subkernel...',
                     iconPath: new vscode.ThemeIcon('plug')
                 };
 

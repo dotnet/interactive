@@ -7,10 +7,12 @@ namespace Microsoft.DotNet.Interactive.App.Commands;
 
 public class ExpandCode : KernelCommand
 {
-    public ExpandCode(string identifier, string targetKernelName = null) : base(targetKernelName)
+    public ExpandCode(string name, string targetKernelName = null) : base(targetKernelName)
     {
-        Identifier = identifier;
+        Name = name;
     }
 
-    public string Identifier { get; }
+    public string Name { get; }
+
+    public int? InsertAtPosition { get; set; }
 }

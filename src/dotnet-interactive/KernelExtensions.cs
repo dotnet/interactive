@@ -22,15 +22,107 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PackageManagement;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
-using static Microsoft.DotNet.Interactive.App.CodeExpansionInfo;
+using static Microsoft.DotNet.Interactive.App.CodeExpansion;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.App;
 
 public static class KernelExtensions
 {
+    public static CompositeKernel UseCodeExpansions(
+        this CompositeKernel kernel,
+        CodeExpansionConfiguration config)
+    {
+        if (kernel is null)
+        {
+            throw new ArgumentNullException(nameof(kernel));
+        }
+
+        KernelEventEnvelope.RegisterEvent<CodeExpansionInfosProduced>();
+
+        kernel.RegisterCommandHandler<RequestCodeExpansionInfos>(async (request, context) =>
+        {
+            var infos = await config.GetCodeExpansionInfosAsync();
+
+            CodeExpansionInfosProduced infosProduced = new(infos, request);
+
+            context.Publish(infosProduced);
+        });
+
+        // Register for the event notifying us when a kernel connection is established
+        var subscription = kernel.KernelEvents
+                                 .OfType<KernelInfoProduced>()
+                                 .Subscribe(produced =>
+                                 {
+                                     if (produced.ConnectionShortcutCode is not null)
+                                     {
+                                         // FIX: (UseCodeExpansions) can we determine if there's a #r nuget needed for this to reproducible?
+                                         if (config.GetRecentConnections is not null)
+                                         {
+                                             var recentConnectionList = config.GetRecentConnections();
+                                             var expansionSubmission = new CodeExpansionSubmission(produced.ConnectionShortcutCode, produced.Command.TargetKernelName);
+                                             var codeExpansion = new CodeExpansion(
+                                                 [expansionSubmission],
+                                                 new CodeExpansionInfo(produced.KernelInfo.LocalName, CodeExpansionKind.RecentConnection));
+
+                                             recentConnectionList.Add(codeExpansion);
+
+                                             config.AddCodeExpansion(codeExpansion);
+
+                                             if (config.SaveRecentConnections is not null)
+                                             {
+                                                 config.SaveRecentConnections(recentConnectionList);
+                                             }
+                                         }
+                                     }
+                                 });
+
+        var expandDirective = new KernelActionDirective("#!expand")
+        {
+            Parameters =
+            [
+                new KernelDirectiveParameter("--name", "The name of the code expansion.")
+                {
+                    AllowImplicitName = true,
+                    Required = true
+                },
+                new KernelDirectiveParameter("--insert-at-position", "The index of the cell after which to insert the expanded code.")
+            ],
+            Hidden = true
+        };
+
+        kernel.AddDirective<ExpandCode>(
+            expandDirective,
+            async (expandCode, context) =>
+            {
+                var codeExpansion = await config.GetCodeExpansionAsync(expandCode.Name);
+                if (codeExpansion is null)
+                {
+                    context.Fail(expandCode, message: $"No code expansion named '{expandCode.Name}' was found.");
+                    return;
+                }
+
+                var offset = 0;
+                foreach (var submission in codeExpansion.Content)
+                {
+                    await kernel.SendAsync(new SendEditableCode(
+                                               submission.TargetKernelName,
+                                               submission.Code)
+                    {
+                        InsertAtPosition = expandCode.InsertAtPosition + offset
+                    });
+
+                    offset++;
+                }
+            });
+
+        kernel.RegisterForDisposal(subscription);
+
+        return kernel;
+    }
+
     public static TKernel UseFormsForMultipleInputs<TKernel>(
-        this TKernel kernel, 
+        this TKernel kernel,
         SecretManager secretManager = null)
         where TKernel : Kernel
     {
@@ -60,11 +152,11 @@ public static class KernelExtensions
 
                 var value = "";
 
-                if (inputDescription.SaveAs is not null && 
+                if (inputDescription.SaveAs is not null &&
                     secretManager is not null)
                 {
                     secretManager.TryGetValue(inputDescription.SaveAs, out value);
-                }  
+                }
 
                 return div(
                     label[@for: inputName](inputDescription.Prompt),
@@ -128,14 +220,12 @@ public static class KernelExtensions
         return kernel;
     }
 
-
     public static CSharpKernel UseNugetDirective(this CSharpKernel kernel, bool forceRestore = false)
     {
         kernel.UseNugetDirective((k, resolvedPackageReference) =>
         {
-            
             k.AddAssemblyReferences(resolvedPackageReference
-                .SelectMany(r => r.AssemblyPaths));
+                                        .SelectMany(r => r.AssemblyPaths));
             return Task.CompletedTask;
         }, forceRestore);
 
@@ -204,10 +294,9 @@ public static class KernelExtensions
                         td(img[src: encodedImage, width: "125em"]),
                         td[style: "line-height:.8em"](
                             p[style: "font-size:1.5em"](b(".NET Interactive")),
-                            p("© 2020-2024 Microsoft Corporation"),
+                            p("© 2020-2025 Microsoft Corporation"),
                             p(b("Version: "), info.AssemblyInformationalVersion),
                             p(b("Library version: "), libraryInformationalVersion),
-                            p(b("Build date: "), info.BuildDate),
                             p(a[href: url](url))
                         ))
                 ));
@@ -218,72 +307,8 @@ public static class KernelExtensions
         return kernel;
     }
 
-    public static CompositeKernel UseCodeExpansions(
-        this CompositeKernel kernel,
-        Func<RecentConnectionList> getRecentConnections, 
-        Action<RecentConnectionList> saveRecentConnections)
-    {
-        if (kernel is null)
-        {
-            throw new ArgumentNullException(nameof(kernel));
-        }
-
-        KernelEventEnvelope.RegisterEvent<CodeExpansionInfosProduced>();
-
-        kernel.RegisterCommandHandler<RequestCodeExpansionInfos>((request, context) =>
-        {
-            List<CodeExpansionInfo> infos = new();
-
-            // FIX: (UseCodeExpansions) recent connections
-            var recentConnectionList = getRecentConnections();
-            infos.AddRange(recentConnectionList.Select(i => new CodeExpansionInfo(i.Name, i.Kind)));
-
-            // FIX: (UseCodeExpansions) kernelspecs
-
-
-            // FIX: (UseCodeExpansions) well-known connections
-            infos.AddRange([
-                new CodeExpansionInfo(
-                    "Kusto Query Language", 
-                    CodeExpansionKind.WellKnownConnection,
-                    "Query a Kusto cluster"),
-                new CodeExpansionInfo(
-                    "Microsoft SQL Database", 
-                    CodeExpansionKind.WellKnownConnection,
-                    "Query a Microsoft SQL database")
-            ]);
-
-            CodeExpansionInfosProduced infosProduced = new(infos, request);
-
-            context.Publish(infosProduced);
-
-            return Task.CompletedTask;
-        });
-
-        // Register for the event notifying us when a kernel connection is established
-        var subscription = kernel.KernelEvents
-                                 .OfType<KernelInfoProduced>()
-                                 .Subscribe(produced =>
-                                 {
-                                     if (produced.ConnectionShortcutCode is not null)
-                                     {
-                                         // FIX: (UseCodeExpansions) can we determine if there's a #r nuget needed for this to reproducible?
-                                         var recentConnectionList = getRecentConnections();
-                                         recentConnectionList.Add(
-                                             new(produced.KernelInfo.DisplayName,
-                                                 [produced.ConnectionShortcutCode],
-                                                 CodeExpansionKind.RecentConnection));
-                                         saveRecentConnections(recentConnectionList);
-                                     }
-                                 });
-
-        kernel.RegisterForDisposal(subscription);
-
-        return kernel;
-    }
-
     public static CompositeKernel UseSecretManager(
-        this CompositeKernel kernel, 
+        this CompositeKernel kernel,
         SecretManager secretManager)
     {
         if (secretManager is null)
@@ -306,7 +331,7 @@ public static class KernelExtensions
                 var message =
                     $"""
                      Using previously saved value for `{requestInput.SaveAs}`.
-                     
+
                      {MoreInfoMessage()}
                      """;
                 context.Publish(new DisplayedValueProduced(
@@ -318,7 +343,7 @@ public static class KernelExtensions
             {
                 using var _ = context.KernelEvents.Subscribe(@event =>
                 {
-                    if (@event is InputProduced inputProduced && 
+                    if (@event is InputProduced inputProduced &&
                         inputProduced.Command.GetOrCreateToken() == requestInput.GetOrCreateToken())
                     {
                         secretManager.SetValue(requestInput.SaveAs, inputProduced.Value);
@@ -326,7 +351,7 @@ public static class KernelExtensions
                         var message =
                             $"""
                              Your response for value `{saveAs}` has been saved and will be reused without a prompt in the future. 
-                             
+
                              {MoreInfoMessage()}
                              """;
                         context.Publish(new DisplayedValueProduced(
@@ -385,23 +410,22 @@ public static class KernelExtensions
             switch (@event.Command, kernelEvent: @event)
             {
                 case (_, PackageAdded added):
-                    {
-                        var properties = GetStandardPropertiesFromEvent(@event);
-                        properties.Add("PackageName", added.PackageReference.PackageName.ToSha256HashWithNormalizedCasing());
-                        properties.Add("PackageVersion", added.PackageReference.PackageVersion.ToSha256Hash());
+                {
+                    var properties = GetStandardPropertiesFromEvent(@event);
+                    properties.Add("PackageName", added.PackageReference.PackageName.ToSha256HashWithNormalizedCasing());
+                    properties.Add("PackageVersion", added.PackageReference.PackageVersion.ToSha256Hash());
 
-                        var measurements = GetStandardMeasurementsFromEvent(@event);
+                    var measurements = GetStandardMeasurementsFromEvent(@event);
 
-                        telemetrySender.TrackEvent(
-                            "PackageAdded",
-                            measurements: measurements,
-                            properties: properties);
-                    }
+                    telemetrySender.TrackEvent(
+                        "PackageAdded",
+                        measurements: measurements,
+                        properties: properties);
+                }
                     break;
             }
-
         }
-        
+
         Dictionary<string, string> GetStandardPropertiesFromEvent(KernelEvent kernelEvent)
         {
             return GetStandardPropertiesFromCommand(kernelEvent.Command);

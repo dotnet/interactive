@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.DotNet.Interactive.App;
-using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -18,55 +17,13 @@ namespace Microsoft.DotNet.Interactive.SQLite.Tests;
 [Trait("Databases", "Data query tests")]
 public class SQLiteConnectionTests
 {
-    [WindowsFact]
-    public async Task SQLDiscoverabilityKernel_suggests_SQLite_connection_when_statements_are_submitted_to_it()
-    {
-        using var kernel = new CompositeKernel
-        {
-            new CSharpKernel().UseNugetDirective(),
-            new SqlDiscoverabilityKernel(),
-            new KeyValueStoreKernel()
-        };
-
-        kernel.AddConnectDirective(new ConnectSQLiteDirective());
-
-        using var _ = CreateInMemorySQLiteDb(out var connectionString);
-
-        var result = await kernel.SubmitCodeAsync(
-            $"#!connect sqlite --kernel-name mydb \"{connectionString}\"");
-
-        result.Events
-            .Should()
-            .NotContainErrors();
-
-        result = await kernel.SubmitCodeAsync(@"
-#!sql
-SELECT * FROM fruit
-");
-
-        result.Events.Should()
-              .ContainSingle<CommandFailed>()
-              .Which
-              .Message
-              .Should()
-              .Be("SQL statements cannot be executed in this kernel.");
-        
-        result.Events.Should()
-              .ContainSingle<DisplayedValueProduced>()
-              .Which
-              .FormattedValues
-              .Should()
-              .ContainSingle(v => v.Value.Contains("#!sql-mydb") &&
-                                  v.MimeType == "text/html");
-    }
-
+   
     [WindowsFact]
     public async Task It_can_connect_and_query_data()
     {
         using var kernel = new CompositeKernel
         {
             new CSharpKernel().UseNugetDirective(),
-            new SqlDiscoverabilityKernel(),
             new KeyValueStoreKernel()
         };
 
