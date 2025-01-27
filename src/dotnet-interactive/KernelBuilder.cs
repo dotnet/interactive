@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Connection;
@@ -14,6 +15,8 @@ using Microsoft.DotNet.Interactive.Mermaid;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Pocket;
+using static Microsoft.DotNet.Interactive.App.CodeExpansion;
+using static Pocket.Logger;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.App;
@@ -26,14 +29,10 @@ public static class KernelBuilder
         StartupOptions startupOptions,
         TelemetrySender telemetrySender)
     {
-        using var _ = Logger.Log.OnEnterAndExit("Creating Kernels");
+        using var _ = Log.OnEnterAndExit();
 
         var compositeKernel = new CompositeKernel();
         compositeKernel.FrontendEnvironment = frontendEnvironment;
-
-        // TODO: temporary measure to support vscode integrations
-        compositeKernel.Add(new SqlDiscoverabilityKernel());
-        compositeKernel.Add(new KqlDiscoverabilityKernel());
 
         compositeKernel.Add(
             new CSharpKernel()
@@ -82,27 +81,7 @@ public static class KernelBuilder
                      .UseSecretManager(secretManager)
                      .UseFormsForMultipleInputs(secretManager)
                      .UseNuGetExtensions(telemetrySender)
-                     .UseCodeExpansions(() =>
-                     {
-                         // FIX: (CreateKernel) refactor this out
-
-                         RecentConnectionList recentlyConnections;
-
-                         if (secretManager.TryGetValue("dotnet-interactive.RecentlyUsedConnections", out var json))
-                         {
-                             recentlyConnections = JsonSerializer.Deserialize<RecentConnectionList>(json, Serializer.JsonSerializerOptions);
-                         }
-                         else
-                         {
-                             recentlyConnections = new();
-                         }
-
-                         return recentlyConnections;
-                     }, list =>
-                     {
-                         var json = JsonSerializer.Serialize(list, Serializer.JsonSerializerOptions);
-                         secretManager.SetValue("dotnet-interactive.RecentlyUsedConnections", json);
-                     });
+                     .UseCodeExpansions(GetCodeExpansionConfiguration(secretManager));
 
         kernel.AddConnectDirective(new ConnectSignalRDirective());
         kernel.AddConnectDirective(new ConnectStdIoDirective(startupOptions.KernelHost));
@@ -119,6 +98,65 @@ public static class KernelBuilder
         kernel.UseTelemetrySender(telemetrySender);
 
         return kernel;
+    }
+
+    private static CodeExpansionConfiguration GetCodeExpansionConfiguration(
+        SecretManager secretManager)
+    {
+        return new(GetWellKnownCodeExpansions(), new JupyterKernelSpecModule())
+        {
+            GetRecentConnections = () => GetRecentConnectionListFromSecretManager(secretManager),
+            SaveRecentConnections = list => SaveRecentConnectionListToSecretManager(list, secretManager)
+        };
+    }
+
+    private static RecentConnectionList GetRecentConnectionListFromSecretManager(
+        SecretManager secretManager)
+    {
+        RecentConnectionList recentlyConnections;
+
+        if (secretManager.TryGetValue("dotnet-interactive.RecentlyUsedConnections", out var json))
+        {
+            recentlyConnections = JsonSerializer.Deserialize<RecentConnectionList>(json, Serializer.JsonSerializerOptions);
+        }
+        else
+        {
+            recentlyConnections = new();
+        }
+
+        return recentlyConnections;
+    }
+
+    private static void SaveRecentConnectionListToSecretManager(
+        RecentConnectionList list, 
+        SecretManager secretManager)
+    {
+        var json = JsonSerializer.Serialize(list, Serializer.JsonSerializerOptions);
+        secretManager.SetValue("dotnet-interactive.RecentlyUsedConnections", json);
+    }
+
+    public static IEnumerable<CodeExpansion> GetWellKnownCodeExpansions()
+    {
+        return [
+            new([
+                    new("""
+                        #r "nuget:Microsoft.DotNet.Interactive.Kql, *-*"
+                        """, "csharp"),
+                    new("""
+                        #!connect kql --kernel-name @input --cluster @input --database @input
+                        """, "csharp")
+                ],
+                new("Kusto Query Language", CodeExpansionKind.DataConnection)),
+            new([
+                    new("""
+                        #r "nuget:Microsoft.DotNet.Interactive.SqlServer, *-*"
+                        """, "csharp"),
+                    new("""
+                        #!connect mssql --kernel-name @input --connection-string @password
+                        """, "csharp")
+                ],
+                new("Microsoft SQL Database", CodeExpansionKind.DataConnection)),
+        ];
     }
 
     internal static void SetUpFormatters(FrontendEnvironment frontendEnvironment)

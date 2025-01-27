@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -17,8 +16,7 @@ internal class RecentConnectionListConverter : JsonConverter<RecentConnectionLis
     {
         EnsureStartObject(reader, typeToConvert);
 
-        int? capacity = null;
-        List<ConnectionShortcut> items = new();
+        List<CodeExpansion> items = new();
 
         while (reader.Read())
         {
@@ -26,17 +24,8 @@ internal class RecentConnectionListConverter : JsonConverter<RecentConnectionLis
             {
                 switch (reader.GetString())
                 {
-                    case "capacity":
-                        if (reader.Read() && reader.TokenType is JsonTokenType.Number)
-                        {
-                            capacity = reader.GetInt32();
-                        }
-
-                        break;
-
                     case "items":
-
-                        if (reader.ReadArray<ConnectionShortcut>(options) is { } shortcuts)
+                        if (reader.ReadArray<CodeExpansion>(options) is { } shortcuts)
                         {
                             items.AddRange(shortcuts);
                         }
@@ -50,10 +39,7 @@ internal class RecentConnectionListConverter : JsonConverter<RecentConnectionLis
             }
         }
 
-        var list = new RecentConnectionList
-        {
-            Capacity = capacity ?? RecentConnectionList.DefaultCapacity
-        };
+        var list = new RecentConnectionList();
 
         foreach (var item in items)
         {
@@ -69,7 +55,6 @@ internal class RecentConnectionListConverter : JsonConverter<RecentConnectionLis
         JsonSerializerOptions options)
     {
         writer.WriteStartObject();
-        writer.WriteNumber("capacity", list.Capacity);
 
         writer.WritePropertyName("items");
         writer.WriteStartArray();

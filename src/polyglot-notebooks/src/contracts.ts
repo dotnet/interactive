@@ -125,7 +125,8 @@ export interface DisplayValue extends KernelCommand {
 }
 
 export interface ExpandCode extends KernelCommand {
-    identifier: string;
+    insertAtPosition?: number;
+    name: string;
 }
 
 export interface ImportDocument extends KernelCommand {
