@@ -121,7 +121,6 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.notebookEditor.connectSubkernel', async (notebook?: vscode.NotebookDocument) => {
-        // FIX: show connection shortcuts
         notebook = notebook || getCurrentNotebookDocument();
 
         if (!notebook) {
