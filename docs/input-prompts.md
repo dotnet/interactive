@@ -109,7 +109,7 @@ You can also provide a type hint using this API, which the web view can use to s
 using Microsoft.DotNet.Interactive;
 
 var input = await Kernel.GetInputAsync(
-    "Please provide a connection string.",
+    "Please pick a file.",
     typeHint: "file");
 ```
 
