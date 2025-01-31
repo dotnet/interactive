@@ -92,7 +92,7 @@ public class RequestInputTests
 
         var saveAs = nameof(When_a_saved_value_is_used_then_the_user_is_notified) + DateTime.Now.Ticks;
 
-        secretManager.SetSecret(saveAs, "the-value");
+        secretManager.SetValue(saveAs, "the-value");
 
         var result = await kernel.SendAsync(new RequestInput("Enter a value")
         {

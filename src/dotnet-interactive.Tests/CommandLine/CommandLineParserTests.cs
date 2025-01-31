@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -44,9 +44,6 @@ public class CommandLineParserTests : IDisposable
 
     public CommandLineParserTests(ITestOutputHelper output)
     {
-        KernelCommandEnvelope.RegisterDefaults();
-        KernelEventEnvelope.RegisterDefaults();
-
         _output = output;
         _serviceCollection = new ServiceCollection();
         var firstTimeUseNoticeSentinel = new FakeFirstTimeUseNoticeSentinel

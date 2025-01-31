@@ -250,6 +250,10 @@ export async function activate(context: vscode.ExtensionContext) {
                 // when new cells are added, the previous cell's kernel name is copied forward, but in this case we want to force it back
                 const addedCell = notebookDocument.cellAt(insertAtIndex); // the newly added cell is always the last one
                 await vscodeUtilities.setCellKernelName(addedCell, kernelName);
+
+                // FIX focus the new cell. this is not working.
+                vscode.window.activeNotebookEditor?.revealRange(range);
+                vscode.commands.executeCommand('notebook.cell.edit');
             }
         });
     }

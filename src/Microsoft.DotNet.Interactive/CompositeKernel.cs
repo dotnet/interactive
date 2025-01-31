@@ -12,6 +12,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -41,6 +42,14 @@ public sealed class CompositeKernel :
     }
 
     public void Add(Kernel kernel, IEnumerable<string> aliases = null)
+    {
+        AddInternal(kernel, aliases);
+    }
+
+    private void AddInternal(
+        Kernel kernel,
+        IEnumerable<string> aliases,
+        DirectiveNode connectDirectiveNode = null)
     {
         if (kernel is null)
         {
@@ -92,6 +101,10 @@ public sealed class CompositeKernel :
         if (KernelInvocationContext.Current is { } current)
         {
             var kernelInfoProduced = new KernelInfoProduced(kernel.KernelInfo, current.Command);
+            if (connectDirectiveNode is not null)
+            {
+                kernelInfoProduced.ConnectionShortcutCode = connectDirectiveNode.Text;
+            }
             current.Publish(kernelInfoProduced);
         }
         else
@@ -235,7 +248,7 @@ public sealed class CompositeKernel :
         AddDirective<T>(connectDirective,
                      async (command, context) =>
                      {
-                         await ConnectKernel(
+                         await ConnectKernels(
                              command,
                              connectDirective,
                              context);
@@ -244,7 +257,7 @@ public sealed class CompositeKernel :
         SubmissionParser.ResetParser();
     }
 
-    private async Task ConnectKernel<TCommand>(
+    private async Task ConnectKernels<TCommand>(
         TCommand command,
         ConnectKernelDirective<TCommand> connectDirective,
         KernelInvocationContext context)
@@ -256,7 +269,7 @@ public sealed class CompositeKernel :
 
         foreach (var connectedKernel in connectedKernels)
         {
-            Add(connectedKernel);
+            AddInternal(connectedKernel, aliases: null, command.DirectiveNode);
 
             var kernelSpecifierDirective =
                 KernelInfo.SupportedDirectives.OfType<KernelSpecifierDirective>()

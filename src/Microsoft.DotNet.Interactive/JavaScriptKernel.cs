@@ -9,6 +9,10 @@ using Microsoft.DotNet.Interactive.ValueSharing;
 
 namespace Microsoft.DotNet.Interactive;
 
+/// <summary>
+/// The JavaScript kernel used for frontends where the JavaScript-based kernel is not available.
+/// </summary>
+/// <remarks>This kernel uses <code>eval()</code> to run JavaScript code in the browser but does not support as many commands as the JavaScript-based kernel.</remarks>
 public class JavaScriptKernel :
     Kernel,
     IKernelCommandHandler<SubmitCode>,

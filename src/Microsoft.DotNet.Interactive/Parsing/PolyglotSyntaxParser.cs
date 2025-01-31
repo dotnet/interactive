@@ -845,6 +845,7 @@ internal class PolyglotSyntaxParser
         public const string TooManyOccurrencesOfParameter = "DNI105";
         public const string InvalidJsonInParameterValue = "DNI106";
         public const string ParametersMustAppearAfterSubcommands = "DNI107";
+        public const string FailedToDeserialize = "DNI108";
 
         // magic command usage errors
         public const string UnsupportedMimeType = "DNI201";

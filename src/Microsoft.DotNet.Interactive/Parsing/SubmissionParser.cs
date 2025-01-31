@@ -294,7 +294,7 @@ public class SubmissionParser
         if (NoSplitWasNeeded())
         {
             originalCommand.TargetKernelName ??= targetKernelName;
-            return new[] { originalCommand };
+            return [originalCommand];
         }
 
         foreach (var command in commands)
@@ -462,14 +462,35 @@ public class SubmissionParser
             // Get command JSON and deserialize.
             if (serializedCommandResult.IsSuccessful)
             {
+                IKernelCommandEnvelope commandEnvelope = null;
                 try
                 {
-                    var commandEnvelope = KernelCommandEnvelope.Deserialize(serializedCommandResult.Value);
+                    commandEnvelope = KernelCommandEnvelope.Deserialize(serializedCommandResult.Value);
+                }
+                catch (JsonException exception)
+                {
+                    PolyglotSyntaxParser.AddDiagnosticForJsonException(directiveNode, exception, SourceText.From(code), out var diagnostic);
+                    ClearCommandsAndFail(diagnostic);
+                    return null;
+                }
+                catch (Exception exception)
+                {
+                    var diagnostic = directiveNode.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.FailedToDeserialize,
+                            exception.Message,
+                            DiagnosticSeverity.Error));
+                    directiveNode.AddDiagnostic(diagnostic);
+                    ClearCommandsAndFail(diagnostic);
+                    return null;
+                }
 
-                    var directiveCommand = commandEnvelope.Command;
+                var directiveCommand = commandEnvelope.Command;
 
-                    if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand &&
-                        _kernel is CompositeKernel compositeKernel)
+                if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand)
+                {
+                    kernelDirectiveCommand.DirectiveNode = directiveNode;
+
+                    if (_kernel is CompositeKernel compositeKernel)
                     {
                         var errors = kernelDirectiveCommand.GetValidationErrors(compositeKernel).ToArray();
 
@@ -484,15 +505,9 @@ public class SubmissionParser
                             return null;
                         }
                     }
+                }
 
-                    return directiveCommand;
-                }
-                catch (JsonException exception)
-                {
-                    PolyglotSyntaxParser.AddDiagnosticForJsonException(directiveNode, exception, SourceText.From(code), out var diagnostic);
-                    ClearCommandsAndFail(diagnostic);
-                    return null;
-                }
+                return directiveCommand;
             }
 
             ClearCommandsAndFail(serializedCommandResult.Diagnostics.ToArray());

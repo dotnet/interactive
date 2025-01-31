@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App;
-using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -30,7 +29,6 @@ public class KqlConnectionTests
 
         var kernel = new CompositeKernel
         {
-            new KqlDiscoverabilityKernel(),
             csharpKernel,
             new KeyValueStoreKernel()
         };
