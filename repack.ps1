@@ -1,10 +1,15 @@
 
 Push-Location $PSScriptRoot
+$ErrorActionPreference = "Stop"
 
 try
 {
     # clean up the previously-cached NuGet packages
-    Remove-Item -Recurse ~\.nuget\packages\microsoft.dotnet.interactive* -Force
+    $nugetCachePath = $env:NUGET_HTTP_CACHE_PATH
+    if (-not $nugetCachePath) {
+        $nugetCachePath = "~\.nuget\packages"
+    }
+    Remove-Item -Recurse "$nugetCachePath\microsoft.dotnet.interactive*" -Force
 
     # build and pack dotnet-interactive 
     dotnet clean -c debug
