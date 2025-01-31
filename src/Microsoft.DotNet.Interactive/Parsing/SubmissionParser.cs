@@ -462,34 +462,10 @@ public class SubmissionParser
             // Get command JSON and deserialize.
             if (serializedCommandResult.IsSuccessful)
             {
+                IKernelCommandEnvelope commandEnvelope = null;
                 try
                 {
-                    var commandEnvelope = KernelCommandEnvelope.Deserialize(serializedCommandResult.Value);
-
-                    var directiveCommand = commandEnvelope.Command;
-
-                    if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand)
-                    {
-                        kernelDirectiveCommand.DirectiveNode = directiveNode;
-
-                        if (_kernel is CompositeKernel compositeKernel)
-                        {
-                            var errors = kernelDirectiveCommand.GetValidationErrors(compositeKernel).ToArray();
-
-                            if (errors.Length > 0)
-                            {
-                                var diagnostic = directiveNode.CreateDiagnostic(
-                                    new(PolyglotSyntaxParser.ErrorCodes.CustomMagicCommandError,
-                                        errors[0], DiagnosticSeverity.Error));
-                                directiveNode.AddDiagnostic(diagnostic);
-
-                                ClearCommandsAndFail(diagnostic);
-                                return null;
-                            }
-                        }
-                    }
-
-                    return directiveCommand;
+                    commandEnvelope = KernelCommandEnvelope.Deserialize(serializedCommandResult.Value);
                 }
                 catch (JsonException exception)
                 {
@@ -497,6 +473,41 @@ public class SubmissionParser
                     ClearCommandsAndFail(diagnostic);
                     return null;
                 }
+                catch (Exception exception)
+                {
+                    var diagnostic = directiveNode.CreateDiagnostic(
+                        new(PolyglotSyntaxParser.ErrorCodes.FailedToDeserialize,
+                            exception.Message,
+                            DiagnosticSeverity.Error));
+                    directiveNode.AddDiagnostic(diagnostic);
+                    ClearCommandsAndFail(diagnostic);
+                    return null;
+                }
+
+                var directiveCommand = commandEnvelope.Command;
+
+                if (directiveCommand is KernelDirectiveCommand kernelDirectiveCommand)
+                {
+                    kernelDirectiveCommand.DirectiveNode = directiveNode;
+
+                    if (_kernel is CompositeKernel compositeKernel)
+                    {
+                        var errors = kernelDirectiveCommand.GetValidationErrors(compositeKernel).ToArray();
+
+                        if (errors.Length > 0)
+                        {
+                            var diagnostic = directiveNode.CreateDiagnostic(
+                                new(PolyglotSyntaxParser.ErrorCodes.CustomMagicCommandError,
+                                    errors[0], DiagnosticSeverity.Error));
+                            directiveNode.AddDiagnostic(diagnostic);
+
+                            ClearCommandsAndFail(diagnostic);
+                            return null;
+                        }
+                    }
+                }
+
+                return directiveCommand;
             }
 
             ClearCommandsAndFail(serializedCommandResult.Diagnostics.ToArray());
