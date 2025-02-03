@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
-public static class Constants
+internal static class JupyterConstants
 {
     public const string USERNAME = "dotnet_kernel";
 

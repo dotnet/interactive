@@ -112,7 +112,7 @@ extends:
               name: $(DncEngInternalBuildPool)
               demands: ImageOverride -equals 1es-windows-2022
               os: windows
-            timeoutInMinutes: 180
+            timeoutInMinutes: 200
             variables:
               - group: DotNet-Symbol-Server-Pats
               - name: _SignType
@@ -134,10 +134,10 @@ extends:
               outputs:
                 - output: pipelineArtifact
                   displayName: 'Publish Test results and Blame dumps'
-                  condition: failed()
                   targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   artifactName: 'Windows_test_results_and_dumps'
                   publishLocation: Container
+                  condition: always()
                 - output: pipelineArtifact
                   displayName: 'Publish VSCode extension artifacts'
                   targetPath: '$(Build.ArtifactStagingDirectory)\vscode'
@@ -198,17 +198,12 @@ extends:
                 BUILDCONFIG: $(_BuildConfig)
               condition: ne(variables['SkipTests'], 'true')
 
-            - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
-              displayName: Delete dump files
-              workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-              condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
-
               # publish VS Code and npm test results
             - task: PublishTestResults@2
               displayName: Publish VS Code extension and npm test results
               inputs:
                 testResultsFormat: VSTest
-                testResultsFiles: '**/*.trx'
+                testResultsFiles: '**/*.*'
                 searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
               condition: always()
 
@@ -256,12 +251,12 @@ extends:
               name: $(DncEngInternalBuildPool)
               os: linux
               demands: ImageOverride -equals 1es-ubuntu-2204
-            timeoutInMinutes: 120
+            timeoutInMinutes: 200
             templateContext:
               outputs:
                 - output: pipelineArtifact
                   displayName: 'Publish Test results and Blame dumps'
-                  condition: failed()
+                  condition: always()
                   targetPath: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   artifactName: 'Linux_test_results_and_dumps'
                   publishLocation: Container
@@ -316,7 +311,7 @@ extends:
               displayName: Publish VS Code extension and npm test results
               inputs:
                 testResultsFormat: VSTest
-                testResultsFiles: '**/*.trx'
+                testResultsFiles: '**/*.*'
                 searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
               condition: always()
 

@@ -119,7 +119,7 @@ stages:
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: $(DncEngInternalBuildPool)
             demands: ImageOverride -equals windows.vs2022.amd64
-        timeoutInMinutes: 120
+        timeoutInMinutes: 200
         variables:
         # Enable signing for internal, non-PR builds
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -196,18 +196,13 @@ stages:
             BUILDCONFIG: $(_BuildConfig)
           condition: ne(variables['SkipTests'], 'true')
 
-        - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
-          displayName: Delete dump files
-          workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-          condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
-
         - task: PublishBuildArtifacts@1
           displayName: Publish Test results and Blame dumps
           inputs:
             pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
             artifactName: Windows_test_results_and_dumps
             artifactType: container
-          condition: failed()
+          condition: always()
 
         # publish VS Code and npm test results
         - task: PublishTestResults@2
@@ -277,7 +272,7 @@ stages:
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: $(DncEngInternalBuildPool)
             demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
-        timeoutInMinutes: 120
+        timeoutInMinutes: 200
         variables:
         # Enable signing for internal, non-PR builds
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -354,7 +349,7 @@ stages:
             pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
             artifactName: Linux_test_results_and_dumps
             artifactType: container
-          condition: failed()
+          condition: always()
 
         # publish VS Code and npm test results
         - task: PublishTestResults@2

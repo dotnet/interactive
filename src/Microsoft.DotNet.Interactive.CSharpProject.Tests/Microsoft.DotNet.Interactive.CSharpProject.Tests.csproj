@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <AssetTargetFallback>portable-net45+win8+wp8+wpa81</AssetTargetFallback>
     <NoWarn>$(NoWarn);VSTHRD002</NoWarn><!-- Ignore: Synchronosly awaiting... -->
     <NoWarn>$(NoWarn);VSTHRD100</NoWarn><!-- Ignore: Synchronosly awaiting... -->
@@ -38,7 +38,7 @@
   <ItemGroup>
     <PackageReference Include="Assent" Version="1.7.0" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.30" />
+    <PackageReference Include="HtmlAgilityPack" Version="$(HtmlAgilityPackVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />

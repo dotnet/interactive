@@ -10,20 +10,24 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
+using Xunit;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[Collection("Do not parallelize")]
 public abstract class JupyterKernelTestBase : IDisposable
 {
-    protected CompositeDisposable _disposables = new();
+    protected readonly CompositeDisposable _disposables = new();
 
     // to re-record the tests for simulated playback with JupyterTestDataAttribute, set this to true
-    protected const bool RECORD_FOR_PLAYBACK = true;
+    protected const bool RECORD_FOR_PLAYBACK = false;
     protected const string PythonKernelName = "python3";
     protected const string RKernelName = "ir";
 
-    public virtual void Dispose()
+    public void Dispose()
     {
         _disposables.Dispose();
     }

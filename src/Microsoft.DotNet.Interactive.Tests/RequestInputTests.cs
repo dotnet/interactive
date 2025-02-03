@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App;
@@ -168,7 +169,7 @@ public class RequestInputTests
                                  new("Tastiness"),
                                  new("Color")
                              ]);
-                             """, "csharp"));
+                             """, "csharp"), new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
 
         result.Events.Should().NotContainErrors();
 

@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -13,7 +12,6 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Pocket;
 using Pocket.For.Xunit;
 using Xunit;

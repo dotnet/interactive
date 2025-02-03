@@ -26,11 +26,11 @@ internal sealed class JupyterZMQTestDataAttribute : JupyterTestDataAttribute
 
     internal static string TestConnectionAndReturnSkipReason()
     {
-        string connectionString = GetConnectionString();
+        var connectionString = GetConnectionString();
+
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            return $"Environment variable {TEST_DOTNET_JUPYTER_ZMQ_CONN} is not set. To run tests that require "
-                   + "Jupyter server running, this environment variable must be set";
+            return $"Environment variable {TEST_DOTNET_JUPYTER_ZMQ_CONN} is not set. To run tests that require Jupyter server running, this environment variable must be set.";
         }
 
         return null;

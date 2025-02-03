@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
@@ -28,7 +28,7 @@
 
  <ItemGroup>
    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-   <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="12.2.7" />
+   <PackageReference Include="Microsoft.Azure.Kusto.Data" Version="12.2.8" />
    <PackageReference Include="StreamJsonRpc" Version="2.17.8" />
    <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
  </ItemGroup>

@@ -183,7 +183,7 @@ public static class KernelExtensions
                 if (resourceStream is not null)
                 {
                     var png = new byte[resourceStream.Length];
-                    resourceStream.Read(png, 0, png.Length);
+                    var _ = resourceStream.Read(png, 0, png.Length);
                     encodedImage = $"data:image/png;base64, {Convert.ToBase64String(png)}";
                 }
             }

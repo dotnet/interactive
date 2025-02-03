@@ -8,12 +8,14 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket.For.Xunit;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public class JupyterKernelCommandTests : JupyterKernelTestBase
 {
     [Theory]
@@ -29,8 +31,8 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
 
         var kernel = CreateCompositeKernelAsync(options);
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
@@ -46,7 +48,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
             .Should()
             .ContainSingle(m => m.Header.MessageType == JupyterMessageContentTypes.KernelInfoRequest);
 
-        var kernelInfoReturned = recievedMessages
+        var kernelInfoReturned = receivedMessages
             .Where(m => m.Header.MessageType == JupyterMessageContentTypes.KernelInfoReply)
             .Select(m => m.Content)
             .Cast<KernelInfoReply>()
@@ -114,8 +116,8 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
         var events = result.Events;
@@ -123,7 +125,6 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         events
             .Should()
             .NotContainErrors();
-
 
         sentMessages
             .Should()
@@ -165,8 +166,8 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
         var events = result.Events;
@@ -184,7 +185,6 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
             .Code
             .Should()
             .Be(codeToRun);
-
 
         var displayValueProduced = events.Should()
            .ContainSingle<DisplayedValueProduced>()
@@ -221,8 +221,8 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
         var events = result.Events;
@@ -279,8 +279,8 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
         var events = result.Events;
@@ -329,8 +329,8 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
         var events = result.Events;
@@ -384,12 +384,11 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         await kernel.SubmitCodeAsync(
             $"#!connect jupyter --kernel-name testKernel --kernel-spec {connectionData.KernelSpecName} {connectionData.ConnectionString}");
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var recievedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var result = await kernel.SubmitCodeAsync($"#!testKernel\n{codeToRun}");
         var events = result.Events;
-
 
         sentMessages
             .Should()
@@ -453,7 +452,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
 
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
 
         var linePosition = SourceUtilities.GetPositionFromCursorOffset(codeToInspect, curPosition);
         var command = new RequestHoverText(codeToInspect, linePosition);
@@ -519,7 +518,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
 
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
 
         var linePosition = SourceUtilities.GetPositionFromCursorOffset(codeToInspect, curPosition);
         var command = new RequestSignatureHelp(codeToInspect, linePosition);
@@ -583,8 +582,8 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
 
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
+        using var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
+        using var receivedMessages = options.MessageTracker.ReceivedMessages.ToSubscribedList();
 
         var linePosition = SourceUtilities.GetPositionFromCursorOffset(codeToInspect, curPosition);
         var command = new RequestCompletions(codeToInspect, linePosition);

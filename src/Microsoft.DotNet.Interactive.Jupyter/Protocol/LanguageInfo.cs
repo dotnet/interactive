@@ -64,21 +64,21 @@ public class LanguageInfo
 
 public class CSharpLanguageInfo : LanguageInfo
 {
-    public CSharpLanguageInfo(string version = "12.0") : base("C#", version, "text/x-csharp", ".cs", pygmentsLexer: "csharp")
+    public CSharpLanguageInfo(string version = "13.0") : base("C#", version, "text/x-csharp", ".cs", pygmentsLexer: "csharp")
     {
     }
 }
 
 public class FSharpLanguageInfo : LanguageInfo
 {
-    public FSharpLanguageInfo(string version = "8.0") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
+    public FSharpLanguageInfo(string version = "9.0") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
     {
     }
 }
 
 public class PowerShellLanguageInfo : LanguageInfo
 {
-    public PowerShellLanguageInfo(string version = "7.0") : base("PowerShell", version, "text/x-powershell", ".ps1", pygmentsLexer: "powershell")
+    public PowerShellLanguageInfo(string version = "7.5") : base("PowerShell", version, "text/x-powershell", ".ps1", pygmentsLexer: "powershell")
     {
     }
 }

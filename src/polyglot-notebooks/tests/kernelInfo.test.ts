@@ -38,7 +38,7 @@ describe("kernelInfo", () => {
             },
             {
                 aliases: ['child1Js'],
-                description: 'This Kernel is for executing JavaScript code.',
+                description: 'Run JavaScript code',
                 displayName: 'child1 - JavaScript',
                 isComposite: false,
                 isProxy: false,
@@ -55,7 +55,7 @@ describe("kernelInfo", () => {
             },
             {
                 aliases: ['child2Js'],
-                description: 'This Kernel is for executing JavaScript code.',
+                description: 'Run JavaScript code',
                 displayName: 'child2 - JavaScript',
                 isComposite: false,
                 isProxy: false,
@@ -112,7 +112,7 @@ describe("kernelInfo", () => {
                     kernelInfo:
                     {
                         aliases: ['child1Js'],
-                        description: 'This Kernel is for executing JavaScript code.',
+                        description: 'Run JavaScript code',
                         displayName: 'child1 - JavaScript',
                         isComposite: false,
                         isProxy: false,

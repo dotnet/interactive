@@ -8,11 +8,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter;
 
 public class JupyterRequestContextScheduler
 {
-    private Func<JupyterRequestContext, Task> handle;
+    private readonly Func<JupyterRequestContext, Task> _handle;
 
     public JupyterRequestContextScheduler(Func<JupyterRequestContext, Task> handle)
     {
-        this.handle = handle ?? throw new ArgumentNullException(nameof(handle));
+        _handle = handle ?? throw new ArgumentNullException(nameof(handle));
     }
 
     public async Task Schedule(JupyterRequestContext context)
@@ -20,7 +20,7 @@ public class JupyterRequestContextScheduler
         try
         {
             JupyterRequestContext.Current = context;
-            await handle(context);
+            await _handle(context);
         }
         finally
         {

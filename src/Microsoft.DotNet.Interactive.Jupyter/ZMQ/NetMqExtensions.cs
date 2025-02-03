@@ -16,10 +16,10 @@ public static class NetMQExtensions
         // There may be additional ZMQ identities attached; read until the delimiter <IDS|MSG>"
         // and store them in message.identifiers
         // http://ipython.org/ipython-doc/dev/development/messaging.html#the-wire-protocol
-        var delimiterAsBytes = Encoding.ASCII.GetBytes(Constants.DELIMITER);
+        var delimiterAsBytes = Encoding.ASCII.GetBytes(JupyterConstants.DELIMITER);
 
         var identifiers = new List<byte[]>();
-        while (true)
+        while (!socket.IsDisposed)
         {
             var delimiter = socket.ReceiveFrameBytes();
             if (delimiter.SequenceEqual(delimiterAsBytes))

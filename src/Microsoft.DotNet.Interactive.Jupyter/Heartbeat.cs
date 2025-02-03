@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using NetMQ;
 using NetMQ.Sockets;
 using Pocket;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Heartbeat>;
 
 namespace Microsoft.DotNet.Interactive.Jupyter;
 
@@ -15,6 +16,8 @@ public class Heartbeat : IHostedService
 {
     private readonly string _address;
     private readonly ResponseSocket _server;
+    private CancellationToken _cancellationToken;
+    private Task _startReceiveLoop;
 
     public Heartbeat(ConnectionInformation connectionInformation)
     {
@@ -25,28 +28,32 @@ public class Heartbeat : IHostedService
 
         _address = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.HBPort}";
 
-        Logger<Heartbeat>.Log.Info($"using address {nameof(_address)}", _address);
+        Log.Info($"using address {nameof(_address)}", _address);
         _server = new ResponseSocket();
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _server.Bind(_address);
-        Task.Run(() =>
-        {
-            using (Logger<Heartbeat>.Log.OnEnterAndExit())
-            {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    var data = _server.ReceiveFrameBytes();
+        _cancellationToken = cancellationToken;
 
-                    // Echoing back whatever was received
-                    _server.TrySendFrame(data);
-                }
-            }
-        }, cancellationToken);
+        _server.Bind(_address);
+
+        _startReceiveLoop = Task.Factory.StartNew(ReceiveLoop, creationOptions: TaskCreationOptions.LongRunning);
 
         return Task.CompletedTask;
+    }
+
+    private void ReceiveLoop()
+    {
+        using var _ = Log.OnEnterAndExit();
+
+        while (!_cancellationToken.IsCancellationRequested)
+        {
+            var data = _server.ReceiveFrameBytes();
+
+            // Echoing back whatever was received
+            _server.TrySendFrame(data);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

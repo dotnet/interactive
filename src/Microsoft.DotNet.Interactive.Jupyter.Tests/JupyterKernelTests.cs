@@ -23,57 +23,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 public class JupyterKernelTests : JupyterKernelTestBase
 {
     [Fact]
-    public async Task variable_sharing_not_enabled_for_unsupported_languages()
-    {
-        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(null, "unsupportedLanguage"));
-
-        var sentMessages = options.MessageTracker.SentMessages.ToSubscribedList();
-        var kernel = await CreateJupyterKernelAsync(options);
-
-        sentMessages
-            .Select(m => m.Header.MessageType)
-            .Should()
-            .NotContain(JupyterMessageContentTypes.ExecuteRequest);
-
-        kernel.KernelInfo.SupportedKernelCommands
-            .Should().NotContain(new KernelCommandInfo(nameof(RequestValue)));
-
-        kernel.KernelInfo.SupportedKernelCommands
-            .Should().NotContain(new KernelCommandInfo(nameof(RequestValueInfos)));
-
-        kernel.KernelInfo.SupportedKernelCommands
-            .Should().NotContain(new KernelCommandInfo(nameof(SendValue)));
-
-        var directives = kernel.KernelInfo.SupportedDirectives.Select(info => info.Name);
-        directives.Should().NotContain("#!who");
-        directives.Should().NotContain("#!whos");
-    }
-
-    [Fact]
-    public async Task variable_sharing_not_enabled_for_when_target_not_found()
-    {
-        var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
-                Message.CreateReply(new ExecuteReplyOk(), Message.Create(new ExecuteRequest("target_setup"))),
-                Message.Create(new CommClose("commId"), Message.Create(new CommOpen("commId", "target_setup", null)).Header)
-        }, "python"));
-
-        var kernel = await CreateJupyterKernelAsync(options);
-
-        kernel.KernelInfo.SupportedKernelCommands
-            .Should().NotContain(new KernelCommandInfo(nameof(RequestValue)));
-
-        kernel.KernelInfo.SupportedKernelCommands
-            .Should().NotContain(new KernelCommandInfo(nameof(RequestValueInfos)));
-
-        kernel.KernelInfo.SupportedKernelCommands
-            .Should().NotContain(new KernelCommandInfo(nameof(SendValue)));
-
-        var directives = kernel.KernelInfo.SupportedDirectives.Select(info => info.Name);
-        directives.Should().NotContain("#!who");
-        directives.Should().NotContain("#!whos");
-    }
-
-    [Fact]
     public async Task can_setup_kernel_using_script()
     {
         string initScript = "kernel_setup_script";

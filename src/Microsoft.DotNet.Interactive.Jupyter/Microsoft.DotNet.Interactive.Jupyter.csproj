@@ -1,9 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Utility\**" />
+    <EmbeddedResource Remove="Utility\**" />
+    <None Remove="Utility\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="CommandEvents\LanguageHandlers\coe_comm_adapter.py" />
@@ -26,13 +32,12 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Markdig.Signed" Version="0.34.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="NetMQ" Version="4.0.1.13" />
     <PackageReference Include="PocketLogger" Version="0.9.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="$(SystemSecurityCryptographyPkcsVersion)" />
   </ItemGroup>
@@ -55,8 +60,5 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Utility\" />
   </ItemGroup>
 </Project>

@@ -36,7 +36,7 @@ type FSharpKernel () as this =
     inherit Kernel("fsharp")
 
     do this.KernelInfo.LanguageName <- "F#"
-    do this.KernelInfo.LanguageVersion <- "8.0"
+    do this.KernelInfo.LanguageVersion <- "9.0"
     do this.KernelInfo.DisplayName <- $"{this.KernelInfo.LocalName} - F# Script"
     do this.KernelInfo.Description <- """Compile and run F# code"""
 

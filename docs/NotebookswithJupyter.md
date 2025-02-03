@@ -4,7 +4,7 @@ To use the .NET Interactive kernel for your multi-language notebooks in Jupyter 
 
 Make sure you have the following installed:
 
-* The [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download).
+* The [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download).
 * **Jupyter**. An easy way to install Jupyter is through [Anaconda](https://www.anaconda.com/distribution).
 
 * You can verify the installations by opening the **Anaconda Prompt** (Windows) or a terminal (macOS, Linux) and running the following commands to ensure that Jupyter and .NET are installed and present on the path:
@@ -13,7 +13,7 @@ Make sure you have the following installed:
 > jupyter kernelspec list
   python3        ~\jupyter\kernels\python3
 > dotnet --version
-  8.0.100
+  9.0.100
 ```
 
 (The `dotnet` minor version isn't important.)

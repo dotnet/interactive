@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -153,7 +153,7 @@ public class CommandLineParserTests : IDisposable
             logFileContents.Append(line);
         }
 
-        logFileContents.ToString().Should().Contain("[KernelInvocationContext]  ▶  +[ ⁞Ϲ⁞ SubmitCode 1+1");
+        logFileContents.ToString().Should().Contain("[Creating Kernels]  ▶");
     }
 
     [Fact]

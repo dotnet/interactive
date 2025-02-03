@@ -29,7 +29,6 @@ Microsoft.DotNet.Interactive.Jupyter
     public Microsoft.DotNet.Interactive.Directives.KernelDirectiveParameter KernelSpecNameParameter { get;}
     public ConnectJupyterKernelDirective AddConnectionOptions(Microsoft.DotNet.Interactive.Jupyter.Connection.IJupyterKernelConnectionOptions connectionOptions)
     public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.DotNet.Interactive.Kernel>> ConnectKernelsAsync(ConnectJupyterKernel connectCommand, Microsoft.DotNet.Interactive.KernelInvocationContext context)
-  public static class Constants
   public class ExecuteRequestHandler : RequestHandlerBase<Microsoft.DotNet.Interactive.Jupyter.Protocol.ExecuteRequest>, System.IDisposable
     .ctor(Microsoft.DotNet.Interactive.Kernel kernel, System.Reactive.Concurrency.IScheduler scheduler = null)
     public System.Threading.Tasks.Task Handle(JupyterRequestContext context)
@@ -235,7 +234,7 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     public System.String Text { get;}
     public System.String Type { get;}
   public class CSharpLanguageInfo : LanguageInfo
-    .ctor(System.String version = 12.0)
+    .ctor(System.String version = 13.0)
   public class DisplayData : PubSubMessage
     .ctor(System.String source = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> data = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> metaData = null, System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> transient = null)
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Data { get;}
@@ -282,7 +281,7 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     public System.Collections.Generic.IReadOnlyDictionary<System.String,System.Object> Transient { get;}
   public static class ExecutionStateValues
   public class FSharpLanguageInfo : LanguageInfo
-    .ctor(System.String version = 8.0)
+    .ctor(System.String version = 9.0)
   public abstract class HistoryElement
     public System.Int32 LineNumber { get;}
     public System.Int32 Session { get;}
@@ -373,7 +372,7 @@ Microsoft.DotNet.Interactive.Jupyter.Protocol
     public static Message TryFromJsonString(System.String jsonString, System.String messageType)
     public System.String MessageType { get;}
   public class PowerShellLanguageInfo : LanguageInfo
-    .ctor(System.String version = 7.0)
+    .ctor(System.String version = 7.5)
   public abstract class PubSubMessage : Message
   public abstract class ReplyMessage : Message
   public abstract class RequestMessage : Message

@@ -1,6 +1,6 @@
-# .NET 8 SDK **REQUIRED**
+# .NET 9 SDK **REQUIRED**
 
-## The Polyglot Notebooks extension now requires .NET SDK Version 8.0.
+## The Polyglot Notebooks extension now requires .NET SDK Version 9.0.
 
-## 1. Install [here](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+## 1. Install [here](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 ## 2. Restart VS Code
