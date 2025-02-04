@@ -209,7 +209,7 @@ stages:
           displayName: Publish VS Code extension and npm test results
           inputs:
             testResultsFormat: VSTest
-            testResultsFiles: '**/*.trx'
+            testResultsFiles: '**/*.*'
             searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
           condition: always()
 
@@ -356,7 +356,7 @@ stages:
           displayName: Publish VS Code extension and npm test results
           inputs:
             testResultsFormat: VSTest
-            testResultsFiles: '**/*.trx'
+            testResultsFiles: '**/*.*'
             searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
           condition: always()
 
