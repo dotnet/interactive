@@ -7,9 +7,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
-using System.Threading.Tasks;
+using System.Threading.Tasks;   
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Pocket;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Tests.MessagePlayback>;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
@@ -20,7 +22,7 @@ internal class MessagePlayback : IMessageTracker
     private readonly Subject<Message> _receivedMessages = new();
     private readonly ConcurrentQueue<Message> _processRequests = new();
     private readonly List<Message> _playbackMessages = new();
-    private readonly CancellationTokenSource _cts = new();
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly Task _requestProcessingLoopTask;
 
     public MessagePlayback(IReadOnlyCollection<Message> messages)
@@ -30,7 +32,7 @@ internal class MessagePlayback : IMessageTracker
         _requestProcessingLoopTask = Task.Factory.StartNew(
             RequestProcessingLoop,
             creationOptions: TaskCreationOptions.LongRunning,
-            cancellationToken: CancellationToken.None,
+            cancellationToken: _cancellationTokenSource.Token,
             scheduler: TaskScheduler.Default);
     }
 
@@ -46,7 +48,9 @@ internal class MessagePlayback : IMessageTracker
 
     private async Task RequestProcessingLoop()
     {
-        while (!_cts.IsCancellationRequested)
+        using var operation = Log.OnEnterAndConfirmOnExit();
+
+        while (!_cancellationTokenSource.IsCancellationRequested)
         {
             if (_processRequests.TryDequeue(out var message))
             {
@@ -82,6 +86,8 @@ internal class MessagePlayback : IMessageTracker
                 await Task.Delay(50);
             }
         }
+
+        operation.Succeed();
     }
 
     private Protocol.Message GetContent(Message message, Message m)
@@ -118,10 +124,17 @@ internal class MessagePlayback : IMessageTracker
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _sentMessages.Dispose();
-        _receivedMessages.Dispose();
-        _requestProcessingLoopTask.Dispose();
+        try
+        {
+            _cancellationTokenSource.Cancel();
+            _sentMessages.Dispose();
+            _receivedMessages.Dispose();
+            _requestProcessingLoopTask.Dispose();
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception);
+        }
     }
 
     public IObservable<Message> SentMessages => _sentMessages;

@@ -102,6 +102,7 @@ public class Shell : IHostedService
     private void ControlChannelLoop()
     {
         using var activity = Log.OnEnterAndExit();
+
         while (!_cancellationToken.IsCancellationRequested)
         {
             var request = _control.GetMessage();

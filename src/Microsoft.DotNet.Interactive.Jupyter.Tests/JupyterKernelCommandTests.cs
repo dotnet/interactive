@@ -12,12 +12,17 @@ using Pocket.For.Xunit;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public class JupyterKernelCommandTests : JupyterKernelTestBase
 {
+    public JupyterKernelCommandTests(ITestOutputHelper output) : base(output)
+    {
+    }
+
     [Theory]
     [JupyterHttpTestData("python", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData("R", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]

@@ -15,6 +15,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
@@ -24,6 +25,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 {
+    public JupyterKernelVariableSharingTests(ITestOutputHelper output) : base(output)
+    {
+    }
+
     [Fact]
     public async Task variable_sharing_not_enabled_for_unsupported_languages()
     {
