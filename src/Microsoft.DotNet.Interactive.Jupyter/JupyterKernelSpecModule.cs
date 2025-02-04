@@ -50,7 +50,7 @@ public class JupyterKernelSpecModule : IJupyterKernelSpecModule
     {
         try
         {
-            var commandLineResult = await CondaEnvironment.ExecuteAsync("jupyter", "kernelspec list --json");
+            var commandLineResult = await _environment.ExecuteAsync("jupyter", "kernelspec list --json");
 
             if (commandLineResult.ExitCode is 0)
             {
