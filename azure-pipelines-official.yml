@@ -48,7 +48,7 @@ variables:
 - name: DisableDockerDetector
   value: true
 - name: PocketLoggerLogPath
-  value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
+  value: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
 - name: TryDotNetPackagesPath
   value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
 - name: NodeJSVersion
