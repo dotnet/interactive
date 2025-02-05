@@ -1,0 +1,162 @@
+parameters:
+  platform: ''
+
+steps:
+- ${{ if eq(parameters.platform, 'windows') }}:
+  - pwsh: . "$(Build.SourcesDirectory)\src\ensure-symlinks.ps1"
+    displayName: ensure symlinks
+
+  - task: NodeTool@0
+    displayName: Add NodeJS/npm
+    inputs:
+      versionSpec: $(NodeJSVersion)
+
+  - script: |
+      robocopy "eng\resources" "$(Build.SourcesDirectory)\artifacts"
+      :: robocopy return codes are terrible; 1 means files were copied
+      if "%errorlevel%" == "1" exit /b 0
+      exit /b 1
+    displayName: Prevent test directory crawling
+
+  - pwsh: |
+      $testArg = if ($env:SKIPTESTS -ne "true") { "-test" } else { "" }
+      Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
+    displayName: Promote variables
+
+  - script: eng\CIBuild.cmd
+      -configuration $(_BuildConfig)
+      -prepareMachine
+      -sign
+      $(_BuildArgs)
+      $(_TestArgs)
+    displayName: Build
+    env:
+      POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
+      TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+      DOTNET_INTERACTIVE_FRONTEND_NAME: CI
+
+  - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
+    displayName: Test / Blame
+    workingDirectory: $(Build.SourcesDirectory)
+    env:
+      BUILDCONFIG: $(_BuildConfig)
+    condition: ne(variables['SkipTests'], 'true')
+
+  # This is an output artifact in the official yml.
+  # - task: PublishBuildArtifacts@1
+  #   displayName: Publish Test results and Blame dumps
+  #   inputs:
+  #     pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+  #     artifactName: Windows_test_results_and_dumps
+  #     artifactType: container
+  #   condition: always()
+
+  - task: PublishTestResults@2
+    displayName: Publish VS Code extension and npm test results
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '**/*.*'
+      searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
+    condition: always()
+
+  - task: PowerShell@2
+    displayName: Pack VS Code Extensions
+    inputs:
+      filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
+      arguments: -stableToolVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
+      workingDirectory: "$(Build.SourcesDirectory)/src"
+      pwsh: true
+
+  # This is an output artifact in the official yml.
+  # - task: PublishBuildArtifacts@1
+  #   displayName: Publish VSCode extension artifacts
+  #   inputs:
+  #     pathToPublish: $(Build.ArtifactStagingDirectory)\vscode
+  #     artifactName: vscode
+  #     artifactType: container
+
+  - task: PowerShell@2
+    displayName: Pack NPM package
+    inputs:
+      filePath: $(Build.SourcesDirectory)/eng/package/PackNpmPackage.ps1
+      arguments: -packageVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\npm"
+      workingDirectory: "$(Build.SourcesDirectory)/src/polyglot-notebooks"
+      pwsh: true
+
+  # This is an output artifact in the official yml.
+  # - task: PublishBuildArtifacts@1
+  #   displayName: Publish NPM package artifacts
+  #   inputs:
+  #     pathToPublish: $(Build.ArtifactStagingDirectory)\npm
+  #     artifactName: npm
+  #     artifactType: container
+
+  - script: del /S $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\*.symbols.nupkg
+    displayName: Clean symbol packages
+
+  # This is an output artifact in the official yml.
+  # - task: PublishBuildArtifacts@1
+  #   displayName: Publish packages to artifacts container
+  #   inputs:
+  #     pathToPublish: $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)
+  #     artifactName: packages
+  #     artifactType: container
+
+- ${{ if eq(parameters.platform, 'linux') }}:
+  - script: git config --global core.longpaths true
+    displayName: Enable `git clean` to handle long paths
+
+  - task: NodeTool@0
+    displayName: Add NodeJS/npm
+    inputs:
+      versionSpec: $(NodeJSVersion)
+
+  - script: |
+      mkdir -p "$(Build.SourcesDirectory)/artifacts"
+      rm -rf "$(Build.SourcesDirectory)/artifacts/*"
+      cp eng/resources/* "$(Build.SourcesDirectory)/artifacts"
+    displayName: Prevent test directory crawling
+
+  - pwsh: |
+      $testArg = if ($env:SKIPTESTS -ne "true") { "--test" } else { "" }
+      Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
+    displayName: Promote variables
+
+  - script: ./eng/cibuild.sh
+      --configuration $(_BuildConfig)
+      --prepareMachine
+      $(_TestArgs)
+    displayName: Build
+    env:
+      POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
+      TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+      DOTNET_INTERACTIVE_FRONTEND_NAME: CI
+
+  - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
+    displayName: Test / Blame
+    workingDirectory: $(Build.SourcesDirectory)
+    env:
+      BUILDCONFIG: $(_BuildConfig)
+    condition: ne(variables['SkipTests'], 'true')
+
+  - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
+    displayName: Delete dump files
+    workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+    condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
+
+  # This is an output artifact in the official yml.
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Test results and Blame dumps
+    inputs:
+      pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+      artifactName: Linux_test_results_and_dumps
+      artifactType: container
+    condition: always()
+
+  - task: PublishTestResults@2
+    displayName: Publish VS Code extension and npm test results
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '**/*.*'
+      searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
+    condition: always()

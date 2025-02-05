@@ -60,34 +60,15 @@ schedules:
     include:
     - main
 
-
 # Variables
 variables:
-  - name: _TeamName
-    value: DotNetInteractive
-  - name: _BuildConfig
-    value: Release
-  - name: _PublishUsingPipelines
-    value: true
-  - name: _DotNetArtifactsCategory
-    value: .NETCore
-  - name: DisableDockerDetector
-    value: true
-  - name: PocketLoggerLogPath
-    value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
-  - name: TryDotNetPackagesPath
-    value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
-  - name: NodeJSVersion
-    value: '16.13.0'
-  - name: LocPRCreationEnabled
-    value: ${{ eq(variables['Build.Reason'], 'Schedule') }}
-  - name: Codeql.Enabled
-    value: true
-  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-    - name: _DotNetValidationArtifactsCategory
-      value: .NETCoreValidation
-    - group: DotNet-Interactive-SDLValidation-Params
-  - template: /eng/common/templates/variables/pool-providers.yml
+- template: /eng/templates/variables-template.yml@self
+- template: /eng/common/templates-official/variables/pool-providers.yml@self
+
+# Import common task groups
+- template: /eng/templates/common-tasks.yml@self
+- template: /eng/templates/post-build-tasks.yml@self
+- template: /eng/templates/npm-publish-tasks.yml@self
 
 stages:
 - stage: build
@@ -143,118 +124,40 @@ stages:
             value: Test
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
+        
+        templateContext:
+              outputParentDirectory: $(Build.ArtifactStagingDirectory)
+              outputs:
+                - output: pipelineArtifact
+                  displayName: 'Publish Test results and Blame dumps'
+                  targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  artifactName: 'Windows_test_results_and_dumps'
+                  publishLocation: Container
+                  condition: always()
+                - output: pipelineArtifact
+                  displayName: 'Publish VSCode extension artifacts'
+                  targetPath: '$(Build.ArtifactStagingDirectory)\vscode'
+                  artifactName: 'vscode'
+                  publishLocation: Container
+                - output: buildArtifacts
+                  displayName: 'Publish NPM package artifacts'
+                  PathtoPublish: '$(Build.ArtifactStagingDirectory)/npm'
+                  ArtifactName: 'npm'
+                  publishLocation: Container
+                - output: pipelineArtifact
+                  displayName: 'Publish packages to artifacts container'
+                  targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/packages/$(_BuildConfig)'
+                  artifactName: 'packages'
+                  publishLocation: Container
+
         steps:
         - checkout: self
           clean: true
 
-        # Azure DevOps doesn't support git symlinks on Windows so we have to fake it
-        - pwsh: . "$(Build.SourcesDirectory)\src\ensure-symlinks.ps1"
-          displayName: ensure symlinks
-
-        - task: NodeTool@0
-          displayName: Add NodeJS/npm
-          inputs:
-            versionSpec: $(NodeJSVersion)
-
-        # - task: UseDotNet@2
-        #   displayName: Use .NET SDK
-        #   inputs:
-        #     packageType: sdk
-        #     useGlobalJson: true
-        #     includePreviewVersions: true
-        #     workingDirectory: $(Build.SourcesDirectory)
-        #     installationPath: $(Agent.ToolsDirectory)/dotnet
-
-        - script: |
-            robocopy "eng\resources" "$(Build.SourcesDirectory)\artifacts"
-            :: robocopy return codes are terrible; 1 means files were copied
-            if "%errorlevel%" == "1" exit /b 0
-            exit /b 1
-          displayName: Prevent test directory crawling
-
-        - pwsh: |
-            $testArg = if ($env:SKIPTESTS -ne "true") { "-test" } else { "" }
-            Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
-          displayName: Promote variables
-
-        - script: eng\CIBuild.cmd
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            -sign
-            $(_BuildArgs)
-            $(_TestArgs)
-          displayName: Build
-          env:
-            POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
-            TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
-            DOTNET_INTERACTIVE_FRONTEND_NAME: CI
-
-        - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
-          displayName: Test / Blame
-          workingDirectory: $(Build.SourcesDirectory)
-          env:
-            BUILDCONFIG: $(_BuildConfig)
-          condition: ne(variables['SkipTests'], 'true')
-
-        - task: PublishBuildArtifacts@1
-          displayName: Publish Test results and Blame dumps
-          inputs:
-            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-            artifactName: Windows_test_results_and_dumps
-            artifactType: container
-          condition: always()
-
-        # publish VS Code and npm test results
-        - task: PublishTestResults@2
-          displayName: Publish VS Code extension and npm test results
-          inputs:
-            testResultsFormat: VSTest
-            testResultsFiles: '**/*.trx'
-            searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
-          condition: always()
-
-        # pack and publish vscode and npm
-        - task: PowerShell@2
-          displayName: Pack VS Code Extensions
-          inputs:
-            filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
-            arguments: -stableToolVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
-            workingDirectory: "$(Build.SourcesDirectory)/src"
-            pwsh: true
-
-        - task: PublishBuildArtifacts@1
-          displayName: Publish VSCode extension artifacts
-          inputs:
-            pathToPublish: $(Build.ArtifactStagingDirectory)\vscode
-            artifactName: vscode
-            artifactType: container
-
-        - task: PowerShell@2
-          displayName: Pack NPM package
-          inputs:
-            filePath: $(Build.SourcesDirectory)/eng/package/PackNpmPackage.ps1
-            arguments: -packageVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\npm"
-            workingDirectory: "$(Build.SourcesDirectory)/src/polyglot-notebooks"
-            pwsh: true
-
-        - task: PublishBuildArtifacts@1
-          displayName: Publish NPM package artifacts
-          inputs:
-            pathToPublish: $(Build.ArtifactStagingDirectory)\npm
-            artifactName: npm
-            artifactType: container
-
-        # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
-        # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
-        - script: del /S $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\*.symbols.nupkg
-          displayName: Clean symbol packages
-
-        - task: PublishBuildArtifacts@1
-          displayName: Publish packages to artifacts container
-          inputs:
-            pathToPublish: $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)
-            artifactName: packages
-            artifactType: container
+        # Use common task group
+        - template: /eng/templates/common-tasks.yml@self
+          parameters:
+            platform: windows
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -290,113 +193,22 @@ stages:
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
         steps:
-        - script: git config --global core.longpaths true
-          displayName: Enable `git clean` to handle long paths
-
         - checkout: self
           clean: true
 
-        - task: NodeTool@0
-          displayName: Add NodeJS/npm
-          inputs:
-            versionSpec: $(NodeJSVersion)
-
-        # - task: UseDotNet@2
-        #   displayName: Use .NET SDK
-        #   inputs:
-        #     packageType: sdk
-        #     useGlobalJson: true
-        #     includePreviewVersions: true
-        #     workingDirectory: $(Build.SourcesDirectory)
-        #     installationPath: $(Agent.ToolsDirectory)/dotnet
-
-        - script: |
-            mkdir -p "$(Build.SourcesDirectory)/artifacts"
-            rm -rf "$(Build.SourcesDirectory)/artifacts/*"
-            cp eng/resources/* "$(Build.SourcesDirectory)/artifacts"
-          displayName: Prevent test directory crawling
-
-        - pwsh: |
-            $testArg = if ($env:SKIPTESTS -ne "true") { "--test" } else { "" }
-            Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
-          displayName: Promote variables
-
-        - script: ./eng/cibuild.sh
-            --configuration $(_BuildConfig)
-            --prepareMachine
-            $(_TestArgs)
-          displayName: Build
-          env:
-            POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
-            TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
-            DOTNET_INTERACTIVE_FRONTEND_NAME: CI
-
-        - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
-          displayName: Test / Blame
-          workingDirectory: $(Build.SourcesDirectory)
-          env:
-            BUILDCONFIG: $(_BuildConfig)
-          condition: ne(variables['SkipTests'], 'true')
-
-        - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
-          displayName: Delete dump files
-          workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-          condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
-
-        - task: PublishBuildArtifacts@1
-          displayName: Publish Test results and Blame dumps
-          inputs:
-            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-            artifactName: Linux_test_results_and_dumps
-            artifactType: container
-          condition: always()
-
-        # publish VS Code and npm test results
-        - task: PublishTestResults@2
-          displayName: Publish VS Code extension and npm test results
-          inputs:
-            testResultsFormat: VSTest
-            testResultsFiles: '**/*.trx'
-            searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
-          condition: always()
+        # Use common task group
+        - template: /eng/templates/common-tasks.yml@self
+          parameters:
+            platform: linux
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    Post Build                                                       #
 #---------------------------------------------------------------------------------------------------------------------#
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - template: eng/common/templates/post-build/post-build.yml
-    parameters:
-      publishingInfraVersion: 3
-      # signing validation currently has issues with dotnet 7; disabling as per internal guidance
-      enableSigningValidation: false
-      # Symbol validation is not entirely reliable as of yet, so should be turned off until https://github.com/dotnet/arcade/issues/2871 is resolved.
-      enableSymbolValidation: false
-      # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
-      enableSourceLinkValidation: false
-      # Enable SDL validation, passing through values from the 'DotNet-FSharp-SDLValidation-Params' group.
-      SDLValidationParameters:
-        enable: true
-        params: >-
-          -SourceToolsList @("policheck","credscan")
-          -TsaInstanceURL $(_TsaInstanceURL)
-          -TsaProjectName $(_TsaProjectName)
-          -TsaNotificationEmail $(_TsaNotificationEmail)
-          -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
-          -TsaBugAreaPath $(_TsaBugAreaPath)
-          -TsaIterationPath $(_TsaIterationPath)
-          -TsaRepositoryName "Interactive"
-          -TsaCodebaseName "Interactive-GitHub"
-          -TsaPublish $True
-          -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/policheck_exclusions.xml")
+  - template: /eng/templates/post-build-tasks.yml@self
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    NPM Publish                                                      #
 #---------------------------------------------------------------------------------------------------------------------#
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - template: eng/publish/publish-npm.yml
-    parameters:
-      packageName: microsoft-polyglot-notebooks-*.tgz
-      registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
-      registryUser: dnceng
-      registryEmail: dnceng@microsoft.com
-      publishingBranch: main
+  - template: /eng/templates/npm-publish-tasks.yml@self
