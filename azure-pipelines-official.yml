@@ -48,7 +48,7 @@ variables:
 - name: DisableDockerDetector
   value: true
 - name: PocketLoggerLogPath
-  value: $(Build.SourcesDirectory)/artifacts/TestResults/logs
+  value: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
 - name: TryDotNetPackagesPath
   value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
 - name: NodeJSVersion
@@ -304,11 +304,6 @@ extends:
                 POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
                 TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
               condition: ne(variables['SkipTests'], 'true')
-
-            - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
-              displayName: Delete dump files
-              workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-              condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
 
               # publish VS Code and npm test results
             - task: PublishTestResults@2
