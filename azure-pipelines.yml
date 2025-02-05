@@ -338,11 +338,6 @@ stages:
             BUILDCONFIG: $(_BuildConfig)
           condition: ne(variables['SkipTests'], 'true')
 
-        - pwsh: Get-ChildItem *.dmp -Recurse | Remove-Item
-          displayName: Delete dump files
-          workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-          condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
-
         - task: PublishBuildArtifacts@1
           displayName: Publish Test results and Blame dumps
           inputs:
