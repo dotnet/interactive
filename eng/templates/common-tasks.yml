@@ -42,15 +42,6 @@ steps:
       BUILDCONFIG: $(_BuildConfig)
     condition: ne(variables['SkipTests'], 'true')
 
-  # This is an output artifact in the official yml.
-  # - task: PublishBuildArtifacts@1
-  #   displayName: Publish Test results and Blame dumps
-  #   inputs:
-  #     pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-  #     artifactName: Windows_test_results_and_dumps
-  #     artifactType: container
-  #   condition: always()
-
   - task: PublishTestResults@2
     displayName: Publish VS Code extension and npm test results
     inputs:
@@ -67,14 +58,6 @@ steps:
       workingDirectory: "$(Build.SourcesDirectory)/src"
       pwsh: true
 
-  # This is an output artifact in the official yml.
-  # - task: PublishBuildArtifacts@1
-  #   displayName: Publish VSCode extension artifacts
-  #   inputs:
-  #     pathToPublish: $(Build.ArtifactStagingDirectory)\vscode
-  #     artifactName: vscode
-  #     artifactType: container
-
   - task: PowerShell@2
     displayName: Pack NPM package
     inputs:
@@ -83,24 +66,9 @@ steps:
       workingDirectory: "$(Build.SourcesDirectory)/src/polyglot-notebooks"
       pwsh: true
 
-  # This is an output artifact in the official yml.
-  # - task: PublishBuildArtifacts@1
-  #   displayName: Publish NPM package artifacts
-  #   inputs:
-  #     pathToPublish: $(Build.ArtifactStagingDirectory)\npm
-  #     artifactName: npm
-  #     artifactType: container
-
   - script: del /S $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\*.symbols.nupkg
     displayName: Clean symbol packages
 
-  # This is an output artifact in the official yml.
-  # - task: PublishBuildArtifacts@1
-  #   displayName: Publish packages to artifacts container
-  #   inputs:
-  #     pathToPublish: $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)
-  #     artifactName: packages
-  #     artifactType: container
 
 - ${{ if eq(parameters.platform, 'linux') }}:
   - script: git config --global core.longpaths true
@@ -143,15 +111,6 @@ steps:
     displayName: Delete dump files
     workingDirectory: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
     condition: and(ne(variables['KeepDumps'], 'true'), ne(variables['SkipTests'], 'true'))
-
-  # This is an output artifact in the official yml.
-  - task: PublishBuildArtifacts@1
-    displayName: Publish Test results and Blame dumps
-    inputs:
-      pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-      artifactName: Linux_test_results_and_dumps
-      artifactType: container
-    condition: always()
 
   - task: PublishTestResults@2
     displayName: Publish VS Code extension and npm test results
