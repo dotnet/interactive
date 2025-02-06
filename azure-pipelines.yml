@@ -65,167 +65,161 @@ variables:
 - template: /eng/templates/variables-template.yml@self
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
 
-resources:
-  repositories:
-  - repository: 1esPipelines
-    type: git
-    name: 1ESPipelineTemplates/1ESPipelineTemplates
-    ref: refs/tags/release
-    
-extends:
-  template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
-  parameters:
-    sdl:
-      enableAllTools: false
-    stages:
-    - stage: build
-      displayName: Build and Test
+
+stages:
+- stage: build
+  displayName: Build and Test
+  jobs:
+  - ${{ if ne(variables['System.TeamProject'], 'public') }}:
+    - template: /eng/common/templates/job/onelocbuild.yml
+      parameters:
+        MirrorRepo: interactive
+        MirrorBranch: main
+        SkipLocProjectJsonGeneration: true
+        LclSource: lclFilesfromPackage
+        LclPackageId: 'LCL-JUNO-PROD-INTERACTIVE'
+        CreatePr: $(LocPRCreationEnabled)
+
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enablePublishBuildArtifacts: true
+      enablePublishTestResults: true
+      enablePublishBuildAssets: true
+      enablePublishUsingPipelines: $(_PublishUsingPipelines)
+
       jobs:
-      - ${{ if ne(variables['System.TeamProject'], 'public') }}:
-        - template: /eng/common/templates/job/onelocbuild.yml@self
+      - job: Windows_NT
+        pool:
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: $(DncEngPublicBuildPool)
+            demands: ImageOverride -equals windows.vs2022.amd64.open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: $(DncEngInternalBuildPool)
+            demands: ImageOverride -equals windows.vs2022.amd64
+        timeoutInMinutes: 200
+        variables:
+        # Enable signing for internal, non-PR builds
+        - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+          - group: DotNet-Symbol-Server-Pats
+          - name: _SignType
+            value: Real
+          - name: _BuildArgs
+            value: /p:SignType=$(_SignType)
+                   /p:DotNetSignType=$(_SignType)
+                   /p:MicroBuild_SigningEnabled=true
+                   /p:TeamName=$(_TeamName)
+                   /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
+                   /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
+                   /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+                   /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+                   /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+                   /p:PublishToSymbolServer=true
+        # else
+        - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+          - name: _SignType
+            value: Test
+          - name: _BuildArgs
+            value: /p:SignType=$(_SignType)
+
+        steps:
+        - checkout: self
+          clean: true
+
+        # Use common task group
+        - template: /eng/templates/common-tasks.yml@self
           parameters:
-            MirrorRepo: interactive
-            MirrorBranch: main
-            SkipLocProjectJsonGeneration: true
-            LclSource: lclFilesfromPackage
-            LclPackageId: 'LCL-JUNO-PROD-INTERACTIVE'
-            CreatePr: $(LocPRCreationEnabled)
+            platform: windows
+        
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Test results and Blame dumps
+          inputs:
+            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+            artifactName: Windows_test_results_and_dumps
+            artifactType: container
+          condition: always()
 
-      - template: /eng/common/templates/jobs/jobs.yml@self
-        parameters:
-          enableMicrobuild: true
-          enablePublishBuildArtifacts: true
-          enablePublishTestResults: true
-          enablePublishBuildAssets: true
-          enablePublishUsingPipelines: $(_PublishUsingPipelines)
-          jobs:
-          - job: Windows_NT
-            pool:
-              ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngPublicBuildPool)
-                demands: ImageOverride -equals 1es-windows-2022
-              ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngInternalBuildPool)
-                demands: ImageOverride -equals 1es-windows-2022
-            timeoutInMinutes: 200
-            variables:
-            # Enable signing for internal, non-PR builds
-            - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-              - group: DotNet-Symbol-Server-Pats
-              - name: _SignType
-                value: Real
-              - name: _BuildArgs
-                value: /p:SignType=$(_SignType)
-                      /p:DotNetSignType=$(_SignType)
-                      /p:MicroBuild_SigningEnabled=true
-                      /p:TeamName=$(_TeamName)
-                      /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
-                      /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
-                      /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-                      /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-                      /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-                      /p:PublishToSymbolServer=true
-            # else
-            - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-              - name: _SignType
-                value: Test
-              - name: _BuildArgs
-                value: /p:SignType=$(_SignType)
-            
-            templateContext:
-                  outputParentDirectory: $(Build.ArtifactStagingDirectory)
-                  outputs:
-                    - output: pipelineArtifact
-                      displayName: 'Publish Test results and Blame dumps'
-                      targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                      artifactName: 'Windows_test_results_and_dumps'
-                      publishLocation: Container
-                      condition: always()
-                    - output: pipelineArtifact
-                      displayName: 'Publish VSCode extension artifacts'
-                      targetPath: '$(Build.ArtifactStagingDirectory)\vscode'
-                      artifactName: 'vscode'
-                      publishLocation: Container
-                    - output: buildArtifacts
-                      displayName: 'Publish NPM package artifacts'
-                      PathtoPublish: '$(Build.ArtifactStagingDirectory)/npm'
-                      ArtifactName: 'npm'
-                      publishLocation: Container
-                    - output: pipelineArtifact
-                      displayName: 'Publish packages to artifacts container'
-                      targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/packages/$(_BuildConfig)'
-                      artifactName: 'packages'
-                      publishLocation: Container
+        - task: PublishBuildArtifacts@1
+          displayName: Publish VSCode extension artifacts
+          inputs:
+            pathToPublish: $(Build.ArtifactStagingDirectory)\vscode
+            artifactName: vscode
+            artifactType: container
 
-            steps:
-            - checkout: self
-              clean: true
+        - task: PublishBuildArtifacts@1
+          displayName: Publish NPM package artifacts
+          inputs:
+            pathToPublish: $(Build.ArtifactStagingDirectory)\npm
+            artifactName: npm
+            artifactType: container
 
-            # Use common task group
-            - template: /eng/templates/common-tasks.yml@self
-              parameters:
-                platform: windows
+        - task: PublishBuildArtifacts@1
+          displayName: Publish packages to artifacts container
+          inputs:
+            pathToPublish: $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)
+            artifactName: packages
+            artifactType: container
 
-      - template: /eng/common/templates/jobs/jobs.yml@self
-        parameters:
-          enableMicrobuild: true
-          enablePublishBuildArtifacts: true
-          enablePublishTestResults: true
-          enablePublishBuildAssets: false
-          enablePublishUsingPipelines: false
-          jobs:
-          - job: Linux
-            pool:
-              ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngPublicBuildPool)
-                demands: ImageOverride -equals 1es-ubuntu-2204
-              ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-                name: $(DncEngInternalBuildPool)
-                demands: ImageOverride -equals 1es-ubuntu-2204
-            timeoutInMinutes: 200
-            templateContext:
-              outputs:
-                - output: pipelineArtifact
-                  displayName: 'Publish Test results and Blame dumps'
-                  condition: always()
-                  targetPath: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                  artifactName: 'Linux_test_results_and_dumps'
-                  publishLocation: Container
 
-            variables:
-            # Enable signing for internal, non-PR builds
-            - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-              - name: _SignType
-                value: Test
-              - name: _BuildArgs
-                value: /p:SignType=$(_SignType)
-                  /p:DotNetSignType=$(_SignType)
-                  /p:TeamName=$(_TeamName)
-                  /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-            # else
-            - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-              - name: _SignType
-                value: Test
-              - name: _BuildArgs
-                value: /p:SignType=$(_SignType)
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enablePublishBuildArtifacts: true
+      enablePublishTestResults: true
+      enablePublishBuildAssets: false
+      enablePublishUsingPipelines: false
+      jobs:
+      - job: Linux
+        pool:
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            name: $(DncEngPublicBuildPool)
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: $(DncEngInternalBuildPool)
+            demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
+        timeoutInMinutes: 200
+        variables:
+        # Enable signing for internal, non-PR builds
+        - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+          - name: _SignType
+            value: Test
+          - name: _BuildArgs
+            value: /p:SignType=$(_SignType)
+              /p:DotNetSignType=$(_SignType)
+              /p:TeamName=$(_TeamName)
+              /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        # else
+        - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+          - name: _SignType
+            value: Test
+          - name: _BuildArgs
+            value: /p:SignType=$(_SignType)
 
-            steps:
-            - checkout: self
-              clean: true
+        steps:
+        - checkout: self
+          clean: true
 
-            # Use common task group
-            - template: /eng/templates/common-tasks.yml@self
-              parameters:
-                platform: linux
+        # Use common task group
+        - template: /eng/templates/common-tasks.yml@self
+          parameters:
+            platform: linux
+        
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Test results and Blame dumps
+          inputs:
+            pathToPublish: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
+            artifactName: Linux_test_results_and_dumps
+            artifactType: container
+          condition: always()
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    Post Build                                                       #
 #---------------------------------------------------------------------------------------------------------------------#
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - template: /eng/templates/post-build-tasks.yml@self
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - template: /eng/templates/post-build-tasks.yml@self
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    NPM Publish                                                      #
 #---------------------------------------------------------------------------------------------------------------------#
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - template: /eng/templates/npm-publish-tasks.yml@self
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - template: /eng/templates/npm-publish-tasks.yml@self

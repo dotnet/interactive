@@ -69,7 +69,6 @@ steps:
   - script: del /S $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\*.symbols.nupkg
     displayName: Clean symbol packages
 
-
 - ${{ if eq(parameters.platform, 'linux') }}:
   - script: git config --global core.longpaths true
     displayName: Enable `git clean` to handle long paths
