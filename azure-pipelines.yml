@@ -221,11 +221,11 @@ extends:
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    Post Build                                                       #
 #---------------------------------------------------------------------------------------------------------------------#
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - template: /eng/templates/post-build-tasks.yml@self
+    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+      - template: /eng/templates/post-build-tasks.yml@self
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    NPM Publish                                                      #
 #---------------------------------------------------------------------------------------------------------------------#
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - template: /eng/templates/npm-publish-tasks.yml@self
+    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+      - template: /eng/templates/npm-publish-tasks.yml@self
