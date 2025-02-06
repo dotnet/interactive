@@ -72,11 +72,6 @@ resources:
     name: 1ESPipelineTemplates/1ESPipelineTemplates
     ref: refs/tags/release
     
-# Import common task groups
-- template: /eng/templates/common-tasks.yml@self
-- template: /eng/templates/post-build-tasks.yml@self
-- template: /eng/templates/npm-publish-tasks.yml@self
-
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
   parameters:
@@ -213,7 +208,7 @@ extends:
                 value: Test
               - name: _BuildArgs
                 value: /p:SignType=$(_SignType)
-                
+
             steps:
             - checkout: self
               clean: true
