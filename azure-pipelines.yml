@@ -63,7 +63,7 @@ schedules:
 # Variables
 variables:
 - template: /eng/templates/variables-template.yml@self
-- template: /eng/common/templates-official/variables/pool-providers.yml@self
+- template: /eng/common/templates/variables/pool-providers.yml@self
 
 
 stages:
