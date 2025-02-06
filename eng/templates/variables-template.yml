@@ -1,26 +1,27 @@
 # Variables used for both the CI and the official builds.
 
-- name: _TeamName
-  value: DotNetInteractive
-- name: _BuildConfig
-  value: Release
-- name: _PublishUsingPipelines
-  value: true
-- name: _DotNetArtifactsCategory
-  value: .NETCore
-- name: DisableDockerDetector
-  value: true
-- name: PocketLoggerLogPath
-  value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
-- name: TryDotNetPackagesPath
-  value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
-- name: NodeJSVersion
-  value: '16.13.0'
-- name: LocPRCreationEnabled
-  value: ${{ eq(variables['Build.Reason'], 'Schedule') }}
-- name: Codeql.Enabled
-  value: true
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - name: _DotNetValidationArtifactsCategory
-    value: .NETCoreValidation
-  - group: DotNet-Interactive-SDLValidation-Params
+variables:
+  - name: _TeamName
+    value: DotNetInteractive
+  - name: _BuildConfig
+    value: Release
+  - name: _PublishUsingPipelines
+    value: true
+  - name: _DotNetArtifactsCategory
+    value: .NETCore
+  - name: DisableDockerDetector
+    value: true
+  - name: PocketLoggerLogPath
+    value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
+  - name: TryDotNetPackagesPath
+    value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
+  - name: NodeJSVersion
+    value: '16.13.0'
+  - name: LocPRCreationEnabled
+    value: ${{ eq(variables['Build.Reason'], 'Schedule') }}
+  - name: Codeql.Enabled
+    value: true
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - name: _DotNetValidationArtifactsCategory
+      value: .NETCoreValidation
+    - group: DotNet-Interactive-SDLValidation-Params
