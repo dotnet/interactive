@@ -47,10 +47,6 @@ variables:
   value: .NETCore
 - name: DisableDockerDetector
   value: true
-- name: PocketLoggerLogPath
-  value: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)
-- name: TryDotNetPackagesPath
-  value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
 - name: NodeJSVersion
   value: '16.13.0'
 - name: LocPRCreationEnabled
@@ -187,8 +183,7 @@ extends:
                 $(_TestArgs)
               displayName: Build
               env:
-                POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
-                TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+                POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
                 DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
             - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
@@ -196,8 +191,7 @@ extends:
               workingDirectory: $(Build.SourcesDirectory)
               env:
                 BUILDCONFIG: $(_BuildConfig)
-                POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
-                TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+                POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
               condition: ne(variables['SkipTests'], 'true')
 
               # publish VS Code and npm test results
@@ -292,8 +286,7 @@ extends:
                 $(_TestArgs)
               displayName: Run tests
               env:
-                POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
-                TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+                POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
                 DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
             - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
@@ -301,8 +294,7 @@ extends:
               workingDirectory: $(Build.SourcesDirectory)
               env:
                 BUILDCONFIG: $(_BuildConfig)
-                POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
-                TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+                POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
               condition: ne(variables['SkipTests'], 'true')
 
               # publish VS Code and npm test results
