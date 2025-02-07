@@ -127,7 +127,7 @@ stages:
           clean: true
 
         # Use common task group
-        - template: /eng/templates/common-tasks.yml@self
+        - template: /eng/templates/build-and-test-tasks.yml@self
           parameters:
             platform: windows
         
@@ -200,7 +200,7 @@ stages:
           clean: true
 
         # Use common task group
-        - template: /eng/templates/common-tasks.yml@self
+        - template: /eng/templates/build-and-test-tasks.yml@self
           parameters:
             platform: linux
         
