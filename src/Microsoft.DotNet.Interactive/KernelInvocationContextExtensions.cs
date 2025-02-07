@@ -66,7 +66,7 @@ public static class KernelInvocationContextExtensions
         return displayedValue;
     }
 
-    public static void DisplayStandardOut(
+    internal static void DisplayStandardOut(
         this KernelInvocationContext context,
         string output,
         KernelCommand command = null)
@@ -82,7 +82,7 @@ public static class KernelInvocationContextExtensions
                 formattedValues));
     }
 
-    public static void DisplayStandardError(
+    internal static void DisplayStandardError(
         this KernelInvocationContext context,
         string error,
         KernelCommand command = null)
@@ -103,6 +103,7 @@ public static class KernelInvocationContextExtensions
         RequestValue requestValue,
         object value)
     {
+        // FIX: (PublishValueProduced) remove this from the public interface
         var valueType = value?.GetType();
 
         var requestedMimeType = requestValue.MimeType;
@@ -114,7 +115,7 @@ public static class KernelInvocationContextExtensions
 
         var formatted = new FormattedValue(
             requestedMimeType,
-            writer.ToString());
+            value.ToDisplayString(requestValue.MimeType));
 
         context.Publish(new ValueProduced(
             value,

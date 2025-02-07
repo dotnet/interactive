@@ -106,8 +106,8 @@ public static class KernelExtensions
 
     private static void HandleAddPackageReference(
         KernelInvocationContext context,
-     Lazy<PackageRestoreContext> packageRestoreContext,
-     PackageReference pkg)
+        Lazy<PackageRestoreContext> packageRestoreContext,
+        PackageReference pkg)
     {
         var alreadyGotten = packageRestoreContext.Value.ResolvedPackageReferences
                                                  .Concat(packageRestoreContext.Value.RequestedPackageReferences)

@@ -63,7 +63,7 @@ public static class KernelExtensions
         return root switch
         {
             CompositeKernel c => predicate(c) ? new[] { kernel }.Concat(c.ChildKernels.Where(predicate)) : c.ChildKernels.Where(predicate),
-            _ when predicate(kernel) => new[] { kernel },
+            _ when predicate(kernel) => [kernel],
             _ => []
         };
     }
@@ -127,6 +127,7 @@ public static class KernelExtensions
                 {
                     displayValue.SetParent(parentCommand);
                 }
+
                 await kernel.SendAsync(displayValue);
             }
             else
@@ -136,7 +137,16 @@ public static class KernelExtensions
                 {
                     submitCode.SetParent(parentCommand);
                 }
-                await kernel.RootKernel.SendAsync(submitCode);
+
+                var result = await kernel.RootKernel.SendAsync(submitCode);
+
+                // FIX: (LoadAndRunInteractiveDocument) consider publishing completion events only visible to the inner command so that he API doesn't have this difference in behavior.
+                if (result.Events.Count == 0)
+                {
+                }
+                else if (result.Events.LastOrDefault() is CommandFailed)
+                {
+                }
             }
         }
 
