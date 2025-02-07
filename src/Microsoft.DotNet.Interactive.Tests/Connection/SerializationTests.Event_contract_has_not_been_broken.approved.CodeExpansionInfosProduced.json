@@ -3,12 +3,12 @@
     "codeExpansionInfos": [
       {
         "name": "Kusto Query Language",
-        "kind": "WellKnownConnection",
+        "kind": "DataConnection",
         "description": null
       },
       {
         "name": "Microsoft SQL Database",
-        "kind": "WellKnownConnection",
+        "kind": "DataConnection",
         "description": null
       }
     ]

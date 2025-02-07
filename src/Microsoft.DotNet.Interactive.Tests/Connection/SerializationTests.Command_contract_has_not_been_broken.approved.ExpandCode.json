@@ -2,7 +2,8 @@
   "token": "the-token",
   "commandType": "ExpandCode",
   "command": {
-    "identifier": "#!sql-adventureworks",
+    "name": "#!sql-adventureworks",
+    "insertAtPosition": null,
     "targetKernelName": null,
     "originUri": null,
     "destinationUri": null

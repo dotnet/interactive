@@ -654,7 +654,8 @@ Microsoft.DotNet.Interactive.Events
     public Microsoft.DotNet.Interactive.IKernelExtension KernelExtension { get;}
   public class KernelInfoProduced : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.KernelInfo kernelInfo, Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    public System.String ConnectionShortcutCode { get; set;}
+    public System.String ConnectionShortcutCode { get;}
+    public System.Reflection.Assembly ConnectionSourceAssembly { get;}
     public Microsoft.DotNet.Interactive.KernelInfo KernelInfo { get;}
   public class KernelReady : KernelEvent
     .ctor(Microsoft.DotNet.Interactive.KernelInfo[] kernelInfos)
