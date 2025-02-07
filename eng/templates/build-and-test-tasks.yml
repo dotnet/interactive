@@ -31,8 +31,7 @@ steps:
       $(_TestArgs)
     displayName: Build
     env:
-      POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
-      TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+      POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
       DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
   - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
@@ -40,6 +39,7 @@ steps:
     workingDirectory: $(Build.SourcesDirectory)
     env:
       BUILDCONFIG: $(_BuildConfig)
+      POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
     condition: ne(variables['SkipTests'], 'true')
 
   - task: PublishTestResults@2
@@ -95,8 +95,7 @@ steps:
       $(_TestArgs)
     displayName: Build
     env:
-      POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
-      TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+      POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
       DOTNET_INTERACTIVE_FRONTEND_NAME: CI
 
   - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
@@ -104,6 +103,7 @@ steps:
     workingDirectory: $(Build.SourcesDirectory)
     env:
       BUILDCONFIG: $(_BuildConfig)
+      POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
     condition: ne(variables['SkipTests'], 'true')
 
   - task: PublishTestResults@2

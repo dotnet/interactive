@@ -11,10 +11,6 @@ variables:
     value: .NETCore
   - name: DisableDockerDetector
     value: true
-  - name: PocketLoggerLogPath
-    value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
-  - name: TryDotNetPackagesPath
-    value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
     value: '16.13.0'
   - name: LocPRCreationEnabled
