@@ -83,7 +83,7 @@ internal class MessagePlayback : IMessageTracker
             }
             else
             {
-                await Task.Delay(50);
+                await Task.Delay(50, _cancellationTokenSource.Token);
             }
         }
 
