@@ -104,6 +104,10 @@ public sealed class CompositeKernel :
             if (connectDirectiveNode is not null)
             {
                 kernelInfoProduced.ConnectionShortcutCode = connectDirectiveNode.Text;
+                if (connectDirectiveNode.SubcommandNode?.TryGetSubcommand(out var directive) is true)
+                {
+                    kernelInfoProduced.ConnectionSourceAssembly = directive.GetType().Assembly;
+                }
             }
             current.Publish(kernelInfoProduced);
         }
@@ -138,6 +142,11 @@ public sealed class CompositeKernel :
     protected override void SetHandlingKernel(KernelCommand command, KernelInvocationContext context)
     {
         context.HandlingKernel = GetHandlingKernel(command, context);
+
+        if (command.TargetKernelName is null)
+        {
+            command.TargetKernelName = context.HandlingKernel.Name;
+        }
     }
 
     private protected override Kernel GetHandlingKernel(

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.Commands;
@@ -93,16 +94,49 @@ public class CodeExpansionTests
     }
 
     [Fact]
-    public void When_connect_directive_comes_from_nuget_package_then_pound_r_is_included_in_the_connection_shortcut()
+    public async Task When_connect_directive_comes_from_nuget_package_then_pound_r_is_included_in_the_connection_shortcut()
     {
+        RecentConnectionList recentConnectionList = new();
 
+        var config = new CodeExpansionConfiguration
+        {
+            GetRecentConnections = () => recentConnectionList
+        };
 
+        var kernel = new CompositeKernel
+        {
+            new CSharpKernel()
+                .UseNugetDirective()
+        }.UseCodeExpansions(config)
+         .UseNuGetExtensions();
 
+        var extensionPackage = await KernelExtensionTestHelper.GetKernelConnectionExtensionPackageAsync();
 
+        var packageLoadingCodeSubmission = $"""
+                                            #i "nuget:{extensionPackage.PackageLocation}"
+                                            #r "nuget:{extensionPackage.Name},{extensionPackage.Version}"
+                                            """;
+        var result = await kernel.SubmitCodeAsync(packageLoadingCodeSubmission);
 
+        result.Events.Should().NotContainErrors();
 
-        // TODO (When_connect_directive_comes_from_nuget_package_then_pound_r_is_included_in_the_connection_shortcut) write test
-        throw new NotImplementedException();
+        result = await kernel.SendAsync(
+                     new SubmitCode("""
+                                    #!connect mykernel --kernel-name mine
+                                    """));
+
+        result.Events.Should().NotContainErrors();
+
+        recentConnectionList.Should()
+                            .ContainSingle()
+                            .Which
+                            .Should()
+                            .BeEquivalentTo(
+                                new CodeExpansion(
+                                [
+                                    new(packageLoadingCodeSubmission, "csharp"),
+                                    new("#!connect mykernel --kernel-name mine", "csharp")
+                                ], new("mine", CodeExpansionKind.RecentConnection)));
     }
 
     [Fact]

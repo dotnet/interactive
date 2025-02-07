@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using System.Text.Json;
 using FluentAssertions;
@@ -38,21 +39,48 @@ public class RecentConnectionListTests
     [InlineData(new[] { "one", "two" }, new[] { "one", "two" })]
     [InlineData(new[] { "one  ", "two" }, new[] { "one", "two" })]
     public void When_a_duplicate_value_is_added_then_it_is_moved_to_the_top_of_the_list(
-        string[] duplicateCode1,
-        string[] duplicateCode2)
+        string[] original,
+        string[] duplicate)
     {
         var list = new RecentConnectionList { Capacity = 3 };
 
-        list.Add(new CodeExpansion([new("value1")], new CodeExpansionInfo("one", CodeExpansionKind.RecentConnection)));
-        list.Add(new CodeExpansion(duplicateCode1.Select(c => new CodeExpansionSubmission(c)).ToArray(), new CodeExpansionInfo("two", CodeExpansionKind.RecentConnection)));
-        list.Add(new CodeExpansion([new("value3")], new CodeExpansionInfo("three", CodeExpansionKind.RecentConnection)));
-        list.Add(new CodeExpansion(duplicateCode2.Select(c => new CodeExpansionSubmission(c)).ToArray(), new CodeExpansionInfo("four", CodeExpansionKind.RecentConnection))); // value (not name) is a duplicate
+        list.Add(new(
+            [new("value1")],
+            new CodeExpansionInfo("one", CodeExpansionKind.RecentConnection)));
+        list.Add(new(
+            original.Select(c => new CodeExpansionSubmission(c)).ToArray(), 
+            new CodeExpansionInfo("two", CodeExpansionKind.RecentConnection)));
+        list.Add(new(
+            [new("value3")], 
+            new CodeExpansionInfo("three", CodeExpansionKind.RecentConnection)));
+        list.Add(new(
+            duplicate.Select(c => new CodeExpansionSubmission(c)).ToArray(), 
+            new CodeExpansionInfo("four", CodeExpansionKind.RecentConnection))); // value (not name) is a duplicate
 
         list.Should().BeEquivalentTo(
         [
-            new CodeExpansion(duplicateCode1.Select(c => new CodeExpansionSubmission(c)).ToArray(), new CodeExpansionInfo("two", CodeExpansionKind.RecentConnection)),
+            new CodeExpansion(duplicate.Select(c => new CodeExpansionSubmission(c)).ToArray(), new CodeExpansionInfo("four", CodeExpansionKind.RecentConnection)),
             new CodeExpansion([new("value3")], new CodeExpansionInfo("three", CodeExpansionKind.RecentConnection)),
             new CodeExpansion([new("value1")], new CodeExpansionInfo("one", CodeExpansionKind.RecentConnection)),
+        ]);
+    }
+
+    [Fact]
+    public void When_a_duplicate_name_is_added_it_replaces_the_previous_entry_having_the_same_name()
+    {
+        var list = new RecentConnectionList { Capacity = 3 };
+
+        list.Add(new CodeExpansion([new("value1")], new CodeExpansionInfo("DUPLICATE1", CodeExpansionKind.RecentConnection)));
+        list.Add(new CodeExpansion([new("value2")], new CodeExpansionInfo("DUPLICATE2", CodeExpansionKind.RecentConnection)));
+        list.Add(new CodeExpansion([new("value3")], new CodeExpansionInfo("DUPLICATE1", CodeExpansionKind.RecentConnection)));
+        list.Add(new CodeExpansion([new("value4")], new CodeExpansionInfo("DUPLICATE2", CodeExpansionKind.RecentConnection)));
+        
+        list.Count.Should().Be(2);
+
+        list.Should().BeEquivalentTo(
+        [
+            new CodeExpansion([new("value4")], new CodeExpansionInfo("DUPLICATE2", CodeExpansionKind.RecentConnection)),
+            new CodeExpansion([new("value3")], new CodeExpansionInfo("DUPLICATE1", CodeExpansionKind.RecentConnection)),
         ]);
     }
 

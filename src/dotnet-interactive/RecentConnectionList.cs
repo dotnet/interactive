@@ -48,11 +48,10 @@ public class RecentConnectionList : ICollection<CodeExpansion>
             throw new ArgumentNullException(nameof(value));
         }
 
-        if (_list.FirstOrDefault(item => CodeIsEquivalent(item.Content, value.Content)) is {  } duplicate)
+        if (_list.FirstOrDefault(item => IsEquivalent(item, value)) is {  } duplicate)
         {
-            // move the duplicate to the top of the list
             _list.Remove(duplicate);
-            _list.Insert(0, duplicate);
+            _list.Insert(0, value);
         }
         else
         {
@@ -65,23 +64,28 @@ public class RecentConnectionList : ICollection<CodeExpansion>
         }
     }
 
-    private bool CodeIsEquivalent(
-        IReadOnlyList<CodeExpansionSubmission> first, 
-        IReadOnlyList<CodeExpansionSubmission> second)
+    private bool IsEquivalent(
+        CodeExpansion first,
+        CodeExpansion second)
     {
-        if (first.Count != second.Count)
+        if (first.Info.Name.Equals(second.Info.Name, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (first.Content.Count != second.Content.Count)
         {
             return false;
         }
 
-        for (var i = 0; i < first.Count; i++)
+        for (var i = 0; i < first.Content.Count; i++)
         {
-            if (first[i].TargetKernelName != second[i].TargetKernelName)
+            if (first.Content[i].TargetKernelName != second.Content[i].TargetKernelName)
             {
                 return false;
             }
 
-            if (first[i].Code.Trim() != second[i].Code.Trim())
+            if (first.Content[i].Code.Trim() != second.Content[i].Code.Trim())
             {
                 return false;
             }

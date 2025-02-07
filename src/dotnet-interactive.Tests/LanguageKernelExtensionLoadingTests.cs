@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests;
@@ -95,9 +96,12 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
 
         var kernel = CreateCompositeKernel(language);
 
-        await kernel.SubmitCodeAsync($@"
-#i ""nuget:{extensionPackage.PackageLocation}""
-#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
+        await kernel.SubmitCodeAsync(
+            $"""
+
+             #i "nuget:{extensionPackage.PackageLocation}"
+             #r "nuget:{extensionPackage.Name},{extensionPackage.Version}"
+             """);
 
         KernelEvents.Should()
                     .ContainSingle<ReturnValueProduced>()
@@ -117,9 +121,13 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
 
         var kernel = CreateCompositeKernel(defaultLanguage);
 
-        await kernel.SubmitCodeAsync($@"
-#i ""nuget:{extensionPackage.PackageLocation}""
-#r ""nuget:{extensionPackage.Name},{extensionPackage.Version}""");
+        var result = await kernel.SubmitCodeAsync(
+                         $"""
+                          #i "nuget:{extensionPackage.PackageLocation}"
+                          #r "nuget:{extensionPackage.Name},{extensionPackage.Version}"
+                          """);
+
+        result.Events.Should().NotContainErrors();
 
         KernelEvents.Should()
                     .ContainSingle<ReturnValueProduced>()
@@ -127,7 +135,7 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
                     .Value
                     .As<string>()
                     .Should()
-                    .Contain("ScriptExtension");
+                    .Contain("ScriptExtension loaded");
     }
 
     [Theory]

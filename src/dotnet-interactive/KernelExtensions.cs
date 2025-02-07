@@ -22,6 +22,7 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PackageManagement;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
+using static System.IO.Path;
 using static Microsoft.DotNet.Interactive.App.CodeExpansion;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -49,33 +50,73 @@ public static class KernelExtensions
             context.Publish(infosProduced);
         });
 
-        // Register for the event notifying us when a kernel connection is established
-        var subscription = kernel.KernelEvents
-                                 .OfType<KernelInfoProduced>()
-                                 .Subscribe(produced =>
-                                 {
-                                     if (produced.ConnectionShortcutCode is not null)
-                                     {
-                                         // FIX: (UseCodeExpansions) can we determine if there's a #r nuget needed for this to reproducible?
-                                         if (config.GetRecentConnections is not null)
-                                         {
-                                             var recentConnectionList = config.GetRecentConnections();
-                                             var expansionSubmission = new CodeExpansionSubmission(produced.ConnectionShortcutCode, produced.Command.TargetKernelName);
-                                             var codeExpansion = new CodeExpansion(
-                                                 [expansionSubmission],
-                                                 new CodeExpansionInfo(produced.KernelInfo.LocalName, CodeExpansionKind.RecentConnection));
+        // Register for the events notifying us when a kernel connections are established and when packages are added
+        List<PackageAdded> packagesAdded = new();
 
-                                             recentConnectionList.Add(codeExpansion);
+        var sub = kernel.KernelEvents
+                        .OfType<PackageAdded>()
+                        .Subscribe(packagesAdded.Add);
+        kernel.RegisterForDisposal(sub);
 
-                                             config.AddCodeExpansion(codeExpansion);
+        sub = kernel.KernelEvents
+                    .OfType<KernelInfoProduced>()
+                    .Subscribe(produced =>
+                    {
+                        if (produced.ConnectionShortcutCode is null)
+                        {
+                            return;
+                        }
 
-                                             if (config.SaveRecentConnections is not null)
-                                             {
-                                                 config.SaveRecentConnections(recentConnectionList);
-                                             }
-                                         }
-                                     }
-                                 });
+                        if (config.GetRecentConnections is null)
+                        {
+                            return;
+                        }
+
+                        var addedKernel = kernel.RootKernel.FindKernelByName(produced.KernelInfo.LocalName);
+
+                        var expansionSubmissions = new List<CodeExpansionSubmission>();
+
+                        if (addedKernel is not null)
+                        {
+                            if (produced.ConnectionSourceAssembly is not null)
+                            {
+                                foreach (var packageAdded in packagesAdded)
+                                {
+                                    if (AreSameAssembly(produced, packageAdded))
+                                    {
+                                        if (packageAdded.Command is SubmitCode submitCode)
+                                        {
+                                            expansionSubmissions.Add(
+                                                new(submitCode.Code,
+                                                    submitCode.TargetKernelName));
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        expansionSubmissions.Add(
+                            new(produced.ConnectionShortcutCode, 
+                                produced.Command.TargetKernelName));
+
+                        var codeExpansion = new CodeExpansion(
+                            expansionSubmissions,
+                            new CodeExpansionInfo(produced.KernelInfo.LocalName, CodeExpansionKind.RecentConnection));
+
+                        var recentConnectionList = config.GetRecentConnections();
+
+                        recentConnectionList.Add(codeExpansion);
+
+                        config.AddCodeExpansion(codeExpansion);
+
+                        if (config.SaveRecentConnections is not null)
+                        {
+                            config.SaveRecentConnections(recentConnectionList);
+                        }
+                    });
+        kernel.RegisterForDisposal(sub);
 
         var expandDirective = new KernelActionDirective("#!expand")
         {
@@ -108,17 +149,41 @@ public static class KernelExtensions
                     await kernel.SendAsync(new SendEditableCode(
                                                submission.TargetKernelName,
                                                submission.Code)
-                    {
-                        InsertAtPosition = expandCode.InsertAtPosition + offset
-                    });
+                                           {
+                                               InsertAtPosition = expandCode.InsertAtPosition + offset
+                                           });
 
                     offset++;
                 }
             });
 
-        kernel.RegisterForDisposal(subscription);
-
         return kernel;
+
+        static bool AreSameAssembly(
+            KernelInfoProduced kernelInfoProduced,
+            PackageAdded packageAdded)
+        {
+            var connectionSourceAssemblyPath = kernelInfoProduced.ConnectionSourceAssembly.Location;
+
+            var packageReference = packageAdded.PackageReference;
+            foreach (var assemblyPath in packageReference.AssemblyPaths)
+            {
+                if (connectionSourceAssemblyPath.Equals(assemblyPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                // Account for connectionSourceAssemblyPath for extension assemblies like this: C:\Users\me\.nuget\packages\mytestextension.1x5nn5he.r3z\2.0.0-38b17791458a4d2f994e5c7405df8b9b\interactive-extensions\dotnet\MyTestExtension.1x5nn5he.r3z.dll
+                var slash = DirectorySeparatorChar;
+                var packageRefPathParts = $"{slash}{packageReference.PackageName}{slash}{packageReference.PackageVersion}{slash}";
+                if (assemblyPath.Contains(packageRefPathParts, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 
     public static TKernel UseFormsForMultipleInputs<TKernel>(

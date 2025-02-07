@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 
@@ -19,6 +20,11 @@ public class KernelInfoProduced : KernelEvent
 
     public KernelInfo KernelInfo { get; }
 
+    // FIX: (KernelInfoProduced) can we make these non-public?
+
     [JsonIgnore]
-    public string ConnectionShortcutCode { get; set; } // FIX: (ConnectionShortcutCode) can this be replaced by a CodeExpansionInfoProduced 
+    public string ConnectionShortcutCode { get; internal set; }
+
+    [JsonIgnore]
+    public Assembly ConnectionSourceAssembly { get; internal set; }
 }

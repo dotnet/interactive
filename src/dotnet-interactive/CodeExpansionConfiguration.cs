@@ -42,29 +42,36 @@ public class CodeExpansionConfiguration
     {
         await EnsureKernelSpecsHaveBeenCheckedAsync();
 
+        var recentConnectionExpansions = GetExpansionsForRecentConnections();
+
+        if (recentConnectionExpansions.FirstOrDefault(e => e.Info.Name.Equals(name,StringComparison.OrdinalIgnoreCase)) is {} expansion)
+        {
+            return expansion;
+        }
+
         return _codeExpansions.GetValueOrDefault(name);
     }
 
     public async Task<List<CodeExpansionInfo>> GetCodeExpansionInfosAsync()
     {
-        List<CodeExpansionInfo> infos = new();
-
         await EnsureKernelSpecsHaveBeenCheckedAsync();
 
-        AddExpansionsForRecentConnections();
+        var expansions = GetExpansionsForRecentConnections();
+        expansions.AddRange(_codeExpansions.Values);
+        return expansions.Select(e => e.Info).ToList();
+    }
 
-        infos.AddRange(_codeExpansions.Values.Select(c => c.Info));
+    private List<CodeExpansion> GetExpansionsForRecentConnections()
+    {
+        List<CodeExpansion> infos = new();
+
+        if (GetRecentConnections is not null)
+        {
+            var recentConnectionList = GetRecentConnections();
+            infos.AddRange(recentConnectionList);
+        }
 
         return infos;
-
-        void AddExpansionsForRecentConnections()
-        {
-            if (GetRecentConnections is not null)
-            {
-                var recentConnectionList = GetRecentConnections();
-                infos.AddRange(recentConnectionList.Select(i => i.Info));
-            }
-        }
     }
 
     private async Task EnsureKernelSpecsHaveBeenCheckedAsync()

@@ -399,6 +399,7 @@ public abstract partial class Kernel :
 
             foreach (var c in commands)
             {
+              
                 switch (c)
                 {
                     case Quit quit:
@@ -1002,7 +1003,15 @@ public abstract partial class Kernel :
 
     protected virtual void SetHandlingKernel(
         KernelCommand command,
-        KernelInvocationContext context) => context.HandlingKernel = this;
+        KernelInvocationContext context)
+    {
+        if (command.TargetKernelName is null)
+        {
+            command.TargetKernelName = Name;
+        }
+
+        context.HandlingKernel = this;
+    }
 
     public void Dispose() => _disposables.Dispose();
 

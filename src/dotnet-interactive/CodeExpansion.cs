@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.App;
 
@@ -18,6 +19,11 @@ public class CodeExpansion
     public CodeExpansionInfo Info { get; }
 
     public IReadOnlyList<CodeExpansionSubmission> Content { get; }
+
+    public override string ToString()
+    {
+        return $"{Info.Name}: {string.Join("\n",Content.Select(c => c.Code))}";
+    }
 
     public static class CodeExpansionKind
     {
