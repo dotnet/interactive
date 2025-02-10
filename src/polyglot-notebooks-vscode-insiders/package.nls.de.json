@@ -15,7 +15,6 @@
   "description.kernelTransportArgs": "Befehl und Argumente, die zum Starten einer Notebooksitzung verwendet werden.",
   "description.kernelTransportWorkingDirectory": "Das Arbeitsverzeichnis, in dem der Kerneltransportprozess gestartet wird.",
   "description.interactiveToolSource": "Die NuGet-Quelle, die beim Abrufen des .NET Interactive-Tools verwendet werden soll.",
-  "description.minimumDotNetSdkVersion": "Die mindestens erforderliche Version des .NET SDK.",
   "description.requiredInteractiveToolVersion": "Die erforderliche Version des .NET Interactive-Tools.",
   "command.acquire": ".NET Interactive installieren",
   "command.openNotebook": "Polyglot Notebook: Notebook öffnen",

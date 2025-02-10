@@ -15,7 +15,6 @@
   "description.kernelTransportArgs": "Not defteri oturumu başlatmak için kullanılan komut ve bağımsız değişkenler.",
   "description.kernelTransportWorkingDirectory": "Çekirdek aktarım işleminin başladığı çalışma dizini.",
   "description.interactiveToolSource": ".NET Interactive aracı alınırken kullanılacak NuGet kaynağı.",
-  "description.minimumDotNetSdkVersion": "Gerekli en düşük .NET SDK sürümü.",
   "description.requiredInteractiveToolVersion": ".NET Interactive aracının gerekli sürümü.",
   "command.acquire": ".NET Interactive'i yükle",
   "command.openNotebook": "Polyglot Notebook: Not defterini aç",
