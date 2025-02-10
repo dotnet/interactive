@@ -29,7 +29,7 @@ public static class KernelBuilder
         StartupOptions startupOptions,
         TelemetrySender telemetrySender)
     {
-        using var _ = Log.OnEnterAndExit();
+        using var _ = Log.OnEnterAndExit("Creating kernels");
 
         var compositeKernel = new CompositeKernel();
         compositeKernel.FrontendEnvironment = frontendEnvironment;

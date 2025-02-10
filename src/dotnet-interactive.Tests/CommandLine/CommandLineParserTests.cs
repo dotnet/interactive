@@ -150,7 +150,7 @@ public class CommandLineParserTests : IDisposable
             logFileContents.Append(line);
         }
 
-        logFileContents.ToString().Should().Contain("[Creating Kernels]  ▶");
+        logFileContents.ToString().Should().Contain("[Creating kernels]  ▶");
     }
 
     [Fact]
