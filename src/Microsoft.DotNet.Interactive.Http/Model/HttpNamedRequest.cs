@@ -6,9 +6,10 @@
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using System;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Xml;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -58,7 +59,8 @@ internal class HttpNamedRequest
                     {
                         try
                         {
-                            var requestJSON = JsonNode.Parse(RequestNode.BodyNode.Text);
+                            var requestJSON = JObject.Parse(RequestNode.BodyNode.Text);
+                            //var requestJSON = JsonNode.Parse(RequestNode.BodyNode.Text);
 
                             if (requestJSON is not null)
                             {
@@ -150,13 +152,20 @@ internal class HttpNamedRequest
 
                         try
                         {
-                            var jsonOptions = new JsonNodeOptions { PropertyNameCaseInsensitive = true };
+                            //var jsonOptions = new JsonNodeOptions { PropertyNameCaseInsensitive = true };
+                            // Parse the outer JObject
+                            //JObject jObject = JObject.Parse(Response.Content.Raw);
 
-                            var responseJSON = JsonNode.Parse(Response.Content.Raw, jsonOptions);
+                            // Get the 'data' property, which is a string containing JSON
+                            //string dataJsonString = jObject["data"].ToString();
 
-                            if (responseJSON is not null)
+                            // Parse the 'data' string as JSON into a JToken
+                            JToken dataJToken = JToken.Parse(Response.Content.Raw);
+
+                            var pathString = String.Join(".", path);
+                            if (dataJToken is not null)
                             {
-                                var resolvedPath = ResolveJsonPath(responseJSON, path, 4);
+                                var resolvedPath = ResolveJsonPath(dataJToken, path, 4);
                                 if (resolvedPath != null)
                                 {
                                     return node.CreateBindingSuccess(resolvedPath);
@@ -244,23 +253,48 @@ internal class HttpNamedRequest
         return node.CreateBindingFailure(HttpDiagnostics.InvalidNamedRequestPath(node.Text));
     }
 
-    private static object? ResolveJsonPath(JsonNode responseJSON, string[] path, int currentIndex)
+    private static object? ResolveJsonPath(JToken responseJSON, string[] path, int currentIndex)
     {
-        if (currentIndex + 1 == path.Length)
+
+        JToken? token = null;
+        var pathItem = path[currentIndex];
+
+        switch(responseJSON)
         {
-            switch (responseJSON)
-            {
-                case JsonArray jsonArray:
-                    var node = jsonArray.FirstOrDefault(n => n?[path[currentIndex]] != null);
-                    return node?[path[currentIndex]]?.ToString();
-                case JsonObject jsonObject:
-                    return jsonObject[path[currentIndex]]?.ToString();
-                default:
-                    return responseJSON.ToString();
-            }
+            case JArray jsonArray:
+                var node = jsonArray.FirstOrDefault(n => n?[path[currentIndex]] != null);
+                token = node?[path[currentIndex]];
+                break;
+            case JObject jsonObject:
+                token = jsonObject.SelectToken(path[currentIndex]);
+                break;
+            default:
+                token = responseJSON;
+                break;
         }
 
-        JsonNode? newResponseJSON = null;
+        if(currentIndex + 1 == path.Length)
+        {
+            return token?.ToString();
+        }
+
+        if (token is not null)
+        {
+            return ResolveJsonPath(token, path, currentIndex + 1);
+            //return result.ToString();
+        }
+        else
+        {
+            return null;
+        }
+        
+        /*Console.WriteLine(responseJSON.ToString());
+        if (currentIndex + 1 == path.Length)
+        {
+            return responseJSON?.SelectToken(path[currentIndex])?.ToString();
+        }
+
+        JObject? newResponseJSON = null;
         try
         {
             newResponseJSON = responseJSON[path[currentIndex]];
@@ -277,7 +311,7 @@ internal class HttpNamedRequest
         else
         {
             return ResolveJsonPath(newResponseJSON, path, currentIndex + 1);
-        }
+        }*/
 
     }
 
