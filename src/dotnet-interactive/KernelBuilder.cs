@@ -103,7 +103,7 @@ public static class KernelBuilder
     private static CodeExpansionConfiguration GetCodeExpansionConfiguration(
         SecretManager secretManager)
     {
-        return new(GetWellKnownCodeExpansions(), new JupyterKernelSpecModule())
+        return new(GetDataKernelCodeExpansions(), new JupyterKernelSpecModule())
         {
             GetRecentConnections = () => GetRecentConnectionListFromSecretManager(secretManager),
             SaveRecentConnections = list => SaveRecentConnectionListToSecretManager(list, secretManager)
@@ -135,7 +135,7 @@ public static class KernelBuilder
         secretManager.SetValue("dotnet-interactive.RecentlyUsedConnections", json);
     }
 
-    public static IEnumerable<CodeExpansion> GetWellKnownCodeExpansions()
+    public static IEnumerable<CodeExpansion> GetDataKernelCodeExpansions()
     {
         return [
             new([

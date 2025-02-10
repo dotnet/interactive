@@ -30,7 +30,7 @@ public class CodeExpansionTests
     {
         using var kernel = CreateKernel()
             .UseCodeExpansions(
-                new(codeExpansions: KernelBuilder.GetWellKnownCodeExpansions()));
+                new(codeExpansions: KernelBuilder.GetDataKernelCodeExpansions()));
 
         var result = await kernel.SendAsync(new RequestCodeExpansionInfos());
 
@@ -40,7 +40,7 @@ public class CodeExpansionTests
               .Which
               .CodeExpansionInfos
               .Should()
-              .Contain(KernelBuilder.GetWellKnownCodeExpansions().Select( e => e.Info));
+              .Contain(KernelBuilder.GetDataKernelCodeExpansions().Select( e => e.Info));
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class CodeExpansionTests
     [Fact]
     public async Task Triggering_a_code_expansion_causes_a_SendEditableCode_to_be_sent_with_the_connect_code()
     {
-        using var kernel = CreateKernel().UseCodeExpansions(new(KernelBuilder.GetWellKnownCodeExpansions()));
+        using var kernel = CreateKernel().UseCodeExpansions(new(KernelBuilder.GetDataKernelCodeExpansions()));
 
         List<SendEditableCode> receivedSendEditableCode = new();
 
@@ -159,7 +159,7 @@ public class CodeExpansionTests
 
         result.Events.Should().NotContainErrors();
 
-        var expectedCodeSubmissions = KernelBuilder.GetWellKnownCodeExpansions().Single(e => e.Info.Name == "Kusto Query Language").Content;
+        var expectedCodeSubmissions = KernelBuilder.GetDataKernelCodeExpansions().Single(e => e.Info.Name == "Kusto Query Language").Content;
 
         // The order of the submissions is reversed so that they come out in the correct order in the notebook
         receivedSendEditableCode[0].Code.Should().Be(expectedCodeSubmissions[0].Code);
