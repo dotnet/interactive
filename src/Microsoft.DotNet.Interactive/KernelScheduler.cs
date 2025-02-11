@@ -72,7 +72,6 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             operation = new ScheduledOperation(
                 value,
                 onExecuteAsync,
-                isDeferred: false,
                 currentlyRunningOperation,
                 executionContext: null,
                 scope,
@@ -85,7 +84,6 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
             operation = new ScheduledOperation(
                 value,
                 onExecuteAsync,
-                isDeferred: false,
                 parentOperation: null,
                 ExecutionContext.Capture(),
                 scope: scope,
@@ -266,7 +264,6 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
                     var scheduledOperation = new ScheduledOperation(
                         deferred,
                         source.OnExecuteAsync,
-                        true,
                         parentOperation: null,
                         scope: operation.Scope);
 
@@ -340,14 +337,12 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         public ScheduledOperation(
             T value,
             KernelSchedulerDelegate<T, TResult> onExecuteAsync,
-            bool isDeferred,
             ScheduledOperation parentOperation = null,
             ExecutionContext executionContext = default,
             string scope = "default",
             CancellationToken cancellationToken = default)
         {
             Value = value;
-            IsDeferred = isDeferred;
 
             ExecutionContext = executionContext;
             _onExecuteAsync = onExecuteAsync;
@@ -382,8 +377,6 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         public T Value { get; }
 
         public bool IsCompleted => TaskCompletionSource.Task.IsCompleted;
-
-        public bool IsDeferred { get; }
 
         public bool IsChildOperation { get; }
 

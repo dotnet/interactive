@@ -952,16 +952,20 @@ $${languageSpecificCode}
 
         var source = language switch
         {
-            Language.FSharp => @"
-open System
-Console.Write(""value one"")
-Console.Write(""value two"")
-Console.Write(""value three"")",
+            Language.FSharp => """
 
-            Language.CSharp => @"
-Console.Write(""value one"");
-Console.Write(""value two"");
-Console.Write(""value three"");"
+                               open System
+                               Console.Write("value one")
+                               Console.Write("value two")
+                               Console.Write("value three")
+                               """,
+
+            Language.CSharp => """
+
+                               Console.Write("value one");
+                               Console.Write("value two");
+                               Console.Write("value three");
+                               """
         };
 
         var result = await kernel.SendAsync(new SubmitCode(source));
