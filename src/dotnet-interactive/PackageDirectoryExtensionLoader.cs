@@ -145,7 +145,7 @@ internal class PackageDirectoryExtensionLoader
                 category: Log.Category,
                 message: logMessage,
                 logOnStart: true,
-                args: new object[] { extensionFile });
+                args: [extensionFile]);
 
             context.Display(logMessage);
 

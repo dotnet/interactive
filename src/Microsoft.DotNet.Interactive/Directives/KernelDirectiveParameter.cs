@@ -33,7 +33,7 @@ public class KernelDirectiveParameter
 
     public string TypeHint { get; init; } = "text";
 
-    public bool Flag { get; set; }
+    public bool Flag { get; init; }
 
     public KernelDirectiveParameter AddCompletions(
         Func<KernelDirectiveCompletionContext, Task> getCompletions)

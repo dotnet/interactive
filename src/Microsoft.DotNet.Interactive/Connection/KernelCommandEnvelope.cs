@@ -6,7 +6,9 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
+using System.Web;
 using Microsoft.DotNet.Interactive.Commands;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Connection;
 
@@ -128,62 +130,70 @@ public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
 
     public static IKernelCommandEnvelope Deserialize(JsonElement json)
     {
-        var commandTypeJson = string.Empty;
-        string commandJson;
-        string commandToken = null;
+        try
+        {
+            var commandTypeJson = string.Empty;
+            string commandJson;
+            string commandToken = null;
 
-        if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
-        {
-            commandTypeJson = commandTypeProperty.GetString();
-        }
-
-        if (string.IsNullOrWhiteSpace(commandTypeJson))
-        {
-            throw new ArgumentException($"Command type not specified: {Environment.NewLine}{json}");
-        }
-
-        var commandType = CommandTypeByName(commandTypeJson);
-        if (json.TryGetProperty(nameof(SerializationModel.command), out var commandJsonProperty))
-        {
-            commandJson = commandJsonProperty.GetRawText();
-        }
-        else
-        {
-            return null;
-        }
-
-         var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
-
-        // restore the command token
-        if (json.TryGetProperty(nameof(SerializationModel.token), out var tokenProperty))
-        {
-            commandToken = tokenProperty.GetString();
-        }
-
-        if (commandToken is not null)
-        {
-            command.SetToken(commandToken);
-        }
-      
-        if (json.TryGetProperty(nameof(SerializationModel.routingSlip), out var routingSlipProperty))
-        {
-            foreach (var routingSlipItem in routingSlipProperty.EnumerateArray())
+            if (json.TryGetProperty(nameof(SerializationModel.commandType), out var commandTypeProperty))
             {
-                var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
+                commandTypeJson = commandTypeProperty.GetString();
+            }
 
-                if (string.IsNullOrWhiteSpace(uri.Query))
+            if (string.IsNullOrWhiteSpace(commandTypeJson))
+            {
+                throw new ArgumentException($"Command type not specified: {Environment.NewLine}{json}");
+            }
+
+            var commandType = CommandTypeByName(commandTypeJson);
+            if (json.TryGetProperty(nameof(SerializationModel.command), out var commandJsonProperty))
+            {
+                commandJson = commandJsonProperty.GetRawText();
+            }
+            else
+            {
+                return null;
+            }
+
+            var command = (KernelCommand)JsonSerializer.Deserialize(commandJson, commandType, Serializer.JsonSerializerOptions);
+
+            // restore the command token
+            if (json.TryGetProperty(nameof(SerializationModel.token), out var tokenProperty))
+            {
+                commandToken = tokenProperty.GetString();
+            }
+
+            if (commandToken is not null)
+            {
+                command.SetToken(commandToken);
+            }
+      
+            if (json.TryGetProperty(nameof(SerializationModel.routingSlip), out var routingSlipProperty))
+            {
+                foreach (var routingSlipItem in routingSlipProperty.EnumerateArray())
                 {
-                    command.RoutingSlip.Stamp(uri);
-                }
-                else
-                {
-                    var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                    command.RoutingSlip.StampAs(uri, query["tag"]);
+                    var uri = new Uri(routingSlipItem.GetString(), UriKind.Absolute);
+
+                    if (string.IsNullOrWhiteSpace(uri.Query))
+                    {
+                        command.RoutingSlip.Stamp(uri);
+                    }
+                    else
+                    {
+                        var query = HttpUtility.ParseQueryString(uri.Query);
+                        command.RoutingSlip.StampAs(uri, query["tag"]);
+                    }
                 }
             }
-        }
 
-        return Create(command);
+            return Create(command);
+        }
+        catch (Exception exception)
+        {
+            Logger.Log.Error(exception, "Error deserializing command envelope");
+            throw;
+        }
     }
 
     public static string Serialize(KernelCommand command) => Serialize(Create(command));

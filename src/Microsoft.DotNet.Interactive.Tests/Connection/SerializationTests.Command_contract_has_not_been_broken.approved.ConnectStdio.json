@@ -1,0 +1,21 @@
+{
+  "token": "the-token",
+  "commandType": "ConnectStdio",
+  "command": {
+    "command": [
+      "dotnet-interactive",
+      "stdio",
+      "--default-kernel",
+      "fsharp"
+    ],
+    "kernelHost": null,
+    "kernelName": "dotnet-interactive",
+    "targetKernelName": null,
+    "originUri": null,
+    "destinationUri": null
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName?tag=arrived",
+    "kernel://somelocation/kernelName"
+  ]
+}
