@@ -199,7 +199,7 @@ public static class KernelExtensions
                         td(img[src: encodedImage, width: "125em"]),
                         td[style: "line-height:.8em"](
                             p[style: "font-size:1.5em"](b(".NET Interactive")),
-                            p("© 2020-2024 Microsoft Corporation"),
+                            p("© 2020-2025 Microsoft Corporation"),
                             p(b("Version: "), info.AssemblyInformationalVersion),
                             p(b("Library version: "), libraryInformationalVersion),
                             p(b("Build date: "), info.BuildDate),
