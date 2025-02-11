@@ -3,6 +3,7 @@ parameters:
 
 steps:
 - ${{ if eq(parameters.platform, 'windows') }}:
+  # Azure DevOps doesn't support git symlinks on Windows so we have to fake it
   - pwsh: . "$(Build.SourcesDirectory)\src\ensure-symlinks.ps1"
     displayName: ensure symlinks
 
@@ -42,6 +43,7 @@ steps:
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
     condition: ne(variables['SkipTests'], 'true')
 
+  # publish VS Code and npm test results
   - task: PublishTestResults@2
     displayName: Publish VS Code extension and npm test results
     inputs:
@@ -66,6 +68,18 @@ steps:
       workingDirectory: "$(Build.SourcesDirectory)/src/polyglot-notebooks"
       pwsh: true
 
+  - task: CopyFiles@2
+    displayName: Copy artifacts to $(Build.ArtifactStagingDirectory)\artifacts
+    inputs:
+      SourceFolder: 'artifacts'
+      Contents: |
+        TestResults\**
+        packages\**
+      TargetFolder: '$(Build.ArtifactStagingDirectory)\artifacts'
+    condition: succeededOrFailed()
+
+  # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
+  # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
   - script: del /S $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\*.symbols.nupkg
     displayName: Clean symbol packages
 
@@ -93,7 +107,7 @@ steps:
       --configuration $(_BuildConfig)
       --prepareMachine
       $(_TestArgs)
-    displayName: Build
+    displayName: Run tests
     env:
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
       DOTNET_INTERACTIVE_FRONTEND_NAME: CI
@@ -106,6 +120,7 @@ steps:
       POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
     condition: ne(variables['SkipTests'], 'true')
 
+  # Publish VS Code and npm test results
   - task: PublishTestResults@2
     displayName: Publish VS Code extension and npm test results
     inputs:

@@ -6,11 +6,13 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Jupyter.Connection;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Pocket;
 using System;
 using System.Collections.Generic;
-using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
+using CompositeDisposable = Pocket.CompositeDisposable;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -20,12 +22,17 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 [Collection("Do not parallelize")]
 public abstract class JupyterKernelTestBase : IDisposable
 {
-    protected readonly CompositeDisposable _disposables = new();
+    private protected readonly CompositeDisposable _disposables = new();
 
     // to re-record the tests for simulated playback with JupyterTestDataAttribute, set this to true
     protected const bool RECORD_FOR_PLAYBACK = false;
     protected const string PythonKernelName = "python3";
     protected const string RKernelName = "ir";
+
+    protected JupyterKernelTestBase(ITestOutputHelper output)
+    {
+        _disposables.Add(output.SubscribeToPocketLogger());
+    }
 
     public void Dispose()
     {

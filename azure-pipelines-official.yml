@@ -167,7 +167,7 @@ extends:
             steps:
             - checkout: self
               clean: true
-              
+
             # Use common task group
             - template: /eng/templates/build-and-test-tasks.yml@self
               parameters:
