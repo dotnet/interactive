@@ -1,4 +1,4 @@
 #!csharp
 
-await Microsoft.DotNet.Interactive.NamedPipeConnector.ConnectNamedPipeDirective.AddToRootKernel();
+Microsoft.DotNet.Interactive.NamedPipeConnector.ConnectNamedPipeDirective.AddToRootKernel();
 

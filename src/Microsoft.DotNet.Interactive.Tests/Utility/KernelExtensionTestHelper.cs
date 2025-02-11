@@ -27,10 +27,11 @@ public static class KernelExtensionTestHelper
 
         return await CreateExtensionNupkg(
             projectDir,
-            "await kernel.SendAsync(new SubmitCode(\"\\\"SimpleExtension\\\"\"));",
+            """await kernel.SendAsync(new SubmitCode("\"SimpleExtension\""));""",
             packageName,
             packageVersion,
-            timeout: TimeSpan.FromMinutes(5));
+            timeout: TimeSpan.FromMinutes(5),
+            implementIKernelExtension: true);
     });
 
     private static readonly AsyncLazy<ExtensionPackage> _fileProviderExtensionPackage = new(async () =>
@@ -43,13 +44,13 @@ public static class KernelExtensionTestHelper
 
         return await CreateExtensionNupkg(
             projectDir,
-            "await kernel.SendAsync(new SubmitCode(\"\\\"FileProviderExtension\\\"\"));",
+            """await kernel.SendAsync(new SubmitCode("\"FileProviderExtension\""));""",
             packageName,
             packageVersion,
             fileToEmbed: fileToEmbed,
             timeout: TimeSpan.FromMinutes(5));
     });
-
+   
     private static readonly AsyncLazy<ExtensionPackage> _scriptBasedExtensionPackage = new(async () =>
     {
         var projectDir = DirectoryUtility.CreateDirectory();
@@ -57,16 +58,16 @@ public static class KernelExtensionTestHelper
         var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
 
         var extensionScriptPath = new FileInfo(Path.Combine(projectDir.FullName, "extension.dib"));
-        var extensionScriptContent = """
+        var extensionScriptContent =
+            """
+            #!markdown
 
-                                     #!markdown
+            # This is an extension!
 
-                                     # This is an extension!
+            #!csharp
 
-                                     #!csharp
-                                     "ScriptExtension"
-
-                                     """;
+            "ScriptExtension loaded"
+            """;
         File.WriteAllText(extensionScriptPath.FullName, extensionScriptContent);
 
         return await CreateExtensionNupkg(
@@ -74,15 +75,81 @@ public static class KernelExtensionTestHelper
             "// this extension does nothing from the assembly",
             packageName,
             packageVersion,
-            additionalPackageFiles: new[] { (extensionScriptPath, "interactive-extensions/dotnet") },
+            additionalPackageFiles: [(extensionScriptPath, "interactive-extensions/dotnet")],
             timeout: TimeSpan.FromMinutes(5));
     });
 
+    private static readonly AsyncLazy<ExtensionPackage> _kernelConnectionExtensionPackage = new(async () =>
+    {
+        var projectDir = DirectoryUtility.CreateDirectory();
+        var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
+        var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+
+        var extensionScriptPath = new FileInfo(Path.Combine(projectDir.FullName, "extension.dib"));
+        var extensionScriptContent =
+            """
+
+            #!markdown
+
+            # This is an extension!
+
+            #!csharp
+            
+            using Microsoft.DotNet.Interactive;
+            
+            (Kernel.Root as CompositeKernel).AddConnectDirective(new ConnectMyKernelDirective());
+            """;
+        File.WriteAllText(extensionScriptPath.FullName, extensionScriptContent);
+
+        return await CreateExtensionNupkg(
+            projectDir,
+            """
+            using System.Threading.Tasks;
+            using System.Collections.Generic;
+            using Microsoft.DotNet.Interactive;
+            using Microsoft.DotNet.Interactive.Commands;
+            using Microsoft.DotNet.Interactive.Connection;
+            using Microsoft.DotNet.Interactive.Directives;
+            
+            public class ConnectMyKernel(string connectedKernelName) : 
+                ConnectKernelCommand(connectedKernelName)
+            {
+            }
+            
+            public class ConnectMyKernelDirective : 
+                ConnectKernelDirective<ConnectMyKernel>
+            {
+                public ConnectMyKernelDirective() : base("mykernel", "Connects a MyKernel test kernel")
+                {
+                }
+            
+                public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
+                    ConnectMyKernel connectCommand,
+                    KernelInvocationContext context)
+                {
+                    return [new MyKernel(connectCommand.ConnectedKernelName)];
+                }
+            }
+            
+            public class MyKernel : Kernel
+            {
+                public MyKernel(string name) : base(name)
+                {
+                }
+            }
+            """,
+            packageName,
+            packageVersion,
+            additionalPackageFiles: [(extensionScriptPath, "interactive-extensions/dotnet")],
+            timeout: TimeSpan.FromMinutes(5));
+    });
     private static readonly string _microsoftDotNetInteractiveDllPath = typeof(IKernelExtension).Assembly.Location;
 
     public static Task<ExtensionPackage> GetSimpleExtensionAsync() => _simpleExtensionPackage.ValueAsync();
 
     public static Task<ExtensionPackage> GetFileProviderExtensionAsync() => _fileProviderExtensionPackage.ValueAsync();
+
+    public static Task<ExtensionPackage> GetKernelConnectionExtensionPackageAsync() => _kernelConnectionExtensionPackage.ValueAsync();
 
     public static Task<ExtensionPackage> GetScriptExtensionPackageAsync() => _scriptBasedExtensionPackage.ValueAsync();
 
@@ -94,19 +161,33 @@ public static class KernelExtensionTestHelper
         IReadOnlyCollection<PackageReference> packageReferences = null,
         FileInfo fileToEmbed = null,
         (FileInfo content, string packagePath)[] additionalPackageFiles = null,
-        TimeSpan? timeout = null)
+        TimeSpan? timeout = null,
+        bool implementIKernelExtension = false)
     {
         var packageReferencesXml = GeneratePackageReferencesFragment(packageReferences);
         var embeddedResourcesXml = GenerateEmbeddedResourceFragment(fileToEmbed);
 
-        additionalPackageFiles ??= Array.Empty<(FileInfo, string)>();
+        additionalPackageFiles ??= [];
         var allPackageFiles = new List<(string filePath, string packagePath)>();
         allPackageFiles.Add(($"$(OutputPath)/{packageName}.dll", "interactive-extensions/dotnet"));
         allPackageFiles.AddRange(additionalPackageFiles.Select(item => (item.content.FullName, item.packagePath)));
 
-        var extensionCode = fileToEmbed is null
-            ? ExtensionCs(code)
-            : FileProviderExtensionCs(code);
+        (string, string) extensionCode;
+        if (fileToEmbed is null)
+        {
+            if (implementIKernelExtension)
+            {
+                extensionCode = ExtensionCs(code);
+            }
+            else
+            {
+                extensionCode = ("Code.cs", code);
+            }
+        }
+        else
+        {
+            extensionCode = FileProviderExtensionCs(code);
+        }
 
         projectDir.Populate(
             extensionCode,

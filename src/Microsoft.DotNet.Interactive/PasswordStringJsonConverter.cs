@@ -23,7 +23,6 @@ internal class PasswordStringJsonConverter : JsonConverter<PasswordString>
                 }
 
                 throw new JsonException($"Cannot deserialize {typeToConvert.Name}");
-
             }
 
             switch (reader.TokenType)

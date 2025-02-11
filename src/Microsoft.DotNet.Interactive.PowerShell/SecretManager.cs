@@ -62,20 +62,15 @@ public class SecretManager
 
     public string VaultName => "DotnetInteractive";
 
-    public void SetSecret(
+    public void SetValue(
         string name,
-        string value,
-        string? command = null,
-        string? source = null)
+        string value)
     {
         EnsureInitialized();
 
         var code =
             $$"""
-              Set-Secret -Name '{{name}}' -Secret '{{value}}' -Vault '{{VaultName}}' -Metadata @{
-                  Command = '{{command}}'
-                  Source = '{{source}}'
-              }
+              Set-Secret -Name '{{name}}' -Secret '{{value}}' -Vault '{{VaultName}}'
               """;
 
         if (!_kernel.RunLocally(code, out var errorMessage, true))
@@ -84,7 +79,7 @@ public class SecretManager
         }
     }
 
-    public bool TryGetSecret(string secretName, out string? value)
+    public bool TryGetValue(string name, out string? value)
     {
         EnsureInitialized();
 
@@ -93,7 +88,7 @@ public class SecretManager
         try
         {
             var code = $"""
-                        ${temporaryVariableName} = Get-Secret -Name '{secretName}' -Vault '{VaultName}' -AsPlainText
+                        ${temporaryVariableName} = Get-Secret -Name '{name}' -Vault '{VaultName}' -AsPlainText
                         """;
 
             if (!_kernel.RunLocally(code, out _, true))
@@ -105,9 +100,6 @@ public class SecretManager
             if (_kernel.TryGetValue(temporaryVariableName, out value))
             {
                 return true;
-            }
-            else
-            {
             }
         }
         finally

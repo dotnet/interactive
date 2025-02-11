@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -33,9 +33,9 @@ public class SecretManagerTests
         // make the secret name unique across runs
         secretName += DateTime.UtcNow.Ticks;
 
-        secretManager.SetSecret(name: secretName, value: value);
+        secretManager.SetValue(name: secretName, value: value);
 
-        var success = secretManager.TryGetSecret(secretName, out var secret);
+        var success = secretManager.TryGetValue(secretName, out var secret);
 
         using var _ = new AssertionScope();
 
@@ -53,11 +53,11 @@ public class SecretManagerTests
         var secretName = nameof(Temporary_variables_are_cleaned_up_after_retrieving_secrets) + DateTime.UtcNow.Ticks;
         var value = "s33kr1t!!!";
 
-        secretManager.SetSecret(name: secretName, value: value);
+        secretManager.SetValue(name: secretName, value: value);
 
         var valueInfosResultBefore = await kernel.SendAsync(new RequestValueInfos());
 
-        secretManager.TryGetSecret(secretName, out var secret);
+        secretManager.TryGetValue(secretName, out _);
 
         var valueInfosResultAfter = await kernel.SendAsync(new RequestValueInfos());
 

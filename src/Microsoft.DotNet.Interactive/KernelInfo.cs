@@ -81,9 +81,9 @@ public class KernelInfo
 
     public string? LanguageVersion { get; set; }
 
-    public bool IsProxy { get; set; }
-
     public bool IsComposite { get; set; }
+
+    public bool IsProxy { get; set; }
 
     public string DisplayName
     {
