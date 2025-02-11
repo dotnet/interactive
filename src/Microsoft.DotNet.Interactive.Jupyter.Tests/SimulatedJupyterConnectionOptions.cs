@@ -11,18 +11,27 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Directives;
+using Pocket;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-public sealed class SimulatedJupyterConnectionOptions : IJupyterKernelConnectionOptions
+public sealed class SimulatedJupyterConnectionOptions :
+    IJupyterKernelConnectionOptions,
+    IDisposable
 {
     private IJupyterKernelConnectionOptions _testParameters;
     private SubscribedList<Message> _sentMessages;
     private SubscribedList<Message> _playbackMessages;
     private readonly bool _allowPlayback = false;
+    private readonly CompositeDisposable _disposables = new();
+    private IMessageTracker _messageTracker;
+    private TestJupyterConnection _connection;
 
-    public SimulatedJupyterConnectionOptions(string kernelSpecName, string filePath, string fileName)
+    public SimulatedJupyterConnectionOptions(
+        string kernelSpecName, 
+        string filePath, 
+        string fileName)
     {
         KernelSpecName = kernelSpecName;
         var fileToPlayback = GetFilePath(filePath, fileName);
@@ -31,7 +40,8 @@ public sealed class SimulatedJupyterConnectionOptions : IJupyterKernelConnection
         Playback(messages);
     }
 
-    public SimulatedJupyterConnectionOptions(IReadOnlyCollection<Message> messagesToPlayback)
+    public SimulatedJupyterConnectionOptions(
+        IReadOnlyCollection<Message> messagesToPlayback)
     {
         Playback(messagesToPlayback);
     }
@@ -52,12 +62,12 @@ public sealed class SimulatedJupyterConnectionOptions : IJupyterKernelConnection
 
     public SimulatedJupyterConnectionOptions(TestJupyterConnection connection)
     {
-        if (connection is null)
-        {
-            throw new ArgumentNullException(nameof(connection));
-        }
-
         Connection = connection;
+    }
+
+    public void Dispose()
+    {
+        _disposables.Dispose();
     }
 
     public void Record(IJupyterKernelConnectionOptions options)
@@ -65,6 +75,7 @@ public sealed class SimulatedJupyterConnectionOptions : IJupyterKernelConnection
         _testParameters = options;
         MessageTracker = new MessageRecorder();
         Connection = new TestJupyterConnection(new TestJupyterKernelConnection(MessageTracker));
+
         if (_allowPlayback)
         {
             _sentMessages = MessageTracker.SentMessages.ToSubscribedList();
@@ -78,9 +89,45 @@ public sealed class SimulatedJupyterConnectionOptions : IJupyterKernelConnection
         Connection = new TestJupyterConnection(new TestJupyterKernelConnection(MessageTracker));
     }
 
-    public IMessageTracker MessageTracker { get; private set; }
+    public IMessageTracker MessageTracker
+    {
+        get => _messageTracker;
+        private set
+        {
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
-    public TestJupyterConnection Connection { get; private set; }
+            if (_messageTracker is not null)
+            {
+                throw new InvalidOperationException("MessageTracker was already set.");
+            }
+
+            _messageTracker = value;
+            _disposables.Add(_messageTracker);
+        }
+    }
+
+    public TestJupyterConnection Connection
+    {
+        get => _connection;
+        private set
+        {
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            if (_connection is not null)
+            {
+                throw new InvalidOperationException("Connection was already set.");
+            }
+
+            _connection = value;
+            _disposables.Add(_connection);
+        }
+    }
 
     public IJupyterConnection GetConnection(ConnectJupyterKernel connectCommand)
     {
