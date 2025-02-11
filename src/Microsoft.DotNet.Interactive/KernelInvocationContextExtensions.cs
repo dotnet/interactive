@@ -97,30 +97,4 @@ public static class KernelInvocationContextExtensions
                 command ?? context.Command,
                 formattedValues));
     }
-
-    public static void PublishValueProduced(
-        this KernelInvocationContext context,
-        RequestValue requestValue,
-        object value)
-    {
-        // FIX: (PublishValueProduced) remove this from the public interface
-        var valueType = value?.GetType();
-
-        var requestedMimeType = requestValue.MimeType;
-
-        var formatter = Formatter.GetPreferredFormatterFor(valueType, requestedMimeType);
-
-        using var writer = new StringWriter(CultureInfo.InvariantCulture);
-        formatter.Format(value, writer);
-
-        var formatted = new FormattedValue(
-            requestedMimeType,
-            value.ToDisplayString(requestValue.MimeType));
-
-        context.Publish(new ValueProduced(
-            value,
-            requestValue.Name,
-            formatted,
-            requestValue));
-    }
 }
