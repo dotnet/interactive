@@ -16,12 +16,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Tags;
 using Xunit;
+using Xunit.Abstractions;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 public class JupyterKernelTests : JupyterKernelTestBase
 {
+    public JupyterKernelTests(ITestOutputHelper output) : base(output)
+    {
+    }
+
     [Fact]
     public async Task can_setup_kernel_using_script()
     {
