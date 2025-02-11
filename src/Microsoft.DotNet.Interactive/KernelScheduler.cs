@@ -107,7 +107,7 @@ public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TRes
         }
         catch (InvalidOperationException exception)
         {
-            Log.Warning($"Top level operations: {_topLevelScheduledOperations.Count} / {_currentlyRunningOperation}: {_currentlyRunningOperation}", exception);
+            Log.Warning(exception, _currentlyRunningOperation);
         }
     }
 
