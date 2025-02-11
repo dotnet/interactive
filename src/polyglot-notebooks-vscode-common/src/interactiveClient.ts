@@ -53,7 +53,11 @@ import {
     ErrorProducedType,
     ErrorProduced,
     KernelInfo,
-    KernelCommandEnvelope
+    KernelCommandEnvelope,
+    CodeExpansionInfosProduced,
+    CodeExpansionInfosProducedType,
+    RequestCodeExpansionInfos,
+    RequestCodeExpansionInfosType
 } from './polyglot-notebooks/commandsAndEvents';
 import { clearDebounce, createOutput } from './utilities';
 
@@ -364,6 +368,17 @@ export class InteractiveClient {
             }
         );
         const result = await (this.submitCommandAndGetResult<ValueInfosProduced>(command, ValueInfosProducedType));
+        return result!;
+    }
+
+    async requestCodeExpansionInfos(): Promise<CodeExpansionInfosProduced> {
+        const command = new KernelCommandEnvelope(
+            RequestCodeExpansionInfosType,
+            <RequestCodeExpansionInfos>{
+                targetKernelName: ".NET", // FIX look up actual root kernel
+            }
+        );
+        const result = await (this.submitCommandAndGetResult<CodeExpansionInfosProduced>(command, CodeExpansionInfosProducedType));
         return result!;
     }
 

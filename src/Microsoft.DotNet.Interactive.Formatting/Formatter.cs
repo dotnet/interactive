@@ -111,13 +111,12 @@ public static class Formatter
         // In the lists of default formatters, the highest priority ones come first,
         // so register those last.
 
-        // TODO: (ResetToDefault) remove the need to reverse these
-        _defaultTypeFormatters.PushRange(TabularDataResourceFormatter.DefaultFormatters.Reverse().ToArray());
-        _defaultTypeFormatters.PushRange(CsvFormatter.DefaultFormatters.Reverse().ToArray());
-        _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters.Reverse().ToArray());
-        _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters.Reverse().ToArray());
-        _defaultTypeFormatters.PushRange(PlainTextSummaryFormatter.DefaultFormatters.Reverse().ToArray());
-        _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters.Reverse().ToArray());
+        _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)TabularDataResourceFormatter.DefaultFormatters).Reverse().ToArray());
+        _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)CsvFormatter.DefaultFormatters).Reverse().ToArray());
+        _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)HtmlFormatter.DefaultFormatters).Reverse().ToArray());
+        _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)JsonFormatter.DefaultFormatters).Reverse().ToArray());
+        _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)PlainTextSummaryFormatter.DefaultFormatters).Reverse().ToArray());
+        _defaultTypeFormatters.PushRange(((IEnumerable<ITypeFormatter>)PlainTextFormatter.DefaultFormatters).Reverse().ToArray());
 
         _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
 

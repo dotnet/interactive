@@ -167,7 +167,6 @@ export class CompositeKernel extends Kernel {
             ? this
             : this.getHandlingKernel(commandEnvelope, invocationContext);
 
-
         const previusoHandlingKernel = invocationContext?.handlingKernel ?? null;
 
         if (kernel === this) {
@@ -189,16 +188,20 @@ export class CompositeKernel extends Kernel {
             } else {
                 Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`);
             }
-            return kernel.handleCommand(commandEnvelope).finally(() => {
-                if (invocationContext !== null) {
-                    invocationContext.handlingKernel = previusoHandlingKernel;
-                }
-                if (!commandEnvelope.routingSlip.contains(kernelUri)) {
-                    commandEnvelope.routingSlip.stamp(kernelUri);
-                } else {
-                    Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as completed but uri ${kernelUri} is already present.`);
-                }
-            });
+            return kernel.handleCommand(commandEnvelope)
+                .catch(e => {
+                    Logger.default.error(`Error when handing command ${commandEnvelope}: ${e}`);
+                })
+                .finally(() => {
+                    if (invocationContext !== null) {
+                        invocationContext.handlingKernel = previusoHandlingKernel;
+                    }
+                    if (!commandEnvelope.routingSlip.contains(kernelUri)) {
+                        commandEnvelope.routingSlip.stamp(kernelUri);
+                    } else {
+                        Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as completed but uri ${kernelUri} is already present.`);
+                    }
+                });
         }
 
         if (invocationContext !== null) {

@@ -16,6 +16,11 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
     private KernelCommand _parent;
     private List<KernelCommand> _childCommandsToBubbleEventsFrom;
     private KernelCommand _selfOrFirstUnhiddenAncestor;
+    private int _childTokenCounter;
+
+#if DEBUG
+    private static int _nextRootToken = 0;
+#endif
 
     protected KernelCommand(string targetKernelName = null)
     {
@@ -88,8 +93,6 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         }
     }
 
-    private int _childTokenCounter;
-
     private int GetNextChildToken()
     {
         return Interlocked.Increment(ref _childTokenCounter);
@@ -102,7 +105,7 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
             return Token;
         }
 
-        if (_parent is { })
+        if (_parent is not null)
         {
             Token = $"{_parent.GetOrCreateToken()}.{_parent.GetNextChildToken()}";
             return Token;
@@ -124,18 +127,16 @@ public abstract class KernelCommand : IEquatable<KernelCommand>
         }
     }
 
-#if DEBUG
-    private static int _nextRootToken = 0;
-#endif
-
     [JsonIgnore] 
     internal SchedulingScope SchedulingScope { get; set; }
 
     [JsonIgnore] 
     internal bool? ShouldPublishCompletionEvent { get; set; }
 
-    [JsonIgnore] public CommandRoutingSlip RoutingSlip { get; }
+    [JsonIgnore] 
+    public CommandRoutingSlip RoutingSlip { get; }
 
+    [JsonIgnore]
     internal bool WasProxied { get; set; }
 
     private void ResultShouldIncludeEventsFrom(KernelCommand childCommand)

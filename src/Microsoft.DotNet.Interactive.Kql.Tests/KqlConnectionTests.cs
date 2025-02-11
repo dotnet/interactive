@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App;
-using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -30,7 +29,6 @@ public class KqlConnectionTests
 
         var kernel = new CompositeKernel
         {
-            new KqlDiscoverabilityKernel(),
             csharpKernel,
             new KeyValueStoreKernel()
         };
@@ -218,7 +216,6 @@ StormEvents | take 10
         var result = await kernel.SubmitCodeAsync(
             $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
 
-
         result.Events
             .Should()
             .NotContainErrors();
@@ -233,36 +230,6 @@ StormEvents | take 10
               .Message
               .Should()
               .Contain("Value 'my_data_result' not found in kernel kql-KustoHelp");
-    }
-
-    [KqlFact]
-    public async Task sending_query_to_kusto_will_generate_suggestions()
-    {
-        var cluster = KqlFactAttribute.GetClusterForTests();
-        using var kernel = await CreateKernelAsync();
-        var result = await kernel.SubmitCodeAsync(
-            $"#!connect kql --kernel-name KustoHelp --cluster \"{cluster}\" --database \"Samples\"");
-
-        result.Events
-              .Should()
-              .NotContainErrors();
-
-        var queryCode = "StormEvents | take 10";
-        result = await kernel.SubmitCodeAsync($@"
-#!kql
-{queryCode}
-");
-
-        result.Events
-              .Should()
-              .ContainSingle<DisplayedValueProduced>(e =>
-                                                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
-              .Which.FormattedValues.Single(f => f.MimeType == HtmlFormatter.MimeType)
-              .Value
-              .Should()
-              .Contain("#!kql-KustoHelp")
-              .And
-              .Contain(queryCode);
     }
 
     [KqlFact]

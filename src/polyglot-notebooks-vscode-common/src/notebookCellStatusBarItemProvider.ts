@@ -53,7 +53,19 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                         return item;
                     });
 
-                const selectedDisplayOption = await vscode.window.showQuickPick(kernelSelectorItems, { title: 'Select cell kernel' });
+                const recentConnectionsOption = {
+                    label: 'Connect to new subkernel...',
+                    iconPath: new vscode.ThemeIcon('plug')
+                };
+
+                const mruConnectionItems = [recentConnectionsOption];
+
+                const allItems = [
+                    ...kernelSelectorItems,
+                    { kind: vscode.QuickPickItemKind.Separator, description: '', label: '' },
+                    ...mruConnectionItems];
+
+                const selectedDisplayOption = await vscode.window.showQuickPick(allItems, { title: 'Select cell kernel' });
 
                 if (selectedDisplayOption) {
                     const selectedValueIndex = kernelSelectorItems.indexOf(selectedDisplayOption);
@@ -74,6 +86,8 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                             // update tokens
                             await vscode.commands.executeCommand('polyglot-notebook.refreshSemanticTokens');
                         }
+                    } else if (selectedDisplayOption === recentConnectionsOption) {
+                        await vscode.commands.executeCommand('polyglot-notebook.notebookEditor.connectSubkernel');
                     }
                 }
             }

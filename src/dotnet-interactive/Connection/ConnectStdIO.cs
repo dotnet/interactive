@@ -20,6 +20,7 @@ public class ConnectStdio : ConnectKernelCommand
     [JsonPropertyName("kernelHost")]
     public string KernelHostUri { get; set; }
 
+    [JsonIgnore]
     public DirectoryInfo WorkingDirectory
     {
         get => _workingDirectory ??= new DirectoryInfo(Directory.GetCurrentDirectory());
