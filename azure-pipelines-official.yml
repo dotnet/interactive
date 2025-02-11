@@ -37,7 +37,29 @@ schedules:
     - main
 
 variables:
+<<<<<<< HEAD
 - template: /eng/templates/variables-template.yml@self
+=======
+- name: _TeamName
+  value: DotNetInteractive
+- name: _BuildConfig
+  value: Release
+- name: _PublishUsingPipelines
+  value: true
+- name: _DotNetArtifactsCategory
+  value: .NETCore
+- name: DisableDockerDetector
+  value: true
+- name: NodeJSVersion
+  value: '16.13.0'
+- name: LocPRCreationEnabled
+  value: ${{ eq(variables['Build.Reason'], 'Schedule') }}
+- name: Codeql.Enabled
+  value: true
+- name: _DotNetValidationArtifactsCategory
+  value: .NETCoreValidation
+- group: DotNet-Interactive-SDLValidation-Params
+>>>>>>> b7307f61 (Jupyter test flakiness fixes (#3834))
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
 
 resources:
@@ -136,10 +158,92 @@ extends:
             - checkout: self
               clean: true
 
+<<<<<<< HEAD
               # Use common task group
             - template: /eng/templates/build-and-test-tasks.yml@self
               parameters:
                 platform: windows
+=======
+              # Azure DevOps doesn't support git symlinks on Windows so we have to fake it
+            - pwsh: . "$(Build.SourcesDirectory)\src\ensure-symlinks.ps1"
+              displayName: ensure symlinks
+
+            - task: NodeTool@0
+              displayName: Add NodeJS/npm
+              inputs:
+                versionSpec: $(NodeJSVersion)
+
+            - script: |
+                robocopy "eng\resources" "$(Build.SourcesDirectory)\artifacts"
+                :: robocopy return codes are terrible; 1 means files were copied
+                if "%errorlevel%" == "1" exit /b 0
+                exit /b 1
+              displayName: Prevent test directory crawling
+
+            - pwsh: |
+                $testArg = if ($env:SKIPTESTS -ne "true") { "-test" } else { "" }
+                Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
+              displayName: Promote variables
+
+            - script: eng\CIBuild.cmd
+                -configuration $(_BuildConfig)
+                -prepareMachine
+                -sign
+                $(_BuildArgs)
+                $(_TestArgs)
+              displayName: Build
+              env:
+                POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
+                DOTNET_INTERACTIVE_FRONTEND_NAME: CI
+
+            - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
+              displayName: Test / Blame
+              workingDirectory: $(Build.SourcesDirectory)
+              env:
+                BUILDCONFIG: $(_BuildConfig)
+                POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\pocketlogger.test.log
+              condition: ne(variables['SkipTests'], 'true')
+
+              # publish VS Code and npm test results
+            - task: PublishTestResults@2
+              displayName: Publish VS Code extension and npm test results
+              inputs:
+                testResultsFormat: VSTest
+                testResultsFiles: '**/*.*'
+                searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
+              condition: always()
+
+            - task: PowerShell@2
+              displayName: Pack VS Code Extensions
+              inputs:
+                filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
+                arguments: -stableToolVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
+                workingDirectory: "$(Build.SourcesDirectory)/src"
+                pwsh: true
+
+            - task: PowerShell@2
+              displayName: Pack NPM package
+              inputs:
+                filePath: $(Build.SourcesDirectory)/eng/package/PackNpmPackage.ps1
+                arguments: -packageVersionNumber $(StableToolVersionNumber) -outDir "$(Build.ArtifactStagingDirectory)\npm"
+                workingDirectory: "$(Build.SourcesDirectory)/src/polyglot-notebooks"
+                pwsh: true
+
+            - task: CopyFiles@2
+              displayName: Copy artifacts to $(Build.ArtifactStagingDirectory)\artifacts
+              inputs:
+                SourceFolder: 'artifacts'
+                Contents: |
+                  TestResults\**
+                  packages\**
+                TargetFolder: '$(Build.ArtifactStagingDirectory)\artifacts'
+              condition: succeededOrFailed()
+
+            # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
+            # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
+            - script: del /S $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\*.symbols.nupkg
+              displayName: Clean symbol packages
+>>>>>>> b7307f61 (Jupyter test flakiness fixes (#3834))
 
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:
@@ -167,11 +271,56 @@ extends:
             steps:
             - checkout: self
               clean: true
+<<<<<<< HEAD
               
             # Use common task group
             - template: /eng/templates/build-and-test-tasks.yml@self
               parameters:
                 platform: linux
+=======
+
+            - task: NodeTool@0
+              displayName: Add NodeJS/npm
+              inputs:
+                versionSpec: $(NodeJSVersion)
+
+            - script: |
+                mkdir -p "$(Build.SourcesDirectory)/artifacts"
+                rm -rf "$(Build.SourcesDirectory)/artifacts/*"
+                cp eng/resources/* "$(Build.SourcesDirectory)/artifacts"
+              displayName: Prevent test directory crawling
+
+            - pwsh: |
+                $testArg = if ($env:SKIPTESTS -ne "true") { "--test" } else { "" }
+                Write-Host "##vso[task.setvariable variable=_TestArgs]$testArg"
+              displayName: Promote variables
+
+            - script: ./eng/cibuild.sh
+                --configuration $(_BuildConfig)
+                --prepareMachine
+                $(_TestArgs)
+              displayName: Run tests
+              env:
+                POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
+                DOTNET_INTERACTIVE_FRONTEND_NAME: CI
+
+            - pwsh: ./test-retry-runner.ps1 -buildConfig $env:BUILDCONFIG
+              displayName: Test / Blame
+              workingDirectory: $(Build.SourcesDirectory)
+              env:
+                BUILDCONFIG: $(_BuildConfig)
+                POCKETLOGGER_LOG_PATH: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/pocketlogger.test.log
+              condition: ne(variables['SkipTests'], 'true')
+
+              # publish VS Code and npm test results
+            - task: PublishTestResults@2
+              displayName: Publish VS Code extension and npm test results
+              inputs:
+                testResultsFormat: VSTest
+                testResultsFiles: '**/*.*'
+                searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
+              condition: always()
+>>>>>>> b7307f61 (Jupyter test flakiness fixes (#3834))
 
     #---------------------------------------------------------------------------------------------------------------------#
     #                                                    Post Build                                                       #
