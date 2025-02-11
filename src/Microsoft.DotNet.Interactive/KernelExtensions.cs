@@ -138,15 +138,7 @@ public static class KernelExtensions
                     submitCode.SetParent(parentCommand);
                 }
 
-                var result = await kernel.RootKernel.SendAsync(submitCode);
-
-                // FIX: (LoadAndRunInteractiveDocument) consider publishing completion events only visible to the inner command so that he API doesn't have this difference in behavior.
-                if (result.Events.Count == 0)
-                {
-                }
-                else if (result.Events.LastOrDefault() is CommandFailed)
-                {
-                }
+                await kernel.RootKernel.SendAsync(submitCode);
             }
         }
 
