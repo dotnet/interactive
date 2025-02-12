@@ -4,12 +4,10 @@
 #nullable enable
 
 using Microsoft.DotNet.Interactive.Http.Parsing;
-using System;
 using System.Linq;
 using System.Xml;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Text.Json.Nodes;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
@@ -60,7 +58,6 @@ internal class HttpNamedRequest
                         try
                         {
                             var requestJSON = JObject.Parse(RequestNode.BodyNode.Text);
-                            //var requestJSON = JsonNode.Parse(RequestNode.BodyNode.Text);
 
                             if (requestJSON is not null)
                             {
@@ -152,17 +149,8 @@ internal class HttpNamedRequest
 
                         try
                         {
-                            //var jsonOptions = new JsonNodeOptions { PropertyNameCaseInsensitive = true };
-                            // Parse the outer JObject
-                            //JObject jObject = JObject.Parse(Response.Content.Raw);
-
-                            // Get the 'data' property, which is a string containing JSON
-                            //string dataJsonString = jObject["data"].ToString();
-
-                            // Parse the 'data' string as JSON into a JToken
                             JToken dataJToken = JToken.Parse(Response.Content.Raw);
 
-                            var pathString = String.Join(".", path);
                             if (dataJToken is not null)
                             {
                                 var resolvedPath = ResolveJsonPath(dataJToken, path, 4);
@@ -281,37 +269,11 @@ internal class HttpNamedRequest
         if (token is not null)
         {
             return ResolveJsonPath(token, path, currentIndex + 1);
-            //return result.ToString();
         }
         else
         {
             return null;
         }
-        
-        /*Console.WriteLine(responseJSON.ToString());
-        if (currentIndex + 1 == path.Length)
-        {
-            return responseJSON?.SelectToken(path[currentIndex])?.ToString();
-        }
-
-        JObject? newResponseJSON = null;
-        try
-        {
-            newResponseJSON = responseJSON[path[currentIndex]];
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
-
-        if (newResponseJSON is null)
-        {
-            return null;
-        }
-        else
-        {
-            return ResolveJsonPath(newResponseJSON, path, currentIndex + 1);
-        }*/
 
     }
 

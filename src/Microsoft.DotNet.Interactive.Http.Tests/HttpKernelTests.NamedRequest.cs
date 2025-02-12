@@ -906,7 +906,48 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             [Fact]
             public async Task accessing_an_index_in_a_json_array_succeeds()
             {
-                using var kernel = new HttpKernel();
+                var responseHandler = new InterceptingHttpMessageHandler((message, _) =>
+                {
+                    var response = new HttpResponseMessage(HttpStatusCode.OK);
+                    
+                    response.RequestMessage = message;
+                    var contentString = """
+                        {
+                          "args": {},
+                          "data": "{\r\n  \"devices\": [\r\n    {\r\n      \"id\": \"5601db0f-32e0-4d82-bc79-251e50fa1407\",\r\n      \"name\": \"Foo\"\r\n    },\r\n    {\r\n      \"id\": \"455301a5-8a6e-49d0-b056-96fb2847be18\",\r\n      \"name\": \"Bar\"\r\n    }\r\n  ]\r\n}",
+                          "files": {},
+                          "form": {},
+                          "headers": {
+                            "Content-Length": "202",
+                            "Content-Type": "text/plain; charset=utf-8",
+                            "Host": "httpbin.org",
+                            "Traceparent": "00-19bf3f145b3822f2f90ba0b2ee45e393-780351be303d7875-00",
+                            "X-Amzn-Trace-Id": "Root=1-67abd836-65a2753d05f1f0e05915d560"
+                          },
+                          "json": {
+                            "devices": [
+                              {
+                                "id": "5601db0f-32e0-4d82-bc79-251e50fa1407",
+                                "name": "Foo"
+                              },
+                              {
+                                "id": "455301a5-8a6e-49d0-b056-96fb2847be18",
+                                "name": "Bar"
+                              }
+                            ]
+                          },
+                          "method": "POST",
+                          "origin": "24.19.234.255",
+                          "url": "https://httpbin.org/anything"
+                        }
+                        """;
+                    response.Content = new StringContent(contentString, Encoding.UTF8, "application/json");
+                    
+
+                    return Task.FromResult(response);
+                });
+                var client = new HttpClient(responseHandler);
+                using var kernel = new HttpKernel("http", client);
 
                 var firstRequest = """                    
                     # @name sampleArray
