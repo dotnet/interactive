@@ -29,5 +29,6 @@
   "command.stopAllNotebookKernels": "Polyglot Notebook: 停止所有筆記本核心",
   "command.shareValueWith": "與下列項目分享值...",
   "command.restartKernel": "重新啟動",
-  "command.openValueViewer": "變數"
+  "command.openValueViewer": "變數",
+  "command.connectSubkernel": "Polyglot Notebook: Connect to new subkernel"
 }

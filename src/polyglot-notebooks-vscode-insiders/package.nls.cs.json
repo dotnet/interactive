@@ -29,5 +29,6 @@
   "command.stopAllNotebookKernels": "Polyglot Notebook: Zastavení všech jader poznámkového bloku",
   "command.shareValueWith": "Sdílet hodnotu s…",
   "command.restartKernel": "Restartovat",
-  "command.openValueViewer": "Proměnné"
+  "command.openValueViewer": "Proměnné",
+  "command.connectSubkernel": "Polyglot Notebook: Connect to new subkernel"
 }

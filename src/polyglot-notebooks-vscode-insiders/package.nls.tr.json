@@ -29,5 +29,6 @@
   "command.stopAllNotebookKernels": "Polyglot Notebook: Tüm not defteri çekirdeklerini durdur",
   "command.shareValueWith": "Değeri şununla paylaş...",
   "command.restartKernel": "Yeniden Başlat",
-  "command.openValueViewer": "Değişkenler"
+  "command.openValueViewer": "Değişkenler",
+  "command.connectSubkernel": "Polyglot Notebook: Connect to new subkernel"
 }

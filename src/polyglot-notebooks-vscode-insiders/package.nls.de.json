@@ -29,5 +29,6 @@
   "command.stopAllNotebookKernels": "Polyglot Notebook: Alle Notebookkernel beenden",
   "command.shareValueWith": "Wert freigeben für...",
   "command.restartKernel": "Neu starten",
-  "command.openValueViewer": "Variablen"
+  "command.openValueViewer": "Variablen",
+  "command.connectSubkernel": "Polyglot Notebook: Connect to new subkernel"
 }

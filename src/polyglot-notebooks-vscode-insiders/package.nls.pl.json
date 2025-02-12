@@ -29,5 +29,6 @@
   "command.stopAllNotebookKernels": "Polyglot Notebook: zatrzymaj wszystkie jądra notesu",
   "command.shareValueWith": "Udostępnij wartość...",
   "command.restartKernel": "Uruchom ponownie",
-  "command.openValueViewer": "Zmienne"
+  "command.openValueViewer": "Zmienne",
+  "command.connectSubkernel": "Polyglot Notebook: Connect to new subkernel"
 }

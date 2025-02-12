@@ -29,5 +29,6 @@
   "command.stopAllNotebookKernels": "Polyglot Notebook: остановить все ядра записных книжек",
   "command.shareValueWith": "Поделиться значением с…",
   "command.restartKernel": "Перезапустить",
-  "command.openValueViewer": "Переменные"
+  "command.openValueViewer": "Переменные",
+  "command.connectSubkernel": "Polyglot Notebook: Connect to new subkernel"
 }
