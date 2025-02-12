@@ -85,7 +85,14 @@ internal class MessagePlayback : IMessageTracker
                 }
                 else
                 {
-                    await Task.Delay(50, _cancellationTokenSource.Token);
+                    try
+                    {
+                        await Task.Delay(50, _cancellationTokenSource.Token);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        break;
+                    }
                 }
             }
             catch (Exception exception)
