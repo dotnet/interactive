@@ -369,7 +369,16 @@ internal class PolyglotSyntaxParser
 
                         ConsumeCurrentTokenInto(node);
 
-                        if (quoteCount is 2)
+                        // triple-quoted string
+                        if (CurrentToken is { Kind: TokenKind.Punctuation } and { Text: "\"" } &&
+                            CurrentTokenPlus(1) is { Kind: TokenKind.Punctuation } and { Text: "\"" })
+                        {
+                            ConsumeCurrentTokenInto(node);
+                            ConsumeCurrentTokenInto(node);
+                            quoteCount += 2;
+                        }
+
+                        if (quoteCount is 2 or 6)
                         {
                             break;
                         }
@@ -497,11 +506,6 @@ internal class PolyglotSyntaxParser
 
                     if (illegalEscapeChars > 0)
                     {
-                        if (legalEscapeChars > 0)
-                        {
-
-                        }
-
                         return false;
                     }
                 }
