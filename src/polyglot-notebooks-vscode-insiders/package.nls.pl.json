@@ -15,7 +15,6 @@
   "description.kernelTransportArgs": "Polecenie i argumenty używane do rozpoczęcia sesji notesu.",
   "description.kernelTransportWorkingDirectory": "Katalog roboczy, w którym jest uruchamiany proces transportu jądra.",
   "description.interactiveToolSource": "Źródło NuGet do użycia podczas uzyskiwania aparatu .NET Interactive.",
-  "description.minimumDotNetSdkVersion": "Minimalna wymagana wersja zestawu .NET SDK.",
   "description.requiredInteractiveToolVersion": "Wymagana wersja narzędzia aparatu .NET Interactive.",
   "command.acquire": "Zainstaluj aparat .NET Interactive",
   "command.openNotebook": "Polyglot Notebook: otwórz notes",

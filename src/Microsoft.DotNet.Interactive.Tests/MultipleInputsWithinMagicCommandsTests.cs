@@ -85,7 +85,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
             ["name"] = "age",
             ["value"] = "123",
             ["anotherValue"] = "456",
-            ["fileValue"] = @"c:\temp\some-file.txt",
+            ["fileValue"] = @"c:\temp\some-file.txt"
         });
 
         var result = await _kernel.SendAsync(

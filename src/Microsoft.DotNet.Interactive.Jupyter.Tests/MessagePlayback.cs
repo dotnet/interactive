@@ -52,38 +52,53 @@ internal class MessagePlayback : IMessageTracker
 
         while (!_cancellationTokenSource.IsCancellationRequested)
         {
-            if (_processRequests.TryDequeue(out var message))
+            try
             {
-                // find appropriate message from playback to send back since we 
-                // can't match the messageIds.
-                var responses = _playbackMessages
-                                .GroupBy(m => new { MsgId = m.ParentHeader?.MessageId, MsgType = m.ParentHeader?.MessageType })
-                                .FirstOrDefault(g => g.Key.MsgType == message.Header.MessageType);
-
-                if (responses is not null)
+                if (_processRequests.TryDequeue(out var message))
                 {
-                    foreach (var m in responses)
-                    {
-                        var replyMessage = new Message(
-                            m.Header,
-                            GetContent(message, m),
-                            new Header(
-                                m.ParentHeader?.MessageType,
-                                message.Header.MessageId, // reply back with the sent message id
-                                m.ParentHeader.Version,
-                                m.ParentHeader.Session,
-                                m.ParentHeader.Username,
-                                m.ParentHeader.Date),
-                            m.Signature, m.MetaData, m.Identifiers, m.Buffers, m.Channel);
+                    // find appropriate message from playback to send back since we 
+                    // can't match the messageIds.
+                    var responses = _playbackMessages
+                                    .GroupBy(m => new { MsgId = m.ParentHeader?.MessageId, MsgType = m.ParentHeader?.MessageType })
+                                    .FirstOrDefault(g => g.Key.MsgType == message.Header.MessageType);
 
-                        _receivedMessages.OnNext(replyMessage);
-                        _playbackMessages.Remove(m);
+                    if (responses is not null)
+                    {
+                        foreach (var m in responses)
+                        {
+                            var replyMessage = new Message(
+                                m.Header,
+                                GetContent(message, m),
+                                new Header(
+                                    m.ParentHeader?.MessageType,
+                                    message.Header.MessageId, // reply back with the sent message id
+                                    m.ParentHeader.Version,
+                                    m.ParentHeader.Session,
+                                    m.ParentHeader.Username,
+                                    m.ParentHeader.Date),
+                                m.Signature, m.MetaData, m.Identifiers, m.Buffers, m.Channel);
+
+                            _receivedMessages.OnNext(replyMessage);
+                            _playbackMessages.Remove(m);
+                        }
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        await Task.Delay(50, _cancellationTokenSource.Token);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        break;
                     }
                 }
             }
-            else
+            catch (Exception exception)
             {
-                await Task.Delay(50, _cancellationTokenSource.Token);
+                operation.Fail(exception);
+                return;
             }
         }
 

@@ -5,8 +5,6 @@ using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Messaging.Comms;
@@ -53,43 +51,13 @@ internal class CommsManager : IDisposable
         _disposables.Dispose();
     }
 
-    public void RegisterTarget(ICommTarget target)
-    {
-        if (target == null)
-        {
-            throw new ArgumentNullException(nameof(target));
-        }
-
-        if (_targets.ContainsKey(target.Name))
-        {
-            throw new ArgumentException($"{target.Name} is already registered");
-        }
-
-        _targets.Add(target.Name, target);
-    }
-
     public async Task<CommAgent> OpenCommAsync(string targetName, string commId = null, IReadOnlyDictionary<string, object> data = null)
     {
         var agent = AddAgent(commId);
 
-        await _sender.SendAsync(Messaging.Message.Create(new CommOpen(agent.CommId, targetName, data)));
+        await _sender.SendAsync(Message.Create(new CommOpen(agent.CommId, targetName, data)));
 
         return agent;
-    }
-
-    public async Task<IReadOnlyDictionary<string, CommTarget>> CurrentCommsAsync()
-    {
-        var request = Messaging.Message.Create(new CommInfoRequest());
-
-        var reply = _receiver.Messages.ResponseOf(request)
-                                .Content()
-                                .OfType<CommInfoReply>()
-                                .Take(1);
-
-        await _sender.SendAsync(request);
-        var results = await reply.ToTask();
-
-        return results?.Comms;
     }
 
     private async Task HandleCommOpenRequestAsync(CommOpen commOpen)
@@ -97,11 +65,12 @@ internal class CommsManager : IDisposable
         if (string.IsNullOrEmpty(commOpen.TargetName) || string.IsNullOrEmpty(commOpen.CommId) ||
             !_targets.TryGetValue(commOpen.TargetName, out ICommTarget target))
         {
-            var commClose = new CommClose(commOpen.CommId, new Dictionary<string, object>() {
+            var commClose = new CommClose(commOpen.CommId, new Dictionary<string, object> 
+            {
                 { "reason", $"Comm target '{commOpen.TargetName}' is not registered on the client"}
             });
 
-            await _sender.SendAsync(Messaging.Message.Create(commClose));
+            await _sender.SendAsync(Message.Create(commClose));
             return;
         }
 
@@ -112,10 +81,15 @@ internal class CommsManager : IDisposable
     private CommAgent AddAgent(string commId)
     {
         CommAgent agent;
+
         if (string.IsNullOrEmpty(commId) || !_agents.TryGetValue(commId, out agent))
         {
             agent = new CommAgent(commId ?? Guid.NewGuid().ToString(),
                               _sender, _receiver);
+        }
+        else
+        {
+            // FIX: (AddAgent) this looks like it should be an exception
         }
 
         _agents.Add(agent.CommId, agent);

@@ -388,7 +388,13 @@ type FSharpKernel () as this =
         task {
             match script.Value.Fsi.TryFindBoundValue(requestValue.Name) with
             | Some cv ->
-                context.PublishValueProduced(requestValue, cv.Value.ReflectionValue)
+                context.Publish(new ValueProduced(
+                                cv.Value.ReflectionValue,
+                                requestValue.Name,
+                                new FormattedValue(
+                                    requestValue.MimeType,
+                                    cv.Value.ReflectionValue.ToDisplayString(requestValue.MimeType)),
+                                requestValue))
             | _ ->
                 context.Fail(requestValue, message=(sprintf "Value '%s' not found in kernel %s" requestValue.Name this.Name))
         }

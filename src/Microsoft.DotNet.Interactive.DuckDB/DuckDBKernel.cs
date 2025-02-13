@@ -10,6 +10,7 @@ using DuckDB.NET.Data;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -158,7 +159,13 @@ public class DuckDBKernel : Kernel,
     {
         if (TryGetValue<object>(command.Name, out var value))
         {
-            context.PublishValueProduced(command, value);
+            context.Publish(new ValueProduced(
+                                value,
+                                command.Name,
+                                new FormattedValue(
+                                    command.MimeType,
+                                    value.ToDisplayString(command.MimeType)),
+                                command));
         }
         else
         {
