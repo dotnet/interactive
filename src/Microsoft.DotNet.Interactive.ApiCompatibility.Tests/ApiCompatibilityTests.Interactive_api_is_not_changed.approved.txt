@@ -221,9 +221,6 @@ Microsoft.DotNet.Interactive
   public static class KernelInvocationContextExtensions
     public static DisplayedValue Display(System.Object value, System.String[] mimeTypes)
     public static DisplayedValue DisplayAs(System.String value, System.String mimeType)
-    public static System.Void DisplayStandardError(System.String error, Microsoft.DotNet.Interactive.Commands.KernelCommand command = null)
-    public static System.Void DisplayStandardOut(System.String output, Microsoft.DotNet.Interactive.Commands.KernelCommand command = null)
-    public static System.Void PublishValueProduced(Microsoft.DotNet.Interactive.Commands.RequestValue requestValue, System.Object value)
   public delegate KernelPipelineContinuation : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable
     .ctor(System.Object object, System.IntPtr method)
     public System.IAsyncResult BeginInvoke(Microsoft.DotNet.Interactive.Commands.KernelCommand command, KernelInvocationContext context, System.AsyncCallback callback, System.Object object)
@@ -296,14 +293,6 @@ Microsoft.DotNet.Interactive
     public System.String PackageName { get;}
     public System.String PackageVersion { get;}
     public System.String ToString()
-  public class PackageReferenceOrFileInfo
-    public static PackageReferenceOrFileInfo op_Implicit(System.IO.FileInfo source)
-    public static PackageReferenceOrFileInfo op_Implicit(PackageReference source)
-    .ctor(System.IO.FileInfo fileInfo)
-    .ctor(PackageReference packageReference)
-    public System.IO.FileInfo FileInfo { get;}
-    public PackageReference PackageReference { get;}
-    public System.Object Value { get;}
   public class ParameterInformation
     .ctor(System.String label, FormattedValue documentation)
     public FormattedValue Documentation { get;}

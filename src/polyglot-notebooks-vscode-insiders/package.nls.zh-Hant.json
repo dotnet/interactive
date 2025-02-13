@@ -15,7 +15,6 @@
   "description.kernelTransportArgs": "用來啟動筆記本工作階段的命令和引數。",
   "description.kernelTransportWorkingDirectory": "核心傳輸流程啟動所在的工作目錄。",
   "description.interactiveToolSource": "取得 .NET 互動工具時要使用的 NuGet 來源。",
-  "description.minimumDotNetSdkVersion": ".NET SDK 所需的最低版本。",
   "description.requiredInteractiveToolVersion": ".NET 互動工具的必要版本。",
   "command.acquire": "安裝 .NET 互動",
   "command.openNotebook": "Polyglot Notebook: 開啟筆記本",

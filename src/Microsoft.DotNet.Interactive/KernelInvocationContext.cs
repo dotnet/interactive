@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
-using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -53,7 +53,7 @@ public class KernelInvocationContext : IDisposable
                     _ownsCancellationTokenSource = true;
                     return new CancellationTokenSource();
                 }
-        );
+            );
 
         Command = command;
 
@@ -65,8 +65,8 @@ public class KernelInvocationContext : IDisposable
         {
             return new CompositeDisposable
             {
-                c.Out.Subscribe(s => this.DisplayStandardOut(s, command)),
-                c.Error.Subscribe(s => this.DisplayStandardError(s, command))
+                c.Out.Subscribe(s => this.DisplayStandardOut(s, CurrentlyExecutingCommand)),
+                c.Error.Subscribe(s => this.DisplayStandardError(s, CurrentlyExecutingCommand))
             };
         }));
 
@@ -298,7 +298,9 @@ public class KernelInvocationContext : IDisposable
         }
     }
 
-    public static KernelInvocationContext GetOrCreateAmbientContext(KernelCommand command, ConcurrentDictionary<string, KernelInvocationContext> contextsByRootToken = null)
+    public static KernelInvocationContext GetOrCreateAmbientContext(
+        KernelCommand command, 
+        ConcurrentDictionary<string, KernelInvocationContext> contextsByRootToken = null)
     {
         if (_current.Value is null)
         {
