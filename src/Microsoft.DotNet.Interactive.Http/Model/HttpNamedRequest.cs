@@ -3,17 +3,24 @@
 
 #nullable enable
 
+using Microsoft.CodeAnalysis.Differencing;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using System;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
 internal class HttpNamedRequest
 {
+
+    const string arrayPattern = @"^(\w+)\[(\d+)\]$";
+
+    internal static readonly Regex arrayRegex = new Regex(arrayPattern, RegexOptions.Compiled);
+
     internal HttpNamedRequest(HttpRequestNode httpRequestNode, HttpResponse response)
     {
         RequestNode = httpRequestNode;
@@ -263,7 +270,32 @@ internal class HttpNamedRequest
         JsonNode? newResponseJSON = null;
         try
         {
-            newResponseJSON = responseJSON[path[currentIndex]];
+            if (responseJSON is JsonObject j)
+            {
+
+                var pathMatch = arrayRegex.Match(path[currentIndex]);
+                if (pathMatch.Success)
+                {
+
+                    // Extract the array name and index
+                    string arrayName = pathMatch.Groups[1].Value;
+                    string indexString = pathMatch.Groups[2].Value;
+
+                    // Cast the index from string to int
+                    int index = int.Parse(indexString);
+
+                    newResponseJSON = j[arrayName][index];
+                } 
+                else
+                {
+                    newResponseJSON = j[path[currentIndex]];
+                }
+            }
+            else
+            {
+                newResponseJSON = responseJSON[path[currentIndex]];
+            }
+
         }
         catch (InvalidOperationException)
         {
