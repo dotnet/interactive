@@ -30,7 +30,7 @@ public abstract class LanguageKernelTestBase : IDisposable
 
     static LanguageKernelTestBase()
     {
-        TaskScheduler.UnobservedTaskException += (sender, args) =>
+        TaskScheduler.UnobservedTaskException += (_, args) =>
         {
             Log.Error($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
             args.SetObserved();
@@ -58,12 +58,11 @@ public abstract class LanguageKernelTestBase : IDisposable
         bool openTestingNamespaces = false)
     {
         return CreateCompositeKernel(
-            new[]
-            {
+            [
                 CreateFSharpKernelAndAliases(openTestingNamespaces),
                 CreateCSharpKernelAndAliases(),
-                CreatePowerShellKernelAndAliases(),
-            },
+                CreatePowerShellKernelAndAliases()
+            ],
             defaultKernelLanguage);
     }
 
@@ -78,7 +77,7 @@ public abstract class LanguageKernelTestBase : IDisposable
             _ => throw new InvalidOperationException($"Unknown language specified: {defaultLanguage}")
         };
 
-        return CreateCompositeKernel(new[] { languageKernel }, defaultLanguage);
+        return CreateCompositeKernel([languageKernel], defaultLanguage);
     }
 
     private CompositeKernel CreateCompositeKernel(IEnumerable<(Kernel, IEnumerable<string>)> subkernelsAndAliases, Language defaultKernelLanguage)
@@ -102,10 +101,12 @@ public abstract class LanguageKernelTestBase : IDisposable
     private Kernel UseExtraNamespacesForFSharpTesting(Kernel kernel)
     {
         var code =
-            "open " + typeof(Task).Namespace + Environment.NewLine +
-            "open " + typeof(System.Linq.Enumerable).Namespace + Environment.NewLine +
-            "open " + typeof(AspNetCore.Html.IHtmlContent).Namespace + Environment.NewLine +
-            "open " + typeof(FSharp.FSharpKernelHelpers.Html).FullName + Environment.NewLine;
+            $"""
+            open {typeof(Task).Namespace}
+            open {typeof(System.Linq.Enumerable).Namespace}
+            open {typeof(AspNetCore.Html.IHtmlContent).Namespace}
+            open {typeof(FSharp.FSharpKernelHelpers.Html).FullName}
+            """;
 
         kernel.DeferCommand(new SubmitCode(code));
         return kernel;
@@ -126,41 +127,21 @@ public abstract class LanguageKernelTestBase : IDisposable
             kernel = UseExtraNamespacesForFSharpTesting(kernel);
         }
 
-        return (kernel, new[]
-        {
-            "f#",
-            "F#"
-        });
+        return (kernel, ["f#", "F#"]);
     }
 
-    private (Kernel, IEnumerable<string>) CreateCSharpKernelAndAliases()
-    {
-        return (CreateCSharpKernel(),
-            new[]
-            {
-                "c#",
-                "C#"
-            });
-    }
+    private (Kernel, IEnumerable<string>) CreateCSharpKernelAndAliases() => 
+        (CreateCSharpKernel(), ["c#", "C#"]);
 
-    protected virtual CSharpKernel CreateCSharpKernel()
-    {
-        return new CSharpKernel()
+    protected virtual CSharpKernel CreateCSharpKernel() =>
+        new CSharpKernel()
             .UseNugetDirective()
             .UseKernelHelpers()
             .UseValueSharing()
             .UseWho();
-    }
 
-    private (Kernel, IEnumerable<string>) CreatePowerShellKernelAndAliases()
-    {
-        return (new PowerShellKernel()
-                .UseValueSharing(),
-            new[]
-            {
-                "powershell"
-            });
-    }
+    private (Kernel, IEnumerable<string>) CreatePowerShellKernelAndAliases() => 
+        (new PowerShellKernel().UseValueSharing(), ["powershell"]);
 
     public async Task SubmitCode(Kernel kernel, string[] submissions)
     {

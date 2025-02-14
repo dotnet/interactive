@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -8,6 +10,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -128,15 +131,17 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
             kernel.DefaultKernelName = "csharp";
 
             var result = await kernel.SubmitCodeAsync(
-                             @"
-using System.Reactive.Linq;
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
+                             """
 
-var result = await Kernel.Root.SendAsync(new SubmitCode(""123"", ""fsharp""));
+                             using System.Reactive.Linq;
+                             using Microsoft.DotNet.Interactive;
+                             using Microsoft.DotNet.Interactive.Commands;
 
-result.Events.Last()
-");
+                             var result = await Kernel.Root.SendAsync(new SubmitCode("123", "fsharp"));
+
+                             result.Events.Last()
+
+                             """);
 
             result.Events.Should().NotContainErrors();
 
@@ -154,20 +159,61 @@ result.Events.Last()
                 new CSharpKernel("cs2")
             };
 
-            var result = await kernel.SendAsync(new SubmitCode(
-                                                    @"
-using System.Reactive.Linq;
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
+            var result = await kernel.SendAsync(
+                             new SubmitCode(
+                                 """
 
-var result = await Kernel.Root.SendAsync(new SubmitCode(""nope"", ""cs2""));
+                                 using System.Reactive.Linq;
+                                 using Microsoft.DotNet.Interactive;
+                                 using Microsoft.DotNet.Interactive.Commands;
 
-result.Events.Last()
-", "cs1"));
+                                 var result = await Kernel.Root.SendAsync(new SubmitCode("nope", "cs2"));
+
+                                 result.Events.Last()
+
+                                 """, "cs1"));
 
             result.Events
                   .Should()
                   .ContainSingle<ReturnValueProduced>(e => e.Value is CommandFailed);
+        }
+
+        [Fact]
+        public async Task Commands_sent_within_the_code_of_another_command_publish_StandardOutputValueProduced_to_the_inner_result()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel(),
+                new PowerShellKernel()
+            };
+
+            var result = await kernel.SendAsync(
+                             new SubmitCode(
+                                 """
+
+                                 using System.Reactive.Linq;
+                                 using Microsoft.DotNet.Interactive;
+                                 using Microsoft.DotNet.Interactive.Commands;
+
+                                 var result = await Kernel.Root.SendAsync(new SubmitCode("echo 123", "pwsh"));
+
+                                 result.Events
+
+                                 """, "csharp"));
+
+            var returnedValueFromCSharp = result.Events
+                                                .Should()
+                                                .ContainSingle<ReturnValueProduced>()
+                                                .Which.Value;
+
+            returnedValueFromCSharp
+                .Should().BeOfType<List<KernelEvent>>()
+                .Which
+                .Should().ContainSingle<StandardOutputValueProduced>()
+                .Which.FormattedValues
+                .Should().ContainSingle()
+                .Which.Value
+                .Should().Be("123" + Environment.NewLine);
         }
     }
 }

@@ -43,7 +43,7 @@ internal class KernelDirectiveConverter : JsonConverter<KernelDirective>
 
         while (reader.Read())
         {
-            if (reader.TokenType == JsonTokenType.PropertyName)
+            if (reader.TokenType is JsonTokenType.PropertyName)
             {
                 switch (reader.GetString())
                 {
@@ -67,7 +67,7 @@ internal class KernelDirectiveConverter : JsonConverter<KernelDirective>
                         break;
                 }
             }
-            else if (reader.TokenType == JsonTokenType.EndObject)
+            else if (reader.TokenType is JsonTokenType.EndObject)
             {
                 break;
             }

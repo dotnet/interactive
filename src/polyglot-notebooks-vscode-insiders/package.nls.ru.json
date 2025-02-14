@@ -15,7 +15,6 @@
   "description.kernelTransportArgs": "Команда и аргументы, используемые для запуска сеанса записной книжки.",
   "description.kernelTransportWorkingDirectory": "Рабочий каталог, в котором запущен транспортный процесс ядра.",
   "description.interactiveToolSource": "Источник NuGet, используемый при получении инструмента .NET Interactive.",
-  "description.minimumDotNetSdkVersion": "Минимальная требуемая версия пакета SDK для .NET.",
   "description.requiredInteractiveToolVersion": "Требуемая версия инструмента .NET Interactive.",
   "command.acquire": "Установить .NET Interactive",
   "command.openNotebook": "Polyglot Notebook: открыть записную книжку",

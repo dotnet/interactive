@@ -72,7 +72,7 @@ public class ConnectJupyterKernelDirective : ConnectKernelDirective<ConnectJupyt
         {
             kernel.RegisterForDisposal(disposableConnection);
         }
-        return new[] { kernel };
+        return [kernel];
     }
 
     private IJupyterConnection GetJupyterConnection(ConnectJupyterKernel connectCommand)

@@ -247,10 +247,8 @@ public class ImportNotebookTests
 
         await File.WriteAllTextAsync(filePath, notebookContents);
 
-        using var events = kernel.KernelEvents.ToSubscribedList();
+        var result = await kernel.SubmitCodeAsync($"#!import {filePath}");
 
-        await kernel.SubmitCodeAsync($"#!import {filePath}");
-
-        events.Should().NotContainErrors();
+        result.Events.Should().NotContainErrors();
     }
 }

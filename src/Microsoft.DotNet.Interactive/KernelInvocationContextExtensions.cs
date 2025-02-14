@@ -66,7 +66,7 @@ public static class KernelInvocationContextExtensions
         return displayedValue;
     }
 
-    public static void DisplayStandardOut(
+    internal static void DisplayStandardOut(
         this KernelInvocationContext context,
         string output,
         KernelCommand command = null)
@@ -82,7 +82,7 @@ public static class KernelInvocationContextExtensions
                 formattedValues));
     }
 
-    public static void DisplayStandardError(
+    internal static void DisplayStandardError(
         this KernelInvocationContext context,
         string error,
         KernelCommand command = null)
@@ -96,30 +96,5 @@ public static class KernelInvocationContextExtensions
             new StandardErrorValueProduced(
                 command ?? context.Command,
                 formattedValues));
-    }
-
-    public static void PublishValueProduced(
-        this KernelInvocationContext context,
-        RequestValue requestValue,
-        object value)
-    {
-        var valueType = value?.GetType();
-
-        var requestedMimeType = requestValue.MimeType;
-
-        var formatter = Formatter.GetPreferredFormatterFor(valueType, requestedMimeType);
-
-        using var writer = new StringWriter(CultureInfo.InvariantCulture);
-        formatter.Format(value, writer);
-
-        var formatted = new FormattedValue(
-            requestedMimeType,
-            writer.ToString());
-
-        context.Publish(new ValueProduced(
-            value,
-            requestValue.Name,
-            formatted,
-            requestValue));
     }
 }

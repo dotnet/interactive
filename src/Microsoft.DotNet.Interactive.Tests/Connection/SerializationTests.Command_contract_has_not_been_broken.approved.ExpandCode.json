@@ -1,0 +1,15 @@
+{
+  "token": "the-token",
+  "commandType": "ExpandCode",
+  "command": {
+    "name": "#!sql-adventureworks",
+    "insertAtPosition": null,
+    "targetKernelName": null,
+    "originUri": null,
+    "destinationUri": null
+  },
+  "routingSlip": [
+    "kernel://somelocation/kernelName?tag=arrived",
+    "kernel://somelocation/kernelName"
+  ]
+}

@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.ValueSharing;
 
@@ -355,7 +356,13 @@ public abstract class ToolsServiceKernel :
     {
         if (TryGetValue<object>(command.Name, out var value))
         {
-            context.PublishValueProduced(command, value);
+            context.Publish(new ValueProduced(
+                                value,
+                                command.Name,
+                                new FormattedValue(
+                                    command.MimeType,
+                                    value.ToDisplayString(command.MimeType)),
+                                command));
         }
         else
         {

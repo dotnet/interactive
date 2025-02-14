@@ -72,8 +72,17 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
         };
 
         const notebookoptions: vscode.NotebookDocumentContentOptions = notebookType === commandsAndEvents.DocumentSerializationType.Dib
-            ? { transientOutputs: true, transientDocumentMetadata: { custom: true }, transientCellMetadata: { custom: true } }
-            : {};
+            // FIX: does this solve incorrect dirty state?
+            ? {
+                transientOutputs: true,
+                transientDocumentMetadata: { custom: true },
+                transientCellMetadata: { custom: true }
+            }
+            : {
+                transientOutputs: true,
+                transientDocumentMetadata: { custom: true },
+                transientCellMetadata: { custom: true }
+            };
 
         const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer, notebookoptions);
         context.subscriptions.push(notebookSerializer);

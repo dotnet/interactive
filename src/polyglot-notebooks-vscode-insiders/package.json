@@ -132,22 +132,18 @@
             "fsharp",
             "html",
             "javascript",
-            "kql",
             "markdown",
             "mermaid",
-            "pwsh",
-            "sql"
+            "pwsh"
           ],
           "enumDescriptions": [
             "C#",
             "F#",
             "HTML",
             "JavaScript",
-            "KQL",
             "Markdown",
             "Mermaid",
-            "PowerShell",
-            "SQL"
+            "PowerShell"
           ]
         },
         "polyglot-notebook.kernelEnvironmentVariables": {
@@ -211,11 +207,6 @@
           "type": "string",
           "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",
           "description": "%description.interactiveToolSource%"
-        },
-        "dotnet-interactive.minimumDotNetSdkVersion": {
-          "type": "string",
-          "default": "9.0",
-          "description": "%description.minimumDotNetSdkVersion%"
         },
         "dotnet-interactive.requiredInteractiveToolVersion": {
           "type": "string",
@@ -302,6 +293,11 @@
         "command": "polyglot-notebook.notebookEditor.openValueViewer",
         "title": "%command.openValueViewer%",
         "icon": "$(variable-group)"
+      },
+      {
+        "command": "polyglot-notebook.notebookEditor.connectSubkernel",
+        "title": "%command.connectSubkernel%",
+        "icon": "$(plug)"
       }
     ],
     "keybindings": [

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -13,6 +14,10 @@ using FluentAssertions;
 using FluentAssertions.Equivalency;
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
+using Microsoft.DotNet.Interactive.App;
+using Microsoft.DotNet.Interactive.App.Commands;
+using Microsoft.DotNet.Interactive.App.Connection;
+using Microsoft.DotNet.Interactive.App.Events;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -27,12 +32,31 @@ using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
+using CommandLineParser = Microsoft.DotNet.Interactive.App.CommandLine.CommandLineParser;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
 [Trait("Category", "Contracts and serialization")]
 public class SerializationTests
 {
+    private static readonly IEnumerable<Assembly> _assembliesWhereCommandEventTypesAreFound = new[]
+        {
+            typeof(CommandLineParser),
+            typeof(Kernel),
+            typeof(CSharpKernel),
+            typeof(FSharpKernel),
+            typeof(HttpKernel),
+            typeof(PowerShellKernel),
+        }
+        .Select(t => t.Assembly);
+
+    static SerializationTests()
+    {
+        KernelCommandEnvelope.RegisterCommand<ExpandCode>();
+        KernelCommandEnvelope.RegisterCommand<RequestCodeExpansionInfos>();
+        KernelEventEnvelope.RegisterEvent<CodeExpansionInfosProduced>();
+    }
+
     private readonly ITestOutputHelper _output;
 
     public SerializationTests(ITestOutputHelper output)
@@ -90,7 +114,6 @@ public class SerializationTests
             {
                 return true;
             }
-
         }
 
         return false;
@@ -129,18 +152,8 @@ public class SerializationTests
     [Fact]
     public void All_command_types_are_tested_for_round_trip_serialization()
     {
-        var commandTypes = new[]
-                           {
-                               typeof(Kernel),
-                               typeof(CSharpKernel),
-                               typeof(FSharpKernel),
-                               typeof(HttpKernel),
-                               typeof(PowerShellKernel),
-                           }
-                           .Select(t => t.Assembly)
-                           .SelectMany(a => a.ExportedTypes);
-
-        var interactiveCommands = commandTypes
+        var knownCommandTypes = _assembliesWhereCommandEventTypesAreFound
+                                  .SelectMany(a => a.ExportedTypes)
                                   .Concrete()
                                   .DerivedFrom(typeof(KernelCommand));
 
@@ -148,23 +161,22 @@ public class SerializationTests
             .Select(e => e[0].GetType())
             .Distinct()
             .Should()
-            .BeEquivalentTo(interactiveCommands);
+            .BeEquivalentTo(knownCommandTypes);
     }
 
     [Fact]
     public void All_event_types_are_tested_for_round_trip_serialization()
     {
-        var interactiveEvents = typeof(Kernel)
-            .Assembly
-            .ExportedTypes
-            .Concrete()
-            .DerivedFrom(typeof(KernelEvent));
+        var knownEventTypes = _assembliesWhereCommandEventTypesAreFound
+                              .SelectMany(a => a.ExportedTypes)
+                              .Concrete()
+                              .DerivedFrom(typeof(KernelEvent));
 
         Events()
             .Select(e => e[0].GetType())
             .Distinct()
             .Should()
-            .BeEquivalentTo(interactiveEvents);
+            .BeEquivalentTo(knownEventTypes);
     }
 
     public static IEnumerable<object[]> Commands()
@@ -176,7 +188,7 @@ public class SerializationTests
                      return c;
                  }))
         {
-            yield return new object[] { command };
+            yield return [command];
         }
 
         IEnumerable<KernelCommand> commands()
@@ -187,13 +199,27 @@ public class SerializationTests
 
             yield return new ClearValues();
 
+            yield return new ConnectSignalR("dotnet-interactive")
+            {
+                HubUrl = new("https://example.com/hub")
+            };
+
+            yield return new ConnectStdio("dotnet-interactive")
+            {
+                Command = ["dotnet-interactive", "stdio", "--default-kernel", "fsharp"]
+            };
+
             yield return new DisplayError("oops!");
 
             yield return new DisplayValue(
                 new FormattedValue("text/html", "<b>hi!</b>")
             );
 
+            yield return new ExpandCode("#!sql-adventureworks");
+
             yield return new ImportDocument(@"c:\temp\some.ipynb");
+
+            yield return new RequestCodeExpansionInfos();
 
             yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
@@ -217,7 +243,10 @@ public class SerializationTests
 
             yield return new RequestSignatureHelp("sig-help-contents", new LinePosition(1, 2));
 
-            yield return new SendEditableCode("someKernelName", "code");
+            yield return new SendEditableCode("someKernelName", "code")
+            {
+                InsertAtPosition = 123
+            };
 
             yield return new SubmitCode("123", "csharp")
             {
@@ -266,11 +295,16 @@ public class SerializationTests
                      return e;
                  }))
         {
-            yield return new object[] { @event };
+            yield return [@event];
         }
 
         IEnumerable<KernelEvent> events()
         {
+            yield return new CodeExpansionInfosProduced([
+                new CodeExpansionInfo("Kusto Query Language", CodeExpansion.CodeExpansionKind.DataConnection),
+                new CodeExpansionInfo("Microsoft SQL Database", CodeExpansion.CodeExpansionKind.DataConnection)
+            ], new RequestCodeExpansionInfos());
+
             yield return new CodeSubmissionReceived(
                 new SubmitCode("123"));
 
@@ -292,8 +326,7 @@ public class SerializationTests
             var requestCompletion = new RequestCompletions("Console.Wri", new LinePosition(0, 11));
 
             yield return new CompletionsProduced(
-                new[]
-                {
+                [
                     new CompletionItem(
                         displayText: "WriteLine",
                         kind: "Method",
@@ -302,7 +335,7 @@ public class SerializationTests
                         insertText: "WriteLine",
                         insertTextFormat: InsertTextFormat.Snippet,
                         documentation: "Writes the line")
-                },
+                ],
                 requestCompletion);
 
             var diagnostic = new Diagnostic(
@@ -321,19 +354,17 @@ public class SerializationTests
             yield return new DisplayedValueProduced(
                 new HtmlString("<b>hi!</b>"),
                 new SubmitCode("b(\"hi!\")", "csharp"),
-                new[]
-                {
-                    new FormattedValue("text/html", "<b>hi!</b>"),
-                });
+                [
+                    new FormattedValue("text/html", "<b>hi!</b>")
+                ]);
 
             yield return new DisplayedValueUpdated(
                 new HtmlString("<b>hi!</b>"),
                 "the-value-id",
                 new SubmitCode("b(\"hi!\")", "csharp"),
-                new[]
-                {
-                    new FormattedValue("text/html", "<b>hi!</b>"),
-                });
+                [
+                    new FormattedValue("text/html", "<b>hi!</b>")
+                ]);
 
             yield return new ErrorProduced("oops!", new SubmitCode("123"));
 
@@ -343,7 +374,7 @@ public class SerializationTests
 
             yield return new HoverTextProduced(
                 requestHoverTextCommand,
-                new[] { new FormattedValue("text/markdown", "markdown") },
+                [new FormattedValue("text/markdown", "markdown")],
                 new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
             yield return new KernelInfoProduced(
@@ -406,47 +437,43 @@ public class SerializationTests
                 new ResolvedPackageReference(
                     packageName: "ThePackage",
                     packageVersion: "1.2.3",
-                    assemblyPaths: new[] { "/path/to/a.dll" },
+                    assemblyPaths: ["/path/to/a.dll"],
                     packageRoot: "/the/package/root",
-                    probingPaths: new[] { "/probing/path/1", "/probing/path/2" }),
+                    probingPaths: ["/probing/path/1", "/probing/path/2"]),
                 new SubmitCode("#r \"nuget:ThePackage,1.2.3\""));
 
             yield return new ReturnValueProduced(
                 new HtmlString("<b>hi!</b>"),
                 new SubmitCode("b(\"hi!\")", "csharp"),
-                new[]
-                {
-                    new FormattedValue("text/html", "<b>hi!</b>"),
-                });
+                [
+                    new FormattedValue("text/html", "<b>hi!</b>")
+                ]);
 
             yield return new SignatureHelpProduced(
                 new RequestSignatureHelp("sig-help-contents", new LinePosition(1, 2)),
-                new[]
-                {
+                [
                     new SignatureInformation("label",
-                        new FormattedValue("text/html", "sig-help-result"),
-                        new[]
-                        {
-                            new ParameterInformation("param1", new FormattedValue("text/html", "param1")),
-                            new ParameterInformation("param2", new FormattedValue("text/html", "param2"))
-                        })
-                },
+                                             new FormattedValue("text/html", "sig-help-result"),
+                                             new[]
+                                             {
+                                                 new ParameterInformation("param1", new FormattedValue("text/html", "param1")),
+                                                 new ParameterInformation("param2", new FormattedValue("text/html", "param2"))
+                                             })
+                ],
                 0,
                 1);
 
             yield return new StandardErrorValueProduced(
                 new SubmitCode("123"),
-                new[]
-                {
+                [
                     new FormattedValue("text/plain", "oops!")
-                });
+                ]);
 
             yield return new StandardOutputValueProduced(
                 new SubmitCode("Console.Write(123);", "csharp"),
-                new[]
-                {
+                [
                     new FormattedValue("text/plain", "123")
-                });
+                ]);
 
             yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
 

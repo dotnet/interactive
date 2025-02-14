@@ -18,7 +18,6 @@
   "description.kernelTransportArgs": "Command and arguments used to start a notebook session.",
   "description.kernelTransportWorkingDirectory": "The working directory in which the kernel transport process is started.",
   "description.interactiveToolSource": "The NuGet source to use when acquiring the .NET Interactive tool.",
-  "description.minimumDotNetSdkVersion": "The minimum required version of the .NET SDK.",
   "description.requiredInteractiveToolVersion": "The required version of the .NET Interactive tool.",
   "command.acquire": "Install .NET Interactive",
   "command.openNotebook": "Polyglot Notebook: Open notebook",
@@ -39,5 +38,6 @@
   "_command.stopAllNotebookKernels.comment": "{Locked='Polyglot Notebook'}",
   "command.shareValueWith": "Share value with...",
   "command.restartKernel": "Restart",
-  "command.openValueViewer": "Variables"
+  "command.openValueViewer": "Variables",
+  "command.connectSubkernel": "Polyglot Notebook: Connect to new subkernel"
 }

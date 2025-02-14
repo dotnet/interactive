@@ -15,7 +15,6 @@
   "description.kernelTransportArgs": "ノートブック セッションの開始時に使用するコマンドと引数。",
   "description.kernelTransportWorkingDirectory": "カーネル トランスポート プロセスを起動する作業ディレクトリ。",
   "description.interactiveToolSource": ".NET Interactive ツールを取得するときに使用する NuGet ソース。",
-  "description.minimumDotNetSdkVersion": ".NET SDK の最低限必要なバージョン。",
   "description.requiredInteractiveToolVersion": "必要な .NET Interactive ツールのバージョン。",
   "command.acquire": ".NET Interactive のインストール",
   "command.openNotebook": "Polyglot Notebook: ノートブックを開く",

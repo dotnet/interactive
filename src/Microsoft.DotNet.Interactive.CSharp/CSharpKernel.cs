@@ -120,7 +120,7 @@ public class CSharpKernel :
                                g.Last().Type);
                        })
                        .ToArray() ??
-            Array.Empty<KernelValueInfo>();
+            [];
 
         context.Publish(new ValueInfosProduced(valueInfos, command));
 
@@ -131,7 +131,13 @@ public class CSharpKernel :
     {
         if (TryGetValue<object>(command.Name, out var value))
         {
-            context.PublishValueProduced(command, value);
+            context.Publish(new ValueProduced(
+                                value,
+                                command.Name,
+                                new FormattedValue(
+                                    command.MimeType,
+                                    value.ToDisplayString(command.MimeType)),
+                                command));
         }
         else
         {

@@ -63,7 +63,7 @@ public static class KernelExtensions
         return root switch
         {
             CompositeKernel c => predicate(c) ? new[] { kernel }.Concat(c.ChildKernels.Where(predicate)) : c.ChildKernels.Where(predicate),
-            _ when predicate(kernel) => new[] { kernel },
+            _ when predicate(kernel) => [kernel],
             _ => []
         };
     }
@@ -127,6 +127,7 @@ public static class KernelExtensions
                 {
                     displayValue.SetParent(parentCommand);
                 }
+
                 await kernel.SendAsync(displayValue);
             }
             else
@@ -136,6 +137,7 @@ public static class KernelExtensions
                 {
                     submitCode.SetParent(parentCommand);
                 }
+
                 await kernel.RootKernel.SendAsync(submitCode);
             }
         }

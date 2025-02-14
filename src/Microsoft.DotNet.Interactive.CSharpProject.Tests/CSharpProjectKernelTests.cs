@@ -27,8 +27,6 @@ public class CSharpProjectKernelTests
 
     public CSharpProjectKernelTests(ITestOutputHelper output)
     {
-        CSharpProjectKernel.RegisterEventsAndCommands();
-
         _output = output;
         _disposables.Add(_output.SubscribeToPocketLogger());
     }

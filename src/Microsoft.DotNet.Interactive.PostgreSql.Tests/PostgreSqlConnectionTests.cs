@@ -12,7 +12,6 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.App;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.App.Connection;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
@@ -26,7 +25,6 @@ public class PostgreSqlConnectionTests : IDisposable
 
         var kernel = new CompositeKernel
         {
-            new SqlDiscoverabilityKernel(),
             csharpKernel,
             new KeyValueStoreKernel()
         };

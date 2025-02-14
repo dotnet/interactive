@@ -197,7 +197,7 @@ public class PowerShellKernel :
         }
         else
         {
-            valueInfos = Array.Empty<KernelValueInfo>();
+            valueInfos = [];
         }
 
         context.Publish(new ValueInfosProduced(valueInfos, command));
@@ -209,7 +209,13 @@ public class PowerShellKernel :
     {
         if (TryGetValue<object>(command.Name, out var value))
         {
-            context.PublishValueProduced(command, value);
+            context.Publish(new ValueProduced(
+                                value,
+                                command.Name,
+                                new FormattedValue(
+                                    command.MimeType,
+                                    value.ToDisplayString(command.MimeType)),
+                                command));
         }
         else
         {

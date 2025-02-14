@@ -24,12 +24,14 @@ public partial class KernelCommandNestingTests
                 new CSharpKernel("cs2")
             };
             var kernelEvents = kernel.KernelEvents.ToSubscribedList();
-            var command = new SubmitCode($@"
-#!cs1
-using {typeof(Kernel).Namespace};
-using {typeof(KernelCommand).Namespace};
-await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
-");
+            var command = new SubmitCode(
+                $"""
+                 #!cs1
+                 using {typeof(Kernel).Namespace};
+                 using {typeof(KernelCommand).Namespace};
+                 await Kernel.Root.SendAsync(new SubmitCode("error", "cs2"));
+
+                 """);
 
             await kernel.SendAsync(command);
 

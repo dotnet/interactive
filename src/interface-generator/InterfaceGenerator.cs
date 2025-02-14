@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.App.ParserServer;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharpProject;
@@ -62,8 +63,8 @@ public class InterfaceGenerator
         typeof(NotebookSerializeResponse),
     };
 
-    private static readonly HashSet<string> OptionalFields = new()
-    {
+    private static readonly HashSet<string> OptionalFields =
+    [
         $"{nameof(CompletionsProduced)}.{nameof(CompletionsProduced.LinePositionSpan)}",
         $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.ValueId)}",
         $"{nameof(DocumentOpened)}.{nameof(DocumentOpened.RegionName)}",
@@ -73,14 +74,21 @@ public class InterfaceGenerator
 
         $"{nameof(KernelCommand)}.{nameof(KernelCommand.TargetKernelName)}",
         $"{nameof(KernelCommand)}.{nameof(KernelCommand.DestinationUri)}",
-        $"{nameof(KernelCommand)}.{nameof(KernelCommand.OriginUri)}",
-    };
+        $"{nameof(KernelCommand)}.{nameof(KernelCommand.OriginUri)}"
+    ];
 
     private static readonly IEnumerable<Type> CoreAssemblyTypes = GetTypesFromClosure(typeof(KernelCommand).Assembly);
     private static readonly IEnumerable<Type> CSharpProjectKernelAssemblyTypes = GetTypesFromClosure(typeof(CSharpProjectKernel).Assembly);
+    private static readonly IEnumerable<Type> DotnetInteractiveToolTypes = GetTypesFromClosure(typeof(RequestCodeExpansionInfos).Assembly);
     private static readonly IEnumerable<Type> VSCodeAssemblyTypes = typeof(VSCodeClientKernelExtension).Assembly.ExportedTypes;
-    private static readonly IEnumerable<Type> AllAssemblyTypes = CoreAssemblyTypes.Concat(CSharpProjectKernelAssemblyTypes).Concat(VSCodeAssemblyTypes).Distinct();
-            
+
+    private static readonly IEnumerable<Type> AllAssemblyTypes =
+        CoreAssemblyTypes
+            .Concat(CSharpProjectKernelAssemblyTypes)
+            .Concat(DotnetInteractiveToolTypes)
+            .Concat(VSCodeAssemblyTypes)
+            .Distinct();
+
     private static IEnumerable<Type> GetTypesFromClosure(Assembly rootAssembly)
     {
         return AssemblyToScan(rootAssembly).SelectMany(a => a.ExportedTypes).Distinct();

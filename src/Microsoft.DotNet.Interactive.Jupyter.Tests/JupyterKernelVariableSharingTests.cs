@@ -84,7 +84,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     [JupyterTestData(KernelSpecName = RKernelName)]
     public async Task can_share_primitives_to_and_from_kernel(JupyterConnectionTestData connectionData)
     {
-        var options = connectionData.GetConnectionOptions();
+        using var options = connectionData.GetConnectionOptions();
 
         var kernel = CreateCompositeKernelAsync(options);
 
@@ -129,7 +129,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     [JupyterTestData("identical(df_in_kernel, df_roundtrip)", "[1] TRUE", KernelSpecName = RKernelName)]
     public async Task can_share_dataframe_to_from_kernel(JupyterConnectionTestData connectionData, string assertIdentical, string expectedAssertionResult)
     {
-        var options = connectionData.GetConnectionOptions();
+        using var options = connectionData.GetConnectionOptions();
 
         var kernel = CreateCompositeKernelAsync(options);
 
@@ -258,7 +258,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     [JupyterTestData(KernelSpecName = RKernelName)]
     public async Task can_handle_setting_multiple_df_on_kernel(JupyterConnectionTestData connectionData)
     {
-        var options = connectionData.GetConnectionOptions();
+        using var options = connectionData.GetConnectionOptions();
 
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
@@ -382,7 +382,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     [JupyterTestData(KernelSpecName = RKernelName)]
     public async Task can_handle_setting_single_df_in_enumerable_on_kernel(JupyterConnectionTestData connectionData)
     {
-        var options = connectionData.GetConnectionOptions();
+        using var options = connectionData.GetConnectionOptions();
 
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
@@ -453,7 +453,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     [JupyterTestData(KernelSpecName = RKernelName)]
     public async Task can_handle_setting_single_df_on_kernel(JupyterConnectionTestData connectionData)
     {
-        var options = connectionData.GetConnectionOptions();
+        using var options = connectionData.GetConnectionOptions();
 
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
@@ -520,7 +520,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     [JupyterTestData("_ab", KernelSpecName = RKernelName)]
     public async Task can_handle_errors_for_send_value_from_kernel(JupyterConnectionTestData connectionData, string invalidId)
     {
-        var options = connectionData.GetConnectionOptions();
+        using var options = connectionData.GetConnectionOptions();
 
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
@@ -548,7 +548,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
     [JupyterTestData(KernelSpecName = RKernelName)]
     public async Task can_handle_errors_for_request_value_from_kernel(JupyterConnectionTestData connectionData)
     {
-        var options = connectionData.GetConnectionOptions();
+        using var options = connectionData.GetConnectionOptions();
 
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 
@@ -593,7 +593,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         string[] formattedValues,
         string[] typeNames)
     {
-        var options = connectionData.GetConnectionOptions();
+        using var options = connectionData.GetConnectionOptions();
 
         var kernel = await CreateJupyterKernelAsync(options, connectionData.KernelSpecName, connectionData.ConnectionString);
 

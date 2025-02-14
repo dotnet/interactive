@@ -15,7 +15,6 @@
   "description.kernelTransportArgs": "Commande et arguments utilisés pour démarrer une session de notebook.",
   "description.kernelTransportWorkingDirectory": "Répertoire de travail dans lequel le processus de transport du noyau est démarré.",
   "description.interactiveToolSource": "Source NuGet à utiliser lors de l’acquisition de l’outil .NET Interactive.",
-  "description.minimumDotNetSdkVersion": "Version minimale requise du Kit de développement logiciel (SDK) .NET.",
   "description.requiredInteractiveToolVersion": "Version requise de l’outil .NET Interactive.",
   "command.acquire": "Installer .NET Interactive",
   "command.openNotebook": "Polyglot Notebook : ouvrir le bloc-notes",

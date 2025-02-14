@@ -15,10 +15,26 @@ public partial class PolyglotSyntaxParserTests
 {
     public class Directives
     {
-        [Fact]
-        public void Pound_r_nuget_is_parsed_as_a_compiler_directive_node_in_csharp()
+        [Theory]
+        [InlineData("""
+                    var x = 1;
+                    #r "nuget:SomePackage"
+                    x
+                    """,
+                    "#r \"nuget:SomePackage\"")]
+        [InlineData(""""
+                    var x = 1;
+                    #r """nuget:SomePackage"""
+                    x
+                    """",
+                    """"
+                    #r """nuget:SomePackage"""
+                    """")]
+        public void Pound_r_nuget_is_parsed_as_a_compiler_directive_node_in_csharp(
+            string codeSubmission, 
+            string expectedDirectiveText)
         {
-            var tree = Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx", "csharp");
+            var tree = Parse(codeSubmission, "csharp");
 
             var node = tree.RootNode
                            .ChildNodes
@@ -27,15 +43,38 @@ public partial class PolyglotSyntaxParserTests
                            .Which;
             node.Text
                 .Should()
-                .Be("#r \"nuget:SomePackage\"");
+                .Be(expectedDirectiveText);
 
             node.Kind.Should().Be(DirectiveNodeKind.CompilerDirective);
+
+            var expectedParameterValue = expectedDirectiveText.Replace("#r", "").Trim();
+            
+            node.DescendantNodesAndTokens()
+                .Should().ContainSingle<DirectiveParameterValueNode>()
+                .Which.Text
+                .Should().Be(expectedParameterValue);
         }
 
-        [Fact]
-        public void Pound_r_nuget_is_parsed_as_a_compiler_directive_node_in_fsharp()
+        [Theory]
+        [InlineData("""
+                    var x = 1;
+                    #r "nuget:SomePackage"
+                    x
+                    """,
+                    "#r \"nuget:SomePackage\"")]
+        [InlineData(""""
+                    var x = 1;
+                    #r """nuget:SomePackage"""
+                    x
+                    """",
+                    """"
+                    #r """nuget:SomePackage"""
+                    """")]
+        public void Pound_r_nuget_is_parsed_as_a_compiler_directive_node_in_fsharp(
+            string codeSubmission,
+            string expectedDirectiveText)
         {
-            var tree = Parse("var x = 1;\n#r \"nuget:SomePackage\"\nx", "fsharp");
+            var tree = Parse(codeSubmission, "fsharp");
 
             var node = tree.RootNode
                            .ChildNodes
@@ -44,9 +83,16 @@ public partial class PolyglotSyntaxParserTests
                            .Which;
             node.Text
                 .Should()
-                .Be("#r \"nuget:SomePackage\"");
+                .Be(expectedDirectiveText);
 
             node.Kind.Should().Be(DirectiveNodeKind.CompilerDirective);
+
+            var expectedParameterValue = expectedDirectiveText.Replace("#r", "").Trim();
+            
+            node.DescendantNodesAndTokens()
+                .Should().ContainSingle<DirectiveParameterValueNode>()
+                .Which.Text
+                .Should().Be(expectedParameterValue);
         }
 
         [Fact]

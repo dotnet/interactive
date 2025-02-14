@@ -115,7 +115,7 @@ hello!
         using var compositeKernel = new CompositeKernel();
 
         compositeKernel.AddConnectDirective(
-            new ConnectFakeKernelDirective("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
+            new ConnectFakeKernelDirective("fake", name => Task.FromResult<Kernel>(new FakeKernel(name))));
 
         await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake1");
         await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake2");
@@ -133,7 +133,7 @@ hello!
         using var compositeKernel = new CompositeKernel();
 
         compositeKernel.AddConnectDirective(
-            new ConnectFakeKernelDirective("fake", "Connects the fake kernel", name => Task.FromResult<Kernel>(new FakeKernel(name))));
+            new ConnectFakeKernelDirective("fake", name => Task.FromResult<Kernel>(new FakeKernel(name))));
 
         var result = await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name myFake");
         result.Events.Should().NotContainErrors();
@@ -153,44 +153,45 @@ hello!
         var compositeKernel = new CompositeKernel();
 
         compositeKernel.AddConnectDirective(
-            new ConnectFakeKernelDirective("fake", "Connects the fake kernel", _ => Task.FromResult<Kernel>(fakeKernel)));
+            new ConnectFakeKernelDirective("fake", _ => Task.FromResult<Kernel>(fakeKernel)));
 
         return compositeKernel;
     }
+}
 
-    public class ConnectFakeKernelDirective : ConnectKernelDirective<ConnectFakeKernel>
+public class ConnectFakeKernelDirective : ConnectKernelDirective<ConnectFakeKernel>
+{
+    private readonly Func<string, Task<Kernel>> _createKernel;
+
+    public ConnectFakeKernelDirective(
+        string name,
+        Func<string, Task<Kernel>> createKernel) : base(name, "Connects the fake kernel")
     {
-        private readonly Func<string, Task<Kernel>> _createKernel;
 
-        public ConnectFakeKernelDirective(
-            string name,
-            string description,
-            Func<string, Task<Kernel>> createKernel) : base(name, description)
-        {
-            KernelCommandType = typeof(ConnectFakeKernel);
-            Parameters.Add(FakenessLevelParameter);
-            ConnectedKernelDescription = description;
 
-            _createKernel = createKernel;
-        }
+        KernelCommandType = typeof(ConnectFakeKernel);
+        Parameters.Add(FakenessLevelParameter);
+        ConnectedKernelDescription = "Connects the fake kernel";
 
-        public KernelDirectiveParameter FakenessLevelParameter { get; } =
-            new("--fakeness-level");
-
-        public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
-            ConnectFakeKernel command,
-            KernelInvocationContext context)
-        {
-            var kernel = await _createKernel(command.ConnectedKernelName);
-
-            return new[] { kernel };
-        }
+        _createKernel = createKernel;
     }
 
-    public class ConnectFakeKernel : ConnectKernelCommand
+    public KernelDirectiveParameter FakenessLevelParameter { get; } =
+        new("--fakeness-level");
+
+    public override async Task<IEnumerable<Kernel>> ConnectKernelsAsync(
+        ConnectFakeKernel command,
+        KernelInvocationContext context)
     {
-        public ConnectFakeKernel(string connectedKernelName) : base(connectedKernelName)
-        {
-        }
+        var kernel = await _createKernel(command.ConnectedKernelName);
+
+        return new[] { kernel };
+    }
+}
+
+public class ConnectFakeKernel : ConnectKernelCommand
+{
+    public ConnectFakeKernel(string connectedKernelName) : base(connectedKernelName)
+    {
     }
 }

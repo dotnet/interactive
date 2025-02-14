@@ -29,10 +29,10 @@ public class NotebookParserServer : IDisposable
 
     public static KernelInfoCollection WellKnownKernelInfos = new()
     {
-        new("csharp", languageName: "C#", aliases: new[] { "c#", "cs" }),
-        new("fsharp", languageName: "F#", aliases: new[] { "f#", "fs" }),
-        new("pwsh", languageName: "PowerShell", aliases: new[] { "powershell" }),
-        new("javascript", languageName: "JavaScript", aliases: new[] { "js" }),
+        new("csharp", languageName: "C#", aliases: ["c#", "cs"]),
+        new("fsharp", languageName: "F#", aliases: ["f#", "fs"]),
+        new("pwsh", languageName: "PowerShell", aliases: ["powershell"]),
+        new("javascript", languageName: "JavaScript", aliases: ["js"]),
         new("html", languageName: "HTML"),
         new("sql", languageName: "SQL"),
         new("kql", languageName: "KQL"),

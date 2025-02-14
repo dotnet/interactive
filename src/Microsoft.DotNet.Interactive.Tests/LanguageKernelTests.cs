@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -20,7 +18,6 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket.For.Xunit;
 using Xunit;
@@ -952,16 +949,20 @@ $${languageSpecificCode}
 
         var source = language switch
         {
-            Language.FSharp => @"
-open System
-Console.Write(""value one"")
-Console.Write(""value two"")
-Console.Write(""value three"")",
+            Language.FSharp => """
 
-            Language.CSharp => @"
-Console.Write(""value one"");
-Console.Write(""value two"");
-Console.Write(""value three"");"
+                               open System
+                               Console.Write("value one")
+                               Console.Write("value two")
+                               Console.Write("value three")
+                               """,
+
+            Language.CSharp => """
+
+                               Console.Write("value one");
+                               Console.Write("value two");
+                               Console.Write("value three");
+                               """
         };
 
         var result = await kernel.SendAsync(new SubmitCode(source));

@@ -20,7 +20,7 @@ public class JupyterKernelSpecModule : IJupyterKernelSpecModule
 
     private class KernelSpecListCommandResult
     {
-        public Dictionary<string, KernelSpecResourceDetail> kernelspecs { get; set; }
+        public Dictionary<string, KernelSpecResourceDetail> kernelspecs { get; init; }
     }
 
     public JupyterKernelSpecModule(IJupyterEnvironment environment = null)
