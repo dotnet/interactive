@@ -30,10 +30,7 @@ internal class MessagePlayback : IMessageTracker
         _playbackMessages.AddRange(messages);
 
         _requestProcessingLoopTask = Task.Factory.StartNew(
-            RequestProcessingLoop,
-            creationOptions: TaskCreationOptions.LongRunning,
-            cancellationToken: _cancellationTokenSource.Token,
-            scheduler: TaskScheduler.Default);
+            RequestProcessingLoop);
     }
 
     public IObservable<Message> Messages => _receivedMessages;
