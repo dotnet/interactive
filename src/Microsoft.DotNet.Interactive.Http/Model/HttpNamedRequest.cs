@@ -3,7 +3,6 @@
 
 #nullable enable
 
-using Microsoft.CodeAnalysis.Differencing;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using System;
 using System.Linq;
