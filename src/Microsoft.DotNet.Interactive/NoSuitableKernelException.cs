@@ -14,8 +14,4 @@ public class NoSuitableKernelException : Exception
             : $"No handler registered on kernel {command.TargetKernelName} for command: {command}")
     {
     }
-
-    public NoSuitableKernelException(string message) : base(message)
-    {
-    }
 }
