@@ -933,6 +933,12 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                     """;
                 var secondResult = await kernel.SendAsync(new SubmitCode(secondRequest));
                 secondResult.Events.Should().NotContainErrors();
+
+                var returnValue = secondResult.Events.OfType<ReturnValueProduced>().First();
+
+                var response = (HttpResponse)returnValue.Value;
+
+                response.Request.Headers["X-Value"].First().Should().Be("5601db0f-32e0-4d82-bc79-251e50fa1407");
             }
 
             [Fact]
