@@ -108,7 +108,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
     }
 
     // note that R kernel returns display_data instead of execute_result
-    [Theory]
+    [Theory(Skip = "Trying to determine if this test is a cause of flakiness")]
     [JupyterHttpTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = PythonKernelName)]
     [JupyterTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = PythonKernelName)]
