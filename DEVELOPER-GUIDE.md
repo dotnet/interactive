@@ -44,18 +44,10 @@ Linux or macOS:
     $ ./build.sh
 ```
 
-You can both build and run the tests for the project by running the scripts with the following option:
-
-Windows:
+You can both build and run the tests for the project by running the following:
 
 ```console
-    > .\build.cmd -test
-```
-
-Linux or macOS:
-
-```console
-    $ ./build.sh --test
+    > dotnet test
 ```
 
 For additional options, you can get help as follows:
@@ -160,9 +152,9 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
 
 If you've made changes to the Polyglot Notebooks extension and want to try your changes locally, follow these steps:
 
-1. Run `build.cmd -pack`/`./build.sh --pack` to create the Nuget packages for the extensions
+1. Ensure that there aren't any kernels running. It's generally best to close all notebooks opened in VS Code as they might be locking some files.
 
-2. Ensure that there aren't any kernels running for the extension in question. It's generally best to close all notebooks opened in VS Code as they might be locking some of these files.
+2. Run `repack.ps1` to build everything and create NuGet packages.
 
 3. Run the `Polyglot Notebook: Create a new blank notebook` command in VS Code. Select `.dib` or `.ipynb` as the extension and any language as default.
 
