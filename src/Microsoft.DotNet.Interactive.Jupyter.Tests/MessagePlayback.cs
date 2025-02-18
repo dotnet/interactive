@@ -78,6 +78,11 @@ internal class MessagePlayback : IMessageTracker
 
                             operation.Info("{replyMessage}", replyMessage.Content.MessageType);
 
+                            if (_receivedMessages.IsDisposed)
+                            {
+                                break;
+                            }
+
                             _receivedMessages.OnNext(replyMessage);
                             _playbackMessages.Remove(m);
                         }
@@ -146,7 +151,6 @@ internal class MessagePlayback : IMessageTracker
             _cancellationTokenSource.Cancel();
             _sentMessages.Dispose();
             _receivedMessages.Dispose();
-            _requestProcessingLoopTask.Dispose();
         }
         catch (Exception exception)
         {
