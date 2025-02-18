@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelTestBase>;
 using CompositeDisposable = Pocket.CompositeDisposable;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
@@ -36,7 +37,9 @@ public abstract class JupyterKernelTestBase : IDisposable
 
     public void Dispose()
     {
+        using var operation = Log.OnEnterAndConfirmOnExit();
         _disposables.Dispose();
+        operation.Succeed();
     }
 
     protected CompositeKernel CreateCompositeKernelAsync(params IJupyterKernelConnectionOptions[] optionsList)

@@ -16,6 +16,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[Collection("Do not parallelize")]
 [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public class JupyterKernelCommandTests : JupyterKernelTestBase
 {

@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -29,11 +29,7 @@ internal class MessagePlayback : IMessageTracker
     {
         _playbackMessages.AddRange(messages);
 
-        _requestProcessingLoopTask = Task.Factory.StartNew(
-            RequestProcessingLoop,
-            creationOptions: TaskCreationOptions.LongRunning,
-            cancellationToken: _cancellationTokenSource.Token,
-            scheduler: TaskScheduler.Default);
+        _requestProcessingLoopTask = Task.Factory.StartNew(RequestProcessingLoop);
     }
 
     public IObservable<Message> Messages => _receivedMessages;
@@ -64,6 +60,8 @@ internal class MessagePlayback : IMessageTracker
 
                     if (responses is not null)
                     {
+                        operation.Info($"Got {responses.Count()} responses");
+
                         foreach (var m in responses)
                         {
                             var replyMessage = new Message(
@@ -78,20 +76,27 @@ internal class MessagePlayback : IMessageTracker
                                     m.ParentHeader.Date),
                                 m.Signature, m.MetaData, m.Identifiers, m.Buffers, m.Channel);
 
+                            operation.Info("{replyMessage}", replyMessage.Content.MessageType);
+
+                            if (_receivedMessages.IsDisposed)
+                            {
+                                break;
+                            }
+
                             _receivedMessages.OnNext(replyMessage);
                             _playbackMessages.Remove(m);
                         }
                     }
-                }
-                else
-                {
-                    try
+                    else
                     {
-                        await Task.Delay(50, _cancellationTokenSource.Token);
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        break;
+                        try
+                        {
+                            await Task.Delay(50, _cancellationTokenSource.Token);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -139,16 +144,17 @@ internal class MessagePlayback : IMessageTracker
 
     public void Dispose()
     {
+        using var operation = Log.OnEnterAndExit();
+
         try
         {
             _cancellationTokenSource.Cancel();
             _sentMessages.Dispose();
             _receivedMessages.Dispose();
-            _requestProcessingLoopTask.Dispose();
         }
         catch (Exception exception)
         {
-            Log.Error(exception);
+            operation.Error(exception);
         }
     }
 
