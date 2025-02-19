@@ -7,9 +7,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
-using System.Threading.Tasks;   
+using System.Threading.Tasks;
+using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Tests.MessagePlayback>;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
@@ -64,6 +66,9 @@ internal class MessagePlayback : IMessageTracker
 
                         foreach (var m in responses)
                         {
+                            _playbackMessages.Remove(m);
+                            operation.Info($"");
+
                             var replyMessage = new Message(
                                 m.Header,
                                 GetContent(message, m),
@@ -76,28 +81,20 @@ internal class MessagePlayback : IMessageTracker
                                     m.ParentHeader.Date),
                                 m.Signature, m.MetaData, m.Identifiers, m.Buffers, m.Channel);
 
-                            operation.Info("{replyMessage}", replyMessage.Content.MessageType);
+                            operation.Info($"{nameof(replyMessage)}: {replyMessage.Content.MessageType}. {nameof(_playbackMessages)}.Count is now {_playbackMessages.Count}");
 
                             if (_receivedMessages.IsDisposed)
                             {
                                 break;
                             }
 
-                            _receivedMessages.OnNext(replyMessage);
-                            _playbackMessages.Remove(m);
+                            await Task.Run(() => _receivedMessages.OnNext(replyMessage)).Timeout(5.Seconds());
                         }
                     }
-                    else
-                    {
-                        try
-                        {
-                            await Task.Delay(50, _cancellationTokenSource.Token);
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            break;
-                        }
-                    }
+                }
+                else
+                {
+                    await Task.Delay(50);
                 }
             }
             catch (Exception exception)
