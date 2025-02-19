@@ -3,6 +3,7 @@
 
 #nullable enable
 
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using System;
 using System.Linq;
@@ -252,48 +253,33 @@ internal class HttpNamedRequest
 
     private static object? ResolveJsonPath(JsonNode responseJSON, string[] path, int currentIndex)
     {
+        JsonNode? newResponseJSON = null;
         if (currentIndex + 1 == path.Length)
         {
+           
             switch (responseJSON)
             {
                 case JsonArray jsonArray:
                     var node = jsonArray.FirstOrDefault(n => n?[path[currentIndex]] != null);
                     return node?[path[currentIndex]]?.ToString();
                 case JsonObject jsonObject:
-                    return jsonObject[path[currentIndex]]?.ToString();
+                    return EvaluatePathAtIndex(jsonObject, path, currentIndex)?.ToString();
                 default:
                     return responseJSON.ToString();
             }
         }
 
-        JsonNode? newResponseJSON = null;
         try
         {
             if (responseJSON is JsonObject j)
             {
-
-                var pathMatch = arrayRegex.Match(path[currentIndex]);
-                if (pathMatch.Success)
-                {
-
-                    // Extract the array name and index
-                    string arrayName = pathMatch.Groups[1].Value;
-                    string indexString = pathMatch.Groups[2].Value;
-
-                    // Cast the index from string to int
-                    int index = int.Parse(indexString);
-
-                    newResponseJSON = j[arrayName][index];
-                } 
-                else
-                {
-                    newResponseJSON = j[path[currentIndex]];
-                }
+                newResponseJSON = EvaluatePathAtIndex(j, path, currentIndex);
             }
             else
             {
                 newResponseJSON = responseJSON[path[currentIndex]];
-            }
+            } 
+                
 
         }
         catch (InvalidOperationException)
@@ -310,6 +296,43 @@ internal class HttpNamedRequest
             return ResolveJsonPath(newResponseJSON, path, currentIndex + 1);
         }
 
+    }
+
+    private static JsonNode? EvaluatePathAtIndex(JsonObject responseJSON, string[] path, int currentIndex)
+    {
+
+        var pathMatch = arrayRegex.Match(path[currentIndex]);
+        if (pathMatch.Success)
+        {
+
+            // Extract the array name and index
+            string arrayName = pathMatch.Groups[1].Value;
+            string indexString = pathMatch.Groups[2].Value;
+
+            // Cast the index from string to int
+            if (int.TryParse(indexString, out var index))
+            {
+                try
+                {
+                    return responseJSON?[arrayName]?[index];
+                } 
+                catch
+                {
+                    return null;
+                }
+                
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+        else
+        {
+           return responseJSON[path[currentIndex]];
+        }
+        
     }
 
     internal static class SyntaxDepth
