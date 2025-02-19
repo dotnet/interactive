@@ -24,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\dotnet-interactive\(Recipes)\TaskExtensions.cs" />
     <Compile Include="..\dotnet-interactive\(Pocket)\Logger\Format.CustomizeLogString.cs" Link="Pocket\Format.CustomizeLogString.cs" />
     <Compile Include="..\dotnet-interactive\Utility\KernelDiagnostics.cs" Link="KernelDiagnostics.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\JupyterConstants.cs" Link="JupyterConstants.cs" />

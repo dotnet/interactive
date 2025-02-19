@@ -67,7 +67,6 @@ internal class MessagePlayback : IMessageTracker
                         foreach (var m in responses)
                         {
                             _playbackMessages.Remove(m);
-                            operation.Info($"");
 
                             var replyMessage = new Message(
                                 m.Header,
