@@ -31,13 +31,13 @@ export async function replaceNotebookCellMetadata(notebookUri: vscode.Uri, cellI
     return succeeded;
 }
 
-export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentMetadata: { [key: string]: any }): Promise<boolean> {
+export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentMetadata: { [key: string]: any }): Promise<void> {
     const notebook = vscode.workspace.notebookDocuments.find(d => d.uri === notebookUri);
     if (notebook) {
         const metadata = notebook.metadata;
         const keysToIngore = new Set<string>();
         if (!isIpynbNotebook(notebook)) {
-            // dib format doesn't use the proeprty 'custom' so this should not be involved in the diff.
+            // dib format doesn't use the property 'custom' so this should not be involved in the diff.
             keysToIngore.add("custom");
         }
         const shouldUpdate = !areEquivalentObjects(metadata, documentMetadata, keysToIngore);
@@ -47,11 +47,8 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
             const edit = new vscode.WorkspaceEdit();
             edit.set(notebookUri, [notebookEdit]);
             const succeeded = await vscode.workspace.applyEdit(edit);
-            return succeeded;
         }
-        return false;
     }
-    return false;
 }
 
 export async function handleCustomInputRequest(prompt: string, inputTypeHint: string, password: boolean): Promise<{ handled: boolean, result: string | null | undefined }> {

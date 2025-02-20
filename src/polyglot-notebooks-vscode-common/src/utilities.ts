@@ -210,7 +210,7 @@ export function createUri(fsPath: string, scheme?: string): Uri {
     };
 }
 
-export function getWorkingDirectoryForNotebook(notebookUri: Uri, workspaceFolderUris: Uri[], fallackWorkingDirectory: string): string {
+export function getWorkingDirectoryForNotebook(notebookUri: Uri, workspaceFolderUris: Uri[], fallbackWorkingDirectory: string): string {
     switch (notebookUri.scheme) {
         case 'file':
             // local file, use it's own directory
@@ -218,10 +218,10 @@ export function getWorkingDirectoryForNotebook(notebookUri: Uri, workspaceFolder
         case 'untitled':
             // unsaved notebook, use first local workspace folder
             const firstLocalWorkspaceFolderUri = workspaceFolderUris.find(uri => uri.scheme === 'file');
-            return firstLocalWorkspaceFolderUri?.fsPath ?? fallackWorkingDirectory;
+            return firstLocalWorkspaceFolderUri?.fsPath ?? fallbackWorkingDirectory;
         default:
             // something else (e.g., remote notebook), use fallback
-            return fallackWorkingDirectory;
+            return fallbackWorkingDirectory;
     }
 }
 
