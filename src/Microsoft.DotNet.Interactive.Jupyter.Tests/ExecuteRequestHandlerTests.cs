@@ -16,7 +16,6 @@ using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Recipes;
 using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
