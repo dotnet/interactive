@@ -411,19 +411,10 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
         }
     });
 
-    const notebookDocumentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
-    const kernelNotebokMetadata = metadataUtilities.getNotebookDocumentMetadataFromCompositeKernel(client.kernel);
-    const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebokMetadata);
-    const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, document.metadata, isIpynb);
-
-    if (isIpynb) {
-        if (!rawNotebookDocumentMetadata.language_info) {
-            rawNotebookDocumentMetadata.language_info = { name: "polyglot-notebook" };
-        } else {
-            rawNotebookDocumentMetadata.language_info.name = "polyglot-notebook";
-        }
+    if (isIpynb &&
+        !document.metadata.metadata.language_info) {
+        document.metadata.metadata.language_info = { name: "polyglot-notebook" };
     }
-    await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, rawNotebookDocumentMetadata);
 }
 
 export function endExecution(client: InteractiveClient | undefined, cell: vscode.NotebookCell, success: boolean) {
@@ -460,6 +451,8 @@ function generateVsCodeNotebookCellOutputItem(data: Uint8Array, mime: string, st
 
 async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
     const documentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
-    const newMetadata = metadataUtilities.createNewIpynbMetadataWithNotebookDocumentMetadata(document.metadata, documentMetadata);
+    const newMetadata = metadataUtilities.createNewIpynbMetadataWithNotebookDocumentMetadata(
+        document.metadata,
+        documentMetadata);
     await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, newMetadata);
 }

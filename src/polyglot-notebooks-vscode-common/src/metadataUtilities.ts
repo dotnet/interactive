@@ -107,7 +107,7 @@ export function getNotebookDocumentMetadataFromInteractiveDocument(interactiveDo
     }
 
     notebookMetadata.kernelInfo.items = notebookMetadata.kernelInfo.items.map(item => ensureProperShapeForDocumentKernelInfo(item));
-    cleanupMedata(notebookMetadata);
+    cleanUpMetadata(notebookMetadata);
     return notebookMetadata;
 }
 
@@ -170,7 +170,7 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
     }
 
     notebookMetadata.kernelInfo.items = notebookMetadata.kernelInfo.items.map(item => ensureProperShapeForDocumentKernelInfo(item));
-    cleanupMedata(notebookMetadata);
+    cleanUpMetadata(notebookMetadata);
     return notebookMetadata;
 }
 
@@ -178,7 +178,7 @@ export function getNotebookDocumentMetadataFromCompositeKernel(kernel: Composite
     const notebookMetadata = createDefaultNotebookDocumentMetadata();
     notebookMetadata.kernelInfo.defaultKernelName = kernel.defaultKernelName ?? notebookMetadata.kernelInfo.defaultKernelName;
     notebookMetadata.kernelInfo.items = kernel.childKernels.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0).filter(k => k.supportsCommand(commandsAndEvents.SubmitCodeType)).map(k => ({ name: k.name, aliases: k.kernelInfo.aliases, languageName: k.kernelInfo.languageName }));
-    cleanupMedata(notebookMetadata);
+    cleanUpMetadata(notebookMetadata);
     return notebookMetadata;
 }
 
@@ -277,20 +277,13 @@ export function getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocume
 }
 
 export function createNewIpynbMetadataWithNotebookDocumentMetadata(existingMetadata: { [key: string]: any }, notebookDocumentMetadata: NotebookDocumentMetadata): { [key: string]: any } {
+    // FIX Why does this add the polyglot_notebook node as a sibling of the metadata node?
     const resultMetadata: { [key: string]: any } = { ...existingMetadata };
-
-    // FIX: "custom" actually means just the bucket of things we don't persist, and therefore should not cause the document dirty state to be set
-
-    // kernelspec
     const kernelspec = getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata);
-    resultMetadata.metadata = resultMetadata.metadata ?? {};
-    resultMetadata.metadata.kernelspec = kernelspec;
-    resultMetadata.metadata.polyglot_notebook = notebookDocumentMetadata;
+    // resultMetadata.metadata = resultMetadata.metadata ?? {};
+    // resultMetadata.metadata.kernelspec = kernelspec;
+    // resultMetadata.metadata.polyglot_notebook = notebookDocumentMetadata;
     return resultMetadata;
-}
-
-export function getRawInteractiveDocumentElementMetadataFromNotebookCellMetadata(notebookCellMetadata: NotebookCellMetadata): { [key: string]: any } {
-    return notebookCellMetadata;
 }
 
 export function getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata: NotebookCellMetadata): { [key: string]: any } {
@@ -298,16 +291,14 @@ export function getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellM
         metadata: {
             // this is the canonical metadata
             polyglot_notebook: notebookCellMetadata,
+
+            // FIX Is this still needed?
             // this is to maintain backwards compatibility for a while
             dotnet_interactive: {
                 language: notebookCellMetadata.kernelName
             }
         }
     };
-}
-
-export function getRawInteractiveDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata): { [key: string]: any } {
-    return notebookDocumentMetadata;
 }
 
 export function getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata: NotebookDocumentMetadata, documentRawMetadata: { [key: string]: any }, createForIpynb: boolean): { [key: string]: any } {
@@ -468,7 +459,7 @@ export function mergeNotebookDocumentMetadata(baseMetadata: NotebookDocumentMeta
     }
 
     resultMetadata.kernelInfo.items = [...kernelInfoItems.values()];
-    cleanupMedata(resultMetadata);
+    cleanUpMetadata(resultMetadata);
     return sortInPlace(resultMetadata);
 }
 
@@ -543,7 +534,7 @@ export function areEquivalentObjects(object1: { [key: string]: any }, object2: {
     return true;
 }
 
-function cleanupMedata(notebookMetadata: NotebookDocumentMetadata) {
+function cleanUpMetadata(notebookMetadata: NotebookDocumentMetadata) {
     notebookMetadata.kernelInfo.items.forEach(ki => {
         if (ki.languageName === undefined || ki.languageName === null) {
             delete ki.languageName;

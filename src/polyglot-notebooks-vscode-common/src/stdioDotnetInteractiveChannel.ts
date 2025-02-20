@@ -135,10 +135,6 @@ export class StdioDotnetInteractiveChannel implements DotnetInteractiveChannel {
             this._receiverSubject.next(event);
 
         } else if (isKernelCommandEnvelopeModel(envelope)) {
-            // TODO: pass in context with shortcut methods for publish, etc.
-            // TODO: wrap and return succeed/failed
-            // TODO: publish succeeded
-            // TODO: publish failed
             const command = KernelCommandEnvelope.fromJson(envelope);
             this._receiverSubject.next(command);
         }

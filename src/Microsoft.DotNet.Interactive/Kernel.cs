@@ -989,7 +989,6 @@ public abstract partial class Kernel :
             return true;
         }
 
-
         return false;
     }
 

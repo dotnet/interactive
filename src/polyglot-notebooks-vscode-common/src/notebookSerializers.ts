@@ -50,10 +50,9 @@ async function serializeNotebookByType(parserServer: NotebookParserServer, seria
         metadata: data.metadata ?? {}
     };
     const notebookMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(fakeNotebookDocument);
-    const rawInteractiveDocumentNotebookMetadata = metadataUtilities.getRawInteractiveDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata);
     const interactiveDocument: commandsAndEvents.InteractiveDocument = {
         elements: data.cells.map(toInteractiveDocumentElement),
-        metadata: rawInteractiveDocumentNotebookMetadata
+        metadata: notebookMetadata
     };
     const rawData = await parserServer.serializeNotebook(serializationType, eol, interactiveDocument);
     return rawData;
