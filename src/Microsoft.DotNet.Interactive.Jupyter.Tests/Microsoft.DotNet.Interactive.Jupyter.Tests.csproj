@@ -9,6 +9,7 @@
     <NoWarn>$(NoWarn);VSTHRD003</NoWarn><!-- Ignore: Avoid awaiting foreign Tasks -->
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
     <NoWarn>$(NoWarn);VSTHRD103</NoWarn><!-- Ignore: Cancel synchronously blocks. Await CancelAsync instead -->
+    <NoWarn>$(NoWarn);VSTHRD105</NoWarn><!-- Ignore: Avoid method overloads that assume TaskScheduler.Current -->
     <!-- Ignore: warning NU1608: Detected package version outside of dependency constraint:
     xunit 2.4.1 requires xunit.core (= 2.4.1) but version xunit.core 2.4.2 was resolved.
     This suppression can be removed once PocketLogger.For.XUnit which currently references
@@ -23,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\dotnet-interactive\(Recipes)\TaskExtensions.cs" />
     <Compile Include="..\dotnet-interactive\(Pocket)\Logger\Format.CustomizeLogString.cs" Link="Pocket\Format.CustomizeLogString.cs" />
     <Compile Include="..\dotnet-interactive\Utility\KernelDiagnostics.cs" Link="KernelDiagnostics.cs" />
     <Compile Include="..\Microsoft.DotNet.Interactive.Jupyter\JupyterConstants.cs" Link="JupyterConstants.cs" />

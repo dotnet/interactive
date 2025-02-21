@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 // FIX: (JupyterKernelVariableSharingTests) re-enable these tests
 [Trait("Category", "Skip")]
+[Collection("Do not parallelize")]
 [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 {

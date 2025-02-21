@@ -8,7 +8,7 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Recipes;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Xunit;
 using Xunit.Abstractions;

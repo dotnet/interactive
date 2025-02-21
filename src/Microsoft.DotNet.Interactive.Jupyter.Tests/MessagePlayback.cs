@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -7,9 +7,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
-using System.Threading.Tasks;   
+using System.Threading.Tasks;
+using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Tests.MessagePlayback>;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
@@ -29,11 +31,7 @@ internal class MessagePlayback : IMessageTracker
     {
         _playbackMessages.AddRange(messages);
 
-        _requestProcessingLoopTask = Task.Factory.StartNew(
-            RequestProcessingLoop,
-            creationOptions: TaskCreationOptions.LongRunning,
-            cancellationToken: _cancellationTokenSource.Token,
-            scheduler: TaskScheduler.Default);
+        _requestProcessingLoopTask = Task.Factory.StartNew(RequestProcessingLoop);
     }
 
     public IObservable<Message> Messages => _receivedMessages;
@@ -64,8 +62,12 @@ internal class MessagePlayback : IMessageTracker
 
                     if (responses is not null)
                     {
+                        operation.Info($"Got {responses.Count()} responses");
+
                         foreach (var m in responses)
                         {
+                            _playbackMessages.Remove(m);
+
                             var replyMessage = new Message(
                                 m.Header,
                                 GetContent(message, m),
@@ -78,21 +80,20 @@ internal class MessagePlayback : IMessageTracker
                                     m.ParentHeader.Date),
                                 m.Signature, m.MetaData, m.Identifiers, m.Buffers, m.Channel);
 
-                            _receivedMessages.OnNext(replyMessage);
-                            _playbackMessages.Remove(m);
+                            operation.Info($"{nameof(replyMessage)}: {replyMessage.Content.MessageType}. {nameof(_playbackMessages)}.Count is now {_playbackMessages.Count}");
+
+                            if (_receivedMessages.IsDisposed)
+                            {
+                                break;
+                            }
+
+                            await Task.Run(() => _receivedMessages.OnNext(replyMessage)).Timeout(5.Seconds());
                         }
                     }
                 }
                 else
                 {
-                    try
-                    {
-                        await Task.Delay(50, _cancellationTokenSource.Token);
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        break;
-                    }
+                    await Task.Delay(50);
                 }
             }
             catch (Exception exception)
@@ -139,16 +140,17 @@ internal class MessagePlayback : IMessageTracker
 
     public void Dispose()
     {
+        using var operation = Log.OnEnterAndExit();
+
         try
         {
             _cancellationTokenSource.Cancel();
             _sentMessages.Dispose();
             _receivedMessages.Dispose();
-            _requestProcessingLoopTask.Dispose();
         }
         catch (Exception exception)
         {
-            Log.Error(exception);
+            operation.Error(exception);
         }
     }
 
