@@ -904,6 +904,82 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             }
 
             [Fact]
+            public async Task accessing_an_index_in_a_json_array_succeeds()
+            {
+                using var kernel = new HttpKernel();
+                var firstRequest = """                    
+                    # @name sampleArray
+                    POST https://httpbin.org/anything
+                    {
+                      "devices": [
+                        {
+                          "id": "5601db0f-32e0-4d82-bc79-251e50fa1407",
+                          "name": "Foo"
+                        },
+                        {
+                          "id": "455301a5-8a6e-49d0-b056-96fb2847be18",
+                          "name": "Bar"
+                        }
+                      ]
+                    }
+                    ###
+                    """;
+                var firstResult = await kernel.SendAsync(new SubmitCode(firstRequest));
+                firstResult.Events.Should().NotContainErrors();
+                var secondRequest = """
+                    GET https://httpbin.org/headers
+                    X-Value: {{sampleArray.response.body.$.json.devices[0].id}}
+                    ###
+                    """;
+                var secondResult = await kernel.SendAsync(new SubmitCode(secondRequest));
+                secondResult.Events.Should().NotContainErrors();
+
+                var returnValue = secondResult.Events.OfType<ReturnValueProduced>().First();
+
+                var response = (HttpResponse)returnValue.Value;
+
+                response.Request.Headers["X-Value"].First().Should().Be("5601db0f-32e0-4d82-bc79-251e50fa1407");
+            }
+
+            [Fact]
+            public async Task accessing_multiple_indexes_in_a_json_array_succeeds()
+            {
+                using var kernel = new HttpKernel();
+                var firstRequest = """                    
+                    # @name sampleArray
+                    POST https://httpbin.org/anything
+                    {
+                      "devices": [
+                        {
+                          "id": "5601db0f-32e0-4d82-bc79-251e50fa1407",
+                          "name": "Foo"
+                        },
+                        {
+                          "ids": ["455301a5-8a6e-49d0-b056-96fb2847be18", "455301a5-8a6e-49d0-b056-96fb2847be19", "455301a5-8a6e-49d0-b056-96fb2847be20"], 
+                          "name": "Bar"
+                        }
+                      ]
+                    }
+                    ###
+                    """;
+                var firstResult = await kernel.SendAsync(new SubmitCode(firstRequest));
+                firstResult.Events.Should().NotContainErrors();
+                var secondRequest = """
+                    GET https://httpbin.org/headers
+                    X-Value: {{sampleArray.response.body.$.json.devices[1].ids[2]}}
+                    ###
+                    """;
+                var secondResult = await kernel.SendAsync(new SubmitCode(secondRequest));
+                secondResult.Events.Should().NotContainErrors();
+
+                var returnValue = secondResult.Events.OfType<ReturnValueProduced>().First();
+
+                var response = (HttpResponse)returnValue.Value;
+
+                response.Request.Headers["X-Value"].First().Should().Be("455301a5-8a6e-49d0-b056-96fb2847be20");
+            }
+
+            [Fact]
             public async Task attempting_to_access_headers_that_do_not_exist_will_produce_an_error()
             {
                 using var kernel = new HttpKernel();

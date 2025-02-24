@@ -948,15 +948,12 @@ public abstract partial class Kernel :
 
                 default:
                     // for command types defined outside this assembly, we can dynamically assign the handler
-                    if (command.GetType().IsPublic)
+                    try
                     {
-                        try
-                        {
-                            SetHandler((dynamic)command, (dynamic)this);
-                        }
-                        catch (RuntimeBinderException)
-                        {
-                        }
+                        SetHandler((dynamic)command, (dynamic)this);
+                    }
+                    catch (RuntimeBinderException)
+                    {
                     }
 
                     break;

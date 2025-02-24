@@ -21,6 +21,7 @@ using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[Collection("Do not parallelize")]
 public class JupyterKernelTests : JupyterKernelTestBase
 {
     public JupyterKernelTests(ITestOutputHelper output) : base(output)

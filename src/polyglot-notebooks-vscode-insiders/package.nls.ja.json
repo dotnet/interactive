@@ -28,5 +28,6 @@
   "command.stopAllNotebookKernels": "Polyglot Notebook: すべてのノートブック カーネルを停止する",
   "command.shareValueWith": "値の共有相手...",
   "command.restartKernel": "再起動",
-  "command.openValueViewer": "変数"
+  "command.openValueViewer": "変数",
+  "command.connectSubkernel": "Polyglot ノートブック: 新しいサブカーネルに接続する"
 }

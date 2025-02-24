@@ -28,5 +28,6 @@
   "command.stopAllNotebookKernels": "Polyglot Notebook : arrêter tous les noyaux de notebook",
   "command.shareValueWith": "Partager la valeur avec...",
   "command.restartKernel": "Redémarrer",
-  "command.openValueViewer": "Variables"
+  "command.openValueViewer": "Variables",
+  "command.connectSubkernel": "Bloc-notes Polyglot : se connecter à un nouveau subkernel"
 }

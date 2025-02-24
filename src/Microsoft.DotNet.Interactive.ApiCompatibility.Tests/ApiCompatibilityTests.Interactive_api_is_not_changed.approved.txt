@@ -285,7 +285,6 @@ Microsoft.DotNet.Interactive
     public System.String ToString()
   public class NoSuitableKernelException : System.Exception, System.Runtime.Serialization.ISerializable
     .ctor(Microsoft.DotNet.Interactive.Commands.KernelCommand command)
-    .ctor(System.String message)
   public class PackageReference
     public static System.Boolean TryParse(System.String value, ref PackageReference& reference)
     .ctor(System.String packageName, System.String packageVersion = null)

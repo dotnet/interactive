@@ -294,4 +294,47 @@ public partial class KernelTests
 
         events.Should().ContainSingle<DisplayedValueProduced>(v => v.Value.Equals("inner submission event"));
     }
+
+#if !NETFRAMEWORK
+    [Fact]
+    public async Task Custom_commands_can_be_defined_and_handlers_for_them_implemented_within_an_interactive_session()
+    {
+        using var kernel = new CSharpKernel();
+
+        var code = """
+                   using Microsoft.DotNet.Interactive;
+                   using Microsoft.DotNet.Interactive.Commands;
+                   using Microsoft.DotNet.Interactive.Events;
+                   using Microsoft.DotNet.Interactive.Formatting;
+                   
+                   public class MyCommand : KernelCommand
+                   {
+                   }
+                   
+                   public class MyKernel : Kernel, IKernelCommandHandler<MyCommand>
+                   {
+                       public MyKernel(string name) : base(name)
+                       {}
+                   
+                       Task IKernelCommandHandler<MyCommand>.HandleAsync(MyCommand command, KernelInvocationContext context)
+                       {
+                           context.Publish(new DisplayedValueProduced("Hi!", command, [FormattedValue.CreateSingleFromObject("Hi!")]));
+                           return Task.CompletedTask;
+                       }
+                   }
+                   
+                   var kernel = new MyKernel("mine");
+                   
+                   var innerResult = await kernel.SendAsync(new MyCommand());
+                   """;
+
+        var result = await kernel.SendAsync(new SubmitCode(code));
+
+        result.Events.Should().NotContainErrors();
+
+        kernel.TryGetValue("innerResult", out KernelCommandResult innerResult);
+        
+        innerResult.Events.Should().NotContainErrors();
+    }
+#endif
 }

@@ -6,12 +6,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Recipes;
 using Xunit;
 using Xunit.Abstractions;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
