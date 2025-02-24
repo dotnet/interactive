@@ -114,11 +114,19 @@ public class TabularDataResourceTests
             {
                 ""name"": ""list"",
                 ""type"": ""array""
+            },
+            {
+                ""name"": ""list_of_list"",
+                ""type"": ""array""
+            },
+                        {
+                ""name"": ""list_of_objects"",
+                ""type"": ""array""
             }
         ]
     },
     ""data"" : [
-        { ""name"": ""mitch"", ""age"": 42, ""salary"":10.0, ""active"":true, ""date"": ""2020-01-01"", ""summary"": { ""a"": 1, ""b"": 2 }, ""list"":[1,2,3,4] }
+        { ""name"": ""mitch"", ""age"": 42, ""salary"":10.0, ""active"":true, ""date"": ""2020-01-01"", ""summary"": { ""a"": 1, ""b"": 2 }, ""list"":[1,2,3,4], ""list_of_list"": [[1,2,3],[4,5,6]], ""list_of_objects"": [{ ""name"": ""people"", ""location"":""in to the night""}] }
     ]
 }";
         var expected = new TabularDataResource(
@@ -132,7 +140,9 @@ public class TabularDataResourceTests
                     new("active", TableSchemaFieldType.Boolean),
                     new("date", TableSchemaFieldType.DateTime),
                     new("summary", TableSchemaFieldType.Object),
-                    new("list", TableSchemaFieldType.Array)
+                    new("list", TableSchemaFieldType.Array),
+                    new("list_of_list", TableSchemaFieldType.Array),
+                    new("list_of_objects", TableSchemaFieldType.Array)
                 }
             },
             new[]
@@ -149,7 +159,13 @@ public class TabularDataResourceTests
                         ["a"] = 1,
                         ["b"] = 2
                     },
-                    ["list"] = new object[]{1,2,3,4}
+                    ["list"] = new object[]{1,2,3,4},
+                    ["list_of_list"] = new object[]{new object[]{1,2,3}, new object[] {4, 5, 6}},
+                    ["list_of_objects"] = new object[]{new Dictionary<string, object>
+                    {
+                        ["name"] = "people",
+                        ["location"] = "in to the night"
+                    }}
                 }
             });
 
