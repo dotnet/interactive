@@ -167,6 +167,14 @@ internal class TabularDataResourceJsonConverter : JsonConverter<TabularDataResou
                 case JsonTokenType.Null:
                     collection.Add(null);
                     break;
+                case JsonTokenType.StartArray:
+                    var arrayValue = DeserializeArray(ref reader, options);
+                    collection.Add(arrayValue);
+                    break;
+                case JsonTokenType.StartObject:
+                    var objectValue = JsonSerializer.Deserialize<IDictionary<string, object>>(ref reader, options);
+                    collection.Add(objectValue);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
