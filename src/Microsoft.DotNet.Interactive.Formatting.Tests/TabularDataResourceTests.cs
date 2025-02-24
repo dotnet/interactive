@@ -132,8 +132,8 @@ public class TabularDataResourceTests
         var expected = new TabularDataResource(
             new TableSchema
             {
-                Fields = new TableDataFieldDescriptors
-                {
+                Fields =
+                [
                     new("name", TableSchemaFieldType.String),
                     new("age", TableSchemaFieldType.Integer),
                     new("salary", TableSchemaFieldType.Number),
@@ -143,10 +143,9 @@ public class TabularDataResourceTests
                     new("list", TableSchemaFieldType.Array),
                     new("list_of_list", TableSchemaFieldType.Array),
                     new("list_of_objects", TableSchemaFieldType.Array)
-                }
+                ]
             },
-            new[]
-            {
+            [
                 new Dictionary<string, object>
                 {
                     ["name"] = "mitch",
@@ -167,7 +166,7 @@ public class TabularDataResourceTests
                         ["location"] = "in to the night"
                     }}
                 }
-            });
+            ]);
 
         var actual = JsonSerializer.Deserialize<TabularDataResource>(json, JsonFormatter.SerializerOptions);
 
