@@ -176,7 +176,30 @@ extends:
     #---------------------------------------------------------------------------------------------------------------------#
     #                                                    Post Build                                                       #
     #---------------------------------------------------------------------------------------------------------------------#
-    - template: /eng/templates/post-build-tasks.yml@self
+    - template: /eng/common/templates-official/post-build/post-build.yml@self
+      parameters:
+        publishingInfraVersion: 3
+        # signing validation currently has issues with dotnet 7; disabling as per internal guidance
+        enableSigningValidation: false
+        # Symbol validation is not entirely reliable as of yet, so should be turned off until https://github.com/dotnet/arcade/issues/2871 is resolved.
+        enableSymbolValidation: false
+        # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
+        enableSourceLinkValidation: false
+        # Enable SDL validation, passing through values from the 'DotNet-FSharp-SDLValidation-Params' group.
+        SDLValidationParameters:
+          enable: true
+          params: >-
+            -SourceToolsList @("policheck","credscan")
+            -TsaInstanceURL $(_TsaInstanceURL)
+            -TsaProjectName $(_TsaProjectName)
+            -TsaNotificationEmail $(_TsaNotificationEmail)
+            -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+            -TsaBugAreaPath $(_TsaBugAreaPath)
+            -TsaIterationPath $(_TsaIterationPath)
+            -TsaRepositoryName "Interactive"
+            -TsaCodebaseName "Interactive-GitHub"
+            -TsaPublish $True
+            -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/policheck_exclusions.xml")
   
     #---------------------------------------------------------------------------------------------------------------------#
     #                                                    NPM Publish                                                      #
