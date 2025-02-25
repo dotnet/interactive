@@ -19,7 +19,7 @@
     "pretest": "npm run compile && npm run lint",
     "test": "mocha tests/**/*.test.ts",
     "testDebug": "mocha tests/**/*.test.ts",
-    "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json"
+    "ciTest": "node ../ensure-testresults-directory.js && npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json"
   },
   "mocha": {
     "ui": "bdd",
