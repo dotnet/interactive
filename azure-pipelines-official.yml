@@ -204,4 +204,10 @@ extends:
     #---------------------------------------------------------------------------------------------------------------------#
     #                                                    NPM Publish                                                      #
     #---------------------------------------------------------------------------------------------------------------------#
-    - template: /eng/templates/npm-publish-tasks.yml@self
+    - template: /eng/publish/publish-npm.yml@self
+      parameters:
+        packageName: microsoft-polyglot-notebooks-*.tgz
+        registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
+        registryUser: dnceng
+        registryEmail: dnceng@microsoft.com
+        publishingBranch: main
