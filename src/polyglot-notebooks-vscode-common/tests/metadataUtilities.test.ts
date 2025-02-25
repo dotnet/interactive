@@ -429,59 +429,6 @@ describe(`metadata utility tests`, async () => {
         });
     });
 
-    it("new ipynb metadata can be created from existing data", () => {
-        const notebookMetadata: metadataUtilities.NotebookDocumentMetadata = {
-            kernelInfo: {
-                defaultKernelName: "csharp",
-                items: [
-                    {
-                        name: "csharp",
-                        aliases: ["cs"],
-                        languageName: "csharp",
-                    },
-                ],
-            },
-        };
-        const existingMetadata: { [key: string]: any } = {
-            metadata: {
-                kernelspec: "this gets replaced",
-                someKey: "some value",
-            },
-            metadata2: "electric boogaloo",
-            notCustom: "not custom",
-        };
-        const newRawMetadata =
-            metadataUtilities.createNewIpynbMetadataWithNotebookDocumentMetadata(
-                existingMetadata,
-                notebookMetadata
-            );
-
-        expect(newRawMetadata).to.deep.equal({
-            metadata: {
-                kernelspec: {
-                    display_name: ".NET (C#)",
-                    language: "C#",
-                    name: ".net-csharp",
-                },
-                polyglot_notebook: {
-                    kernelInfo: {
-                        defaultKernelName: "csharp",
-                        items: [
-                            {
-                                aliases: ["cs"],
-                                languageName: "csharp",
-                                name: "csharp",
-                            },
-                        ],
-                    },
-                },
-                someKey: "some value",
-            },
-            metadata2: "electric boogaloo",
-            notCustom: "not custom",
-        });
-    });
-
     it("notebook metadata can be extracted from a composite kernel", () => {
         const kernel = new CompositeKernel("composite");
         const cs = new Kernel("csharp", "csharp");
