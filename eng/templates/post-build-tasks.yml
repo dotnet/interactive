@@ -2,7 +2,7 @@ parameters:
   publishingInfraVersion: 3
 
 steps:
-- template: eng/common/templates/post-build/post-build.yml
+- template: ../common/templates/post-build/post-build.yml@self
   parameters:
     publishingInfraVersion: ${{ parameters.publishingInfraVersion }}
     # signing validation currently has issues with dotnet 7; disabling as per internal guidance

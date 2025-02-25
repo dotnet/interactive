@@ -1,6 +1,6 @@
 
 steps:
-- template: eng/publish/publish-npm.yml@self
+- template: ../publish/publish-npm.yml@self
   parameters:
     packageName: microsoft-polyglot-notebooks-*.tgz
     registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
