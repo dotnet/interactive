@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.24475.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.24475.1" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.24529.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.24529.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -35,64 +35,75 @@ Give the [sample notebook](../samples/extensions/ClockExtension.ipynb) a try to 
 
 Here are some of the more common things you might want to do when extending .NET Interactive.
 
-## Add magic commands
+### Add magic commands
 
-You can add to the set of magic commands available in your notebooks. A magic command is defined using [System.CommandLine](https://learn.microsoft.com/en-us/dotnet/standard/commandline/) to parse the user's input as well as provide help and completions. A `System.CommandLine.Command` is used to define a magic command. The handler you define for the command will be invoked when the user runs the magic command.
+You can create you own magic commands and add them to the available commands in your notebooks either by writing an extension or by defining them directly in the notebook code. Magic commands are defined using the APIs under the `Microsoft.DotNet.Interactive.Directives` namespace to parse the user's input and define the associated actions performed by the magic command, as well as provide hover help and completions.
 
-Here's an example from the `ClockExtension` sample, showing how to define the `#!clock` magic command:
+We'll use the example found in the [`ClockExtension` sample](https://github.com/dotnet/interactive/blob/main/samples/extensions/ClockExtension) to go over the high-level usage of this API. This sample creates a magic command called `#!clock` that can be used to display an SVG rendering of a clock showing the specified time.
+
+<img src="https://github.com/user-attachments/assets/4d5a10c8-daac-444a-9c99-699e526307b9" />
+
+Let's start by looking at the code used to define the magic command itself. This code creates a magic command (`#!clock`) with three parameters (`--hour`, `--minute`, and `--second`), which can be called as in the screen shot above. We'll go through the code step by step to explain how the API is used. 
 
 ```csharp
-public class ClockKernelExtension : IKernelExtension
-{
-    public async Task OnLoadAsync(Kernel kernel)
-    {
-        // ...
-        
-        var hourOption = new Option<int>(new[] { "-o", "--hour" },
-                                            "The position of the hour hand");
-        var minuteOption = new Option<int>(new[] { "-m", "--minute" },
-                                            "The position of the minute hand");
-        var secondOption = new Option<int>(new[] { "-s", "--second" },
-                                            "The position of the second hand");
+var hourParameter = new KernelDirectiveParameter("--hour", "The position of the hour hand");
+var minuteParameter = new KernelDirectiveParameter("--minute", "The position of the minute hand");
+var secondParameter = new KernelDirectiveParameter("--second", "The position of the second hand");
 
-        var clockCommand = new Command("#!clock", "Displays a clock showing the current or specified time.")
-        {
-            hourOption,
-            minuteOption,
-            secondOption
-        };
-     
-        //...
-        
-        kernel.AddDirective(clockCommand);
-        
-        // ...
-    }
+var clockDirective = new KernelActionDirective("#!clock")
+{
+    Description = "Displays a clock showing the current or specified time.",
+    Parameters =
+    [
+        hourParameter,
+        minuteParameter,
+        secondParameter
+    ]
+};
+```
+
+A `KernelActionDirective` is used to define a magic command and give it a name (`#!clock`), which is the text used in code to invoke it. The `KernelDirectiveParameter` class is used to define the parameters that the magic command accepts.
+
+The names and descriptions for these objects are used to provide hover help and standard completions such as parameter names.
+
+<img src="https://github.com/user-attachments/assets/85adc71a-cf7c-418e-b8b5-a3832576d0a9" />
+
+<img src="https://github.com/user-attachments/assets/78654d82-68c8-49b5-a779-83624565ad4f" />
+
+The next step is to add the `KernelActionDirective` to the kernel where it will be in scope. 
+
+```csharp
+kernel.AddDirective<DisplayClock>(clockDirective, (displayClock, context) =>
+{
+    context.Display(
+        SvgClock.DrawSvgClock(
+            displayClock.Hour,
+            displayClock.Minute, 
+            displayClock.Second));
+    return Task.CompletedTask;
+});
+```
+
+Several things are happening in the above code.
+
+* `kernel.AddDirective` adds the the directive (`clockDirective`) to the kernel.
+* The generic parameter (`DisplayClock`) defines the type of the associated `KernelCommand` that will be instantiated and sent to the kernel when the magic command is invoked.
+* The delegate defines the code that will run to handle the `DisplayClock` command.
+
+Here's the definition of `DisplayClock`:
+
+```csharp
+public class DisplayClock : KernelDirectiveCommand
+{
+    public int Hour { get; set; }
+    public int Minute { get; set; }
+    public int Second { get; set; }
 }
 ```
 
-Once the `Command` has been added using `Kernel.AddDirective`, it's available in the kernel and ready to be used.
+Note that `KernelDirectiveCommand` inherits `KernelCommand`, so you can send the `DisplayClock` command directly using the `Kernel.SendAsync` method, just like any other `KernelCommand`.
 
-System.CommandLine allows users to get help for a magic command just like they can get help on in a command line app. For example, to get help for the `#!clock` magic command, you can run `#!clock -h`. That produces the following output:
-
-```console
-Description:
-  Displays a clock showing the current or specified time.
-
-Usage:
-  #!clock [options]
-
-Options:
-  -o, --hour <hour>      The position of the hour hand
-  -m, --minute <minute>  The position of the minute hand
-  -s, --second <second>  The position of the second hand
-  -?, -h, --help         Show help and usage information
-```
-
-By calling the `#!clock` magic command, you can draw a lovely purple clock using SVG with the hands at the positions specified:
-
-<img width="513" alt="image" src="https://user-images.githubusercontent.com/547415/213597279-a5bf64b4-f6de-4f78-a29c-af3c6052677c.png">
-
+### Customize formatting
 
 The extension also changes the default formatting for the `System.DateTime` type. This feature is the basis for creating custom visualizations for any .NET type. Before installing the extension, the default output just used the `DateTime.ToString` method:
 
