@@ -19,6 +19,7 @@
     <HtmlAgilityPackVersion>1.11.57</HtmlAgilityPackVersion>
     <HumanizerCoreVersion>2.14.1</HumanizerCoreVersion>
     <HumanizerVersion>2.14.1</HumanizerVersion>
+    <MicrosoftBclAsyncInterfacesVersion>8.0.0</MicrosoftBclAsyncInterfacesVersion>
     <MicrosoftCodeAnalysisCommonVersion>4.12.0</MicrosoftCodeAnalysisCommonVersion>
     <MicrosoftDataSqlClientVersion>5.2.2</MicrosoftDataSqlClientVersion>
     <MicrosoftEntityFrameworkCoreDesignVersion>9.0.0</MicrosoftEntityFrameworkCoreDesignVersion>
@@ -26,11 +27,13 @@
     <MicrosoftIdentityClientVersion>4.65.0</MicrosoftIdentityClientVersion>
     <MicrosoftNETTestSdkVersion>17.12.0</MicrosoftNETTestSdkVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
+    <SystemCollectionsImmutableVersion>8.0.0</SystemCollectionsImmutableVersion>
     <SystemDrawingCommonVersion>9.0.0</SystemDrawingCommonVersion>
     <SystemReactiveVersion>6.0.0</SystemReactiveVersion>
+    <SystemReflectionMetadataVersion>8.0.0</SystemReflectionMetadataVersion>
     <SystemSecurityCryptographyPkcsVersion>9.0.0</SystemSecurityCryptographyPkcsVersion>
     <SystemSecurityCryptographyXmlVersion>9.0.0</SystemSecurityCryptographyXmlVersion>
-    <SystemTextJsonVersion>9.0.0</SystemTextJsonVersion>
+    <SystemTextJsonVersion>8.0.0</SystemTextJsonVersion>
     <xunitrunnervisualstudioVersion>2.5.7</xunitrunnervisualstudioVersion>
     <xunitVersion>2.7.0</xunitVersion>
   </PropertyGroup>
