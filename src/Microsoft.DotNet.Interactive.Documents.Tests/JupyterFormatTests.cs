@@ -24,7 +24,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
 {
     private readonly Configuration _assentConfiguration =
         new Configuration()
-            .UsingExtension("json")
+            .UsingExtension("ipynb")
             .SetInteractive(Debugger.IsAttached);
 
     public InteractiveDocument SerializeAndParse(object jupyter)
@@ -1504,7 +1504,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             })
         };
         var notebook = new InteractiveDocument(cells);
-        var serialized = (string)notebook.ToJupyterJson();
+        var serialized = notebook.ToJupyterJson();
         var jupyter = JToken.Parse(serialized);
         jupyter["cells"]
             .Should()
@@ -1652,5 +1652,5 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     private string GetNotebookFilePath([CallerMemberName] string testName = null) =>
         Path.Combine(
             Path.GetDirectoryName(PathToCurrentSourceFile()),
-            $"{GetType().Name}.{testName}.approved.json");
+            $"{GetType().Name}.{testName}.approved.ipynb");
 }
