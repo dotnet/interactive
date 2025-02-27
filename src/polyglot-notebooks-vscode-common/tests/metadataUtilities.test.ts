@@ -491,9 +491,6 @@ describe(`metadata utility tests`, async () => {
             );
         expect(rawNotebookDocumentElementMetadata).to.deep.equal({
             metadata: {
-                dotnet_interactive: {
-                    language: "fsharp",
-                },
                 polyglot_notebook: {
                     kernelName: "fsharp",
                 },

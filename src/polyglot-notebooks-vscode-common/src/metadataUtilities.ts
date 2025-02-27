@@ -39,7 +39,7 @@ export function isDotNetNotebook(notebook: vscodeLike.NotebookDocument): boolean
 }
 
 export function getNotebookCellMetadataFromInteractiveDocumentElement(interactiveDocumentElement: commandsAndEvents.InteractiveDocumentElement): NotebookCellMetadata {
-    const cellMetadata = createDefaultNotebookCellMetadata();
+    const cellMetadata: NotebookCellMetadata = {};
 
     // first try to get the old `dotnet_interactive` value...
     const dotnet_interactive = interactiveDocumentElement.metadata?.dotnet_interactive;
@@ -64,7 +64,7 @@ export function getNotebookCellMetadataFromInteractiveDocumentElement(interactiv
 }
 
 export function getNotebookCellMetadataFromNotebookCellElement(notebookCell: vscodeLike.NotebookCell): NotebookCellMetadata {
-    const cellMetadata = createDefaultNotebookCellMetadata();
+    const cellMetadata: NotebookCellMetadata = {};
 
     const metadata = getCellMetadata(notebookCell);
 
@@ -277,26 +277,15 @@ export function getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocume
 }
 
 export function createNewIpynbMetadataWithNotebookDocumentMetadata(existingMetadata: { [key: string]: any }, notebookDocumentMetadata: NotebookDocumentMetadata): { [key: string]: any } {
-    // FIX Why does this add the polyglot_notebook node as a sibling of the metadata node?
+    // FIX inline this method
     const resultMetadata: { [key: string]: any } = { ...existingMetadata };
-    const kernelspec = getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocumentMetadata);
-    // resultMetadata.metadata = resultMetadata.metadata ?? {};
-    // resultMetadata.metadata.kernelspec = kernelspec;
-    // resultMetadata.metadata.polyglot_notebook = notebookDocumentMetadata;
     return resultMetadata;
 }
 
 export function getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata: NotebookCellMetadata): { [key: string]: any } {
     return {
         metadata: {
-            // this is the canonical metadata
-            polyglot_notebook: notebookCellMetadata,
-
-            // FIX Is this still needed?
-            // this is to maintain backwards compatibility for a while
-            dotnet_interactive: {
-                language: notebookCellMetadata.kernelName
-            }
+            polyglot_notebook: notebookCellMetadata
         }
     };
 }
@@ -484,10 +473,6 @@ export function createDefaultNotebookDocumentMetadata(): NotebookDocumentMetadat
             ],
         }
     };
-}
-
-function createDefaultNotebookCellMetadata(): NotebookCellMetadata {
-    return {};
 }
 
 export function areEquivalentObjects(object1: { [key: string]: any }, object2: { [key: string]: any }, keysToIgnore?: Set<string>): boolean {

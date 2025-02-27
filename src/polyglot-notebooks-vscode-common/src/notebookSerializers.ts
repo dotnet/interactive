@@ -20,12 +20,16 @@ function toInteractiveDocumentElement(cell: vscode.NotebookCellData): commandsAn
     };
     const notebookCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(fakeCell);
     const outputs = cell.outputs || [];
-    return {
+    const kernelName = cell.languageId === 'markdown' ? 'markdown' : notebookCellMetadata.kernelName ?? 'csharp';
+
+    const interactiveDocumentElement: commandsAndEvents.InteractiveDocumentElement = {
         executionOrder: cell.executionSummary?.executionOrder ?? 0,
-        kernelName: cell.languageId === 'markdown' ? 'markdown' : notebookCellMetadata.kernelName ?? 'csharp',
+        kernelName: kernelName,
         contents: cell.value,
         outputs: outputs.map(vscodeUtilities.vsCodeCellOutputToContractCellOutput)
     };
+
+    return interactiveDocumentElement;
 }
 
 async function deserializeNotebookByType(parserServer: NotebookParserServer, serializationType: commandsAndEvents.DocumentSerializationType, rawData: Uint8Array): Promise<vscode.NotebookData> {
