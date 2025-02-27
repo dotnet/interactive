@@ -33,7 +33,7 @@
     <SystemReflectionMetadataVersion>8.0.0</SystemReflectionMetadataVersion>
     <SystemSecurityCryptographyPkcsVersion>9.0.0</SystemSecurityCryptographyPkcsVersion>
     <SystemSecurityCryptographyXmlVersion>9.0.0</SystemSecurityCryptographyXmlVersion>
-    <SystemTextJsonVersion>8.0.0</SystemTextJsonVersion>
+    <SystemTextJsonVersion>8.0.5</SystemTextJsonVersion>
     <xunitrunnervisualstudioVersion>2.5.7</xunitrunnervisualstudioVersion>
     <xunitVersion>2.7.0</xunitVersion>
   </PropertyGroup>
