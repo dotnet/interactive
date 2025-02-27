@@ -22,18 +22,16 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <MicrosoftCodeAnalysisAnalyzersVersion>2.9.6</MicrosoftCodeAnalysisAnalyzersVersion>	
-    <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>	
-    <SystemCollectionsImmutableVersion>5.0.0</SystemCollectionsImmutableVersion>	
-    <SystemReflectionMetadataVersion>5.0.0</SystemReflectionMetadataVersion>	
-    <SystemCommandLineVersion>2.0.0-beta4.22272.1</SystemCommandLineVersion>	
+    <MicrosoftCodeAnalysisAnalyzersVersion>2.9.6</MicrosoftCodeAnalysisAnalyzersVersion>
+    <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>
+    <SystemCollectionsImmutableVersion>5.0.0</SystemCollectionsImmutableVersion>
+    <SystemReflectionMetadataVersion>5.0.0</SystemReflectionMetadataVersion>
+    <SystemCommandLineVersion>2.0.0-beta4.22272.1</SystemCommandLineVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Runtime.Loader" Version="$(SystemRuntimeLoaderVersion)" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
-    <PackageReference Include="System.Collections.Immutable" Version="9.0.0" />
-    <PackageReference Include="System.Reflection.Metadata" Version="9.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="PocketLogger" Version="0.9.1">
       <PrivateAssets>all</PrivateAssets>
