@@ -276,12 +276,6 @@ export function getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocume
     }
 }
 
-export function createNewIpynbMetadataWithNotebookDocumentMetadata(existingMetadata: { [key: string]: any }, notebookDocumentMetadata: NotebookDocumentMetadata): { [key: string]: any } {
-    // FIX inline this method
-    const resultMetadata: { [key: string]: any } = { ...existingMetadata };
-    return resultMetadata;
-}
-
 export function getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata: NotebookCellMetadata): { [key: string]: any } {
     return {
         metadata: {

@@ -450,9 +450,6 @@ function generateVsCodeNotebookCellOutputItem(data: Uint8Array, mime: string, st
 }
 
 async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
-    const documentMetadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
-    const newMetadata = metadataUtilities.createNewIpynbMetadataWithNotebookDocumentMetadata(
-        document.metadata,
-        documentMetadata);
+    const newMetadata: { [key: string]: any } = { ...document.metadata };
     await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, newMetadata);
 }
