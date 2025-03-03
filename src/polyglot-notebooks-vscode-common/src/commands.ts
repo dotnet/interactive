@@ -149,7 +149,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             { kind: vscode.QuickPickItemKind.Separator, label: 'Recent kernels', description: '' },
             ...recentlyUsedConnectionOptions];
 
-        const selectedOption = await vscode.window.showQuickPick(allOptions, { title: 'Connect to new subkernel' });
+        const selectedOption = await vscode.window.showQuickPick(allOptions, { title: 'Connect to new cell kernel' });
 
         if (selectedOption) {
             const selection = vscode.window.activeNotebookEditor?.selection;
