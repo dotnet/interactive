@@ -23,7 +23,7 @@ internal class InteractiveDocumentConverter : JsonConverter<InteractiveDocument>
 
         while (reader.Read())
         {
-            if (reader.TokenType == JsonTokenType.PropertyName)
+            if (reader.TokenType is JsonTokenType.PropertyName)
             {
                 switch (reader.GetString())
                 {
@@ -54,7 +54,7 @@ internal class InteractiveDocumentConverter : JsonConverter<InteractiveDocument>
                         break;
                 }
             }
-            else if (reader.TokenType == JsonTokenType.EndObject)
+            else if (reader.TokenType is JsonTokenType.EndObject)
             {
                 break;
             }

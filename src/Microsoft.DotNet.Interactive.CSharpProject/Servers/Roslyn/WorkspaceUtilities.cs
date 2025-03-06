@@ -12,14 +12,14 @@ namespace Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 
 public static class WorkspaceUtilities
 {
-    public static readonly ImmutableArray<string> DefaultUsingDirectives = new[]
-    {
+    public static readonly ImmutableArray<string> DefaultUsingDirectives =
+    [
         "System",
         "System.Linq",
         "System.Collections.Generic",
         "System.Globalization",
         "System.Threading.Tasks"
-    }.ToImmutableArray();
+    ];
 
     public static IEnumerable<MetadataReference> GetMetadataReferences(this IEnumerable<string> filePaths)
     {

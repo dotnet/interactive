@@ -22,7 +22,7 @@ class KernelSelectorItem implements vscode.QuickPickItem {
     label: string;
     description?: string | undefined;
     detail?: string | undefined;
-    iconPath?: vscode.ThemeIcon;
+    iconPath?: vscode.ThemeIcon | vscode.Uri;
 }
 
 export function registerNotbookCellStatusBarItemProvider(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
@@ -45,6 +45,7 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                 const kernelSelectorOptions = kernelSelectorUtilities
                     .getKernelSelectorOptions(client.kernel, cell.notebook, commandsAndEvents.SubmitCodeType);
 
+                // FIX use language-specific icons e.g. vscode.Uri.parse('https://api.dicebear.com/6.x/pixel-art/svg')
                 const kernelSelectorItems = kernelSelectorOptions
                     .map(o => {
                         const item = new KernelSelectorItem(o.displayValue);
@@ -54,7 +55,7 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                     });
 
                 const recentConnectionsOption = {
-                    label: 'Connect to new subkernel...',
+                    label: 'Connect to new cell kernel...',
                     iconPath: new vscode.ThemeIcon('plug')
                 };
 
@@ -71,14 +72,14 @@ export function registerNotbookCellStatusBarItemProvider(context: vscode.Extensi
                     const selectedValueIndex = kernelSelectorItems.indexOf(selectedDisplayOption);
                     if (selectedValueIndex >= 0) {
                         const selectedKernelItem = kernelSelectorOptions[selectedValueIndex];
-                        const codeCell = await vscodeUtilities.ensureCellKernelKind(cell, vscode.NotebookCellKind.Code);
+                        const codeCell = await vscodeUtilities.ensureCellIsCodeCell(cell);
                         const notebookCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(cell);
                         if (notebookCellMetadata.kernelName !== selectedKernelItem.kernelName) {
                             // update metadata
                             notebookCellMetadata.kernelName = selectedKernelItem.kernelName;
                             const newRawMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
                             const mergedMetadata = metadataUtilities.mergeRawMetadata(cell.metadata, newRawMetadata);
-                            const _succeeded = await vscodeNotebookManagement.replaceNotebookCellMetadata(codeCell.notebook.uri, codeCell.index, mergedMetadata);
+                            const _succeeded = await vscodeNotebookManagement.updateNotebookCellMetadata(codeCell.notebook.uri, codeCell.index, mergedMetadata);
 
                             // update language configuration
                             ServiceCollection.Instance.LanguageConfigurationManager.ensureLanguageConfigurationForDocument(cell.document);

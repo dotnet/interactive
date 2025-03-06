@@ -239,6 +239,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 const notebookCellMetadata: metadataUtilities.NotebookCellMetadata = {
                     kernelName
                 };
+
+                // Ensure previous cell language is repeated
                 const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata);
                 newCell.metadata = rawCellMetadata;
                 const succeeded = await vscodeNotebookManagement.replaceNotebookCells(notebookDocument.uri, range, [newCell]);
@@ -251,8 +253,9 @@ export async function activate(context: vscode.ExtensionContext) {
                 const addedCell = notebookDocument.cellAt(insertAtIndex); // the newly added cell is always the last one
                 await vscodeUtilities.setCellKernelName(addedCell, kernelName);
 
-                // FIX focus the new cell. this is not working.
                 vscode.window.activeNotebookEditor?.revealRange(range);
+
+                // FIX focus the new cell. https://github.com/dotnet/interactive/issues/3877
                 vscode.commands.executeCommand('notebook.cell.edit');
             }
         });

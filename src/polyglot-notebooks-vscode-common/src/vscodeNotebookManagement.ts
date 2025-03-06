@@ -9,11 +9,7 @@ import { extractHostAndNomalize, isKernelCommandEnvelope, isKernelEventEnvelope,
 import * as rxjs from 'rxjs';
 import * as connection from './polyglot-notebooks/connection';
 import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
-import { areEquivalentObjects, isIpynbNotebook } from './metadataUtilities';
-
-export function getNotebookDocumentFromEditor(notebookEditor: vscode.NotebookEditor): vscode.NotebookDocument {
-    return notebookEditor.notebook;
-}
+import { areEquivalentObjects } from './metadataUtilities';
 
 export async function replaceNotebookCells(notebookUri: vscode.Uri, range: vscode.NotebookRange, cells: vscode.NotebookCellData[]): Promise<boolean> {
     const notebookEdit = vscode.NotebookEdit.replaceCells(range, cells);
@@ -23,7 +19,10 @@ export async function replaceNotebookCells(notebookUri: vscode.Uri, range: vscod
     return succeeded;
 }
 
-export async function replaceNotebookCellMetadata(notebookUri: vscode.Uri, cellIndex: number, newCellMetadata: { [key: string]: any }): Promise<boolean> {
+export async function updateNotebookCellMetadata(notebookUri: vscode.Uri, cellIndex: number, newCellMetadata: { [key: string]: any }): Promise<boolean> {
+    // This is a workaround for a bug in VSCode's .ipynb handling which responds the same notification and races with this code, clobbering our metadata change. Yielding to the event loop seems to help.
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     const notebookEdit = vscode.NotebookEdit.updateCellMetadata(cellIndex, newCellMetadata);
     const edit = new vscode.WorkspaceEdit();
     edit.set(notebookUri, [notebookEdit]);
@@ -31,16 +30,11 @@ export async function replaceNotebookCellMetadata(notebookUri: vscode.Uri, cellI
     return succeeded;
 }
 
-export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentMetadata: { [key: string]: any }): Promise<void> {
+export async function updateNotebookMetadata(notebookUri: vscode.Uri, documentMetadata: { [key: string]: any }): Promise<void> {
     const notebook = vscode.workspace.notebookDocuments.find(d => d.uri === notebookUri);
     if (notebook) {
         const metadata = notebook.metadata;
-        const keysToIngore = new Set<string>();
-        if (!isIpynbNotebook(notebook)) {
-            // dib format doesn't use the property 'custom' so this should not be involved in the diff.
-            keysToIngore.add("custom");
-        }
-        const shouldUpdate = !areEquivalentObjects(metadata, documentMetadata, keysToIngore);
+        const shouldUpdate = !areEquivalentObjects(metadata, documentMetadata);
 
         if (shouldUpdate) {
             const notebookEdit = vscode.NotebookEdit.updateNotebookMetadata(documentMetadata);
@@ -53,6 +47,16 @@ export async function replaceNotebookMetadata(notebookUri: vscode.Uri, documentM
 
 export async function handleCustomInputRequest(prompt: string, inputTypeHint: string, password: boolean): Promise<{ handled: boolean, result: string | null | undefined }> {
     return { handled: false, result: undefined };
+}
+
+export function isNotebookDirty(notebookUri: vscode.Uri): boolean {
+    const notebook = vscode.workspace.notebookDocuments.find(d => d.uri === notebookUri);
+
+    if (!notebook) {
+        throw new Error(`Notebook with URI ${notebookUri.toString()} not found`);
+    }
+
+    return notebook.isDirty;
 }
 
 export function hashBangConnect(clientMapper: ClientMapper, hostUri: string, kernelInfos: commandsAndEvents.KernelInfo[], messageHandlerMap: Map<string, rxjs.Subject<KernelCommandOrEventEnvelope>>, controllerPostMessage: (_: any) => void, documentUri: vscodeLike.Uri) {
