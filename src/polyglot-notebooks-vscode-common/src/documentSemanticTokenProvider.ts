@@ -85,7 +85,7 @@ export class DocumentSemanticTokensProvider implements vscode.DocumentSemanticTo
                 const isIpynb = metadataUtilities.isIpynbNotebook(notebook);
                 const bareMetadata = metadataUtilities.createDefaultNotebookDocumentMetadata();
                 const rawBareMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(bareMetadata, notebook.metadata, isIpynb);
-                const _succeeded = await vscodeNotebookManagement.replaceNotebookMetadata(notebook.uri, rawBareMetadata);
+                const _succeeded = await vscodeNotebookManagement.updateNotebookMetadata(notebook.uri, rawBareMetadata);
                 const kernelInfos = metadataUtilities.getKernelInfosFromNotebookDocument(notebook);
                 this.dynamicTokenProvider.rebuildNotebookGrammar(notebook.uri, kernelInfos, true);
             }

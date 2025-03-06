@@ -151,7 +151,7 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
 
     // if nothing was found, populate it from the kernelspec metadata
     if (isIpynbNotebook(document)) {
-        if (!setDefaultKernel) {
+        if (!setDefaultKernel && !typeof polyglot_notebook.defaultKernelName) {
             const kernelSpecMetadata = getKernelspecMetadataFromIpynbNotebookDocument(document);
             if (kernelSpecMetadata.name.startsWith('.net-')) {
                 // the command `dotnet interactive jupyter install` lays down 3 well-known kernelspecs, all with the name `.net-<kernelName>`

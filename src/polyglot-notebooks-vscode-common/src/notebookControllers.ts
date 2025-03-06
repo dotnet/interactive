@@ -62,7 +62,7 @@ export class DotNetNotebookKernel {
         jupyterController.onDidChangeSelectedNotebooks(async e => {
             // update metadata
             if (e.selected) {
-                await updateNotebookMetadata(e.notebook, this.config.clientMapper);
+                // await updateNotebookMetadata(e.notebook, this.config.clientMapper);
             }
         });
         this.commonControllerInit(jupyterController);
@@ -221,7 +221,7 @@ export class DotNetNotebookKernel {
                         const mergedMetadata = metadataUtilities.mergeNotebookDocumentMetadata(notebookDocumentMetadata, kernelNotebookMetadata);
                         const rawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(mergedMetadata, cell.notebook.metadata, isIpynb);
 
-                        await vscodeNotebookManagement.replaceNotebookMetadata(cell.notebook.uri, rawNotebookDocumentMetadata);
+                        await vscodeNotebookManagement.updateNotebookMetadata(cell.notebook.uri, rawNotebookDocumentMetadata);
                         endExecution(client, cell, success);
                     }).catch(async () => {
                         await outputUpdatePromise;
@@ -311,7 +311,7 @@ async function ensureCellKernelMetadata(cell: vscode.NotebookCell, options: { pr
             const updatedCellMetadata = { ...cell.metadata };
             delete updatedCellMetadata.dotnet_interactive;
             delete updatedCellMetadata.polyglot_notebook;
-            await vscodeNotebookManagement.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, updatedCellMetadata);
+            await vscodeNotebookManagement.updateNotebookCellMetadata(cell.notebook.uri, cell.index, updatedCellMetadata);
         }
         return;
     }
@@ -352,8 +352,9 @@ async function updateNotebookMetadata(notebook: vscode.NotebookDocument, clientM
     try {
         // update various metadata
         await updateDocumentKernelspecMetadata(notebook);
+
         for (let cell of notebook.getCells()) {
-            await vscodeUtilities.ensureCellLanguage(cell);
+            await vscodeUtilities.ensureCellLanguageId(cell);
 
             // the previous call might have replaced the cell in the notebook, so we need to fetch it again to make sure it's fresh
             cell = notebook.cellAt(cell.index);
@@ -364,6 +365,7 @@ async function updateNotebookMetadata(notebook: vscode.NotebookDocument, clientM
 
         // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
         const client = await clientMapper.getOrAddClient(notebook.uri);
+
         await updateKernelInfoMetadata(client, notebook);
     } catch (err) {
         vscode.window.showErrorMessage(`Failed to set document metadata for '${notebook.uri}': ${err}`);
@@ -406,7 +408,7 @@ async function updateKernelInfoMetadata(client: InteractiveClient, document: vsc
                 const existingRawNotebookDocumentMetadata = document.metadata;
                 const updatedRawNotebookDocumentMetadata = metadataUtilities.getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata(notebookMetadata, existingRawNotebookDocumentMetadata, isIpynb);
                 const newRawNotebookDocumentMetadata = metadataUtilities.mergeRawMetadata(existingRawNotebookDocumentMetadata, updatedRawNotebookDocumentMetadata);
-                await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, newRawNotebookDocumentMetadata);
+                await vscodeNotebookManagement.updateNotebookMetadata(document.uri, newRawNotebookDocumentMetadata);
             }
         }
     });
@@ -451,5 +453,5 @@ function generateVsCodeNotebookCellOutputItem(data: Uint8Array, mime: string, st
 
 async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
     const newMetadata: { [key: string]: any } = { ...document.metadata };
-    await vscodeNotebookManagement.replaceNotebookMetadata(document.uri, newMetadata);
+    await vscodeNotebookManagement.updateNotebookMetadata(document.uri, newMetadata);
 }

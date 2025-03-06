@@ -75,17 +75,15 @@ export function createAndRegisterNotebookSerializers(context: vscode.ExtensionCo
         };
 
         const notebookoptions: vscode.NotebookDocumentContentOptions = notebookType === commandsAndEvents.DocumentSerializationType.Dib
-            // FIX: does this solve incorrect dirty state?
+            // This is intended to prevent .dib files from being marked dirty when cells are run, since outputs aren't preserved.
+            // FIX: This doesn't prevent the notebook from being marked dirty when the cell is run.
             ? {
                 transientOutputs: true,
                 transientDocumentMetadata: { custom: true },
                 transientCellMetadata: { custom: true }
             }
-            : {
-                transientOutputs: true,
-                transientDocumentMetadata: { custom: true },
-                transientCellMetadata: { custom: true }
-            };
+            // .ipynb is handled directly by VS Code
+            : {};
 
         const notebookSerializer = vscode.workspace.registerNotebookSerializer(notebookType, serializer, notebookoptions);
         context.subscriptions.push(notebookSerializer);
@@ -112,7 +110,7 @@ function toVsCodeNotebookCellData(cell: commandsAndEvents.InteractiveDocumentEle
     return cellData;
 }
 
-function outputElementToVsCodeCellOutput(output: commandsAndEvents.InteractiveDocumentOutputElement): vscode.NotebookCellOutput {
+export function outputElementToVsCodeCellOutput(output: commandsAndEvents.InteractiveDocumentOutputElement): vscode.NotebookCellOutput {
     const outputItems: Array<vscode.NotebookCellOutputItem> = [];
     if (utilities.isDisplayOutput(output)) {
         for (const mimeKey in output.data) {

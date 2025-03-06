@@ -7,7 +7,6 @@ import { ClientMapper } from './clientMapper';
 import * as commandsAndEvents from './polyglot-notebooks/commandsAndEvents';
 import * as connection from './polyglot-notebooks/connection';
 import * as utilities from './utilities';
-import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { Disposable } from './polyglot-notebooks/disposables';
 import { isKernelEventEnvelope } from './polyglot-notebooks';
 import * as kernelSelectorUtilities from './kernelSelectorUtilities';
@@ -22,7 +21,7 @@ export function registerVariableExplorer(context: vscode.ExtensionContext, clien
     context.subscriptions.push(vscode.commands.registerCommand('polyglot-notebook.shareValueWith', async (variableInfo: VariableInfo | undefined) => {
         const activeNotebookEditor = vscode.window.activeNotebookEditor;
         if (variableInfo && activeNotebookEditor) {
-            const notebookDocument = vscodeNotebookManagement.getNotebookDocumentFromEditor(activeNotebookEditor);
+            const notebookDocument = activeNotebookEditor.notebook;
             const client = await clientMapper.tryGetClient(notebookDocument.uri);
             if (client) {
                 const kernelSelectorOptions = kernelSelectorUtilities.getKernelSelectorOptions(client.kernel, notebookDocument, commandsAndEvents.SendValueType);

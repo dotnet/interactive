@@ -91,38 +91,36 @@ export async function setCellKernelName(cell: vscode.NotebookCell, kernelName: s
     };
     const rawCellMetadata = metadataUtilities.getRawNotebookCellMetadataFromNotebookCellMetadata(cellMetadata);
     const mergedMetadata = metadataUtilities.mergeRawMetadata(cell.metadata, rawCellMetadata);
-    await vscodeNotebookManagement.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, mergedMetadata);
+    await vscodeNotebookManagement.updateNotebookCellMetadata(cell.notebook.uri, cell.index, mergedMetadata);
 }
 
-export async function ensureCellKernelKind(cell: vscode.NotebookCell, kind: vscode.NotebookCellKind): Promise<vscode.NotebookCell> {
-    if (cell.kind === kind) {
+export async function ensureCellIsCodeCell(cell: vscode.NotebookCell): Promise<vscode.NotebookCell> {
+    if (cell.kind === vscode.NotebookCellKind.Code) {
         return cell;
     }
 
+    // FIX Replacing the cell here is likely the cause of https://github.com/dotnet/interactive/issues/3430. If the cell is created as a Markup cell from the outset, it might avoid this.
+
     const newCellData: vscode.NotebookCellData = {
-        kind: kind,
-        languageId: kind === vscode.NotebookCellKind.Markup ? 'markdown' : constants.CellLanguageIdentifier,
+        kind: vscode.NotebookCellKind.Code,
+        languageId: constants.CellLanguageIdentifier,
         value: cell.document.getText(),
         metadata: cell.metadata,
     };
     const cellIndex = cell.index; // this gets reset to -1 when the cell is replaced so we have to capture it here
+
     await vscodeNotebookManagement.replaceNotebookCells(cell.notebook.uri, new vscode.NotebookRange(cellIndex, cellIndex + 1), [newCellData]);
     const cells = cell.notebook.getCells();
-    return cells[cellIndex];
+    const newCell = cells[cellIndex];
+    return newCell;
 }
 
-export async function ensureCellLanguage(cell: vscode.NotebookCell): Promise<void> {
+export async function ensureCellLanguageId(cell: vscode.NotebookCell): Promise<void> {
+    // The NotebookCellData.languageId is needed to associate the various cell languages with Polyglot Notebooks. If this isn't set, the cell can't be run.
+    // Since the field is immutable, any cells that don't have it set have to replaced, which will mark the notebook as dirty, but once saved, it should open clean afterwards.
     if (cell.kind === vscode.NotebookCellKind.Code) {
         if (cell.document.languageId !== constants.CellLanguageIdentifier) {
-            const updatedCellData = new vscode.NotebookCellData(
-                vscode.NotebookCellKind.Code,
-                cell.document.getText(),
-                constants.CellLanguageIdentifier
-            );
-            updatedCellData.metadata = cell.metadata;
-
-            await vscodeNotebookManagement.replaceNotebookCells(cell.notebook.uri, new vscode.NotebookRange(cell.index, cell.index + 1), [updatedCellData]);
-
+            await vscode.languages.setTextDocumentLanguage(cell.document, constants.CellLanguageIdentifier);
         }
     }
 }

@@ -168,7 +168,7 @@ export async function registerLanguageProviders(clientMapper: ClientMapper, lang
     disposables.push(vscode.languages.registerSignatureHelpProvider(languages, new SignatureHelpProvider(clientMapper, languageServiceDelay), ...SignatureHelpProvider.triggerCharacters));
     disposables.push(vscode.workspace.onDidChangeTextDocument(e => {
         if (e.document.languageId === constants.CellLanguageIdentifier && vscode.window.activeNotebookEditor) {
-            const notebookDocument = vscodeNotebookManagement.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+            const notebookDocument = vscode.window.activeNotebookEditor.notebook;
             const cells = notebookDocument.getCells();
             const cell = cells?.find(cell => cell.document === e.document);
             if (cell) {

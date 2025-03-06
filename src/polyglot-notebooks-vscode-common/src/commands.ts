@@ -14,11 +14,9 @@ import * as notebookControllers from './notebookControllers';
 import * as metadataUtilities from './metadataUtilities';
 import { ReportChannel } from './interfaces/vscode-like';
 import { NotebookParserServer } from './notebookParserServer';
-import * as vscodeNotebookManagement from './vscodeNotebookManagement';
 import { PromiseCompletionSource } from './polyglot-notebooks/promiseCompletionSource';
 
 import * as constants from './constants';
-import { CodeExpansionInfo, KernelCommandEnvelope, RequestCodeExpansionInfos, RequestCodeExpansionInfosType } from './polyglot-notebooks';
 
 export async function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel): Promise<void> {
     const dotnetConfig = vscode.workspace.getConfiguration(constants.DotnetConfigurationSectionName);
@@ -49,7 +47,7 @@ export async function registerAcquisitionCommands(context: vscode.ExtensionConte
                     createToolManifest,
                     (version: string) => {
                         vscode.window.withProgress(
-                            { location: vscode.ProgressLocation.Notification, title: `Installing .NET Interactive version ${version}...` },
+                            { location: vscode.ProgressLocation.Notification, title: `Installing .NET Interactive version ${version}... at location ${context.globalStorageUri.fsPath}` },
                             (_progress, _token) => installationPromiseCompletionSource.promise);
                     },
                     installInteractiveTool,
@@ -106,7 +104,7 @@ function getCurrentNotebookDocument(): vscode.NotebookDocument | undefined {
         return undefined;
     }
 
-    return vscodeNotebookManagement.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+    return vscode.window.activeNotebookEditor.notebook;
 }
 
 export function registerKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
@@ -443,7 +441,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
                 return;
             }
 
-            const notebook = vscodeNotebookManagement.getNotebookDocumentFromEditor(vscode.window.activeNotebookEditor);
+            const notebook = vscode.window.activeNotebookEditor.notebook;
             const interactiveDocument = toNotebookDocument(notebook);
             const uriPath = uri.toString();
             const extension = path.extname(uriPath);
