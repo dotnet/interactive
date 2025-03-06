@@ -129,7 +129,6 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
     let setDefaultKernel = false;
     let setItems = false;
 
-
     // .dib files will have their metadata at the root; .ipynb files will have their metadata a little deeper
     const polyglot_notebook = getDocumentMetadata(document);
 
@@ -151,7 +150,7 @@ export function getNotebookDocumentMetadataFromNotebookDocument(document: vscode
 
     // if nothing was found, populate it from the kernelspec metadata
     if (isIpynbNotebook(document)) {
-        if (!setDefaultKernel && !typeof polyglot_notebook.defaultKernelName) {
+        if (!setDefaultKernel) {
             const kernelSpecMetadata = getKernelspecMetadataFromIpynbNotebookDocument(document);
             if (kernelSpecMetadata.name.startsWith('.net-')) {
                 // the command `dotnet interactive jupyter install` lays down 3 well-known kernelspecs, all with the name `.net-<kernelName>`
