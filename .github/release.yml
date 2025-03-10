@@ -93,6 +93,4 @@ changelog:
     - title: Visualization
       labels:
         - Area-Visualization
-    - title: Other Changes
-      labels:
-        - "*"
+
