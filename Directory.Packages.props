@@ -54,7 +54,7 @@
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
     <PackageVersion Include="Microsoft.IdentityClient" Version="4.66.2" />
-    <!-- <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" /> -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" Condition="'$(DisableArcade)' == '1'" />
     <PackageVersion Include="microsoft.playwright" Version="1.28.0" />
     <PackageVersion Include="Microsoft.PowerShell.Archive" Version="1.2.5" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.6" />
