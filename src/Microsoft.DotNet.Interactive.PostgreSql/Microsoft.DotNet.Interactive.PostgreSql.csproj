@@ -11,12 +11,12 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="9.0.2" />
-    <PackageReference Include="Pocket.Disposable" Version="1.2.0">
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Pocket.Disposable">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger" Version="0.9.1">
+    <PackageReference Include="PocketLogger">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>

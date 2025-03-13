@@ -21,35 +21,24 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup>
-    <MicrosoftCodeAnalysisAnalyzersVersion>2.9.6</MicrosoftCodeAnalysisAnalyzersVersion>
-    <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>
-    <SystemCollectionsImmutableVersion>5.0.0</SystemCollectionsImmutableVersion>
-    <SystemReflectionMetadataVersion>5.0.0</SystemReflectionMetadataVersion>
-    <SystemCommandLineVersion>2.0.0-beta4.22272.1</SystemCommandLineVersion>
-  </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="System.Runtime.Loader" Version="$(SystemRuntimeLoaderVersion)" />
-    <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="PocketLogger" Version="0.9.1">
+    <PackageReference Include="System.Runtime.Loader" />
+    <PackageReference Include="System.Reactive" />
+    <PackageReference Include="Microsoft.CodeAnalysis" />
+    <PackageReference Include="PocketLogger" >
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.Subscribe" Version="0.9.0">
+    <PackageReference Include="PocketLogger.Subscribe">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.0" />
+    <PackageReference Include="System.Text.Json" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" />
   </ItemGroup>
 
   <ItemGroup>
-    <NuspecProperty Include="MicrosoftCodeAnalysisAnalyzersVersion=$(MicrosoftCodeAnalysisAnalyzersVersion)" />	
     <NuspecProperty Include="SystemRuntimeLoaderVersion=$(SystemRuntimeLoaderVersion)" />	
     <NuspecProperty Include="SystemReactiveVersion=$(SystemReactiveVersion)" />	
-    <NuspecProperty Include="SystemCommandLineVersion=$(SystemCommandLineVersion)" />	
-    <NuspecProperty Include="FSharpCompilerPrivateScriptingVersion=$(FSharpCompilerPrivateScriptingVersion)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -26,21 +26,19 @@
  </ItemGroup>
 
  <ItemGroup>
-   <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
-   <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-   <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-   <PackageReference Include="Humanizer" Version="2.14.1" />
-   <PackageReference Include="Azure.Core" Version="1.44.1" />
-   <PackageReference Include="Azure.Identity" Version="1.13.1" />
-   <PackageReference Include="Microsoft.Identity.Client" Version="4.66.2" />
-   <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
-   <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.12.0" />
-   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+   <PackageReference Include="System.Drawing.Common" />
+   <PackageReference Include="Microsoft.Data.SqlClient" />
+   <PackageReference Include="Humanizer" />
+   <PackageReference Include="Azure.Core" />
+   <PackageReference Include="Azure.Identity" />
+   <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" />
+   <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >
      <PrivateAssets>all</PrivateAssets>
      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
    </PackageReference>
-   <PackageReference Include="StreamJsonRpc" Version="2.17.8" />
-   <PackageReference Include="System.Runtime.Caching" Version="9.0.0" />
+   <PackageReference Include="StreamJsonRpc" />
+   <PackageReference Include="System.Runtime.Caching" />
  </ItemGroup>
 
   <ItemGroup>

@@ -18,10 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="6.12.0" />
-    <PackageReference Include="Assent" Version="1.7.0" />
-    <PackageReference Include="xunit" Version="$(xunitVersion)"  />
-    <PackageReference Include="xunit.runner.visualstudio"  Version="$(xunitrunnervisualstudioVersion)" >
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Assent" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
