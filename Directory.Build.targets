@@ -12,12 +12,4 @@
     <PackageReference Update="Newtonsoft.Json" />
   </ItemGroup>
 
-  <!--
-  Microsoft.NET.Test.Sdk pulls in an older version of Newtonsoft.Json that _must_ be updated to >= 13.0.1 to address
-  component goverance alerts.
-  -->
-  <ItemGroup>
-    <PackageReference Update="Microsoft.NET.Test.Sdk" />
-  </ItemGroup>
-
 </Project>

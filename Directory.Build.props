@@ -9,6 +9,7 @@
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
     <EnableSourceLink>true</EnableSourceLink>
     <PublishWindowsPdb>false</PublishWindowsPdb>
+    <DisableArcadeTestFramework>true</DisableArcadeTestFramework>
     
     <!-- NuGet: A stable release of a package should not have a prerelease dependency. -->
     <NoWarn>$(NoWarn);NU5104</NoWarn>
