@@ -1,15 +1,9 @@
 <Project>
   <PropertyGroup>
-    <!-- Enable central package management,
-    https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    
     <RoslynVersion>4.12.0</RoslynVersion>
-
-    <MicrosoftCodeAnalysisAnalyzersVersion>2.9.6</MicrosoftCodeAnalysisAnalyzersVersion>
-    <SystemReflectionMetadataVersion>5.0.0</SystemReflectionMetadataVersion>
-    <SystemCommandLineVersion>2.0.0-beta4.22272.1</SystemCommandLineVersion>
-
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,7 +31,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Azure.Kusto.Data" Version="12.2.8" />
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="$(RoslynVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynVersion)" />
@@ -68,9 +62,9 @@
     <PackageVersion Include="Microsoft.PowerShell.SecretStore" Version="1.0.6" />
     <PackageVersion Include="Microsoft.Reactive.Testing" Version="6.0.0" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
-    <PackageVersion Include="Nerdbank.Streams" Version="2.9.112" />
+    <PackageVersion Include="Nerdbank.Streams" Version="2.10.69" />
     <PackageVersion Include="NetMQ" Version="4.0.1.13" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Npgsql" Version="9.0.2" />
     <PackageVersion Include="PackageManagement" Version="1.4.8.1" />
     <PackageVersion Include="Pocket.Disposable" Version="1.2.0" />
@@ -85,7 +79,7 @@
     <PackageVersion Include="SkiaSharp" Version="2.88.6" />
     <PackageVersion Include="StreamJsonRpc" Version="2.17.8" />
     <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
-    <PackageVersion Include="System.CommandLine.NamingConventionBinder" Version="$(SystemCommandLineVersion)" />
+    <PackageVersion Include="System.CommandLine.NamingConventionBinder" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="9.0.0" />
@@ -102,7 +96,7 @@
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="9.0.0" />
     <PackageVersion Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="9.0.0" />
-    <PackageVersion Include="System.Text.Json" Version="8.0.5" />
+    <PackageVersion Include="System.Text.Json" Version="9.0.0" />
     <PackageVersion Include="ThreadJob" Version="2.0.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" />
     <PackageVersion Include="xunit" Version="2.7.0" />
