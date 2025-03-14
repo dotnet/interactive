@@ -777,6 +777,8 @@ function MSBuild() {
       (Join-Path $basePath (Join-Path netcoreapp3.1 'Microsoft.DotNet.Arcade.Sdk.dll'))
       (Join-Path $basePath (Join-Path net7.0 'Microsoft.DotNet.ArcadeLogging.dll')),
       (Join-Path $basePath (Join-Path net7.0 'Microsoft.DotNet.Arcade.Sdk.dll'))
+      (Join-Path $basePath (Join-Path net8.0 'Microsoft.DotNet.Arcade.Sdk.dll'))
+      (Join-Path $basePath (Join-Path net9.0 'Microsoft.DotNet.Arcade.Sdk.dll'))
     )
     $selectedPath = $null
     foreach ($path in $possiblePaths) {

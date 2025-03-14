@@ -18,14 +18,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="$(SystemDrawingCommonVersion)" />
-    <PackageReference Include="FluentAssertions" Version="6.12.0" />
-    <PackageReference Include="Assent" Version="1.7.0" />
-    <PackageReference Include="xunit" Version="$(xunitVersion)"  />
-    <PackageReference Include="xunit.runner.visualstudio"  Version="$(xunitrunnervisualstudioVersion)" >
+    <PackageReference Include="System.Drawing.Common"  />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Assent" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.X509Certificates" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,7 +35,6 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.PostgreSql\Microsoft.DotNet.Interactive.PostgreSql.csproj" />
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
   </ItemGroup>
 
 </Project>

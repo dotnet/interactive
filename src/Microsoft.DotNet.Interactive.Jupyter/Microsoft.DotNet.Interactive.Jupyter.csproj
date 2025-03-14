@@ -31,14 +31,14 @@
     <EmbeddedResource Include="CommandEvents\LanguageHandlers\r\coe_comm_handler.r" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Markdig.Signed" Version="0.34.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
-    <PackageReference Include="NetMQ" Version="4.0.1.13" />
-    <PackageReference Include="PocketLogger" Version="0.9.1">
+    <PackageReference Include="Markdig.Signed" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="NetMQ" />
+    <PackageReference Include="PocketLogger">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="$(SystemSecurityCryptographyPkcsVersion)" />
   </ItemGroup>
   <ItemGroup>

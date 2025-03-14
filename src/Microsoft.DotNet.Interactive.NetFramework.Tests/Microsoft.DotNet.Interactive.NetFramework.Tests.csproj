@@ -39,22 +39,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="6.12.0" />
-    <PackageReference Include="Pocket.Disposable" Version="1.2.0">
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Pocket.Disposable">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger" Version="0.9.1">
+    <PackageReference Include="PocketLogger">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.For.Xunit" Version="0.9.0">
+    <PackageReference Include="PocketLogger.For.Xunit">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.Subscribe" Version="0.9.0">
+    <PackageReference Include="PocketLogger.Subscribe">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Update="xunit.runner.visualstudio" Version="$(xunitrunnervisualstudioVersion)">
+    <PackageReference Update="xunit.runner.visualstudio" >
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

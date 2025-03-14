@@ -19,17 +19,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" />
+    <PackageReference Include="Microsoft.CSharp" />
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="pocket.disposable" Version="1.2.0">
+    <PackageReference Include="Pocket.Disposable">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Memory" Version="4.6.0" />
+    <PackageReference Include="System.Memory" />
   </ItemGroup>
 
   <ItemGroup>

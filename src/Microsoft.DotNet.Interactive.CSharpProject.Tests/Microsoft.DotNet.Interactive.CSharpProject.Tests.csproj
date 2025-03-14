@@ -36,32 +36,32 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Assent" Version="1.7.0" />
-    <PackageReference Include="FluentAssertions" Version="6.12.0" />
-    <PackageReference Include="HtmlAgilityPack" Version="$(HtmlAgilityPackVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="Microsoft.Reactive.Testing" Version="$(SystemReactiveVersion)" />
-    <PackageReference Include="Pocket.Disposable" Version="1.2.0">
+    <PackageReference Include="Assent" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="HtmlAgilityPack" />
+    <PackageReference Include="Microsoft.CodeAnalysis" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
+    <PackageReference Include="Microsoft.Reactive.Testing" />
+    <PackageReference Include="Pocket.Disposable">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger" Version="0.9.1">
+    <PackageReference Include="PocketLogger">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.For.Xunit" Version="0.9.0">
+    <PackageReference Include="PocketLogger.For.Xunit" >
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.Subscribe" Version="0.9.0">
+    <PackageReference Include="PocketLogger.Subscribe">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
+    <PackageReference Include="System.Reactive"  />
+    <PackageReference Include="System.Security.Cryptography.X509Certificates" />
   </ItemGroup>
 
   <ItemGroup>
@@ -95,11 +95,7 @@
   </ProjectExtensions>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="xunit.runner.visualstudio" Version="$(xunitrunnervisualstudioVersion)">
+    <PackageReference Update="xunit.runner.visualstudio" >
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
