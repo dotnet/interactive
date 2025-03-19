@@ -16,6 +16,7 @@ using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
 using Serilog.Sinks.RollingFileAlternate;
@@ -57,6 +58,7 @@ public class Program
         typeof(Startup).Assembly, // dotnet-interactive.dll
         typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
         typeof(JupyterRequestContext).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
+        typeof(PowerShellKernel).Assembly, // Microsoft.DotNet.Interactive.PowerShell.dll
         typeof(InteractiveDocument).Assembly, // Microsoft.DotNet.Interactive.Documents.dll
     };
 

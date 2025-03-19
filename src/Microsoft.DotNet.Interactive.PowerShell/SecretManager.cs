@@ -4,6 +4,8 @@
 #nullable enable
 
 using System;
+using Pocket;
+using static Pocket.Logger;
 
 namespace Microsoft.DotNet.Interactive.PowerShell;
 
@@ -75,7 +77,7 @@ public class SecretManager
 
         if (!_kernel.RunLocally(code, out var errorMessage, true))
         {
-            throw new InvalidOperationException(errorMessage);
+            Log.Error(errorMessage);
         }
     }
 
