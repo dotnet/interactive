@@ -35,7 +35,7 @@ public class ConnectNamedPipeDirective : ConnectKernelDirective<ConnectNamedPipe
 
         proxyKernel.RegisterForDisposal(connector);
 
-        return new Kernel[] { proxyKernel };
+        return [proxyKernel];
     }
 
     public static void AddToRootKernel()
