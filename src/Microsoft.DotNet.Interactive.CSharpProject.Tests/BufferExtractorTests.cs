@@ -3,13 +3,13 @@
 
 using System.Linq;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class BufferExtractorTests
 {
-    [Fact]
+    [TestMethod]
     public void it_generates_a_buffer_only_workspace_when_no_regions_are_defined()
     {
         var noRegionFiles = new[]
@@ -26,7 +26,7 @@ public class BufferExtractorTests
         result.Files.Should().BeNullOrEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public void it_generates_a_file_and_buffers_workspace()
     {
         var noRegionFiles = new[]
@@ -49,7 +49,7 @@ public class BufferExtractorTests
         result.Files.Should().Contain(found => found.Name == "buffer1.cs" && found.Text == SourceCodeProvider.CodeWithTwoRegions);
     }
 
-    [Fact]
+    [TestMethod]
     public void it_generates_content_with_correct_indentation()
     {
         const string expectedCode = "// Instant represents time from epoch\nInstant now = SystemClock.Instance.GetCurrentInstant();\nConsole.WriteLine($\"now: {now}\");\n\n// Convert an instant to a ZonedDateTime\nZonedDateTime nowInIsoUtc = now.InUtc();\nConsole.WriteLine($\"nowInIsoUtc: {nowInIsoUtc}\");\n\n// Create a duration\nDuration duration = Duration.FromMinutes(3);\nConsole.WriteLine($\"duration: {duration}\");\n\n// Add it to our ZonedDateTime\nZonedDateTime thenInIsoUtc = nowInIsoUtc + duration;\nConsole.WriteLine($\"thenInIsoUtc: {thenInIsoUtc}\");\n\n// Time zone support (multiple providers)\nvar london = DateTimeZoneProviders.Tzdb[\"Europe/London\"];\nConsole.WriteLine($\"london: {london}\");\n\n// Time zone conversions\nvar localDate = new LocalDateTime(2012, 3, 27, 0, 45, 00);\nvar before = london.AtStrictly(localDate);\nConsole.WriteLine($\"before: {before}\");";

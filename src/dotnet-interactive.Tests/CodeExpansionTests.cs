@@ -18,14 +18,14 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 using static Microsoft.DotNet.Interactive.App.CodeExpansion;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class CodeExpansionTests
 {
-    [Fact]
+    [TestMethod]
     public async Task Connection_shortcuts_include_well_known_data_connections()
     {
         using var kernel = CreateKernel()
@@ -43,7 +43,7 @@ public class CodeExpansionTests
               .Contain(KernelBuilder.GetDataKernelCodeExpansions().Select( e => e.Info));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_connect_directive_is_run_then_recent_connection_list_item_is_added()
     {
         RecentConnectionList recentConnectionList = new();
@@ -67,7 +67,7 @@ public class CodeExpansionTests
                     new CodeExpansionInfo("myFakeKernel", CodeExpansionKind.RecentConnection)));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_connect_directive_is_run_then_code_expansion_is_added_to_config()
     {
         RecentConnectionList recentConnectionList = new();
@@ -93,7 +93,7 @@ public class CodeExpansionTests
                      .Which.Code.Should().Be("#!connect fake --kernel-name myFakeKernel --fakeness-level 9000");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_connect_directive_comes_from_nuget_package_then_pound_r_is_included_in_the_connection_shortcut()
     {
         RecentConnectionList recentConnectionList = new();
@@ -139,7 +139,7 @@ public class CodeExpansionTests
                                 ], new("mine", CodeExpansionKind.RecentConnection)));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Triggering_a_code_expansion_causes_a_SendEditableCode_to_be_sent_with_the_connect_code()
     {
         using var kernel = CreateKernel().UseCodeExpansions(new(KernelBuilder.GetDataKernelCodeExpansions()));
@@ -166,7 +166,7 @@ public class CodeExpansionTests
         receivedSendEditableCode[1].Code.Should().Be(expectedCodeSubmissions[1].Code);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_kernelspec_expansions_are_correctly_generated_from_kernelspecs()
     {
         var config = new CodeExpansionConfiguration(

@@ -6,13 +6,12 @@ using Microsoft.DotNet.Interactive.Browser;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
-using Xunit.Abstractions;
 
 namespace Pocket;
 
 internal partial class LogEvents
 {
-    public static IDisposable SubscribeToPocketLogger(this ITestOutputHelper output) =>
+    public static IDisposable SubscribeToPocketLogger(this TestContext output) =>
         Subscribe(
             e => output.WriteLine(e.ToLogString()),
             new[]

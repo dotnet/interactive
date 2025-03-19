@@ -18,7 +18,6 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
@@ -30,12 +29,12 @@ public partial class HttpKernelTests
         Formatter.ResetToDefault();
     }
 
-    [Theory]
-    [InlineData("GET")]
-    [InlineData("PUT")]
-    [InlineData("POST")]
-    [InlineData("DELETE")]
-    [InlineData("HEAD")]
+    [TestMethod]
+    [DataRow("GET")]
+    [DataRow("PUT")]
+    [DataRow("POST")]
+    [DataRow("DELETE")]
+    [DataRow("HEAD")]
     public async Task supports_sending_requests_with_common_verbs(string verb)
     {
         HttpRequestMessage request = null;
@@ -58,7 +57,7 @@ public partial class HttpKernelTests
         request.Method.Method.Should().Be(verb);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task it_can_interpolate_variable_for_URL_host()
     {
         HttpRequestMessage request = null;
@@ -82,7 +81,7 @@ public partial class HttpKernelTests
         request.RequestUri.Should().Be("https://my.host.com:1200/endpoint");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_handle_multiple_request_in_a_single_submission()
     {
         List<HttpRequestMessage> requests = new();
@@ -109,7 +108,7 @@ public partial class HttpKernelTests
         requests.Select(r => r.RequestUri.AbsoluteUri).ToArray().Should().BeEquivalentTo(new[] { "https://location1.com:1200/endpoint", "https://location2.com:1200/endpoint" });
     }
 
-    [Fact]
+    [TestMethod]
     public async Task binding_for_variables_that_have_been_sent_work_well()
     {
         HttpRequestMessage request = null;
@@ -133,7 +132,7 @@ public partial class HttpKernelTests
         request.RequestUri.Should().Be("https://my.host.com:1200/endpoint");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task send_request_and_variables_are_saved()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -166,7 +165,7 @@ public partial class HttpKernelTests
         valueInfo.FormattedValue.Should().BeEquivalentTo(new FormattedValue(PlainTextSummaryFormatter.MimeType, "https://httpbin.org"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_set_request_headers()
     {
         HttpRequestMessage request = null;
@@ -192,7 +191,7 @@ public partial class HttpKernelTests
         request.Headers.Authorization.ToString().Should().Be("Basic username password");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_set_body_from_single_line()
     {
         HttpRequestMessage request = null;
@@ -222,7 +221,7 @@ public partial class HttpKernelTests
         bodyAsString.Should().Be("""{ "key" : "value", "list": [1, 2, 3] }""");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_set_body_from_multiline_text()
     {
         HttpRequestMessage request = null;
@@ -260,7 +259,7 @@ public partial class HttpKernelTests
             """);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task invalid_header_value_produces_error()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -281,7 +280,7 @@ public partial class HttpKernelTests
             "The format of value 'OOPS!' is invalid.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_use_symbols_in_body()
     {
         HttpRequestMessage request = null;
@@ -313,7 +312,7 @@ public partial class HttpKernelTests
         bodyAsString.Should().Be("""{ "key" : "value", "list": [1, 2, 3] }""");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task comments_can_be_placed_before_a_variable_expanded_request()
     {
         HttpRequestMessage request = null;
@@ -342,7 +341,7 @@ public partial class HttpKernelTests
         request.RequestUri.AbsoluteUri.Should().Be("https://example.com/");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task binding_in_variable_value_is_valid()
     {
         HttpRequestMessage request = null;
@@ -371,7 +370,7 @@ public partial class HttpKernelTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task binding_in_variable_value_with_request_separator()
     {
         HttpRequestMessage request = null;
@@ -399,7 +398,7 @@ public partial class HttpKernelTests
         request.RequestUri.Should().Be($"https://microsoft.com");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task binding_variable_in_text_is_valid()
     {
         HttpRequestMessage request = null;
@@ -435,7 +434,7 @@ public partial class HttpKernelTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_guid()
     {
         HttpRequestMessage request = null;
@@ -468,17 +467,17 @@ public partial class HttpKernelTests
 
     }
 
-    [Theory]
-    [InlineData(" $guid")]
-    [InlineData("$guid ")]
-    [InlineData(" $datetime 'yyyy-MM-dd'")]
-    [InlineData("$datetime 'yyyy-MM-dd' ")]
-    [InlineData(" $localDatetime 'yyyy-MM-dd'")]
-    [InlineData("$localDatetime 'yyyy-MM-dd' ")]
-    [InlineData(" $timestamp")]
-    [InlineData("$timestamp ")]
-    [InlineData(" $randomInt")]
-    [InlineData("$randomInt ")]
+    [TestMethod]
+    [DataRow(" $guid")]
+    [DataRow("$guid ")]
+    [DataRow(" $datetime 'yyyy-MM-dd'")]
+    [DataRow("$datetime 'yyyy-MM-dd' ")]
+    [DataRow(" $localDatetime 'yyyy-MM-dd'")]
+    [DataRow("$localDatetime 'yyyy-MM-dd' ")]
+    [DataRow(" $timestamp")]
+    [DataRow("$timestamp ")]
+    [DataRow(" $randomInt")]
+    [DataRow("$randomInt ")]
     public async Task can_bind_expression_with_various_spaces(string expression)
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -504,10 +503,10 @@ public partial class HttpKernelTests
 
     }
 
-    [Theory]
-    [InlineData("$guid$guid")]
-    [InlineData("abc$guid")]
-    [InlineData("$guidabc")]
+    [TestMethod]
+    [DataRow("$guid$guid")]
+    [DataRow("abc$guid")]
+    [DataRow("$guidabc")]
     public async Task cant_bind_invalid_guid_expression(string expression)
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -536,10 +535,10 @@ public partial class HttpKernelTests
         diagnostics.Diagnostics.First().Message.Should().Be($"Unable to evaluate expression '{expression}'.");
     }
 
-    [Theory]
-    [InlineData("$datetime$datetime")]
-    [InlineData("abc$datetime")]
-    [InlineData("$datetimeabc")]
+    [TestMethod]
+    [DataRow("$datetime$datetime")]
+    [DataRow("abc$datetime")]
+    [DataRow("$datetimeabc")]
     public async Task cant_bind_invalid_datetime_expression(string expression)
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -569,10 +568,10 @@ public partial class HttpKernelTests
 
     }
 
-    [Theory]
-    [InlineData("$localDatetime$localDatetime")]
-    [InlineData("abc$localDatetime")]
-    [InlineData("$localDatetimeabc")]
+    [TestMethod]
+    [DataRow("$localDatetime$localDatetime")]
+    [DataRow("abc$localDatetime")]
+    [DataRow("$localDatetimeabc")]
     public async Task cant_bind_invalid_local_datetime_expression(string expression)
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -602,10 +601,10 @@ public partial class HttpKernelTests
 
     }
 
-    [Theory]
-    [InlineData("$timestamp$timestamp")]
-    [InlineData("abc$timestamp")]
-    [InlineData("$timestampabc")]
+    [TestMethod]
+    [DataRow("$timestamp$timestamp")]
+    [DataRow("abc$timestamp")]
+    [DataRow("$timestampabc")]
     public async Task cant_bind_invalid_timestamp_expression(string expression)
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -635,10 +634,10 @@ public partial class HttpKernelTests
 
     }
 
-    [Theory]
-    [InlineData("$randomInt$randomInt")]
-    [InlineData("abc$randomInt")]
-    [InlineData("$randomIntabc")]
+    [TestMethod]
+    [DataRow("$randomInt$randomInt")]
+    [DataRow("abc$randomInt")]
+    [DataRow("$randomIntabc")]
     public async Task cant_bind_invalid_random_int_expression(string expression)
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -668,10 +667,10 @@ public partial class HttpKernelTests
 
     }
 
-    [Theory]
-    [InlineData("$randomInt$guid")]
-    [InlineData("$randomInt$dateTime")]
-    [InlineData("$timestamp$localDatetime")]
+    [TestMethod]
+    [DataRow("$randomInt$guid")]
+    [DataRow("$randomInt$dateTime")]
+    [DataRow("$timestamp$localDatetime")]
     public async Task cant_bind_multiples_in_expression(string expression)
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -699,12 +698,12 @@ public partial class HttpKernelTests
 
     }
 
-    [Theory]
-    [InlineData("$GUID")]
-    [InlineData("$TIMESTAMP")]
-    [InlineData("$DATETIME")]
-    [InlineData("$LOCALDATETIME")]
-    [InlineData("$RANDOMINT")]
+    [TestMethod]
+    [DataRow("$GUID")]
+    [DataRow("$TIMESTAMP")]
+    [DataRow("$DATETIME")]
+    [DataRow("$LOCALDATETIME")]
+    [DataRow("$RANDOMINT")]
     public async Task cant_bind_capital_versions_of_expressions(string expression)
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -734,7 +733,7 @@ public partial class HttpKernelTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_timestamp()
     {
         HttpRequestMessage request = null;
@@ -767,7 +766,7 @@ public partial class HttpKernelTests
         unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(10));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_timestamp_With_additional_spaces()
     {
         HttpRequestMessage request = null;
@@ -800,11 +799,11 @@ public partial class HttpKernelTests
         unixValue.Should().BeCloseTo(DateTimeOffset.UtcNow.AddDays(4), TimeSpan.FromSeconds(10));
     }
 
-    [Theory]
-    [InlineData("-1")]
-    [InlineData("+1")]
-    [InlineData("0")]
-    [InlineData("4")]
+    [TestMethod]
+    [DataRow("-1")]
+    [DataRow("+1")]
+    [DataRow("0")]
+    [DataRow("4")]
     public async Task can_bind_timestamp_with_valid_offset(string offsetDays)
     {
         HttpRequestMessage request = null;
@@ -839,7 +838,7 @@ public partial class HttpKernelTests
         unixValue.Should().BeCloseTo(dateTimeOffset, TimeSpan.FromSeconds(10));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task cant_bind_timestamp_offset_without_option()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -867,7 +866,7 @@ public partial class HttpKernelTests
         diagnostics.Diagnostics.First().Message.Should().Be("The supplied expression '$timestamp -1' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$timestamp [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task cant_bind_timestamp_offset_with_invalid_option()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -897,7 +896,7 @@ public partial class HttpKernelTests
 
 
 
-    [Fact]
+    [TestMethod]
     public async Task cant_bind_timestamp_offset_with_invalid_offset()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -925,7 +924,7 @@ public partial class HttpKernelTests
         diagnostics.Diagnostics.First().Message.Should().Be("The supplied offset '33.2' in the expression '$timestamp 33.2 d' is not a valid integer. See https://aka.ms/http-date-time-format for more details.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task cant_bind_timestamp_with_invalid_chars_in_the_arguments()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -951,7 +950,7 @@ public partial class HttpKernelTests
         result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied offset '~1' in the expression '$timestamp ~1 d' is not a valid integer. See https://aka.ms/http-date-time-format for more details.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_random_int_with_no_arguments()
     {
         HttpRequestMessage request = null;
@@ -983,7 +982,7 @@ public partial class HttpKernelTests
         int.TryParse(randIntValue, out _).Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_random_int_with_only_max()
     {
         HttpRequestMessage request = null;
@@ -1019,7 +1018,7 @@ public partial class HttpKernelTests
         intValueOfRandInt.Should().BeLessThanOrEqualTo(10);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_random_int_with_arguments()
     {
         HttpRequestMessage request = null;
@@ -1056,7 +1055,7 @@ public partial class HttpKernelTests
         intValueOfRandInt.Should().BeLessThanOrEqualTo(99);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_random_int_with_additional_spaces()
     {
         HttpRequestMessage request = null;
@@ -1093,7 +1092,7 @@ public partial class HttpKernelTests
         intValueOfRandInt.Should().BeLessThanOrEqualTo(99);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_random_int_with_negative_values()
     {
         HttpRequestMessage request = null;
@@ -1129,7 +1128,7 @@ public partial class HttpKernelTests
         intValueOfRandInt.Should().BeLessThanOrEqualTo(99);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task cant_bind_random_int_with_min_greater_than_max()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -1154,7 +1153,7 @@ public partial class HttpKernelTests
         result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied argument '99' in the expression '$randomInt 99 10' must not be greater than the supplied argument '10'.""");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task cant_bind_random_int_with_non_integer_max()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -1179,11 +1178,11 @@ public partial class HttpKernelTests
         result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied argument '99.3' in the expression '$randomInt 10 99.3' is not a valid integer.");
     }
 
-    [Theory]
-    [InlineData("-1")]
-    [InlineData("+1")]
-    [InlineData("0")]
-    [InlineData("4")]
+    [TestMethod]
+    [DataRow("-1")]
+    [DataRow("+1")]
+    [DataRow("0")]
+    [DataRow("4")]
     public async Task can_bind_datetime_with_valid_offset(string offsetDays)
     {
         HttpRequestMessage request = null;
@@ -1217,15 +1216,15 @@ public partial class HttpKernelTests
         dateTimeValue.Should().BeCloseTo(dateTimeOffset, TimeSpan.FromSeconds(10));
     }
 
-    [Theory]
-    [InlineData("h")]
-    [InlineData("y")]
-    [InlineData("ms")]
-    [InlineData("d")]
-    [InlineData("s")]
-    [InlineData("M")]
-    [InlineData("w")]
-    [InlineData("m")]
+    [TestMethod]
+    [DataRow("h")]
+    [DataRow("y")]
+    [DataRow("ms")]
+    [DataRow("d")]
+    [DataRow("s")]
+    [DataRow("M")]
+    [DataRow("w")]
+    [DataRow("m")]
     public async Task binding_with_various_datetime_options_doesnt_produce_errors(string option)
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -1250,7 +1249,7 @@ public partial class HttpKernelTests
         result.Events.Should().NotContainErrors();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task invalid_option_produces_error()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -1275,7 +1274,7 @@ public partial class HttpKernelTests
         result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("The supplied option 't' in the expression '$datetime 'yyyy-MM-dd' -1 t' is not supported. The following options are supported: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_datetime_with_additional_spaces()
     {
         HttpRequestMessage request = null;
@@ -1309,7 +1308,7 @@ public partial class HttpKernelTests
         readDateValue.Should().BeEquivalentTo(offsetDate);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_datetime_with_arguments()
     {
         HttpRequestMessage request = null;
@@ -1343,7 +1342,7 @@ public partial class HttpKernelTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_datetime_with_offset()
     {
         HttpRequestMessage request = null;
@@ -1378,7 +1377,7 @@ public partial class HttpKernelTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_datetime_with_positive_offset_and_no_plus()
     {
         HttpRequestMessage request = null;
@@ -1413,7 +1412,7 @@ public partial class HttpKernelTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_local_datetime_with_arguments()
     {
         HttpRequestMessage request = null;
@@ -1446,7 +1445,7 @@ public partial class HttpKernelTests
         readDateValue.Should().BeEquivalentTo(currentDate);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_local_datetime_with_iso_format()
     {
         HttpRequestMessage request = null;
@@ -1479,7 +1478,7 @@ public partial class HttpKernelTests
         DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDateTime, TimeSpan.FromSeconds(10));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_local_datetime_with_additonal_spaces()
     {
         HttpRequestMessage request = null;
@@ -1512,7 +1511,7 @@ public partial class HttpKernelTests
         DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDate, TimeSpan.FromSeconds(10));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_bind_local_datetime_with_rfc_format()
     {
         HttpRequestMessage request = null;
@@ -1545,7 +1544,7 @@ public partial class HttpKernelTests
         DateTimeOffset.Parse(readDateValue).Should().BeCloseTo(currentDate, TimeSpan.FromSeconds(10));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task several_system_variables_in_single_request()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -1577,7 +1576,7 @@ public partial class HttpKernelTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task url_in_embedded_expression_is_valid()
     {
         HttpRequestMessage request = null;
@@ -1604,7 +1603,7 @@ public partial class HttpKernelTests
         request.RequestUri.AbsoluteUri.Should().Be("https://httpbin.org/anything");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task incorrect_datetime_syntax_produces_error()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -1631,7 +1630,7 @@ public partial class HttpKernelTests
     }
 
 
-    [Fact]
+    [TestMethod]
     public async Task incorrect_datetime_produces_error()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -1657,7 +1656,7 @@ public partial class HttpKernelTests
         result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Diagnostics.Should().ContainSingle().Which.Message.Should().Be("""The supplied expression '$localDatetime' does not follow the correct pattern. The expression should adhere to the following pattern: '{{$localDatetime [rfc1123|iso8601|"custom format"] [offset option]}}' where offset (if specified) must be a valid integer and option must be one of the following: ms, s, m, h, d, w, M, Q, y. See https://aka.ms/http-date-time-format for more details.""");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols_in_URL()
     {
         using var kernel = new HttpKernel();
@@ -1673,7 +1672,7 @@ public partial class HttpKernelTests
         diagnostics.Diagnostics.First().Message.Should().Be("Unable to evaluate expression 'api_endpoint'.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols()
     {
         using var kernel = new HttpKernel();
@@ -1695,7 +1694,7 @@ public partial class HttpKernelTests
         diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 26), new LinePosition(2, 43)));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task diagnostic_positions_are_correct_for_unresolved_symbols_after_other_symbols_were_successfully_resolved()
     {
         using var kernel = new HttpKernel();
@@ -1717,7 +1716,7 @@ public partial class HttpKernelTests
         diagnostics.Diagnostics.Should().ContainSingle().Which.LinePositionSpan.Should().Be(new LinePositionSpan(new LinePosition(2, 14), new LinePosition(2, 31)));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task multiple_diagnostics_are_returned_from_the_same_submission()
     {
         using var kernel = new HttpKernel();
@@ -1739,7 +1738,7 @@ public partial class HttpKernelTests
         diagnostics.Diagnostics.Should().HaveCount(2);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_error_diagnostics_are_present_then_request_is_not_sent()
     {
         var messageWasSent = false;
@@ -1757,7 +1756,7 @@ public partial class HttpKernelTests
         messageWasSent.Should().BeFalse();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task produces_html_formatted_display_value()
     {
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -1777,7 +1776,7 @@ public partial class HttpKernelTests
             .MimeType.Should().Be(HtmlFormatter.MimeType);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task produces_json_formatted_return_value()
     {
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -1797,7 +1796,7 @@ public partial class HttpKernelTests
             .MimeType.Should().Be(JsonFormatter.MimeType);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task display_should_be_suppressed_for_return_value()
     {
         var handler = new InterceptingHttpMessageHandler((message, _) =>
@@ -1817,7 +1816,7 @@ public partial class HttpKernelTests
             .SuppressDisplay.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task produces_initial_displayed_value_that_is_updated_when_response_is_slow()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
@@ -1845,7 +1844,7 @@ public partial class HttpKernelTests
         displayEvents[2].Should().BeOfType<ReturnValueProduced>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_response_is_slow_initial_displayed_value_conveys_that_it_is_awaiting_response()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
@@ -1866,7 +1865,7 @@ public partial class HttpKernelTests
             .FormattedValues.Single().Value.Should().Contain("Awaiting response");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_response_is_slow_final_displayed_value_includes_response_details()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
@@ -1887,7 +1886,7 @@ public partial class HttpKernelTests
             .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_response_is_slow_and_an_error_happens_the_awaiting_response_displayed_value_is_cleared()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
@@ -1911,7 +1910,7 @@ public partial class HttpKernelTests
         displayedValueUpdated.FormattedValues.Single(f => f.MimeType is HtmlFormatter.MimeType).Value.Should().Be("<span/>");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task produces_initial_displayed_value_that_is_updated_when_response_is_large()
     {
         const int ContentByteLengthThreshold = 100;
@@ -1945,7 +1944,7 @@ public partial class HttpKernelTests
         displayEvents[2].Should().BeOfType<ReturnValueProduced>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_response_is_large_initial_displayed_value_conveys_that_it_is_loading_response()
     {
         const int ContentByteLengthThreshold = 100;
@@ -1973,7 +1972,7 @@ public partial class HttpKernelTests
             .FormattedValues.Single().Value.Should().Contain("Loading content");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_response_is_large_final_displayed_value_includes_response_details()
     {
         const int ContentByteLengthThreshold = 100;
@@ -2001,7 +2000,7 @@ public partial class HttpKernelTests
             .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task produces_initial_displayed_value_that_is_updated_twice_when_response_is_slow_and_large()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
@@ -2039,7 +2038,7 @@ public partial class HttpKernelTests
         displayEvents[3].Should().BeOfType<ReturnValueProduced>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_response_is_slow_and_large_first_displayed_value_conveys_that_it_is_awaiting_response()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
@@ -2069,7 +2068,7 @@ public partial class HttpKernelTests
             .FormattedValues.Single().Value.Should().Contain("Awaiting response");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_response_is_slow_and_large_second_displayed_value_conveys_that_it_is_loading_response()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
@@ -2099,7 +2098,7 @@ public partial class HttpKernelTests
             .FormattedValues.Single().Value.Should().Contain("Loading content");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_response_is_slow_and_large_final_displayed_value_includes_response_details()
     {
         const int ResponseDelayThresholdInMilliseconds = 5;
@@ -2129,7 +2128,7 @@ public partial class HttpKernelTests
             .FormattedValues.Single().Value.Should().ContainAll("Response", "Request", "Headers");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task commands_that_exceed_the_configured_request_timeout_are_marked_as_failed()
     {
         const int DelayInMilliseconds = 300;
@@ -2153,7 +2152,7 @@ public partial class HttpKernelTests
             "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task request_timeout_can_be_changed_more_than_once()
     {
         const int DelayInMilliseconds = 300;
@@ -2194,7 +2193,8 @@ public partial class HttpKernelTests
             "The request was canceled due to the configured timeout of 0.02 seconds elapsing.");
     }
 
-    [Fact(Skip = "Requires updates to HTTP parser")]
+    [TestMethod]
+    [Ignore("Requires updates to HTTP parser")]
     public void prompt_symbol_sends_input_request_to_user()
     {
         /*
@@ -2214,7 +2214,7 @@ Content-Type: {{contentType}}
         throw new NotImplementedException();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_supports_RequestValueInfos()
     {
         using var kernel = new HttpKernel();
@@ -2235,7 +2235,7 @@ Content-Type: {{contentType}}
         valueInfo.FormattedValue.Should().BeEquivalentTo(new FormattedValue(PlainTextSummaryFormatter.MimeType, "123"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_supports_RequestValue()
     {
         using var kernel = new HttpKernel();
@@ -2255,7 +2255,7 @@ Content-Type: {{contentType}}
             .BeEquivalentTo(new FormattedValue(JsonFormatter.MimeType, "123"));
     }
 
-    [Fact] // https://github.com/dotnet/interactive/issues/3239
+    [TestMethod] // https://github.com/dotnet/interactive/issues/3239
     public async Task traceparent_header_has_a_new_top_level_value_for_each_request()
     {
         using var kernel = new HttpKernel();
@@ -2273,7 +2273,7 @@ Content-Type: {{contentType}}
         traceparent1.Single()[0..36].Should().NotBe(traceparent2.Single()[0..36]);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Variables_can_be_cleared()
     {
         using var kernel = new HttpKernel().UseValueSharing();

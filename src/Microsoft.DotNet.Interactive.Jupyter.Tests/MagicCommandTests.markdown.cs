@@ -8,15 +8,15 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 public partial class MagicCommandTests
 {
+    [TestClass]
     public class Markdown
     {
-        [Fact]
+        [TestMethod]
         public async Task markdown_renders_markdown_content_as_html()
         {
             using var kernel = new CompositeKernel()

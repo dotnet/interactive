@@ -17,11 +17,11 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests;
 
-[Trait("Databases", "Data query tests")]
+[TestProperty("Databases", "Data query tests")]
+[TestClass]
 public class MsSqlConnectionTests : IDisposable
 {
     private async Task<CompositeKernel> CreateKernelAsync()
@@ -42,6 +42,7 @@ public class MsSqlConnectionTests : IDisposable
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task It_can_connect_and_query_data()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -70,6 +71,7 @@ SELECT TOP 100 * FROM Person.Person
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task It_does_not_add_a_kernel_on_connection_failure()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -86,6 +88,7 @@ SELECT TOP 100 * FROM Person.Person
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task It_allows_to_retry_connecting()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -105,6 +108,7 @@ SELECT TOP 100 * FROM Person.Person
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task It_gives_error_if_kernel_name_is_already_used()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -128,6 +132,7 @@ SELECT TOP 100 * FROM Person.Person
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task null_values_are_preserved_as_null_references()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -164,6 +169,7 @@ select top 10 AddressLine1, AddressLine2 from Person.Address
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task sending_query_to_sql_will_generate_suggestions()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -193,6 +199,7 @@ SELECT TOP 100 * FROM Person.Person
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task It_can_scaffold_a_DbContext_in_a_CSharpKernel()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -217,6 +224,7 @@ SELECT TOP 100 * FROM Person.Person
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task Field_types_are_deserialized_correctly()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -245,6 +253,7 @@ select * from sys.databases
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task query_produces_expected_formatted_values()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -272,6 +281,7 @@ select * from sys.databases
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task Empty_results_are_displayed_correctly()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -300,6 +310,7 @@ drop table dbo.EmptyTable;
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task It_can_store_result_set_with_a_name()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -333,6 +344,7 @@ my_data_result");
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task Stored_query_results_are_listed_in_ValueInfos()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -357,6 +369,7 @@ select * from sys.databases
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task Storing_results_does_interfere_with_subsequent_executions()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -388,6 +401,7 @@ select * from sys.databases
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task When_variable_does_not_exist_then_an_error_is_returned()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -412,6 +426,7 @@ select * from sys.databases
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task It_can_store_multiple_result_set_with_a_name()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
@@ -445,29 +460,30 @@ my_data_result");
               .Be(2);
     }
 
-    public static readonly IEnumerable<object[]> SharedObjectVariables =
+    public static IEnumerable<object[]> SharedObjectVariables =>
         new List<object[]>
         {
             new object[] { "Guid testVar = Guid.Parse(\"4df65065-2369-4d63-a6b0-20dc7cdd02fe\");", Guid.Parse("4df65065-2369-4d63-a6b0-20dc7cdd02fe") } // GUID
         };
 
     [MsSqlTheory]
-    [InlineData("var testVar = new Microsoft.DotNet.Interactive.PasswordString(\"pwd\");", "pwd")] // password string
-    [InlineData("var testVar = 2;", 2)] // var
-    [InlineData("string testVar = \"hi!\";", "hi!")] // string
-    [InlineData("string testVar = \"tricky'string\";", "tricky'string")] // string with '
-    [InlineData("string testVar = \"«ταБЬℓσ»\";", "«ταБЬℓσ»")] // unicode
-    [InlineData("string testVar = \"\";", "")] // Empty string
-    [InlineData("double testVar = 123456.789;", 123456.789)] // double
-    [InlineData("decimal testVar = 123456.789M;", 123456.789, typeof(Decimal))] // decimal
-    [InlineData("bool testVar = false;", false)] // bool
-    [InlineData("char testVar = 'a';", "a")] // char
-    [InlineData("char testVar = '\\'';", "'")] // ' char
-    [InlineData("byte testVar = 123;", (byte)123)] // byte
-    [InlineData("int testVar = 123456;", 123456)] // int
-    [InlineData("long testVar = 123456789012345;", 123456789012345)] // long
-    [InlineData("short testVar = 123;", (short)123)] // short
-    [MemberData(nameof(SharedObjectVariables))]
+    [DataRow("var testVar = new Microsoft.DotNet.Interactive.PasswordString(\"pwd\");", "pwd")] // password string
+    [DataRow("var testVar = 2;", 2)] // var
+    [DataRow("string testVar = \"hi!\";", "hi!")] // string
+    [DataRow("string testVar = \"tricky'string\";", "tricky'string")] // string with '
+    [DataRow("string testVar = \"«ταБЬℓσ»\";", "«ταБЬℓσ»")] // unicode
+    [DataRow("string testVar = \"\";", "")] // Empty string
+    [DataRow("double testVar = 123456.789;", 123456.789)] // double
+    [DataRow("decimal testVar = 123456.789M;", 123456.789, typeof(Decimal))] // decimal
+    [DataRow("bool testVar = false;", false)] // bool
+    [DataRow("char testVar = 'a';", "a")] // char
+    [DataRow("char testVar = '\\'';", "'")] // ' char
+    [DataRow("byte testVar = 123;", (byte)123)] // byte
+    [DataRow("int testVar = 123456;", 123456)] // int
+    [DataRow("long testVar = 123456789012345;", 123456789012345)] // long
+    [DataRow("short testVar = 123;", (short)123)] // short
+    [DynamicData(nameof(SharedObjectVariables))]
+    [TestMethod]
     public async Task Shared_variable_can_be_used_to_parameterize_a_sql_query(string csharpVariableDeclaration, object expectedValue, Type changeType = null)
     {
         using var kernel = await CreateKernelAsync();
@@ -503,6 +519,7 @@ select @testVar";
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task Multiple_shared_variable_can_be_used_to_parameterize_a_sql_query()
     {
         using var kernel = await CreateKernelAsync();
@@ -537,6 +554,7 @@ select @x, @y";
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task Shared_variable_are_not_stored_as_part_of_the_resultSet()
     {
         using var kernel = await CreateKernelAsync();
@@ -560,6 +578,7 @@ select TOP(@testVar) * from sys.databases";
     }
 
     [MsSqlFact]
+    [TestMethod]
     public async Task An_input_type_hint_is_set_for_connection_strings()
     {
         using var kernel = await CreateKernelAsync();

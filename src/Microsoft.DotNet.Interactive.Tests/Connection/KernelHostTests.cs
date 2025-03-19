@@ -5,21 +5,20 @@ using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
+[TestClass]
 public class KernelHostTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public KernelHostTests(ITestOutputHelper output)
+    public KernelHostTests(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
 
-    [Fact]
+    [TestMethod]
     public void When_kernel_is_added_to_hosted_CompositeKernel_then_origin_URI_is_set()
     {
         using var composite = new CompositeKernel();
@@ -34,7 +33,7 @@ public class KernelHostTests : IDisposable
         kernelInfo.Uri.Should().Be(new Uri(composite.Host.Uri, "fake"));
     }
 
-    [Fact]
+    [TestMethod]
     public void It_does_not_throw_when_proxy_kernel_is_created_for_nonexistent_remote()
     {
         using var localCompositeKernel = new CompositeKernel("LOCAL");

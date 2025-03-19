@@ -7,14 +7,14 @@ using FluentAssertions;
 
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-[Trait("Category", "Contracts and serialization")]
+[TestProperty("Category", "Contracts and serialization")]
+[TestClass]
 public class HistorySerializationTests
 {
-    [Fact]
+    [TestMethod]
     public void Can_serialize_history_reply()
     {
 
@@ -29,7 +29,7 @@ public class HistorySerializationTests
         serialized.Should().Be(@"{""history"":[[0,0,""input value""],[1,0,""input value""],[2,0,[""input value"",""output result""]]]}");
     }
 
-    [Fact]
+    [TestMethod]
     public void Can_serialize_empty_history_reply()
     {
         var historyReply = new HistoryReply(new HistoryElement[]{});
@@ -38,7 +38,7 @@ public class HistorySerializationTests
         serialized.Should().Be(@"{""history"":[]}");
     }
 
-    [Fact]
+    [TestMethod]
     public void Can_serialize_null_history_reply()
     {
         var historyReply = new HistoryReply();
@@ -47,7 +47,7 @@ public class HistorySerializationTests
         serialized.Should().Be(@"{""history"":[]}");
     }
 
-    [Fact]
+    [TestMethod]
     public void Can_deserialize_history_reply()
     {
 
@@ -61,7 +61,7 @@ public class HistorySerializationTests
         }));
     }
 
-    [Fact]
+    [TestMethod]
     public void Can_deserialize_empty_history_reply()
     {
 
@@ -70,7 +70,7 @@ public class HistorySerializationTests
         historyReply.Should().BeEquivalentToRespectingRuntimeTypes(new HistoryReply(new HistoryElement[]{}));
     }
 
-    [Fact]
+    [TestMethod]
     public void Can_deserialize_null_history_reply()
     {
         var serialized = @"{""history"":null}";

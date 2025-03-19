@@ -11,20 +11,20 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
+
+[TestClass]
 #pragma warning disable 8509
 public class LanguageKernelAssemblyReferenceTests : LanguageKernelTestBase
 {
-    public LanguageKernelAssemblyReferenceTests(ITestOutputHelper output) : base(output)
+    public LanguageKernelAssemblyReferenceTests(TestContext output) : base(output)
     {
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task it_can_load_assembly_references_using_r_directive_single_submission(Language language)
     {
         var kernel = CreateKernel(language);
@@ -54,9 +54,9 @@ typeof(Hello).Name"
             .Be("Hello");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task it_can_load_assembly_references_using_r_directive_separate_submissions(Language language)
     {
         var kernel = CreateKernel(language);
@@ -92,9 +92,9 @@ typeof(Hello).Name"
             .Be("Hello");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task it_can_load_assembly_references_using_r_directive_with_relative_path(Language language)
     {
         var kernel = CreateKernel(language);
@@ -117,9 +117,9 @@ typeof(Hello).Name"
             .ContainSingle<CommandSucceeded>(c => c.Command == command);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    // [InlineData(Language.FSharp)] Not supported in F#
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    // [DataRow(Language.FSharp)] Not supported in F#
     public async Task it_can_load_assembly_references_using_r_directive_with_relative_path_after_user_code_changes_current_directory(Language language)
     {
         var currentDirectory = Directory.GetCurrentDirectory();

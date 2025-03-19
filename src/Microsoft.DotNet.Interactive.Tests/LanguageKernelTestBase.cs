@@ -14,16 +14,10 @@ using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.LanguageKernelTestBase>;
-using Xunit.Abstractions;
-
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public abstract class LanguageKernelTestBase : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
@@ -37,7 +31,7 @@ public abstract class LanguageKernelTestBase : IDisposable
         };
     }
 
-    protected LanguageKernelTestBase(ITestOutputHelper output)
+    protected LanguageKernelTestBase(TestContext output)
     {
         DisposeAfterTest(output.SubscribeToPocketLogger());
     }

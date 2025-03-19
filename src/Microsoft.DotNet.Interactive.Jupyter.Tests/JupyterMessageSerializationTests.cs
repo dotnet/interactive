@@ -7,23 +7,22 @@ using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using System.Collections.Generic;
 using System.Text.Json;
-using Xunit;
-using Xunit.Abstractions;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[TestClass]
 public class JupyterMessageSerializationTests
 {
-    private readonly ITestOutputHelper _output;
+    private readonly TestContext _output;
 
-    public JupyterMessageSerializationTests(ITestOutputHelper output)
+    public JupyterMessageSerializationTests(TestContext output)
     {
         _output = output;
     }
     
-    [Theory]
-    [MemberData(nameof(Messages))]
+    [TestMethod]
+    [DynamicData(nameof(Messages))]
     public void All_message_types_are_round_trip_serializable(Message message)
     {
         var json = JsonSerializer.Serialize(message, MessageFormatter.SerializerOptions);

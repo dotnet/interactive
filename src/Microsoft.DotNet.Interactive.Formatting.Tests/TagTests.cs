@@ -2,13 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[TestClass]
 public class TagTests : FormatterTestBase
 {
-    [Fact]
+    [TestMethod]
     public void Name_property_is_set_by_constructor()
     {
         var tag = new HtmlTag("label");
@@ -16,7 +16,7 @@ public class TagTests : FormatterTestBase
         tag.Name.Should().Be("label");
     }
 
-    [Fact]
+    [TestMethod]
     public void ToString_renders_start_tag_when_there_is_no_content()
     {
         var p = new HtmlTag("p");
@@ -24,7 +24,7 @@ public class TagTests : FormatterTestBase
         p.ToString().Should().Contain("<p>");
     }
 
-    [Fact]
+    [TestMethod]
     public void ToString_renders_end_tag_when_there_is_no_content()
     {
         var p = new HtmlTag("p");
@@ -32,7 +32,7 @@ public class TagTests : FormatterTestBase
         p.ToString().Should().Contain("<p></p>");
     }
 
-    [Fact]
+    [TestMethod]
     public void ToString_renders_text_content()
     {
         var p = new HtmlTag("p", "content");
@@ -40,7 +40,7 @@ public class TagTests : FormatterTestBase
         p.ToString().Should().Be("<p>content</p>");
     }
 
-    [Fact]
+    [TestMethod]
     public void ToString_renders_Action_content()
     {
         var p = new HtmlTag("p", c => c.Writer.Write("content"));
@@ -48,7 +48,7 @@ public class TagTests : FormatterTestBase
         p.ToString().Should().Be("<p>content</p>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Append_appends_content_to_existing_Tag_content()
     {
         var tag = new HtmlTag("div").Containing("initial content");
@@ -60,7 +60,7 @@ public class TagTests : FormatterTestBase
         html.Should().Be("<div>initial content<div>more content</div></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Append_array_overload_appends_content_to_existing_Tag_content()
     {
         var tag = new HtmlTag("div").Containing("initial content");
@@ -72,7 +72,7 @@ public class TagTests : FormatterTestBase
         html.Should().Be("<div>initial content<div>more</div><div>content</div></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Append_appends_to_tag_with_no_content()
     {
         var tag = "div".Tag().Append("img".Tag().SelfClosing()).ToString();
@@ -80,7 +80,7 @@ public class TagTests : FormatterTestBase
         tag.Should().Be("<div><img /></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Prepend_prepends_to_tag_with_no_content()
     {
         var tag = "div".Tag().Prepend("img".Tag().SelfClosing()).ToString();
@@ -88,7 +88,7 @@ public class TagTests : FormatterTestBase
         tag.Should().Be("<div><img /></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void AppendTo_appends_content_to_target_Tag_content()
     {
         var tag = new HtmlTag("div").Containing("initial content");
@@ -98,7 +98,7 @@ public class TagTests : FormatterTestBase
         html.Should().Be("<div>initial content<div>more content</div></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void AppendTo_appends_content_to_target_Tag_that_has_no_content()
     {
         var tag = "div".Tag();
@@ -108,7 +108,7 @@ public class TagTests : FormatterTestBase
         html.Should().Be("<div><div>some content</div></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void PrependTo_prepends_content_to_target_Tag_that_has_no_content()
     {
         var tag = "div".Tag();
@@ -118,21 +118,21 @@ public class TagTests : FormatterTestBase
         html.Should().Be("<div><div>some content</div></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Append_returns_the_same_tag()
     {
         var tag = new HtmlTag("div");
         tag.Append("a".Tag()).Should().Be(tag);
     }
 
-    [Fact]
+    [TestMethod]
     public void AppendTo_returns_the_same_tag()
     {
         var tag = new HtmlTag("div");
         tag.AppendTo("a".Tag()).Should().Be(tag);
     }
 
-    [Fact]
+    [TestMethod]
     public void AppendTo_returns_unmodified_tag()
     {
         var target = "div".Tag();
@@ -143,7 +143,7 @@ public class TagTests : FormatterTestBase
         after.ToString().Should().Be(before.ToString());
     }
 
-    [Fact]
+    [TestMethod]
     public void Append_appends_many_tags_into_one()
     {
         var tag = "ul".Tag().Append("li".Tag(), "li".Tag());
@@ -153,7 +153,7 @@ public class TagTests : FormatterTestBase
         html.Should().Be("<ul><li></li><li></li></ul>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Prepend_returns_the_same_tag()
     {
         var tag = new HtmlTag("div");
@@ -161,7 +161,7 @@ public class TagTests : FormatterTestBase
         tag.Prepend("a".Tag()).Should().Be(tag);
     }
 
-    [Fact]
+    [TestMethod]
     public void PrependTo_returns_the_same_tag()
     {
         var tag = new HtmlTag("div");
@@ -169,7 +169,7 @@ public class TagTests : FormatterTestBase
         tag.PrependTo("a".Tag()).Should().Be(tag);
     }
 
-    [Fact]
+    [TestMethod]
     public void PrependTo_returns_unmodified_tag()
     {
         var target = "div".Tag();
@@ -180,14 +180,14 @@ public class TagTests : FormatterTestBase
         after.ToString().Should().Be(before.ToString());
     }
 
-    [Fact]
+    [TestMethod]
     public void WrapInner_returns_the_same_tag()
     {
         var tag = new HtmlTag("div");
         tag.WrapInner("a".Tag()).Should().Be(tag);
     }
 
-    [Fact]
+    [TestMethod]
     public void Prepend_prepends_content_to_existing_Tag_content()
     {
         var tag = new HtmlTag("div").Containing("initial content");
@@ -199,7 +199,7 @@ public class TagTests : FormatterTestBase
         after.Should().Be("<div><div>more content</div>initial content</div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void WrapInner_wraps_inner_content_in_specified_tag()
     {
         var tag = new HtmlTag("div").Containing("initial content");
@@ -211,7 +211,7 @@ public class TagTests : FormatterTestBase
         after.Should().Be("<div><a href=\"#\">initial content</a></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void MergedAttributes_produces_a_tag_having_the_union_of_attributes_differing_by_name()
     {
         var tag = new HtmlTag("div");
@@ -223,7 +223,7 @@ public class TagTests : FormatterTestBase
         html.Should().Contain("<div class=\"error\" style=\"display:block\"></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void WithAttributes_produces_a_tag_having_the_union_of_attributes_differing_by_name()
     {
         var tag = new HtmlTag("div")
@@ -235,7 +235,7 @@ public class TagTests : FormatterTestBase
         html.Should().Contain("<div class=\"error\" style=\"display:block\"></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void When_called_more_than_once_with_attributes_of_the_same_name_MergeAttributes_does_not_overwrite_by_default()
     {
         var tag = new HtmlTag("div");
@@ -247,7 +247,7 @@ public class TagTests : FormatterTestBase
         html.Should().Contain("<div class=\"error\"></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void When_called_more_than_once_with_attributes_of_the_same_name_WithAttributes_overwrites_by_default()
     {
         var tag = new HtmlTag("div")
@@ -259,7 +259,7 @@ public class TagTests : FormatterTestBase
         html.Should().Contain("<div class=\"alert\"></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void When_called_more_than_once_with_attributes_of_the_same_name_MergeAttributes_and_overwrite_is_set_to_true_it_overwrites()
     {
         var tag = new HtmlTag("div");
@@ -271,7 +271,7 @@ public class TagTests : FormatterTestBase
         html.Should().Contain("<div class=\"alert\"></div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void IsSelfClosing_renders_selfclosing_when_no_content()
     {
         var tag = "pizza".Tag();
@@ -282,7 +282,7 @@ public class TagTests : FormatterTestBase
         after.Should().Be("<pizza />");
     }
 
-    [Fact]
+    [TestMethod]
     public void IsSelfClosing_renders_full_tag_when_content()
     {
         var tag = new HtmlTag("pizza").Containing("some content");
@@ -292,7 +292,7 @@ public class TagTests : FormatterTestBase
         after.Should().Be("<pizza>some content</pizza>");
     }
 
-    [Fact]
+    [TestMethod]
     public void SelfClosing_extension_sets_IsSelfClosing_property()
     {
         var tag = "input".Tag();

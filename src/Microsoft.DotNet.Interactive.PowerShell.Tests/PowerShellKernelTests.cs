@@ -13,12 +13,11 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 using Language = Microsoft.DotNet.Interactive.Tests.Language;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Tests;
 
+[TestClass]
 public class PowerShellKernelTests : LanguageKernelTestBase
 {
     private readonly string _allUsersCurrentHostProfilePath = Path.Combine(Path.GetDirectoryName(typeof(PSObject).Assembly.Location), "Microsoft.dotnet-interactive_profile.ps1");
@@ -75,13 +74,13 @@ public class PowerShellKernelTests : LanguageKernelTestBase
         </table>
         """;
 
-    public PowerShellKernelTests(ITestOutputHelper output) : base(output)
+    public PowerShellKernelTests(TestContext output) : base(output)
     {
     }
 
-    [Theory]
-    [InlineData(@"$x = New-Object -TypeName System.IO.FileInfo -ArgumentList c:\temp\some.txt", typeof(FileInfo))]
-    [InlineData("$x = \"hello!\"", typeof(string))]
+    [TestMethod]
+    [DataRow(@"$x = New-Object -TypeName System.IO.FileInfo -ArgumentList c:\temp\some.txt", typeof(FileInfo))]
+    [DataRow("$x = \"hello!\"", typeof(string))]
     public async Task TryGetVariable_unwraps_PowerShell_object(string code, Type expectedType)
     {
         using var kernel = new PowerShellKernel();
@@ -93,7 +92,7 @@ public class PowerShellKernelTests : LanguageKernelTestBase
         fi.Should().BeOfType(expectedType);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task PowerShell_progress_sends_updated_display_values()
     {
         var kernel = CreateKernel(Language.PowerShell);
@@ -106,22 +105,22 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 ");
         var result = await kernel.SendAsync(command);
 
-        Assert.Collection(result.Events,
-                          e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                          e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                          e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                                .Value.Should().BeOfType<string>().Which
-                                .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
-                          e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                                .Value.Should().BeOfType<string>().Which
-                                .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
-                          e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                                .Value.Should().BeOfType<string>().Which
-                                .Should().Be(string.Empty),
-                          e => e.Should().BeOfType<CommandSucceeded>());
+        Assert.AreEqual(6, result.Events.Count);
+        result.Events[0].Should().BeOfType<CodeSubmissionReceived>();
+        result.Events[1].Should().BeOfType<CompleteCodeSubmissionReceived>();
+        result.Events[2].Should().BeOfType<DisplayedValueProduced>().Which
+            .Value.Should().BeOfType<string>().Which
+            .Should().Match("* Search in Progress* 0% Complete* [ * ] *");
+        result.Events[3].Should().BeOfType<DisplayedValueUpdated>().Which
+            .Value.Should().BeOfType<string>().Which
+            .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *");
+        result.Events[4].Should().BeOfType<DisplayedValueUpdated>().Which
+            .Value.Should().BeOfType<string>().Which
+            .Should().Be(string.Empty);
+        result.Events[5].Should().BeOfType<CommandSucceeded>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_command_is_not_recognized_then_the_command_fails()
     {
         using var kernel = CreateKernel(Language.PowerShell);
@@ -131,7 +130,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         result.Events.Last().Should().BeOfType<CommandFailed>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_code_produces_errors_then_the_command_fails()
     {
         using var kernel = CreateKernel(Language.PowerShell);
@@ -143,7 +142,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
               .Should().Match("Cannot find path '*oops' because it does not exist.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Errors_from_previous_submissions_are_not_shown()
     {
         using var kernel = CreateKernel(Language.PowerShell);
@@ -157,7 +156,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
               .Should().NotContain("oops1");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task PowerShell_token_variables_work()
     {
         var kernel = CreateKernel(Language.PowerShell);
@@ -204,7 +203,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             e => e.Should().BeOfType<CommandSucceeded>());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task PowerShell_get_history_should_work()
     {
         var kernel = CreateKernel(Language.PowerShell);
@@ -225,7 +224,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 .ContainSingle(f => f.Value == "echo bar > $null" + Environment.NewLine));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task PowerShell_native_executable_output_is_collected()
     {
         var kernel = CreateKernel(Language.PowerShell);
@@ -246,7 +245,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             .ContainAll("build-server", "restore");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task GetCorrectProfilePaths()
     {
         using var kernel = new PowerShellKernel().UseProfiles();
@@ -278,7 +277,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         allUsersCurrentHost.Should().Be(_allUsersCurrentHostProfilePath);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task VerifyAllUsersProfileRuns()
     {
         var randomVariableName = Path.GetRandomFileName().Split('.')[0];
@@ -303,7 +302,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task RequestValueInfos_only_returns_user_defined_values()
     {
         using var kernel = CreateKernel(Language.PowerShell);
@@ -324,7 +323,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
               .Be("theAnswer");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Powershell_non_standard_mimetypes_work()
     {
       var kernel = CreateKernel(Language.PowerShell);
@@ -393,9 +392,9 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             .Be(vegaLightRequest);
     }
 
-    [Theory]
-    [InlineData(" -MimeType 'text/html'")]
-    [InlineData("")]
+    [TestMethod]
+    [DataRow(" -MimeType 'text/html'")]
+    [DataRow("")]
     public async Task Powershell_CustomObject_Is_Formatted_Correctly(string mimeTypeParameter)
     {
         // Arrange

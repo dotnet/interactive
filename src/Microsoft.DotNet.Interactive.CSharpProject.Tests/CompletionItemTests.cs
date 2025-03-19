@@ -4,14 +4,14 @@
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Events;
 using Newtonsoft.Json;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class CompletionItemTests
 {
-    [Theory]
-    [InlineData(
+    [TestMethod]
+    [DataRow(
         @"{
   ""displayText"": ""BackgroundColor"",
   ""kind"": ""Property"",

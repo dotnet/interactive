@@ -3,13 +3,13 @@
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class KernelExtensionsTests
 {
-    [Fact]
+    [TestMethod]
     public void FindKernelByName_finds_a_subkernel_of_a_composite_kernel_by_name()
     {
         var one = new FakeKernel("one");
@@ -25,7 +25,7 @@ public class KernelExtensionsTests
         found.Should().BeSameAs(two);
     }
 
-    [Fact]
+    [TestMethod]
     public void FindKernelByName_finds_a_subkernel_of_a_composite_kernel_by_alias()
     {
         var one = new FakeKernel("one");
@@ -39,7 +39,7 @@ public class KernelExtensionsTests
         found.Should().BeSameAs(one);
     }
 
-    [Fact]
+    [TestMethod]
     public void FindKernelByName_finds_a_subkernel_of_a_parent_composite_kernel_by_name()
     {
         var one = new FakeKernel("one");
@@ -55,7 +55,7 @@ public class KernelExtensionsTests
         found.Should().BeSameAs(two);
     }
 
-    [Fact]
+    [TestMethod]
     public void FindKernelByName_returns_null_for_unknown_kernel()
     {
         var one = new FakeKernel("one");

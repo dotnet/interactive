@@ -8,24 +8,23 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Combinatorial
     {
-        private readonly ITestOutputHelper _output;
+        private readonly TestContext _output;
 
-        public Combinatorial(ITestOutputHelper output)
+        public Combinatorial(TestContext output)
         {
             _output = output;
         }
 
-        [Theory]
-        [MemberData(nameof(GenerateValidRequests))]
+        [TestMethod]
+        [DynamicData(nameof(GenerateValidRequests))]
         public void Valid_syntax_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
@@ -43,8 +42,8 @@ public partial class HttpParserTests
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
         }
 
-        [Theory]
-        [MemberData(nameof(GenerateValidRequestsWithExtraTrivia))]
+        [TestMethod]
+        [DynamicData(nameof(GenerateValidRequestsWithExtraTrivia))]
         public void Valid_syntax_with_extra_trivia_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
@@ -62,8 +61,8 @@ public partial class HttpParserTests
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
         }
 
-        [Theory]
-        [MemberData(nameof(GenerateInvalidRequests))]
+        [TestMethod]
+        [DynamicData(nameof(GenerateInvalidRequests))]
         public void Invalid_syntax_produces_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
@@ -81,8 +80,8 @@ public partial class HttpParserTests
             syntaxSpec.Validate(parseResult.SyntaxTree.RootNode.ChildNodes.Single());
         }
 
-        [Theory]
-        [MemberData(nameof(GenerateValidRequestsWithExtraTrivia))]
+        [TestMethod]
+        [DynamicData(nameof(GenerateValidRequestsWithExtraTrivia))]
         public void Code_that_a_user_has_not_finished_typing_round_trips_correctly_and_does_not_throw(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();

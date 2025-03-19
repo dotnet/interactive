@@ -6,19 +6,20 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
+    [TestClass]
     public class Completions
     {
+        [TestClass]
         public class Directives
         {
-            [Theory]
-            [InlineData("#!$$", new[]{"#!connect", "#!set", "#!who"})]
-            [InlineData("#!conn$$", new[]{"#!connect"})]
+            [TestMethod]
+            [DataRow("#!$$", new[]{"#!connect", "#!set", "#!who"})]
+            [DataRow("#!conn$$", new[]{"#!connect"})]
             public async Task produce_completions_for_partial_text(string markupCode, string[] expectedCompletions)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);
@@ -35,9 +36,9 @@ public partial class PolyglotSyntaxParserTests
                 completions.Select(c => c.DisplayText).Should().Contain(expectedCompletions);
             }
 
-            [Theory]
-            [InlineData("#!connect $$")]
-            [InlineData("#!connect          $$")]
+            [TestMethod]
+            [DataRow("#!connect $$")]
+            [DataRow("#!connect          $$")]
             public async Task produce_completions_for_subcommands(string markupCode)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);
@@ -61,43 +62,43 @@ public partial class PolyglotSyntaxParserTests
                     ]);
             }
 
-            [Theory]
-            [InlineData("#!connect jupyter $$",
+            [TestMethod]
+            [DataRow("#!connect jupyter $$",
                         new[] { "--kernel-name" })]
-            [InlineData("#!connect jupyter       $$",
+            [DataRow("#!connect jupyter       $$",
                         new[] { "--kernel-name" })]
-            [InlineData("#!connect mssql  $$ --create-dbcontext",
+            [DataRow("#!connect mssql  $$ --create-dbcontext",
                         new[] { "--kernel-name" })]
-            [InlineData("#!connect mssql --create-dbcontext      $$",
+            [DataRow("#!connect mssql --create-dbcontext      $$",
                         new[] { "--kernel-name" })]
-            [InlineData("""#!connect mssql --connection-string @input:{"saveAs":"mydbconnectionstring"}  $$""",
+            [DataRow("""#!connect mssql --connection-string @input:{"saveAs":"mydbconnectionstring"}  $$""",
                         new[] { "--kernel-name" })]
-            [InlineData("#!connect jupyter --kernel-name asdf $$",
+            [DataRow("#!connect jupyter --kernel-name asdf $$",
                         new[]
                         {
                             "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
                         })]
-            [InlineData("#!connect jupyter --kernel-name @input $$",
+            [DataRow("#!connect jupyter --kernel-name @input $$",
                         new[]
                         {
                             "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
                         })]
-            [InlineData("""#!connect jupyter --kernel-name @input:{"saveAs":"xyz"} $$""",
+            [DataRow("""#!connect jupyter --kernel-name @input:{"saveAs":"xyz"} $$""",
                         new[]
                         {
                             "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
                         })]
-            [InlineData("#!connect jupyter $$ --kernel-name",
+            [DataRow("#!connect jupyter $$ --kernel-name",
                         new[]
                         {
                             "--url", "--kernel-spec", "--init-script", "--conda-env", "--bearer"
                         })]
-            [InlineData("#!set --name @input $$",
+            [DataRow("#!set --name @input $$",
                         new[]
                         {
                             "--value", "--byref", "--mime-type"
                         })]
-            [InlineData("""#!set --name @input:{"saveAs":"xyz"} $$""",
+            [DataRow("""#!set --name @input:{"saveAs":"xyz"} $$""",
                         new[]
                         {
                             "--value", "--byref", "--mime-type"
@@ -120,7 +121,7 @@ public partial class PolyglotSyntaxParserTests
                 completions.Select(c => c.DisplayText).Should().Contain(expectedParameterNames);
             }
 
-            [Fact]
+            [TestMethod]
             public async Task produce_completions_for_parameter_values_when_parameter_allows_implicit_name()
             {
                 var config = new PolyglotParserConfiguration("csharp")
@@ -162,9 +163,9 @@ public partial class PolyglotSyntaxParserTests
                 completions.Select(c => c.DisplayText).Should().Contain(["one", "two", "three"]);
             }
 
-            [Theory]
-            [InlineData("#!test $$")]
-            [InlineData("#!test $$  subcommand  ")]
+            [TestMethod]
+            [DataRow("#!test $$")]
+            [DataRow("#!test $$  subcommand  ")]
             public async Task do_not_produce_parameter_completions_before_a_subcommand(string markupCode)
             {
                 var config = new PolyglotParserConfiguration("csharp")
@@ -212,11 +213,12 @@ public partial class PolyglotSyntaxParserTests
             }
         }
 
+        [TestClass]
         public class Subcommands
         {
-            [Theory]
-            [InlineData("#!connect mssql $$")]
-            [InlineData("#!connect mssql         $$")]
+            [TestMethod]
+            [DataRow("#!connect mssql $$")]
+            [DataRow("#!connect mssql         $$")]
             public async Task produce_completions_for_parameter_names(string markupCode)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);
@@ -237,12 +239,12 @@ public partial class PolyglotSyntaxParserTests
                 ]);
             }
 
-            [Theory]
-            [InlineData("#!connect mssql $$")]
-            [InlineData("#!connect mssql         $$")]
-            [InlineData("#!connect mssql --connection-string   @input $$")]
-            [InlineData("#!connect mssql --connection-string abc $$")]
-            [InlineData("#!connect mssql --create-dbcontext  $$  @input")]
+            [TestMethod]
+            [DataRow("#!connect mssql $$")]
+            [DataRow("#!connect mssql         $$")]
+            [DataRow("#!connect mssql --connection-string   @input $$")]
+            [DataRow("#!connect mssql --connection-string abc $$")]
+            [DataRow("#!connect mssql --create-dbcontext  $$  @input")]
             public async Task do_not_produce_completions_for_sibling_subcommands(string markupCode)
             {
                 MarkupTestFile.GetPosition(markupCode, out var code, out var position);
@@ -261,7 +263,7 @@ public partial class PolyglotSyntaxParserTests
                 displayTextValues.Should().NotContain("jupyter");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task produce_completions_for_parameter_values_when_parameter_allows_implicit_name()
             {
                 var config = new PolyglotParserConfiguration("csharp")
@@ -308,9 +310,10 @@ public partial class PolyglotSyntaxParserTests
             }
         }
 
+        [TestClass]
         public class Parameters
         {
-            [Fact]
+            [TestMethod]
             public async Task produce_completions_for_parameter_values()
             {
                 var config = new PolyglotParserConfiguration("csharp")
@@ -348,9 +351,9 @@ public partial class PolyglotSyntaxParserTests
             }
         }
 
-        [Theory]
-        [InlineData("#!set --name xyz $$")]
-        [InlineData("#!set $$ --name xyz")]
+        [TestMethod]
+        [DataRow("#!set --name xyz $$")]
+        [DataRow("#!set $$ --name xyz")]
         public async Task Parameter_names_are_not_suggested_when_they_have_reached_their_max_occurrences(string markupCode)
         {
             MarkupTestFile.GetPosition(markupCode, out var code, out var position);

@@ -7,15 +7,15 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Headers
     {
-        [Fact]
+        [TestMethod]
         public void header_with_body_is_parsed_correctly()
         {
             var result = Parse(
@@ -43,7 +43,7 @@ public partial class HttpParserTests
         """);
         }
 
-        [Fact]
+        [TestMethod]
         public void when_headers_are_not_present_there_should_be_no_header_nodes()
         {
             var result = Parse(
@@ -62,7 +62,7 @@ public partial class HttpParserTests
             requestNode.HeadersNode.Should().BeNull();
         }
 
-        [Fact]
+        [TestMethod]
         public void header_separator_is_parsed()
         {
             var result = Parse(
@@ -76,7 +76,7 @@ public partial class HttpParserTests
                   .Which.Text.Should().Be(":");
         }
 
-        [Fact]
+        [TestMethod]
         public void Comments_can_precede_headers()
         {
             var code = """
@@ -95,7 +95,7 @@ public partial class HttpParserTests
             requestNode.ChildNodes.Should().ContainSingle<HttpHeadersNode>();
         }
 
-        [Fact]
+        [TestMethod]
         public void headers_are_parsed_correctly()
         {
             var result = Parse(
@@ -130,7 +130,7 @@ public partial class HttpParserTests
             headerNodes[4].ValueNode.Text.Should().Be("expor=;HSD=Ak_1ZasdqwASDASD;SSID=SASASSDFsdfsdf213123;APISID=WRQWRQWRQWRcc123123;");
         }
 
-        [Fact]
+        [TestMethod]
         public void Common_headers_are_bound_correctly()
         {
             var result = Parse(
@@ -179,7 +179,7 @@ public partial class HttpParserTests
                    .Should().BeEquivalentSequenceTo(0.9);
         }
 
-        [Fact]
+        [TestMethod]
         public void content_headers_are_ignored_when_body_is_absent()
         {
             var result = Parse(
@@ -208,7 +208,7 @@ public partial class HttpParserTests
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void Diagnostics_are_reported_for_missing_header_expression_values()
         {
             var result = Parse(
@@ -225,7 +225,7 @@ public partial class HttpParserTests
                          .Which.GetMessage().Should().Be("oops!");
         }
 
-        [Fact]
+        [TestMethod]
         public void Missing_header_name_produces_a_diagnostic()
         {
             var result = Parse(
@@ -239,7 +239,7 @@ public partial class HttpParserTests
             headerNode.GetDiagnostics().Should().ContainSingle().Which.GetMessage().Should().Be("Missing header name.");
         }
 
-        [Fact]
+        [TestMethod]
         public void Whitespace_in_a_header_name_produces_a_diagnostic()
         {
             var result = Parse(
@@ -253,7 +253,7 @@ public partial class HttpParserTests
             headerNode.GetDiagnostics().Should().ContainSingle().Which.GetMessage().Should().Be("Invalid whitespace in header name.");
         }
 
-        [Fact]
+        [TestMethod]
         public void Missing_header_value_produces_a_diagnostic()
         {
             var result = Parse(
@@ -269,7 +269,7 @@ public partial class HttpParserTests
                   .Which.GetMessage().Should().Be("Missing header value.");
         }
 
-        [Fact]
+        [TestMethod]
         public void Case_is_preserved_for_header_name()
         {
             var result = Parse(
@@ -288,7 +288,7 @@ public partial class HttpParserTests
             request.Headers.Should().ContainSingle().Which.Key.Should().Be("HEadEr");
         }
 
-        [Fact]
+        [TestMethod]
         public void Case_is_preserved_for_header_value()
         {
             var result = Parse(

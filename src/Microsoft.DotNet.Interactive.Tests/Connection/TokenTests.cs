@@ -5,13 +5,13 @@ using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
+[TestClass]
 public class TokenTests
 {
-    [Fact]
+    [TestMethod]
     public void A_token_is_generated_on_demand()
     {
         var command = new SubmitCode("123");
@@ -21,7 +21,7 @@ public class TokenTests
             .NotBeNullOrWhiteSpace();
     }
 
-    [Fact]
+    [TestMethod]
     public void Repeated_calls_to_GetOrCreateToken_for_the_same_command_return_the_same_value()
     {
         var command = new SubmitCode("123");
@@ -32,7 +32,7 @@ public class TokenTests
         token2.Should().Be(token1);
     }
     
-    [Fact]
+    [TestMethod]
     public void Command_tokens_cannot_be_changed()
     {
         var command = new SubmitCode("123");
@@ -48,7 +48,7 @@ public class TokenTests
             .Be("Command token cannot be changed.");
     }
 
-    [Fact]
+    [TestMethod]
     public void Once_set_then_after_serialization_command_tokens_cannot_be_changed_using_SetParent()
     {
         var parent = new SubmitCode("parent");

@@ -2,16 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Xunit;
 using FluentAssertions;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests;
 
+[TestClass]
 public class MsSqlServiceClientTests
 {
-    [Theory]
-    [InlineData("\r\n")]
-    [InlineData("\n")]
+    [TestMethod]
+    [DataRow("\r\n")]
+    [DataRow("\n")]
     public void Should_parse_doc_change_correctly_with_different_line_endings(string lineEnding)
     {
         string oldText = string.Join(lineEnding, "abc", "def", "", "abc", "abcdef");

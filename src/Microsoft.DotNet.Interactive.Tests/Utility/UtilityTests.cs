@@ -2,32 +2,32 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
+[TestClass]
 public class UtilityTests
 {
-    [Fact]
+    [TestMethod]
     public void replacement_position_can_be_found_at_the_end_of_a_string()
     {
         var code = "System.Linq.Enumerable.";
         // finding this                   ^
         var pos = SourceUtilities.ComputeReplacementStartPosition(code, code.Length);
-        Assert.Equal(code.Length, pos);
+        Assert.AreEqual(code.Length, pos);
     }
 
-    [Fact]
+    [TestMethod]
     public void replacement_position_can_be_found_not_at_the_end_of_a_string()
     {
         var code = "System.Linq.Enumerable.Ran";
         // finding this                   ^
         var lastDotPos = code.LastIndexOf('.') + 1;
         var pos = SourceUtilities.ComputeReplacementStartPosition(code, lastDotPos);
-        Assert.Equal(lastDotPos, pos);
+        Assert.AreEqual(lastDotPos, pos);
     }
 
-    [Fact]
+    [TestMethod]
     public void replacement_position_can_be_found_at_the_end_of_a_multiline_string()
     {
         var code = @"
@@ -36,10 +36,10 @@ Enumerable.
 //        ^ finding this";
         var lastDotPos = code.LastIndexOf('.') + 1;
         var pos = SourceUtilities.ComputeReplacementStartPosition(code, lastDotPos);
-        Assert.Equal(lastDotPos, pos);
+        Assert.AreEqual(lastDotPos, pos);
     }
 
-    [Fact]
+    [TestMethod]
     public void replacement_position_can_be_found_not_at_the_end_of_a_multiline_string()
     {
         var code = @"
@@ -48,6 +48,6 @@ Enumerable.Ran
 //        ^ finding this";
         var lastDotPos = code.LastIndexOf('.') + 1;
         var pos = SourceUtilities.ComputeReplacementStartPosition(code, lastDotPos);
-        Assert.Equal(lastDotPos, pos);
+        Assert.AreEqual(lastDotPos, pos);
     }
 }

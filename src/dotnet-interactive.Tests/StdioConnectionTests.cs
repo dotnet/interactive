@@ -16,18 +16,15 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
-using Pocket.For.Xunit;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+[TestClass]
 public class StdioConnectionTests : ProxyKernelConnectionTestsBase
 {
     private readonly StdioConnectionTestConfiguration _configuration;
 
-    public StdioConnectionTests(ITestOutputHelper output) : base(output)
+    public StdioConnectionTests(TestContext output) : base(output)
     {
         _configuration = CreateConnectionConfiguration();
     }
@@ -80,7 +77,7 @@ public class StdioConnectionTests : ProxyKernelConnectionTestsBase
         };
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_server_encoding_is_utf_8()
     {
         using var localCompositeKernel = new CompositeKernel

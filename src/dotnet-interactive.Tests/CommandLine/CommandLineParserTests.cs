@@ -27,14 +27,13 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Extensions.DependencyInjection;
 
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine;
 
+[TestClass]
 public class CommandLineParserTests : IDisposable
 {
-    private readonly ITestOutputHelper _output;
+    private readonly TestContext _output;
     private readonly TestConsole _console = new();
     private StartupOptions _startOptions;
     private readonly Parser _parser;
@@ -42,7 +41,7 @@ public class CommandLineParserTests : IDisposable
     private readonly DirectoryInfo _kernelSpecInstallPath;
     private readonly ServiceCollection _serviceCollection;
 
-    public CommandLineParserTests(ITestOutputHelper output)
+    public CommandLineParserTests(TestContext output)
     {
         _output = output;
         _serviceCollection = new ServiceCollection();
@@ -90,7 +89,7 @@ public class CommandLineParserTests : IDisposable
         _connectionFile.Delete();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_parses_log_output_directory()
     {
         var logPath = new DirectoryInfo(Path.GetTempPath());
@@ -104,7 +103,7 @@ public class CommandLineParserTests : IDisposable
             .Be(logPath.FullName);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_mode_honors_log_path()
     {
         using var logPath = DisposableDirectory.Create();
@@ -153,7 +152,7 @@ public class CommandLineParserTests : IDisposable
         logFileContents.ToString().Should().Contain("[Creating kernels]  ▶");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_parses_verbose_option()
     {
         await _parser.InvokeAsync($"jupyter --verbose {_connectionFile}", _console);
@@ -164,7 +163,7 @@ public class CommandLineParserTests : IDisposable
             .BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void jupyter_command_parses_port_range_option()
     {
         var result = _parser.Parse($"jupyter --http-port-range 3000-4000 {_connectionFile}");
@@ -179,7 +178,7 @@ public class CommandLineParserTests : IDisposable
             .BeEquivalentToRespectingRuntimeTypes(new HttpPortRange(3000, 4000));
     }
 
-    [Fact]
+    [TestMethod]
     public void jupyter_command_help_shows_default_port_range()
     {
         _parser.Invoke("jupyter -h", _console);
@@ -187,7 +186,7 @@ public class CommandLineParserTests : IDisposable
         _console.Out.ToString().Should().Contain("default: 2048-3000");
     }
 
-    [Fact]
+    [TestMethod]
     public void jupyter_install_command_parses_path_option()
     {
         Directory.CreateDirectory(_kernelSpecInstallPath.FullName);
@@ -202,7 +201,7 @@ public class CommandLineParserTests : IDisposable
             .BeEquivalentTo(".net-csharp", ".net-fsharp", ".net-powershell");
     }
 
-    [Fact]
+    [TestMethod]
     public void jupyter_install_command_does_not_parse_http_port_option()
     {
         var result = _parser.Parse("jupyter install --http-port 8000");
@@ -213,7 +212,7 @@ public class CommandLineParserTests : IDisposable
             .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'.");
     }
 
-    [Fact]
+    [TestMethod]
     public void jupyter_install_command_parses_port_range_option()
     {
         var result = _parser.Parse("jupyter install --http-port-range 3000-4000");
@@ -228,7 +227,7 @@ public class CommandLineParserTests : IDisposable
             .BeEquivalentToRespectingRuntimeTypes(new HttpPortRange(3000, 4000));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task jupyter_command_returns_error_if_connection_file_path_is_not_passed()
     {
         var testConsole = new TestConsole();
@@ -238,7 +237,7 @@ public class CommandLineParserTests : IDisposable
         testConsole.Error.ToString().Should().Contain("Required argument missing for command: 'jupyter'.");
     }
 
-    [Fact]
+    [TestMethod]
     public void jupyter_command_does_not_parse_http_port_option()
     {
         var result = _parser.Parse($"jupyter {_connectionFile} --http-port 8000");
@@ -249,7 +248,7 @@ public class CommandLineParserTests : IDisposable
             .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task jupyter_command_enables_http_api_when_http_port_range_is_specified()
     {
         await _parser.InvokeAsync($"jupyter --http-port-range 3000-5000 {_connectionFile}");
@@ -257,7 +256,7 @@ public class CommandLineParserTests : IDisposable
         _startOptions.EnableHttpApi.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void jupyter_command_parses_connection_file_path()
     {
         var result = _parser.Parse($"jupyter {_connectionFile}");
@@ -273,7 +272,7 @@ public class CommandLineParserTests : IDisposable
             .Be(_connectionFile.FullName);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task jupyter_command_enables_http_api_by_default()
     {
         await _parser.InvokeAsync($"jupyter {_connectionFile}");
@@ -281,7 +280,7 @@ public class CommandLineParserTests : IDisposable
         _startOptions.EnableHttpApi.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task jupyter_command_by_default_uses_port_rage()
     {
         await _parser.InvokeAsync($"jupyter {_connectionFile}");
@@ -292,7 +291,7 @@ public class CommandLineParserTests : IDisposable
         _startOptions.HttpPortRange.End.Should().Be(HttpPortRange.Default.End);
     }
 
-    [Fact]
+    [TestMethod]
     public void jupyter_command_default_kernel_option_value()
     {
         var result = _parser.Parse($"jupyter {Path.GetTempFileName()}");
@@ -302,7 +301,7 @@ public class CommandLineParserTests : IDisposable
         options.DefaultKernel.Should().Be("csharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void jupyter_command_honors_default_kernel_option()
     {
         var result = _parser.Parse($"jupyter --default-kernel bsharp {Path.GetTempFileName()}");
@@ -312,7 +311,7 @@ public class CommandLineParserTests : IDisposable
         options.DefaultKernel.Should().Be("bsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task jupyter_command_returns_error_if_connection_file_path_does_not_exist()
     {
         var expected = "not_exist.json";
@@ -323,7 +322,7 @@ public class CommandLineParserTests : IDisposable
         testConsole.Error.ToString().Should().ContainAll("File does not exist", "not_exist.json");
     }
 
-    [Fact]
+    [TestMethod]
     public void stdio_command_kernel_host_defaults_to_process_id()
     {
         var result = _parser.Parse("stdio");
@@ -337,7 +336,7 @@ public class CommandLineParserTests : IDisposable
             .Be(new Uri($"kernel://pid-{Process.GetCurrentProcess().Id}"));
     }
 
-    [Fact]
+    [TestMethod]
     public void stdio_command_kernel_name_can_be_specified()
     {
         var result = _parser.Parse("stdio --kernel-host some-kernel-name");
@@ -351,7 +350,7 @@ public class CommandLineParserTests : IDisposable
             .Be(new Uri("kernel://some-kernel-name"));
     }
 
-    [Fact]
+    [TestMethod]
     public void stdio_command_working_dir_defaults_to_process_current()
     {
         var result = _parser.Parse("stdio");
@@ -365,7 +364,7 @@ public class CommandLineParserTests : IDisposable
             .Be(Environment.CurrentDirectory);
     }
 
-    [Fact]
+    [TestMethod]
     public void stdio_command_working_dir_can_be_specified()
     {
         // StartupOptions.WorkingDir is of type DirectoryInfo which normalizes paths to OS type and ensures that
@@ -388,7 +387,7 @@ public class CommandLineParserTests : IDisposable
     }
 
 
-    [Fact]
+    [TestMethod]
     public void stdio_command_does_not_support_http_port_and_http_port_range_options_at_same_time()
     {
         var result = _parser.Parse("stdio --http-port 8000 --http-port-range 3000-4000");
@@ -399,7 +398,7 @@ public class CommandLineParserTests : IDisposable
             .Contain(errorMessage => errorMessage == "Cannot specify both --http-port-range and --http-port together");
     }
 
-    [Fact]
+    [TestMethod]
     public void stdio_command_parses_http_port_options()
     {
         var result = _parser.Parse("stdio --http-port 8000");
@@ -411,7 +410,7 @@ public class CommandLineParserTests : IDisposable
         options.HttpPort.PortNumber.Should().Be(8000);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_command_parses_http_port_range_options()
     {
         await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
@@ -422,7 +421,7 @@ public class CommandLineParserTests : IDisposable
         _startOptions.HttpPortRange.End.Should().Be(4000);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_command_requires_api_bootstrapping_when_http_is_enabled()
     {
         await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
@@ -435,7 +434,7 @@ public class CommandLineParserTests : IDisposable
             .BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void stdio_command_defaults_to_csharp_kernel()
     {
         var result = _parser.Parse("stdio");
@@ -445,7 +444,7 @@ public class CommandLineParserTests : IDisposable
         options.DefaultKernel.Should().Be("csharp");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_command_does_not_enable_http_api_by_default()
     {
         await _parser.InvokeAsync("stdio");
@@ -454,7 +453,7 @@ public class CommandLineParserTests : IDisposable
     }
 
 
-    [Fact]
+    [TestMethod]
     public void stdio_command_honors_default_kernel_option()
     {
         var result = _parser.Parse("stdio --default-kernel bsharp");
@@ -464,7 +463,7 @@ public class CommandLineParserTests : IDisposable
         options.DefaultKernel.Should().Be("bsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void Parser_configuration_is_valid()
     {
         _parser.Configuration.ThrowIfInvalid();

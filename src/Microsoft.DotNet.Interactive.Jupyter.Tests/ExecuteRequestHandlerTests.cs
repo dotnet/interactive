@@ -16,21 +16,20 @@ using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 using static Microsoft.DotNet.Interactive.Jupyter.Tests.RecordingJupyterMessageSender;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[TestClass]
 public class ExecuteRequestHandlerTests : JupyterRequestHandlerTestBase
 {
-    public ExecuteRequestHandlerTests(ITestOutputHelper output) : base(output)
+    public ExecuteRequestHandlerTests(TestContext output) : base(output)
     {
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_ExecuteInput_when_ExecuteRequest_is_handled()
     {
         var scheduler = CreateScheduler();
@@ -46,7 +45,7 @@ public class ExecuteRequestHandlerTests : JupyterRequestHandlerTestBase
         JupyterMessageSender.PubSubMessages.OfType<ExecuteInput>().Should().Contain(r => r.Code == "var a =12;");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_ExecuteReply_message_on_when_code_submission_is_handled()
     {
         var scheduler = CreateScheduler();
@@ -61,7 +60,7 @@ public class ExecuteRequestHandlerTests : JupyterRequestHandlerTestBase
             .ContainItemsAssignableTo<ExecuteReplyOk>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_ExecuteReply_with_error_message_on_when_code_submission_contains_errors()
     {
         var scheduler = CreateScheduler();
@@ -75,7 +74,7 @@ public class ExecuteRequestHandlerTests : JupyterRequestHandlerTestBase
         JupyterMessageSender.PubSubMessages.Should().Contain(e => e is Error);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Shows_informative_exception_information()
     {
         var scheduler = CreateScheduler();
@@ -118,7 +117,7 @@ f();"));
             .Contain("---> System.Exception: the-inner-exception");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task does_not_expose_stacktrace_when_code_submission_contains_errors()
     {
         var scheduler = CreateScheduler();
@@ -136,9 +135,9 @@ f();"));
             .ContainAll("(1,13): error CS1002:", ";");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "(1,4): error CS1733:")]
-    [InlineData(Language.FSharp, "input.fsx (1,2)-(1,4) parse error Unexpected token '+!' or incomplete expression")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "(1,4): error CS1733:")]
+    [DataRow(Language.FSharp, "input.fsx (1,2)-(1,4) parse error Unexpected token '+!' or incomplete expression")]
     public async Task shows_diagnostics_on_erroneous_input(Language language, string expected)
     {
         var scheduler = CreateScheduler();
@@ -154,7 +153,7 @@ f();"));
             .ContainSingle(error => error.Text.Contains(expected));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_DisplayData_message_on_ValueProduced()
     {
         var scheduler = CreateScheduler();
@@ -167,7 +166,7 @@ f();"));
         JupyterMessageSender.PubSubMessages.Should().Contain(r => r is DisplayData);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_DisplayData_message_with_json_when_json_mimetype_is_requested()
     {
         var scheduler = CreateScheduler();
@@ -182,9 +181,9 @@ f();"));
             .ContainSingle<DisplayData>(r => r.Data["application/json"] is JsonElement element && element.ValueKind == JsonValueKind.Number);
     }
         
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task does_not_send_ExecuteResult_message_when_evaluating_display_value(Language language)
     {
         var scheduler = CreateScheduler();
@@ -198,9 +197,9 @@ f();"));
         JupyterMessageSender.PubSubMessages.Should().NotContain(r => r is ExecuteResult);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task deferred_command_can_produce_events(Language language)
     {
         var scheduler = CreateScheduler();
@@ -221,7 +220,7 @@ f();"));
             .Contain(dp => dp.Data["text/html"] .ToString().Trim() == "<p>hello!</p>");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_Stream_message_on_StandardOutputValueProduced()
     {
         var scheduler = CreateScheduler();
@@ -234,7 +233,7 @@ f();"));
         JupyterMessageSender.PubSubMessages.Should().Contain(r => r is Protocol.Stream && r.As<Protocol.Stream>().Name == Protocol.Stream.StandardOutput);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_Stream_message_on_StandardErrorValueProduced()
     {
         var scheduler = CreateScheduler();
@@ -247,7 +246,7 @@ f();"));
         JupyterMessageSender.PubSubMessages.Should().Contain(r => r is Protocol.Stream && r.As<Protocol.Stream>().Name == Protocol.Stream.StandardError);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_ExecuteReply_message_on_ReturnValueProduced()
     {
         var scheduler = CreateScheduler();
@@ -269,7 +268,7 @@ f();"));
                                 d.Value.As<string>().RemoveStyleElement().Equals($"{PlainTextBegin}4{PlainTextEnd}"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_ExecuteReply_message_when_submission_contains_only_a_directive()
     {
         var scheduler = CreateScheduler();
@@ -284,7 +283,7 @@ f();"));
             .ContainSingle<ExecuteReplyOk>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_ExecuteReply_message_when_submission_contains_a_language_directive_and_trailing_expression()
     {
         var scheduler = CreateScheduler();
@@ -309,10 +308,10 @@ f();"));
                                 d.Value.As<string>().RemoveStyleElement().Equals($"{PlainTextBegin}123{PlainTextEnd}"));
     }
 
-    [Theory]
-    [InlineData("input()", "", InputForUnspecifiedPrompt)]
-    [InlineData($"input(\"{InputPromptForUser}\")", InputPromptForUser, InputForUser)]
-    [InlineData($"await Microsoft.DotNet.Interactive.Kernel.GetInputAsync(\"{InputPromptForUser}\")", InputPromptForUser, InputForUser)]
+    [TestMethod]
+    [DataRow("input()", "", InputForUnspecifiedPrompt)]
+    [DataRow($"input(\"{InputPromptForUser}\")", InputPromptForUser, InputForUser)]
+    [DataRow($"await Microsoft.DotNet.Interactive.Kernel.GetInputAsync(\"{InputPromptForUser}\")", InputPromptForUser, InputForUser)]
     public async Task sends_InputRequest_message_when_submission_requests_user_input_in_csharp(string code, string prompt, string expectedDisplayValue)
     {
         var scheduler = CreateScheduler();
@@ -329,9 +328,9 @@ f();"));
             .Contain(dp => dp.Data["text/plain"] as string == expectedDisplayValue);
     }
 
-    [Theory]
-    [InlineData("Read-Host", "", InputForUnspecifiedPrompt)]
-    [InlineData("Read-Host -Prompt User", InputPromptForUser, InputForUser)]
+    [TestMethod]
+    [DataRow("Read-Host", "", InputForUnspecifiedPrompt)]
+    [DataRow("Read-Host -Prompt User", InputPromptForUser, InputForUser)]
     public async Task sends_InputRequest_message_when_submission_requests_user_input_in_powershell(string code, string prompt, string expectedDisplayValue)
     {
         SetKernelLanguage(Language.PowerShell);
@@ -350,7 +349,7 @@ f();"));
             .Contain(s => s.Name == Stream.StandardOutput && s.Text == (expectedDisplayValue + Environment.NewLine));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task password_input_should_not_appear_in_diagnostic_logs()
     {
         var log = new System.Text.StringBuilder();
@@ -366,9 +365,9 @@ f();"));
         log.ToString().Should().NotContain(InputForPassword);
     }
 
-    [Theory]
-    [InlineData("password()", "")]
-    [InlineData("password(\"Type your password:\")", "Type your password:")]
+    [TestMethod]
+    [DataRow("password()", "")]
+    [DataRow("password(\"Type your password:\")", "Type your password:")]
     public async Task sends_InputRequest_message_when_submission_requests_user_password_in_csharp(string code, string prompt)
     {
         var scheduler = CreateScheduler();
@@ -387,9 +386,9 @@ f();"));
                                      because: $" password function returns the {typeof(PasswordString)} instance");
     }
 
-    [Theory]
-    [InlineData("Read-Host -AsSecureString", "")]
-    [InlineData("Read-Host -Prompt 'Type your password' -AsSecureString", "Type your password: ")]
+    [TestMethod]
+    [DataRow("Read-Host -AsSecureString", "")]
+    [DataRow("Read-Host -Prompt 'Type your password' -AsSecureString", "Type your password: ")]
     public async Task sends_InputRequest_message_when_submission_requests_user_password_in_powershell(string code, string prompt)
     {
         SetKernelLanguage(Language.PowerShell);
@@ -408,7 +407,7 @@ f();"));
             .Contain(s => s.Name == Protocol.Stream.StandardOutput && s.Text == $"System.Security.SecureString{Environment.NewLine}");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Shows_not_supported_exception_when_stdin_not_allowed_and_input_is_requested()
     {
         var scheduler = CreateScheduler();
@@ -432,7 +431,7 @@ f();"));
             .StartWith("System.NotSupportedException: Input prompt is not supported");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Shows_not_supported_exception_when_stdin_not_allowed_and_password_is_requested()
     {
         var scheduler = CreateScheduler();
@@ -456,7 +455,7 @@ f();"));
             .StartWith("System.NotSupportedException: Password prompt is not supported.");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_kernel_name_can_be_pulled_from_dotnet_metadata_when_present()
     {
         var metaData = new Dictionary<string, object>
@@ -472,7 +471,7 @@ f();"));
             .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_kernel_name_can_be_pulled_from_polyglot_metadata_when_present()
     {
         var metaData = new Dictionary<string, object>
@@ -487,7 +486,7 @@ f();"));
             .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_kernel_name_in_polyglot_metadata_overrides_dotnet_metadata()
     {
         var metaData = new Dictionary<string, object>
@@ -503,7 +502,7 @@ f();"));
             .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_kernel_name_defaults_to_null_when_it_cant_be_found()
     {
         var request = ZeroMQMessage.Create(new ExecuteRequest("1+1"));

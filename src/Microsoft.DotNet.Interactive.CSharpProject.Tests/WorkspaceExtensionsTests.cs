@@ -3,13 +3,13 @@
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharpProject.Models.Execution;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class WorkspaceExtensionsTests
 {
-    [Fact]
+    [TestMethod]
     public void When_there_is_only_one_buffer_and_it_has_no_id_then_GetAbsolutePosition_returns_its_position
         ()
     {
@@ -23,7 +23,7 @@ public class WorkspaceExtensionsTests
         workspace.GetAbsolutePositionForBufferByIdOrSingleBufferIfThereIsOnlyOne().Should().Be(123);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_there_is_only_one_buffer_and_it_has_an_id_that_does_not_match_then_GetAbsolutePosition_returns_its_position
         ()
     {
@@ -37,7 +37,7 @@ public class WorkspaceExtensionsTests
         workspace.GetAbsolutePositionForBufferByIdOrSingleBufferIfThereIsOnlyOne().Should().Be(123);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_buffer_id_is_empty_and_there_is_a_file_with_empty_string_for_id_then_GetFileFromBufferId_returns_it()
     {
         var workspace = new Workspace(

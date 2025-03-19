@@ -8,18 +8,18 @@ using FluentAssertions.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
+    [TestClass]
     public class DirectiveName
     {
-        [Theory]
-        [InlineData(@"
+        [TestMethod]
+        [DataRow(@"
 [|#!|]", "fsharp")]
-        [InlineData(@"
+        [DataRow(@"
 let x = 123
 [|#!abc|]", "fsharp")]
         public void Incomplete_or_unknown_directive_node_is_parsed_as_directive_name_node(
@@ -40,7 +40,7 @@ let x = 123
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void Shebang_after_the_end_of_a_line_is_not_a_node_delimiter()
         {
             var code = "Console.WriteLine(\"Hello from C#!\");";
@@ -57,7 +57,7 @@ let x = 123
                 .Be(code);
         }
 
-        [Fact]
+        [TestMethod]
         public void Errors_for_unknown_directives_are_available_as_diagnostics()
         {
             var markupCode = """

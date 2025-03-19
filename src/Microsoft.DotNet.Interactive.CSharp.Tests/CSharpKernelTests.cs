@@ -8,18 +8,17 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharp.Tests;
 
+[TestClass]
 public class CSharpKernelTests : LanguageKernelTestBase
 {
-    public CSharpKernelTests(ITestOutputHelper output) : base(output)
+    public CSharpKernelTests(TestContext output) : base(output)
     {
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Script_state_is_available_within_middleware_pipeline()
     {
         var variableCountBeforeEvaluation = 0;
@@ -42,7 +41,7 @@ public class CSharpKernelTests : LanguageKernelTestBase
         variableCountAfterEvaluation.Should().Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task GetValueInfos_only_returns_non_shadowed_values()
     {
         using var kernel = new CSharpKernel();
@@ -59,7 +58,7 @@ public class CSharpKernelTests : LanguageKernelTestBase
             .ContainSingle(v => v.Name == "x");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Use_of_interactive_API_in_submitted_code_does_not_produce_diagnostics()
     {
         using var kernel = new CSharpKernel();

@@ -7,13 +7,13 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Documents;
 using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests;
 
+[TestClass]
 public class ParsingTests : ProgressiveLearningTestBase
 {
-    [Fact]
+    [TestMethod]
     public void parser_can_parse_teacher_notebook_with_two_challenges_with_all_components_defined()
     {
         InteractiveDocument document = ReadDib("forParsing1.dib");
@@ -45,7 +45,7 @@ public class ParsingTests : ProgressiveLearningTestBase
             .Should().ContainAll("challenge2QuestionCell1", "challenge2QuestionCell2");
     }
 
-    [Fact]
+    [TestMethod]
     public void duplicate_challenge_name_causes_parser_to_throw_exception()
     {
         InteractiveDocument document = ReadDib("forParsing2DuplicateChallengeName.dib");
@@ -57,7 +57,7 @@ public class ParsingTests : ProgressiveLearningTestBase
             .Which.Message.Should().Contain("conflicts");
     }
 
-    [Fact]
+    [TestMethod]
     public void notebook_with_no_challenge_causes_parser_to_throw_exception()
     {
         InteractiveDocument document = ReadDib("noChallenge.dib");
@@ -69,7 +69,7 @@ public class ParsingTests : ProgressiveLearningTestBase
             .Which.Message.Should().Contain("This lesson has no challenges");
     }
 
-    [Fact]
+    [TestMethod]
     public void a_challenge_with_no_question_causes_parser_to_throw_exception()
     {
         InteractiveDocument document = ReadDib("challengeWithNoQuestion.dib");

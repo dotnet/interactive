@@ -6,18 +6,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
-using Xunit;
-using Xunit.Abstractions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class WorkspaceServerCompletionTests : WorkspaceServerTestsCore
 {
-    public WorkspaceServerCompletionTests(PrebuildFixture prebuildFixture, ITestOutputHelper output) : base(prebuildFixture, output)
-    {
-    }
-
-    [Fact]
+    [TestMethod]
     public async Task Get_autocompletion_for_console_class()
     {
         #region bufferSources
@@ -78,7 +74,7 @@ namespace FibonacciTest
         hasDuplicatedEntries.Should().BeFalse();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_autocompletion_for_console_methods()
     {
         #region bufferSources
@@ -140,7 +136,7 @@ namespace FibonacciTest
         hasDuplicatedEntries.Should().BeFalse();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_documentation_with_autocompletion_of_console_methods()
     {
         #region bufferSources
@@ -205,7 +201,7 @@ namespace FibonacciTest
               .Contain(d => d == "Writes the text representation of the specified Boolean value to the standard output stream.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_autocompletion_for_jtoken()
     {
         #region bufferSources
@@ -276,7 +272,7 @@ namespace FibonacciTest
         hasDuplicatedEntries.Should().BeFalse();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_autocompletion_for_jtoken_methods()
     {
         #region bufferSources
@@ -346,7 +342,7 @@ namespace FibonacciTest
         hasDuplicatedEntries.Should().BeFalse();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_autocompletion_can_be_empty()
     {
         #region bufferSources
@@ -401,7 +397,7 @@ namespace FibonacciTest
         return duplicatedEntries.Any();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_signature_help_for_console_writeline()
     {
         #region bufferSources
@@ -460,7 +456,7 @@ namespace FibonacciTest
         result.Signatures.Should().Contain(signature => signature.Label == "void Console.WriteLine(string format, params object?[]? arg)");
     }
         
-    [Fact]
+    [TestMethod]
     public async Task Get_signature_help_for_invalid_location_return_empty()
     {
         #region bufferSources
@@ -518,7 +514,7 @@ namespace FibonacciTest
         result.Signatures.Should().BeNullOrEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_signature_help_for_console_writeline_with_region()
     {
         #region bufferSources
@@ -584,7 +580,7 @@ namespace FibonacciTest
         result.Signatures.Should().Contain(signature => signature.Label == "void Console.WriteLine(string format, params object?[]? arg)");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_signature_help_for_jtoken()
     {
         #region bufferSources
@@ -652,7 +648,7 @@ namespace FibonacciTest
         result.Signatures.Should().Contain(signature => signature.Label == "JToken JToken.FromObject(object o)");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_documentation_with_signature_help_for_console_writeline()
     {
         #region bufferSources

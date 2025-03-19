@@ -12,15 +12,15 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
 public partial class KernelCommandNestingTests
 {
+    [TestClass]
     public class KernelCommandResult_Events
     {
-        [Fact]
+        [TestMethod]
         public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_CommandSucceeded_to_the_outer_result()
         {
             using var kernel = new CompositeKernel
@@ -46,7 +46,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""1+1"", ""cs2""));
                                   e.Command.TargetKernelName == "cs2");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_CommandFailed_to_the_outer_result()
         {
             using var kernel = new CompositeKernel
@@ -70,7 +70,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
                   .NotContain(e => e is CommandFailed);
         }
 
-        [Fact] 
+        [TestMethod] 
         public async Task Commands_sent_within_the_code_of_another_command_do_not_publish_events_to_the_outer_result()
         {
             using var kernel = new CompositeKernel
@@ -93,7 +93,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
             result.Events.Should().NotContain(e => e is ReturnValueProduced);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Commands_sent_via_API_within_a_split_submission_do_not_bubble_events()
         {
             using var kernel = new CompositeKernel
@@ -120,7 +120,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
             result.Events.Should().NotContain(e => e is ReturnValueProduced);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Commands_sent_within_the_code_of_another_command_publish_CommandSucceeded_to_the_inner_result()
         {
             using var kernel = new CompositeKernel
@@ -150,7 +150,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
                   .ContainSingle<ReturnValueProduced>(e => e.Value is CommandSucceeded);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Commands_sent_within_the_code_of_another_command_publish_CommandFailed_to_the_inner_result()
         {
             using var kernel = new CompositeKernel
@@ -178,7 +178,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
                   .ContainSingle<ReturnValueProduced>(e => e.Value is CommandFailed);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Commands_sent_within_the_code_of_another_command_publish_StandardOutputValueProduced_to_the_inner_result()
         {
             using var kernel = new CompositeKernel

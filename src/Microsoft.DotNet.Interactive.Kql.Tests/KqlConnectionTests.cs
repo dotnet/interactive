@@ -16,11 +16,11 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.SqlServer;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Kql.Tests;
 
-[Trait("Databases", "Data query tests")]
+[TestProperty("Databases", "Data query tests")]
+[TestClass]
 public class KqlConnectionTests
 {
     private static async Task<CompositeKernel> CreateKernelAsync()
@@ -41,6 +41,7 @@ public class KqlConnectionTests
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task It_can_connect_and_query_data()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -69,6 +70,7 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task It_does_not_add_a_kernel_on_connection_failure()
     {
         using var kernel = await CreateKernelAsync();
@@ -85,6 +87,7 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task It_allows_to_retry_connecting()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -105,6 +108,7 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task It_gives_error_if_kernel_name_is_already_used()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -127,6 +131,7 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task It_can_store_result_set_with_a_name()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -152,6 +157,7 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task Storing_results_does_interfere_with_subsequent_executions()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -182,6 +188,7 @@ StormEvents | take 11
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task Stored_query_results_are_listed_in_ValueInfos()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -209,6 +216,7 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task When_variable_does_not_exist_then_an_error_is_returned()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -233,6 +241,7 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task Field_types_are_deserialized_correctly()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -261,6 +270,7 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task query_produces_expected_formatted_values()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -288,6 +298,7 @@ StormEvents | take 10
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task Empty_results_are_displayed_correctly()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -313,25 +324,26 @@ StormEvents | take 0
     }
 
     [KqlTheory]
-    [InlineData("var testVar = new Microsoft.DotNet.Interactive.PasswordString(\"pwd\");", "pwd")] // password string
-    [InlineData("var testVar = 2;", (long)2)] // var
-    [InlineData("var testVar = \"hi!\";", "hi!")] // var string
-    [InlineData("string testVar = \"hi!\";", "hi!")] // string
-    [InlineData("string testVar = \"«ταБЬℓσ»\";", "«ταБЬℓσ»")] // unicode
-    [InlineData("string testVar = \"\";", "")] // Empty string
-    [InlineData("double testVar = 123456.789;", 123456.789)] // double
-    [InlineData("decimal testVar = 123456.789M;", 123456.789)] // decimal
-    [InlineData("bool testVar = false;", (sbyte)0)] // bool
-    [InlineData("char testVar = 'a';", "a")] // char
-    [InlineData("char testVar = '\\'';", "'")] // ' char
-    [InlineData("byte testVar = 123;", (long)123)] // byte
-    [InlineData("int testVar = 123456;", (long)123456)] // int
-    [InlineData("long testVar = 123456789012345;", 123456789012345)] // long
-    [InlineData("short testVar = 123;", (long)123)] // short
-    [InlineData("sbyte testVar = 123;", (long)123)] // sbyte
-    [InlineData("uint testVar = 123456;", (long)123456)] // uint
-    [InlineData("ulong testVar = 123456789012345;", 123456789012345)] // ulong
-    [InlineData("ushort testVar = 123;", (long)123)] // ushort
+    [DataRow("var testVar = new Microsoft.DotNet.Interactive.PasswordString(\"pwd\");", "pwd")] // password string
+    [DataRow("var testVar = 2;", (long)2)] // var
+    [DataRow("var testVar = \"hi!\";", "hi!")] // var string
+    [DataRow("string testVar = \"hi!\";", "hi!")] // string
+    [DataRow("string testVar = \"«ταБЬℓσ»\";", "«ταБЬℓσ»")] // unicode
+    [DataRow("string testVar = \"\";", "")] // Empty string
+    [DataRow("double testVar = 123456.789;", 123456.789)] // double
+    [DataRow("decimal testVar = 123456.789M;", 123456.789)] // decimal
+    [DataRow("bool testVar = false;", (sbyte)0)] // bool
+    [DataRow("char testVar = 'a';", "a")] // char
+    [DataRow("char testVar = '\\'';", "'")] // ' char
+    [DataRow("byte testVar = 123;", (long)123)] // byte
+    [DataRow("int testVar = 123456;", (long)123456)] // int
+    [DataRow("long testVar = 123456789012345;", 123456789012345)] // long
+    [DataRow("short testVar = 123;", (long)123)] // short
+    [DataRow("sbyte testVar = 123;", (long)123)] // sbyte
+    [DataRow("uint testVar = 123456;", (long)123456)] // uint
+    [DataRow("ulong testVar = 123456789012345;", 123456789012345)] // ulong
+    [DataRow("ushort testVar = 123;", (long)123)] // ushort
+    [TestMethod]
     public async Task Shared_variable_can_be_used_to_parameterize_a_kql_query(string csharpVariableDeclaration, object expectedValue)
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -363,11 +375,12 @@ print testVar";
     }
 
     [KqlTheory]
-    [InlineData("string testVar = null;")] // Don't support null vars currently
-    [InlineData("nint testVar = 123456;")] // Unsupported type
-    [InlineData("nuint testVar = 123456;")] // Unsupported type
-    [InlineData("var testVar = new List<int>();")] // Unsupported type
-    [InlineData("string testVar = \"tricky\\\"string\";")] // string with ", bug https://github.com/microsoft/sqltoolsservice/issues/1271
+    [DataRow("string testVar = null;")] // Don't support null vars currently
+    [DataRow("nint testVar = 123456;")] // Unsupported type
+    [DataRow("nuint testVar = 123456;")] // Unsupported type
+    [DataRow("var testVar = new List<int>();")] // Unsupported type
+    [DataRow("string testVar = \"tricky\\\"string\";")] // string with ", bug https://github.com/microsoft/sqltoolsservice/issues/1271
+    [TestMethod]
     public async Task Invalid_shared_variables_are_handled_correctly(string csharpVariableDeclaration)
     {
         var cluster = KqlFactAttribute.GetClusterForTests();
@@ -393,6 +406,7 @@ print testVar";
     }
 
     [KqlFact]
+    [TestMethod]
     public async Task Shared_variable_are_not_stored_as_part_of_the_resultSet()
     {
         var cluster = KqlFactAttribute.GetClusterForTests();

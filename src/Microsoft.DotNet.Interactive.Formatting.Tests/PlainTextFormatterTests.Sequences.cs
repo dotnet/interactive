@@ -7,15 +7,15 @@ using System.Collections.Generic;
 using System.IO;
 using Dummy;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public partial class PlainTextFormatterTests : FormatterTestBase
 {
+    [TestClass]
     public class Sequences : FormatterTestBase
     {
-        [Fact]
+        [TestMethod]
         public void Formatter_truncates_expansion_of_ICollection()
         {
             var list = new List<string>();
@@ -36,7 +36,7 @@ public partial class PlainTextFormatterTests : FormatterTestBase
             formatted.Should().Contain("6 more");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_expands_IEnumerable()
         {
             var list = new List<string> { "this", "that", "the other thing" };
@@ -49,7 +49,7 @@ public partial class PlainTextFormatterTests : FormatterTestBase
                      .Be("[ this, that, the other thing ]");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_truncates_expansion_of_IDictionary()
         {
             var list = new Dictionary<string, int>();
@@ -70,7 +70,7 @@ public partial class PlainTextFormatterTests : FormatterTestBase
             formatted.Should().Contain("6 more");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_truncates_expansion_of_IEnumerable()
         {
             Formatter.ListExpansionLimit = 3;
@@ -90,7 +90,7 @@ public partial class PlainTextFormatterTests : FormatterTestBase
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_iterates_IEnumerable_property_when_its_actual_type_is_an_array_of_objects()
         {
             var node = new Node
@@ -114,7 +114,7 @@ public partial class PlainTextFormatterTests : FormatterTestBase
             output.Should().Contain("1.3");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_iterates_IEnumerable_property_when_its_actual_type_is_an_array_of_structs()
         {
             var ints = new[] { 1, 2, 3, 4, 5 };
@@ -126,7 +126,7 @@ public partial class PlainTextFormatterTests : FormatterTestBase
                 .Be("[ 1, 2, 3, 4, 5 ]");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_recursively_formats_types_within_IEnumerable()
         {
             var list = new List<Widget>
@@ -159,7 +159,7 @@ TheWidgets: Widget[]
              */
         }
 
-        [Fact]
+        [TestMethod]
         public void Properties_of_System_Type_instances_are_not_expanded()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(Type));
@@ -173,7 +173,7 @@ TheWidgets: Widget[]
                   .Be("System.String");
         }
 
-        [Fact]
+        [TestMethod]
         public void ReadOnlyMemory_of_char_is_formatted_like_a_string()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(ReadOnlyMemory<char>));
@@ -187,7 +187,7 @@ TheWidgets: Widget[]
             writer.ToString().Should().Be("Hi!");
         }
 
-        [Fact]
+        [TestMethod]
         public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(ReadOnlyMemory<int>));
@@ -201,7 +201,7 @@ TheWidgets: Widget[]
             writer.ToString().Should().Be("[ 1, 2, 3 ]");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_shows_null_items_in_the_sequence_as_null()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(object[]));
@@ -218,7 +218,7 @@ TheWidgets: Widget[]
                 """.ReplaceLineEndings());
         }
 
-        [Fact]
+        [TestMethod]
         public void Strings_with_escaped_sequences_are_preserved()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(string));
@@ -232,7 +232,7 @@ TheWidgets: Widget[]
             writer.ToString().Should().Be(value);
         }
 
-        [Fact]
+        [TestMethod]
         public void Sequences_in_an_object_property_are_indented()
         {
             var node = new Node("1");
@@ -269,7 +269,7 @@ TheWidgets: Widget[]
                 """.ReplaceLineEndings());
         }
 
-        [Fact]
+        [TestMethod]
         public void When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements()
         {
             var instance = new ClassWithPropertiesThatIsAlsoIEnumerable(new object[] { "apple", "banana" })
@@ -288,7 +288,7 @@ TheWidgets: Widget[]
                 """);
         }
 
-        [Fact]
+        [TestMethod]
         public void When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements()
         {
             var instance = new ClassWithPropertiesThatIsAlsoIEnumerable<string>(new[] { "durian", "elderberry" })

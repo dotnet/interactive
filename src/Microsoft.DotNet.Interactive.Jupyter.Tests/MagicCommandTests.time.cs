@@ -9,7 +9,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 
@@ -17,9 +16,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 public partial class MagicCommandTests
 {
+    [TestClass]
     public class Time
     {
-        [Fact]
+        [TestMethod]
         public async Task time_produces_time_elapsed_to_run_the_code_submission()
         {
             using var kernel = new CompositeKernel

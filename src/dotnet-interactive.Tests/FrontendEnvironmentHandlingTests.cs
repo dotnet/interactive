@@ -8,10 +8,10 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class FrontendEnvironmentHandlingTests
 {
     private class TestCommand : KernelCommand
@@ -27,7 +27,7 @@ public class FrontendEnvironmentHandlingTests
         return (context, httpFrontend);
     }
 
-    [Fact]
+    [TestMethod]
     public void HttpNotebookFrontendEnvironment_wraps_submitted_js_content()
     {
         var (context, httpFrontend) = CreateTestHtmlFrontendAndContext();
@@ -71,7 +71,7 @@ await Object.getPrototypeOf(async function() {}).constructor(
 </script>".EnforceNewLine()));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task HttpNotebookFrontendEnvironment_does_not_complete_if_uri_is_not_specified()
     {
         var testCommand = new TestCommand();
@@ -86,7 +86,7 @@ await Object.getPrototypeOf(async function() {}).constructor(
             .ThrowAsync<TimeoutException>();
     }
 
-    [Fact]
+    [TestMethod]
     public void HttpNotebookFrontendEnvironment_can_complete_if_the_uri_is_supplied_after_execution_is_invoked()
     {
         var testCommand = new TestCommand();
@@ -115,7 +115,7 @@ await Object.getPrototypeOf(async function() {}).constructor(
             );
     }
 
-    [Fact]
+    [TestMethod]
     public void HttpNotebookFrontendEnvironment_can_publish_events_with_the_appropriate_token()
     {
         var (context, httpFrontend) = CreateTestHtmlFrontendAndContext();
@@ -132,7 +132,7 @@ await Object.getPrototypeOf(async function() {}).constructor(
             .Be(context.Command.GetOrCreateToken());
     }
 
-    [Fact]
+    [TestMethod]
     public void HttpNotebookFrontendEnvironment_returns_the_ReferenceEquals_command_based_on_the_token()
     {
         var (context, httpFrontend) = CreateTestHtmlFrontendAndContext();
@@ -149,7 +149,7 @@ await Object.getPrototypeOf(async function() {}).constructor(
             .BeSameAs(context.Command);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task HttpNotebookFrontendEnvironment_completes_after_MarkExecutionComplete_has_been_called()
     {
         var (context, httpFrontend) = CreateTestHtmlFrontendAndContext();

@@ -6,14 +6,14 @@ using System.Linq;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Connection;
-using Xunit;
 using static Microsoft.DotNet.Interactive.App.CodeExpansion;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class RecentConnectionListTests
 {
-    [Fact]
+    [TestMethod]
     public void When_more_than_the_MRU_list_limit_is_reached_then_the_least_recently_used_is_removed_and_new_item_is_added_at_the_beginning()
     {
         var list = new RecentConnectionList { Capacity = 3 };
@@ -33,11 +33,11 @@ public class RecentConnectionListTests
         ]);
     }
 
-    [Theory]
-    [InlineData(new[] { "one" }, new[] { "one" })]
-    [InlineData(new[] { "one" }, new[] { "one  " })]
-    [InlineData(new[] { "one", "two" }, new[] { "one", "two" })]
-    [InlineData(new[] { "one  ", "two" }, new[] { "one", "two" })]
+    [TestMethod]
+    [DataRow(new[] { "one" }, new[] { "one" })]
+    [DataRow(new[] { "one" }, new[] { "one  " })]
+    [DataRow(new[] { "one", "two" }, new[] { "one", "two" })]
+    [DataRow(new[] { "one  ", "two" }, new[] { "one", "two" })]
     public void When_a_duplicate_value_is_added_then_it_is_moved_to_the_top_of_the_list(
         string[] original,
         string[] duplicate)
@@ -65,7 +65,7 @@ public class RecentConnectionListTests
         ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_a_duplicate_name_is_added_it_replaces_the_previous_entry_having_the_same_name()
     {
         var list = new RecentConnectionList { Capacity = 3 };
@@ -84,7 +84,7 @@ public class RecentConnectionListTests
         ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void It_can_be_round_trip_JSON_serialized()
     {
         var list = new RecentConnectionList();
@@ -100,7 +100,7 @@ public class RecentConnectionListTests
         deserialized.Should().BeEquivalentTo(list.Reverse());
     }
 
-    [Fact]
+    [TestMethod]
     public void Serialization_contract_has_not_been_broken()
     {
         var codeExpansion = new CodeExpansion(
@@ -137,7 +137,7 @@ public class RecentConnectionListTests
         ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_capacity_is_reduced_then_excess_items_are_removed()
     {
          var list = new RecentConnectionList { Capacity = 3 };
@@ -154,7 +154,7 @@ public class RecentConnectionListTests
             .BeEquivalentTo("three", "two");
     }
 
-    [Fact]
+    [TestMethod]
     public void The_list_can_be_cleared()
     {
         var list = new RecentConnectionList { Capacity = 3 };

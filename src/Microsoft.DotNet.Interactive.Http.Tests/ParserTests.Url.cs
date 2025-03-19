@@ -6,15 +6,15 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Parsing;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Url
     {
-        [Fact]
+        [TestMethod]
         public void whitespace_is_legal_after_url()
         {
             var result = Parse("GET https://example.com  ");
@@ -24,7 +24,7 @@ public partial class HttpParserTests
                   .UrlNode.ChildTokens.Last().Kind.Should().Be(TokenKind.Whitespace);
         }
 
-        [Fact]
+        [TestMethod]
         public void newline_is_legal_at_the_after_url()
         {
             var result = Parse(
@@ -38,9 +38,9 @@ public partial class HttpParserTests
             result.GetDiagnostics().Should().BeEmpty();
         }
 
-        [Theory]
-        [InlineData("https://example.com?hat&ost=foo")]
-        [InlineData("https://example.com?q=3081#blah-2%203")]
+        [TestMethod]
+        [DataRow("https://example.com?hat&ost=foo")]
+        [DataRow("https://example.com?q=3081#blah-2%203")]
         public void common_url_structures_are_parsed_correctly(string url)
         {
             var result = Parse($"GET {url}");
@@ -50,7 +50,7 @@ public partial class HttpParserTests
                   .UrlNode.Text.Should().Be(url);
         }
 
-        [Fact]
+        [TestMethod]
         public void request_node_without_method_node_created_correctly()
         {
             var result = Parse("https://example.com");
@@ -59,7 +59,7 @@ public partial class HttpParserTests
                   .MethodNode.Should().BeNull();
         }
 
-        [Fact]
+        [TestMethod]
         public void url_node_can_return_url()
         {
             var result = Parse(
@@ -84,7 +84,7 @@ public partial class HttpParserTests
             bindingResult.Value.ToString().Should().Be("https://example.com/api/123-comments/1");
         }
 
-        [Fact]
+        [TestMethod]
         public void error_is_reported_for_undefined_variable()
         {
             var result = Parse(
@@ -106,7 +106,7 @@ public partial class HttpParserTests
             bindingResult.Diagnostics.Should().ContainSingle().Which.GetMessage().Should().Be(message);
         }
 
-        [Fact]
+        [TestMethod]
         public void Missing_url_produces_a_diagnostic()
         {
             var code = """
@@ -127,7 +127,7 @@ public partial class HttpParserTests
             lineSpan.EndLinePosition.Character.Should().Be(3);
         }
 
-        [Fact]
+        [TestMethod]
         public void Invalid_url_produces_a_diagnostic()
         {
             var code = """
@@ -148,7 +148,7 @@ public partial class HttpParserTests
         }
 
 
-        [Fact]
+        [TestMethod]
         public void Punctuation_at_url_start_produces_a_diagnostic()
         {
             var code = """
@@ -162,7 +162,7 @@ public partial class HttpParserTests
                                    .Which;
         }
 
-        [Fact]
+        [TestMethod]
         public void Request_separator_following_embedded_expression_is_parsed_correctly()
         {
             var code = """

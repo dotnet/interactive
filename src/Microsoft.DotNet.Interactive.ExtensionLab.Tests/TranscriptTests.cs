@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
 
+[TestClass]
 public class TranscriptTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    [Fact]
+    [TestMethod]
     public async Task transcript_extension_writes_all_received_commands_to_the_specified_file()
     {
         using var kernel = new CompositeKernel

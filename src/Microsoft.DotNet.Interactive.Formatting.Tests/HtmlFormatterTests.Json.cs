@@ -4,24 +4,23 @@
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public partial class HtmlFormatterTests : FormatterTestBase
 {
+    [TestClass]
     public class Json : FormatterTestBase
     {
-        private readonly ITestOutputHelper _output;
+        private readonly TestContext _output;
 
-        public Json(ITestOutputHelper output)
+        public Json(TestContext output)
         {
             _output = output;
         }
 
-        [Fact]
+        [TestMethod]
         public void JsonDocument_and_JsonDocument_RootElement_output_the_same_HTML()
         {
             var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
@@ -35,7 +34,7 @@ public partial class HtmlFormatterTests : FormatterTestBase
             jsonDocumentHtml.Should().Be(jsonElementHtml);
         }
 
-        [Fact]
+        [TestMethod]
         public void JSON_object_output_contains_a_text_summary()
         {
             var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
@@ -50,7 +49,7 @@ public partial class HtmlFormatterTests : FormatterTestBase
                 "</code>");
         }
 
-        [Fact]
+        [TestMethod]
         public void JSON_object_output_contains_table_of_properties_within_details_tag()
         {
             var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
@@ -66,7 +65,7 @@ public partial class HtmlFormatterTests : FormatterTestBase
                 "</details>");
         }
 
-        [Fact]
+        [TestMethod]
         public void JSON_array_output_contains_a_text_summary()
         {
             var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
@@ -81,7 +80,7 @@ public partial class HtmlFormatterTests : FormatterTestBase
                 "</code>");
         }
             
-        [Fact]
+        [TestMethod]
         public void JSON_array_output_contains_table_of_items_within_details_tag()
         {
             var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
@@ -94,7 +93,7 @@ public partial class HtmlFormatterTests : FormatterTestBase
                 "<tr><td><span>&quot;apple&quot;</span></td></tr><tr><td><span>&quot;banana&quot;</span></td></tr><tr><td><span>&quot;cherry&quot;</span></td></tr>");
         }
 
-        [Fact]
+        [TestMethod]
         public void Strings_with_escaped_sequences_are_encoded()
         {
             var value = "hola! \n \t \" \" ' ' the joy of escapes! ==> &   white  space  ";
@@ -104,7 +103,7 @@ public partial class HtmlFormatterTests : FormatterTestBase
             text.Should().Be($"{PlainTextBegin}hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  {PlainTextEnd}");
         }
 
-        [Fact]
+        [TestMethod]
         public void Strings_with_unicode_sequences_are_encoded()
         {
             var value = "hola! ʰ˽˵ΘϱϪԘÓŴ𝓌🦁♿🌪🍒☝🏿";

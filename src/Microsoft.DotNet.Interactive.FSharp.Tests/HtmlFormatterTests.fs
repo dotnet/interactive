@@ -5,60 +5,60 @@ namespace Microsoft.DotNet.Interactive.FSharp.Tests
 
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html
-open Xunit
+open Microsoft.VisualStudio.TestTools.UnitTesting
 
 type HtmlFormatterTests() =
 
     let PlainTextBegin = "<div class=\"dni-plaintext\">";
     let PlainTextEnd = "</div>";
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``empty tag``() =
-        Assert.Equal("<div></div>", (div [] []).ToString())
+        Assert.AreEqual<string>("<div></div>", (div [] []).ToString())
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``indexer as attribute``() =
-        Assert.Equal("<div class=\"c\"></div>", (div [_class "c"] []).ToString());
+        Assert.AreEqual<string>("<div class=\"c\"></div>", (div [_class "c"] []).ToString());
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``HTML from string``() =
-        Assert.Equal("<div>d</div>", (div [] [ "d" ]).ToString())
+        Assert.AreEqual<string>("<div>d</div>", (div [] [ "d" ]).ToString())
 
-    [<Fact>]
+    [<TestMethod>]
     // Note, the inner object is currently rendered using plaintext formatting
     member __.``HTML from inner object``() =
-        Assert.Equal("<div>11</div>", (div [] [str (string 11)]).ToString())
+        Assert.AreEqual<string>("<div>11</div>", (div [] [str (string 11)]).ToString())
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``HTML from inner object that is ScriptContent``() =
-        Assert.Equal("<script>var x = 1 < 2;</script>", (script [] [ScriptContent ("var x = 1 < 2;")]).ToString())
+        Assert.AreEqual<string>("<script>var x = 1 < 2;</script>", (script [] [ScriptContent ("var x = 1 < 2;")]).ToString())
 
-    [<Fact>]
+    [<TestMethod>]
     // Note, this test result will change in the future once F# formatting uses %A 
     // formatting by default for plaintext display
     member __.``HTML from inner object rendered as plaintext with encoded characters``() =
-        Assert.Equal(sprintf "<div>[ &gt;, &lt; ]</div>", (div [] [  "[ >, < ]" ]).ToString())
+        Assert.AreEqual<string>(sprintf "<div>[ &gt;, &lt; ]</div>", (div [] [  "[ >, < ]" ]).ToString())
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``HTML from content with attribute``() =
-        Assert.Equal("<div class=\"c\">d</div>", (div [_class "c"] [str "d"]).ToString())
+        Assert.AreEqual<string>("<div class=\"c\">d</div>", (div [_class "c"] [str "d"]).ToString())
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``HTML from another tag``() =
-        Assert.Equal("<div><a>foo</a></div>", (div [] [a [] [str "foo"]]).ToString())
+        Assert.AreEqual<string>("<div><a>foo</a></div>", (div [] [a [] [str "foo"]]).ToString())
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``HTML varargs 0``() =
-        Assert.Equal("<div></div>", (div [] [] ).ToString())
+        Assert.AreEqual<string>("<div></div>", (div [] [] ).ToString())
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``HTML varargs 2``() =
-        Assert.Equal("<div>ab</div>", (div [] [str "a"; str "b"]).ToString())
+        Assert.AreEqual<string>("<div>ab</div>", (div [] [str "a"; str "b"]).ToString())
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``Formatting _style attribute value`` () =
-        Assert.Equal((_style ["a"; " b; "; "c;"]), HtmlAttribute ("style", "a; b; c"))
-        Assert.Equal(_style [
+        Assert.AreEqual((_style ["a"; " b; "; "c;"]), HtmlAttribute ("style", "a; b; c"))
+        Assert.AreEqual(_style [
             "width: 3em;";
             "background: rgb(0,0,0);";
             "display: inline-block;";

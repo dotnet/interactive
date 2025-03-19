@@ -9,11 +9,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace Microsoft.DotNet.Interactive.Journey.Tests;
 
+[TestClass]
 public class LessonTests : ProgressiveLearningTestBase
 {
     private Challenge GetChallenge(string? name = null)
@@ -29,7 +28,7 @@ public class LessonTests : ProgressiveLearningTestBase
         };
     }
 
-    [Fact]
+    [TestMethod]
     public async Task starting_to_an_unrevealed_challenge_directly_reveals_it()
     {
         var challenge = GetChallenge();
@@ -39,7 +38,7 @@ public class LessonTests : ProgressiveLearningTestBase
         challenge.Revealed.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task starting_a_challenge_sets_the_current_challenge_to_it()
     {
         var challenge = GetChallenge();
@@ -49,7 +48,7 @@ public class LessonTests : ProgressiveLearningTestBase
         Lesson.CurrentChallenge.Should().Be(challenge);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_start_a_challenge_using_challenge_name()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -72,7 +71,7 @@ public class LessonTests : ProgressiveLearningTestBase
         Lesson.CurrentChallenge.Should().Be(challenges[2]);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_explicitly_start_the_next_challenge()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -94,7 +93,7 @@ public class LessonTests : ProgressiveLearningTestBase
         Lesson.CurrentChallenge.Should().Be(challenges[1]);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_stay_at_the_current_challenge()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -116,7 +115,7 @@ public class LessonTests : ProgressiveLearningTestBase
         Lesson.CurrentChallenge.Should().Be(challenges[0]);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_teacher_chooses_to_stay_at_the_current_challenge_the_next_challenge_is_not_revealed()
     {
         var capturedCommands = new List<SendEditableCode>();
@@ -147,7 +146,7 @@ public class LessonTests : ProgressiveLearningTestBase
         capturedCommands.Should().BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task explicitly_starting_the_next_challenge_at_last_challenge_does_nothing()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -163,7 +162,7 @@ public class LessonTests : ProgressiveLearningTestBase
         Lesson.CurrentChallenge.Should().Be(null);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_student_reaches_the_end_then_submissions_work_as_normal()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -188,7 +187,7 @@ public class LessonTests : ProgressiveLearningTestBase
               .Be(42);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_a_student_submits_code_to_a_challenge_they_move_to_the_next_challenge()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -206,7 +205,7 @@ public class LessonTests : ProgressiveLearningTestBase
         Lesson.CurrentChallenge.Should().Be(challenges[1]);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_a_student_completes_the_last_challenge_then_the_Lesson_is_completed()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -224,7 +223,7 @@ public class LessonTests : ProgressiveLearningTestBase
         Lesson.CurrentChallenge.Should().Be(null);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_run_challenge_environment_setup_code_when_starting_a_Lesson()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -243,7 +242,7 @@ public class LessonTests : ProgressiveLearningTestBase
         events.Should().ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(7);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_show_challenge_contents_when_starting_a_Lesson()
     {
         var capturedSendEditableCode = new List<(string kernelName, string code)>();
@@ -269,7 +268,7 @@ public class LessonTests : ProgressiveLearningTestBase
         capturedSendEditableCode.Should().BeEquivalentTo(contents);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_run_challenge_environment_setup_code_when_progressing_the_student_to_a_new_challenge()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -293,7 +292,7 @@ public class LessonTests : ProgressiveLearningTestBase
         events.Should().ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(7);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_show_challenge_contents_when_progressing_the_student_to_a_new_challenge()
     {
         var capturedSendEditableCode = new List<(string kernelName, string code)>();
@@ -324,7 +323,7 @@ public class LessonTests : ProgressiveLearningTestBase
         capturedSendEditableCode.Should().BeEquivalentTo(contents);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task after_starting_a_lesson_the_student_can_submit_multiple_times_to_the_same_challenge_and_see_evaluation_feedback_for_the_latest_submission()
     {
         var correctAnswer = "1 + 1";
@@ -362,7 +361,7 @@ public class LessonTests : ProgressiveLearningTestBase
                 .Value.Contains("You passed"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task after_progressing_to_a_new_challenge_the_student_can_submit_multiple_times_to_the_same_challenge_and_see_evaluation_feedback_for_the_latest_submission()
     {
         var correctAnswer = "1 + 1";

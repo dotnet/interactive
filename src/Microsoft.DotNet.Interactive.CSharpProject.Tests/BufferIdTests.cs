@@ -3,15 +3,15 @@
 
 using FluentAssertions;
 using Recipes;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class BufferIdTests
 {
-    [Theory]
-    [InlineData("MyFile.cs", "MyFile.cs", null)]
-    [InlineData("MyFile.cs@myregion", "MyFile.cs", "myregion")]
+    [TestMethod]
+    [DataRow("MyFile.cs", "MyFile.cs", null)]
+    [DataRow("MyFile.cs@myregion", "MyFile.cs", "myregion")]
     public void BufferId_Parse_sets_file_name_and_region_name_correctly(
         string input,
         string expectedFileName,
@@ -23,10 +23,10 @@ public class BufferIdTests
         bufferId.RegionName.Should().Be(expectedRegionName);
     }
 
-    [Theory]
-    [InlineData("MyFile.cs", "MyFile.cs", true)]
-    [InlineData("MyFile.cs@myregion", "MyFile.cs@myregion", true)]
-    [InlineData("MyFile.cs", "MyFile.cs@myregion", false)]
+    [TestMethod]
+    [DataRow("MyFile.cs", "MyFile.cs", true)]
+    [DataRow("MyFile.cs@myregion", "MyFile.cs@myregion", true)]
+    [DataRow("MyFile.cs", "MyFile.cs@myregion", false)]
     public void BufferIds_are_equal_only_if_they_have_the_same_file_and_region_names(
         string input1,
         string input2,
@@ -42,10 +42,10 @@ public class BufferIdTests
         (bufferId2 != bufferId1).Should().Be(!expectedToBeEqual);
     }
 
-    [Theory]
-    [InlineData("MyFile.cs", "MyFile.cs", true)]
-    [InlineData("MyFile.cs@myregion", "MyFile.cs@myregion", true)]
-    [InlineData("MyFile.cs", "MyFile.cs@myregion", false)]
+    [TestMethod]
+    [DataRow("MyFile.cs", "MyFile.cs", true)]
+    [DataRow("MyFile.cs@myregion", "MyFile.cs@myregion", true)]
+    [DataRow("MyFile.cs", "MyFile.cs@myregion", false)]
     public void BufferIds_have_the_same_hash_codes_only_if_they_have_the_same_file_and_region_names(
         string input1,
         string input2,
@@ -57,7 +57,7 @@ public class BufferIdTests
         bufferId1.GetHashCode().Equals(bufferId2.GetHashCode()).Should().Be(expectedToBeEqual);
     }
 
-    [Fact]
+    [TestMethod]
     public void ToString_returns_filename_if_no_region_was_specified()
     {
         var bufferId = new BufferId("MyFile.cs");
@@ -65,7 +65,7 @@ public class BufferIdTests
         bufferId.ToString().Should().Be("MyFile.cs");
     }
 
-    [Fact]
+    [TestMethod]
     public void ToString_returns_filename_at_region_if_a_region_was_specified()
     {
         var bufferId = new BufferId("MyFile.cs", "myregion");
@@ -73,7 +73,7 @@ public class BufferIdTests
         bufferId.ToString().Should().Be("MyFile.cs@myregion");
     }
 
-    [Fact]
+    [TestMethod]
     public void BufferId_JSON_serializes_as_a_string()
     {
         var json = new { Id = new BufferId("MyFile.cs", "myregion") }.ToJson();
@@ -81,7 +81,7 @@ public class BufferIdTests
         json.Should().Be(@"{""Id"":""MyFile.cs@myregion""}");
     }
 
-    [Fact]
+    [TestMethod]
     public void BufferId_JSON_deserializes_from_a_string()
     {
         var thingJson = new 

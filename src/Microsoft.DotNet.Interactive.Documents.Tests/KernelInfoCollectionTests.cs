@@ -3,13 +3,13 @@
 
 using System;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
+[TestClass]
 public class KernelInfoCollectionTests
 {
-    [Fact]
+    [TestMethod]
     public void When_a_KernelInfo_with_a_conflicting_name_is_added_then_it_throws_()
     {
         var collection = new KernelInfoCollection();
@@ -25,7 +25,7 @@ public class KernelInfoCollectionTests
                   .Be($"A {nameof(KernelInfo)} with name or alias 'one' is already present in the collection.");
     }
 
-    [Fact]
+    [TestMethod]
     public void When_a_KernelInfo_with_a_conflicting_alias_is_added_then_it_throws_()
     {
         var collection = new KernelInfoCollection();
@@ -41,7 +41,7 @@ public class KernelInfoCollectionTests
                   .Be($"A {nameof(KernelInfo)} with name or alias 'one' is already present in the collection.");
     }
 
-    [Fact]
+    [TestMethod]
     public void When_an_item_is_removed_then_Contains_no_longer_includes_its_name()
     {
         var collection = new KernelInfoCollection();
@@ -55,7 +55,7 @@ public class KernelInfoCollectionTests
         collection.Contains("a").Should().BeFalse();
     }
 
-    [Fact]
+    [TestMethod]
     public void When_an_item_is_removed_then_Contains_no_longer_includes_its_aliases()
     {
         var collection = new KernelInfoCollection();

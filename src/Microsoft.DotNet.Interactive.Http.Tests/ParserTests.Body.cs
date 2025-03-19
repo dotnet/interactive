@@ -5,15 +5,15 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Body
     {
-        [Fact]
+        [TestMethod]
         public void body_is_parsed_correctly_when_headers_are_not_present()
         {
             var result = Parse(
@@ -38,7 +38,7 @@ public partial class HttpParserTests
                 """);
         }
 
-        [Fact]
+        [TestMethod]
         public void multiple_new_lines_before_body_are_parsed_correctly()
         {
             var result = Parse(
@@ -68,7 +68,7 @@ public partial class HttpParserTests
                 """);
         }
 
-        [Fact]
+        [TestMethod]
         public void Whitespace_after_headers_is_not_parsed_as_body()
         {
             var code = """
@@ -86,7 +86,7 @@ public partial class HttpParserTests
             result.SyntaxTree.RootNode.DescendantNodesAndTokens().Should().NotContain(n => n is HttpBodyNode);
         }
 
-        [Fact]
+        [TestMethod]
         public void When_body_is_absent_HttpRequestMessage_Content_is_set_to_null()
         {
             var result = Parse(
@@ -107,7 +107,7 @@ public partial class HttpParserTests
             request.Content.Should().BeNull();
         }
 
-        [Fact]
+        [TestMethod]
         public void When_body_is_present_HttpRequestMessage_Content_is_set_appropriately()
         {
             var result = Parse(

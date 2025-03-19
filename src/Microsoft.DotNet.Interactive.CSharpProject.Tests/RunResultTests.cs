@@ -6,13 +6,13 @@ using FluentAssertions;
 using Newtonsoft.Json.Linq;
 using Pocket;
 using Recipes;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class RunResultTests
 {
-    [Fact]
+    [TestMethod]
     public void Disposable_RunResult_features_are_disposed_when_RunResult_is_disposed()
     {
         var wasDisposed = false;
@@ -26,7 +26,7 @@ public class RunResultTests
         wasDisposed.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void Features_can_add_object_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
     {
         var result = new RunResult(true);
@@ -41,7 +41,7 @@ public class RunResultTests
         obj.IntProperty.Should().Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public void Features_can_add_string_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
     {
         var result = new RunResult(true);
@@ -55,7 +55,7 @@ public class RunResultTests
         scalar.Should().Be("here i am!");
     }
 
-    [Fact]
+    [TestMethod]
     public void Features_can_add_int_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
     {
         var result = new RunResult(true);
@@ -69,7 +69,7 @@ public class RunResultTests
         scalar.Should().Be(123);
     }
 
-    [Fact]
+    [TestMethod]
     public void Features_can_add_array_properties_to_serialized_RunResult_by_implementing_IAugmentRunResult()
     {
         var result = new RunResult(true);

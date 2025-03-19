@@ -19,20 +19,20 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
+
+[TestClass]
 #pragma warning disable 8509
 public class LanguageKernelPackageTests : LanguageKernelTestBase
 {
-    public LanguageKernelPackageTests(ITestOutputHelper output) : base(output)
+    public LanguageKernelPackageTests(TestContext output) : base(output)
     {
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task it_returns_completion_list_for_types_imported_at_runtime(Language language)
     {
         var kernel = CreateKernel(language);
@@ -56,9 +56,9 @@ public class LanguageKernelPackageTests : LanguageKernelTestBase
             .Contain(i => i.DisplayText == "SerializeObject");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var a = new List<int>();")]
-    [InlineData(Language.FSharp, "let _ = List<int>()")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var a = new List<int>();")]
+    [DataRow(Language.FSharp, "let _ = List<int>()")]
     public async Task When_SubmitCode_command_adds_packages_to_the_kernel_then_the_submission_is_not_passed_to_the_script(Language language, string assignment)
     {
         using var kernel = CreateKernel(language);
@@ -73,9 +73,9 @@ public class LanguageKernelPackageTests : LanguageKernelTestBase
             .NotContain(e => e.Code.Contains("#r \"nuget:"));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "Microsoft.Extensions.Logging.ILogger logger = null;")]
-    [InlineData(Language.FSharp, "let logger: Microsoft.Extensions.Logging.ILogger = null")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "Microsoft.Extensions.Logging.ILogger logger = null;")]
+    [DataRow(Language.FSharp, "let logger: Microsoft.Extensions.Logging.ILogger = null")]
     public async Task When_SubmitCode_command_adds_packages_to_kernel_then_PackageAdded_event_is_raised(Language language, string expression)
     {
         using Kernel kernel = language switch
@@ -100,7 +100,7 @@ public class LanguageKernelPackageTests : LanguageKernelTestBase
                       e.PackageReference.PackageVersion == "2.2.0");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Loads_native_dependencies_from_nugets()
     {
         using var kernel = CreateKernel();
@@ -164,7 +164,7 @@ catch (Exception e)
                 e => e.FormattedValues.Any(v => v.Value.Contains("success")));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Dependency_version_conflicts_are_resolved_correctly()
     {
         var kernel = CreateKernel(Language.CSharp);
@@ -214,9 +214,9 @@ Formatter.Register<DataFrame>((df, writer) =>
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_disallows_empty_package_specification(Language language)
     {
         var kernel = CreateKernel(language);
@@ -236,7 +236,7 @@ Formatter.Register<DataFrame>((df, writer) =>
             .Be("(1,4): error DNI210: Unable to parse package reference: \"nuget:\"");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Pound_r_is_not_treated_as_pound_r_nuget_by_csharp_kernel_if_assembly_path_happens_to_contain_the_string_nuget()
     {
         var kernel = CreateCSharpKernel();
@@ -258,9 +258,9 @@ Formatter.Register<DataFrame>((df, writer) =>
             .NotContain("DNI");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_disallows_version_only_package_specification(Language language)
     {
         var kernel = CreateKernel(language);
@@ -282,9 +282,9 @@ Formatter.Register<DataFrame>((df, writer) =>
             .Be("(3,4): error DNI210: Unable to parse package reference: \"nuget:,1.0.0\"");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_i_nuget_allows_RestoreSources_package_specification(Language language)
     {
         var kernel = CreateKernel(language);
@@ -300,9 +300,9 @@ Formatter.Register<DataFrame>((df, writer) =>
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_i_nuget_displays_list_of_added_sources(Language language)
     {
         var kernel = CreateKernel(language);
@@ -316,9 +316,9 @@ Formatter.Register<DataFrame>((df, writer) =>
         events.OfType<DisplayEvent>().Select(e => e.GetType()).Should().ContainInOrder(typeof(DisplayedValueProduced), typeof(DisplayedValueUpdated));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_i_nuget_with_multi_submissions_combines_the_text_produced(Language language)
     {
         var kernel = CreateKernel(language);
@@ -350,9 +350,9 @@ Formatter.Register<DataFrame>((df, writer) =>
               .ContainAll(expectedList);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_i_nuget_with_multi_submissions_combines_the_Text_Updates(Language language)
     {
         var kernel = CreateKernel(language);
@@ -385,9 +385,9 @@ Formatter.Register<DataFrame>((df, writer) =>
               .BeEquivalentTo(expectedList);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_single_cell(Language language)
     {
         var kernel = CreateKernel(language);
@@ -404,9 +404,9 @@ Formatter.Register<DataFrame>((df, writer) =>
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_multiple_cells(Language language)
     {
         var kernel = CreateKernel(language);
@@ -428,9 +428,9 @@ Formatter.Register<DataFrame>((df, writer) =>
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_i_nuget_allows_multiple_sources_package_specification_single_cell(Language language)
     {
         var kernel = CreateKernel(language);
@@ -446,9 +446,9 @@ Formatter.Register<DataFrame>((df, writer) =>
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_i_nuget_allows_multiple_package_sources_to_be_specified_in_multiple_cells(Language language)
     {
         var kernel = CreateKernel(language);
@@ -471,9 +471,9 @@ Formatter.Register<DataFrame>((df, writer) =>
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    //[InlineData(Language.CSharp, "using SixLabors.ImageSharp;")]
-    [InlineData(Language.FSharp, "open SixLabors.ImageSharp")]
+    [TestMethod]
+    //[DataRow(Language.CSharp, "using SixLabors.ImageSharp;")]
+    [DataRow(Language.FSharp, "open SixLabors.ImageSharp")]
     public async Task Pound_r_nuget_allows_duplicate_package_specifications_single_cell(Language language, string code)
     {
         var kernel = CreateKernel(language);
@@ -491,9 +491,9 @@ Formatter.Register<DataFrame>((df, writer) =>
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "using SixLabors.ImageSharp;")]
-    [InlineData(Language.FSharp, "open SixLabors.ImageSharp")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "using SixLabors.ImageSharp;")]
+    [DataRow(Language.FSharp, "open SixLabors.ImageSharp")]
     public async Task Pound_r_nuget_allows_duplicate_package_specifications_multiple_cells(Language language, string code)
     {
         var kernel = CreateKernel(language);
@@ -516,9 +516,9 @@ Formatter.Register<DataFrame>((df, writer) =>
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_single_cell(Language language)
     {
         var kernel = CreateKernel(language);
@@ -538,9 +538,9 @@ Formatter.Register<DataFrame>((df, writer) =>
 
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "using SixLabors.ImageSharp;", "*The type or namespace name 'SixLabors' could not be found*")]
-    [InlineData(Language.FSharp, "open SixLabors.ImageSharp", "*The namespace or module 'SixLabors' is not defined.")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "using SixLabors.ImageSharp;", "*The type or namespace name 'SixLabors' could not be found*")]
+    [DataRow(Language.FSharp, "open SixLabors.ImageSharp", "*The namespace or module 'SixLabors' is not defined.")]
     public async Task Pound_r_nuget_with_different_versions_in_a_single_cell_fails_package_restore(Language language, string code, string errorMessage)
     {
         var kernel = CreateKernel(language);
@@ -561,9 +561,9 @@ Formatter.Register<DataFrame>((df, writer) =>
                .Match(errorMessage);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "using SixLabors.ImageSharp;")]
-    [InlineData(Language.FSharp, "open SixLabors.ImageSharp")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "using SixLabors.ImageSharp;")]
+    [DataRow(Language.FSharp, "open SixLabors.ImageSharp")]
     public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_multiple_cells(Language language, string code)
     {
         var kernel = CreateKernel(language);
@@ -593,9 +593,9 @@ Formatter.Register<DataFrame>((df, writer) =>
             .Be("SixLabors.ImageSharp version 1.0.2 cannot be added because version 1.0.1 was added previously.");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, Language.FSharp)]
-    [InlineData(Language.FSharp, Language.CSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp, Language.FSharp)]
+    [DataRow(Language.FSharp, Language.CSharp)]
     public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel(Language first, Language second)
     {
         var csk =
@@ -637,9 +637,9 @@ using NodaTime.Extensions;");
             .ContainSingle<CommandSucceeded>(ch => ch.Command == command);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_disallows_changing_version_of_loaded_dependent_packages(Language language)
     {
         var kernel = CreateKernel(language);
@@ -667,9 +667,9 @@ using NodaTime.Extensions;");
             .Be("Google.Protobuf version 3.10.1 cannot be added because version 3.19.4 was added previously.");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_allows_using_version_of_loaded_dependent_packages(Language language)
     {
         var kernel = CreateKernel(language);
@@ -691,9 +691,9 @@ using NodaTime.Extensions;");
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "using System.Text.Json;")]
-    [InlineData(Language.FSharp, "open System.Text.Json")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "using System.Text.Json;")]
+    [DataRow(Language.FSharp, "open System.Text.Json")]
     public async Task Pound_r_nuget_with_System_Text_Json_should_succeed(Language language, string code)
     {
         var kernel = CreateKernel(language);
@@ -709,9 +709,9 @@ using NodaTime.Extensions;");
         events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_with_no_version_should_not_get_the_oldest_package_version(Language language)
     {
         // #r "nuget: with no version specified should get the newest version of the package not the oldest:
@@ -733,9 +733,9 @@ using NodaTime.Extensions;");
                                 e.PackageReference.PackageVersion != "5.0.2");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_with_no_version_displays_the_version_that_was_installed(Language language)
     {
         var expectedList = new[]
@@ -764,9 +764,9 @@ using NodaTime.Extensions;");
                                 e.PackageReference.PackageVersion == "2.10.1");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_does_not_repeat_notifications_for_previous_r_nuget_submissions(Language language)
     {
         var kernel = CreateKernel(language);
@@ -787,9 +787,9 @@ using NodaTime.Extensions;");
                     .StartsWith("Installing package Its.Log"));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_does_not_accept_invalid_keys(Language language)
     {
         var kernel = CreateKernel(language);
@@ -818,9 +818,9 @@ using NodaTime.Extensions;");
             );
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task When_restore_fails_then_an_error_is_displayed(Language language)
     {
         var kernel = CreateKernel(language);
@@ -839,9 +839,9 @@ using NodaTime.Extensions;");
             .Contain("error NU1101:", nonexistentPackageName);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task it_can_load_assembly_referenced_from_refs_folder_in_nuget_package(Language language)
     {
         var kernel = CreateKernel(language);
@@ -882,9 +882,9 @@ tInput.Length
               .Be(4);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task it_can_load_platform_specific_assembly_in_nuget_package(Language language)
     {
         var kernel = CreateKernel(language);
@@ -931,10 +931,10 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
         // (OSPlatform.OSX is not supported by this library
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
-    [InlineData(Language.PowerShell)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
+    [DataRow(Language.PowerShell)]
     public async Task Pound_r_nuget_works_immediately_after_a_language_selector(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);
@@ -962,9 +962,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             .Be("Newtonsoft.Json");
     }
 
-    [Theory] // https://github.com/dotnet/interactive/issues/3753
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod] // https://github.com/dotnet/interactive/issues/3753
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_works_immediately_after_pound_r_nuget(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);
@@ -989,9 +989,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
         result.Events.Should().NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_should_display_only_requested_packages_for_first_submission(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);
@@ -1021,9 +1021,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             .BeEquivalentTo(expectedDisplayed);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_should_display_only_requested_packages_for_subsequent_submission(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);
@@ -1058,9 +1058,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             .BeEquivalentTo(expected);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_should_display_only_requested_packages_for_third_submission(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);
@@ -1103,9 +1103,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             .BeEquivalentTo(expectedDisplayed);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_should_error_when_trying_to_specify_a_different_version_of_an_already_loaded_package(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);
@@ -1135,9 +1135,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             .Be("Google.Protobuf version 3.5.0 cannot be added because version 3.5.1 was added previously.");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_should_error_when_trying_to_specify_a_different_version_of_an_already_specified_package(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);
@@ -1162,9 +1162,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             .Be("Google.Protobuf version 3.5.1 cannot be added because version 3.5.0 was added previously.");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_should_not_error_when_trying_to_load_again_same_package_with_wildcard(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);
@@ -1189,9 +1189,9 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
               .NotContainErrors();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_r_nuget_should_succeed_when_trying_to_load_again_same_package_with_wildcard_after_loading_a_specific_version_reuses_the_previously_resolved(Language defaultLanguageKernel)
     {
         var kernel = CreateCompositeKernel(defaultLanguageKernel);

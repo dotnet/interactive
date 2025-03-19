@@ -12,13 +12,13 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class JavaScriptKernelTests
 {
-    [Fact]
+    [TestMethod]
     public async Task javascript_kernel_emits_code_as_it_was_given()
     {
         using var kernel = new CompositeKernel
@@ -49,7 +49,7 @@ public class JavaScriptKernelTests
     }
 
 
-    [Fact]
+    [TestMethod]
     public async Task javascript_kernel_forwards_commands_to_frontend()
     {
         var client = new TestClient();

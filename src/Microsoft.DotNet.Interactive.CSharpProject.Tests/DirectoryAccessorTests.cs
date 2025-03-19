@@ -6,7 +6,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using FluentAssertions;
 using Microsoft.DotNet.PlatformAbstractions;
-using Xunit;
 using static Microsoft.DotNet.PlatformAbstractions.RuntimeEnvironment;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
@@ -17,7 +16,7 @@ public abstract class DirectoryAccessorTests
 
     public abstract IDirectoryAccessor CreateDirectory([CallerMemberName]string testName = null);
 
-    [Fact]
+    [TestMethod]
     public void It_can_retrieve_all_files_recursively()
     {
         var directory = GetDirectory(TestAssets.SampleConsole);
@@ -36,7 +35,7 @@ public abstract class DirectoryAccessorTests
             .Contain(new RelativeFilePath("Subdirectory/Tutorial.md"));
     }
 
-    [Fact]
+    [TestMethod]
     public void It_can_retrieve_all_files_at_root()
     {
         var directory = GetDirectory(TestAssets.SampleConsole);
@@ -55,7 +54,7 @@ public abstract class DirectoryAccessorTests
             .NotContain(new RelativeFilePath("Subdirectory/Tutorial.md"));
     }
 
-    [Fact]
+    [TestMethod]
     public void GetAllFilesRecursively_does_not_return_directories()
     {
         var directory = GetDirectory(TestAssets.SampleConsole);
@@ -66,7 +65,7 @@ public abstract class DirectoryAccessorTests
         files.Should().NotContain(f => f.Value.EndsWith("Subdirectory/"));
     }
 
-    [Fact]
+    [TestMethod]
     public void It_can_retrieve_all_directories_recursively()
     {
         var directory = GetDirectory(TestAssets.SampleConsole);
@@ -77,7 +76,7 @@ public abstract class DirectoryAccessorTests
             .Contain(new RelativeDirectoryPath("Subdirectory"));
     }
 
-    [Fact]
+    [TestMethod]
     public void GetAllDirectoriesRecursively_does_not_return_files()
     {
         var directory = GetDirectory(TestAssets.SampleConsole);
@@ -96,9 +95,9 @@ public abstract class DirectoryAccessorTests
             .NotContain(d => d.Value.EndsWith("Subdirectory/Tutorial.md"));
     }
 
-    [Theory]
-    [InlineData(".")]
-    [InlineData("./Subdirectory")]
+    [TestMethod]
+    [DataRow(".")]
+    [DataRow("./Subdirectory")]
     public void When_the_directory_exists_DirectoryExists_returns_true(string path)
     {
         var directoryAccessor = GetDirectory(TestAssets.SampleConsole);
@@ -106,9 +105,9 @@ public abstract class DirectoryAccessorTests
         directoryAccessor.DirectoryExists(path).Should().BeTrue();
     }
 
-    [Theory]
-    [InlineData(".")]
-    [InlineData("Subdirectory")]
+    [TestMethod]
+    [DataRow(".")]
+    [DataRow("Subdirectory")]
     public void It_can_ensure_a_directory_exists(string path)
     {
         var directoryAccessor = CreateDirectory();
@@ -118,7 +117,7 @@ public abstract class DirectoryAccessorTests
         directoryAccessor.DirectoryExists(path).Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void EnsureDirectoryExists_is_idempotent()
     {
         var directoryAccessor = CreateDirectory();
@@ -133,8 +132,8 @@ public abstract class DirectoryAccessorTests
             .NotThrow();
     }
 
-    [Theory]
-    [InlineData("./some-file.txt", "hello!")]
+    [TestMethod]
+    [DataRow("./some-file.txt", "hello!")]
     public void It_can_write_text_to_a_file(string path, string text)
     {
         var directory = CreateDirectory();
@@ -144,7 +143,7 @@ public abstract class DirectoryAccessorTests
         directory.ReadAllText(path).Should().Be(text);
     }
 
-    [Fact]
+    [TestMethod]
     public void It_can_overwrite_an_existing_file()
     {
         var directory = CreateDirectory();
@@ -155,32 +154,32 @@ public abstract class DirectoryAccessorTests
         directory.ReadAllText("./some-file.txt").Should().Be("updated text");
     }
 
-    [Fact]
+    [TestMethod]
     public void When_the_file_exists_FileExists_returns_true()
     {
         var testDir = TestAssets.SampleConsole;
         GetDirectory(testDir).FileExists(new RelativeFilePath("Program.cs")).Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void When_the_filepath_is_null_FileExists_returns_false()
     {
         var testDir = TestAssets.SampleConsole;
         GetDirectory(testDir).Invoking(d => d.FileExists(null)).Should().Throw<ArgumentNullException>();
     }
 
-    [Theory]
-    [InlineData(@"Subdirectory/AnotherProgram.cs")]
-    [InlineData(@"Subdirectory\AnotherProgram.cs")]
+    [TestMethod]
+    [DataRow(@"Subdirectory/AnotherProgram.cs")]
+    [DataRow(@"Subdirectory\AnotherProgram.cs")]
     public void When_the_filepath_contains_subdirectory_paths_FileExists_returns_true(string filepath)
     {
         var testDir = TestAssets.SampleConsole;
         GetDirectory(testDir).FileExists(new RelativeFilePath(filepath)).Should().BeTrue();
     }
 
-    [Theory]
-    [InlineData(@"../Program.cs")]
-    [InlineData(@"..\Program.cs")]
+    [TestMethod]
+    [DataRow(@"../Program.cs")]
+    [DataRow(@"..\Program.cs")]
     public void When_the_filepath_contains_a_path_that_looks_upward_in_tree_then_FileExists_returns_the_text(string filePath)
     {
         var rootDirectoryToAddFiles = TestAssets.SampleConsole;
@@ -188,25 +187,25 @@ public abstract class DirectoryAccessorTests
         GetDirectory(testDir, rootDirectoryToAddFiles).FileExists(new RelativeFilePath(filePath)).Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void When_the_filepath_contains_an_existing_file_ReadAllText_returns_the_text()
     {
         var testDir = TestAssets.SampleConsole;
         GetDirectory(testDir).ReadAllText(new RelativeFilePath("Program.cs")).Should().Contain("Hello World!");
     }
 
-    [Theory]
-    [InlineData(@"Subdirectory/AnotherProgram.cs")]
-    [InlineData(@"Subdirectory\AnotherProgram.cs")]
+    [TestMethod]
+    [DataRow(@"Subdirectory/AnotherProgram.cs")]
+    [DataRow(@"Subdirectory\AnotherProgram.cs")]
     public void When_the_filepath_contains_an_existing_file_from_subdirectory_then_ReadAllText_returns_the_text(string filePath)
     {
         var testDir = TestAssets.SampleConsole;
         GetDirectory(testDir).ReadAllText(new RelativeFilePath(filePath)).Should().Contain("Hello from Another Program!");
     }
 
-    [Theory]
-    [InlineData(@"../Program.cs")]
-    [InlineData(@"..\Program.cs")]
+    [TestMethod]
+    [DataRow(@"../Program.cs")]
+    [DataRow(@"..\Program.cs")]
     public void When_the_filepath_contains_a_path_that_looks_upward_in_tree_then_ReadAllText_returns_the_text(string filePath)
     {
         var rootDirectoryToAddFiles = TestAssets.SampleConsole;
@@ -215,7 +214,7 @@ public abstract class DirectoryAccessorTests
         value.Should().Contain("Hello World!");
     }
 
-    [Fact]
+    [TestMethod]
     public void Should_return_a_directory_accessor_for_a_relative_path()
     {
         var rootDir = TestAssets.SampleConsole;
@@ -224,7 +223,7 @@ public abstract class DirectoryAccessorTests
         inner.FileExists(new RelativeFilePath("AnotherProgram.cs")).Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void Path_separators_are_uniform()
     {
         var directory = GetDirectory(TestAssets.SampleConsole);
@@ -239,7 +238,7 @@ public abstract class DirectoryAccessorTests
         }
     }
 
-    [Fact]
+    [TestMethod]
     public void It_can_make_a_directory_accessor_from_an_absolute_DirectoryInfo()
     {
         var directory = GetDirectory(TestAssets.SampleConsole);
@@ -252,6 +251,7 @@ public abstract class DirectoryAccessorTests
     }
 }
 
+[TestClass]
 public class FileSystemDirectoryAccessorTests : DirectoryAccessorTests
 {
     public override IDirectoryAccessor CreateDirectory([CallerMemberName]string testName = null)
@@ -267,6 +267,7 @@ public class FileSystemDirectoryAccessorTests : DirectoryAccessorTests
     }
 }
 
+[TestClass]
 public class InMemoryDirectoryAccessorTests : DirectoryAccessorTests
 {
     public override IDirectoryAccessor CreateDirectory([CallerMemberName]string testName = null)
@@ -274,11 +275,11 @@ public class InMemoryDirectoryAccessorTests : DirectoryAccessorTests
         return new InMemoryDirectoryAccessor();
     }
 
-    [Theory]
-    [InlineData("one")]
-    [InlineData("./one")]
-    [InlineData("./one/two")]
-    [InlineData("./one/two/three")]
+    [TestMethod]
+    [DataRow("one")]
+    [DataRow("./one")]
+    [DataRow("./one/two")]
+    [DataRow("./one/two/three")]
     public void DirectoryExists_returns_true_for_parent_directories_of_explicitly_added_relative_file_paths(string relativeDirectoryPath)
     {
         var directory = new InMemoryDirectoryAccessor

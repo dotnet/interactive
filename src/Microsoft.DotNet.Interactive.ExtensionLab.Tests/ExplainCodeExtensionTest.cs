@@ -9,13 +9,13 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Mermaid;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
 
+[TestClass]
 public class ExplainCodeExtensionTest
 {
-    [Fact]
+    [TestMethod]
     public async Task it_requires_mermaid_kernel_to_load()
     {
         using var kernel = new CompositeKernel
@@ -29,7 +29,7 @@ public class ExplainCodeExtensionTest
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task generates_interaction_diagram_for_top_level_statements()
     {
         using var kernel = new CompositeKernel

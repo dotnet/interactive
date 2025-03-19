@@ -13,10 +13,10 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
+[TestClass]
 public class ObservableCommandAndEventReceiverTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
@@ -30,7 +30,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
+    [TestMethod]
     public void Read_is_not_called_until_first_subscriber_subscribes()
     {
         var queue = new Queue<CommandOrEvent>();
@@ -42,7 +42,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
         queue.Should().NotBeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_there_are_multiple_subscribers_there_are_no_concurrent_reads_from_underlying_source()
     {
         int readCount = 0;
@@ -104,7 +104,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
         readCount.Should().Be(enqueuedMessageCount);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_receiver_is_disposed_then_no_further_reads_occur()
     {
         int readCount = 0;
@@ -136,7 +136,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
         readCount.Should().Be(readCountAfterEmptied);
     }
 
-    [Fact]
+    [TestMethod]
     public void New_subscriptions_can_be_made_after_all_subscribers_have_unsubscribed()
     {
         var count = 0;
@@ -157,7 +157,7 @@ public class ObservableCommandAndEventReceiverTests : IDisposable
         took.Should().Be(4);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_all_subscribers_are_unsubscribed_then_receiver_stop_reading()
     {
         var count = 0;

@@ -6,23 +6,12 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using Microsoft.DotNet.Interactive.CSharpProject.Servers.Roslyn;
 using Pocket;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
-[Collection(nameof(PrebuildFixture))]
 public abstract class WorkspaceServerTestsCore : IDisposable
 {
-    private readonly PrebuildFixture _prebuildFixture;
     private readonly CompositeDisposable _disposables = new();
-
-    protected WorkspaceServerTestsCore(
-        PrebuildFixture prebuildFixture, 
-        ITestOutputHelper output)
-    {
-        _prebuildFixture = prebuildFixture;
-    }
 
     public void Dispose() => _disposables.Dispose();
 
@@ -32,8 +21,14 @@ public abstract class WorkspaceServerTestsCore : IDisposable
 
     protected ICodeRunner GetCodeRunner() => CreateRoslynWorkspaceServer();
 
+    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+    public static async Task ClassInitialize(TestContext testContext)
+    {
+        await PrebuildFixture.Instance.InitializeAsync();
+    }
+
     private WorkspaceServer CreateRoslynWorkspaceServer()
     {
-        return new WorkspaceServer(PrebuildFinder.Create(() => Task.FromResult(_prebuildFixture.Prebuild)));
+        return new WorkspaceServer(PrebuildFinder.Create(() => Task.FromResult(PrebuildFixture.Instance.Prebuild)));
     }
 }

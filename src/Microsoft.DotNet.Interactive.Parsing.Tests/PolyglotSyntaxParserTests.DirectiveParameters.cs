@@ -8,23 +8,23 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
+[TestClass]
 public partial class PolyglotSyntaxParserTests
 {
+    [TestClass]
     public class DirectiveParameters
     {
-        private readonly ITestOutputHelper _output;
+        private readonly TestContext _output;
 
-        public DirectiveParameters(ITestOutputHelper output)
+        public DirectiveParameters(TestContext output)
         {
             _output = output;
         }
 
-        [Fact]
+        [TestMethod]
         public void Words_prefixed_with_hyphens_are_parsed_into_parameter_name_nodes()
         {
             var tree = Parse("#!directive --option");
@@ -36,7 +36,7 @@ public partial class PolyglotSyntaxParserTests
             parameterNode.NameNode.Text.Should().Be("--option");
         }
 
-        [Fact]
+        [TestMethod]
         public void Words_prefixed_with_hyphens_are_parsed_into_parameter_value_nodes()
         {
             var tree = Parse("#!directive --option argument");
@@ -48,11 +48,11 @@ public partial class PolyglotSyntaxParserTests
             argumentNode.Text.Should().Be("argument");
         }
 
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
             #!directive --option "this is the argument"
             """)]
-        [InlineData("""
+        [DataRow("""
             #!directive "this is the argument"
             """)]
         public void Quoted_values_can_include_whitespace(string code)
@@ -66,9 +66,9 @@ public partial class PolyglotSyntaxParserTests
             argumentNode.Text.Should().Be("\"this is the argument\"");
         }
 
-        [Theory]
-        [InlineData("#!test --flag --param 123")]
-        [InlineData("#!test --flag 123")] // implicit parameter... but this is really confusing to read
+        [TestMethod]
+        [DataRow("#!test --flag --param 123")]
+        [DataRow("#!test --flag 123")] // implicit parameter... but this is really confusing to read
         public void Flag_does_not_consume_parameter_value(string code)
         {
             PolyglotParserConfiguration config = new("csharp")
@@ -110,7 +110,7 @@ public partial class PolyglotSyntaxParserTests
                                                                node.ValueNode is null);
         }
 
-        [Fact]
+        [TestMethod]
         public void Errors_for_unknown_parameter_names_are_available_as_diagnostics()
         {
             var markupCode = """
@@ -154,7 +154,7 @@ public partial class PolyglotSyntaxParserTests
                 .Be(span.End);
         }
 
-        [Fact]
+        [TestMethod]
         public void When_there_are_too_many_occurrences_then_an_error_is_produced()
         {
             PolyglotParserConfiguration config = new("csharp")
@@ -218,8 +218,8 @@ public partial class PolyglotSyntaxParserTests
             }
         }
 
-        [Theory]
-        [InlineData("#!test")]
+        [TestMethod]
+        [DataRow("#!test")]
         public void When_a_required_parameter_is_missing_then_an_error_is_produced(string code)
         {
             PolyglotParserConfiguration config = new("csharp")
@@ -258,9 +258,9 @@ public partial class PolyglotSyntaxParserTests
                 .Be("Missing required parameter '--required'");
         }
 
-        [Theory]
-        [InlineData("#!test --not-required 123 --required")]
-        [InlineData("#!test --required --not-required 123")]
+        [TestMethod]
+        [DataRow("#!test --not-required 123 --required")]
+        [DataRow("#!test --required --not-required 123")]
         public void When_the_value_for_a_required_parameter_is_missing_then_an_error_is_produced(string code)
         {
             PolyglotParserConfiguration config = new("csharp")
@@ -299,7 +299,7 @@ public partial class PolyglotSyntaxParserTests
                 .Be("Missing value for required parameter '--required'");
         }
 
-        [Fact]
+        [TestMethod]
         public void When_a_required_parameter_on_a_subcommand_is_missing_then_an_error_is_produced()
         {
             var tree = Parse("#!connect jupyter --kernel-spec .net-csharp");
@@ -314,9 +314,9 @@ public partial class PolyglotSyntaxParserTests
                 .Be("Missing required parameter '--kernel-name'");
         }
 
-        [Theory]
-        [InlineData("#!connect jupyter --kernel-spec .net-csharp --kernel-name")]
-        [InlineData("#!connect jupyter --kernel-name --kernel-spec .net-csharp")]
+        [TestMethod]
+        [DataRow("#!connect jupyter --kernel-spec .net-csharp --kernel-name")]
+        [DataRow("#!connect jupyter --kernel-name --kernel-spec .net-csharp")]
         public void When_the_value_for_a_required_parameter_on_a_subcommand_is_missing_then_an_error_is_produced(string code)
         {
             var tree = Parse(code);
@@ -331,14 +331,14 @@ public partial class PolyglotSyntaxParserTests
                 .Be("Missing value for required parameter '--kernel-name'");
         }
 
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
                     "just a JSON string"
                     """)]
-        [InlineData("""
+        [DataRow("""
                     { "fruit": "cherry" }
                     """)]
-        [InlineData("""
+        [DataRow("""
                     [ "a string", 123, { "fruit": "Granny Smith" } ]
                     """)]
         public void Inline_JSON_is_consumed_as_a_parameter_value(string jsonParameter)
@@ -380,7 +380,7 @@ public partial class PolyglotSyntaxParserTests
                 .Should().Be(jsonParameter);
         }
 
-        [Fact]
+        [TestMethod]
         public void Diagnostics_are_produced_for_invalid_JSON()
         {
             PolyglotParserConfiguration config = new("csharp")
@@ -436,7 +436,7 @@ public partial class PolyglotSyntaxParserTests
         }
     }
 
-    [Fact]
+    [TestMethod]
     public void A_parameter_nodes_associated_parameter_can_be_looked_up()
     {
         var tree = Parse("#!set --value 123 --name x ");

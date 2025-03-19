@@ -12,26 +12,22 @@ using Microsoft.DotNet.Interactive.CSharpProject.Events;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
-[Collection(nameof(PrebuildFixture))]
-[LogToPocketLogger]
+[TestClass]
 public class CSharpProjectKernelTests
 {
-    private readonly ITestOutputHelper _output;
+    private readonly TestContext _output;
     private readonly CompositeDisposable _disposables = new();
 
-    public CSharpProjectKernelTests(ITestOutputHelper output)
+    public CSharpProjectKernelTests(TestContext output)
     {
         _output = output;
         _disposables.Add(_output.SubscribeToPocketLogger());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenDocument_before_OpenProject_fails()
     {
         using var kernel = new CSharpProjectKernel();
@@ -47,7 +43,7 @@ public class CSharpProjectKernelTests
               .Contain($"Project must be opened, send the command '{nameof(OpenProject)}' first.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenProject_returns_a_full_list_of_available_project_items()
     {
         using var kernel = new CSharpProjectKernel();
@@ -82,7 +78,7 @@ var a = 2;
               });
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenProject_overrides_previously_loaded_project()
     {
         using var kernel = new CSharpProjectKernel();
@@ -147,7 +143,7 @@ namespace Program {
             .Contain("Console.WriteLine(123);");            
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenDocument_with_an_existing_file_path_succeeds()
     {
         using var kernel = new CSharpProjectKernel();
@@ -158,7 +154,7 @@ namespace Program {
             .NotContainErrors();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenDocument_with_an_existing_file_path_produces_DocumentOpened_event()
     {
         using var kernel = new CSharpProjectKernel();
@@ -169,7 +165,7 @@ namespace Program {
             .ContainSingle<DocumentOpened>(e => e.RelativeFilePath == "./Program.cs" && e.RegionName is null && e.Content == "// content");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenDocument_with_an_existing_file_path_and_region_produces_DocumentOpened_event()
     {
         using var kernel = new CSharpProjectKernel();
@@ -180,7 +176,7 @@ namespace Program {
             .ContainSingle<DocumentOpened>(e => e.RelativeFilePath == "./Program.cs" && e.RegionName == "region-name" && e.Content == "// content");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenDocument_with_a_non_existing_file_path_succeeds()
     {
         using var kernel = new CSharpProjectKernel();
@@ -193,7 +189,7 @@ namespace Program {
             .NotContainErrors();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenDocument_with_a_non_existing_file_path_produces_DocumentOpened_event()
     {
         using var kernel = new CSharpProjectKernel();
@@ -204,7 +200,7 @@ namespace Program {
               .ContainSingle<DocumentOpened>(e => e.RelativeFilePath == "./File_that_is_not_part_of_the_project.cs" && e.RegionName is null && e.Content == "");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenDocument_with_a_non_existing_file_path_and_region_fails()
     {
         using var kernel = new CSharpProjectKernel();
@@ -220,7 +216,7 @@ namespace Program {
               .Contain("Region 'test-region' not found in file './File_that_is_not_part_of_the_project.cs'");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenDocument_with_path_and_region_name_succeeds()
     {
         using var kernel = new CSharpProjectKernel();
@@ -245,7 +241,7 @@ public class Program
               .Which.Content.Should().Be("var a = 123;");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OpenDocument_with_region_name_fails_if_region_name_cannot_be_found()
     {
         using var kernel = new CSharpProjectKernel();
@@ -269,7 +265,7 @@ public class Program
             .Contain("Region 'NOT_A_REGION_IN_THE_FILE' not found in file './Program.cs'");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CompileProject_before_OpenProject_fails()
     {
         using var kernel = new CSharpProjectKernel();
@@ -285,7 +281,7 @@ public class Program
             .Contain($"Project must be opened, send the command '{nameof(OpenProject)}' first");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CompileProject_before_OpenDocument_fails()
     {
         using var kernel = new CSharpProjectKernel();
@@ -302,7 +298,7 @@ public class Program
               .Contain($"Document must be opened, send the command '{nameof(OpenDocument)}' first");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task RequestCompletions_before_OpenProject_fails()
     {
         var markedCode = @"in$$t x = 1;";
@@ -320,7 +316,7 @@ public class Program
               .Contain($"Project must be opened, send the command '{nameof(OpenProject)}' first");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task RequestCompletions_before_OpenDocument_fails()
     {
         var markedCode = @"in$$t x = 1;";
@@ -339,7 +335,7 @@ public class Program
               .Contain($"Document must be opened, send the command '{nameof(OpenDocument)}' first");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CompletionsProduced_is_returned_when_the_entire_file_contents_are_set()
     {
         using var kernel = new CSharpProjectKernel();
@@ -368,7 +364,7 @@ public class Program
               .Contain(ci => ci.DisplayText == "AppendText");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CompletionsProduced_is_returned_when_a_region_is_set()
     {
         using var kernel = new CSharpProjectKernel();
@@ -408,7 +404,7 @@ public class Program
               .Contain(ci => ci.DisplayText == "AppendText");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task SignatureHelpProduced_is_returned_when_a_region_is_set()
     {
         using var kernel = new CSharpProjectKernel();
@@ -472,7 +468,7 @@ public class Program
             });
     }
 
-    [Fact]
+    [TestMethod]
     public async Task SignatureHelpProduced_is_returned_when_no_region_is_set()
     {
         using var kernel = new CSharpProjectKernel();
@@ -534,7 +530,7 @@ public class Program
             });
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CompileProject_with_no_region_returns_an_assembly()
     {
         using var kernel = new CSharpProjectKernel();
@@ -559,7 +555,7 @@ public class Program
               .BeGreaterThan(0);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CompileProject_with_a_region_returns_an_assembly()
     {
         using var kernel = new CSharpProjectKernel();
@@ -588,7 +584,7 @@ public class Program
               .BeGreaterThan(0);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CompileProject_produces_diagnostics_and_fails()
     {
         using var kernel = new CSharpProjectKernel();
@@ -628,7 +624,7 @@ public class Program
               );
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CompileProject_produces_empty_diagnostics_collection_when_it_passes()
     {
         using var kernel = new CSharpProjectKernel();
@@ -661,7 +657,7 @@ public class Program
               .NotContain(d => d.Severity == CodeAnalysis.DiagnosticSeverity.Error);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task RequestDiagnostics_succeeds_even_with_errors_in_the_code()
     {
         using var kernel = new CSharpProjectKernel();
@@ -698,7 +694,7 @@ public class Program
               );
     }
 
-    [Fact]
+    [TestMethod]
     public async Task project_files_are_case_insensitive()
     {
         using var kernel = new CSharpProjectKernel();

@@ -11,7 +11,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 #if !NETFRAMEWORK
 using System;
@@ -20,9 +19,10 @@ using Microsoft.DotNet.Interactive.CSharp;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public partial class KernelTests
 {
-    [Fact]
+    [TestMethod]
     public void Deferred_initialization_command_is_not_executed_prior_to_first_submission()
     {
         var receivedCommands = new List<KernelCommand>();
@@ -42,7 +42,7 @@ public partial class KernelTests
         receivedCommands.Should().BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Deferred_initialization_command_is_executed_on_first_submission()
     {
         var receivedCommands = new List<KernelCommand>();
@@ -67,7 +67,7 @@ public partial class KernelTests
             .BeEquivalentSequenceTo("one", "two", "three");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Split_non_referencing_directives_are_executed_in_textual_order()
     {
         var receivedCommands = new List<string>();
@@ -118,7 +118,7 @@ public partial class KernelTests
                 code3);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Middleware_is_only_executed_once_per_command()
     {
         var middeware1Count = 0;
@@ -150,7 +150,7 @@ public partial class KernelTests
         middeware3Count.Should().Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task kernelEvents_sequence_completes_when_kernel_is_disposed()
     {
         var kernel = new FakeKernel();
@@ -163,7 +163,7 @@ public partial class KernelTests
     }
 
 #if !NETFRAMEWORK
-    [Fact]
+    [TestMethod]
     public async Task language_service_command_with_empty_buffer_doesnt_crash()
     {
         using var kernel = new CompositeKernel() { new CSharpKernel() };
@@ -187,7 +187,7 @@ public partial class KernelTests
         fail.Should().BeFalse(because: "there were no unhandled exceptions emitted");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Awaiting_a_disposed_task_does_not_deadlock()
     {
         using var kernel = new CompositeKernel
@@ -215,7 +215,8 @@ public partial class KernelTests
         result.Events.Should().ContainSingle<CommandSucceeded>();
     }
 
-    [Fact(Skip = "later")]
+    [TestMethod]
+    [Ignore("later")]
     public async Task Invocation_context_does_not_cause_entanglement_between_kernels_that_do_not_share_a_scheduler()
     {
         using var kernel = new CompositeKernel
@@ -247,7 +248,7 @@ public partial class KernelTests
     }
 #endif
 
-    [Fact]
+    [TestMethod]
     public async Task it_can_handle_commands_that_submit_commands_that_are_split()
     {
         var subkernel = new FakeKernel();
@@ -296,7 +297,7 @@ public partial class KernelTests
     }
 
 #if !NETFRAMEWORK
-    [Fact]
+    [TestMethod]
     public async Task Custom_commands_can_be_defined_and_handlers_for_them_implemented_within_an_interactive_session()
     {
         using var kernel = new CSharpKernel();

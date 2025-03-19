@@ -3,13 +3,13 @@
 
 using System.Collections.Generic;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[TestClass]
 public sealed partial class FormatterTests : FormatterTestBase
 {
-    [Fact]
+    [TestMethod]
     public void ListExpansionLimit_can_be_specified_per_type()
     {
         Formatter<KeyValuePair<string, int>>.ListExpansionLimit = 1000;

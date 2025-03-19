@@ -3,17 +3,17 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Xunit;
 using System.Globalization;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
+    [TestClass]
     public class LocalizationTests
     {
 
-        [Fact]
+        [TestMethod]
         public void Culture_Is_Set_Base_On_Environment_Variable()
         {
             Environment.SetEnvironmentVariable("DOTNET_CLI_CULTURE", "es-ES");
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             CultureInfo.CurrentCulture.Name.Should().Be(culture.Name);
         }
 
-        [Fact]
+        [TestMethod]
         public void UICulture_Is_Set_Base_On_Environment_Variable()
         {
             Environment.SetEnvironmentVariable("DOTNET_CLI_UI_LANGUAGE", "es-ES");
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             CultureInfo.CurrentUICulture.Name.Should().Be(culture.Name);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Kernel_Execute_Code_Using_Culture_From_Parent_Thread_That_Created_It()
         {
             using var kernel = new CSharpKernel();

@@ -10,10 +10,10 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class VariableSharingWithinMagicCommandsTests : IDisposable
 {
     private readonly CompositeKernel _kernel;
@@ -49,7 +49,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
         _kernel.Dispose();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Magic_commands_can_interpolate_variables_from_the_current_kernel()
     {
         await _kernel.SendAsync(new SubmitCode("var x = 123;", "csharp"));
@@ -61,7 +61,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
         receivedValue.Should().Be("123");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Magic_commands_can_interpolate_variables_from_a_different_kernel()
     {
         var valueX = "value from the C# kernel";
@@ -75,7 +75,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
         receivedValue.Should().Be(valueX);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_variable_does_not_exist_then_an_error_is_returned()
     {
         var result = await _kernel.SendAsync(new SubmitCode("#!shim --value @x", "csharp"));
@@ -90,7 +90,7 @@ public class VariableSharingWithinMagicCommandsTests : IDisposable
               .Contain("Value 'x' not found in kernel csharp");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Language_service_requests_do_not_trigger_value_interpolation()
     {
         var inputWasRequested = false;

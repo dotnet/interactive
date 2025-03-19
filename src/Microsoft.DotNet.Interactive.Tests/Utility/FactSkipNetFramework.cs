@@ -3,17 +3,22 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
-public sealed class FactSkipNetFramework : FactAttribute
+public sealed class NotNetFrameworkConditionAttribute : ConditionBaseAttribute
 {
-    public FactSkipNetFramework(string reason = null)
+    private readonly string _reason;
+
+    public NotNetFrameworkConditionAttribute(string reason = null)
+        : base(ConditionMode.Include)
     {
-        if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
-        {
-            Skip = string.IsNullOrWhiteSpace(reason) ? "Ignored on .NET Framework" : reason;
-        }
+        _reason = string.IsNullOrWhiteSpace(reason) ? "Ignored on .NET Framework" : reason;
     }
+
+    public override string IgnoreMessage => _reason;
+
+    public override string GroupName => nameof(NotNetFrameworkConditionAttribute);
+
+    public override bool ShouldRun => RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase);
 }

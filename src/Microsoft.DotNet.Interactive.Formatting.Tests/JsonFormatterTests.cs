@@ -6,14 +6,14 @@ using System.IO;
 using FluentAssertions;
 using System.Linq;
 using System.Text.Json;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[TestClass]
 public class JsonFormatterTests : FormatterTestBase
 {
-    [Theory]
-    [MemberData(nameof(JsonElements))]
+    [TestMethod]
+    [DynamicData(nameof(JsonElements))]
     public void It_does_not_JSON_encode_JSON_types(JsonElement jsonElement)
     {
         var formatter = JsonFormatter.GetPreferredFormatterFor(jsonElement.GetType());

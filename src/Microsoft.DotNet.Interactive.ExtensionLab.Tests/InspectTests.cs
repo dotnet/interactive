@@ -8,13 +8,13 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
 
+[TestClass]
 public sealed class InspectTests
 {
-    [Fact]
+    [TestMethod]
     public async Task inspect_with_default_settings_produces_error_and_diagnostics_on_invalid_source_code()
     {
         using var kernel = new CompositeKernel {
@@ -42,7 +42,7 @@ public class A
             .ContainAll(",35): error CS1513: } expected");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task inspect_with_default_settings_calls_inspector_and_produces_output()
     {
         using var kernel = new CompositeKernel() {
@@ -83,7 +83,7 @@ public class A
                 "ctor()", "get_P1()");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task inspect_with_complex_source_and_release_settings_calls_inspector_and_produces_output()
     {
         using var kernel = new CompositeKernel 
@@ -140,9 +140,9 @@ public class A
                 "private auto ansi ", "public static int Sum(ReadOnlySpan", "private static void Unsafe()");
     }
 
-    [Theory]
-    [InlineData("Release")]
-    [InlineData("Debug")]
+    [TestMethod]
+    [DataRow("Release")]
+    [DataRow("Debug")]
     public async Task inspect_with_configuration_settings_calls_inspector_and_produces_output(string configuration)
     {
         using var kernel = new CompositeKernel
@@ -187,9 +187,10 @@ public class A
                 "get_P1()");
     }
 
-    [Theory(Skip = "Utility will be determined later")]
-    [InlineData("Script")]
-    [InlineData("Regular")]
+    [TestMethod]
+    [Ignore("Utility will be determined later")]
+    [DataRow("Script")]
+    [DataRow("Regular")]
     public async Task inspect_with_kind_settings_calls_inspector_and_produces_output(string kind)
     {
         using var kernel = new CompositeKernel() {
@@ -234,7 +235,7 @@ public class A
                 "ctor", "get_P1()");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task inspect_with_default_settings_produces_proper_js_and_css()
     {
         using var kernel = new CompositeKernel() {

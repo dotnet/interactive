@@ -18,17 +18,17 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
 public partial class VariableSharingTests
 {
+    [TestClass]
     public class SetMagicCommand : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
 
-        [Fact]
+        [TestMethod]
         public async Task can_set_value_directly()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -46,7 +46,7 @@ public partial class VariableSharingTests
             valueProduced.Value.Should().Be("hello!");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task can_set_value_prompting_user()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -70,7 +70,7 @@ public partial class VariableSharingTests
             valueProduced.Value.Should().Be("hello!");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task can_set_value_prompting_user_for_password()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -96,7 +96,7 @@ public partial class VariableSharingTests
             valueProduced.Value.As<PasswordString>().GetClearTextPassword().Should().Be("hello!");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task multiple_set_commands_in_single_submission_can_combine_input_and_sharing()
         {
             using var kernel = CreateCompositeKernel();
@@ -143,7 +143,7 @@ public partial class VariableSharingTests
             newVar3.Should().Be("three");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task multiple_set_commands_in_single_submission_can_combine_input_and_sharing_and_literal_values()
         {
             using var kernel = CreateCompositeKernel();
@@ -190,8 +190,8 @@ public partial class VariableSharingTests
             newVar3.Should().Be("three");
         }
         
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             """
                 #!fsharp 
                 let x = 123
@@ -201,7 +201,7 @@ public partial class VariableSharingTests
                 #!set --name x --value @fsharp:x
                 x
                 """)]
-        [InlineData(
+        [DataRow(
             """
                 #!pwsh
                 $x = 123
@@ -229,8 +229,8 @@ public partial class VariableSharingTests
                   .Be(123);
         }
 
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             """
                 #!csharp
                 var x = 123;
@@ -240,7 +240,7 @@ public partial class VariableSharingTests
                 #!set --name x --value @csharp:x
                 x
                 """)]
-        [InlineData(
+        [DataRow(
             """
                 #!pwsh
                 $x = 123
@@ -268,15 +268,15 @@ public partial class VariableSharingTests
                   .Be(123);
         }
 
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             "#!csharp",
             "var x = 123;",
             """
                 #!set --name x --value @csharp:x
                 "$($x):$($x.GetType().ToString())"
                 """)]
-        [InlineData(
+        [DataRow(
             "#!fsharp",
             "let x = 123",
             """
@@ -307,7 +307,7 @@ public partial class VariableSharingTests
                    .Be("123:System.Double");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task JavaScript_ProxyKernel_can_share_a_value_from_csharp()
         {
             var (compositeKernel, remoteKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
@@ -337,10 +337,10 @@ public partial class VariableSharingTests
                           .Be("123");
         }
 
-        [Theory]
-        [InlineData("let source = 456", 456)]
-        [InlineData("let source = \"hello\"", "hello")]
-        [InlineData("let source = true", true)]
+        [TestMethod]
+        [DataRow("let source = 456", 456)]
+        [DataRow("let source = \"hello\"", "hello")]
+        [DataRow("let source = true", true)]
         public async Task can_set_value_from_another_kernel_when_serialized_as_scalar(
             string sourceDeclaration,
             object expectedDestinationValue)
@@ -356,7 +356,7 @@ public partial class VariableSharingTests
             valueProduced.Value.Should().Be(expectedDestinationValue);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task can_set_value_from_another_kernel_when_serialized_as_array()
         {
             using var composite = CreateCompositeKernel();
@@ -377,7 +377,7 @@ public partial class VariableSharingTests
                          .BeEquivalentTo(new[] { 1, 2, 3 });
         }
 
-        [Fact]
+        [TestMethod]
         public async Task can_set_value_from_another_kernel_when_serialized_as_object()
         {
             using var composite = CreateCompositeKernel();
@@ -398,7 +398,7 @@ public partial class VariableSharingTests
                          .BeEquivalentTo(new { X = 1, Y = 2 });
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Values_are_not_shared_by_reference_by_default()
         {
             using var kernel = CreateCompositeKernel();
@@ -428,7 +428,7 @@ public partial class VariableSharingTests
                   .BeOfType<JsonDocument>();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Byref_sharing_is_not_allowed_when_destination_kernel_is_a_proxy()
         {
             var (compositeKernel, _) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
@@ -452,7 +452,7 @@ public partial class VariableSharingTests
                   .Be("(1,15): error DNI203: Sharing by reference is not allowed when kernels are remote.");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Byref_sharing_is_not_allowed_when_source_kernel_is_a_proxy()
         {
             var (compositeKernel, _) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
@@ -474,7 +474,7 @@ public partial class VariableSharingTests
                   .Be("(1,15): error DNI203: Sharing by reference is not allowed when kernels are remote.");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Values_can_be_shared_by_reference_using_the_byref_option()
         {
             using var kernel = CreateCompositeKernel();
@@ -504,7 +504,7 @@ public partial class VariableSharingTests
                   .BeOfType<DirectoryInfo>();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task the_byref_option_cannot_be_combined_with_the_MIME_type_option()
         {
             using var kernel = CreateCompositeKernel();
@@ -526,7 +526,7 @@ public partial class VariableSharingTests
                   .Contain("The --mime-type and --byref options cannot be used together.");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task When_plaintext_MIME_type_is_specified_then_a_string_is_declared()
         {
             using var kernel = CreateCompositeKernel();
@@ -553,7 +553,7 @@ public partial class VariableSharingTests
                   .Be("System.String");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task honors_mimetype_from_value_kernel()
         {
             var csharpKernel = CreateKernel(Language.CSharp);
@@ -584,7 +584,7 @@ public partial class VariableSharingTests
                          .BeEquivalentTo(expected, opt => opt.ComparingByMembers<JsonElement>());
         }
 
-        [Fact]
+        [TestMethod]
         public async Task name_option_is_required()
         {
             using var kernel = CreateKernel(Language.CSharp);
@@ -595,7 +595,7 @@ public partial class VariableSharingTests
                    .Which.Message.Should().Be("(1,1): error DNI104: Missing required parameter '--name'");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task value_option_is_required()
         {
             using var kernel = CreateKernel(Language.CSharp);
@@ -606,7 +606,7 @@ public partial class VariableSharingTests
                    .Which.Message.Should().Be("(1,1): error DNI104: Missing required parameter '--value'");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ProxyKernels_sharing_values_receives_them_as_deserialized_values()
         {
             using var localCompositeKernel = new CompositeKernel

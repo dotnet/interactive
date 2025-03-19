@@ -15,24 +15,22 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
 public partial class VariableSharingTests
 {
+    [TestClass]
     public class ShareMagicCommand : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
 
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             "#!fsharp",
             "let x = 123",
             "#!share --from fsharp x\nx")]
-        [InlineData(
+        [DataRow(
             "#!pwsh",
             "$x = 123",
             "#!share --from pwsh x\nx")]
@@ -57,12 +55,12 @@ public partial class VariableSharingTests
                   .Be(123);
         }
 
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             "#!csharp",
             "var x = 123;",
             "#!share --from csharp x\nx")]
-        [InlineData(
+        [DataRow(
             "#!pwsh",
             "$x = 123",
             "#!share --from pwsh x\nx")]
@@ -87,12 +85,12 @@ public partial class VariableSharingTests
                   .Be(123);
         }
 
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             "#!csharp",
             "var x = 123;",
             "#!share --from csharp x\n\"$($x):$($x.GetType().ToString())\"")]
-        [InlineData(
+        [DataRow(
             "#!fsharp",
             "let x = 123",
             "#!share --from fsharp x\n\"$($x):$($x.GetType().ToString())\"")]
@@ -120,12 +118,12 @@ public partial class VariableSharingTests
                    .Be("123:System.Int32");
         }
 
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             "#!fsharp",
             "let x = 1",
             "#!share --from fsharp x")]
-        [InlineData(
+        [DataRow(
             "#!pwsh",
             "$x = 1",
             "#!share --from pwsh x")]
@@ -147,12 +145,12 @@ public partial class VariableSharingTests
                   .Be(2);
         }
 
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             "#!csharp",
             "var x = 1;",
             "#!share --from csharp x")]
-        [InlineData(
+        [DataRow(
             "#!pwsh",
             "$x = 1",
             "#!share --from pwsh x")]
@@ -174,12 +172,12 @@ public partial class VariableSharingTests
                   .Be(2);
         }
 
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             "#!csharp",
             "var x = 1;",
             "#!share --from csharp x")]
-        [InlineData(
+        [DataRow(
             "#!fsharp",
             "let x = 1",
             "#!share --from fsharp x")]
@@ -206,7 +204,7 @@ public partial class VariableSharingTests
                   .Be("2");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task JavaScript_ProxyKernel_can_share_a_value_from_csharp()
         {
             var (compositeKernel, remoteKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
@@ -236,7 +234,7 @@ public partial class VariableSharingTests
                           .Be("123");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task CSharpKernel_can_share_variable_from_JavaScript_via_a_ProxyKernel()
         {
             var (compositeKernel, jsKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
@@ -271,7 +269,7 @@ public partial class VariableSharingTests
             jsVariable.Should().Be(123);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task CSharpKernel_can_prompt_for_input_from_JavaScript_via_a_ProxyKernel()
         {
             var (compositeKernel, jsKernel) = await CreateCompositeKernelWithJavaScriptProxyKernel(_disposables);
@@ -301,7 +299,7 @@ public partial class VariableSharingTests
             valueProduced.FormattedValue.Value.Should().Be("hello!");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Values_can_be_shared_using_a_specified_MIME_type()
         {
             using var kernel = CreateCompositeKernel();
@@ -324,7 +322,7 @@ x");
                   .BeEquivalentTo(new FormattedValue("text/html", 123.ToDisplayString("text/html")));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task When_plaintext_MIME_type_is_specified_then_a_string_is_declared()
         {
             using var kernel = CreateCompositeKernel();
@@ -346,7 +344,7 @@ stringType");
                   .Be("System.String");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task honors_mimetype_from_value_kernel()
         {
             var csharpKernel = CreateKernel(Language.CSharp);
@@ -377,7 +375,7 @@ stringType");
                          .BeEquivalentTo(expected, opt => opt.ComparingByMembers<JsonElement>());
         }
 
-        [Fact]
+        [TestMethod]
         public async Task A_name_can_be_specified_for_the_imported_value()
         {
             using var kernel = CreateCompositeKernel();
@@ -400,10 +398,10 @@ stringType");
                   .BeEquivalentTo(new FormattedValue("text/plain", "123"));
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
+        [TestMethod]
+        [DataRow(Language.CSharp)]
+        [DataRow(Language.FSharp)]
+        [DataRow(Language.PowerShell)]
         public async Task RequestValue_returns_defined_variable(Language language)
         {
             var codeToSetVariable = language switch
@@ -422,10 +420,10 @@ stringType");
             valueProduced.Value.Should().Be(123);
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
+        [TestMethod]
+        [DataRow(Language.CSharp)]
+        [DataRow(Language.FSharp)]
+        [DataRow(Language.PowerShell)]
         public async Task RequestValueInfos_returns_the_names_of_defined_variables(Language language)
         {
             var codeToSetVariable = language switch
@@ -444,7 +442,7 @@ stringType");
             valueInfosProduced.ValueInfos.Should().Contain(v => v.Name == "x");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task RequestValueInfos_shows_expected_type_name()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -458,10 +456,10 @@ stringType");
                               .Contain(v => v.TypeName == "System.Collections.Generic.List<System.String>");
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
+        [TestMethod]
+        [DataRow(Language.CSharp)]
+        [DataRow(Language.FSharp)]
+        [DataRow(Language.PowerShell)]
         public async Task SendValue_declares_the_specified_variable(Language language)
         {
             using var kernel = CreateKernel(language);
@@ -473,10 +471,10 @@ stringType");
             valueProduced.Value.Should().Be(123);
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
+        [TestMethod]
+        [DataRow(Language.CSharp)]
+        [DataRow(Language.FSharp)]
+        [DataRow(Language.PowerShell)]
         public async Task SendValue_overwrites_an_existing_variable_of_the_same_type(Language language)
         {
             using var kernel = CreateKernel(language);
@@ -489,10 +487,10 @@ stringType");
             valueProduced.Value.Should().Be(456);
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
+        [TestMethod]
+        [DataRow(Language.CSharp)]
+        [DataRow(Language.FSharp)]
+        [DataRow(Language.PowerShell)]
         public async Task SendValue_can_redeclare_an_existing_variable_and_change_its_type(Language language)
         {
             using var kernel = CreateKernel(language);
@@ -505,7 +503,7 @@ stringType");
             valueProduced.Value.Should().Be("hello");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task FSharp_can_set_an_array_value_with_SendValue()
         {
             using var kernel = CreateKernel(Language.FSharp);

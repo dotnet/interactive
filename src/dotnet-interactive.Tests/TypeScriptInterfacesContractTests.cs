@@ -6,11 +6,11 @@ using System.Runtime.CompilerServices;
 using Assent;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.InterfaceGen.App;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
-[Trait("Category", "Contracts and serialization")]
+[TestProperty("Category", "Contracts and serialization")]
+[TestClass]
 public class TypeScriptInterfacesContractTests
 {
     private string GetTypeScriptContractFullPath(string subPath, [CallerFilePath] string thisDir = null)
@@ -47,7 +47,7 @@ dotnet run --project src/interface-generator -- --out-file {contractFile.FullNam
 ");
     }
 
-    [Fact]
+    [TestMethod]
     public void vscode_generated_TypeScript_interfaces_file_has_known_shape()
     {
         CheckTypeScriptInterfaceFile("src/polyglot-notebooks/src/contracts.ts");

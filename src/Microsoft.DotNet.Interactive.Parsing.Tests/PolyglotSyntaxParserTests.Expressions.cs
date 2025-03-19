@@ -7,26 +7,26 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
+    [TestClass]
     public class Expressions
     {
-        [Theory]
-        [InlineData(
+        [TestMethod]
+        [DataRow(
             """
             #!set --name myVar --value @input:"Please enter the value"
             """,
             "\"Please enter the value\"")]
-        [InlineData(
+        [DataRow(
             """
             #!set --name myVar --value @input:blah
             """,
             "blah")]
-        [InlineData(
+        [DataRow(
             """
             #!set --name myVar --value @input:{ "prompt": "Please enter the fruit name", "type": "text", "saveAs": "fruitName" }
             """,
@@ -59,7 +59,7 @@ public partial class PolyglotSyntaxParserTests
                      .Should().Be(expectedParameters);
         }
 
-        [Fact]
+        [TestMethod]
         public void Diagnostics_are_produced_for_invalid_JSON()
         {
             PolyglotParserConfiguration config = new("csharp")

@@ -3,14 +3,19 @@
 
 using System;
 using Npgsql;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
 
-public sealed class PostgreSqlFactAttribute : FactAttribute
+public sealed class PostgreSqlFactAttribute : ConditionBaseAttribute
 {
     private const string TEST_POSTGRESQL_CONNECTION_STRING = nameof(TEST_POSTGRESQL_CONNECTION_STRING);
     private static readonly string _skipReason;
+
+    public override string IgnoreMessage => _skipReason;
+
+    public override string GroupName => nameof(PostgreSqlFactAttribute);
+
+    public override bool ShouldRun => _skipReason is null;
 
     static PostgreSqlFactAttribute()
     {
@@ -18,11 +23,8 @@ public sealed class PostgreSqlFactAttribute : FactAttribute
     }
 
     public PostgreSqlFactAttribute()
+        : base(ConditionMode.Include)
     {
-        if (_skipReason is not null)
-        {
-            Skip = _skipReason;
-        }
     }
 
     internal static string TestConnectionAndReturnSkipReason()

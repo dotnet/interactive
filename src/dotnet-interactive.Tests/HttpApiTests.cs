@@ -26,17 +26,16 @@ using Newtonsoft.Json.Linq;
 
 using Pocket;
 
-using Xunit;
-using Xunit.Abstractions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class HttpApiTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public HttpApiTests(ITestOutputHelper output)
+    public HttpApiTests(TestContext output)
     {
         _disposables.Add(Formatting.Formatter.ResetToDefault);
         _disposables.Add(output.SubscribeToPocketLogger());
@@ -57,7 +56,8 @@ public class HttpApiTests : IDisposable
         return newServer;
     }
 
-    [Fact(Skip = "Revisit jupyter integration")]
+    [TestMethod]
+    [Ignore("Revisit jupyter integration")]
     public async Task discovery_route_is_not_registered_without_JupyterFrontedEnvironment()
     {
         var server = await GetServer();
@@ -70,7 +70,7 @@ public class HttpApiTests : IDisposable
         frontendEnvironment.Should().NotBeOfType<HtmlNotebookFrontendEnvironment>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task FrontendEnvironment_host_is_set_via_handshake()
     {
         var tunnelUri = new Uri("http://choosen.one:1000/");
@@ -85,7 +85,7 @@ public class HttpApiTests : IDisposable
         apiUri.Should().Be(tunnelUri);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task HttpApiTunneling_configures_frontend_environment()
     {
         var tunnelUri = new Uri("http://choosen.one:1000/");
@@ -101,7 +101,7 @@ public class HttpApiTests : IDisposable
         apiUri.Should().Be(tunnelUri);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task HttpApiTunneling_return_bootstrapper_js_url()
     {
         var tunnelUri = new Uri("http://choosen.one:1000/");
@@ -120,7 +120,7 @@ public class HttpApiTests : IDisposable
             .Should().Match(match);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task HttpApiTunneling_route_serves_bootstrapper_js()
     {
         var tunnelUri = new Uri("http://choosen.one:1000/");
@@ -144,9 +144,9 @@ public class HttpApiTests : IDisposable
 
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var a = 123;")]
-    [InlineData(Language.FSharp, "let a = 123")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var a = 123;")]
+    [DataRow(Language.FSharp, "let a = 123")]
     public async Task can_get_variable_value(Language language, string code)
     {
         var server = await GetServer();
@@ -161,9 +161,9 @@ public class HttpApiTests : IDisposable
         responseContent.Should().BeJsonEquivalentTo(123);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var a = \"Code value\";")]
-    [InlineData(Language.FSharp, "let a = \"Code value\"")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var a = \"Code value\";")]
+    [DataRow(Language.FSharp, "let a = \"Code value\"")]
     public async Task can_get_variable_value_when_variable_is_string(Language language, string code)
     {
         var server = await GetServer(language);
@@ -177,9 +177,9 @@ public class HttpApiTests : IDisposable
         responseContent.Should().BeJsonEquivalentTo("Code value");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var a = \"Code value\";")]
-    [InlineData(Language.FSharp, "let a = \"Code value\"")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var a = \"Code value\";")]
+    [DataRow(Language.FSharp, "let a = \"Code value\"")]
     public async Task deferred_command_produce_html_bootstrap_code(Language language, string code)
     {
         var server = await GetServer(language);
@@ -200,7 +200,7 @@ public class HttpApiTests : IDisposable
             .Contain("<script type='text/javascript'>");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_get_variables_with_bulk_request()
     {
         var server = await GetServer();
@@ -240,7 +240,7 @@ let d = 567", Language.FSharp.LanguageName()));
         responseContent.Should().BeJsonEquivalentTo(expected);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task get_variables_preserves_property_case()
     {
         var server = await GetServer();
@@ -260,7 +260,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             .ContainSingle("Field");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task bulk_variable_request_is_returned_with_application_json_content_type()
     {
         var server = await GetServer();
@@ -281,7 +281,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         response.Content.Headers.ContentType.MediaType.Should().Be("application/json");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Variable_serialization_can_be_customized_using_Formatter()
     {
         Formatting.Formatter.Register<FileInfo>(
@@ -301,9 +301,9 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         value["TheName"].Value<string>().Should().Be("the-file.txt");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var a = 123;")]
-    [InlineData(Language.FSharp, "let a = 123")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var a = 123;")]
+    [DataRow(Language.FSharp, "let a = 123")]
     public async Task variable_is_returned_with_application_json_content_type(Language language, string code)
     {
         var server = await GetServer();
@@ -317,9 +317,9 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         response.Content.Headers.ContentType.MediaType.Should().Be("application/json");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task When_variable_does_not_exist_then_it_returns_404(Language language)
     {
         var server = await GetServer();
@@ -328,7 +328,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_subkernel_does_not_exist_then_it_returns_404()
     {
         var server = await GetServer();
@@ -337,7 +337,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_get_static_content()
     {
         var server = await GetServer();
@@ -348,7 +348,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         response.Content.Headers.ContentType.MediaType.Should().Be("image/png");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_get_static_content_from_extensions()
     {
         var server = await GetServer();
@@ -368,7 +368,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         response.Content.Headers.ContentType.MediaType.Should().Be("text/plain");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_get_kernel_names()
     {
         var server = await GetServer();
@@ -394,7 +394,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                 "value");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_mode_returns_javascript_api_via_http()
     {
         var port = GetFreePort();

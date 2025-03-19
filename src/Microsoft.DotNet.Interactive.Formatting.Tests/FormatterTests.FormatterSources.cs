@@ -5,17 +5,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public sealed partial class FormatterTests
 {
+    [TestClass]
     public class FormatterSources
     {
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
         public void Formatter_sources_can_provide_lazy_registration_of_custom_formatters(string mimeType)
         {
             var obj = new TypeWithCustomFormatter();
@@ -25,9 +25,9 @@ public sealed partial class FormatterTests
             formatted.Should().Be($"Hello from {nameof(CustomFormatterSource)} using MIME type {mimeType}");
         }
 
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
         public void Convention_based_formatter_sources_can_provide_lazy_registration_of_custom_formatters(string mimeType)
         {
             var obj = new TypeWithConventionBasedFormatter();
@@ -37,7 +37,7 @@ public sealed partial class FormatterTests
             formatted.Should().Be($"Hello from {typeof(ConventionBased.FormatterSource)} using MIME type {mimeType}");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_sources_are_still_registered_after_formatters_are_reset()
         {
             var obj = new TypeWithCustomFormatter();
@@ -51,7 +51,7 @@ public sealed partial class FormatterTests
             formattedAfter.Should().Be(formattedBefore);
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_sources_can_set_preferred_MIME_type()
         {
             var obj = new TypeWithCustomFormatterAndMimeType();
@@ -69,7 +69,7 @@ public sealed partial class FormatterTests
                     c => c.WithStrictOrdering());
         }
 
-        [Fact]
+        [TestMethod]
         public void Convention_based_formatter_sources_are_still_registered_after_formatters_are_reset()
         {
             var obj = new TypeWithConventionBasedFormatter();
@@ -83,7 +83,7 @@ public sealed partial class FormatterTests
             formattedAfter.Should().Be(formattedBefore);
         }
 
-        [Fact]
+        [TestMethod]
         public void Convention_based_formatter_sources_can_set_preferred_MIME_type()
         {
             var obj = new TypeWithConventionBasedFormatterAndMimeType();

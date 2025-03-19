@@ -13,13 +13,13 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.FSharp.Core;
 
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
+[TestClass]
 public class AsyncContextTests
 {
-    [Fact]
+    [TestMethod]
     public async Task async_context_is_available_in_csharp_scripting2()
     {
         AsyncContext.TryEstablish(out var contextId);
@@ -33,7 +33,7 @@ AsyncContext.Id
         result.ReturnValue.Should().Be(contextId);
     }
 
-    [Fact]
+    [TestMethod]
     public void async_context_is_available_in_fsharp_scripting2()
     {
         AsyncContext.TryEstablish(out var contextId);

@@ -6,15 +6,15 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Parsing;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Method
     {
-        [Fact]
+        [TestMethod]
         public void whitespace_is_legal_at_the_beginning_of_a_request()
         {
             var result = Parse("  GET https://example.com");
@@ -25,7 +25,7 @@ public partial class HttpParserTests
                   .Should().Be(TokenKind.Whitespace);
         }
 
-        [Fact]
+        [TestMethod]
         public void newline_is_legal_at_the_beginning_of_a_request()
         {
             var result = Parse(
@@ -44,7 +44,7 @@ public partial class HttpParserTests
             requestNode.MethodNode.Text.Should().Be("GET");
         }
 
-        [Fact]
+        [TestMethod]
         public void comment_is_legal_at_the_beginning_of_a_request()
         {
             var result = Parse(
@@ -63,11 +63,11 @@ public partial class HttpParserTests
             requestNode.MethodNode.Text.Should().Be("GET");
         }
 
-        [Theory]
-        [InlineData("GET https://example.com", "GET")]
-        [InlineData("POST https://example.com", "POST")]
-        [InlineData("OPTIONS https://example.com", "OPTIONS")]
-        [InlineData("TRACE https://example.com", "TRACE")]
+        [TestMethod]
+        [DataRow("GET https://example.com", "GET")]
+        [DataRow("POST https://example.com", "POST")]
+        [DataRow("OPTIONS https://example.com", "OPTIONS")]
+        [DataRow("TRACE https://example.com", "TRACE")]
         public void common_verbs_are_parsed_correctly(string line, string method)
         {
             var result = Parse(line);
@@ -77,11 +77,11 @@ public partial class HttpParserTests
                   .MethodNode.Text.Should().Be(method);
         }
 
-        [Theory]
-        [InlineData("GET https://example.com", "GET")]
-        [InlineData("Get https://example.com", "Get")]
-        [InlineData("OPTIONS https://example.com", "OPTIONS")]
-        [InlineData("options https://example.com", "options")]
+        [TestMethod]
+        [DataRow("GET https://example.com", "GET")]
+        [DataRow("Get https://example.com", "Get")]
+        [DataRow("OPTIONS https://example.com", "OPTIONS")]
+        [DataRow("options https://example.com", "options")]
         public void it_can_parse_verbs_regardless_of_their_casing(string line, string method)
         {
             var result = Parse(line);
@@ -91,7 +91,7 @@ public partial class HttpParserTests
                   .MethodNode.Text.Should().Be(method);
         }
 
-        [Fact]
+        [TestMethod]
         public void Unrecognized_verb_produces_a_diagnostic()
         {
             var result = Parse("OOPS https://example.com");

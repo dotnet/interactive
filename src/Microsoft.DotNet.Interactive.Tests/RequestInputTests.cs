@@ -13,13 +13,13 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class RequestInputTests
 {
-    [Fact]
+    [TestMethod]
     public async Task When_Save_is_specified_then_subsequent_requests_reuse_the_saved_value()
     {
         var inputRequestCount = 0;
@@ -47,7 +47,7 @@ public class RequestInputTests
         inputRequestCount.Should().Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_a_value_is_saved_then_the_user_is_notified()
     {
         var kernel = CreateKernel();
@@ -78,7 +78,7 @@ public class RequestInputTests
               .Match($"Your response for value `{saveAs}` has been saved and will be reused without a prompt in the future.*To remove this value *, run the following command in a PowerShell cell:*");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_a_saved_value_is_used_then_the_user_is_notified()
     {
         var kernel = CreateKernel();
@@ -110,7 +110,7 @@ public class RequestInputTests
               .Match($"Using previously saved value for `{saveAs}`.*To remove this value *, run the following command in a PowerShell cell:*");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Multiple_inputs_can_be_requested_together_using_command()
     {
         var requestInputs = new RequestInputs
@@ -143,7 +143,7 @@ public class RequestInputTests
               .Which.Values.Should().BeEquivalentTo(formValues);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Multiple_inputs_can_be_requested_together_using_GetInputsAsync()
     {
         using var kernel = CreateKernel()

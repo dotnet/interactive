@@ -1,36 +1,33 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
-
 using FluentAssertions;
-
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.Playwright;
-
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit.Abstractions;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
 
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+[TestClass]
 public class HtmlKernelTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public HtmlKernelTests(ITestOutputHelper output)
+    public HtmlKernelTests(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
 
     public void Dispose() => _disposables.Dispose();
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_share_the_underlying_Playwright_page_object()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -46,7 +43,8 @@ public class HtmlKernelTests : IDisposable
               .BeAssignableTo<ILocator>();
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_share_the_underlying_page_HTML()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -66,7 +64,8 @@ public class HtmlKernelTests : IDisposable
               .Contain("<div>hello</div>");
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_share_the_underlying_page_content()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -86,7 +85,8 @@ public class HtmlKernelTests : IDisposable
               .Be("hello");
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_capture_a_PNG_using_a_selector()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -111,7 +111,8 @@ public class HtmlKernelTests : IDisposable
              .NotThrow();
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_capture_a_Jpeg_using_a_selector()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -138,7 +139,8 @@ public class HtmlKernelTests : IDisposable
 
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_has_shareable_values()
     {
         using var kernel = await CreateHtmlProxyKernelAsync();
@@ -154,7 +156,8 @@ public class HtmlKernelTests : IDisposable
               .ContainSingle(i => i.Name == ":root");
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task HTML_kernel_can_see_DOM_changes_made_by_JavaScript_kernel()
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
@@ -176,7 +179,8 @@ public class HtmlKernelTests : IDisposable
               .Contain("<div>howdy</div>");
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task JavaScript_kernel_can_see_DOM_changes_made_by_HTML_kernel()
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);
@@ -199,7 +203,8 @@ public class HtmlKernelTests : IDisposable
               .ContainSingle(v => v.Value.Contains("<div>hey there!</div>"));
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task html_kernel_evaluates_script_tags()
     {
         var connector = new PlaywrightKernelConnector(!Debugger.IsAttached);

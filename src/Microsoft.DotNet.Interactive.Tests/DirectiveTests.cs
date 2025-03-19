@@ -13,18 +13,15 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+[TestClass]
 public class DirectiveTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public DirectiveTests(ITestOutputHelper output)
+    public DirectiveTests(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
@@ -34,7 +31,7 @@ public class DirectiveTests : IDisposable
         _disposables.Dispose();
     }
 
-    [Fact]
+    [TestMethod]
     public void Directives_may_be_prefixed_with_hash()
     {
         using var kernel = new CompositeKernel();
@@ -45,11 +42,12 @@ public class DirectiveTests : IDisposable
             .NotThrow();
     }
 
-    [Theory(Skip = "TODO")]
-    [InlineData("{")]
-    [InlineData(";")]
-    [InlineData("a")]
-    [InlineData("1")]
+    [TestMethod]
+    [Ignore("TODO")]
+    [DataRow("{")]
+    [DataRow(";")]
+    [DataRow("a")]
+    [DataRow("1")]
     public void Directives_may_not_begin_with_(string value)
     {
         using var kernel = new CompositeKernel();
@@ -66,7 +64,7 @@ public class DirectiveTests : IDisposable
             .Be($"Invalid directive name \"{value}hello\". Directives must begin with \"#\".");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Default_directive_handlers_are_invoked_in_the_order_in_which_they_occur_in_the_code_submission()
     {
         using var kernel = new CSharpKernel();
@@ -93,7 +91,7 @@ i");
             .Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Custom_command_directive_handlers_are_invoked_in_the_order_in_which_they_occur_in_the_code_submission()
     {
         using var kernel = new CSharpKernel();
@@ -126,7 +124,7 @@ i");
               .Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Custom_command_directive_handlers_can_be_invoked_by_sending_the_associated_KernelCommand_to_the_kernel_directly()
     {
         using var kernel = new CSharpKernel();
@@ -158,7 +156,7 @@ i");
               .Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Custom_directives_can_be_added_after_submission_parser_has_already_been_initialized()
     {
         var csharpKernel = new CSharpKernel();
@@ -192,7 +190,7 @@ i");
               .FormattedValues.Should().ContainSingle(v => v.Value.Contains("apple"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Magic_command_JSON_parsing_errors_provide_an_informative_error_message()
     {
         var csharpKernel = new CSharpKernel();
@@ -259,7 +257,7 @@ i");
         public string VariableName { get; set; }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Directive_parse_errors_are_displayed()
     {
         var directive = new KernelActionDirective("#!oops")
@@ -289,7 +287,7 @@ i");
               .Be("(1,1): error DNI104: Missing required parameter '-x'");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Directive_parse_errors_prevent_code_submission_from_being_run()
     {
         var command = new KernelActionDirective("#!x")
@@ -309,9 +307,9 @@ i");
         events.Last().Should().BeOfType<CommandFailed>();
     }
 
-    [Theory] // https://github.com/dotnet/interactive/issues/2085
-    [InlineData("[|#!unknown|]\n123")]
-    [InlineData("// first line\n[|#!unknown|]\n123")]
+    [TestMethod] // https://github.com/dotnet/interactive/issues/2085
+    [DataRow("[|#!unknown|]\n123")]
+    [DataRow("// first line\n[|#!unknown|]\n123")]
     public async Task Unrecognized_directives_result_in_errors(string markedUpCode)
     {
         MarkupTestFile.GetPositionAndSpan(markedUpCode, out var code, out _, out var span);
@@ -343,7 +341,7 @@ i");
         events.Last().Should().BeOfType<CommandFailed>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OnComplete_can_be_used_to_act_on_completion_of_commands()
     {
         var onCompleteWasCalled = false;
@@ -361,7 +359,7 @@ i");
         onCompleteWasCalled.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task OnComplete_can_be_used_to_publish_events_before_context_is_completed()
     {
         using var kernel = new FakeKernel();
@@ -384,7 +382,7 @@ i");
               .BeEquivalentSequenceTo("hello!", "goodbye!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task New_directives_can_be_added_after_older_ones_have_been_evaluated()
     {
         using var kernel = new CompositeKernel { new CSharpKernel() };
@@ -421,7 +419,7 @@ i");
         twoWasCalled.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task DirectiveCommand_is_not_referenced_by_KernelEvent_Command()
     {
         using var kernel = new FakeKernel();
@@ -449,7 +447,7 @@ i");
               .Be(submitCode);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Partial_match_does_not_invoke_incorrect_subcommand()
     {
         using var compositeKernel = new CompositeKernel();

@@ -10,15 +10,15 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 using System;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class KernelInvocationContextTests
 {
-    [Fact]
+    [TestMethod]
     public async Task Current_differs_per_async_context()
     {
         var barrier = new Barrier(2);
@@ -51,7 +51,7 @@ public class KernelInvocationContextTests
             .NotBeNull();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Parented_commands_reuse_same_context()
     {
         var barrier = new Barrier(2);
@@ -82,7 +82,7 @@ public class KernelInvocationContextTests
         context1.Should().BeSameAs(context2);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Console_capture_works_when_context_is_shared_by_parented_commands()
     {
         var barrier = new Barrier(2);
@@ -119,7 +119,7 @@ public class KernelInvocationContextTests
         lines.Should().BeEquivalentSequenceTo("context1", "context2");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Middleware_can_be_used_to_emit_events_after_the_command_has_been_handled()
     {
         using var kernel = new CompositeKernel
@@ -149,7 +149,7 @@ public class KernelInvocationContextTests
             .BeEquivalentSequenceTo(1, 2, 3);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Commands_created_by_submission_splitting_do_not_publish_CommandSucceeded()
     {
         using var kernel = new CompositeKernel
@@ -172,7 +172,7 @@ public class KernelInvocationContextTests
             .Command.Should().BeSameAs(command);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Commands_created_by_submission_splitting_do_not_publish_CommandFailed()
     {
         using var kernel = new CompositeKernel
@@ -195,7 +195,7 @@ error
             .Command.Should().BeSameAs(command);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_Fail_is_called_CommandFailed_is_published()
     {
         var command = new SubmitCode("123");
@@ -210,7 +210,7 @@ error
             .ContainSingle<CommandFailed>();
     }
 
-    [Fact]
+    [TestMethod]
     public void When_Fail_is_called_CommandHandled_is_not_published()
     {
         var command = new SubmitCode("123");
@@ -225,7 +225,7 @@ error
             .NotContain(e => e is CommandSucceeded);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_Complete_is_called_then_CommandHandled_is_published()
     {
         var command = new SubmitCode("123");
@@ -240,7 +240,7 @@ error
             .ContainSingle<CommandSucceeded>();
     }
 
-    [Fact]
+    [TestMethod]
     public void When_Complete_is_called_then_CommandFailed_is_not_published()
     {
         var command = new SubmitCode("123");
@@ -255,7 +255,7 @@ error
             .NotContain(e => e is CommandFailed);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_Complete_is_called_then_no_further_events_are_published()
     {
         var command = new SubmitCode("123");
@@ -271,7 +271,7 @@ error
         events.Should().NotContain(e => e is ErrorProduced);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_Fail_is_called_then_no_further_events_are_published()
     {
         var command = new SubmitCode("123");
@@ -287,7 +287,7 @@ error
         events.Should().NotContain(e => e is DisplayedValueProduced);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_multiple_commands_are_active_then_context_does_not_publish_CommandHandled_until_all_are_complete()
     {
         var outerSubmitCode = new SubmitCode("abc");
@@ -303,7 +303,7 @@ error
         events.Should().NotContain(e => e is CommandSucceeded);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_outer_context_is_completed_then_inner_commands_can_no_longer_be_used_to_publish_events()
     {
         using var outer = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("abc"));
@@ -318,7 +318,7 @@ error
         events.Should().NotContain(e => e is ErrorProduced);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_inner_context_is_completed_then_no_further_events_can_be_published_for_it()
     {
         using var outer = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("abc"));
@@ -335,7 +335,7 @@ error
         events.Should().NotContain(e => e is ErrorProduced);
     }
 
-    [Fact]
+    [TestMethod]
     public void After_disposal_Current_is_null()
     {
         var context = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("123"));
@@ -345,7 +345,7 @@ error
         KernelInvocationContext.Current.Should().BeNull();
     }
 
-    [Fact]
+    [TestMethod]
     public void When_inner_context_fails_then_CommandFailed_is_published_for_outer_command()
     {
         using var outer = KernelInvocationContext.GetOrCreateAmbientContext(new SubmitCode("abc"));
@@ -365,7 +365,7 @@ error
             .Be(outer.Command);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_inner_context_fails_then_no_further_events_can_be_published()
     {
         var command = new SubmitCode("abc");

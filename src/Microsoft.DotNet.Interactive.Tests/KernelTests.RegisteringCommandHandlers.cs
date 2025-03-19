@@ -5,17 +5,17 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
 public partial class KernelTests
 {
+    [TestClass]
     public class RegisteringCommandHandlers
     {
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
         public void When_command_type_registered_then_kernel_registers_envelope_type_for_serialization(bool withHandler)
         {
             KernelCommandEnvelope.RegisterDefaults();
@@ -46,9 +46,9 @@ public partial class KernelTests
                 .Be(originalCommand.Info);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
         public void When_command_type_reregistered_with_changed_type_command_then_kernel_registers_updated_envelope_type_for_serialization(bool withHandler)
         {
             // Notebook authors should be able to develop their custom commands experimentally and progressively,

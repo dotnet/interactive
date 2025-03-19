@@ -9,15 +9,15 @@ using System.Linq;
 using Dummy;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public partial class HtmlFormatterTests
 {
+    [TestClass]
     public class Sequences : FormatterTestBase
     {
-        [Fact]
+        [TestMethod]
         public void It_formats_sequences_as_tables_with_an_index_on_the_y_axis()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<EntityId>));
@@ -116,7 +116,7 @@ public partial class HtmlFormatterTests
                         """);
         }
 
-        [Fact]
+        [TestMethod]
         public void It_formats_sequence_properties_using_plain_text_formatting()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<float[]>));
@@ -140,7 +140,7 @@ public partial class HtmlFormatterTests
                   .Contain($"<td>{Tags.PlainTextBegin}{listOfArrays.First().ToDisplayString("text/plain")}{Tags.PlainTextEnd}</td>");
         }
             
-        [Fact]
+        [TestMethod]
         public void It_formats_generic_dictionaries_with_tree_views_in_the_value_column()
         {
             var writer = new StringWriter();
@@ -258,7 +258,7 @@ public partial class HtmlFormatterTests
                         """);
         }
 
-        [Fact]
+        [TestMethod]
         public void It_formats_non_generic_dictionaries_with_tree_views_in_the_value_column()
         {
             var writer = new StringWriter();
@@ -375,7 +375,7 @@ public partial class HtmlFormatterTests
                           """);
         }
 
-        [Fact]
+        [TestMethod]
         public void It_formats_DateTime_correctly()
         {
             var date1 = DateTime.Now;
@@ -386,7 +386,7 @@ public partial class HtmlFormatterTests
                 $"<span>{date1:u}</span>");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_formats_DateTimeOffset_correctly()
         {
             var date1 = DateTimeOffset.Now;
@@ -397,7 +397,7 @@ public partial class HtmlFormatterTests
                 $"<span>{date1:u}</span>");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_formats_enum_value_using_the_name()
         {
             var day = DayOfWeek.Monday;
@@ -408,7 +408,7 @@ public partial class HtmlFormatterTests
                 $"<span>{day}</span>");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_formats_string_with_encoding_and_preserving_whitespace_and_with_tags()
         {
             var text = "hello<b>world  </b>  \n\n  ";
@@ -418,7 +418,7 @@ public partial class HtmlFormatterTests
             html.Should().Be($"{Tags.PlainTextBegin}hello&lt;b&gt;world  &lt;/b&gt;  \n\n  {Tags.PlainTextEnd}");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_formats_string_arrays_correctly()
         {
             var strings = new[] { "apple", "banana", "cherry" };
@@ -434,7 +434,7 @@ public partial class HtmlFormatterTests
                            """);
         }
 
-        [Fact]
+        [TestMethod]
         public void It_formats_ordered_enumerables_correctly()
         {
             var sorted = new[]
@@ -451,7 +451,7 @@ public partial class HtmlFormatterTests
                     """);
         }
 
-        [Fact]
+        [TestMethod]
         public void Empty_sequences_are_indicated()
         {
             var list = new List<string>();
@@ -466,7 +466,7 @@ public partial class HtmlFormatterTests
                 """);
         }
 
-        [Fact]
+        [TestMethod]
         public void Empty_dictionaries_are_indicated()
         {
             var list = new Dictionary<int, int>();
@@ -476,7 +476,7 @@ public partial class HtmlFormatterTests
             html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_truncates_expansion_of_ICollection()
         {
             var list = new List<string>();
@@ -497,7 +497,7 @@ public partial class HtmlFormatterTests
             formatted.Should().Contain("(6 more)");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_truncates_expansion_of_IDictionary()
         {
             var list = new Dictionary<string, int>();
@@ -519,7 +519,7 @@ public partial class HtmlFormatterTests
             formatted.Should().Contain("6 more");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_truncates_expansion_of_IEnumerable()
         {
             Formatter.ListExpansionLimit = 4;
@@ -540,7 +540,7 @@ public partial class HtmlFormatterTests
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void DateTime_is_not_destructured()
         {
             var date1 = DateTime.Now;
@@ -554,7 +554,7 @@ public partial class HtmlFormatterTests
                 $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td><span>{date1.ToDisplayString("text/plain")}</span></td></tr><tr><td>1</td><td><span>{date2.ToDisplayString("text/plain")}</span></td></tr></tbody></table>");
         }
 
-        [Fact]
+        [TestMethod]
         public void System_Type_is_not_destructured()
         {
             var objects = new object[] { typeof(string), typeof(int) };
@@ -591,7 +591,7 @@ public partial class HtmlFormatterTests
     </table>");
         }
 
-        [Fact]
+        [TestMethod]
         public void Dictionary_with_non_string_keys_are_formatted_correctly()
         {
             var dict = new ClassImplementingIDictionary_of_int_string();
@@ -604,7 +604,7 @@ public partial class HtmlFormatterTests
                     """);
         }
 
-        [Fact]
+        [TestMethod]
         public void ReadOnlyMemory_of_char_is_formatted_like_a_string()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<char>>();
@@ -620,7 +620,7 @@ public partial class HtmlFormatterTests
                   .BeEquivalentHtmlTo("<span>Hi!</span>");
         }
 
-        [Fact]
+        [TestMethod]
         public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<int>>();
@@ -641,7 +641,7 @@ public partial class HtmlFormatterTests
                           """);
         }
 
-        [Fact]
+        [TestMethod]
         public void It_shows_null_items_in_the_sequence_as_null()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(object[]));
@@ -665,7 +665,7 @@ public partial class HtmlFormatterTests
 </table>");
         }
         
-        [Fact]
+        [TestMethod]
         public void Sequences_can_contain_different_types_of_elements()
         {
             IEnumerable<object> GetCollection()
@@ -740,7 +740,7 @@ public partial class HtmlFormatterTests
                       """);
         }
             
-        [Fact]
+        [TestMethod]
         public void All_element_properties_are_shown_when_sequences_contain_different_types()
         {
             var objects = new object[]
@@ -862,7 +862,7 @@ public partial class HtmlFormatterTests
                         """);
         }
         
-        [Fact]
+        [TestMethod]
         public void Respective_HTML_formatters_are_used_when_sequences_contain_different_types()
         {
             var anonymousObj = new { name = "apple", color = "green" };
@@ -958,7 +958,7 @@ public partial class HtmlFormatterTests
                         """);
         }
 
-        [Fact]
+        [TestMethod]
         public void When_an_IEnumerable_type_has_properties_it_shows_both_properties_and_elements()
         {
             var instance = new ClassWithPropertiesThatIsAlsoIEnumerable(new[] { "apple", "banana" })
@@ -1031,7 +1031,7 @@ public partial class HtmlFormatterTests
                 """);
         }
 
-        [Fact]
+        [TestMethod]
         public void When_an_IEnumerable_T_type_has_properties_it_shows_both_properties_and_elements()
         {
             var instance = new ClassWithPropertiesThatIsAlsoIEnumerable<string>(new[] { "apple", "banana" })

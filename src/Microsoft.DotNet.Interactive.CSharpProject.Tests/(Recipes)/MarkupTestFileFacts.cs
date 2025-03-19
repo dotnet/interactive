@@ -6,30 +6,30 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class MarkupTestFileFacts
 {
-    [Fact]
+    [TestMethod]
     public void GetPosition_Should_Return_String_Without_Dollar_Signs()
     {
         var input = "some$$string";
         MarkupTestFile.GetPosition(input, out var output, out var position);
-        Assert.Equal("somestring", output);
+        Assert.AreEqual("somestring", output);
     }
 
-    [Fact]
+    [TestMethod]
     public void GetPosition_Should_Return_Correct_Position()
     {
         var input = "some$$string";
         string output;
         MarkupTestFile.GetPosition(input, out output, out var position);
-        Assert.Equal(4, position);
+        Assert.AreEqual(4, position);
     }
 
-    [Fact]
+    [TestMethod]
     public void GetSpans_Should_Return_Correct_Spans()
     {
         var input = "[|input span|]other[|second span|]";
@@ -38,15 +38,15 @@ public class MarkupTestFileFacts
             new TextSpan(0, 10),
             new TextSpan(15, 11)
         );
-        Assert.Equal(expected.ToArray(), spans.ToArray());
+        Assert.AreEqual(expected.ToArray(), spans.ToArray());
     }
 
-    [Fact]
+    [TestMethod]
     public void GetNamedSpans_Should_Return_Correct_Named_Spans()
     {
         var input = "{|first:input span|}other";
         MarkupTestFile.GetNamedSpans(input, out string output, out IDictionary<string, ImmutableArray<TextSpan>> spans);
         var expected = ImmutableArray.Create(new TextSpan(0, 10));
-        Assert.Equal(expected.ToArray(), spans["first"].ToArray());
+        Assert.AreEqual(expected.ToArray(), spans["first"].ToArray());
     }
 }

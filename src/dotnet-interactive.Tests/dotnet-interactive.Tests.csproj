@@ -7,11 +7,6 @@
     <NoWarn>$(NoWarn);VSTHRD002</NoWarn><!-- Ignore: Avoid problematic synchronous waits -->
     <NoWarn>$(NoWarn);VSTHRD110</NoWarn><!-- Ignore: Observe result of async calls -->
     <NoWarn>$(NoWarn);VSTHRD200</NoWarn><!-- Ignore: Use "Async" suffix for async methods -->
-    <!-- Ignore: warning NU1608: Detected package version outside of dependency constraint:
-    xunit 2.4.1 requires xunit.core (= 2.4.1) but version xunit.core 2.4.2 was resolved.
-    This suppression can be removed once PocketLogger.For.XUnit which currently references
-    xunit v2.4.1 is updated to reference xunit v2.4.2. -->
-    <NoWarn>$(NoWarn);NU1608</NoWarn>
     <IsPackable>false</IsPackable>
     <AssemblyName>Microsoft.DotNet.Interactive.App.Tests</AssemblyName>
   </PropertyGroup>
@@ -31,9 +26,6 @@
     </PackageReference>
     <PackageReference Include="Assent" />
     <PackageReference Include="FluentAssertions" />
-    <PackageReference Include="PocketLogger.For.Xunit" >
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -43,10 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
 </Project>

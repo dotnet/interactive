@@ -5,24 +5,23 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
+    [TestClass]
     public class Combinatorial
     {
-        private readonly ITestOutputHelper _output;
+        private readonly TestContext _output;
 
-        public Combinatorial(ITestOutputHelper output)
+        public Combinatorial(TestContext output)
         {
             _output = output;
         }
 
-        [Theory]
-        [MemberData(nameof(GenerateValidDirectives))]
+        [TestMethod]
+        [DynamicData(nameof(GenerateValidDirectives))]
         public void Valid_syntax_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
@@ -40,8 +39,8 @@ public partial class PolyglotSyntaxParserTests
             syntaxSpec.Validate(syntaxTree.RootNode);
         }
 
-        [Theory]
-        [MemberData(nameof(GenerateValidDirectivesWithNonDirectiveCode))]
+        [TestMethod]
+        [DynamicData(nameof(GenerateValidDirectivesWithNonDirectiveCode))]
         public void Valid_syntax_with_extra_trivia_and_non_directive_code_produces_expected_parse_tree_and_no_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
@@ -59,8 +58,8 @@ public partial class PolyglotSyntaxParserTests
             syntaxSpec.Validate(syntaxTree.RootNode);
         }
 
-        [Theory]
-        [MemberData(nameof(GenerateInvalidDirectives))]
+        [TestMethod]
+        [DynamicData(nameof(GenerateInvalidDirectives))]
         public void Invalid_syntax_produces_diagnostics(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();
@@ -78,8 +77,8 @@ public partial class PolyglotSyntaxParserTests
             syntaxSpec.Validate(syntaxTree.RootNode);
         }
 
-        [Theory]
-        [MemberData(nameof(GenerateValidDirectivesWithNonDirectiveCode))]
+        [TestMethod]
+        [DynamicData(nameof(GenerateValidDirectivesWithNonDirectiveCode))]
         public void Code_that_a_user_has_not_finished_typing_round_trips_correctly_and_does_not_throw(ISyntaxSpec syntaxSpec, int generation)
         {
             var code = syntaxSpec.ToString();

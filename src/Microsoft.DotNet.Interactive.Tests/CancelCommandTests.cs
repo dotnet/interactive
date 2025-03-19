@@ -12,19 +12,19 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
+
+[TestClass]
 #pragma warning disable xUnit1000
 
 public class CancelCommandTests : LanguageKernelTestBase
 {
-    public CancelCommandTests(ITestOutputHelper output) : base(output)
+    public CancelCommandTests(TestContext output) : base(output)
     {
     }
 
-    [Fact]
+    [TestMethod]
     public async Task cancel_issues_CommandSucceeded()
     {
         using var kernel = CreateKernel()
@@ -46,7 +46,7 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
             .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task new_commands_issued_after_cancel_are_executed()
     {
         while (true)
@@ -86,7 +86,7 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task cancel_succeeds_when_there_is_command_in_progress_to_cancel()
     {
         using var kernel = CreateKernel();
@@ -100,7 +100,7 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
             .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
     }
     
-    [Fact]
+    [TestMethod]
     public async Task can_cancel_user_loop_using_CancellationToken()
     {
         // todo: this test is flaky and timeouts in CI
@@ -141,7 +141,7 @@ while(!cancellationToken.IsCancellationRequested){
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_cancel_user_code_when_commands_are_split()
     {
         // todo: this test is flaky and timeouts in CI
@@ -183,7 +183,7 @@ while(!cancellationToken.IsCancellationRequested){
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task user_code_can_react_to_cancel_command_using_KernelInvocationContext_cancellation_token()
     {
         using var kernel = CreateKernel();

@@ -12,14 +12,14 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.DuckDB.Tests;
 
-[Trait("Databases", "Data query tests")]
+[TestProperty("Databases", "Data query tests")]
+[TestClass]
 public class DuckDbConnectionTests
 {
-    [Fact]
+    [TestMethod]
     public async Task It_can_connect_and_query_data()
     {
         using var kernel = new CompositeKernel();
@@ -50,7 +50,7 @@ SELECT SUM(deliciousness) FROM fruit GROUP BY color
             .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_can_create_collections()
     {
         using var kernel = new CompositeKernel
@@ -105,7 +105,7 @@ SHOW ALL TABLES;
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_can_connect_and_query_data_with_list_type()
     {
         using var kernel = new CompositeKernel
@@ -149,7 +149,7 @@ SELECT * FROM fruit
         res.Data.Data.First().Last().Value.Should().BeEquivalentTo(new[] { "a", "b", "c" });
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_can_handle_multiple_statements()
     {
         using var kernel = new CompositeKernel
@@ -180,7 +180,7 @@ SELECT SUM(deliciousness) FROM fruit GROUP BY name;
         result.Events.OfType<DisplayedValueProduced>().Should().HaveCount(2);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_can_store_result_set_with_a_name()
     {
         using var kernel = new CompositeKernel

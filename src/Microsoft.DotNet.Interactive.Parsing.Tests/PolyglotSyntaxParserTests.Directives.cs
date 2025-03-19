@@ -7,22 +7,22 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
+    [TestClass]
     public class Directives
     {
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
                     var x = 1;
                     #r "nuget:SomePackage"
                     x
                     """,
                     "#r \"nuget:SomePackage\"")]
-        [InlineData(""""
+        [DataRow(""""
                     var x = 1;
                     #r """nuget:SomePackage"""
                     x
@@ -55,14 +55,14 @@ public partial class PolyglotSyntaxParserTests
                 .Should().Be(expectedParameterValue);
         }
 
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
                     var x = 1;
                     #r "nuget:SomePackage"
                     x
                     """,
                     "#r \"nuget:SomePackage\"")]
-        [InlineData(""""
+        [DataRow(""""
                     var x = 1;
                     #r """nuget:SomePackage"""
                     x
@@ -95,7 +95,7 @@ public partial class PolyglotSyntaxParserTests
                 .Should().Be(expectedParameterValue);
         }
 
-        [Fact]
+        [TestMethod]
         public void Pound_i_is_a_valid_directive()
         {
             var tree = Parse("var x = 1;\n#i \"nuget:/some/path\"\nx");
@@ -112,12 +112,12 @@ public partial class PolyglotSyntaxParserTests
             node.Kind.Should().Be(DirectiveNodeKind.CompilerDirective);
         }
 
-        [Theory]
-        [InlineData("var x = 123$$;", typeof(LanguageNode))]
-        [InlineData("#!csharp\nvar x = 123$$;", typeof(LanguageNode))]
-        [InlineData("#!csharp\nvar x = 123$$;\n", typeof(LanguageNode))]
-        [InlineData("#!csh$$arp\nvar x = 123;", typeof(DirectiveNameNode))]
-        [InlineData("#!csharp\n#!time a b$$ c", typeof(DirectiveParameterValueNode))]
+        [TestMethod]
+        [DataRow("var x = 123$$;", typeof(LanguageNode))]
+        [DataRow("#!csharp\nvar x = 123$$;", typeof(LanguageNode))]
+        [DataRow("#!csharp\nvar x = 123$$;\n", typeof(LanguageNode))]
+        [DataRow("#!csh$$arp\nvar x = 123;", typeof(DirectiveNameNode))]
+        [DataRow("#!csharp\n#!time a b$$ c", typeof(DirectiveParameterValueNode))]
         public void Node_type_is_correctly_identified(
             string markupCode,
             Type expectedNodeType)
@@ -131,13 +131,13 @@ public partial class PolyglotSyntaxParserTests
             node.Should().BeOfType(expectedNodeType);
         }
 
-        [Theory]
-        [InlineData("#!csh$$arp\nvar x = 123;", nameof(DirectiveNodeKind.KernelSelector))]
-        [InlineData("#!csharp\n#!time a b$$ c", nameof(DirectiveNodeKind.Action))]
-        [InlineData("""#r $$"nuget:PocketLogger"  """, nameof(DirectiveNodeKind.CompilerDirective))]
-        [InlineData("""#r $$"/path/to/a.dll"  """, nameof(DirectiveNodeKind.CompilerDirective))]
-        [InlineData("""#i $$"nuget:https://api.nuget.org/v3/index.json" """, nameof(DirectiveNodeKind.CompilerDirective))]
-        [InlineData("""#i $$"/path/to/some-folder"  """, nameof(DirectiveNodeKind.CompilerDirective))]
+        [TestMethod]
+        [DataRow("#!csh$$arp\nvar x = 123;", nameof(DirectiveNodeKind.KernelSelector))]
+        [DataRow("#!csharp\n#!time a b$$ c", nameof(DirectiveNodeKind.Action))]
+        [DataRow("""#r $$"nuget:PocketLogger"  """, nameof(DirectiveNodeKind.CompilerDirective))]
+        [DataRow("""#r $$"/path/to/a.dll"  """, nameof(DirectiveNodeKind.CompilerDirective))]
+        [DataRow("""#i $$"nuget:https://api.nuget.org/v3/index.json" """, nameof(DirectiveNodeKind.CompilerDirective))]
+        [DataRow("""#i $$"/path/to/some-folder"  """, nameof(DirectiveNodeKind.CompilerDirective))]
         public void DirectiveNode_kind_is_correctly_identified(
             string markupCode,
             string kind)
@@ -158,7 +158,7 @@ public partial class PolyglotSyntaxParserTests
                 .Be(kind);
         }
 
-        [Fact]
+        [TestMethod]
         public void Directive_character_ranges_can_be_read()
         {
             var markupCode = @"
@@ -181,20 +181,20 @@ x
                 .BeEquivalentTo(span);
         }
 
-        [Theory]
-        [InlineData(@"{|csharp:    |}", "csharp")]
-        [InlineData(@"{|csharp: var x = abc|}", "csharp")]
-        [InlineData(@"
+        [TestMethod]
+        [DataRow(@"{|csharp:    |}", "csharp")]
+        [DataRow(@"{|csharp: var x = abc|}", "csharp")]
+        [DataRow(@"
 #!fsharp
 {|fsharp:let x = |}
 #!csharp
 {|csharp:var x = 123;|}", "csharp")]
-        [InlineData(@"
+        [DataRow(@"
 #!fsharp
 {|fsharp:let x = |}
 #!csharp
 {|csharp:var x = 123;|}", "fsharp")]
-        [InlineData(@"
+        [DataRow(@"
 #!fsharp
 {|fsharp:  let x = |}
 #!csharp
@@ -225,8 +225,8 @@ x
             }
         }
 
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
                     {|none:#!fsharp |}
                     let x =
                     {|.NET:#!time |}
@@ -270,7 +270,7 @@ x
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void root_node_span_always_expands_with_child_nodes()
         {
             var code = """
@@ -286,12 +286,12 @@ x
                 .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
         }
 
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
             #!time
             #!set --name x --value 123
             """)]
-        [InlineData("""
+        [DataRow("""
             #!set --name x --value 123
             #!set --name y --value xyz
             """)]

@@ -13,7 +13,6 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
@@ -21,7 +20,7 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    protected ProxyKernelConnectionTestsBase(ITestOutputHelper output)
+    protected ProxyKernelConnectionTestsBase(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
@@ -36,7 +35,9 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
         _disposables.Dispose();
     }
 
-    [WindowsFact(Skip = "connector reuse needs redesign")]
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [Ignore("connector reuse needs redesign")]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task it_can_reuse_connection_for_multiple_proxy_kernels()
     {
@@ -86,7 +87,8 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
             .Should().ContainSingle(f => f.Value == "echo2");
     }
 
-    [WindowsFact]
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task can_connect_to_remote_using_connect_magic_command()
     {
@@ -128,7 +130,8 @@ public abstract class ProxyKernelConnectionTestsBase : IDisposable
                          .Be("2");
     }
 
-    [WindowsFact]
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Test only enabled on windows platforms")]
     public async Task fast_path_commands_over_proxy_can_be_handled()
     {

@@ -6,13 +6,13 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[TestClass]
 public class CustomMetadataParsingTests
 {
-    [Fact]
+    [TestMethod]
     public void Input_cell_metadata_can_be_parsed_from_dotnet_interactive_metadata()
     {
         var rawMetadata = new
@@ -29,7 +29,7 @@ public class CustomMetadataParsingTests
             .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(language: "fsharp"));
     }
 
-    [Fact]
+    [TestMethod]
     public void Input_cell_metadata_can_be_parsed_from_polyglot_notebook_metadata()
     {
         var rawMetadata = new
@@ -45,7 +45,7 @@ public class CustomMetadataParsingTests
             .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(kernelName: "fsharp"));
     }
 
-    [Fact]
+    [TestMethod]
     public void Input_cell_metadata_can_be_parsed_with_no_fields()
     {
         var rawMetadata = new
@@ -61,7 +61,7 @@ public class CustomMetadataParsingTests
             .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata());
     }
 
-    [Fact]
+    [TestMethod]
     public void Input_cell_metadata_is_not_parsed_when_not_present()
     {
         var rawMetadata = new

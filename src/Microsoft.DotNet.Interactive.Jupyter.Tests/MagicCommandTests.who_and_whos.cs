@@ -10,18 +10,19 @@ using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 #pragma warning disable 8509 // don't warn on incomplete pattern matches
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[TestClass]
 public partial class MagicCommandTests
 {
+    [TestClass]
     public class who_and_whos
     {
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
+        [TestMethod]
+        [DataRow(Language.CSharp)]
+        [DataRow(Language.FSharp)]
         public async Task whos_lists_the_names_and_values_of_variables_in_scope(Language language)
         {
             using var baseKernel = language switch
@@ -113,9 +114,9 @@ public partial class MagicCommandTests
                     );
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
+        [TestMethod]
+        [DataRow(Language.CSharp)]
+        [DataRow(Language.FSharp)]
         public async Task who_lists_the_names_of_variables_in_scope(Language language)
         {
             using var baseKernel = language switch

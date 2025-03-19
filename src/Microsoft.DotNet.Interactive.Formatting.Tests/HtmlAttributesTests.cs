@@ -4,13 +4,13 @@
 using System;
 using System.Collections.Generic;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[TestClass]
 public class HtmlAttributesTests : FormatterTestBase
 {
-    [Fact]
+    [TestMethod]
     public void When_object_constructor_overload_is_passed_a_dictionary_it_initializes_correctly()
     {
         var attributes =
@@ -27,7 +27,7 @@ public class HtmlAttributesTests : FormatterTestBase
             .Be("class=\"required\" style=\"display:none\"", html);
     }
 
-    [Fact]
+    [TestMethod]
     public void When_object_constructor_overload_is_passed_a_HtmlAttributes_it_initializes_correctly()
     {
         var attributes =
@@ -44,7 +44,7 @@ public class HtmlAttributesTests : FormatterTestBase
             .Be("class=\"required\" style=\"display:none\"");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Dictionary_Add_adds_items_to_dictionary()
     {
         var attributes = new HtmlAttributes();
@@ -56,7 +56,7 @@ public class HtmlAttributesTests : FormatterTestBase
         value.Should().Be("bar");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Collection_initializer_adds_items_to_dictionary()
     {
         var attributes = new HtmlAttributes { { "foo", "bar" } };
@@ -66,7 +66,7 @@ public class HtmlAttributesTests : FormatterTestBase
         value.Should().Be("bar");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void When_HtmlAttributes_is_empty_ToString_returns_empty_string()
     {
         var attributes = new HtmlAttributes();
@@ -76,7 +76,7 @@ public class HtmlAttributesTests : FormatterTestBase
         value.Should().BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void ToString_returns_correct_value_for_single_dictionary_entry()
     {
         var attributes = new HtmlAttributes { { "foo", "bar" } };
@@ -84,7 +84,7 @@ public class HtmlAttributesTests : FormatterTestBase
         attributes.ToString().Should().Be("foo=\"bar\"");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void ToString_returns_correct_value_for_multiple_dictionary_entries()
     {
         var attributes = new HtmlAttributes
@@ -96,7 +96,7 @@ public class HtmlAttributesTests : FormatterTestBase
         attributes.ToString().Should().Be("one=\"1\" two=\"2\"");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Dynamic_assignment_adds_items_to_dictionary()
     {
         dynamic attributes = new HtmlAttributes();
@@ -108,7 +108,7 @@ public class HtmlAttributesTests : FormatterTestBase
         value.Should().Be("bar");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Dictionary_items_can_be_dynamically_retrieved()
     {
         dynamic attributes = new HtmlAttributes { { "foo", "bar" } };
@@ -118,7 +118,7 @@ public class HtmlAttributesTests : FormatterTestBase
         foo.Should().Be("bar");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Get_keys_returns_dynamically_assigned_keys()
     {
         dynamic attributes = new HtmlAttributes();
@@ -131,7 +131,7 @@ public class HtmlAttributesTests : FormatterTestBase
         ((IDictionary<string, object>) attributes).Keys.Count.Should().Be(5);
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Classes_are_aggregated_by_AddCssClass()
     {
         var attributes = new HtmlAttributes();
@@ -142,7 +142,7 @@ public class HtmlAttributesTests : FormatterTestBase
         attributes["class"].Should().Be("foo bar");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void When_multiple_Add_calls_use_same_key_it_throws()
     {
         var attributes = new HtmlAttributes();
@@ -152,7 +152,7 @@ public class HtmlAttributesTests : FormatterTestBase
         Assert.Throws<ArgumentException>(() => attributes.Add("class", "two"));
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Classes_are_overwritten_during_set_operations()
     {
         var attributes = new HtmlAttributes();
@@ -163,7 +163,7 @@ public class HtmlAttributesTests : FormatterTestBase
         attributes["class"].Should().Be("two");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Classes_are_overwritten_during_dynamic_set_operations()
     {
         dynamic attributes = new HtmlAttributes();
@@ -176,7 +176,7 @@ public class HtmlAttributesTests : FormatterTestBase
         @class.Should().Be("two");
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Can_remove_dynamically_assigned_value()
     {
         var attributes = new HtmlAttributes();
@@ -188,7 +188,7 @@ public class HtmlAttributesTests : FormatterTestBase
         attributes.Count.Should().Be(0);
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void ContainsKey_is_true_for_dynamically_assigned_property()
     {
         var attributes = new HtmlAttributes();
@@ -198,7 +198,7 @@ public class HtmlAttributesTests : FormatterTestBase
         attributes.ContainsKey("foo").Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public virtual void Can_convert_arbitrary_named_parameters_into_attributes()
     {
         dynamic attributes = new HtmlAttributes();
@@ -211,7 +211,7 @@ public class HtmlAttributesTests : FormatterTestBase
             .Contain("class=\"required\" style=\"display:block\"");
     }
 
-    [Fact]
+    [TestMethod]
     public void Attribute_values_containing_double_quotes_are_attribute_encoded()
     {
         dynamic attributes = new HtmlAttributes();
@@ -226,13 +226,13 @@ public class HtmlAttributesTests : FormatterTestBase
             .Be($"quote=\"{quote.HtmlAttributeEncode()}\"");
     }
 
-    [Fact]
+    [TestMethod]
     public void IsReadOnly_defaults_to_false()
     {
         new HtmlAttributes().IsReadOnly.Should().BeFalse();
     }
 
-    [Fact]
+    [TestMethod]
     public void Can_be_cleared()
     {
         var attributes = new HtmlAttributes { { "one", 1 } };

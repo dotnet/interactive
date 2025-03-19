@@ -3,13 +3,13 @@
 
 using System;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class ProjectFileTests
 {
-    [Fact]
+    [TestMethod]
     public void file_can_only_be_with_relative_paths()
     {
         Action buildProjectFile = () =>

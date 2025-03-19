@@ -8,15 +8,15 @@ using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Variables
     {
-        [Fact]
+        [TestMethod]
         public void expression_is_parsed_correctly()
         {
             var result = Parse(
@@ -35,7 +35,7 @@ public partial class HttpParserTests
                        .Should().ContainSingle().Which.Text.Should().Be("token");
         }
 
-        [Fact]
+        [TestMethod]
         public void variable_in_document_is_parsed_correctly()
         {
             var result = Parse(
@@ -60,7 +60,7 @@ public partial class HttpParserTests
             variableNode.ValueNode.Text.Should().Be("https://httpbin.org/");
         }
 
-        [Fact]
+        [TestMethod]
         public void multiple_variables_in_document_are_parsed_correctly()
         {
             var result = Parse(
@@ -86,7 +86,7 @@ public partial class HttpParserTests
             variableNodes.Select(e => e.ValueNode.Text).Should().BeEquivalentSequenceTo(new[] { "https://httpbin.org/", "HTTP/1.1" });
         }
 
-        [Fact]
+        [TestMethod]
         public void variable_using_another_variable_is_parsed_correctly()
         {
             var result = Parse(
@@ -114,7 +114,7 @@ public partial class HttpParserTests
             variableNodes.Select(e => e.ValueNode.Text).Should().BeEquivalentSequenceTo(new[] { "httpbin.org", "https://{{hostname}}/" });
         }
 
-        [Fact]
+        [TestMethod]
         public void no_variable_name_produces_diagnostic()
         {
             var result = Parse(
@@ -139,7 +139,7 @@ public partial class HttpParserTests
             variableNodes.First().GetDiagnostics().Single().GetMessage().Should().Be("Variable name expected.");
         }
 
-        [Fact]
+        [TestMethod]
         public void multiple_variables_with_comments_are_parsed_correctly()
         {
             var result = Parse(
@@ -169,7 +169,7 @@ public partial class HttpParserTests
                 .BeEquivalentSequenceTo(new[] { "hostname", "host" });
         }
 
-        [Fact]
+        [TestMethod]
         public void declared_variables_can_be_used_for_binding()
         {
             var result = Parse(
@@ -181,7 +181,7 @@ public partial class HttpParserTests
             variables.Should().ContainSingle().Which.Value.Value.Should().Be("httpbin.org");
         }
 
-        [Fact]
+        [TestMethod]
         public void declared_variables_using_another_variable_can_be_resolved()
         {
             var result = Parse(
@@ -195,7 +195,7 @@ public partial class HttpParserTests
 
         }
 
-        [Fact]
+        [TestMethod]
         public void declared_variable_with_expression_can_be_parsed()
         {
             var result = Parse(
@@ -222,7 +222,7 @@ public partial class HttpParserTests
             DateTime.TryParse(createAtValue, out var dateTimeResult).Should().BeTrue();
         }
 
-        [Fact]
+        [TestMethod]
         public void underscores_in_variable_declarations_are_supported()
         {
             var result = Parse(
@@ -235,7 +235,7 @@ public partial class HttpParserTests
 
         }
 
-        [Fact]
+        [TestMethod]
         public void underscores_in_embedded_expressions_are_supported()
         {
             var result = Parse(
@@ -251,7 +251,7 @@ public partial class HttpParserTests
 
         }
 
-        [Fact]
+        [TestMethod]
         public void periods_in_embedded_expressions_are_supported()
         {
             var result = Parse(
@@ -268,7 +268,7 @@ public partial class HttpParserTests
 
         }
 
-        [Fact]
+        [TestMethod]
         public void spaces_after_variable_do_not_produce_diagnostics()
         {
             var result = Parse(
@@ -284,7 +284,7 @@ public partial class HttpParserTests
             result.SyntaxTree.RootNode.ChildNodes.Count().Should().Be(1);
         }
 
-        [Fact]
+        [TestMethod]
         public void single_quotes_in_variable_values_are_supported()
         {
             var result = Parse(
@@ -299,7 +299,7 @@ public partial class HttpParserTests
 
         }
 
-        [Fact]
+        [TestMethod]
         public void double_quotes_in_variable_values_are_supported()
         {
             var result = Parse(
@@ -314,7 +314,7 @@ public partial class HttpParserTests
 
         }
 
-        [Fact]
+        [TestMethod]
         public void spaces_in_variable_values_are_supported()
         {
             var result = Parse(

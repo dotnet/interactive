@@ -12,10 +12,10 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class SingleInputsWithinMagicCommandsTests : IDisposable
 {
     private readonly CompositeKernel _kernel;
@@ -71,9 +71,9 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
         _kernel.Dispose();
     }
 
-    [Theory]
-    [InlineData("#!shim @input")]
-    [InlineData("#!shim --value @input")]
+    [TestMethod]
+    [DataRow("#!shim @input")]
+    [DataRow("#!shim --value @input")]
     public async Task Input_token_in_magic_command_prompts_user_for_input_using_the_associated_parameter_name(string code)
     {
         _responses.Enqueue("one");
@@ -96,10 +96,10 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
         _receivedUserInput.Should().ContainSingle().Which.Should().Be("one");
     }
 
-    [Theory]
-    [InlineData("#!shim @input:input-please")]
-    [InlineData("#!shim --value @input:input-please")]
-    [InlineData("#!shim --value @input:\"input-please\"")]
+    [TestMethod]
+    [DataRow("#!shim @input:input-please")]
+    [DataRow("#!shim --value @input:input-please")]
+    [DataRow("#!shim --value @input:\"input-please\"")]
     public async Task Input_token_in_magic_command_prompts_user_for_input_using_prompt_shorthand(string code)
     {
         _responses.Enqueue("one");
@@ -122,7 +122,7 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
         _receivedUserInput.Should().ContainSingle().Which.Should().Be("one");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Input_token_in_magic_command_prompts_user_passes_user_input_to_directive_to_handler_when_there_are_multiple_inputs()
     {
         _responses.Enqueue("one");
@@ -137,7 +137,7 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
         _receivedUserInput.Should().BeEquivalentTo("one", "two");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Input_token_in_magic_command_prompts_user_for_password()
     {
         await _kernel.SendAsync(new SubmitCode("#!shim --value @password:input-please", "csharp"));
@@ -153,7 +153,7 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
             .Be("input-please");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task An_input_type_hint_is_set_when_the_expected_parameter_specifies_it()
     {
         _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file")
@@ -169,7 +169,7 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
         _receivedRequestInput.InputTypeHint.Should().Be("file");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Type_hint_is_set_based_on_inline_JSON_configuration_of_the_input_token()
     {
         _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file"));
@@ -181,7 +181,7 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
         _receivedRequestInput.InputTypeHint.Should().Be("file");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Type_hint_is_overridden_based_on_inline_JSON_configuration_of_the_input_token()
     {
         _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file")
@@ -196,7 +196,7 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
         _receivedRequestInput.InputTypeHint.Should().Be("number");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task multiple_set_commands_with_inputs_can_be_used_in_single_submission()
     {
         using var kernel = new CompositeKernel
@@ -238,7 +238,7 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
         value3.Should().Be("three");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Additional_properties_of_input_request_are_set_by_input_properties()
     {
         using var kernel = new CSharpKernel();
@@ -276,8 +276,8 @@ public class SingleInputsWithinMagicCommandsTests : IDisposable
         requestInput.InputTypeHint.Should().Be("file");
     }
 
-    [Theory]
-    [MemberData(nameof(LanguageServiceCommands))]
+    [TestMethod]
+    [DynamicData(nameof(LanguageServiceCommands))]
     public async Task Language_service_commands_do_not_trigger_input_requests(KernelCommand command)
     {
         var result = await _kernel.SendAsync(command);

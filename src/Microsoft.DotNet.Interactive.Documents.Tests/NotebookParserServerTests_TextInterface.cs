@@ -10,17 +10,17 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.ParserServer;
 using Nerdbank.Streams;
 using Pocket;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
+[TestClass]
 public class NotebookParserServerTests_TextInterface : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    [Theory]
-    [InlineData("\n")]
-    [InlineData("\r\n")]
+    [TestMethod]
+    [DataRow("\n")]
+    [DataRow("\r\n")]
     public async Task Notebook_parser_server_takes_request_until_newline_and_returns_response_on_a_single_line(string newline)
     {
         var request = new NotebookParseRequest(
@@ -47,9 +47,9 @@ public class NotebookParserServerTests_TextInterface : IDisposable
                                     })));
     }
 
-    [Theory]
-    [InlineData("\n")]
-    [InlineData("\r\n")]
+    [TestMethod]
+    [DataRow("\n")]
+    [DataRow("\r\n")]
     public async Task Notebook_parser_server_can_handle_repeated_requests_with_different_newlines(string newline)
     {
         var request1 = new NotebookParseRequest(
@@ -95,7 +95,7 @@ public class NotebookParserServerTests_TextInterface : IDisposable
             .Be("the-second-id");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Notebook_parser_server_does_nothing_with_garbage_input_and_skips_to_the_next_line_to_process()
     {
         var validRequest = new NotebookParseRequest(

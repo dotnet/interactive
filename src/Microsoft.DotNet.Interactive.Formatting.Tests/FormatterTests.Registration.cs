@@ -7,15 +7,15 @@ using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public sealed partial class FormatterTests
 {
+    [TestClass]
     public class Registration : FormatterTestBase
     {
-        [Fact]
+        [TestMethod]
         public void Can_Register_formatter_for_type_string()
         {
             var value = "hola!";
@@ -32,7 +32,7 @@ public sealed partial class FormatterTests
         }
 
 
-        [Fact]
+        [TestMethod]
         public void ToDisplayString_uses_actual_type_formatter_and_not_compiled_type()
         {
             Widget widget = new InheritedWidget();
@@ -56,10 +56,10 @@ public sealed partial class FormatterTests
             inheritedWidgetFormatterCalled.Should().BeTrue();
         }
 
-        [Theory]
-        [InlineData("text/html", "<div class=\"dni-plaintext\"><pre># { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }</pre></div>")]
-        [InlineData("text/plain", "# { This is the <input> \"yes\"\t\b\n\r }")]
-        [InlineData("application/json", "\"# { This is the <input> \\\"yes\\\"\\t\\b\\n\\r }\"")]
+        [TestMethod]
+        [DataRow("text/html", "<div class=\"dni-plaintext\"><pre># { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }</pre></div>")]
+        [DataRow("text/plain", "# { This is the <input> \"yes\"\t\b\n\r }")]
+        [DataRow("application/json", "\"# { This is the <input> \\\"yes\\\"\\t\\b\\n\\r }\"")]
         public void When_input_is_a_string_with_unusual_characters_then_it_is_encoded_appropriately(string mimeType, string expected)
         {
             var input = "# { This is the <input> \"yes\"\t\b\n\r }";
@@ -69,11 +69,11 @@ public sealed partial class FormatterTests
             result.Should().Be(expected);
         }
 
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
+        [TestMethod]
+        [DataRow("text/plain", false)]
+        [DataRow("text/plain", true)]
+        [DataRow("text/html", false)]
+        [DataRow("text/html", true)]
         public void Formatters_can_be_registered_for_concrete_types(string mimeType, bool useGenericRegisterMethod)
         {
             if (useGenericRegisterMethod)
@@ -95,11 +95,11 @@ public sealed partial class FormatterTests
                                             .Be("hello");
         }
 
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
+        [TestMethod]
+        [DataRow("text/plain", false)]
+        [DataRow("text/plain", true)]
+        [DataRow("text/html", false)]
+        [DataRow("text/html", true)]
         public void Formatters_can_be_registered_for_obj_type(string mimeType, bool useGenericRegisterMethod)
         {
             if (useGenericRegisterMethod)
@@ -121,11 +121,11 @@ public sealed partial class FormatterTests
                                             .Be("hello");
         }
 
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
+        [TestMethod]
+        [DataRow("text/plain", false)]
+        [DataRow("text/plain", true)]
+        [DataRow("text/html", false)]
+        [DataRow("text/html", true)]
         public void Formatters_choose_exact_type_amongst_user_defined_formatters(string mimeType, bool useGenericRegisterMethod)
         {
             if (useGenericRegisterMethod)
@@ -166,11 +166,11 @@ public sealed partial class FormatterTests
 
         }
 
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
+        [TestMethod]
+        [DataRow("text/plain", false)]
+        [DataRow("text/plain", true)]
+        [DataRow("text/html", false)]
+        [DataRow("text/html", true)]
         public void Formatters_choose_most_specific_type_amongst_user_defined_formatters(string mimeType, bool useGenericRegisterMethod)
         {
             if (useGenericRegisterMethod)
@@ -211,9 +211,9 @@ public sealed partial class FormatterTests
                        .Be("world");
         }
 
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
         public void Formatters_choose_most_recently_registered_formatter_is_preferred(string mimeType)
         {
             Formatter.Register<IComparable>(
@@ -244,11 +244,11 @@ public sealed partial class FormatterTests
                        .Be("world");
         }
 
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
+        [TestMethod]
+        [DataRow("text/plain", false)]
+        [DataRow("text/plain", true)]
+        [DataRow("text/html", false)]
+        [DataRow("text/html", true)]
         public void Formatters_can_be_registered_on_demand_for_non_generic_interfaces(string mimeType, bool useGenericRegisterMethod)
         {
             if (useGenericRegisterMethod)
@@ -288,11 +288,11 @@ public sealed partial class FormatterTests
                 .Be(list.Count.ToString());
         }
 
-        [Theory]
-        [InlineData("text/plain", false)]
-        [InlineData("text/plain", true)]
-        [InlineData("text/html", false)]
-        [InlineData("text/html", true)]
+        [TestMethod]
+        [DataRow("text/plain", false)]
+        [DataRow("text/plain", true)]
+        [DataRow("text/html", false)]
+        [DataRow("text/html", true)]
         public void Formatters_can_be_registered_on_demand_for_abstract_classes(string mimeType, bool useGenericRegisterMethod)
         {
             if (useGenericRegisterMethod)
@@ -332,9 +332,9 @@ public sealed partial class FormatterTests
         {
         };
 
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
         public void Formatters_can_be_registered_on_demand_for_open_generic_classes(string mimeType)
         {
             Formatter.Register(
@@ -357,9 +357,9 @@ public sealed partial class FormatterTests
                 .Be(list.Count.ToString());
         }
 
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
         public void Formatters_can_be_registered_on_demand_for_open_generic_interfaces(string mimeType)
         {
             Formatter.Register(
@@ -382,7 +382,7 @@ public sealed partial class FormatterTests
                 .Be(list.Count.ToString());
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatting_can_be_chosen_based_on_mime_type()
         {
             Formatter.Register(

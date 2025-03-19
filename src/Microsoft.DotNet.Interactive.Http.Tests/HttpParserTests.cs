@@ -6,18 +6,17 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Http.Parsing;
-using Xunit.Abstractions;
 using DiagnosticInfo  = Microsoft.DotNet.Interactive.Parsing.DiagnosticInfo;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests : IDisposable
 {
-    private readonly ITestOutputHelper _output;
+    private readonly TestContext _output;
 
     private readonly AssertionScope _assertionScope;
 
-    public HttpParserTests(ITestOutputHelper output)
+    public HttpParserTests(TestContext output)
     {
         _output = output;
         _assertionScope = new AssertionScope();

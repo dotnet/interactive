@@ -7,13 +7,13 @@ using System.Text.Json;
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[TestClass]
 public class TabularDataResourceTests
 {
-    [Fact]
+    [TestMethod]
     public void can_create_from_JsonDocument()
     {
         var doc = JsonDocument.Parse(@"[
@@ -46,7 +46,7 @@ public class TabularDataResourceTests
         actual.Should().BeEquivalentTo(expected);
     }
 
-    [Fact]
+    [TestMethod]
     public void schema_is_inferred_correctly_when_leading_data_item_has_null_field()
     {
         var tabularDataResource = JsonDocument.Parse(@"
@@ -79,7 +79,7 @@ public class TabularDataResourceTests
             .Type.Should().Be(TableSchemaFieldType.String);
     }
 
-    [Fact]
+    [TestMethod]
     public void can_be_deserialized_from_json()
     {
         var json = @"

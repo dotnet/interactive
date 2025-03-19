@@ -11,10 +11,10 @@ using HtmlAgilityPack;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Mermaid.Tests;
 
+[TestClass]
 public class MermaidKernelTests 
 {
     private readonly Configuration _configuration;
@@ -28,7 +28,7 @@ public class MermaidKernelTests
             .SetInteractive(Debugger.IsAttached);
     }
     
-    [Fact]
+    [TestMethod]
     public void registers_html_formatter_for_MermaidMarkdown()
     {
         var markdown = @"graph TD
@@ -52,7 +52,7 @@ public class MermaidKernelTests
         renderTarget.Should().NotBeNull();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task mermaid_kernel_handles_SubmitCode()
     {
         using var kernel = new CompositeKernel
@@ -80,7 +80,7 @@ public class MermaidKernelTests
         
     }
 
-    [Fact]
+    [TestMethod]
     public async Task mermaid_kernel_handles_escaped_strings()
     {
         using var kernel = new CompositeKernel
@@ -106,7 +106,7 @@ public class MermaidKernelTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_specify_background_color()
     {
         using var kernel = new CompositeKernel
@@ -140,7 +140,7 @@ public class MermaidKernelTests
         style.Should().Be("background-color:red");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_specify_display_dimensions()
     {
         using var kernel = new CompositeKernel

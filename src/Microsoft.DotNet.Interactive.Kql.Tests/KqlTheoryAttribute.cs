@@ -1,11 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Kql.Tests;
 
-public sealed class KqlTheoryAttribute : TheoryAttribute
+public sealed class KqlTheoryAttribute : ConditionBaseAttribute
 {
     private static readonly string _skipReason;
 
@@ -15,10 +14,13 @@ public sealed class KqlTheoryAttribute : TheoryAttribute
     }
 
     public KqlTheoryAttribute()
+        : base(ConditionMode.Include)
     {
-        if (_skipReason is not null)
-        {
-            Skip = _skipReason;
-        }
     }
+
+    public override string IgnoreMessage => _skipReason;
+
+    public override string GroupName => nameof(KqlTheoryAttribute);
+
+    public override bool ShouldRun => _skipReason is null;
 }

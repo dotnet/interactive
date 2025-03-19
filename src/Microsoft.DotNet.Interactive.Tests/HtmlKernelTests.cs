@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class HtmlKernelTests
 {
-    [Fact]
+    [TestMethod]
     public async Task html_emits_string_as_content_within_a_script_element()
     {
         using var kernel = new CompositeKernel

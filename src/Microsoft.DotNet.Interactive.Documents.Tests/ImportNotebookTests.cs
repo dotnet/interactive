@@ -6,17 +6,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
+[TestClass]
 public class ImportNotebookTests : DocumentFormatTestsBase
 {
-    [Theory]
-    [InlineData(".ipynb", ".ipynb")]
-    [InlineData(".ipynb", ".dib")]
-    [InlineData(".dib", ".ipynb")]
-    [InlineData(".dib", ".dib")]
+    [TestMethod]
+    [DataRow(".ipynb", ".ipynb")]
+    [DataRow(".ipynb", ".dib")]
+    [DataRow(".dib", ".ipynb")]
+    [DataRow(".dib", ".dib")]
     public async Task It_can_read_one_notebooks_imports_into_another(
         string importingNotebookExtension,
         string importedFileExtension)
@@ -68,14 +68,14 @@ public class ImportNotebookTests : DocumentFormatTestsBase
                          .Contents.Should().Contain(importedCode);
     }
 
-    [Theory]
-    [InlineData(".cs", "csharp")]
-    [InlineData(".csx", "csharp")]
-    [InlineData(".fs", "fsharp")]
-    [InlineData(".fsx", "fsharp")]
-    [InlineData(".ps1", "pwsh")]
-    [InlineData(".html", "html")]
-    [InlineData(".js", "javascript")]
+    [TestMethod]
+    [DataRow(".cs", "csharp")]
+    [DataRow(".csx", "csharp")]
+    [DataRow(".fs", "fsharp")]
+    [DataRow(".fsx", "fsharp")]
+    [DataRow(".ps1", "pwsh")]
+    [DataRow(".html", "html")]
+    [DataRow(".js", "javascript")]
     public async Task It_can_import_language_specific_source_files_into_a_notebook(
         string importedFileExtension,
         string expectedKernelName)
@@ -108,7 +108,7 @@ public class ImportNotebookTests : DocumentFormatTestsBase
         importedElement.KernelName.Should().Be(expectedKernelName);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_can_import_a_file_that_imports_another_file()
     {
         // given notebook1 which imports notebook2 which imports notebook3...
@@ -152,7 +152,7 @@ public class ImportNotebookTests : DocumentFormatTestsBase
                          .Contents.Should().Contain("notebook3 content");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_imported_document_does_not_exist_then_it_throws()
     {
         var missingNotebookPath = "not-found.dib";

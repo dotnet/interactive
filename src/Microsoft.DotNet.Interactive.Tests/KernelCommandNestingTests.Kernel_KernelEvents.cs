@@ -7,15 +7,15 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
 public partial class KernelCommandNestingTests
 {
+    [TestClass]
     public class Kernel_KernelEvents
     {
-        [Fact]
+        [TestMethod]
         public async Task Commands_sent_within_the_code_of_another_command_publish_error_events_on_CompositeKernel_for_failures()
         {
             using var kernel = new CompositeKernel

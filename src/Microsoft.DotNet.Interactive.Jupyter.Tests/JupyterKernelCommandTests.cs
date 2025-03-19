@@ -8,23 +8,19 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
-using Pocket.For.Xunit;
 using System.Linq;
 using System.Threading.Tasks;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-[Collection("Do not parallelize")]
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+[TestClass]
 public class JupyterKernelCommandTests : JupyterKernelTestBase
 {
-    public JupyterKernelCommandTests(ITestOutputHelper output) : base(output)
+    public JupyterKernelCommandTests(TestContext output) : base(output)
     {
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("python", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData("R", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("python", KernelSpecName = PythonKernelName)]
@@ -79,7 +75,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
             }, c => c.ExcludingMissingMembers());
 
         var testKernel = kernel.FindKernelByName("testKernel");
-        Assert.NotNull(testKernel);
+        Assert.IsNotNull(testKernel);
 
         // kernel info should be sent as kernel info produced
         testKernel
@@ -109,7 +105,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
     }
 
     // note that R kernel returns display_data instead of execute_result
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = PythonKernelName)]
     [JupyterTestData("1+1", PlainTextFormatter.MimeType, "2", KernelSpecName = PythonKernelName)]
@@ -160,7 +156,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = PythonKernelName)]
     [JupyterTestData("from IPython.display import display; display(2)", new[] { "text/plain" }, new[] { "2" }, KernelSpecName = PythonKernelName)]
@@ -215,7 +211,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("for i in range(2):\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("for i in range(2):\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = PythonKernelName)]
     [JupyterTestData("for i in range(2):\n\tprint (i, flush=True)", new[] { "0\n", "1\n" }, KernelSpecName = PythonKernelName)]
@@ -273,7 +269,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
     }
 
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData("message('stderr')", "stderr\n", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("import sys\n\nprint('stderr', file=sys.stderr)", "stderr\n", KernelSpecName = PythonKernelName)]
@@ -323,7 +319,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData("prin()", new[] { "Error in prin(): could not find function \"prin\"\nTraceback:\n" }, KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("prin()", new[] { "\u001B[1;31mNameError\u001B[0m: name 'prin' is not defined", "Traceback (most recent call last)" }, KernelSpecName = PythonKernelName)]
@@ -381,7 +377,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = PythonKernelName)]
     [JupyterTestData("dh = display(\"test\", display_id=True)\ndh.update(\"update-test\")", "'test'", "'update-test'", KernelSpecName = PythonKernelName)]
@@ -438,7 +434,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
             .Should()
             .Be(updateDisplayValue);
 
-        Assert.NotNull(display.Which.ValueId);
+        Assert.IsNotNull(display.Which.ValueId);
 
         updateDisplay
             .Which
@@ -449,7 +445,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Prints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Prints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName)]
     [JupyterTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Prints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName)]
@@ -515,7 +511,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Prints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Prints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName)]
     [JupyterTestData("print (\"test\")", 3, new[] { "text/plain" }, new[] { "Prints the values to a stream, or to sys.stdout by default.\n" }, KernelSpecName = PythonKernelName)]
@@ -579,7 +575,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("pr", 0, 0, 2, new[] { "print", "property" }, KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("pr", 0, 0, 2, new[] { "print", "property" }, KernelSpecName = PythonKernelName)]
     [JupyterTestData("pr", 0, 0, 2, new[] { "print", "property" }, KernelSpecName = PythonKernelName)]
