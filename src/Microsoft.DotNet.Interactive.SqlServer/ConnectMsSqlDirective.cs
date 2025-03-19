@@ -90,9 +90,9 @@ public class ConnectMsSqlDirective : ConnectKernelDirective<ConnectMsSqlKernel>
 
         var submission1 = $$"""
             #r "nuget: Microsoft.Data.SqlClient, {{MicrosoftDataSqlClientVersion}}"
-            #r "nuget: Microsoft.EntityFrameworkCore.Design, {{MicrosoftEntityFrameworkCoreDesignVersion}}"
-            #r "nuget: Microsoft.EntityFrameworkCore.SqlServer, {{MicrosoftEntityFrameworkCoreSqlServerVersion}}"
-            #r "nuget: Humanizer.Core, {{HumanizerCoreVersion}}"
+            #r "nuget: Microsoft.EntityFrameworkCore.Design, {{MicrosoftEntityFrameworkVersion}}"
+            #r "nuget: Microsoft.EntityFrameworkCore.SqlServer, {{MicrosoftEntityFrameworkVersion}}"
+            #r "nuget: Humanizer.Core, {{HumanizerVersion}}"
             #r "nuget: Humanizer, {{HumanizerVersion}}"
             #r "nuget: Microsoft.Identity.Client, {{MicrosoftIdentityClientVersion}}"
             

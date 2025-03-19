@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -577,6 +578,24 @@ select TOP(@testVar) * from sys.databases";
         await kernel.SendAsync(new SubmitCode("#!connect mssql @input:connectionString --kernel-name abc"));
 
         requestInput.InputTypeHint.Should().Be("connectionstring-mssql");
+    }
+
+    [Fact]
+    public void DependencyVersions_are_correctly_scaffolded_from_build()
+    {
+        var dependencyVersionsType = typeof(ConnectMsSqlKernel)
+                                     .Assembly
+                                     .GetTypes()
+                                     .Single(t => t.Name == "DependencyVersions");
+
+        dependencyVersionsType
+            .GetMembers()
+            .Where(m => m.MemberType == MemberTypes.Field)
+            .Cast<FieldInfo>()
+            .Select(f => f.GetValue(null))
+            .Cast<string>()
+            .Should()
+            .AllSatisfy(value => value.Should().NotBeNullOrEmpty());
     }
 
     public void Dispose()
