@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -62,11 +62,9 @@
       <Code Include="internal static class DependencyVersions" />
       <Code Include="{" />
 
-      <Code Include="%20%20%20%20public const string HumanizerCoreVersion = &quot;$(HumanizerCoreVersion)&quot;%3B" />
       <Code Include="%20%20%20%20public const string HumanizerVersion = &quot;$(HumanizerVersion)&quot;%3B" />
       <Code Include="%20%20%20%20public const string MicrosoftDataSqlClientVersion = &quot;$(MicrosoftDataSqlClientVersion)&quot;%3B" />
-      <Code Include="%20%20%20%20public const string MicrosoftEntityFrameworkCoreDesignVersion = &quot;$(MicrosoftEntityFrameworkCoreDesignVersion)&quot;%3B" />
-      <Code Include="%20%20%20%20public const string MicrosoftEntityFrameworkCoreSqlServerVersion = &quot;$(MicrosoftEntityFrameworkCoreSqlServerVersion)&quot;%3B" />
+      <Code Include="%20%20%20%20public const string MicrosoftEntityFrameworkVersion = &quot;$(MicrosoftEntityFrameworkVersion)&quot;%3B" />
       <Code Include="%20%20%20%20public const string MicrosoftIdentityClientVersion = &quot;$(MicrosoftIdentityClientVersion)&quot;%3B" />
 
       <Code Include="}" />
