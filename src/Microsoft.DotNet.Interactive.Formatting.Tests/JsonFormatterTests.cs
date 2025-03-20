@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 public class JsonFormatterTests : FormatterTestBase
 {
     [TestMethod]
-    [DynamicData(nameof(JsonElements))]
+    [DynamicData(nameof(JsonElements), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
     public void It_does_not_JSON_encode_JSON_types(JsonElement jsonElement)
     {
         var formatter = JsonFormatter.GetPreferredFormatterFor(jsonElement.GetType());
