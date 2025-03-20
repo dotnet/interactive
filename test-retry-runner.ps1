@@ -21,7 +21,7 @@ else
 }
 
 function ExecuteTestDirectory([string]$testDirectory, [string]$extraArgs = "") {
-    $testCommand = "dotnet test $testDirectory/ $extraArgs -l trx --no-restore --no-build --blame-hang-timeout 10m --blame-hang-dump-type full --blame-crash -c $buildConfig --results-directory $repoRoot/artifacts/TestResults/$buildConfig"
+    $testCommand = "dotnet test $testDirectory/ $extraArgs -l trx --no-restore --no-build -bl:$repoRoot/artifacts/TestResults/$buildConfig/test.binlog --blame-hang-timeout 10m --blame-hang-dump-type full --blame-crash -c $buildConfig --results-directory $repoRoot/artifacts/TestResults/$buildConfig"
     Write-Host "Executing $testCommand"
     Invoke-Expression $testCommand
 }
