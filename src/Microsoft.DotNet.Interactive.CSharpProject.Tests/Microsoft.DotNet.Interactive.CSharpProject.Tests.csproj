@@ -54,6 +54,7 @@
     </PackageReference>
     <PackageReference Include="System.Reactive"  />
     <PackageReference Include="System.Security.Cryptography.X509Certificates" />
+    <PackageReference Include="MSTest" />
   </ItemGroup>
 
   <ItemGroup>

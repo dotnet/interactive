@@ -27,6 +27,7 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.NamedPipeConnector\Microsoft.DotNet.Interactive.NamedPipeConnector.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Tests\Microsoft.DotNet.Interactive.Tests.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+    <PackageReference Include="MSTest" />
   </ItemGroup>
 
   <ItemGroup>

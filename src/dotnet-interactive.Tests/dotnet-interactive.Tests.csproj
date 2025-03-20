@@ -20,11 +20,12 @@
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
-    <PackageReference Include="PocketLogger.Subscribe" >
+    <PackageReference Include="PocketLogger.Subscribe">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Assent" />
+    <PackageReference Include="MSTest" />
     <PackageReference Include="FluentAssertions" />
   </ItemGroup>
 

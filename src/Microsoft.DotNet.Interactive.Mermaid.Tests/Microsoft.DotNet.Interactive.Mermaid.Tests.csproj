@@ -23,6 +23,7 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Assent" />
     <PackageReference Include="HtmlAgilityPack" />
+    <PackageReference Include="MSTest" />
   </ItemGroup>
 
   <ItemGroup>

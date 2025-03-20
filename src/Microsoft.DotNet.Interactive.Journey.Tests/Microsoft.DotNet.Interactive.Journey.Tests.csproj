@@ -19,6 +19,7 @@
     <PackageReference Include="Humanizer.Core" />
     <PackageReference Include="HtmlAgilityPack" />
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="MSTest" />
   </ItemGroup>
 
   <ItemGroup>
