@@ -65,6 +65,7 @@ public class FirstTimeUseSentinelTests : IDisposable
         var console = new TestConsole();
         var parser = CreateParser(true);
         await parser.InvokeAsync($"jupyter  {_connectionFile}", console);
-        Assert.DoesNotContain("Telemetry", console.Out.ToString());
+        // Using this overload to workaround https://github.com/microsoft/testfx/issues/5277
+        Assert.DoesNotContain("Telemetry", console.Out.ToString(), StringComparison.Ordinal, null, null);
     }
 }
