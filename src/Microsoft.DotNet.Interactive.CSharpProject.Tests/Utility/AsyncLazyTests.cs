@@ -6,13 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class AsyncLazyTests
 {
-    [Fact]
+    [TestMethod]
     public async Task AsyncLazy_returns_the_specified_value()
     {
         var lazy = new AsyncLazy<string>(async () =>
@@ -27,7 +27,7 @@ public class AsyncLazyTests
         value.Should().Be("hello!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task AsyncLazy_can_be_awaited_concurrently_without_triggering_initialization_twice()
     {
         var callCount = 0;

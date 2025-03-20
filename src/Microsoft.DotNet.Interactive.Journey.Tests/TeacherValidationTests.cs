@@ -9,10 +9,10 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests;
 
+[TestClass]
 public class TeacherValidationTests : ProgressiveLearningTestBase
 {
     private async Task RunAllCells(FileInfo file, CompositeKernel kernel)
@@ -25,7 +25,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_scratchpad_to_validate_their_material()
     {
         var filename = "teacherValidation.dib";
@@ -61,7 +61,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
                         "Challenge math message"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_add_rule_when_starting_a_lesson()
     {
         var kernel = await CreateKernel(LessonMode.TeacherMode);
@@ -76,7 +76,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
                     "Challenge func rule failed"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_on_code_submitted_when_starting_a_lesson()
     {
         var kernel = await CreateKernel(LessonMode.TeacherMode);
@@ -90,7 +90,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
                     "Challenge func not done"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_add_rule_when_progressing_the_student_to_different_challenge()
     {
         var kernel = await CreateKernel(LessonMode.TeacherMode);
@@ -106,7 +106,7 @@ public class TeacherValidationTests : ProgressiveLearningTestBase
                     "Challenge math passed"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_on_code_submitted_when_progressing_the_student_to_different_challenge()
     {
         var kernel = await CreateKernel(LessonMode.TeacherMode);

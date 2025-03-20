@@ -14,32 +14,30 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class KernelInfoTests
 {
-    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+    [TestClass]
     public class ForCompositeKernel
     {
         private readonly CompositeDisposable _disposables = new();
 
-        public ForCompositeKernel(ITestOutputHelper output)
+        public ForCompositeKernel(TestContext output)
         {
             _disposables.Add(output.SubscribeToPocketLogger());
         }
 
-        [Fact]
+        [TestMethod]
         public void When_LanguageName_is_not_set_then_DisplayName_is_LocalName()
         {
             var kernelInfo = new KernelInfo("csharp");
             kernelInfo.DisplayName.Should().Be("csharp");
         }
 
-        [Fact]
+        [TestMethod]
         public void By_default_DisplayName_is_derived_from_local_and_language_names()
         {
             var kernelInfo = new KernelInfo("csharp");
@@ -48,7 +46,7 @@ public class KernelInfoTests
             kernelInfo.DisplayName.Should().Be("csharp - C#");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_returns_kernel_info_for_all_children()
         {
             using var kernel = new CompositeKernel
@@ -65,7 +63,7 @@ public class KernelInfoTests
             result.Events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "fsharp");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_returns_the_list_of_proxied_kernel_commands_for_a_specified_subkernel()
         {
             using var localCompositeKernel = new CompositeKernel("LOCAL")
@@ -106,7 +104,7 @@ public class KernelInfoTests
                   }, c => c.ExcludingMissingMembers());
         }
 
-        [Fact]
+        [TestMethod]
         public async Task proxyKernel_kernelInfo_is_updated_to_reflect_remote_kernelInfo()
         {
             using var localCompositeKernel = new CompositeKernel("LOCAL")
@@ -148,7 +146,7 @@ public class KernelInfoTests
                   }, c => c.ExcludingMissingMembers());
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_returns_info_about_unproxied_subkernels_of_remote_composite()
         {
             using var localCompositeKernel = new CompositeKernel("LOCAL-COMPOSITE")
@@ -180,7 +178,7 @@ public class KernelInfoTests
                 .Contain(new Uri("kernel://remote/remote-fake"));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Unproxied_kernels_have_a_URI()
         {
             using var localCompositeKernel = new CompositeKernel
@@ -201,7 +199,7 @@ public class KernelInfoTests
                   .Be(new Uri("kernel://local/csharp"));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ProxyKernels_have_a_local_uri()
         {
             using var localCompositeKernel = new CompositeKernel
@@ -229,7 +227,7 @@ public class KernelInfoTests
                        .Be(new Uri("kernel://local/python"));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ProxyKernels_have_a_remote_uri()
         {
             using var localCompositeKernel = new CompositeKernel
@@ -257,7 +255,7 @@ public class KernelInfoTests
                        .Be(new Uri("kernel://remote/python"));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task When_kernel_info_is_requested_from_proxy_then_ProxyKernel_kernel_info_is_updated()
         {
             using var localCompositeKernel = new CompositeKernel();
@@ -298,7 +296,7 @@ public class KernelInfoTests
                   .Contain(remoteCsharpKernel.KernelInfo.SupportedKernelCommands.Select(c => c.Name));
         }
 
-        [Fact]
+        [TestMethod]
         public void when_kernels_are_added_it_produces_KernelInfoProduced_events()
         {
             using var compositeKernel = new CompositeKernel();
@@ -310,7 +308,7 @@ public class KernelInfoTests
             events.Should().ContainSingle<KernelInfoProduced>(e => e.KernelInfo.LocalName == "csharp");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task when_a_command_adds_kernels_it_produces_KernelInfoProduced_events()
         {
             using var compositeKernel = new CompositeKernel
@@ -330,9 +328,10 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
         }
     }
 
+    [TestClass]
     public class ForUnparentedKernel
     {
-        [Fact]
+        [TestMethod]
         public async Task It_returns_the_list_of_intrinsic_kernel_commands()
         {
             using var kernel = new CSharpKernel();
@@ -351,7 +350,7 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
                       nameof(SubmitCode));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_returns_language_info_for_csharp_kernel()
         {
             using var kernel = new CSharpKernel();
@@ -367,7 +366,7 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
                   .Be("C#");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_returns_language_info_for_fsharp_kernel()
         {
             using var kernel = new FSharpKernel();
@@ -383,7 +382,7 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
                   .Be("F#");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_returns_language_info_for_PowerShell_kernel()
         {
             using var kernel = new PowerShellKernel();
@@ -400,7 +399,7 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
                   .Be("PowerShell");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_returns_the_list_of_directive_commands()
         {
             using var kernel = new CSharpKernel()
@@ -420,7 +419,7 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
                   .Contain("#!who", "#!who", "#r");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_returns_the_list_of_dynamic_kernel_commands()
         {
             using var kernel = new FakeKernel();
@@ -445,7 +444,7 @@ compositeKernel.Add(new CSharpKernel(""csharpTwo""), new []{""cs2""});
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_hosts_have_bidirectional_proxies_RequestKernelInfo_is_not_forwarded_back_to_the_host_that_initiated_the_request()
     {
         using var localCompositeKernel = new CompositeKernel("LOCAL")

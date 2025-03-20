@@ -4,17 +4,17 @@
 using System;
 using FluentAssertions;
 using System.Text.Json;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public sealed partial class FormatterTests : FormatterTestBase
 {
+    [TestClass]
     public class MimeTypeSettings : FormatterTestBase
     {
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
         public void Default_mime_type_sets_mime_type_for_all_types(string mimeType)
         {
             Formatter.DefaultMimeType = mimeType;
@@ -24,9 +24,9 @@ public sealed partial class FormatterTests : FormatterTestBase
             Formatter.GetPreferredMimeTypesFor(typeof(Type)).Should().BeEquivalentTo(mimeType);
         }
 
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
         public void Type_specific_mime_type_preference_applies_to_derived_types(string mimeType)
         {
             Formatter.SetPreferredMimeTypesFor(typeof(object), mimeType);
@@ -38,10 +38,10 @@ public sealed partial class FormatterTests : FormatterTestBase
             Formatter.GetPreferredMimeTypesFor(typeof(JsonElement)).Should().BeEquivalentTo(mimeType);
         }
 
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        [InlineData("text/whacky")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
+        [DataRow("text/whacky")]
         public void Last_specified_type_specific_mime_type_preference_applies_to_non_specified_derived_types(string mimeType)
         {
             // the last one should win
@@ -58,10 +58,10 @@ public sealed partial class FormatterTests : FormatterTestBase
             Formatter.GetPreferredMimeTypesFor(typeof(JsonElement)).Should().BeEquivalentTo(mimeType);
         }
 
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        [InlineData("text/whacky")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
+        [DataRow("text/whacky")]
         public void Formatters_can_override_default_preference_for_base_type(string mimeType)
         {
             Formatter.SetPreferredMimeTypesFor(typeof(object), "text/default");
@@ -70,10 +70,10 @@ public sealed partial class FormatterTests : FormatterTestBase
             Formatter.GetPreferredMimeTypesFor(typeof(int)).Should().BeEquivalentTo(mimeType);
         }
 
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        [InlineData("text/whacky")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
+        [DataRow("text/whacky")]
         public void Formatters_can_override_default_mime_type(string mimeType)
         {
             Formatter.DefaultMimeType = "text/default";
@@ -82,10 +82,10 @@ public sealed partial class FormatterTests : FormatterTestBase
             Formatter.GetPreferredMimeTypesFor(typeof(int)).Should().BeEquivalentTo(mimeType);
         }
 
-        [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        [InlineData("text/whacky")]
+        [TestMethod]
+        [DataRow("text/plain")]
+        [DataRow("text/html")]
+        [DataRow("text/whacky")]
         public void Formatters_can_clear_default_preference_for_single_type(string mimeType)
         {
             Formatter.SetPreferredMimeTypesFor(typeof(int), mimeType);

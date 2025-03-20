@@ -7,15 +7,15 @@ using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Lexer
     {
-        [Fact]
+        [TestMethod]
         public void multiple_whitespaces_are_treated_as_a_single_token()
         {
             var result = Parse("  \t  ");
@@ -27,7 +27,7 @@ public partial class HttpParserTests
                   .ChildTokens.Single().Text.Should().Be("  \t  ");
         }
 
-        [Fact]
+        [TestMethod]
         public void multiple_newlines_are_parsed_into_different_tokens()
         {
             var result = Parse("\n\v\r\n\n");
@@ -40,7 +40,7 @@ public partial class HttpParserTests
                       new { Text = "\n", Kind = TokenKind.NewLine });
         }
 
-        [Fact]
+        [TestMethod]
         public void multiple_punctuations_are_parsed_into_different_tokens()
         {
             var result = Parse(".!?.:/");

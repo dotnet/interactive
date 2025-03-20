@@ -12,20 +12,19 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
 {
-    public LanguageKernelExtensionLoadingTests(ITestOutputHelper output) : base(output)
+    public LanguageKernelExtensionLoadingTests(TestContext output) : base(output)
     {
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task It_loads_extensions_in_specified_directory_via_a_command(Language language)
     {
         var projectDir = DirectoryUtility.CreateDirectory();
@@ -60,9 +59,9 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
               .ContainSingle<DisplayedValueProduced>(v => v.FormattedValues.Single().Value == $"{language} extension installed");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task It_throws_when_extension_throws_during_load(Language language)
     {
         var projectDir = DirectoryUtility.CreateDirectory();
@@ -87,9 +86,9 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
               .ContainSingle<CommandFailed>(cf => cf.Exception is KernelExtensionLoadException);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task It_loads_extensions_found_in_nuget_packages(Language language)
     {
         var extensionPackage = await KernelExtensionTestHelper.GetSimpleExtensionAsync();
@@ -112,9 +111,9 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
                     .Contain("SimpleExtension");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task it_loads_script_extension_found_in_nuget_package(Language defaultLanguage)
     {
         var extensionPackage = await KernelExtensionTestHelper.GetScriptExtensionPackageAsync();
@@ -138,9 +137,9 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
                     .Contain("ScriptExtension loaded");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task It_does_not_track_extensions_that_are_not_file_providers(Language language)
     {
         var kernel = CreateKernel(language);
@@ -157,9 +156,9 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
         action.Should().Throw<KeyNotFoundException>();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task It_tracks_extensions_that_are_not_file_providers(Language language)
     {
         var kernel = CreateCompositeKernel(language);
@@ -177,9 +176,9 @@ public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
             .NotBeNull();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public void it_cannot_resolve_unregistered_extensions(Language language)
     {
         var kernel = CreateKernel(language);

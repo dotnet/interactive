@@ -4,17 +4,17 @@
 using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[TestClass]
 public class PocketViewWithFormatterTests : FormatterTestBase
 {
-    [Theory]
-    [InlineData("text/html")]
-    [InlineData("text/plain")]
+    [TestMethod]
+    [DataRow("text/html")]
+    [DataRow("text/plain")]
     public void Formatter_does_not_expand_properties_of_PocketView(string mimeType)
     {
         PocketView view = b(123);
@@ -25,7 +25,7 @@ public class PocketViewWithFormatterTests : FormatterTestBase
             .Be($"<b>{PlainTextBegin}123{PlainTextEnd}</b>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Embedded_objects_are_formatted_using_custom_html_formatter_and_encoded()
     {
         var date = DateTime.Parse("1/1/2019 12:30pm");
@@ -37,7 +37,7 @@ public class PocketViewWithFormatterTests : FormatterTestBase
         output.Should().Be("<div>&lt;hello&gt;</div>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Embedded_objects_are_not_formatted_using_custom_plaintext_formatter_when_formating_as_html()
     {
         var date = DateTime.Parse("1/1/2019 12:30pm");

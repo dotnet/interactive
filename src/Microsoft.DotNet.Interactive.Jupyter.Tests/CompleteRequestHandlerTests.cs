@@ -10,20 +10,19 @@ using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
-using Xunit;
-using Xunit.Abstractions;
 
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[TestClass]
 public class CompleteRequestHandlerTests : JupyterRequestHandlerTestBase
 {
-    public CompleteRequestHandlerTests(ITestOutputHelper output) : base(output)
+    public CompleteRequestHandlerTests(TestContext output) : base(output)
     {
     }
 
-    [Fact]
+    [TestMethod]
     public async Task send_completeReply_on_CompleteRequest()
     {
         var scheduler = CreateScheduler();
@@ -39,7 +38,7 @@ public class CompleteRequestHandlerTests : JupyterRequestHandlerTestBase
             .ContainSingle(r => r is CompleteReply);
     }
 
-    [Fact]
+    [TestMethod]
     public void kernel_name_can_be_pulled_from_dotnet_interactive_metadata_when_present()
     {
         var metaData = new Dictionary<string, object>
@@ -55,7 +54,7 @@ public class CompleteRequestHandlerTests : JupyterRequestHandlerTestBase
             .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void kernel_name_can_be_pulled_from_polyglot_notebook_metadata_when_present()
     {
         var metaData = new Dictionary<string, object>
@@ -70,7 +69,7 @@ public class CompleteRequestHandlerTests : JupyterRequestHandlerTestBase
             .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_language_defaults_to_null_when_it_cant_be_found()
     {
         var request = ZeroMQMessage.Create(new CompleteRequest("1+1"));

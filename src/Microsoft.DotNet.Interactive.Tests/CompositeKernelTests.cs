@@ -13,17 +13,16 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Tests.Utility.CustomCommandTypes;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class CompositeKernelTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public CompositeKernelTests(ITestOutputHelper output)
+    public CompositeKernelTests(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
@@ -33,7 +32,7 @@ public class CompositeKernelTests : IDisposable
         _disposables.Dispose();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive()
     {
         var cSharpKernel = new CSharpKernel();
@@ -64,7 +63,7 @@ new [] {1,2,3}");
             .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Handling_kernel_can_be_specified_using_kernel_alias_as_a_directive()
     {
         var cSharpKernel = new CSharpKernel();
@@ -94,11 +93,11 @@ new [] {1,2,3}");
             .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
     }
 
-    [Theory]
-    [InlineData("#!fake1", "fake1")]
-    [InlineData("#!fake1-alias", "fake1")]
-    [InlineData("#!fake2", "fake2")]
-    [InlineData("#!fake2-alias", "fake2")]
+    [TestMethod]
+    [DataRow("#!fake1", "fake1")]
+    [DataRow("#!fake1-alias", "fake1")]
+    [DataRow("#!fake2", "fake2")]
+    [DataRow("#!fake2-alias", "fake2")]
     public async Task Action_directives_are_routed_by_kernel_chooser_directives(
         string chooseKernelCommand,
         string expectedInvokedOnKernelName)
@@ -136,10 +135,10 @@ new [] {1,2,3}");
             .Be(expectedInvokedOnKernelName);
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    [DataRow(2)]
     public async Task when_target_kernel_is_specified_and_not_found_then_command_fails(int kernelCount)
     {
         using var kernel = new CompositeKernel();
@@ -158,7 +157,7 @@ new [] {1,2,3}");
                .ContainSingle<CommandFailed>(cf => cf.Exception is NoSuitableKernelException);
     }
 
-    [Fact]
+    [TestMethod]
     public void cannot_add_duplicated_named_kernels()
     {
         using var kernel = new CompositeKernel
@@ -175,7 +174,7 @@ new [] {1,2,3}");
             .Be("The kernel name or alias 'csharp' is already in use.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_handle_commands_targeting_composite_kernel_directly()
     {
         using var kernel = new CompositeKernel
@@ -202,7 +201,7 @@ new [] {1,2,3}");
             .Be(submitCode);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task commands_targeting_compositeKernel_are_not_routed_to_childKernels()
     {
         var receivedOnFakeKernel = new List<KernelCommand>();
@@ -225,7 +224,7 @@ new [] {1,2,3}");
             .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Handling_kernel_can_be_specified_by_setting_the_kernel_name_in_the_command()
     {
         var receivedOnFakeKernel = new List<KernelCommand>();
@@ -266,7 +265,7 @@ new [] {1,2,3}");
             .Be("hello!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Handling_kernel_can_be_specified_as_a_default()
     {
         var receivedOnFakeKernel = new List<KernelCommand>();
@@ -300,7 +299,7 @@ new [] {1,2,3}");
             .Be("hello!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Handling_kernel_can_be_specified_as_a_default_via_an_alias()
     {
         var receivedOnFakeKernel = new List<KernelCommand>();
@@ -337,7 +336,7 @@ new [] {1,2,3}");
             .Be("hello!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_no_default_kernel_is_specified_then_kernel_directives_can_be_used()
     {
         using var kernel = new CompositeKernel
@@ -355,7 +354,7 @@ new [] {1,2,3}");
         events.Should().NotContainErrors();
     }
 
-    [Fact]
+    [TestMethod]
     public void When_only_one_subkernel_is_present_then_default_kernel_name_returns_its_name()
     {
         using var kernel = new CompositeKernel
@@ -366,7 +365,7 @@ new [] {1,2,3}");
         kernel.DefaultKernelName.Should().Be("csharp");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Events_published_by_child_kernel_are_visible_in_parent_kernel()
     {
         var subKernel = new CSharpKernel();
@@ -389,7 +388,7 @@ new [] {1,2,3}");
                 typeof(CommandSucceeded));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Deferred_commands_on_composite_kernel_are_execute_on_first_submission()
     {
         var deferredCommandExecuted = false;
@@ -429,7 +428,7 @@ new [] {1,2,3}");
     }
         
 
-    [Fact]
+    [TestMethod]
     public async Task Deferred_commands_on_composite_kernel_can_use_directives()
     {
         var deferredCommandExecuted = false;
@@ -468,7 +467,7 @@ new [] {1,2,3}");
                 typeof(CommandSucceeded));
     }
 
-    [Fact]
+    [TestMethod]
     public void Child_kernels_are_disposed_when_CompositeKernel_is_disposed()
     {
         var csharpKernelWasDisposed = false;
@@ -491,7 +490,7 @@ new [] {1,2,3}");
         fsharpKernelWasDisposed.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void When_frontend_environment_is_set_then_it_is_also_assigned_to_child_kernels()
     {
         using var compositeKernel = new CompositeKernel
@@ -510,7 +509,7 @@ new [] {1,2,3}");
             .BeSameAs(compositeKernel.FrontendEnvironment);
     }
         
-    [Fact]
+    [TestMethod]
     public void When_child_kernel_is_added_then_its_frontend_environment_is_obtained_from_the_parent()
     {
         using var compositeKernel = new CompositeKernel();
@@ -528,7 +527,7 @@ new [] {1,2,3}");
             .BeSameAs(compositeKernel.FrontendEnvironment);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_command_handler_registered_and_command_sent_then_handler_is_executed()
     {
         using var compositeKernel = new CompositeKernel();
@@ -555,7 +554,7 @@ new [] {1,2,3}");
             .NotBeNull();
     }
 
-    [Fact] 
+    [TestMethod] 
     public async Task When_command_handler_registered_in_child_kernel_and_command_sent_to_parent_then_handler_is_executed()
     {
         using var compositeKernel = new CompositeKernel();
@@ -582,7 +581,7 @@ new [] {1,2,3}");
             .BeSameAs(commandSentToCompositeKernel);
     }
 
-    [Fact]
+    [TestMethod]
     public void Cannot_add_CompositeKernel_as_child()
     {
         using var compositeKernel = new CompositeKernel();

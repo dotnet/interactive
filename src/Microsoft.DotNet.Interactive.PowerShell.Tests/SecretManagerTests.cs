@@ -8,16 +8,16 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Tests;
 
+[TestClass]
 public class SecretManagerTests
 {
-    [Theory]
-    [InlineData("SECRET_NAME", "s33kr1t!!!")]
-    [InlineData("SECRET NAME with a space", "s33kr1t!!!")]
-    [InlineData("SecretJson",
+    [TestMethod]
+    [DataRow("SECRET_NAME", "s33kr1t!!!")]
+    [DataRow("SECRET NAME with a space", "s33kr1t!!!")]
+    [DataRow("SecretJson",
                 """
                 {
                     "what": "how about some JSON?",
@@ -43,7 +43,7 @@ public class SecretManagerTests
         secret.Should().Be(value);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Temporary_variables_are_cleaned_up_after_retrieving_secrets()
     {
         using var kernel = new PowerShellKernel();

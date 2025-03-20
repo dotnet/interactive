@@ -7,13 +7,13 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Formatting;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
+[TestClass]
 public class PolyglotParserConfigurationTests
 {
-    [Fact]
+    [TestMethod]
     public void Kernel_name_magic_is_recognized_as_kernel_chooser()
     {
         var config = GetDefaultConfiguration();
@@ -21,7 +21,7 @@ public class PolyglotParserConfigurationTests
         config.IsKernelSelectorDirective("#!csharp").Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void Kernel_alias_magic_is_recognized_as_kernel_chooser()
     {
         var config = GetDefaultConfiguration();

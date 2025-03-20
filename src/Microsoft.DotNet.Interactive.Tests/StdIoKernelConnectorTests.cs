@@ -10,10 +10,10 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Pocket;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    [TestClass]
     public class StdIoKernelConnectorTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             return connector;
         }
 
-        [Fact]
+        [TestMethod]
         public async Task it_can_return_a_proxy_to_a_remote_composite()
         {
             var connector = CreateConnector();
@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             rootProxyKernel.KernelInfo.IsComposite.Should().BeTrue();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task it_can_return_a_proxy_to_a_specific_remote_composite()
         {
             var connector = CreateConnector();
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             proxyKernel.KernelInfo.IsComposite.Should().BeTrue();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task it_can_create_a_proxy_to_a_specific_remote_subkernel()
         {
             var connector = CreateConnector();
@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             proxyKernel.Name.Should().Be("csharp");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task it_can_create_a_proxy_kernel_with_a_different_name_than_the_remote()
         {
             var connector = CreateConnector();
@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             proxyKernel.Name.Should().Be("fsharp2");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task it_can_create_a_proxy_kernel_to_more_than_one_remote_subkernel()
         {
             var connector = CreateConnector();
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             fsharpProxyKernel.KernelInfo.Should().BeEquivalentTo(expectedFSharpKernelInfo);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task it_throws_if_there_is_no_remote_subkernel_with_the_specified_name()
         {
             var connector = CreateConnector();
@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             await action.Should().ThrowAsync<InvalidOperationException>();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task when_only_root_proxy_is_created_and_disposed_then_the_remote_process_is_killed()
         {
             var connector = CreateConnector();
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             HasProcessExited(process).Should().BeTrue();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task when_all_created_proxies_have_been_disposed_then_the_remote_process_is_killed()
         {
             var connector = CreateConnector();
@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             HasProcessExited(process).Should().BeTrue();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task when_all_created_proxies_including_the_root_proxy_have_been_disposed_then_the_remote_process_is_killed()
         {
             var connector = CreateConnector();
@@ -255,7 +255,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             HasProcessExited(process).Should().BeTrue();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task encoding_is_preserved()
         {
             var connector = CreateConnector();

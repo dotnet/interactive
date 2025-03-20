@@ -7,14 +7,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 using File = System.IO.File;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class BufferInliningTransformerTests
 {
-    [Fact]
+    [TestMethod]
     public async Task When_workspace_is_null_then_the_transformer_throw_exception()
     {
         var processor = new BufferInliningTransformer();
@@ -22,7 +22,7 @@ public class BufferInliningTransformerTests
         await extraction.Should().ThrowAsync<ArgumentNullException>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Processed_workspace_files_are_modified_inlining_buffers()
     {
         var original = new Workspace(
@@ -52,7 +52,7 @@ public class BufferInliningTransformerTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Buffer_can_be_injected_before_region()
     {
         var original = new Workspace(
@@ -81,7 +81,7 @@ public class BufferInliningTransformerTests
         processed.Buffers.ElementAt(0).AbsolutePosition.Should().Be(155);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Buffers_can_be_injected_according_to_injection_points()
     {
         var original = new Workspace(
@@ -117,7 +117,7 @@ public class BufferInliningTransformerTests
         afterBuffer.AbsolutePosition.Should().Be(235);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Buffer_can_be_injected_after_region()
     {
         var original = new Workspace(
@@ -146,7 +146,7 @@ public class BufferInliningTransformerTests
         processed.Buffers.ElementAt(0).AbsolutePosition.Should().Be(215);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Processed_workspace_files_are_replaced_by_buffer_when_id_is_just_file_name()
     {
         var ws = new Workspace(
@@ -172,7 +172,7 @@ public class BufferInliningTransformerTests
         processed.Buffers.ElementAt(0).Position.Should().Be(0);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Processed_workspace_with_single_buffer_with_empty_id_generates_a_program_file()
     {
         var ws = new Workspace(
@@ -190,7 +190,7 @@ public class BufferInliningTransformerTests
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task If_workspace_contains_with_multiple_buffers_targeting_single_file_generates_a_single_file()
     {
         var expectedCode = @"using System;
@@ -233,7 +233,7 @@ Console.Write(newValueA + newValueB);
         newCode.Should().Be(expectedCode);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task If_workspace_contains_files_whose_names_are_absolute_paths_and_they_have_no_content_then_the_contents_are_read_from_disk()
     {
         using (var directory = DisposableDirectory.Create())
@@ -255,7 +255,7 @@ Console.Write(newValueA + newValueB);
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task If_workspace_contains_buffers_whose_file_names_are_absolute_paths_the_contents_are_read_from_disk()
     {
         using (var directory = DisposableDirectory.Create())

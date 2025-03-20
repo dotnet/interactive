@@ -6,18 +6,15 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
 public class MagicCommandTests
 {
-    [Collection("Do not parallelize")]
+    [TestClass]
     public class About
     {
-        [Fact]
+        [TestMethod]
         public async Task it_shows_the_product_name_and_version_information()
         {
             using var kernel = new CompositeKernel()

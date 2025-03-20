@@ -13,20 +13,19 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests;
 
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.NamedPipeConnector.Tests;
 
+[TestClass]
 public class NamedPipeConnectionTests : ProxyKernelConnectionTestsBase
 {
     private readonly string _pipeName = Guid.NewGuid().ToString();
 
-    public NamedPipeConnectionTests(ITestOutputHelper output) : base(output)
+    public NamedPipeConnectionTests(TestContext output) : base(output)
     {
     }
 
-    [Fact]
+    [TestMethod]
     public void connect_command_is_available_when_a_user_adds_a_kernel_connection_type()
     {
         using var compositeKernel = new CompositeKernel();

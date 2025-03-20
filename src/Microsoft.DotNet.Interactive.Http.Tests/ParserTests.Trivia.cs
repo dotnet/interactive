@@ -5,22 +5,22 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Trivia
     {
-        [Fact]
+        [TestMethod]
         public void it_can_parse_an_empty_string()
         {
             var result = Parse("");
             result.SyntaxTree.Should().NotBeNull();
         }
 
-        [Fact]
+        [TestMethod]
         public void it_can_parse_a_string_with_only_whitespace()
         {
             var result = Parse(" \t ");
@@ -29,7 +29,7 @@ public partial class HttpParserTests
                   .ChildTokens.First().Text.Should().Be(" \t ");
         }
 
-        [Fact]
+        [TestMethod]
         public void string_with_only_newlines_is_parsed_into_root_node()
         {
             var result = Parse("\r\n\n\r\n");

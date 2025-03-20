@@ -15,15 +15,16 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests
 {
+    [TestClass]
     public partial class HttpKernelTests
     {
+        [TestClass]
         public class NamedRequest
         {
-            [Fact]
+            [TestMethod]
             public async Task responses_can_be_accessed_as_symbols_in_later_requests()
             {
 
@@ -79,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 secondResult.Events.Should().NotContainErrors();
             }
 
-            [Fact]
+            [TestMethod]
             public async Task response_headers_can_be_accessed_correctly()
             {
                 var headerValue = string.Empty;
@@ -146,7 +147,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 headerValue.Should().Be("gunicorn/19.9.0");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task response_headers_with_syntax_depth_of_five_can_be_accessed_correctly()
             {
                 var headerValue = string.Empty;
@@ -216,7 +217,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 headerValue.Should().Be("theme=dark; Path=/; Expires=Wed, 09 Jun 2023 10:18:14 GMT");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task attempting_to_access_response_headers_with_excessive_syntax_depth_will_produce_an_error()
             {
                 var headerValue = string.Empty;
@@ -281,7 +282,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied expression 'binHeader.response.headers.Server.gunicorn' does not follow the correct pattern. The expression should adhere to the following pattern: {{requestName.(response|request).(body|headers).(*|JSONPath|XPath|Header Name)}}.""");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task accessing_a_response_header_that_does_not_exist_will_produce_an_error()
             {
                 var headerValue = string.Empty;
@@ -346,9 +347,9 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name 'Accept' does not exist in the named request.""");
             }
 
-            [Theory]
-            [InlineData("json.response.body.$.slideshow.slides.title", "Wake up to WonderWidgets!")]
-            [InlineData("json.response.body.$.slideshow.slides.type", "all")]
+            [TestMethod]
+            [DataRow("json.response.body.$.slideshow.slides.title", "Wake up to WonderWidgets!")]
+            [DataRow("json.response.body.$.slideshow.slides.type", "all")]
             public async Task json_with_additional_syntax_depths_can_be_accessed_correctly(string path, string expectedValue)
             {
 
@@ -425,11 +426,11 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
 
             }
 
-            [Theory]
-            [InlineData("login.response.$")]
-            [InlineData("login.response.//")]
-            [InlineData("login.request.$")]
-            [InlineData("login.request.//")]
+            [TestMethod]
+            [DataRow("login.response.$")]
+            [DataRow("login.response.//")]
+            [DataRow("login.request.$")]
+            [DataRow("login.request.//")]
             public async Task responses_with_incomplete_paths_produces_errors(string path)
             {
 
@@ -471,9 +472,9 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             }
 
 
-            [Theory]
-            [InlineData("login.request.body.$.test", "application/json")]
-            [InlineData("login.request.body.//test", "application/xml")]
+            [TestMethod]
+            [DataRow("login.request.body.$.test", "application/json")]
+            [DataRow("login.request.body.//test", "application/xml")]
             public async Task incomplete_syntax_depths_produces_errors(string path, string contentType)
             {
                 using var kernel = new HttpKernel();
@@ -517,7 +518,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be($"The named request does not contain any content at this path '{path}'.");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task json_with_xml_content_type_produces_errors()
             {
                 using var kernel = GetHttpKernelWithMockedResponses(
@@ -555,7 +556,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be("""The supplied named request has content type of 'application/xml' which differs from the required content type of 'application/json'.""");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task xml_with_json_content_type_produces_errors()
             {
                 using var kernel = GetHttpKernelWithMockedResponses(("{}", "application/json"));
@@ -599,9 +600,9 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be("The supplied named request has content type of 'application/json' which differs from the required content type of 'application/xml'.");
             }
 
-            [Theory]
-            [InlineData("login.request.body.$")]
-            [InlineData("login.request.body.//")]
+            [TestMethod]
+            [DataRow("login.request.body.$")]
+            [DataRow("login.request.body.//")]
             public async Task no_body_produces_errors_when_trying_to_access(string path)
             {
                 using var kernel = new HttpKernel();
@@ -640,7 +641,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be("""The supplied named request 'login' does not have a request body.""");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task responses_can_be_accessed_as_xml_in_later_requests()
             {
                 using var kernel = GetHttpKernelWithMockedResponses(("""
@@ -675,9 +676,9 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 secondResult.Events.Should().NotContainErrors();
             }
 
-            [Theory]
-            [InlineData("example.request.body.*")]
-            [InlineData("example.response.body.*")]
+            [TestMethod]
+            [DataRow("example.request.body.*")]
+            [DataRow("example.response.body.*")]
             public async Task body_content_produces_the_entirety_of_the_body_content(string path)
             {
                 using var kernel = new HttpKernel();
@@ -711,7 +712,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 secondResult.Events.Should().NotContainErrors();
             }
 
-            [Fact]
+            [TestMethod]
             public async Task improper_xml_path_produces_errors()
             {
                 using var kernel = GetHttpKernelWithMockedResponses(("<test>testing!</test>", "application/xml"));
@@ -748,7 +749,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                                                                     """);
             }
 
-            [Fact]
+            [TestMethod]
             public async Task responses_can_be_accessed_through_headers_in_later_requests()
             {
                 using var kernel = new HttpKernel();
@@ -782,7 +783,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
             }
 
 
-            [Fact]
+            [TestMethod]
             public async Task invalid_named_request_property_produces_errors()
             {
                 using var kernel = new HttpKernel();
@@ -826,9 +827,9 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 secondResult.Events.Count.Should().Be(2);
             }
 
-            [Theory]
-            [InlineData("example.request.headers.*")]
-            [InlineData("example.response.headers.*")]
+            [TestMethod]
+            [DataRow("example.request.headers.*")]
+            [DataRow("example.response.headers.*")]
             public async Task Accessing_content_body_after_headers_is_not_supported_and_produces_errors(string path)
             {
                 using var kernel = new HttpKernel();
@@ -861,9 +862,9 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name '*' does not exist in the named request.""");
             }
 
-            [Theory]
-            [InlineData("example.request.headers.Content-Type", "Content-Type")]
-            [InlineData("example.response.headers.Authorization", "Authorization")]
+            [TestMethod]
+            [DataRow("example.request.headers.Content-Type", "Content-Type")]
+            [DataRow("example.response.headers.Authorization", "Authorization")]
             public async Task accessing_non_existent_header_names_produces_an_error(string path, string headerName)
             {
                 using var kernel = new HttpKernel();
@@ -903,7 +904,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be($$$"""The supplied header name '{{{headerName}}}' does not exist in the named request.""");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task accessing_an_index_in_a_json_array_succeeds()
             {
                 using var kernel = new HttpKernel();
@@ -941,7 +942,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 response.Request.Headers["X-Value"].First().Should().Be("5601db0f-32e0-4d82-bc79-251e50fa1407");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task accessing_multiple_indexes_in_a_json_array_succeeds()
             {
                 using var kernel = new HttpKernel();
@@ -979,7 +980,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 response.Request.Headers["X-Value"].First().Should().Be("455301a5-8a6e-49d0-b056-96fb2847be20");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task attempting_to_access_headers_that_do_not_exist_will_produce_an_error()
             {
                 using var kernel = new HttpKernel();
@@ -1018,7 +1019,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 diagnostics.Diagnostics.First().Message.Should().Be("The supplied named request 'example' does not have any headers.");
             }
 
-            [Fact]
+            [TestMethod]
             public async Task variables_have_precedence_over_named_requests()
             {
                 using var kernel = new HttpKernel();
@@ -1055,7 +1056,7 @@ namespace Microsoft.DotNet.Interactive.Http.Tests
                 secondResult.Events.Should().NotContainErrors();
             }
 
-            [Fact]
+            [TestMethod]
             public async Task attempting_to_use_named_request_prior_to_run_will_cause_failure()
             {
                 using var kernel = new HttpKernel();

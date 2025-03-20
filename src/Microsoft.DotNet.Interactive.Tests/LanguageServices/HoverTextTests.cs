@@ -8,15 +8,14 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests.LanguageServices;
 
+[TestClass]
 public class HoverTextTests : LanguageKernelTestBase
 {
-    public HoverTextTests(ITestOutputHelper output) : base(output)
+    public HoverTextTests(TestContext output) : base(output)
     {
     }
 
@@ -26,7 +25,7 @@ public class HoverTextTests : LanguageKernelTestBase
         return kernel.SendAsync(command);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task hover_in_unsupported_language_fails_with_informative_error()
     {
         using var kernel = new FakeKernel();
@@ -46,9 +45,9 @@ public class HoverTextTests : LanguageKernelTestBase
             .Be($"Kernel {kernel} does not support command type {nameof(RequestHoverText)}.");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var x = 12$$34;", "text/markdown", "readonly struct System.Int32")]
-    [InlineData(Language.FSharp, "let f$$oo = 12", "text/markdown", "```fsharp\nval foo : int\n```\n\n----\n*Full name: foo*")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var x = 12$$34;", "text/markdown", "readonly struct System.Int32")]
+    [DataRow(Language.FSharp, "let f$$oo = 12", "text/markdown", "```fsharp\nval foo : int\n```\n\n----\n*Full name: foo*")]
     public async Task hover_request_returns_expected_result(Language language, string markupCode, string expectedMimeType, string expectedContent)
     {
         using var kernel = CreateKernel(language);
@@ -65,10 +64,10 @@ public class HoverTextTests : LanguageKernelTestBase
                      .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
     }
 
-    [Theory]
-    [InlineData("#!s$$et --value", "Sets a value in the current kernel*--name*--value*")]
-    [InlineData("#!set --valu$$e", "The value to be set*")]
-    [InlineData("#!connect sign$$alr --kernel-name blah", "Connects to a kernel using SignalR*")]
+    [TestMethod]
+    [DataRow("#!s$$et --value", "Sets a value in the current kernel*--name*--value*")]
+    [DataRow("#!set --valu$$e", "The value to be set*")]
+    [DataRow("#!connect sign$$alr --kernel-name blah", "Connects to a kernel using SignalR*")]
     public async Task hover_request_returns_expected_result_for_magic_commands(
         string markupCode,
         string expectedContent)
@@ -92,9 +91,9 @@ public class HoverTextTests : LanguageKernelTestBase
                      .Match(expectedContent);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var x = 1; // hovering$$ in a comment")]
-    [InlineData(Language.FSharp, "let x = 1 // hovering$$ in a comment")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var x = 1; // hovering$$ in a comment")]
+    [DataRow(Language.FSharp, "let x = 1 // hovering$$ in a comment")]
     public async Task hover_request_over_comments_succeeds(Language language, string markupCode)
     {
         using var kernel = CreateKernel(language);
@@ -108,11 +107,11 @@ public class HoverTextTests : LanguageKernelTestBase
             .ContainSingle<CommandSucceeded>();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var x = 1; // hovering past the end of the line", 0, 200)]
-    [InlineData(Language.CSharp, "var x = 1; // hovering on a non-existent line", 10, 2)]
-    [InlineData(Language.FSharp, "let x = 1 // hovering past the end of the line", 0, 200)]
-    [InlineData(Language.FSharp, "let x = 1 // hovering on a non-existent line", 10, 2)]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var x = 1; // hovering past the end of the line", 0, 200)]
+    [DataRow(Language.CSharp, "var x = 1; // hovering on a non-existent line", 10, 2)]
+    [DataRow(Language.FSharp, "let x = 1 // hovering past the end of the line", 0, 200)]
+    [DataRow(Language.FSharp, "let x = 1 // hovering on a non-existent line", 10, 2)]
     public async Task out_of_bounds_hover_request_returns_no_result(Language language, string code, int line, int character)
     {
         using var kernel = CreateKernel(language);
@@ -132,9 +131,9 @@ public class HoverTextTests : LanguageKernelTestBase
             .ContainSingle<CommandFailed>();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "text/markdown", ") int one")]
-    [InlineData(Language.FSharp, "let one = 1", "printfn \"%a\" o$$ne", "text/markdown", "```fsharp\nval one : int // 1\n```\n\n----\n*Full name: one*")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "text/markdown", ") int one")]
+    [DataRow(Language.FSharp, "let one = 1", "printfn \"%a\" o$$ne", "text/markdown", "```fsharp\nval one : int // 1\n```\n\n----\n*Full name: one*")]
     public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string markupCode, string expectedMimeType, string expectedContentEnd)
     {
         // declare a variable in deferred code
@@ -157,8 +156,8 @@ public class HoverTextTests : LanguageKernelTestBase
                      .Contain(f => f.MimeType == expectedMimeType && f.Value.EndsWith(expectedContentEnd));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "System.Environment.Command$$Line", "Gets the command line for this process.")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "System.Environment.Command$$Line", "Gets the command line for this process.")]
     public async Task hover_text_doc_comments_can_be_loaded_from_bcl_types(Language language, string markupCode, string expectedHoverTextSubString)
     {
         using var kernel = CreateKernel(language);
@@ -180,9 +179,9 @@ public class HoverTextTests : LanguageKernelTestBase
             .Contain(expectedHoverTextSubString);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$d(1, 2)", "Adds two numbers.")]
-    [InlineData(Language.FSharp, "/// Adds two numbers.\nlet add a b = a + b", "ad$$d 1 2", "Adds two numbers.")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$d(1, 2)", "Adds two numbers.")]
+    [DataRow(Language.FSharp, "/// Adds two numbers.\nlet add a b = a + b", "ad$$d 1 2", "Adds two numbers.")]
     public async Task hover_text_doc_comments_can_be_loaded_from_source_in_a_previous_submission(Language language, string previousSubmission, string markupCode, string expectedHoverTextSubString)
     {
         using var kernel = CreateKernel(language);
@@ -201,9 +200,9 @@ public class HoverTextTests : LanguageKernelTestBase
                      .ContainSingle(fv => fv.Value.Contains(expectedHoverTextSubString));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "var s = new Sample$$Class();")]
-    [InlineData(Language.FSharp, "let s = Sample$$Class()")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "var s = new Sample$$Class();")]
+    [DataRow(Language.FSharp, "let s = Sample$$Class()")]
     public async Task hover_text_can_read_doc_comments_from_individually_referenced_assemblies_with_xml_files(Language language, string markupCode)
     {
         using var assembly = new TestAssemblyReference("Project", "netstandard2.0", "Program.cs", @"
@@ -237,7 +236,7 @@ public class SampleClass
                      .ContainSingle(fv => fv.Value.Contains("A sample class constructor."));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task csharp_hover_text_can_read_doc_comments_from_nuget_packages_after_forcing_the_assembly_to_load()
     {
         using var kernel = CreateKernel(Language.CSharp);
@@ -261,7 +260,8 @@ public class SampleClass
                      .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's null as a string. This field is read-only."));
     }
 
-    [Fact(Skip = "https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
+    [TestMethod]
+    [Ignore("https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
     public async Task csharp_hover_text_can_read_doc_comments_from_nuget_packages()
     {
         using var kernel = CreateKernel(Language.CSharp);
@@ -282,7 +282,7 @@ public class SampleClass
                      .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's null as a string. This field is read-only."));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task fsharp_hover_text_can_read_doc_comments_from_nuget_packages()
     {
         using var kernel = CreateKernel(Language.FSharp);
@@ -303,9 +303,9 @@ public class SampleClass
                      .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's `null` as a string. This field is read-only."));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 18")]
-    [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "Exit the current hardware isolated process")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 18")]
+    [DataRow(Language.FSharp, "ex$$it 0", "text/markdown", "Exit the current hardware isolated process")]
     public async Task hover_text_commands_have_offsets_normalized_after_magic_commands(Language language, string markupCode, string expectedMimeType, string expectedContent)
     {
         using var kernel = CreateKernel(language);
@@ -331,9 +331,9 @@ public class SampleClass
                      .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 18")]
-    [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "Exit the current hardware isolated process")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 18")]
+    [DataRow(Language.FSharp, "ex$$it 0", "text/markdown", "Exit the current hardware isolated process")]
     public async Task hover_text_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language, string markupCode, string expectedMimeType, string expectedContent)
     {
         using var kernel = CreateKernel(language);
@@ -357,7 +357,7 @@ public class SampleClass
                      .ContainSingle(fv => fv.MimeType == expectedMimeType && fv.Value.Contains(expectedContent));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task hover_text_commands_and_events_have_offsets_normalized_when_switching_languages()
     {
         // switch to C# from an F# kernel/cell
@@ -382,9 +382,9 @@ public class SampleClass
             .Be(new LinePositionSpan(new LinePosition(line, 8), new LinePosition(line, 17)));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task hover_text_is_returned_for_shadowing_variables(Language language)
     {
         var (declaration, shadowingDeclaration, expectedEnd) = language switch

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 internal static class CommandRoutingSlipExtensions
@@ -18,9 +17,10 @@ internal static class CommandRoutingSlipExtensions
     }
 }
 
+[TestClass]
 public class CommandRoutingSlipTests
 {
-    [Fact]
+    [TestMethod]
     public void can_be_stamped_with_kernel_uri_on_arrival()
     {
         var routingSlip = new CommandRoutingSlip();
@@ -30,7 +30,7 @@ public class CommandRoutingSlipTests
         routingSlip.StartsWith(other).Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void the_uri_array_contains_all_uris()
     {
         var routingSlip = new CommandRoutingSlip();
@@ -48,7 +48,7 @@ public class CommandRoutingSlipTests
             "kernel://3/?tag=arrived");
     }
 
-    [Fact]
+    [TestMethod]
     public void can_be_stamped_with_kernel_uri()
     {
         var routingSlip = new CommandRoutingSlip();
@@ -60,7 +60,7 @@ public class CommandRoutingSlipTests
         routingSlip.StartsWith(other).Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public void cannot_can_be_stamped_with_kernel_uri_on_arrival_twice()
     {
         var routingSlip = new CommandRoutingSlip();
@@ -72,7 +72,7 @@ public class CommandRoutingSlipTests
             .WithMessage("The uri kernel://1/?tag=arrived is already in the routing slip");
     }
 
-    [Fact]
+    [TestMethod]
     public void cannot_can_be_stamped_with_kernel_uri_if_the_uri_is_not_stamped_on_arrival()
     {
         var routingSlip = new CommandRoutingSlip();
@@ -83,7 +83,7 @@ public class CommandRoutingSlipTests
             .WithMessage("The uri kernel://1/ is not in the routing slip");
     }
 
-    [Fact]
+    [TestMethod]
     public void can_continue_a_routingSlip_with_another()
     {
         var original = new CommandRoutingSlip();
@@ -104,7 +104,7 @@ public class CommandRoutingSlipTests
             "kernel://4/");
     }
 
-    [Fact]
+    [TestMethod]
     public void can_continue_a_routingSlip_to_another_skipping_entries_if_the_other_contains_it()
     {
         var original = new CommandRoutingSlip();
@@ -127,8 +127,8 @@ public class CommandRoutingSlipTests
             "kernel://4/");
     }
 
-    [Theory]
-    [MemberData(nameof(CommandRoutingSlipsToTest))]
+    [TestMethod]
+    [DynamicData(nameof(CommandRoutingSlipsToTest))]
     public void starts_with_urls(CommandRoutingSlip other, bool startsWith)
     {
         var original = new CommandRoutingSlip();
@@ -171,7 +171,7 @@ public class CommandRoutingSlipTests
         yield return new object[] {routingSlip, false };
     }
 
-    [Fact]
+    [TestMethod]
     public void continuing_a_routingSlip_with_another_contains_all_kernel_uris()
     {
         var original = new CommandRoutingSlip();
@@ -191,7 +191,7 @@ public class CommandRoutingSlipTests
             "kernel://4/?tag=arrived");
     }
 
-    [Fact]
+    [TestMethod]
     public void throws_exception_when_continuing_a_routingSlip_with_another_if_they_do_not_start_with_same_uri_sequence()
     {
         var original = new CommandRoutingSlip();

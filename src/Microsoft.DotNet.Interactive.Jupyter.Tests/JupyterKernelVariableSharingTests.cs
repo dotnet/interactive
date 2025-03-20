@@ -10,27 +10,23 @@ using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
-using Pocket.For.Xunit;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Xunit;
-using Xunit.Abstractions;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 // FIX: (JupyterKernelVariableSharingTests) re-enable these tests
-[Trait("Category", "Skip")]
-[Collection("Do not parallelize")]
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+[TestProperty("Category", "Skip")]
+[TestClass]
 public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 {
-    public JupyterKernelVariableSharingTests(ITestOutputHelper output) : base(output)
+    public JupyterKernelVariableSharingTests(TestContext output) : base(output)
     {
     }
 
-    [Fact]
+    [TestMethod]
     public async Task variable_sharing_not_enabled_for_unsupported_languages()
     {
         var options = new SimulatedJupyterConnectionOptions(GenerateReplies(null, "unsupportedLanguage"));
@@ -54,7 +50,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         directives.Should().NotContain("#!whos");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task variable_sharing_not_enabled_for_when_target_not_found()
     {
         var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[]
@@ -76,7 +72,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         directives.Should().NotContain("#!whos");
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
@@ -121,7 +117,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("df_in_kernel.equals(df_roundtrip)", "True", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("df_in_kernel.equals(df_roundtrip)", "True", KernelSpecName = PythonKernelName)]
     [JupyterTestData("df_in_kernel.equals(df_roundtrip)", "True", KernelSpecName = PythonKernelName)]
@@ -250,7 +246,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 
     // for validating the kernel side logic, this test is intended to be run against a jupyter connection that and not just a test connection
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
     [JupyterTestData(KernelSpecName = PythonKernelName)]
@@ -374,7 +370,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 
     // for validating the kernel side logic, this test is intended to be run against a jupyter connection that and not just a test connection
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
     [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
@@ -445,7 +441,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
 
     // for validating the kernel side logic, this test is intended to be run against a jupyter connection that and not just a test connection
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
     [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
@@ -512,7 +508,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("a.b", KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData("_ab", KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData("a.b", KernelSpecName = PythonKernelName)]
@@ -540,7 +536,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData(KernelSpecName = PythonKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterHttpTestData(KernelSpecName = RKernelName, AllowPlayback = RECORD_FOR_PLAYBACK)]
     [JupyterZMQTestData(KernelSpecName = PythonKernelName)]
@@ -567,7 +563,7 @@ public class JupyterKernelVariableSharingTests : JupyterKernelTestBase
         options.SaveState();
     }
 
-    [Theory]
+    [TestMethod]
     [JupyterHttpTestData("a = 12345", new[] { "a", "b", "df" }, new[] { "text/plain+summary", "text/plain+summary", "text/plain+summary" }, new[] { "12345", "6789", """
                                               name  deliciousness   color
                              0  Granny Smith apple              0     red

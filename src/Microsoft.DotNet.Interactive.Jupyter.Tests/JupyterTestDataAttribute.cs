@@ -4,12 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Xunit.Sdk;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-internal class JupyterTestDataAttribute : DataAttribute
+internal class JupyterTestDataAttribute : Attribute, ITestDataSource
 {
     private readonly object[] _data;
     public const string JUPYTER_RECORDED_TEST = nameof(JUPYTER_RECORDED_TEST);
@@ -19,7 +18,7 @@ internal class JupyterTestDataAttribute : DataAttribute
         _data = data;
     }
 
-    public override IEnumerable<object[]> GetData(MethodInfo testMethod)
+    public IEnumerable<object[]> GetData(MethodInfo testMethod)
     {
         List<object> testData = new();
         var connData = GetConnectionTestData();
@@ -32,6 +31,9 @@ internal class JupyterTestDataAttribute : DataAttribute
     {
         return new JupyterConnectionTestData(JUPYTER_RECORDED_TEST);
     }
+
+    public string GetDisplayName(MethodInfo methodInfo, object[] data)
+        => null;
 
     public string KernelSpecName { get; set; }
 }

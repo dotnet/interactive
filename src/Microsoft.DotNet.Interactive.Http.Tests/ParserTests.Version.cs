@@ -4,15 +4,15 @@
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Version
     {
-        [Fact]
+        [TestMethod]
         public void http_version_is_parsed_correctly()
         {
             var result = Parse("GET https://example.com HTTP/1.1");
@@ -22,7 +22,7 @@ public partial class HttpParserTests
                   .VersionNode.Text.Should().Be("HTTP/1.1");
         }
 
-        [Fact]
+        [TestMethod]
         public void http_version_containing_whitespace_produces_a_diagnostic()
         {
             var version = """HTTP 1.1""";
@@ -43,7 +43,7 @@ public partial class HttpParserTests
                        .Which.GetMessage().Should().Be("Invalid HTTP version.");
         }
 
-        [Fact]
+        [TestMethod]
         public void extra_whitespace_around_HTTP_version_does_not_produce_diagnostics()
         {
             var code = """

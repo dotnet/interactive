@@ -9,7 +9,6 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
@@ -35,11 +34,12 @@ public class CsvFormatterTests : FormatterTestBase
         },
     };
 
+    [TestClass]
     public class Escaping : IDisposable
     {
         private readonly StringWriter _writer = new();
 
-        [Fact]
+        [TestMethod]
         public void Values_containing_commas_are_wrapped_in_quotes()
         {
             var obj = new
@@ -56,7 +56,7 @@ public class CsvFormatterTests : FormatterTestBase
             _writer.ToString().SplitIntoLines()[1].Should().Be("no-comma-here,\"this one, has a comma\",123");
         }
 
-        [Fact]
+        [TestMethod]
         public void Values_containing_newlines_are_wrapped_in_quotes()
         {
             var obj = new
@@ -73,7 +73,7 @@ public class CsvFormatterTests : FormatterTestBase
             _writer.ToString().Should().Contain("\"with\r\ntwo\nnewlines\",\"with one newline at the end\n\",123");
         }
 
-        [Fact]
+        [TestMethod]
         public void Double_quotes_are_replaced_with_two_double_quotes()
         {
             var obj = new
@@ -92,6 +92,7 @@ public class CsvFormatterTests : FormatterTestBase
         public void Dispose() => _writer?.Dispose();
     }
 
+    [TestClass]
     public class Objects : IDisposable
     {
         private readonly ITypeFormatter<SomethingWithLotsOfProperties> _formatter;
@@ -102,7 +103,7 @@ public class CsvFormatterTests : FormatterTestBase
             _formatter = CsvFormatter.GetPreferredFormatterFor<SomethingWithLotsOfProperties>();
         }
 
-        [Fact]
+        [TestMethod]
         public void It_creates_row_headers_based_on_property_names()
         {
             _formatter.Format(_objects.First(), _writer);
@@ -111,7 +112,7 @@ public class CsvFormatterTests : FormatterTestBase
             lines[0].Should().Be("DateProperty,StringProperty,IntProperty,BoolProperty,UriProperty");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_creates_rows_containing_values()
         {
             _formatter.Format(_objects.First(), _writer);
@@ -124,6 +125,7 @@ public class CsvFormatterTests : FormatterTestBase
         public void Dispose() => _writer?.Dispose();
     }
 
+    [TestClass]
     public class SequencesOfObjects : IDisposable
     {
         private readonly ITypeFormatter _formatter;
@@ -134,7 +136,7 @@ public class CsvFormatterTests : FormatterTestBase
             _formatter = CsvFormatter.GetPreferredFormatterFor(_objects.GetType());
         }
 
-        [Fact]
+        [TestMethod]
         public void It_creates_row_headers_based_on_property_names()
         {
             _formatter.Format(_objects, _writer);
@@ -143,7 +145,7 @@ public class CsvFormatterTests : FormatterTestBase
             lines[0].Should().Be("DateProperty,StringProperty,IntProperty,BoolProperty,UriProperty");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_creates_rows_containing_values()
         {
             _formatter.Format(_objects, _writer);
@@ -155,6 +157,7 @@ public class CsvFormatterTests : FormatterTestBase
         public void Dispose() => _writer?.Dispose();
     }
 
+    [TestClass]
     public class Dictionaries : IDisposable
     {
         private readonly ITypeFormatter _formatter;
@@ -167,7 +170,7 @@ public class CsvFormatterTests : FormatterTestBase
             _formatter = CsvFormatter.GetPreferredFormatterFor(_dictionary.GetType());
         }
 
-        [Fact]
+        [TestMethod]
         public void It_creates_row_headers_based_on_keys()
         {
             _formatter.Format(_dictionary, _writer);
@@ -176,7 +179,7 @@ public class CsvFormatterTests : FormatterTestBase
             lines[0].Should().Be("DateProperty,StringProperty,IntProperty,BoolProperty,UriProperty");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_creates_rows_containing_values()
         {
             _formatter.Format(_dictionary, _writer);
@@ -188,6 +191,7 @@ public class CsvFormatterTests : FormatterTestBase
         public void Dispose() => _writer?.Dispose();
     }
 
+    [TestClass]
     public class TabularDataResources : IDisposable
     {
         private readonly ITypeFormatter<TabularDataResource> _formatter;
@@ -200,7 +204,7 @@ public class CsvFormatterTests : FormatterTestBase
             _tabularDataResource = _objects.ToTabularDataResource();
         }
 
-        [Fact]
+        [TestMethod]
         public void It_creates_row_headers_based_on_property_names()
         {
             _formatter.Format(_tabularDataResource, _writer);
@@ -209,7 +213,7 @@ public class CsvFormatterTests : FormatterTestBase
             lines[0].Should().Be("DateProperty,StringProperty,IntProperty,BoolProperty,UriProperty");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_creates_rows_containing_values()
         {
             _formatter.Format(_tabularDataResource, _writer);

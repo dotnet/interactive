@@ -16,13 +16,13 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.LanguageServices;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class KeyValueStoreKernelTests
 {
-    [Fact]
+    [TestMethod]
     public async Task SubmitCode_is_not_valid_without_a_value_name()
     {
         using var kernel = CreateKernel();
@@ -44,7 +44,7 @@ public class KeyValueStoreKernelTests
               .Be("(1,1): error DNI104: Missing required parameter '--name'");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task SubmitCode_stores_code_as_a_formatted_value()
     {
         using var kernel = CreateKernel();
@@ -65,7 +65,7 @@ public class KeyValueStoreKernelTests
                      .Be(storedValue);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_mime_type_is_specified_then_the_value_is_displayed_using_the_specified_mime_type()
     {
         using var kernel = CreateKernel();
@@ -88,7 +88,7 @@ public class KeyValueStoreKernelTests
                                   v.Value == storedValue);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_mime_type_is_specified_then_it_retains_the_specified_mime_type()
     {
         using var kernel = CreateKernel();
@@ -113,7 +113,7 @@ public class KeyValueStoreKernelTests
               .Be("text/test-stuff");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task requestValueInfos_uses_mimetypes_as_type_names()
     {
         using var kernel = CreateKernel();
@@ -146,7 +146,7 @@ public class KeyValueStoreKernelTests
         valueInfosProduced.ValueInfos.Should().ContainSingle(v => v.Name == "b" && v.TypeName == "application/json");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_mime_type_is_not_specified_then_it_default_to_text_plain()
     {
         using var kernel = CreateKernel();
@@ -170,9 +170,9 @@ public class KeyValueStoreKernelTests
               .Be("text/plain");
     }
 
-    [Theory]
-    [InlineData("#!value --name hi --from-file {0}")]
-    [InlineData("#!value --name hi --from-file {0}\n")]
+    [TestMethod]
+    [DataRow("#!value --name hi --from-file {0}")]
+    [DataRow("#!value --name hi --from-file {0}\n")]
     public async Task It_can_import_file_contents_as_strings(string code)
     {
         using var kernel = CreateKernel();
@@ -193,7 +193,7 @@ public class KeyValueStoreKernelTests
             .Be(fileContents);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_can_import_URL_contents_as_strings()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -218,7 +218,7 @@ public class KeyValueStoreKernelTests
             .Contain("<p>hi!</p>");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_importing_URL_contents_the_mimetype_is_preserved()
     {
         var handler = new InterceptingHttpMessageHandler((_, _) =>
@@ -243,7 +243,7 @@ public class KeyValueStoreKernelTests
             .Be("text/html");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_can_store_user_input()
     {
         using var kernel = CreateKernel();
@@ -266,7 +266,7 @@ public class KeyValueStoreKernelTests
             .Be("hello!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task from_file_and_from_url_options_are_mutually_exclusive()
     {
         using var kernel = CreateKernel();
@@ -282,7 +282,7 @@ public class KeyValueStoreKernelTests
             .Be("(1,46): error DNI205: The --from-url and --from-file options cannot be used together.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task from_file_and_from_value_options_are_mutually_exclusive()
     {
         using var kernel = CreateKernel();
@@ -298,7 +298,7 @@ public class KeyValueStoreKernelTests
             .Be("(1,44): error DNI207: The --from-value and --from-file options cannot be used together.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task from_url_and_from_value_options_are_mutually_exclusive()
     {
         using var kernel = CreateKernel();
@@ -314,7 +314,8 @@ public class KeyValueStoreKernelTests
             .Be("(1,46): error DNI206: The --from-url and --from-value options cannot be used together.");
     }
 
-    [Fact(Skip = "Consider changing this behavior")]
+    [TestMethod]
+    [Ignore("Consider changing this behavior")]
     public async Task Share_into_the_value_kernel_is_not_supported_and_stores_the_directive_text_literally()
     {
         using var kernel = CreateKernel();
@@ -333,7 +334,7 @@ public class KeyValueStoreKernelTests
         valueProduced.FormattedValue.Value.Should().Be("#!share --from fsharp f");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task from_file_returns_error_when_content_is_also_submitted()
     {
         using var kernel = CreateKernel();
@@ -355,7 +356,7 @@ public class KeyValueStoreKernelTests
             .Be("(1,19): error DNI208: The --from-file option cannot be used in combination with a content submission.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task from_url_returns_error_when_content_is_also_submitted()
     {
         using var kernel = CreateKernel();
@@ -375,7 +376,7 @@ public class KeyValueStoreKernelTests
             .Be("(1,19): error DNI209: The --from-url option cannot be used in combination with a content submission.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Multiple_value_kernel_invocations_can_be_submitted_together_when_from_options_are_used()
     {
         using var kernel = CreateKernel();
@@ -404,7 +405,7 @@ public class KeyValueStoreKernelTests
         valueKernel.Values.Should().ContainKey("inline");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_from_url_is_used_with_content_then_the_response_is_not_stored()
     {
         using var kernel = CreateKernel();
@@ -424,7 +425,7 @@ public class KeyValueStoreKernelTests
             .NotContain(vi => vi.Name == "hi");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_from_url_is_used_with_content_then_the_previous_value_is_retained()
     {
         using var kernel = CreateKernel();
@@ -448,7 +449,7 @@ public class KeyValueStoreKernelTests
             .Be("// previous content");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Completions_show_value_options()
     {
         using var kernel = CreateKernel();
@@ -468,7 +469,7 @@ public class KeyValueStoreKernelTests
               .Contain("--name", "--from-url", "--from-file", "--mime-type");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Canceled_input_request_does_not_record_input_token_as_value()
     {
         using var kernel = CreateKernel();

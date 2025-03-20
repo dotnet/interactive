@@ -7,13 +7,13 @@ using Microsoft.DotNet.Interactive.Journey.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests;
 
+[TestClass]
 public class OutputEvaluationTests : ProgressiveLearningTestBase
 {
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_provide_challenge_evaluation_feedback()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -30,7 +30,7 @@ public class OutputEvaluationTests : ProgressiveLearningTestBase
         challenge.CurrentEvaluation.Hint.Should().Be(3);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_fail_rule_evaluation_and_provide_feedback_and_hint()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -45,7 +45,7 @@ public class OutputEvaluationTests : ProgressiveLearningTestBase
         challenge.CurrentEvaluation.RuleEvaluations.Single().Hint.Should().Be(3);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_pass_rule_evaluation_and_provide_feedback_and_hint()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -60,7 +60,7 @@ public class OutputEvaluationTests : ProgressiveLearningTestBase
         challenge.CurrentEvaluation.RuleEvaluations.Single().Hint.Should().Be(3);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_partially_pass_rule_evaluation_and_provide_feedback_and_hint()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -75,7 +75,8 @@ public class OutputEvaluationTests : ProgressiveLearningTestBase
         challenge.CurrentEvaluation.RuleEvaluations.Single().Hint.Should().Be(3);
     }
 
-    [Fact(Skip = "requires a dotnet interactive fix")]
+    [TestMethod]
+    [Ignore("requires a dotnet interactive fix")]
     public async Task teacher_can_check_for_command_failed_as_a_rule()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);

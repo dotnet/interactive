@@ -3,35 +3,34 @@
 
 using System;
 using FluentAssertions;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class RelativeFilePathTests
 {
-    private readonly ITestOutputHelper _output;
+    private readonly TestContext _output;
 
-    public RelativeFilePathTests(ITestOutputHelper output)
+    public RelativeFilePathTests(TestContext output)
     {
         _output = output;
     }
 
-    [Fact]
+    [TestMethod]
     public void Can_create_file_paths_from_string_with_directory()
     {
         var path = new RelativeFilePath("../readme.md");
         path.Value.Should().Be("../readme.md");    
     }
 
-    [Fact]
+    [TestMethod]
     public void Can_create_file_paths_from_string_without_directory()
     {
         var path = new RelativeFilePath("readme.md");
         path.Value.Should().Be("./readme.md");
     }
 
-    [Fact]
+    [TestMethod]
     public void Normalises_the_passed_path()
     {
         var path = new RelativeFilePath(@"..\readme.md");
@@ -40,48 +39,48 @@ public class RelativeFilePathTests
         path.Value.Should().Be("../readme.md");
     }
 
-    [Fact]
+    [TestMethod]
     public void Throws_exception_if_the_path_contains_invalid_filename_characters()
     {
         Action action = () => new RelativeFilePath(@"abc*def");
         action.Should().Throw<ArgumentException>();
     }
 
-    [Fact]
+    [TestMethod]
     public void Throws_exception_if_the_path_contains_invalid_path_characters()
     {
         Action action = () => new RelativeFilePath(@"abc|def");
         action.Should().Throw<ArgumentException>();
     }
 
-    [Fact]
+    [TestMethod]
     public void Throws_exception_if_the_path_is_empty()
     {
         Action action = () => new RelativeFilePath("");
         action.Should().Throw<ArgumentException>();
     }
 
-    [Theory]
-    [InlineData("../src/Program.cs", "../src/")]
-    [InlineData("src/Program.cs", "./src/")]
-    [InlineData("Readme.md", "./")]
+    [TestMethod]
+    [DataRow("../src/Program.cs", "../src/")]
+    [DataRow("src/Program.cs", "./src/")]
+    [DataRow("Readme.md", "./")]
     public void Returns_the_directory_path(string path, string directory)
     {
         var relativePath = new RelativeFilePath(path);
         relativePath.Directory.Value.Should().Be(directory);
     }
 
-    [Fact]
+    [TestMethod]
     public void Extension_returns_file_extension_with_a_dot()
     {
         new RelativeFilePath("../Program.cs").Extension.Should().Be(".cs");
     }
 
-    [Theory]
-    [InlineData("Program.cs", "Program.cs")]
-    [InlineData("./Program.cs", "Program.cs")]
-    [InlineData("./Program.cs", @".\Program.cs")]
-    [InlineData("./a/Program.cs", @".\a/Program.cs")]
+    [TestMethod]
+    [DataRow("Program.cs", "Program.cs")]
+    [DataRow("./Program.cs", "Program.cs")]
+    [DataRow("./Program.cs", @".\Program.cs")]
+    [DataRow("./a/Program.cs", @".\a/Program.cs")]
     public void Equality_is_based_on_same_resolved_file_path(
         string value1,
         string value2)

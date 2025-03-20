@@ -10,10 +10,10 @@ using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine;
 
+[TestClass]
 public class FirstTimeUseSentinelTests : IDisposable
 {
     private readonly FileInfo _connectionFile;
@@ -50,7 +50,7 @@ public class FirstTimeUseSentinelTests : IDisposable
         _disposables.Dispose();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task First_time_use_sentinel_does_not_exist_then_print_telemetry_first_time_use_welcome_message()
     {
         var console = new TestConsole();
@@ -59,12 +59,13 @@ public class FirstTimeUseSentinelTests : IDisposable
         Assert.Contains("Telemetry", console.Out.ToString());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task First_time_use_sentinel_exists_then_do_not_print_telemetry_first_time_use_welcome_message()
     {
         var console = new TestConsole();
         var parser = CreateParser(true);
         await parser.InvokeAsync($"jupyter  {_connectionFile}", console);
-        Assert.DoesNotContain("Telemetry", console.Out.ToString());
+        // Using this overload to workaround https://github.com/microsoft/testfx/issues/5277
+        Assert.DoesNotContain("Telemetry", console.Out.ToString(), StringComparison.Ordinal, null, null);
     }
 }

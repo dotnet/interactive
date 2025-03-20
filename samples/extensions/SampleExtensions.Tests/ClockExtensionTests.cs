@@ -32,7 +32,7 @@ namespace SampleExtensions.Tests
             _kernel.Dispose();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_formats_DateTime()
         {
             var result = await _kernel.SubmitCodeAsync("DateTime.Now");
@@ -40,7 +40,7 @@ namespace SampleExtensions.Tests
             AssertThatClockWasRendered(result);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_formats_DateTimeOffset()
         {
             var result = await _kernel.SubmitCodeAsync("DateTimeOffset.Now");
@@ -48,7 +48,7 @@ namespace SampleExtensions.Tests
             AssertThatClockWasRendered(result);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task It_adds_a_clock_magic_command()
         {
             var result = await _kernel.SubmitCodeAsync("#!clock");

@@ -10,7 +10,7 @@ open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.FSharp
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
-open Xunit
+open Microsoft.VisualStudio.TestTools.UnitTesting
 
 type KernelTests() =
     let withKernel (action : Kernel -> (unit -> seq<KernelEvent>) -> 'a) =
@@ -62,7 +62,7 @@ type KernelTests() =
             
             completions
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``HoverText for Values``() =
         let texts =
             getHoverTexts 0 4 [
@@ -72,7 +72,7 @@ type KernelTests() =
         /// val a : int
         texts.Should().Contain(@"val a : int", null)
         
-    [<Fact>]
+    [<TestMethod>]
     member __.``HoverText for Keywords``() =
         let texts =
             getHoverTexts 0 1 [
@@ -82,7 +82,7 @@ type KernelTests() =
         /// for
         texts.Should().Contain(@"for", null)
         
-    [<Fact>]
+    [<TestMethod>]
     member __.``HoverText for Methods``() =
         let texts =
             getHoverTexts 1 14 [ 
@@ -93,7 +93,7 @@ type KernelTests() =
         // Math.Sin(a: float) : float
         texts.Should().ContainAll(@"static member Sin", "a: float", "-> float")
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``HoverText for Types``() =
         let texts =
             getHoverTexts 1 10 [ 
@@ -106,7 +106,7 @@ type KernelTests() =
         //     ...
         texts.Should().Contain(@"type Math", null)
         
-    [<Fact>]
+    [<TestMethod>]
     member __.``HoverText for Hidden Bindings``() =
         let texts =
             getHoverTexts 2 8 [ 
@@ -120,7 +120,7 @@ type KernelTests() =
         texts.Should().Contain(@"val a : float", null)
         
         
-    [<Fact>]
+    [<TestMethod>]
     member __.``HoverText for Functions``() =
         let texts =
             getHoverTexts 0 9 [ 
@@ -130,7 +130,7 @@ type KernelTests() =
         // val inline int : value:'T -> int (requires member op_Explicit)
         texts.Should().ContainAll("val inline int:", "^T (requires static member op_Explicit )", "-> int")
 
-    [<Fact>]
+    [<TestMethod>]
     member __.``Get completion list for List module then get the 'average' function and verify it has documentation``() =
         let completionItem =
             getCompletions 0 5 [ 
@@ -140,7 +140,7 @@ type KernelTests() =
 
         completionItem.Documentation.Should().Be("Returns the average of the values in a non-empty list.", null)
         
-    [<Fact>]
+    [<TestMethod>]
     member _.``Completion items that need double backticks have the right display in tools but insert with the backticks``() =
         let src = """
 type C() =
@@ -150,4 +150,4 @@ C().
         let completions = getCompletions 3 4 [src] |> Array.map (fun item -> item.DisplayText, item.InsertText)
 
         let hasYeeYeeBackticked = completions |> Array.contains ("Yee Yee", "``Yee Yee``")
-        Assert.True(hasYeeYeeBackticked, $"Insert and display text aren't correct:\n%A{completions}")
+        Assert.IsTrue(hasYeeYeeBackticked, $"Insert and display text aren't correct:\n%A{completions}")

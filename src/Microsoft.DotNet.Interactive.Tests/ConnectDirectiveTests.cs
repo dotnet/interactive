@@ -11,18 +11,15 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+[TestClass]
 public class ConnectDirectiveTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public ConnectDirectiveTests(ITestOutputHelper output)
+    public ConnectDirectiveTests(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
@@ -32,7 +29,7 @@ public class ConnectDirectiveTests : IDisposable
         _disposables.Dispose();
     }
 
-    [Fact]
+    [TestMethod]
     public void connect_command_is_not_available_by_default()
     {
         using var compositeKernel = new CompositeKernel();
@@ -44,7 +41,7 @@ public class ConnectDirectiveTests : IDisposable
             .NotContain(c => c.Name == "#!connect");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_a_kernel_is_connected_then_information_about_it_is_displayed()
     {
         using var kernel = CreateKernelWithConnectableFakeKernel(new FakeKernel("my-fake-kernel"));
@@ -66,7 +63,7 @@ public class ConnectDirectiveTests : IDisposable
               .Be("Kernel added: #!my-fake-kernel");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_a_new_kernel_is_connected_then_it_becomes_addressable_by_name()
     {
         var wasCalled = false;
@@ -90,7 +87,7 @@ hello!
         wasCalled.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Connected_kernels_are_disposed_when_composite_kernel_is_disposed()
     {
         var disposed = false;
@@ -109,7 +106,7 @@ hello!
         disposed.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Multiple_connections_can_be_created_using_the_same_connection_type()
     {
         using var compositeKernel = new CompositeKernel();
@@ -127,7 +124,7 @@ hello!
             .ContainSingle(k => k.Name == "fake2");
     }
 
-    [Fact] // https://github.com/dotnet/interactive/issues/3711
+    [TestMethod] // https://github.com/dotnet/interactive/issues/3711
     public async Task When_a_duplicate_name_is_used_then_a_friendly_error_is_shown()
     {
         using var compositeKernel = new CompositeKernel();

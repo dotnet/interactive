@@ -7,15 +7,15 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Request
     {
-        [Fact]
+        [TestMethod]
         public void multiple_request_are_parsed_correctly()
         {
             var result = Parse(
@@ -43,7 +43,7 @@ public partial class HttpParserTests
                         });
         }
 
-        [Fact]
+        [TestMethod]
         public void request_node_containing_only_url_and_no_variable_expressions_returns_HttpRequestMessage_with_GET_method()
         {
             var result = Parse(
@@ -63,7 +63,7 @@ public partial class HttpParserTests
             bindingResult.Value.Method.Should().Be(HttpMethod.Get);
         }
 
-        [Fact]
+        [TestMethod]
         public void request_node_with_multiple_variables_declared_prior_parsed_correctly()
         {
             var result = Parse(
@@ -89,7 +89,7 @@ public partial class HttpParserTests
             variableNodes.Last().DescendantNodesAndTokens().OfType<HttpExpressionNode>().Count().Should().Be(1);
         }
 
-        [Fact]
+        [TestMethod]
         public void request_node_with_embedded_expression_after_embedded_expression()
         {
             var result = Parse(
@@ -111,7 +111,7 @@ public partial class HttpParserTests
             requestNode.UrlNode.Text.Should().Be("https://httpbin.org/get");
         }
 
-        [Fact]
+        [TestMethod]
         public void request_with_forward_slash_at_beginning_of_nodes_works()
         {
             var result = Parse(
@@ -134,7 +134,7 @@ public partial class HttpParserTests
             bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/anything");
         }
 
-        [Fact]
+        [TestMethod]
         public void single_request_with_comment_and_request_separator_parsed_correctly()
         {
             var result = Parse(
@@ -157,7 +157,7 @@ public partial class HttpParserTests
             bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/");
         }
 
-        [Fact]
+        [TestMethod]
         public void request_node_containing_method_and_url_and_no_variable_expressions_returns_HttpRequestMessage_with_specified_method()
         {
             var result = Parse(
@@ -177,7 +177,7 @@ public partial class HttpParserTests
             bindingResult.Value.Method.Should().Be(HttpMethod.Post);
         }
 
-        [Fact]
+        [TestMethod]
         public void request_node_binds_variable_expressions_in_url()
         {
             var result = Parse(
@@ -201,7 +201,7 @@ public partial class HttpParserTests
             bindingResult.Value.RequestUri.ToString().Should().Be("https://example.com/api/123-comments/1");
         }
 
-        [Fact]
+        [TestMethod]
         public void error_is_reported_for_undefined_variable()
         {
             var result = Parse(
@@ -222,7 +222,7 @@ public partial class HttpParserTests
             bindingResult.Diagnostics.Should().ContainSingle().Which.GetMessage().Should().Be(message);
         }
 
-        [Fact]
+        [TestMethod]
         public void binding_for_variable_using_another_variable_is_correct()
         {
             var result = Parse(
@@ -253,7 +253,7 @@ public partial class HttpParserTests
             bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/anything");
         }
 
-        [Fact]
+        [TestMethod]
         public void binding_for_variable_with_period_is_correct()
         {
             var result = Parse(
@@ -284,7 +284,7 @@ public partial class HttpParserTests
             bindingResult.Value.RequestUri.ToString().Should().Be("https://httpbin.org/anything");
         }
 
-        [Fact]
+        [TestMethod]
         public void binding_for_variable_in_header_is_correct()
         {
             var result = Parse(

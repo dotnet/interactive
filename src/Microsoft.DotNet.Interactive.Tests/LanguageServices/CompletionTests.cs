@@ -6,21 +6,20 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests.LanguageServices;
 
+[TestClass]
 public partial class CompletionTests : LanguageKernelTestBase
 {
-    public CompletionTests(ITestOutputHelper output) : base(output)
+    public CompletionTests(TestContext output) : base(output)
     {
     }
 
-    [Theory]
-    [InlineData(Language.FSharp)]
-    [InlineData(Language.CSharp)]
+    [TestMethod]
+    [DataRow(Language.FSharp)]
+    [DataRow(Language.CSharp)]
     public async Task Completions_are_available_for_symbols_declared_in_the_previous_submission(Language language)
     {
         var variableName = "aaaaaaa";
@@ -46,9 +45,9 @@ public partial class CompletionTests : LanguageKernelTestBase
             .Contain(item => item.DisplayText == variableName);
     }
 
-    [Theory]
-    [InlineData(Language.FSharp)]
-    [InlineData(Language.CSharp)]
+    [TestMethod]
+    [DataRow(Language.FSharp)]
+    [DataRow(Language.CSharp)]
     public async Task Completions_are_available_for_symbols_declared_in_a_submission_before_the_previous_submission(Language language)
     {
         var variableName = "aaaaaaa";
@@ -85,9 +84,9 @@ public partial class CompletionTests : LanguageKernelTestBase
             .Contain(item => item.DisplayText == variableName);
     }
 
-    [Theory]
-    [InlineData(Language.FSharp)]
-    [InlineData(Language.CSharp)]
+    [TestMethod]
+    [DataRow(Language.FSharp)]
+    [DataRow(Language.CSharp)]
     public async Task Completions_are_available_for_symbols_members(Language language)
     {
         var declaration = language switch
@@ -111,9 +110,9 @@ public partial class CompletionTests : LanguageKernelTestBase
             .Contain(item => item.DisplayText == "AppendText");
     }
 
-    [Theory]
-    [InlineData(Language.FSharp)]
-    [InlineData(Language.CSharp)]
+    [TestMethod]
+    [DataRow(Language.FSharp)]
+    [DataRow(Language.CSharp)]
     public async Task Completions_are_available_for_symbols_declared_in_the_previous_submission_ending_in_a_trailing_expression(Language language)
     {
         var variableName = "aaaaaaa";
@@ -139,9 +138,9 @@ public partial class CompletionTests : LanguageKernelTestBase
             .Contain(item => item.DisplayText == variableName);
     }
 
-    [Theory]
-    [InlineData(Language.FSharp)]
-    [InlineData(Language.CSharp)]
+    [TestMethod]
+    [DataRow(Language.FSharp)]
+    [DataRow(Language.CSharp)]
     public async Task Completions_are_available_for_symbols_declared_in_a_submission_before_the_previous_one_ending_in_a_trailing_expression(Language language)
     {
         var variableName = "aaaaaaa";
@@ -170,7 +169,7 @@ public partial class CompletionTests : LanguageKernelTestBase
               .Contain(item => item.DisplayText == variableName);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Subsequent_completion_commands_produce_the_expected_results()
     {
         var kernel = CreateKernel();
@@ -199,9 +198,9 @@ public partial class CompletionTests : LanguageKernelTestBase
               .Contain(item => item.DisplayText == "diego");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task completion_commands_produce_values_after_normalizing_the_request(Language language)
     {
         var variableName = "aaaaaaa";
@@ -234,9 +233,9 @@ public partial class CompletionTests : LanguageKernelTestBase
               .Contain(item => item.DisplayText == variableName);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task completion_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language)
     {
         var variableName = "aaaaaaa";
@@ -269,7 +268,7 @@ public partial class CompletionTests : LanguageKernelTestBase
             .Contain(item => item.DisplayText == variableName);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task completion_commands_and_events_have_offsets_normalized_when_switching_languages()
     {
         // switch to PowerShell from an F# kernel/cell
@@ -293,7 +292,7 @@ public partial class CompletionTests : LanguageKernelTestBase
             .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 4)));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task magic_command_completion_commands_and_events_have_offsets_normalized_when_the_submission_was_parsed_and_split()
     {
         using var kernel = CreateKernel(Language.CSharp);
@@ -315,8 +314,8 @@ var y = x + 2;
             .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 3)));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "System.Environment.Command$$Line", "Gets the command line for this process.", Skip = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "System.Environment.Command$$Line", "Gets the command line for this process.", IgnoreMessage = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
     public async Task completion_doc_comments_can_be_loaded_from_bcl_types(Language language, string markupCode, string expectedCompletionSubstring)
     {
         using var kernel = CreateKernel(language);
@@ -333,9 +332,9 @@ var y = x + 2;
             .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains(expectedCompletionSubstring));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$", "Adds two numbers.", Skip = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
-    [InlineData(Language.FSharp, "/// Adds two numbers.\nlet add a b = a + b", "ad$$", "Adds two numbers.")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$", "Adds two numbers.", IgnoreMessage = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
+    [DataRow(Language.FSharp, "/// Adds two numbers.\nlet add a b = a + b", "ad$$", "Adds two numbers.")]
     public async Task completion_doc_comments_can_be_loaded_from_source_in_a_previous_submission(Language language, string previousSubmission, string markupCode, string expectedCompletionSubString)
     {
         using var kernel = CreateKernel(language);
@@ -354,9 +353,9 @@ var y = x + 2;
             .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains(expectedCompletionSubString));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, Skip = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp, IgnoreMessage = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
+    [DataRow(Language.FSharp)]
     public async Task completion_contains_doc_comments_from_individually_referenced_assemblies_with_xml_files(Language language)
     {
         using var assembly = new TestAssemblyReference("Project", "netstandard2.0", "Program.cs", @"
@@ -392,7 +391,8 @@ public class C
             .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("This is the answer."));
     }
 
-    [Fact(Skip = "Disabled pending https://github.com/dotnet/interactive/issues/2637")]
+    [TestMethod]
+    [Ignore("Disabled pending https://github.com/dotnet/interactive/issues/2637")]
     public async Task csharp_completions_can_read_doc_comments_from_nuget_packages_after_forcing_the_assembly_to_load()
     {
         using var kernel = CreateKernel(Language.CSharp);
@@ -416,7 +416,8 @@ public class C
             .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
     }
 
-    [Fact(Skip = "https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
+    [TestMethod]
+    [Ignore("https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
     public async Task csharp_completions_can_read_doc_comments_from_nuget_packages()
     {
         using var kernel = CreateKernel(Language.CSharp);
@@ -437,7 +438,7 @@ public class C
             .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task fsharp_completions_can_read_doc_comments_from_nuget_packages()
     {
         using var kernel = CreateKernel(Language.FSharp);
@@ -458,9 +459,9 @@ public class C
             .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Property_completions_are_returned_as_plain_text(Language language)
     {
         var kernel = CreateKernel(language);
@@ -483,9 +484,9 @@ public class C
                 item.InsertTextFormat == null);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Method_completions_are_returned_as_a_snippet(Language language)
     {
         var kernel = CreateKernel(language);
@@ -508,7 +509,7 @@ public class C
                 item.InsertTextFormat == InsertTextFormat.Snippet);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task FSharp_module_functions_are_returned_as_plain_text()
     {
         var kernel = CreateKernel(Language.FSharp);
@@ -531,7 +532,7 @@ public class C
                 item.InsertTextFormat == null);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CSharp_generic_method_completions_are_returned_as_a_snippet()
     {
         // in general F# prefers to infer generic types, not specify them
@@ -556,9 +557,9 @@ public class C
                 item.InsertTextFormat == InsertTextFormat.Snippet);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Non_generic_type_completions_are_returned_as_plain_text(Language language)
     {
         var kernel = CreateKernel(language);
@@ -581,7 +582,7 @@ public class C
                 item.InsertTextFormat == null);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task CSharp_generic_type_completions_are_returned_as_a_snippet()
     {
         // in general F# prefers to infer generic types, not specify them

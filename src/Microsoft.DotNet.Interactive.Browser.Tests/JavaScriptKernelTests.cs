@@ -1,33 +1,32 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit.Abstractions;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Browser.Tests;
 
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+[TestClass]
 public class JavaScriptKernelTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public JavaScriptKernelTests(ITestOutputHelper output)
+    public JavaScriptKernelTests(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
 
     public void Dispose() => _disposables.Dispose();
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_execute_code()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -37,7 +36,8 @@ public class JavaScriptKernelTests : IDisposable
         result.Events.Should().NotContainErrors();
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_get_a_return_value()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -52,7 +52,8 @@ public class JavaScriptKernelTests : IDisposable
                                   v.Value == "123");
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_get_console_log_output()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -67,7 +68,8 @@ public class JavaScriptKernelTests : IDisposable
                                   v.Value == "123");
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_import_value_from_another_kernel()
     {
         using var kernel = await CreateJavaScriptProxyKernelAsync();
@@ -94,7 +96,8 @@ console.log(x);", targetKernelName: kernel.Name));
                                 v.Value == "123");
     }
 
-    [FactSkipLinux("Requires Playwright installed")]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)] // Requires Playwright installed
+    [TestMethod]
     public async Task It_can_share_value_with_another_kernel()
     {
         using var javascriptKernel = await CreateJavaScriptProxyKernelAsync();

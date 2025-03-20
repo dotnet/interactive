@@ -6,20 +6,20 @@ using System.Collections.Generic;
 using System.IO;
 using Dummy;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[TestClass]
 public class PlainTextSummaryFormatterTests : FormatterTestBase
 {
-    [Fact]
+    [TestMethod]
     public void Default_formatter_Type_displays_keyword_when_available_for_arrays()
     {
         typeof(string[]).ToDisplayString(PlainTextSummaryFormatter.MimeType)
                         .Should().Be("System.String[]");
     }
 
-    [Fact]
+    [TestMethod]
     public void Default_formatter_for_Type_displays_generic_parameter_name_for_single_parameter_generic_type()
     {
         typeof(List<string>).ToDisplayString(PlainTextSummaryFormatter.MimeType)
@@ -28,7 +28,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
                           .Should().Be("System.Collections.Generic.List<System.String>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Default_formatter_for_Type_displays_generic_parameter_name_for_multiple_parameter_generic_type()
     {
         typeof(Dictionary<string, IEnumerable<int>>).ToDisplayString(PlainTextSummaryFormatter.MimeType)
@@ -36,7 +36,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
                                                         "System.Collections.Generic.Dictionary<System.String,System.Collections.Generic.IEnumerable<System.Int32>>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Default_formatter_for_Type_displays_generic_parameter_names_for_open_generic_types()
     {
         typeof(IList<>).ToDisplayString(PlainTextSummaryFormatter.MimeType)
@@ -45,7 +45,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
                               .Should().Be("System.Collections.Generic.IDictionary<TKey,TValue>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Null_reference_types_are_indicated()
     {
         string value = null;
@@ -53,7 +53,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
         value.ToDisplayString(PlainTextSummaryFormatter.MimeType).Should().Be(Formatter.NullString);
     }
 
-    [Fact]
+    [TestMethod]
     public void Null_nullables_are_indicated()
     {
         int? nullable = null;
@@ -63,7 +63,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
         output.Should().Be(Formatter.NullString);
     }
 
-    [Fact]
+    [TestMethod]
     public void It_falls_back_to_ToString()
     {
         var instance = new ClassWithManyPropertiesAndCustomToString();
@@ -73,7 +73,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
         formatted.Should().Be($"{typeof(ClassWithManyPropertiesAndCustomToString)} custom ToString value");
     }
 
-    [Fact]
+    [TestMethod]
     public void It_truncates_longer_outputs()
     {
         var instance = new string('a', 1000);
@@ -85,7 +85,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
         formatted.Should().EndWith("...");
     }
 
-    [Fact]
+    [TestMethod]
     public void It_expands_sequences_of_scalars()
     {
         var instance = new[] { 1, 2, 3 };
@@ -95,7 +95,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
         formatted.Should().Be("[ 1, 2, 3 ]");
     }
 
-    [Fact]
+    [TestMethod]
     public void It_does_not_expand_properties_of_non_scalar_values_within_sequences()
     {
         var instance = new FileInfo[]
@@ -110,7 +110,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
         formatted.Should().Be("[ 1.txt, 2.txt, 3.txt ]");
     }
 
-    [Fact]
+    [TestMethod]
     public void It_replaces_newlines()
     {
         var stringWithNewlines = "one\ntwo\r\nthree";
@@ -120,7 +120,7 @@ public class PlainTextSummaryFormatterTests : FormatterTestBase
         formatted.Should().Be("one\\ntwo\\r\\nthree");
     }
 
-    [Fact]
+    [TestMethod]
     public void If_ToString_throws_then_the_exception_is_displayed()
     {
         var instance = new ClassWithToStringThatThrows();

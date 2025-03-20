@@ -16,10 +16,10 @@ using Microsoft.DotNet.Interactive.Documents.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
+[TestClass]
 public class JupyterFormatTests : DocumentFormatTestsBase
 {
     private readonly Configuration _assentConfiguration =
@@ -34,9 +34,9 @@ public class JupyterFormatTests : DocumentFormatTestsBase
         return Notebook.Parse(content, DefaultKernelInfos);
     }
 
-    [Theory]
-    [InlineData("csharp", "C#", ".cs", "8.0")]
-    [InlineData("fsharp", "F#", ".fs", "5.0")]
+    [TestMethod]
+    [DataRow("csharp", "C#", ".cs", "8.0")]
+    [DataRow("fsharp", "F#", ".fs", "5.0")]
     public void notebook_metadata_default_language_is_honored_in_cells_without_language_specifier_set(string language, string shortLanguage, string extension, string version)
     {
         var jupyter = new
@@ -80,11 +80,11 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Theory]
-    [InlineData("C#", "csharp")]
-    [InlineData("F#", "fsharp")]
-    [InlineData("f#", "fsharp")]
-    [InlineData("PowerShell", "pwsh")]
+    [TestMethod]
+    [DataRow("C#", "csharp")]
+    [DataRow("F#", "fsharp")]
+    [DataRow("f#", "fsharp")]
+    [DataRow("PowerShell", "pwsh")]
     public void Metadata_default_kernel_name_is_based_on_specified_language(string languageName, string kernelName)
     {
         var document = Notebook.Parse(new InteractiveDocument().ToJupyterJson(languageName));
@@ -94,11 +94,11 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .Be(kernelName);
     }
 
-    [Theory]
-    [InlineData("C#", "csharp")]
-    [InlineData("F#", "fsharp")]
-    [InlineData("f#", "fsharp")]
-    [InlineData("PowerShell", "pwsh")]
+    [TestMethod]
+    [DataRow("C#", "csharp")]
+    [DataRow("F#", "fsharp")]
+    [DataRow("f#", "fsharp")]
+    [DataRow("PowerShell", "pwsh")]
     public void Metadata_default_kernel_name_is_based_on_specified_language_when_serialized_and_deserialized(string languageName, string kernelName)
     {
         var originalDoc = Notebook.Parse(new InteractiveDocument().ToJupyterJson(languageName));
@@ -110,7 +110,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                  .Be(kernelName);
     }
 
-    [Fact]
+    [TestMethod]
     public void missing_metadata_defaults_to_csharp_kernel()
     {
         var jupyter = new
@@ -144,7 +144,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_dotnet_metadata_can_specify_language_that_overrides_notebook()
     {
         var jupyter = new
@@ -195,7 +195,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_polyglot_metadata_can_specify_kernel_name_that_overrides_notebook()
     {
         var jupyter = new
@@ -246,7 +246,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_language_can_specify_language_when_there_is_no_notebook_default()
     {
         var jupyter = new
@@ -278,7 +278,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_polyglot_kernel_name_overrides_dotnet_metadata_language()
     {
         var jupyter = new
@@ -314,7 +314,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_cells_do_not_contain_redundant_language_specifier()
     {
         var jupyter = new
@@ -358,7 +358,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void kernel_chooser_magic_takes_precedence_over_metadata_language()
     {
         var jupyter = new
@@ -415,7 +415,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .Be("pwsh");
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_cell_language_aliases_are_normalized()
     {
         var jupyter = new
@@ -463,7 +463,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_cells_can_override_default_language_with_language_specifier()
     {
         var jupyter = new
@@ -507,7 +507,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_cells_can_contain_polyglot_blobs_with_appropriate_default_language()
     {
         var jupyter = new
@@ -551,7 +551,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_cells_create_non_language_specifier_first_lines_as_magic_commands()
     {
         var jupyter = new
@@ -595,7 +595,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void markdown_cells_can_be_parsed_as_a_single_string()
     {
         var jupyter = new
@@ -617,7 +617,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void markdown_cells_can_be_parsed_as_a_string_array()
     {
         var jupyter = new
@@ -643,7 +643,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void cells_can_specify_source_as_a_string_array()
     {
         var jupyter = new
@@ -694,7 +694,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void cells_can_specify_source_as_a_single_string()
     {
         var jupyter = new
@@ -718,7 +718,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_with_dotnet_metadata_but_not_language_can_be_parsed()
     {
         var jupyter = new
@@ -761,7 +761,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_with_polyglot_metadata_but_not_kernel_name_can_be_parsed()
     {
         var jupyter = new
@@ -804,7 +804,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void code_cell_without_source_can_be_parsed()
     {
         var jupyter = new
@@ -829,7 +829,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]);
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_display_output_with_object_array_can_be_parsed()
     {
         var jupyter = new
@@ -887,7 +887,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
     }
 
 
-    [Fact]
+    [TestMethod]
     public void cell_display_output_without_data_member_can_be_parsed()
     {
         var jupyter = new
@@ -933,7 +933,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public void execute_result_output_without_data_member_can_be_parsed()
     {
         var jupyter = new
@@ -979,7 +979,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_stream_output_without_text_member_can_be_parsed()
     {
         var jupyter = new
@@ -1023,7 +1023,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_error_output_without_required_fields_can_be_parsed()
     {
         var jupyter = new
@@ -1069,7 +1069,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .BeEquivalentToRespectingRuntimeTypes(new ErrorElement(null, null));
     }
 
-    [Fact]
+    [TestMethod]
     public void markdown_cell_missing_source_field_can_be_parsed()
     {
         var jupyter = new
@@ -1092,7 +1092,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .BeEquivalentToRespectingRuntimeTypes(new InteractiveDocumentElement(kernelName: "markdown"));
     }
 
-    [Fact]
+    [TestMethod]
     public void serialized_notebook_has_appropriate_metadata()
     {
         var notebook = new InteractiveDocument();
@@ -1137,7 +1137,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             .BeGreaterOrEqualTo(4);
     }
 
-    [Fact]
+    [TestMethod]
     public void serialized_code_cells_have_appropriate_shape()
     {
         var cells = new List<InteractiveDocumentElement>
@@ -1177,7 +1177,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                                          )));
     }
 
-    [Fact]
+    [TestMethod]
     public void serialized_code_cells_with_default_jupyter_kernel_language_dont_have_language_specifier()
     {
         var cells = new List<InteractiveDocumentElement>
@@ -1195,7 +1195,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             })));
     }
 
-    [Fact]
+    [TestMethod]
     public void serialized_code_cells_with_non_default_jupyter_kernel_language_have_language_metadata_and_no_language_specifier()
     {
         var cells = new List<InteractiveDocumentElement>
@@ -1230,7 +1230,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             })));
     }
 
-    [Fact]
+    [TestMethod]
     public void code_cells_with_multi_line_text_are_serialized_as_an_array()
     {
         var cells = new List<InteractiveDocumentElement>
@@ -1249,7 +1249,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
             })));
     }
 
-    [Fact]
+    [TestMethod]
     public void serialized_markdown_cells_have_appropriate_shape()
     {
         var cells = new List<InteractiveDocumentElement>
@@ -1278,7 +1278,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                                          )));
     }
 
-    [Fact]
+    [TestMethod]
     public void text_cell_outputs_are_serialized()
     {
         var cells = new List<InteractiveDocumentElement>
@@ -1309,7 +1309,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                                          )));
     }
 
-    [Fact]
+    [TestMethod]
     public void text_cell_outputs_are_parsed_as_string()
     {
         var jupyter = new
@@ -1347,7 +1347,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text", "stdout"));
     }
 
-    [Fact]
+    [TestMethod]
     public void text_cell_outputs_are_parsed_as_string_array()
     {
         var jupyter = new
@@ -1391,7 +1391,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 .BeEquivalentToRespectingRuntimeTypes(new TextElement("this is text\nso is this", "stdout"));
     }
 
-    [Fact]
+    [TestMethod]
     public void rich_cell_outputs_are_serialized()
     {
         var cells = new List<InteractiveDocumentElement>
@@ -1428,7 +1428,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                                          )));
     }
 
-    [Fact]
+    [TestMethod]
     public void rich_cell_outputs_are_parsed()
     {
         var jupyter = new
@@ -1471,7 +1471,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 }));
     }
 
-    [Fact]
+    [TestMethod]
     public void error_cell_outputs_are_serialized()
     {
         var cells = new List<InteractiveDocumentElement>
@@ -1507,7 +1507,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                                          )));
     }
 
-    [Fact]
+    [TestMethod]
     public void error_cell_outputs_are_parsed()
     {
         var jupyter = new
@@ -1553,13 +1553,13 @@ public class JupyterFormatTests : DocumentFormatTestsBase
                 ]));
     }
 
-    [Theory]
-    [InlineData("", new string[] { })]
-    [InlineData("one", new[] { "one" })]
-    [InlineData("one\n", new[] { "one\n" })]
-    [InlineData("one\r\n", new[] { "one\r\n" })]
-    [InlineData("one\ntwo", new[] { "one\n", "two" })]
-    [InlineData("one\r\ntwo", new[] { "one\r\n", "two" })]
+    [TestMethod]
+    [DataRow("", new string[] { })]
+    [DataRow("one", new[] { "one" })]
+    [DataRow("one\n", new[] { "one\n" })]
+    [DataRow("one\r\n", new[] { "one\r\n" })]
+    [DataRow("one\ntwo", new[] { "one\n", "two" })]
+    [DataRow("one\r\ntwo", new[] { "one\r\n", "two" })]
     public void SplitIntoJupyterFileArray_performs_expected_split_for_ipynb_array_values(string input, string[] expected)
     {
         var lines = input.SplitIntoJupyterFileArray();
@@ -1567,8 +1567,8 @@ public class JupyterFormatTests : DocumentFormatTestsBase
         lines.Should().BeEquivalentTo(expected, c => c.WithStrictOrdering());
     }
 
-    [Fact]
-    [Trait("Category", "Contracts and serialization")]
+    [TestMethod]
+    [TestProperty("Category", "Contracts and serialization")]
     public async Task ipynb_from_Jupyter_can_be_round_tripped_through_read_and_write_without_the_content_changing()
     {
         var path = GetNotebookFilePath();
@@ -1576,8 +1576,8 @@ public class JupyterFormatTests : DocumentFormatTestsBase
         this.Assent(await RoundTripIpynb(path), _assentConfiguration);
     }
 
-    [Fact]
-    [Trait("Category", "Contracts and serialization")]
+    [TestMethod]
+    [TestProperty("Category", "Contracts and serialization")]
     public async Task ipynb_from_VSCode_can_be_round_tripped_through_read_and_write_without_the_content_changing()
     {
         var path = GetNotebookFilePath();
@@ -1585,7 +1585,7 @@ public class JupyterFormatTests : DocumentFormatTestsBase
         this.Assent(await RoundTripIpynb(path), _assentConfiguration);
     }
 
-    [Fact]
+    [TestMethod]
     public void Input_tokens_are_parsed_from_ipynb_files()
     {
         var ipynbJson = new InteractiveDocument

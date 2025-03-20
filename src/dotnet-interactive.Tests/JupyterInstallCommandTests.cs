@@ -9,13 +9,13 @@ using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Http;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class JupyterInstallCommandTests
 {
-    [Fact]
+    [TestMethod]
     public async Task Appends_http_port_range_arguments()
     {
         var console = new TestConsole();
@@ -33,11 +33,11 @@ public class JupyterInstallCommandTests
 
     }
 
-    [Theory]
-    [InlineData(".NET (C#)")]
-    [InlineData(".NET (F#)")]
-    [InlineData(".NET (PowerShell)")]
-    [Trait("Category", "Contracts and serialization")]
+    [TestMethod]
+    [DataRow(".NET (C#)")]
+    [DataRow(".NET (F#)")]
+    [DataRow(".NET (PowerShell)")]
+    [TestProperty("Category", "Contracts and serialization")]
     public async Task kernel_spec_is_not_broken(string displayName)
     {
         var _configuration = new Configuration()
@@ -56,7 +56,7 @@ public class JupyterInstallCommandTests
         this.Assent(kernelSpec, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Returns_error_when_jupyter_paths_could_not_be_obtained()
     {
         var console = new TestConsole();
@@ -72,7 +72,7 @@ public class JupyterInstallCommandTests
         consoleError.Should().Contain("Failed to install \".NET (PowerShell)\" kernel.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Prints_to_console_when_kernel_installation_succeeded()
     {
         var console = new TestConsole();

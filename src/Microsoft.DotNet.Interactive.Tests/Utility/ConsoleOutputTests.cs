@@ -7,13 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
+[TestClass]
 public class ConsoleOutputTests
 {
-    [Fact]
+    [TestMethod]
     public void Console_output_is_captured_for_the_current_async_context()
     {
         var output = new StringBuilder();
@@ -25,7 +25,7 @@ public class ConsoleOutputTests
         output.ToString().Should().Contain("hello");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Console_output_is_not_captured_from_other_async_contexts()
     {
         var output = new StringBuilder();
@@ -39,7 +39,7 @@ public class ConsoleOutputTests
         output.ToString().Should().NotContain("hello");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Console_output_can_be_captured_from_other_async_contexts_for_known_async_context_id()
     {
         var output = new StringBuilder();

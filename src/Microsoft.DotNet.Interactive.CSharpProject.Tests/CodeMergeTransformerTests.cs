@@ -5,13 +5,13 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class CodeMergeTransformerTests
 {
-    [Fact]
+    [TestMethod]
     public async Task When_workspace_is_null_then_the_transformer_throw_exception()
     {
         var processor = new CodeMergeTransformer();
@@ -19,8 +19,8 @@ public class CodeMergeTransformerTests
         await extraction.Should().ThrowAsync<ArgumentNullException>();
     }
 
-    [Fact]
-    public async void Files_are_merged_in_order()
+    [TestMethod]
+    public async Task Files_are_merged_in_order()
     {
         var processor = new CodeMergeTransformer();
         var workspace = new Workspace(
@@ -53,8 +53,8 @@ second line;
 first line;".EnforceLF());
     }
 
-    [Fact]
-    public async void buffers_are_merged_in_order()
+    [TestMethod]
+    public async Task buffers_are_merged_in_order()
     {
         var processor = new CodeMergeTransformer();
         var workspace = new Workspace(

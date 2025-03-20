@@ -18,15 +18,15 @@ using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class ImportNotebookTests
 {
-    [Theory]
-    [InlineData(".ipynb")]
-    [InlineData(".dib")]
+    [TestMethod]
+    [DataRow(".ipynb")]
+    [DataRow(".dib")]
     public async Task It_imports_and_runs_well_known_polyglot_file_formats(string notebookExt)
     {
         using var kernel = new CompositeKernel { 
@@ -93,13 +93,13 @@ public class ImportNotebookTests
         }
     }
 
-    [Theory]
-    [InlineData(".cs")]
-    [InlineData(".csx")]
-    [InlineData(".fs")]
-    [InlineData(".fsx")]
-    [InlineData(".ps1")]
-    [InlineData(".http")]
+    [TestMethod]
+    [DataRow(".cs")]
+    [DataRow(".csx")]
+    [DataRow(".fs")]
+    [DataRow(".fsx")]
+    [DataRow(".ps1")]
+    [DataRow(".http")]
     public async Task It_imports_and_runs_source_code_from_files_with_well_known_file_extensions(string fileExtension)
     {
         using var kernel = new CompositeKernel
@@ -153,9 +153,9 @@ public class ImportNotebookTests
         receivedTargetKernelName.Should().Be(expectedTargetKernelName);
     }
 
-    [Theory]
-    [InlineData(".ipynb")]
-    [InlineData(".dib")]
+    [TestMethod]
+    [DataRow(".ipynb")]
+    [DataRow(".dib")]
     public async Task It_produces_DisplayedValueProduced_events_for_markdown_cells(string notebookExt)
     {
         using var kernel = new CompositeKernel {
@@ -212,9 +212,9 @@ public class ImportNotebookTests
         events.Should().ContainSingle<DisplayedValueProduced>(v => v.FormattedValues.Any(f => f.MimeType == "text/markdown"));
     }
 
-    [Theory]
-    [InlineData(".ipynb")]
-    [InlineData(".dib")]
+    [TestMethod]
+    [DataRow(".ipynb")]
+    [DataRow(".dib")]
     public async Task It_loads_packages_from_imports(string notebookExt)
     {
         using var kernel = new CompositeKernel {

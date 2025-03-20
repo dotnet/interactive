@@ -8,18 +8,17 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class QuitCommandTests : LanguageKernelTestBase
 {
-    public QuitCommandTests(ITestOutputHelper output) : base(output)
+    public QuitCommandTests(TestContext output) : base(output)
     {
     }
 
-    [Fact]
+    [TestMethod]
     public async Task quit_command_fails_when_not_configured()
     {
         var kernel = CreateKernel();
@@ -45,7 +44,7 @@ public class QuitCommandTests : LanguageKernelTestBase
             .BeOfType<InvalidOperationException>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Quit_command_bypasses_work_in_progress()
     {
         var quitRan = false;

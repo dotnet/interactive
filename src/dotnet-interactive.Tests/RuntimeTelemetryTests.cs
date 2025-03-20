@@ -13,10 +13,10 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class RuntimeTelemetryTests : IDisposable
 {
     private readonly FakeTelemetrySender _telemetrySender;
@@ -35,7 +35,7 @@ public class RuntimeTelemetryTests : IDisposable
 
     public void Dispose() => _kernel.Dispose();
 
-    [Fact]
+    [TestMethod]
     public async Task Language_information_is_sent_on_successful_code_execution_when_target_kernel_is_specified()
     {
         var telemetrySender = new FakeTelemetrySender();
@@ -74,7 +74,7 @@ telemetry
         properties.Should().BeEquivalentTo(expected);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Language_information_is_sent_on_successful_code_execution_after_split()
     {
         await _kernel.SendAsync(new SubmitCode("123", "csharp"));
@@ -90,7 +90,7 @@ telemetry
                 new KeyValuePair<string, string>("KernelLanguageName", "C#".ToSha256Hash()));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Language_information_is_sent_on_unsuccessful_code_execution_when_target_kernel_is_specified()
     {
         await _kernel.SendAsync(new SubmitCode("that doesn't compile", "csharp"));
@@ -104,7 +104,7 @@ telemetry
                         .Contain(new KeyValuePair<string, string>("KernelName", "csharp".ToSha256Hash()));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Language_information_is_sent_on_successful_code_execution_when_target_kernel_is_not_specified()
     {
         await _kernel.SendAsync(new SubmitCode("123"));
@@ -120,7 +120,7 @@ telemetry
                             new KeyValuePair<string, string>("KernelLanguageName", "C#".ToSha256Hash()));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Language_information_is_sent_on_unsuccessful_code_execution_when_target_kernel_is_not_specified()
     {
         await _kernel.SendAsync(new SubmitCode("that doesn't compile"));
@@ -134,7 +134,7 @@ telemetry
                         .Contain(new KeyValuePair<string, string>("KernelName", "csharp".ToSha256Hash()));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Kernel_session_id_is_sent()
     {
         await _kernel.SendAsync(new SubmitCode("123"));
@@ -148,7 +148,7 @@ telemetry
             .Be(sessionIdForSecondExecution);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Package_and_version_number_are_sent_on_successful_package_load()
     {
         var results = await _kernel.SendAsync(new SubmitCode("#r \"nuget:NodaTime,3.1.9\"", "csharp"));

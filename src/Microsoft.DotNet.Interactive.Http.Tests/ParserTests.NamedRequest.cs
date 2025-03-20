@@ -5,17 +5,16 @@ using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Http.Parsing.Parsing;
 using Microsoft.DotNet.Interactive.Http.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 using static Microsoft.DotNet.Interactive.Http.Tests.HttpParserTests;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
-
+    [TestClass]
     public class NamedRequest
     {
-        [Fact]
+        [TestMethod]
         public void named_request_is_parsed_correctly()
         {
             var code = """
@@ -39,7 +38,7 @@ public partial class HttpParserTests
             result.SyntaxTree.RootNode.DescendantNodesAndTokens().OfType<HttpNamedRequestNode>().Should().HaveCount(1);
         }
 
-        [Fact]
+        [TestMethod]
         public void named_request_can_reference_content_type_header()
         {
             var code = """
@@ -65,7 +64,7 @@ public partial class HttpParserTests
             namedRequest.ValueNode.Text.Should().Be("login");
         }
 
-        [Fact]
+        [TestMethod]
         public void named_request_with_two_names_produces_an_error()
         {
             var code = """
@@ -91,17 +90,17 @@ public partial class HttpParserTests
             namedRequest.GetDiagnostics().Should().HaveCount(1);   
         }
 
-        [Theory]
-        [InlineData("tes!")]
-        [InlineData("tes#")]
-        [InlineData("tes!t")]
-        [InlineData("+est")]
-        [InlineData("e-st")]
-        [InlineData("te$t")]
-        [InlineData("test%")]
-        [InlineData("test^")]
-        [InlineData("test&")]
-        [InlineData("test*")]
+        [TestMethod]
+        [DataRow("tes!")]
+        [DataRow("tes#")]
+        [DataRow("tes!t")]
+        [DataRow("+est")]
+        [DataRow("e-st")]
+        [DataRow("te$t")]
+        [DataRow("test%")]
+        [DataRow("test^")]
+        [DataRow("test&")]
+        [DataRow("test*")]
         public void named_request_with_special_characters_produces_an_error(string name)
         {
             var code = $$$"""
@@ -127,12 +126,12 @@ public partial class HttpParserTests
             
         }
 
-        [Theory]
-        [InlineData("login")]
-        [InlineData("   login   ")]
-        [InlineData("  login")]
-        [InlineData("login   ")]
-        [InlineData("login \r\n")]
+        [TestMethod]
+        [DataRow("login")]
+        [DataRow("   login   ")]
+        [DataRow("  login")]
+        [DataRow("login   ")]
+        [DataRow("login \r\n")]
         public void named_request_with_various_spaces_are_parsed_correctly(string name)
         {
             var code = $$$"""
@@ -158,7 +157,7 @@ public partial class HttpParserTests
             namedRequest.ValueNode.Text.Should().Be("login");
         }
 
-        [Fact]
+        [TestMethod]
         public void named_request_comments_can_use_double_slash_prefix()
         {
             var code = """
@@ -182,7 +181,7 @@ public partial class HttpParserTests
             namedRequest.ValueNode.Text.Should().Be("login");
         }
 
-        [Fact]
+        [TestMethod]
         public void comments_before_named_request_are_parsed_correctly()
         {
             var code = """
@@ -208,11 +207,11 @@ public partial class HttpParserTests
             namedRequest.ValueNode.Text.Should().Be("login");
         }
 
-        [Theory]
-        [InlineData(" @name   ")]
-        [InlineData("@name     ")]
-        [InlineData("                @name   ")]
-        [InlineData("              @name")]
+        [TestMethod]
+        [DataRow(" @name   ")]
+        [DataRow("@name     ")]
+        [DataRow("                @name   ")]
+        [DataRow("              @name")]
 
         public void miscellaneous_spaces_around_name_parsed_correctly(string nameToken)
         {

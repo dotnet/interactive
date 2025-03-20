@@ -3,53 +3,53 @@
 
 using System;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class RelativeDirectoryPathTests
 {
-    [Fact]
+    [TestMethod]
     public void Can_create_directory_paths_from_string_with_directory()
     {
         var path = new RelativeDirectoryPath("../src");
         path.Value.Should().Be("../src/");
     }
 
-    [Fact]
+    [TestMethod]
     public void Normalises_the_passed_path()
     {
         var path = new RelativeDirectoryPath(@"..\src");
         path.Value.Should().Be("../src/");
     }
 
-    [Fact]
+    [TestMethod]
     public void Throws_exception_if_the_path_contains_invalid_path_characters()
     {
         Action action = () => new RelativeDirectoryPath(@"abc|def");
         action.Should().Throw<ArgumentException>();
     }
 
-    [Theory]
-    [InlineData("/")]
-    [InlineData("/some/path")]
-    [InlineData(@"c:\some\path")]
-    [InlineData(@"\\some\path")]
+    [TestMethod]
+    [DataRow("/")]
+    [DataRow("/some/path")]
+    [DataRow(@"c:\some\path")]
+    [DataRow(@"\\some\path")]
     public void Throws_if_path_is_absolute(string value)
     {
         Action action = () => new RelativeDirectoryPath(value);
         action.Should().Throw<ArgumentException>();
     }
 
-    [Theory]
-    [InlineData(".", ".")]
-    [InlineData(".", "./")]
-    [InlineData(".", @".\")]
-    [InlineData("./", @".\")]
-    [InlineData("..", "..")]
-    [InlineData(@"../", @"..\")]
-    [InlineData("../a/", "../a")]
-    [InlineData("a", "./a")]
+    [TestMethod]
+    [DataRow(".", ".")]
+    [DataRow(".", "./")]
+    [DataRow(".", @".\")]
+    [DataRow("./", @".\")]
+    [DataRow("..", "..")]
+    [DataRow(@"../", @"..\")]
+    [DataRow("../a/", "../a")]
+    [DataRow("a", "./a")]
     public void Equality_is_based_on_same_resolved_directory_path(
         string value1,
         string value2)

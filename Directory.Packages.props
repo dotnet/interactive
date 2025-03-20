@@ -106,8 +106,7 @@
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="9.0.0" />
     <PackageVersion Include="System.Text.Json" Version="9.0.0" />
     <PackageVersion Include="ThreadJob" Version="2.0.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" />
-    <PackageVersion Include="xunit" Version="2.7.0" />
+    <PackageVersion Include="MSTest" Version="3.8.3" />
   </ItemGroup>
 
 

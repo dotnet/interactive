@@ -6,8 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Xunit;
-using Xunit.Abstractions;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Documents.Jupyter;
@@ -15,13 +13,14 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[TestClass]
 public class IsCompleteRequestHandlerTests : JupyterRequestHandlerTestBase
 {
-    public IsCompleteRequestHandlerTests(ITestOutputHelper output) : base(output)
+    public IsCompleteRequestHandlerTests(TestContext output) : base(output)
     {
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_isCompleteReply_with_complete_if_the_code_is_a_complete_submission()
     {
         var scheduler = CreateScheduler();
@@ -37,7 +36,7 @@ public class IsCompleteRequestHandlerTests : JupyterRequestHandlerTestBase
             .ContainSingle(r => r.Status == "complete");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task sends_isCompleteReply_with_incomplete_and_indent_if_the_code_is_not_a_complete_submission()
     {
         var scheduler = CreateScheduler();
@@ -50,7 +49,7 @@ public class IsCompleteRequestHandlerTests : JupyterRequestHandlerTestBase
         JupyterMessageSender.ReplyMessages.OfType<IsCompleteReply>().Should().ContainSingle(r => r.Status == "incomplete" && r.Indent == "*");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_language_can_be_pulled_from_dotnet_interactive_metadata_when_present()
     {
         var metaData = new Dictionary<string, object>
@@ -66,7 +65,7 @@ public class IsCompleteRequestHandlerTests : JupyterRequestHandlerTestBase
             .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_language_can_be_pulled_from_polyglot_notebook_metadata_when_present()
     {
         var metaData = new Dictionary<string, object>
@@ -81,7 +80,7 @@ public class IsCompleteRequestHandlerTests : JupyterRequestHandlerTestBase
             .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void cell_language_defaults_to_null_when_it_cant_be_found()
     {
         var request = ZeroMQMessage.Create(new IsCompleteRequest("1+1"));

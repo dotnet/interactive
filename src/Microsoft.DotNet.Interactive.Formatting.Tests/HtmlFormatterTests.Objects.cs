@@ -11,15 +11,15 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public partial class HtmlFormatterTests
 {
+    [TestClass]
     public class Objects : FormatterTestBase
     {
-        [Fact]
+        [TestMethod]
         public void Formatters_are_generated_on_the_fly_for_anonymous_types()
         {
             var output = new { a = 123 }.ToDisplayString(HtmlFormatter.MimeType);
@@ -51,7 +51,7 @@ public partial class HtmlFormatterTests
                     """);
         }
 
-        [Fact]
+        [TestMethod]
         public void Null_references_are_indicated()
         {
             string value = null;
@@ -61,7 +61,7 @@ public partial class HtmlFormatterTests
                  .Be($"{Tags.PlainTextBegin}&lt;null&gt;{Tags.PlainTextEnd}");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_puts_div_with_class_around_string()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
@@ -71,7 +71,7 @@ public partial class HtmlFormatterTests
             s.Should().Be($"{Tags.PlainTextBegin}hello{Tags.PlainTextEnd}");
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_expands_properties_of_ExpandoObjects()
         {
             dynamic expando = new ExpandoObject();
@@ -92,7 +92,7 @@ public partial class HtmlFormatterTests
 </table>");
         }
 
-        [Fact]
+        [TestMethod]
         public void It_formats_objects_as_tree()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(EntityId));
@@ -139,7 +139,7 @@ public partial class HtmlFormatterTests
                     """);
         }
 
-        [Fact]
+        [TestMethod]
         public void Recursive_formatter_calls_do_not_cause_exceptions()
         {
             var widget = new Widget();
@@ -152,7 +152,7 @@ public partial class HtmlFormatterTests
             formatter.Invoking(f => f.Format(widget, context)).Should().NotThrow();
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatted_objects_include_custom_styles()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(DirectoryInfo));
@@ -168,7 +168,7 @@ public partial class HtmlFormatterTests
             html.Should().Contain(Tags.DefaultStyles);
         }
         
-        [Fact]
+        [TestMethod]
         public void It_formats_value_tuples_as_tree()
         {
             var writer = new StringWriter();
@@ -214,7 +214,7 @@ public partial class HtmlFormatterTests
                 """);
         }
 
-        [Fact]
+        [TestMethod]
         public void Object_properties_are_formatted_using_nested_trees()
         {
             var writer = new StringWriter();
@@ -285,7 +285,7 @@ public partial class HtmlFormatterTests
                       expected);
         }
 
-        [Fact]
+        [TestMethod]
         public void Scalar_sequence_properties_are_formatted_using_plain_text_formatter()
         {
             var writer = new StringWriter();
@@ -337,7 +337,7 @@ public partial class HtmlFormatterTests
                        """);
         }
 
-        [Fact]
+        [TestMethod]
         public void It_displays_exceptions_thrown_by_properties_in_the_property_value_cell()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(SomePropertyThrows));
@@ -361,7 +361,7 @@ public partial class HtmlFormatterTests
                     """.Crunch());
         }
 
-        [Fact]
+        [TestMethod]
         public void Type_instances_do_not_have_properties_expanded()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
@@ -375,7 +375,7 @@ public partial class HtmlFormatterTests
                   .Be("Dummy.ClassNotInSystemNamespace");
         }
 
-        [Fact]
+        [TestMethod]
         public void Type_instances_have_link_added_for_System_namespace_type()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
@@ -389,7 +389,7 @@ public partial class HtmlFormatterTests
                   .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-7.0\">System.String</a></span>");
         }
 
-        [Fact]
+        [TestMethod]
         public void Type_instances_have_link_added_for_Microsoft_namespace_type()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
@@ -404,7 +404,7 @@ public partial class HtmlFormatterTests
                       "<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=net-7.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
         }
 
-        [Fact]
+        [TestMethod]
         public void Enums_are_formatted_using_their_names()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(FileAccess));
@@ -416,7 +416,7 @@ public partial class HtmlFormatterTests
             writer.ToString().Should().Contain("ReadWrite");
         }
 
-        [Fact]
+        [TestMethod]
         public void TimeSpan_is_not_destructured()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(TimeSpan));

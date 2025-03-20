@@ -11,13 +11,13 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests;
 
+[TestClass]
 public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
 {
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_load_notebook_from_url()
     {
         var capturedCommands = new List<SendEditableCode>();
@@ -39,7 +39,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
             e => e.Code.Should().Contain("This is the DFS question."));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_run_lesson_setup_code()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -51,7 +51,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         events.Should().ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(666);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_run_lesson_setup_code_in_the_same_cell_as_package_import()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -63,7 +63,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         events.Should().ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(333);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_add_rule_when_starting_a_lesson()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -89,7 +89,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
                   "pass reasons");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_on_code_submitted_when_starting_a_lesson()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -110,7 +110,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
               .Contain("Good job");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_run_challenge_environment_setup_code_when_starting_a_lesson()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -122,7 +122,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         events.Should().ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(3);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_show_challenge_contents_when_starting_a_lesson()
     {
         var capturedCommands = new List<SendEditableCode>();
@@ -142,7 +142,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
             e => e.Code.Should().Contain("// write your answer to LinkedList question below"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_starting_a_lesson_the_shown_challenge_contents_do_not_contain_directives()
     {
         var capturedCommands = new List<SendEditableCode>();
@@ -161,7 +161,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
             .Should().NotContainAny(NotebookLessonParser.AllDirectiveNames);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_starting_a_lesson_the_shown_challenge_contents_do_not_contain_scratchpad_material()
     {
         var capturedCommands = new List<SendEditableCode>();
@@ -180,7 +180,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
             .Should().NotContainAny("// random scratchpad stuff");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_add_rule_when_progressing_the_student_to_different_challenge()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -205,7 +205,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
                   "dfspassreasons");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_on_code_submitted_when_progressing_the_student_to_different_challenge()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -227,7 +227,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
                   "Good job for DFS");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_run_challenge_environment_setup_code_when_progressing_the_student_to_different_challenge()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -239,7 +239,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
         result.Events.Should().ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(10);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_show_challenge_contents_when_progressing_the_student_to_different_challenge()
     {
         var capturedCommands = new List<SendEditableCode>();
@@ -259,7 +259,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
             e => e.Code.Should().Contain("This is the DFS question."));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task when_progressing_the_student_to_different_challenge_the_shown_challenge_contents_do_not_contain_directives()
     {
         var capturedCommands = new List<SendEditableCode>();
@@ -279,7 +279,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
             .NotContainAny(NotebookLessonParser.AllDirectiveNames);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task
         when_progressing_the_student_to_different_challenge_the_shown_challenge_contents_do_not_contain_scratchpad_material()
     {
@@ -300,7 +300,7 @@ public class LoadingNotebookLessonTests : ProgressiveLearningTestBase
             .NotContainAny("// random scratchpad stuff");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_declare_identifiers_and_let_it_become_replaced_by_the_students_answer()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -317,7 +317,7 @@ CalcTrigArea = (double x, double y) => 0.5 * x * y;
                         .Value.Contains("You passed"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task for_start_lesson_command_from_url_and_from_file_options_cannot_be_used_together()
     {
         var kernel = await CreateKernel(LessonMode.StudentMode);

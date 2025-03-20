@@ -10,15 +10,15 @@ using System.Numerics;
 using Dummy;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public partial class PlainTextFormatterTests
 {
+    [TestClass]
     public class Objects : FormatterTestBase
     {
-        [Fact]
+        [TestMethod]
         public void Null_reference_types_are_indicated()
         {
             string value = null;
@@ -26,7 +26,7 @@ public partial class PlainTextFormatterTests
             value.ToDisplayString().Should().Be(Formatter.NullString);
         }
 
-        [Fact]
+        [TestMethod]
         public void Null_nullables_are_indicated()
         {
             int? nullable = null;
@@ -36,7 +36,7 @@ public partial class PlainTextFormatterTests
             output.Should().Be(Formatter.NullString);
         }
 
-        [Fact]
+        [TestMethod]
         public void It_emits_the_property_names_and_values_for_a_specific_type()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<Widget>();
@@ -51,7 +51,7 @@ public partial class PlainTextFormatterTests
             s.Should().Contain("Name: Bob");
         }
         
-        [Fact]
+        [TestMethod]
         public void When_Zero_properties_available_to_choose_just_ToString_is_used()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<ClassWithNoPropertiesAndCustomToString>();
@@ -63,19 +63,19 @@ public partial class PlainTextFormatterTests
             s.Should().Be($"{typeof(ClassWithNoPropertiesAndCustomToString)} custom ToString value");
         }
         
-        [Theory]
-        [InlineData(typeof(Boolean), "False")]
-        [InlineData(typeof(Byte), "0")]
-        [InlineData(typeof(Decimal), "0")]
-        [InlineData(typeof(Double), "0")]
-        [InlineData(typeof(Guid), "00000000-0000-0000-0000-000000000000")]
-        [InlineData(typeof(Int16), "0")]
-        [InlineData(typeof(Int32), "0")]
-        [InlineData(typeof(Int64), "0")]
-        [InlineData(typeof(Single), "0")]
-        [InlineData(typeof(UInt16), "0")]
-        [InlineData(typeof(UInt32), "0")]
-        [InlineData(typeof(UInt64), "0")]
+        [TestMethod]
+        [DataRow(typeof(Boolean), "False")]
+        [DataRow(typeof(Byte), "0")]
+        [DataRow(typeof(Decimal), "0")]
+        [DataRow(typeof(Double), "0")]
+        [DataRow(typeof(Guid), "00000000-0000-0000-0000-000000000000")]
+        [DataRow(typeof(Int16), "0")]
+        [DataRow(typeof(Int32), "0")]
+        [DataRow(typeof(Int64), "0")]
+        [DataRow(typeof(Single), "0")]
+        [DataRow(typeof(UInt16), "0")]
+        [DataRow(typeof(UInt32), "0")]
+        [DataRow(typeof(UInt64), "0")]
         public void It_does_not_expand_properties_of_scalar_types(Type type, string expected)
         {
             var value = Activator.CreateInstance(type);
@@ -83,7 +83,7 @@ public partial class PlainTextFormatterTests
             value.ToDisplayString().Should().Be(expected);
         }
 
-        [Fact]
+        [TestMethod]
         public void It_expands_properties_of_structs()
         {
             var id = new EntityId("the typename", "the id");
@@ -98,7 +98,7 @@ public partial class PlainTextFormatterTests
                      .Contain("Id: the id");
         }
 
-        [Fact]
+        [TestMethod]
         public void Anonymous_types_are_automatically_fully_formatted()
         {
             var ints = new[] { 3, 2, 1 };
@@ -114,7 +114,7 @@ public partial class PlainTextFormatterTests
     count: 3".ReplaceLineEndings());
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_expands_properties_of_ExpandoObjects()
         {
             dynamic expando = new ExpandoObject();
@@ -129,7 +129,7 @@ public partial class PlainTextFormatterTests
 Parts: <null>".ReplaceLineEndings());
         }
 
-        [Fact]
+        [TestMethod]
         public void When_a_property_throws_it_does_not_prevent_other_properties_from_being_written()
         {
             var log = new SomePropertyThrows().ToDisplayString();
@@ -139,7 +139,7 @@ Parts: <null>".ReplaceLineEndings());
             log.Should().Contain("PerfectlyFine:");
         }
 
-        [Fact]
+        [TestMethod]
         public void When_a_property_throws_then_then_exception_is_written_in_place_of_the_property_and_indented()
         {
             var log = new SomePropertyThrows().ToDisplayString();
@@ -193,7 +193,7 @@ SomePropertyThrows
     */
         }
         
-        [Fact]
+        [TestMethod]
         public void Recursive_formatter_calls_do_not_cause_exceptions()
         {
             var widget = new Widget();
@@ -204,7 +204,7 @@ SomePropertyThrows
             widget.Invoking(w => w.ToDisplayString(formatter)).Should().NotThrow();
         }
 
-        [Fact]
+        [TestMethod]
         public void Formatter_does_not_expand_string()
         {
             var widget = new Widget
@@ -224,7 +224,7 @@ SomePropertyThrows
              .NotContain("{ h },{ e }");
         }
 
-        [Fact]
+        [TestMethod]
         public void Static_fields_are_not_written()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<Widget>();
@@ -232,7 +232,7 @@ SomePropertyThrows
                         .Should().NotContain(nameof(SomethingAWithStaticProperty.StaticField));
         }
 
-        [Fact]
+        [TestMethod]
         public void Static_properties_are_not_written()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<Widget>();
@@ -240,7 +240,7 @@ SomePropertyThrows
                         .Should().NotContain(nameof(SomethingAWithStaticProperty.StaticProperty));
         }
 
-        [Fact]
+        [TestMethod]
         public void It_expands_fields_of_objects()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor<SomeStruct>();
@@ -258,7 +258,7 @@ SomePropertyThrows
             output.Should().Contain("DateProperty: ");
         }
         
-        [Fact]
+        [TestMethod]
         public void Tuple_values_are_formatted_on_one_line_when_all_scalar()
         {
             var tuple = Tuple.Create(123, "Hello");
@@ -272,7 +272,7 @@ SomePropertyThrows
             formatted.Should().Be("( 123, Hello )");
         }
 
-        [Fact]
+        [TestMethod]
         public void ValueTuple_values_are_formatted_on_one_line_when_all_scalar()
         {
             var tuple = (123, "Hello");
@@ -284,7 +284,7 @@ SomePropertyThrows
             formatted.Should().Be("( 123, Hello )");
         }
 
-        [Fact]
+        [TestMethod]
         public void Tuple_values_are_formatted_as_multi_line_when_not_all_scalar()
         {
             var tuple = Tuple.Create(123, "Hello", Enumerable.Range(1, 3));
@@ -298,7 +298,7 @@ SomePropertyThrows
   - [ 1, 2, 3 ]".Replace("\r", ""));
         }
 
-        [Fact]
+        [TestMethod]
         public void ValueTuple_values_are_formatted_as_multi_line_when_not_all_scalar()
         {
             var tuple = (123, "Hello", Enumerable.Range(1, 3));
@@ -312,7 +312,7 @@ SomePropertyThrows
   - [ 1, 2, 3 ]".Replace("\r", ""));
         }
 
-        [Fact]
+        [TestMethod]
         public void Enums_are_formatted_using_their_names()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(FileAccess));
@@ -324,7 +324,7 @@ SomePropertyThrows
             writer.ToString().Should().Be("ReadWrite");
         }
 
-        [Fact]
+        [TestMethod]
         public void TimeSpan_is_not_destructured()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(TimeSpan));
@@ -338,7 +338,7 @@ SomePropertyThrows
             writer.ToString().Should().Be(timespan.ToString());
         }
 
-        [Fact]
+        [TestMethod]
         public void PlainTextFormatter_returns_plain_for_BigInteger()
         {
             var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(BigInteger));
@@ -354,7 +354,7 @@ SomePropertyThrows
                   .Be("78923589327589332402359");
         }
 
-        [Fact]
+        [TestMethod]
         public void Properties_that_are_complex_objects_are_shown_indented()
         {
             var obj = new
@@ -386,7 +386,7 @@ SomePropertyThrows
                 """.ReplaceLineEndings());
         }
 
-        [Fact]
+        [TestMethod]
         public void Sequences_of_complex_objects_are_shown_indented()
         {
             var obj = new
@@ -425,7 +425,8 @@ SomePropertyThrows
                 """.ReplaceLineEndings());
         }
 
-        [Fact(Skip = "TODO")]
+        [TestMethod]
+        [Ignore("TODO")]
         public void Complex_objects_within_a_sequence_are_indented()
         {
             var obj = new object[]

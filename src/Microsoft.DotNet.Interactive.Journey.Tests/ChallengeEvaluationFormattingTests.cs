@@ -4,13 +4,13 @@
 using FluentAssertions;
 using HtmlAgilityPack;
 using Microsoft.DotNet.Interactive.Formatting;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests;
 
+[TestClass]
 public class ChallengeEvaluationFormattingTests
 {
-    [Fact]
+    [TestMethod]
     public void teacher_can_provide_feedback_for_a_specific_rule()
     {
         // arrange
@@ -38,7 +38,7 @@ public class ChallengeEvaluationFormattingTests
             .Be("Your submission has compiled.");
     }
 
-    [Fact]
+    [TestMethod]
     public void display_number_of_rules()
     {
         // arrange

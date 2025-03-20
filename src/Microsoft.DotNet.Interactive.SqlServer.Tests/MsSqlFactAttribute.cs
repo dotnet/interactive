@@ -3,26 +3,28 @@
 
 using System;
 using Microsoft.Data.SqlClient;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests;
 
-public sealed class MsSqlFactAttribute : FactAttribute
+public sealed class MsSqlFactAttribute : ConditionBaseAttribute
 {
     private const string TEST_MSSQL_CONNECTION_STRING = nameof(TEST_MSSQL_CONNECTION_STRING);
     private static readonly string _skipReason;
-        
+
+    public override string IgnoreMessage => _skipReason;
+
+    public override string GroupName => nameof(MsSqlFactAttribute);
+
+    public override bool ShouldRun => _skipReason is null;
+
     static MsSqlFactAttribute()
     {
         _skipReason = TestConnectionAndReturnSkipReason();
     }
         
     public MsSqlFactAttribute()
+        : base(ConditionMode.Include)
     {
-        if (_skipReason is not null)
-        {
-            Skip = _skipReason;
-        }
     }
         
     internal static string TestConnectionAndReturnSkipReason()

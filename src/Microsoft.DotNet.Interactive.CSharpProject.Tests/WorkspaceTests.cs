@@ -4,13 +4,13 @@
 using System;
 using System.Linq;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class WorkspaceTests
 {
-    [Fact]
+    [TestMethod]
     public void I_can_extracts_viewPorts_when_files_declare_region()
     {
         var ws = new Workspace(files: new[]
@@ -23,7 +23,7 @@ public class WorkspaceTests
         viewPorts.Select(p => p.BufferId.ToString()).Should().BeEquivalentTo("Program.cs@alpha");
     }
 
-    [Fact]
+    [TestMethod]
     public void ViewPort_ids_must_be_uinique_within_a_file()
     {
         var ws = new Workspace(files: new[]
@@ -35,7 +35,7 @@ public class WorkspaceTests
         extraction.Should().Throw<InvalidOperationException>();
     }
 
-    [Fact]
+    [TestMethod]
     public void ViewPort_ids_must_be_unique_inside_the_workspace()
     {
         var ws = new Workspace(files: new[]
@@ -48,7 +48,7 @@ public class WorkspaceTests
         extraction.Should().NotThrow<InvalidOperationException>();
     }
         
-    [Fact]
+    [TestMethod]
     public void ViewPort_extraction_fails_with_null_workspace()
     {
         Action extraction = () => ((Workspace)null).ExtractViewPorts().ToList();

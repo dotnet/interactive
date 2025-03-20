@@ -1,26 +1,28 @@
 ﻿using System;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Kql.Tests;
 
-public sealed class KqlFactAttribute : FactAttribute
+public sealed class KqlFactAttribute : ConditionBaseAttribute
 {
     private const string TEST_KQL_CONNECTION_STRING = nameof(TEST_KQL_CONNECTION_STRING);
     private static readonly string _skipReason;
-        
+
+    public override string IgnoreMessage => _skipReason;
+
+    public override string GroupName => nameof(KqlFactAttribute);
+
+    public override bool ShouldRun => _skipReason is null;
+
     static KqlFactAttribute()
     {
         _skipReason = TestConnectionAndReturnSkipReason();
     }
         
     public KqlFactAttribute()
+        : base(ConditionMode.Include)
     {
-        if (_skipReason is not null)
-        {
-            Skip = _skipReason;
-        }
     }
-        
+
     internal static string TestConnectionAndReturnSkipReason()
     {
         string clusterName = GetClusterForTests();

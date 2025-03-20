@@ -5,28 +5,28 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class Comments
     {
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
                     // #This is a comment
                     GET https://example.com
                     """)]
-        [InlineData("""
+        [DataRow("""
                     // // // // This is a comment
                     GET https://example.com
                     """)]  
-        [InlineData("""
+        [DataRow("""
                     # // This is a comment
                     GET https://example.com
                     """)]
-        [InlineData("""
+        [DataRow("""
                     # This is a comment
                     GET https://example.com
                     """)]
@@ -46,12 +46,12 @@ public partial class HttpParserTests
                        .Which.Text.Should().Be(expectedCommentText);
         }
 
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
                     https://example.com
                     #
                     """, "#")]
-        [InlineData("""
+        [DataRow("""
                     https://example.com
                     //
                     """, "//")]
@@ -65,7 +65,7 @@ public partial class HttpParserTests
                   .Which.Text.Should().Be(expectedCommentText);
         }
 
-        [Fact]
+        [TestMethod]
         public void Comment_node_can_immediately_follow_headers()
         {
             var code = """
@@ -85,30 +85,30 @@ public partial class HttpParserTests
                   .Which.Text.Should().Be("# This is a comment");
         }
 
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
                 # This is a comment
                 """)]
-        [InlineData("""
+        [DataRow("""
                 # This is a comment
                 # This is the second line of the comment
                 """)]
-        [InlineData("""
+        [DataRow("""
                 # This is a comment
                 # This is the second line of the comment
                 # This is the third line of the comment
                 """)]
-        [InlineData("""
+        [DataRow("""
                 GET https://example.com
                 # This is a comment
                 # This is the second line of the comment
                 """)]
-        [InlineData("""
+        [DataRow("""
                 # This is a comment
 
                 # This is the second line of the comment
                 """)]
-        [InlineData("""
+        [DataRow("""
                 # This is a comment
 
                 # This is the second line of the comment
@@ -123,7 +123,7 @@ public partial class HttpParserTests
 
         }
 
-        [Fact]
+        [TestMethod]
         public void comment_after_request_separator_is_parsed_correctly()
         {
             var code = """

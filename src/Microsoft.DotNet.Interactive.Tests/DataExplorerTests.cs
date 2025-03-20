@@ -3,13 +3,13 @@
 
 using FluentAssertions;
 using Microsoft.AspNetCore.Html;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class DataExplorerTests
 {
-    [Fact]
+    [TestMethod]
     public void when_there_is_single_DataExplorer_return_it_as_default()
     {
         DataExplorer<string>.Register<StringDataExplorer>();
@@ -18,7 +18,7 @@ public class DataExplorerTests
     }
 
 
-    [Fact]
+    [TestMethod]
     public void can_create_specific_DataExplorer_for_a_data_type()
     {
         DataExplorer<string>.Register<StringDataExplorer>();
@@ -27,7 +27,7 @@ public class DataExplorerTests
         dataExplorer.Should().BeOfType<AdvancedStringDataExplorer>();
     }
 
-    [Fact]
+    [TestMethod]
     public void can_specify_default_DataExplorer_for_a_data_type()
     {
         DataExplorer<string>.Register<StringDataExplorer>();

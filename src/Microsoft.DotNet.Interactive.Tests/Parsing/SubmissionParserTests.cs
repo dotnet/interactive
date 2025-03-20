@@ -12,15 +12,15 @@ using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Parsing;
 
+[TestClass]
 public class SubmissionParserTests
 {
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Pound_i_is_dispatched_to_the_correct_kernel(Language targetKernel)
     {
         var command = new SubmitCode("#i \"nuget: SomeLocation\"", targetKernelName: targetKernel.LanguageName());
@@ -32,7 +32,7 @@ public class SubmissionParserTests
             .AllSatisfy(c => c.TargetKernelName.Should().Be(targetKernel.LanguageName()));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task DiagnosticsProduced_events_always_point_back_to_the_original_command()
     {
         using var kernel = new CSharpKernel();
@@ -41,7 +41,7 @@ public class SubmissionParserTests
         result.Events.Should().ContainSingle<DiagnosticsProduced>().Which.Command.Should().BeSameAs(command);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task ParsedDirectives_With_Args_Consume_Newlines()
     {
         using var kernel = new CompositeKernel
@@ -74,18 +74,18 @@ Console.WriteLine($""{x} {y}"");";
             .NotBeEmpty();
     }
 
-    [Theory]
-    [InlineData(@"
+    [TestMethod]
+    [DataRow(@"
 #r one.dll
 #r two.dll", "csharp")]
-    [InlineData(@"
+    [DataRow(@"
 #r one.dll
 var x = 123; // with some intervening code
 #r two.dll", "csharp")]
-    [InlineData(@"
+    [DataRow(@"
 #r one.dll
 #r two.dll", "fsharp")]
-    [InlineData(@"
+    [DataRow(@"
 #r one.dll
 let x = 123 // with some intervening code
 #r two.dll", "fsharp")]
@@ -112,7 +112,7 @@ let x = 123 // with some intervening code
             .ContainAll("#r one.dll", "#r two.dll");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task RequestDiagnostics_can_be_split_into_separate_commands()
     {
         var markupCode = @"
@@ -137,7 +137,7 @@ let x = 123 // with some intervening code
             .ContainSingle<RequestDiagnostics>(c => c.Code.Contains("after magic") && !c.Code.Contains("before magic"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Whitespace_only_nodes_do_not_generate_separate_SubmitCode_commands()
     {
         using var kernel = new CompositeKernel

@@ -6,13 +6,13 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class SendEditableCodeTests
 {
-    [Fact]
+    [TestMethod]
     public async Task It_infers_InsertAtPosition_from_ambient_SubmitCode_cellIndex_parameter()
     {
         SendEditableCode receivedSendEditableCode = null;

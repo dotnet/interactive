@@ -4,20 +4,19 @@
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class FileProviderTests : LanguageKernelTestBase
 {
-    public FileProviderTests(ITestOutputHelper output) : base(output)
+    public FileProviderTests(TestContext output) : base(output)
     {
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public void It_loads_content_from_root_provider(Language language)
     {
         var kernel = CreateKernel(language);

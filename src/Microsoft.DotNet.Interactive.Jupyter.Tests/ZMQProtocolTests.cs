@@ -6,13 +6,13 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
+[TestClass]
 public class ZMQProtocolTests
 {
-    [Fact]
+    [TestMethod]
     public void can_deserialize_execute_request()
     {
         var signature = "test";
@@ -39,7 +39,7 @@ public class ZMQProtocolTests
         });
     }
 
-    [Fact]
+    [TestMethod]
     public void can_deserialize_kernel_info_request()
     {
         var signature = "test" ;

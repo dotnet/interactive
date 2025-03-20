@@ -19,13 +19,7 @@
     <PackageReference Include="Humanizer.Core" />
     <PackageReference Include="HtmlAgilityPack" />
     <PackageReference Include="FluentAssertions" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="xunit.runner.visualstudio" >
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="MSTest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +31,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Journey\Microsoft.DotNet.Interactive.Journey.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Tests\Microsoft.DotNet.Interactive.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
 </Project>

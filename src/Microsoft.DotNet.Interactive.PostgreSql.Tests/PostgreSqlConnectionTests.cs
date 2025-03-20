@@ -12,11 +12,11 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.App;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.PostgreSql.Tests;
 
-[Trait("Databases", "Data query tests")]
+[TestProperty("Databases", "Data query tests")]
+[TestClass]
 public class PostgreSqlConnectionTests : IDisposable
 {
     private static CompositeKernel CreateKernel()
@@ -36,7 +36,7 @@ public class PostgreSqlConnectionTests : IDisposable
         return kernel;
     }
 
-
+    [TestMethod]
     [PostgreSqlFact]
     public async Task It_can_connect_and_query_data()
     {
@@ -61,6 +61,7 @@ public class PostgreSqlConnectionTests : IDisposable
     }
 
     [PostgreSqlFact]
+    [TestMethod]
     public async Task It_returns_error_if_query_is_not_valid()
     {
         var connectionString = PostgreSqlFactAttribute.GetConnectionStringForTests();

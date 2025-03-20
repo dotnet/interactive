@@ -3,13 +3,14 @@
 
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
-public class PrebuildFixture : IAsyncLifetime
+[TestClass]
+public static class PrebuildFixture
 {
-    public async Task InitializeAsync()
+    [AssemblyInitialize]
+    public static async Task InitializeAsync(TestContext _)
     {
         var consolePrebuild = await Prebuild.GetOrCreateConsolePrebuildAsync(true);
         await consolePrebuild.EnsureReadyAsync();
@@ -19,10 +20,5 @@ public class PrebuildFixture : IAsyncLifetime
         Prebuild = consolePrebuild;
     }
 
-    public Prebuild Prebuild { get; private set; }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
-    }
+    public static Prebuild Prebuild { get; private set; }
 }

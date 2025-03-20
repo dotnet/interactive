@@ -9,24 +9,23 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Xunit;
-using Xunit.Abstractions;
 using KernelActionDirective = Microsoft.DotNet.Interactive.Directives.KernelActionDirective;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class KernelRoutingTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public KernelRoutingTests(ITestOutputHelper output)
+    public KernelRoutingTests(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
+    [TestMethod]
     public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_custom_magics()
     {
         using var localCompositeKernel = new CompositeKernel();
@@ -72,7 +71,7 @@ public class KernelRoutingTests : IDisposable
         result.Events.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should().Be(code);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_target_kernel_name_is_not_specified_then_ProxyKernel_does_not_split_custom_magics()
     {
         using var localCompositeKernel = new CompositeKernel();
@@ -118,7 +117,7 @@ public class KernelRoutingTests : IDisposable
         result.Events.Should().ContainSingle<CommandSucceeded>().Which.Command.As<SubmitCode>().Code.Should().Be(code);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_target_kernel_name_is_specified_then_ProxyKernel_does_not_split_pound_r_and_pound_i()
     {
         var handledCommands = new List<KernelCommand>();
@@ -165,7 +164,7 @@ Console.WriteLine(1);";
             .Be(code);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_target_kernel_name_is_not_specified_then_proxyKernel_does_not_split_pound_r_and_pound_i()
     {
         var handledCommands = new List<KernelCommand>();
@@ -210,7 +209,7 @@ Console.WriteLine(1);";
             .Be(code);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task A_default_kernel_name_can_be_specified_to_handle_a_command_type()
     {
         KernelCommand receivedByKernelOne = null;
@@ -247,7 +246,7 @@ Console.WriteLine(1);";
         receivedByKernelOne.Should().Be(command);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task commands_routing_slip_contains_kernels_that_have_been_traversed()
     {
         using var compositeKernel = new CompositeKernel
@@ -278,7 +277,7 @@ Console.WriteLine(1);";
             });
     }
 
-    [Fact]
+    [TestMethod]
     public async Task proxy_kernel_can_register_command_types_handled_by_remote()
     {
         using var localCompositeKernel = new CompositeKernel("vscode");
@@ -329,7 +328,7 @@ Console.WriteLine(1);";
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task commands_routing_slip_contains_proxy_kernels_that_have_been_traversed()
     {
         using var localCompositeKernel = new CompositeKernel("vscode");
@@ -375,7 +374,7 @@ Console.WriteLine(1);";
             });
     }
 
-    [Fact]
+    [TestMethod]
     public async Task events_routing_slip_contains_kernels_that_have_been_traversed()
     {
         using var compositeKernel = new CompositeKernel
@@ -414,7 +413,7 @@ Console.WriteLine(1);";
                   });
     }
 
-    [Fact]
+    [TestMethod]
     public async Task events_routing_slip_contains_proxy_kernels_that_have_been_traversed()
     {
         using var localCompositeKernel = new CompositeKernel("vscode");

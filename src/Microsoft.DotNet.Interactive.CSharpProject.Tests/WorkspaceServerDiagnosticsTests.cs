@@ -3,18 +3,14 @@
 
 using System.Threading.Tasks;
 using FluentAssertions;
-using Xunit;
-using Xunit.Abstractions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class WorkspaceServerDiagnosticsTests : WorkspaceServerTestsCore
 {
-    public WorkspaceServerDiagnosticsTests(PrebuildFixture prebuildFixture, ITestOutputHelper output) : base(prebuildFixture, output)
-    {
-    }
-
-    [Fact]
+    [TestMethod]
     public async Task Get_diagnostics_with_buffer_with_region()
     {
         #region bufferSources
@@ -54,7 +50,7 @@ namespace FibonacciTest
         result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "(1,1): error CS0103: The name 'adddd' does not exist in the current context");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_diagnostics_with_buffer_with_region_in_code_but_not_in_buffer_id()
     {
         #region bufferSources
@@ -93,7 +89,7 @@ namespace FibonacciTest
         result.Diagnostics.Should().Contain(diagnostics => diagnostics.Message == "Program.cs(13,13): warning CS0168: The variable 'moreError' is declared but never used");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Get_diagnostics()
     {
         #region bufferSources

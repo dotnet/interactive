@@ -11,15 +11,15 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Connection;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
 public partial class KernelTests
 {
+    [TestClass]
     public class SubmissionCount
     {
-        [Fact]
+        [TestMethod]
         public async Task Split_submissions_only_increment_count_by_one()
         {
             using var kernel = new CompositeKernel
@@ -38,7 +38,7 @@ public partial class KernelTests
             kernel.SubmissionCount.Should().Be(1);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task SubmitCode_is_the_only_command_that_increments_submission_count()
         {
             using var kernel = new CompositeKernel
@@ -56,7 +56,7 @@ public partial class KernelTests
             kernel.SubmissionCount.Should().Be(0);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Deferred_commands_do_not_increment_count()
         {
             using var kernel = new CompositeKernel
@@ -72,7 +72,7 @@ public partial class KernelTests
             kernel.SubmissionCount.Should().Be(0);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Nested_submissions_do_not_increment_submission_count()
         {
             using var kernel = new CompositeKernel
@@ -94,7 +94,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""456"", ""fake""));
             kernel.SubmissionCount.Should().Be(1);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Non_user_submissions_do_not_increment_submission_count()
         {
             var csharp2 = new CSharpKernel("csharp2");
@@ -126,7 +126,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""456"", ""fake""));
             kernel.SubmissionCount.Should().Be(2);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Failed_commands_increment_submission_count()
         {
             using var kernel = new CompositeKernel

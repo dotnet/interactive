@@ -5,15 +5,15 @@ using System.IO;
 using System.Numerics;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public partial class HtmlFormatterTests
 {
+    [TestClass]
     public class PreformatPlainText : FormatterTestBase
     {
-        [Fact]
+        [TestMethod]
         public void It_can_format_a_String_with_class()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(string));
@@ -33,7 +33,7 @@ string";
                       $"{Tags.PlainTextBegin}{instance.HtmlEncode()}{Tags.PlainTextEnd}");
         }
 
-        [Fact]
+        [TestMethod]
         public void HtmlFormatter_returns_plain_for_decimal()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor<decimal>();
@@ -44,7 +44,7 @@ string";
         }
 
 
-        [Fact]
+        [TestMethod]
         public void HtmlFormatter_returns_plain_for_BigInteger()
         {
             var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(BigInteger));

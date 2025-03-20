@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-internal sealed class JupyterHttpTestDataAttribute : JupyterTestDataAttribute
+internal sealed class JupyterHttpTestDataAttribute : JupyterTestDataAttribute, ITestDataSourceIgnoreCapability
 {
     public const string TEST_DOTNET_JUPYTER_HTTP_CONN = nameof(TEST_DOTNET_JUPYTER_HTTP_CONN);
     public const string JUPYTER_HTTP = nameof(JUPYTER_HTTP);
@@ -20,7 +20,7 @@ internal sealed class JupyterHttpTestDataAttribute : JupyterTestDataAttribute
     {
         if (_skipReason is not null)
         {
-            Skip = _skipReason;
+            IgnoreMessage = _skipReason;
         }
     }
 
@@ -55,4 +55,6 @@ internal sealed class JupyterHttpTestDataAttribute : JupyterTestDataAttribute
     /// and reading back from it at the point of save.
     /// </summary>
     public bool AllowPlayback { get; set; }
+
+    public string IgnoreMessage { get; set; }
 }

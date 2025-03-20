@@ -10,17 +10,12 @@ using Pocket;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Xunit;
-using Xunit.Abstractions;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Tests.JupyterKernelTestBase>;
 using CompositeDisposable = Pocket.CompositeDisposable;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-[Collection("Do not parallelize")]
 public abstract class JupyterKernelTestBase : IDisposable
 {
     private protected readonly CompositeDisposable _disposables = new();
@@ -30,7 +25,7 @@ public abstract class JupyterKernelTestBase : IDisposable
     protected const string PythonKernelName = "python3";
     protected const string RKernelName = "ir";
 
-    protected JupyterKernelTestBase(ITestOutputHelper output)
+    protected JupyterKernelTestBase(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }

@@ -6,15 +6,15 @@ using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Http.Parsing;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class DynamicExpressions
     {
-        [Fact]
+        [TestMethod]
         public void can_bind_datetime_with_custom_format()
         {
             var expression = "$datetime 'dd-MM-yyyy' 1 d";
@@ -28,7 +28,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_datetime_uses_utcnow()
         {
             var expression = "$datetime 'Tzz'";
@@ -45,7 +45,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_datetime_with_iso8601_format()
         {
             var expression = "$datetime iso8601";
@@ -59,7 +59,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.ToString("o"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_datetime_with_iso8601_format_with_offset()
         {
             var expression = "$datetime iso8601 1 y";
@@ -73,7 +73,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_datetime_with_rfc1123_format()
         {
             var expression = "$datetime rfc1123";
@@ -87,7 +87,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.ToString("r"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_datetime_with_rfc1123_format_with_offset()
         {
             var expression = "$datetime rfc1123 1 d";
@@ -101,7 +101,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.AddDays(1).ToString("r"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_local_datetime_with_custom_format()
         {
             var expression = "$localDatetime 'dd-MM-yyyy' 1 d";
@@ -115,7 +115,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.AddDays(1.0).ToString("dd-MM-yyyy"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_local_datetime_uses_now()
         {
             var expression = "$localDatetime 'Tzz'";
@@ -132,7 +132,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.ToString("Tzz"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_local_datetime_with_iso8601_format()
         {
             var expression = "$localDatetime iso8601";
@@ -146,7 +146,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.ToString("o"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_local_datetime_with_iso8601_format_with_offset()
         {
             var expression = "$localDatetime iso8601 1 y";
@@ -160,7 +160,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.AddYears(1).ToString("o"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_local_datetime_with_rfc1123_format()
         {
             var expression = "$localDatetime rfc1123";
@@ -174,7 +174,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.ToString("r"));
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_timestamp()
         {
             var expression = "$timestamp";
@@ -188,7 +188,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.ToUnixTimeSeconds().ToString());
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_timestamp_with_offset()
         {
             var expression = "$timestamp 7 M";
@@ -202,7 +202,7 @@ public partial class HttpParserTests
             binding.Value.As<string>().Should().Be(currentTime.AddMonths(7).ToUnixTimeSeconds().ToString());
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_randomInt_2_10()
         {
             using var _ = new AssertionScope();
@@ -216,11 +216,11 @@ public partial class HttpParserTests
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             var stringValue = binding.Value.As<string>();
-            Assert.True(int.TryParse(stringValue, out int value));
+            Assert.IsTrue(int.TryParse(stringValue, out int value));
             value.Should().BeGreaterThanOrEqualTo(2).And.BeLessThan(10);
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_randomInt_3()
         {
             using var _ = new AssertionScope();
@@ -234,11 +234,11 @@ public partial class HttpParserTests
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             var stringValue = binding.Value.As<string>();
-            Assert.True(int.TryParse(stringValue, out int value));
+            Assert.IsTrue(int.TryParse(stringValue, out int value));
             value.Should().BeGreaterThanOrEqualTo(0).And.BeLessThan(3);
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_randomInt()
         {
             using var _ = new AssertionScope();
@@ -252,11 +252,11 @@ public partial class HttpParserTests
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             var stringValue = binding.Value.As<string>();
-            Assert.True(int.TryParse(stringValue, out int value));
+            Assert.IsTrue(int.TryParse(stringValue, out int value));
             value.Should().BeGreaterThanOrEqualTo(0);
         }
 
-        [Fact]
+        [TestMethod]
         public void can_bind_guid()
         {
             using var _ = new AssertionScope();
@@ -270,7 +270,7 @@ public partial class HttpParserTests
 
             var binding = DynamicExpressionUtilities.ResolveExpressionBinding(node, () => currentTime, expression);
             var stringValue = binding.Value.As<string>();
-            Assert.True(Guid.TryParse(stringValue, out Guid value));
+            Assert.IsTrue(Guid.TryParse(stringValue, out Guid value));
             value.Should().NotBeEmpty();
         }
     }

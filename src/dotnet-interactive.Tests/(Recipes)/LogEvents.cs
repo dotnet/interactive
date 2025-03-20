@@ -5,13 +5,13 @@ using System;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit.Abstractions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Pocket;
 
 internal partial class LogEvents
 {
-    public static IDisposable SubscribeToPocketLogger(this ITestOutputHelper output) =>
+    public static IDisposable SubscribeToPocketLogger(this TestContext output) =>
         Subscribe(
             e => output.WriteLine(e.ToLogString()),
             new[]

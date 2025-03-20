@@ -15,10 +15,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Pocket;
 
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine;
 
+[TestClass]
 public class StartupTelemetryTests : IDisposable
 {
     private readonly FakeTelemetrySender _fakeTelemetrySender;
@@ -57,7 +57,7 @@ public class StartupTelemetryTests : IDisposable
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_standalone_command_sends_telemetry()
     {
         await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
@@ -67,14 +67,14 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_standalone_command_has_one_entry()
     {
         await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_default_kernel_csharp_sends_telemetry()
     {
         await _parser.InvokeAsync($"jupyter --default-kernel csharp {_connectionFile}", _console);
@@ -84,14 +84,14 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_default_kernel_csharp_has_one_entry()
     {
         await _parser.InvokeAsync($"jupyter --default-kernel csharp {_connectionFile}", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_default_kernel_fsharp_sends_telemetry()
     {
         await _parser.InvokeAsync($"jupyter --default-kernel fsharp {_connectionFile}", _console);
@@ -101,14 +101,14 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "FSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_default_kernel_fsharp_has_one_entry()
     {
         await _parser.InvokeAsync($"jupyter --default-kernel fsharp {_connectionFile}", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_install_sends_telemetry()
     {
         await _parser.InvokeAsync("jupyter install", _console);
@@ -118,14 +118,14 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["subcommand"] == "INSTALL".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_install_has_one_entry()
     {
         await _parser.InvokeAsync($"jupyter install", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_default_kernel_csharp_ignore_connection_file_sends_telemetry()
     {
         var tmp = Path.GetTempFileName();
@@ -137,14 +137,14 @@ public class StartupTelemetryTests : IDisposable
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_default_kernel_csharp_ignore_connection_file_has_one_entry()
     {
         await _parser.InvokeAsync($"jupyter --default-kernel csharp {_connectionFile}", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_ignore_connection_file_sends_telemetry()
     {
         // Do not capture connection file
@@ -155,14 +155,14 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_ignore_connection_file_has_one_entry()
     {
         await _parser.InvokeAsync($"jupyter  {_connectionFile}", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_with_verbose_option_sends_telemetry_just_for_jupyter_command()
     {
         await _parser.InvokeAsync($"--verbose jupyter  {_connectionFile}", _console);
@@ -172,21 +172,21 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_with_verbose_option_has_one_entry()
     {
         await _parser.InvokeAsync($"--verbose jupyter {_connectionFile}", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_with_invalid_argument_does_not_send_any_telemetry()
     {
         await _parser.InvokeAsync("jupyter invalidargument", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_default_kernel_with_invalid_kernel_does_not_send_any_telemetry()
     {
         // Do not capture anything, especially "oops".
@@ -194,7 +194,7 @@ public class StartupTelemetryTests : IDisposable
         _fakeTelemetrySender.TelemetryEvents.Should().BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_command_sends_frontend_telemetry()
     {
         await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
@@ -206,7 +206,7 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Jupyter_install_command_sends_default_frontend_telemetry()
     {
         var defaultFrontend = GetDefaultFrontendName();
@@ -220,14 +220,14 @@ public class StartupTelemetryTests : IDisposable
 
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Invalid_command_is_does_not_send_any_telemetry()
     {
         await _parser.InvokeAsync("invalidcommand", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_command_sends_frontend_telemetry()
     {
         await _parser.InvokeAsync("[synapse] stdio", _console);
@@ -239,7 +239,7 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task githubCodeSpaces_is_a_valid_frontend_for_stdio()
     {
         Environment.SetEnvironmentVariable("CODESPACES", "true");
@@ -261,7 +261,7 @@ public class StartupTelemetryTests : IDisposable
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task frontend_can_be_set_via_environment_variable()
     {
         Environment.SetEnvironmentVariable("DOTNET_INTERACTIVE_FRONTEND_NAME", "test_runner");
@@ -283,7 +283,7 @@ public class StartupTelemetryTests : IDisposable
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task vscode_is_a_valid_frontend_for_stdio()
     {
         await _parser.InvokeAsync("[vscode] stdio", _console);
@@ -296,7 +296,7 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_command_sends_default_frontend_telemetry()
     {
         var defaultFrontend = GetDefaultFrontendName();
@@ -316,7 +316,7 @@ public class StartupTelemetryTests : IDisposable
         return frontendName;
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_standalone_command_sends_telemetry()
     {
         await _parser.InvokeAsync("stdio", _console);
@@ -327,14 +327,14 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_command_has_one_entry()
     {
         await _parser.InvokeAsync("stdio", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_default_kernel_csharp_sends_telemetry()
     {
         await _parser.InvokeAsync("stdio --default-kernel csharp", _console);
@@ -345,14 +345,14 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "CSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_default_kernel_csharp_has_one_entry()
     {
         await _parser.InvokeAsync("stdio --default-kernel csharp", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_default_kernel_fsharp_sends_telemetry()
     {
         await _parser.InvokeAsync("stdio --default-kernel fsharp", _console);
@@ -363,14 +363,14 @@ public class StartupTelemetryTests : IDisposable
                  x.Properties["default-kernel"] == "FSHARP".ToSha256Hash());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task stdio_default_kernel_fsharp_has_one_entry()
     {
         await _parser.InvokeAsync("stdio --default-kernel fsharp", _console);
         _fakeTelemetrySender.TelemetryEvents.Should().HaveCount(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Show_first_time_message_if_environment_variable_is_not_set_and_sentinel_does_not_exist()
     {
         var environmentVariableName = FirstTimeUseNoticeSentinel.SkipFirstTimeExperienceEnvironmentVariableName;
@@ -388,7 +388,7 @@ public class StartupTelemetryTests : IDisposable
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Do_not_show_first_time_message_if_environment_variable_is_set()
     {
         var environmentVariableName = FirstTimeUseNoticeSentinel.SkipFirstTimeExperienceEnvironmentVariableName;
@@ -406,11 +406,11 @@ public class StartupTelemetryTests : IDisposable
         }
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
     public async Task stdio_command_sends_frontend_telemetry_when_frontend_is_VS(
         bool isSkipFirstTimeExperienceEnvironmentVariableSet, bool firstTimeExperienceSentinelExists)
     {

@@ -5,14 +5,14 @@ using FluentAssertions;
 using System;
 using System.Collections.Generic;
 
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class EventRoutingSlipTests
 {
 
-    [Fact]
+    [TestMethod]
     public void can_be_stamped_with_kernel_uri()
     {
         var routingSlip = new EventRoutingSlip();
@@ -23,7 +23,7 @@ public class EventRoutingSlipTests
     }
 
 
-    [Fact]
+    [TestMethod]
     public void cannot_can_be_stamped_with_kernel_uri_twice()
     {
         var routingSlip = new EventRoutingSlip();
@@ -35,7 +35,7 @@ public class EventRoutingSlipTests
             .WithMessage("The uri kernel://1/ is already in the routing slip");
     }
 
-    [Fact]
+    [TestMethod]
     public void can_continue_a_routingSlip_with_another()
     {
         var original = new EventRoutingSlip();
@@ -56,8 +56,8 @@ public class EventRoutingSlipTests
             "kernel://4/");
     }
 
-    [Theory]
-    [MemberData(nameof(EventRoutingSlipsToTest))]
+    [TestMethod]
+    [DynamicData(nameof(EventRoutingSlipsToTest))]
     public void starts_with_urls(EventRoutingSlip other, bool startsWith)
     {
         var original = new EventRoutingSlip();
@@ -101,7 +101,7 @@ public class EventRoutingSlipTests
         yield return new object[] { routingSlip, false };
     }
 
-    [Fact]
+    [TestMethod]
     public void can_continue_a_routingSlip_to_another_skipping_entries_if_the_other_contains_it()
     {
         var original = new EventRoutingSlip();
@@ -124,7 +124,7 @@ public class EventRoutingSlipTests
             "kernel://4/");
     }
 
-    [Fact]
+    [TestMethod]
     public void throws_exception_when_continuing_a_routingSlip_with_another_if_they_do_not_start_with_same_uri_sequence()
     {
         var original = new EventRoutingSlip();

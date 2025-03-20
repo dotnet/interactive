@@ -8,23 +8,22 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
+    [TestClass]
     public class JsonConversion
     {
-        private readonly ITestOutputHelper _output;
+        private readonly TestContext _output;
 
-        public JsonConversion(ITestOutputHelper output)
+        public JsonConversion(TestContext output)
         {
             _output = output;
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Directive_nodes_not_containing_JSON_can_be_converted_to_JSON()
         {
             var tree = Parse("""
@@ -53,7 +52,7 @@ public partial class PolyglotSyntaxParserTests
                 """);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task JSON_values_in_parameter_nodes_are_inserted_directly_into_the_serialized_JSON()
         {
             var tree = Parse("""
@@ -87,9 +86,9 @@ public partial class PolyglotSyntaxParserTests
                 """);
         }
 
-        [Theory]
-        [InlineData("#!test --opt2 value2 value1")]
-        [InlineData("#!test value1 --opt2 value2")]
+        [TestMethod]
+        [DataRow("#!test --opt2 value2 value1")]
+        [DataRow("#!test value1 --opt2 value2")]
         public async Task Property_name_is_written_for_implicit_parameter_names(string code)
         {
             PolyglotParserConfiguration config = new("csharp")
@@ -142,7 +141,7 @@ public partial class PolyglotSyntaxParserTests
                 """);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Required_parameter_can_use_implicit_parameter_name()
         {
             PolyglotParserConfiguration config = new("csharp")
@@ -196,7 +195,7 @@ public partial class PolyglotSyntaxParserTests
                                                      """);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Properties_are_written_for_parameters_on_parent_directives()
         {
             PolyglotParserConfiguration config = new("csharp")
@@ -255,7 +254,7 @@ public partial class PolyglotSyntaxParserTests
                 """);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task When_there_are_error_diagnostics_then_JSON_serialization_fails()
         {
             var tree = Parse("#!set --oops wut");
@@ -275,7 +274,7 @@ public partial class PolyglotSyntaxParserTests
             result.Value.Should().BeNull();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task When_there_are_unbound_expressions_and_no_binding_delegate_is_provided_then_JSON_serialization_fails()
         {
             var markupCode = "#!set --name myVar --value [|@fsharp:|]myVar";

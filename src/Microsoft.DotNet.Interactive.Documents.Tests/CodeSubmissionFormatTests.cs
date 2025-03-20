@@ -13,10 +13,10 @@ using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
+[TestClass]
 public class CodeSubmissionFormatTests : DocumentFormatTestsBase
 {
     private readonly Configuration _assentConfiguration =
@@ -35,7 +35,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
         return interactive.ToCodeSubmissionContent(newLine);
     }
 
-    [Fact]
+    [TestMethod]
     public void empty_dib_file_parses_as_a_single_empty_cell()
     {
         var notebook = ParseDib(string.Empty);
@@ -49,7 +49,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
                                                        cell.Contents == string.Empty);
     }
 
-    [Fact]
+    [TestMethod]
     public void top_level_code_without_a_language_specifier_is_assigned_the_default_language()
     {
         var notebook = ParseDib("var x = 1;");
@@ -64,7 +64,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
                 );
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_cells_can_specify_their_language_without_retaining_the_language_specifier()
     {
         var notebook = ParseDib(@"#!fsharp
@@ -80,7 +80,7 @@ let x = 1");
                 );
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_cells_without_a_language_specifier_retain_magic_commands_and_the_default_language()
     {
         var notebook = ParseDib(@"#!probably-a-magic-command
@@ -96,7 +96,7 @@ var x = 1;");
                 );
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_cells_with_a_language_specifier_retain_magic_commands()
     {
         var notebook = ParseDib(@"#!fsharp
@@ -113,7 +113,7 @@ let x = 1");
                 );
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_cells_with_connect_directive_dont_cause_subsequent_cells_to_change_language()
     {
         var notebook = ParseDib(@"
@@ -131,7 +131,7 @@ let x = 1");
                 );
     }
 
-    [Fact]
+    [TestMethod]
     public void multiple_cells_can_be_parsed()
     {
         var notebook = ParseDib(@"#!csharp
@@ -150,7 +150,7 @@ let y = 2");
                 });
     }
 
-    [Fact]
+    [TestMethod]
     public void empty_language_cells_are_removed_when_parsing()
     {
         var notebook = ParseDib(@"#!csharp
@@ -172,7 +172,7 @@ Get-Item
                 });
     }
 
-    [Fact]
+    [TestMethod]
     public void empty_lines_are_removed_between_cells()
     {
         var notebook = ParseDib(@"
@@ -208,9 +208,9 @@ Get-Item
                 });
     }
 
-    [Theory]
-    [InlineData("markdown")]
-    [InlineData("md")]
+    [TestMethod]
+    [DataRow("markdown")]
+    [DataRow("md")]
     public void markdown_cells_can_be_parsed_even_though_its_not_a_kernel_language(string cellLanguage)
     {
         var notebook = ParseDib($@"
@@ -226,7 +226,7 @@ This is `markdown`.
                 });
     }
 
-    [Fact]
+    [TestMethod]
     public void language_aliases_are_expanded_when_parsed()
     {
         var notebook = ParseDib(@"
@@ -261,9 +261,9 @@ This is `markdown` with an alias.
                 });
     }
 
-    [Theory]
-    [InlineData("\n")]
-    [InlineData("\r\n")]
+    [TestMethod]
+    [DataRow("\n")]
+    [DataRow("\r\n")]
     public void different_line_separators_are_honored_and_normalized(string newline)
     {
         var lines = new[]
@@ -286,7 +286,7 @@ This is `markdown` with an alias.
                 });
     }
 
-    [Fact]
+    [TestMethod]
     public void parsed_notebook_outputs_are_empty()
     {
         var notebook = ParseDib(@"
@@ -304,7 +304,7 @@ var x = 1;
                 .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public void extra_blank_lines_are_removed_from_beginning_and_end_on_save()
     {
         var notebook = new InteractiveDocument
@@ -325,7 +325,7 @@ var x = 1;
             .Be(expected);
     }
 
-    [Fact]
+    [TestMethod]
     public void empty_cells_are_not_serialized()
     {
         var notebook = new InteractiveDocument
@@ -348,9 +348,9 @@ var x = 1;
             .Be(expected);
     }
 
-    [Theory]
-    [InlineData("\n")]
-    [InlineData("\r\n")]
+    [TestMethod]
+    [DataRow("\n")]
+    [DataRow("\r\n")]
     public void multiple_cells_are_serialized_with_appropriate_separators(string newline)
     {
         var cells = new List<InteractiveDocumentElement>
@@ -384,7 +384,7 @@ var x = 1;
             .Be(expected);
     }
 
-    [Fact]
+    [TestMethod]
     public void Default_language_can_be_specified_in_metadata()
     {
         var kernelInfo = DefaultKernelInfos;
@@ -404,7 +404,7 @@ var x = 1;
                 .Be("fsharp");
     }
 
-    [Fact]
+    [TestMethod]
     public void Kernel_languages_can_be_specified_in_metadata()
     {
         var kernelInfo = DefaultKernelInfos;
@@ -434,7 +434,7 @@ var x = 1;
                 });
     }
 
-    [Fact]
+    [TestMethod]
     public void dib_file_with_only_metadata_section_can_be_loaded()
     {
         var content = @"#!meta
@@ -446,7 +446,7 @@ var x = 1;
             .ContainKey("theAnswer");
     }
 
-    [Fact]
+    [TestMethod]
     public void kernel_selector_can_immediately_follow_metadata_section()
     {
         var content = @"#!meta
@@ -472,7 +472,7 @@ var x = 1;";
             .Be("var x = 1;");
     }
 
-    [Fact]
+    [TestMethod]
     public void Metadata_section_is_not_added_as_a_document_element()
     {
         var kernelInfo = DefaultKernelInfos;
@@ -494,7 +494,7 @@ var x = 1;";
                 .NotContain("meta");
     }
 
-    [Fact]
+    [TestMethod]
     public void Metadata_JSON_can_span_multiple_lines()
     {
         var dib = @"
@@ -524,8 +524,8 @@ Console.Write(""hello"");
                 .BeOfType<JsonElement>();
     }
 
-    [Fact]
-    [Trait("Category", "Contracts and serialization")]
+    [TestMethod]
+    [TestProperty("Category", "Contracts and serialization")]
     public async Task dib_file_can_be_round_tripped_through_read_and_write_without_the_content_changing()
     {
         var path = GetNotebookFilePath();
@@ -574,7 +574,7 @@ Console.Write(""hello"");
 ";
     }
 
-    [Fact]
+    [TestMethod]
     public void Input_tokens_are_parsed_from_dib_files()
     {
         var dib = """
@@ -592,7 +592,7 @@ Console.Write(""hello"");
                 .Be("myfile");
     }
 
-    [Fact]
+    [TestMethod]
     public void Password_tokens_are_parsed_from_dib_files()
     {
         var dib = """
@@ -609,7 +609,7 @@ Console.Write(""hello"");
                 .BeEquivalentTo(new InputField("TOPSECRET", "password"));
     }
 
-    [Fact]
+    [TestMethod]
     public void When_an_input_field_name_is_repeated_then_only_one_is_created_in_the_document()
     {
         var dib = """
@@ -629,7 +629,7 @@ Console.Write(""hello"");
                 .BeEquivalentTo(new InputField("the-password", "password"));
     }
 
-    [Fact]
+    [TestMethod]
     public void When_using_set_magic_then_input_field_names_are_set_using_name_option()
     {
         var dib = """
@@ -646,7 +646,7 @@ Console.Write(""hello"");
                 .BeEquivalentTo(new InputField("value_name", "text"));
     }
     
-    [Fact]
+    [TestMethod]
     public void When_using_set_magic_then_password_field_names_are_set_using_name_option()
     {
         var dib = """

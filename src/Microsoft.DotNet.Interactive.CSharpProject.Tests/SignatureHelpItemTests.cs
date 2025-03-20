@@ -4,14 +4,14 @@
 using System.Linq;
 using FluentAssertions;
 using Newtonsoft.Json;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class SignatureHelpItemTests
 {
-    [Theory]
-    [InlineData(
+    [TestMethod]
+    [DataRow(
         @"{
   ""name"": ""Write"",
   ""label"": ""void Console.Write(bool value)"",

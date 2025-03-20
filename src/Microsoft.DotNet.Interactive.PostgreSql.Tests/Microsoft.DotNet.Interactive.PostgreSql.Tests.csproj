@@ -21,12 +21,12 @@
     <PackageReference Include="System.Drawing.Common"  />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Assent" />
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="MSTest" />
     <PackageReference Include="System.Security.Cryptography.X509Certificates" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
   <ItemGroup>

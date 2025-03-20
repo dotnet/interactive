@@ -15,20 +15,18 @@ using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Tags;
-using Xunit;
-using Xunit.Abstractions;
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-[Collection("Do not parallelize")]
+[TestClass]
 public class JupyterKernelTests : JupyterKernelTestBase
 {
-    public JupyterKernelTests(ITestOutputHelper output) : base(output)
+    public JupyterKernelTests(TestContext output) : base(output)
     {
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_setup_kernel_using_script()
     {
         string initScript = "kernel_setup_script";
@@ -50,7 +48,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .Be(initScript);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_get_a_list_of_kernelspecs_from_completions()
     {
         var specs = new List<KernelSpec>
@@ -72,7 +70,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             }));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task jupyter_and_kernel_connection_is_disposed_on_dispose()
     {
         var options = new SimulatedJupyterConnectionOptions(GenerateReplies());
@@ -93,7 +91,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
         options.Connection.KernelConnection.IsDisposed.Should().BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_cancel_submit_code_and_interrupt_kernel()
     {
         var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
@@ -131,7 +129,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
     }
 
 
-    [Fact]
+    [TestMethod]
     public async Task submit_code_line_endings_are_normalized_to_LF()
     {
         string code = "\r\ntest\r\ncode\r\n\n";
@@ -156,7 +154,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .Be("\ntest\ncode\n\n");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_fail_on_execute_reply_status_error()
     {
         string code = "test";
@@ -190,7 +188,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .ContainSingle<StandardErrorValueProduced>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_cancel_hover_text_without_kernel_interrupt()
     {
         var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
@@ -228,7 +226,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_handle_hover_text_not_found()
     {
         var code = "test";
@@ -252,7 +250,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_fail_on_hover_text_status_error()
     {
         var code = "test";
@@ -279,7 +277,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task hover_text_unrecognized_text_formatting_is_removed()
     {
         var ansiEscapedText = 
@@ -322,7 +320,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             + "mic");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_cancel_signature_help_without_kernel_interrupt()
     {
         var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
@@ -360,7 +358,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_handle_signature_help_not_found()
     {
         var code = "test";
@@ -384,7 +382,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_fail_on_signature_help_status_error()
     {
         var code = "test";
@@ -411,7 +409,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task signature_help_unrecognized_text_formatting_is_removed()
     {
         var ansiEscapedText =
@@ -455,7 +453,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             + "mic");
     }
     
-    [Fact]
+    [TestMethod]
     public async Task can_cancel_completions_without_kernel_interrupt()
     {
         var options = new SimulatedJupyterConnectionOptions(GenerateReplies(new[] {
@@ -492,7 +490,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .BeTrue();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_fail_on_completions_status_error()
     {
         var code = "test";
@@ -517,7 +515,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .BeEmpty();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_translate_completion_item_metadata_for_completions_produce()
     {
         var code = "test";

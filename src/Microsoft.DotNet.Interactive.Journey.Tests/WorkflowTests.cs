@@ -9,10 +9,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests;
 
+[TestClass]
 public class WorkflowTests : ProgressiveLearningTestBase
 {
     private readonly IReadOnlyList<SendEditableCode> _sampleContent = new SendEditableCode[]
@@ -31,7 +31,7 @@ public class WorkflowTests : ProgressiveLearningTestBase
 1 + 2";
 
  
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_evaluate_a_challenge()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -70,7 +70,7 @@ public class WorkflowTests : ProgressiveLearningTestBase
                 && v.Value.Contains("this rule failed because reasons"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_access_challenge_submission_history_for_challenge_evaluation()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);

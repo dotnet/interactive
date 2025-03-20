@@ -11,16 +11,15 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class LanguageKernelFormattingTests : LanguageKernelTestBase
 {
-    public LanguageKernelFormattingTests(ITestOutputHelper output) : base(output)
+    public LanguageKernelFormattingTests(TestContext output) : base(output)
     {
     }
 
@@ -36,16 +35,16 @@ using {typeof(PocketView).Namespace};
         return cSharpKernel;
     }
 
-    [Theory]
+    [TestMethod]
     // PocketView
-    [InlineData(Language.CSharp, "b(123)", $"<b>{PlainTextBegin}123{PlainTextEnd}</b>")]
-    [InlineData(Language.FSharp, "b [] [str \"123\" ]", "<b>123</b>")]
+    [DataRow(Language.CSharp, "b(123)", $"<b>{PlainTextBegin}123{PlainTextEnd}</b>")]
+    [DataRow(Language.FSharp, "b [] [str \"123\" ]", "<b>123</b>")]
     // sequence
-    [InlineData(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<pre>")]
-    [InlineData(Language.FSharp, "[1; 2; 3; 4]", "<pre>")]
+    [DataRow(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<pre>")]
+    [DataRow(Language.FSharp, "[1; 2; 3; 4]", "<pre>")]
     // sequence of anonymous objects
-    [InlineData(Language.CSharp, "new[] { new { a = 123 }, new { a = 456 } }", "<table>")]
-    [InlineData(Language.FSharp, "[{| a = 123 |}; {| a = 456 |}]", "<div>")]
+    [DataRow(Language.CSharp, "new[] { new { a = 123 }, new { a = 456 } }", "<table>")]
+    [DataRow(Language.FSharp, "[{| a = 123 |}; {| a = 456 |}]", "<div>")]
     public async Task Default_formatting_is_HTML(
         Language language,
         string submission,
@@ -66,9 +65,9 @@ using {typeof(PocketView).Namespace};
                 v.Value.ToString().Contains(expectedContent));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "display(\"<test></test>\")", "<test></test>")]
-    [InlineData(Language.FSharp, "display(\"<test></test>\")", "<test></test>")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "display(\"<test></test>\")", "<test></test>")]
+    [DataRow(Language.FSharp, "display(\"<test></test>\")", "<test></test>")]
     public async Task String_is_rendered_as_plain_text_via_display(
         Language language,
         string submission,
@@ -89,9 +88,9 @@ using {typeof(PocketView).Namespace};
                                  v.Value.ToString().Contains(expectedContent));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "\"hi\"", "hi")]
-    [InlineData(Language.FSharp, "\"hi\"", "hi")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "\"hi\"", "hi")]
+    [DataRow(Language.FSharp, "\"hi\"", "hi")]
     public async Task String_is_rendered_as_plain_text_via_implicit_return(
         Language language,
         string submission,
@@ -114,9 +113,9 @@ using {typeof(PocketView).Namespace};
                 v.Value.ToString().Contains(expectedContent));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "{ \"hello\": 123 ", "application/json")]
-    [InlineData(Language.CSharp, "<span class=\"test\">hello!&nbsp;</span>", "text/html")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "{ \"hello\": 123 ", "application/json")]
+    [DataRow(Language.CSharp, "<span class=\"test\">hello!&nbsp;</span>", "text/html")]
     public async Task DisplayAs_renders_string_as_specified_mime_type(
         Language language,
         string stringValue,
@@ -143,9 +142,9 @@ using {typeof(PocketView).Namespace};
                 v.Value == stringValue);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task DisplayTable_produces_tabular_HTML_output_for_IEnumerable_T(Language language)
     {
         var kernel = CreateKernel(language, openTestingNamespaces: true);
@@ -205,9 +204,9 @@ using {typeof(PocketView).Namespace};
               """);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task display_can_be_called_without_specifying_class_name(Language language)
     {
         var kernel = CreateKernel(language, openTestingNamespaces: true);
@@ -229,9 +228,9 @@ using {typeof(PocketView).Namespace};
                 v.Value.ToString().Contains("<b>"));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Displayed_value_can_be_updated(Language language)
     {
         var kernel = CreateKernel(language, openTestingNamespaces: true);
@@ -261,9 +260,9 @@ using {typeof(PocketView).Namespace};
                 v.Value.ToString().Contains("<b>world</b>"));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Displayed_value_can_be_updated_from_later_submissions(Language language)
     {
         var kernel = CreateKernel(language, openTestingNamespaces: true);
@@ -290,9 +289,9 @@ using {typeof(PocketView).Namespace};
                 v.Value.ToString().Contains("<b>world</b>"));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Value_display_and_update_are_in_right_order(Language language)
     {
         var kernel = CreateKernel(language, openTestingNamespaces: true);
@@ -315,9 +314,9 @@ using {typeof(PocketView).Namespace};
         valueEvents.Last().Should().BeOfType<DisplayedValueUpdated>();
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "display(HTML(\"<b>hi!</b>\"));")]
-    [InlineData(Language.FSharp, "display(HTML(\"<b>hi!</b>\"))")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "display(HTML(\"<b>hi!</b>\"));")]
+    [DataRow(Language.FSharp, "display(HTML(\"<b>hi!</b>\"))")]
     public async Task HTML_helper_emits_HTML_which_is_not_encoded_and_has_the_text_html_mime_type(
         Language language, 
         string code)
@@ -339,9 +338,9 @@ using {typeof(PocketView).Namespace};
                                 f.MimeType == "text/html");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Javascript_helper_emits_string_as_content_within_a_script_element(Language language)
     {
         var kernel = CreateKernel(language);
@@ -369,9 +368,9 @@ using {typeof(PocketView).Namespace};
                 v.Value.ToString().Contains($@"<script type=""text/javascript"">{scriptContent}</script>"));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task CSS_helper_emits_content_within_a_chunk_of_javascript(Language language)
     {
         var kernel = CreateKernel(language);
@@ -397,9 +396,9 @@ using {typeof(PocketView).Namespace};
                                  v.Value.ToString().Contains($"var css = `{cssContent}`"));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task it_displays_detailed_information_for_exceptions_thrown_in_user_code(Language language)
     {
         var kernel = CreateKernel(language);
@@ -454,9 +453,9 @@ f();"
             .Contain("the-outer-exception");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Display_indicates_when_a_value_is_null(Language language)
     {
         var kernel = CreateKernel(language);
@@ -482,9 +481,9 @@ f();"
                 v.Value.ToString().Contains(Formatter.NullString.HtmlEncode().ToString()));
     }
 
-    [Theory]
-    [InlineData(Language.CSharp)]
-    [InlineData(Language.FSharp)]
+    [TestMethod]
+    [DataRow(Language.CSharp)]
+    [DataRow(Language.FSharp)]
     public async Task Null_return_value_is_formatted_as_null(Language language)
     {
         var kernel = CreateKernel(language);
@@ -510,7 +509,7 @@ f();"
                 v.Value.ToString().Contains(Formatter.NullString.HtmlEncode().ToString()));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task FSharpKernel_does_not_publish_return_values_for_unit()
     {
         var kernel = CreateKernel(Language.FSharp);
@@ -521,7 +520,7 @@ f();"
             .NotContain(e => e is ReturnValueProduced);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task FSharpKernel_opens_System()
     {
         var kernel = CreateKernel(Language.FSharp);
@@ -532,7 +531,7 @@ f();"
             .NotContain(e => e is CommandFailed);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task FSharpKernel_opens_System_IO()
     {
         var kernel = CreateKernel(Language.FSharp);
@@ -543,7 +542,7 @@ f();"
             .Contain(e => e is CommandSucceeded);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task FSharpKernel_opens_System_Text()
     {
         var kernel = CreateKernel(Language.FSharp);
@@ -555,7 +554,7 @@ f();"
               .ContainSingle<CommandSucceeded>();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task FSharpKernel_does_not_open_System_Linq()
     {
         var kernel = CreateKernel(Language.FSharp);
@@ -566,7 +565,7 @@ f();"
             .Contain(e => e is CommandFailed);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task FSharpKernel_does_not_open_System_Threading_Tasks()
     {
         var kernel = CreateKernel(Language.FSharp);
@@ -577,7 +576,7 @@ f();"
             .Contain(e => e is CommandFailed);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task FSharpKernel_does_not_open_HTML_DSL()
     {
         var kernel = CreateKernel(Language.FSharp);

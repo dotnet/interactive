@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-internal sealed class JupyterZMQTestDataAttribute : JupyterTestDataAttribute
+internal sealed class JupyterZMQTestDataAttribute : JupyterTestDataAttribute, ITestDataSourceIgnoreCapability
 {
     public const string TEST_DOTNET_JUPYTER_ZMQ_CONN = nameof(TEST_DOTNET_JUPYTER_ZMQ_CONN);
     public const string JUPYTER_ZMQ = nameof(JUPYTER_ZMQ);
@@ -20,7 +20,7 @@ internal sealed class JupyterZMQTestDataAttribute : JupyterTestDataAttribute
     {
         if (_skipReason is not null)
         {
-            Skip = _skipReason;
+            IgnoreMessage = _skipReason;
         }
     }
 
@@ -54,4 +54,6 @@ internal sealed class JupyterZMQTestDataAttribute : JupyterTestDataAttribute
     /// and reading back from it at the point of save.
     /// </summary>
     public bool AllowPlayback { get; set; }
+
+    public string IgnoreMessage { get; set; }
 }

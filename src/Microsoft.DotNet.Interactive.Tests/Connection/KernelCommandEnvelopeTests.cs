@@ -4,13 +4,13 @@
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
+[TestClass]
 public class KernelCommandEnvelopeTests
 {
-    [Fact]
+    [TestMethod]
     public void Create_creates_envelope_of_the_correct_type()
     {
         KernelCommand command = new SubmitCode("display(123)");
@@ -20,7 +20,7 @@ public class KernelCommandEnvelopeTests
         envelope.Should().BeOfType<KernelCommandEnvelope<SubmitCode>>();
     }
         
-    [Fact]
+    [TestMethod]
     public void Create_creates_envelope_with_reference_to_original_command()
     {
         KernelCommand command = new SubmitCode("display(123)");

@@ -15,10 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive.Tests\Utility\FactSkipLinux.cs" Link="FactSkipLinux.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Assent" />
     <PackageReference Include="Pocket.Disposable">
@@ -32,11 +28,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="MSTest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
   <ItemGroup>

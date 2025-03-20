@@ -9,11 +9,11 @@ using Assent;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Formatting.Tests.Utility;
-using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[TestClass]
 public class TabularDataResourceFormatterTests : IDisposable
 {
     private readonly Configuration _configuration;
@@ -25,7 +25,7 @@ public class TabularDataResourceFormatterTests : IDisposable
             .UsingExtension("json");
     }
 
-    [Fact]
+    [TestMethod]
     public void can_generate_tabular_json_when_non_numeric_literals_are_used()
     {
         var data = new[]
@@ -42,7 +42,7 @@ public class TabularDataResourceFormatterTests : IDisposable
         this.Assent(formattedData, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void can_generate_tabular_json_from_object_array()
     {
         var data = new[]
@@ -59,7 +59,7 @@ public class TabularDataResourceFormatterTests : IDisposable
         this.Assent(formattedData, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void can_generate_tabular_json_from_sequence_of_sequences_of_ValueTuples()
     {
         IEnumerable<IEnumerable<(string name, object value)>> data =
@@ -93,7 +93,7 @@ public class TabularDataResourceFormatterTests : IDisposable
         this.Assent(formattedData, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void can_generate_tabular_json_from_sequence_of_sequences_of_KeyValuePairs()
     {
         IEnumerable<IEnumerable<KeyValuePair<string, object>>> data =
@@ -127,7 +127,7 @@ public class TabularDataResourceFormatterTests : IDisposable
         this.Assent(formattedData, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void can_generate_tabular_json_from_dictionary()
     {
         var data = new Dictionary<string,int>
@@ -141,7 +141,7 @@ public class TabularDataResourceFormatterTests : IDisposable
         this.Assent(formattedData, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void serialization_of_sequence_of_dictionaries_is_equivalent_to_sequence_of_objects()
     {
         var dict = new Dictionary<string, object>[]
@@ -171,7 +171,7 @@ public class TabularDataResourceFormatterTests : IDisposable
         dictJson.Should().Be(objJson);
     }
 
-    [Fact]
+    [TestMethod]
     public void can_generate_tabular_json_from_data_with_nullable_types()
     {
         var data = new Dictionary<string, int?>
@@ -185,7 +185,7 @@ public class TabularDataResourceFormatterTests : IDisposable
         this.Assent(formattedData, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void Tabular_data_resource_is_formatted_as_a_table()
     {
         var tabularDataResource = CreateTabularDataResource();
@@ -197,7 +197,7 @@ public class TabularDataResourceFormatterTests : IDisposable
             .Be($"<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td>{PlainTextBegin}12{PlainTextEnd}</td><td>green</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr><tr><td>Rainier cherry</td><td>{PlainTextBegin}9000{PlainTextEnd}</td><td>yellow</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr></tbody></table>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Tabular_data_resource_is_formatted_as_a_table_with_list_expansion_limit()
     {
         var tabularDataResource = CreateTabularDataResource();
@@ -211,7 +211,7 @@ public class TabularDataResourceFormatterTests : IDisposable
             .Be($"<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td>{PlainTextBegin}12{PlainTextEnd}</td><td>green</td><td>{PlainTextBegin}True{PlainTextEnd}</td></tr><tr><td colspan=\"4\"><i>(1 more)</i></td></tr></tbody></table>");
     }
 
-    [Fact]
+    [TestMethod]
     public void Serialization_as_MIME_type_application_json_uses_custom_formatter()
     {
         var tabularDataResource = CreateTabularDataResource();

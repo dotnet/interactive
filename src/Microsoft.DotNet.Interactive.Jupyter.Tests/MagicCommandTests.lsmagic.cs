@@ -13,20 +13,17 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
 public partial class MagicCommandTests
 {
-    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+    [TestClass]
     public class LSMmagic : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
 
-        public LSMmagic(ITestOutputHelper output)
+        public LSMmagic(TestContext output)
         {
             _disposables.Add(output.SubscribeToPocketLogger());
         }
@@ -36,7 +33,7 @@ public partial class MagicCommandTests
             _disposables.Dispose();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task lsmagic_lists_registered_magic_commands()
         {
             using var kernel = new CompositeKernel()
@@ -61,7 +58,7 @@ public partial class MagicCommandTests
                 .ContainAll("#!lsmagic", "#!one", "#!three", "#!two");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task lsmagic_lists_registered_magic_commands_in_subkernels()
         {
             var subkernel1 = new CSharpKernel();
@@ -108,7 +105,7 @@ public partial class MagicCommandTests
         }
     }
 
-    [Fact]
+    [TestMethod]
     public async Task lsmagic_does_not_list_hidden_commands()
     {
         using var kernel = new CompositeKernel()

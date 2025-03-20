@@ -13,13 +13,13 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests;
 
+[TestClass]
 public class DataFrameTypeGeneratorTests
 {
-    [Fact]
+    [TestMethod]
     public async Task it_builds_a_type_based_on_a_DataFrame()
     {
         using var kernel = await CreateKernelAndGenerateType();
@@ -32,7 +32,7 @@ public class DataFrameTypeGeneratorTests
         newFrame.GetType().Name.Should().Be("DataFrame_From_frame");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Custom_DataFrame_contains_source_frame_data()
     {
         using var kernel = await CreateKernelAndGenerateType();
@@ -44,7 +44,7 @@ public class DataFrameTypeGeneratorTests
         newFrame.Rows.Count.Should().Be(3);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task completions_show_custom_DataFrame_members()
     {
         using var kernel = await CreateKernelAndGenerateType();
@@ -66,7 +66,7 @@ public class DataFrameTypeGeneratorTests
             .Contain(new[] { "name", "is_available", "price_in_credits" });
     }
 
-    [Fact]
+    [TestMethod]
     public void Custom_DataFrame_can_be_sliced_with_LINQ()
     {
         var frame = CreateDataFrame();
@@ -78,7 +78,7 @@ public class DataFrameTypeGeneratorTests
             .Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task The_generated_source_code_can_be_displayed()
     {
         var kernel = new CSharpKernel()
@@ -115,7 +115,7 @@ using Microsoft.Data.Analysis;
                 "public System.String name => ");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Completions_suggest_existing_DataFrame_variables()
     {
         var kernel = new CSharpKernel()

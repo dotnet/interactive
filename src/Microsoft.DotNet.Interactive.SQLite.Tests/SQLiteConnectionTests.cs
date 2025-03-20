@@ -10,15 +10,16 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SQLite.Tests;
 
-[Trait("Databases", "Data query tests")]
+[TestProperty("Databases", "Data query tests")]
+[TestClass]
 public class SQLiteConnectionTests
 {
    
-    [WindowsFact]
+    [OSCondition(OperatingSystems.Windows)]
+    [TestMethod]
     public async Task It_can_connect_and_query_data()
     {
         using var kernel = new CompositeKernel

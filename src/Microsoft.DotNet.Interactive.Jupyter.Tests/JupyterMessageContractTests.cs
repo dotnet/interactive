@@ -9,13 +9,13 @@ using Microsoft.DotNet.Interactive.Documents.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Messaging;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
-using Xunit;
 
 using Message = Microsoft.DotNet.Interactive.Jupyter.Messaging.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests;
 
-[Trait("Category", "Contracts and serialization")]
+[TestProperty("Category", "Contracts and serialization")]
+[TestClass]
 public class JupyterMessageContractTests
 {
     private readonly Configuration _configuration;
@@ -28,7 +28,7 @@ public class JupyterMessageContractTests
         _configuration = _configuration.SetInteractive(Debugger.IsAttached);
     }
 
-    [Fact]
+    [TestMethod]
     public void KernelInfoReply_contract_has_not_been_broken()
     {
         var socket = new TextSocket();
@@ -54,7 +54,7 @@ public class JupyterMessageContractTests
         this.Assent(encoded, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void Execute_result_contract_has_not_been_broken()
     {
         var socket = new TextSocket();
@@ -82,7 +82,7 @@ public class JupyterMessageContractTests
         this.Assent(encoded, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void Display_data_contract_has_not_been_broken()
     {
         var socket = new TextSocket();
@@ -109,7 +109,7 @@ public class JupyterMessageContractTests
         this.Assent(encoded, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void Complete_reply_contract_has_not_been_broken()
     {
         var socket = new TextSocket();
@@ -128,7 +128,7 @@ public class JupyterMessageContractTests
         this.Assent(encoded, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void Update_data_contract_has_not_been_broken()
     {
         var socket = new TextSocket();
@@ -156,7 +156,7 @@ public class JupyterMessageContractTests
         this.Assent(encoded, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void Input_cell_honors_custom_dotnet_interactive_metadata()
     {
         var socket = new TextSocket();
@@ -189,7 +189,7 @@ public class JupyterMessageContractTests
         this.Assent(encoded, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void Input_cell_honors_custom_polyglot_notebook_metadata()
     {
         var socket = new TextSocket();

@@ -65,7 +65,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" />
+    <PackageReference Include="MSTest" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.CodeAnalysis" />
     <PackageReference Include="Newtonsoft.Json"  />
@@ -73,14 +73,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="xunit.runner.visualstudio" >
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
   </ItemGroup>
 
 </Project>

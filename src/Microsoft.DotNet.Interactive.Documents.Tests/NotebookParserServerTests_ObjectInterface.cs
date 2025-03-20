@@ -9,15 +9,15 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.ParserServer;
 using Newtonsoft.Json;
 
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
+[TestClass]
 public class NotebookParserServerTests_ObjectInterface
 {
-    [Theory]
-    [InlineData(DocumentSerializationType.Dib, "#!csharp\nvar x = 1;")]
-    [InlineData(DocumentSerializationType.Ipynb, @"{""cells"":[{""cell_type"":""code"",""source"":[""var x = 1;""]}]}")]
+    [TestMethod]
+    [DataRow(DocumentSerializationType.Dib, "#!csharp\nvar x = 1;")]
+    [DataRow(DocumentSerializationType.Ipynb, @"{""cells"":[{""cell_type"":""code"",""source"":[""var x = 1;""]}]}")]
     public void Notebook_parser_server_can_parse_file_based_on_document_type(DocumentSerializationType serializationType, string contents)
     {
         var request = new NotebookParseRequest(
@@ -42,7 +42,7 @@ public class NotebookParserServerTests_ObjectInterface
             .Be("var x = 1;");
     }
 
-    [Fact]
+    [TestMethod]
     public void Notebook_parser_server_can_parse_a_dib_file_with_well_known_kernel_metadata()
     {
         var dibContents = @"
@@ -90,7 +90,7 @@ let x = 1 (* this is F# *)
             .Equal(new[] { "csharp", "fsharp" });
     }
 
-    [Fact]
+    [TestMethod]
     public void Notebook_parser_server_can_parse_a_dib_file_with_not_well_known_kernel_metadata()
     {
         var dibContents = @"
@@ -131,7 +131,7 @@ x = 1 # this is Python
             .Be("snake-language");
     }
 
-    [Fact]
+    [TestMethod]
     public void Notebook_parser_server_can_handle_serialize_requests()
     {
         var request = @"{
@@ -255,7 +255,7 @@ x = 1 # this is Python
     }
 
 
-    [Fact]
+    [TestMethod]
     public void Notebook_parser_server_can_parse_a_dib_file_with_merged_kernel_metadata()
     {
         var dibContents = @"
@@ -299,7 +299,7 @@ let x = 1 (* this is F# *)
             .Equal(new[] { "csharp", "fsharp" });
     }
     
-    [Fact]
+    [TestMethod]
     public void Notebook_parser_server_can_parse_a_ipynb_file_with_well_known_kernel_metadata()
     {
         var ipynb = new
@@ -392,7 +392,7 @@ let x = 1 (* this is F# *)
             .Equal(new[] { "fsharp", "csharp" });
     }
 
-    [Fact]
+    [TestMethod]
     public void Notebook_parser_server_can_parse_a_ipynb_file_with_not_well_known_kernel_metadata()
     {
         var ipynb = new
@@ -473,9 +473,9 @@ let x = 1 (* this is F# *)
             .Be("snake-language");
     }
 
-    [Theory]
-    [InlineData(DocumentSerializationType.Dib, "#!csharp")]
-    [InlineData(DocumentSerializationType.Ipynb, @"""cell_type""")]
+    [TestMethod]
+    [DataRow(DocumentSerializationType.Dib, "#!csharp")]
+    [DataRow(DocumentSerializationType.Ipynb, @"""cell_type""")]
     public void Notebook_parser_server_can_serialize_file_based_on_document_type(DocumentSerializationType serializationType, string expected)
     {
         var request = new NotebookSerializeRequest(
@@ -499,7 +499,7 @@ let x = 1 (* this is F# *)
             .Contain(expected);
     }
 
-    [Fact]
+    [TestMethod]
     public void Notebook_parser_server_throws_on_unsupported_document_type()
     {
         var request = new NotebookParseRequest(

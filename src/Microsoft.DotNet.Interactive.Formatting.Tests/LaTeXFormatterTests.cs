@@ -2,13 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
+[TestClass]
 public class LaTeXFormatterTests
 {
-    [Fact]
+    [TestMethod]
     public void Can_generate_LaTeX_string_from_LaTeX_object()
     {
         var latexSource = """

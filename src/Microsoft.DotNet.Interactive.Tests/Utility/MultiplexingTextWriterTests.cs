@@ -11,19 +11,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
-using Pocket.For.Xunit;
-using Xunit;
-using Xunit.Abstractions;
 using static System.Environment;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility;
 
-[LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+[TestClass]
 public class MultiplexingTextWriterTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public MultiplexingTextWriterTests(ITestOutputHelper output)
+    public MultiplexingTextWriterTests(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
@@ -33,7 +30,7 @@ public class MultiplexingTextWriterTests : IDisposable
         _disposables.Dispose();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task It_writes_parallel_console_writes_to_separate_buffers()
     {
         await using var writer = new MultiplexingTextWriter("out");
@@ -69,7 +66,7 @@ public class MultiplexingTextWriterTests : IDisposable
         }
     }
 
-    [Fact]
+    [TestMethod]
     public void Initialization_per_context_is_idempotent()
     {
         using var writer = new MultiplexingTextWriter("out", () => new TestWriter());
@@ -89,8 +86,8 @@ public class MultiplexingTextWriterTests : IDisposable
             .BeFalse();
     }
         
-    [Theory]
-    [MemberData(nameof(WriteOperations))]
+    [TestMethod]
+    [DynamicData(nameof(WriteOperations))]
     public void Write_operations_on_MultiplexingStringWriter_are_observable_and_produce_one_event_per_top_level_write_invocation(
         Action<TextWriter> write, 
         string expectedValue)
@@ -110,7 +107,7 @@ public class MultiplexingTextWriterTests : IDisposable
             .Be(expectedValue);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Multiple_instances_can_initialized_in_one_async_context()
     {
         await using var writerOne = new MultiplexingTextWriter("one");
@@ -126,8 +123,8 @@ public class MultiplexingTextWriterTests : IDisposable
         writerTwo.ToString().Should().Be("two");
     }
 
-    [Theory]
-    [MemberData(nameof(WriteOperations))]
+    [TestMethod]
+    [DynamicData(nameof(WriteOperations))]
     public void Write_operations_on_ObservableStringWriter_are_observable_and_produce_one_event_per_top_level_write_invocation(
         Action<TextWriter> write, 
         string expectedValue)

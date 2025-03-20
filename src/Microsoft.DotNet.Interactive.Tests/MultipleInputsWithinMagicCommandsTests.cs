@@ -14,10 +14,10 @@ using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests;
 
+[TestClass]
 public class MultipleInputsWithinMagicCommandsTests : IDisposable
 {
     private readonly CompositeKernel _kernel;
@@ -77,7 +77,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         _kernel.Dispose();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Multiple_inputs_are_bound_within_a_single_magic_command_that_uses_JSON_binding()
     {
         _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
@@ -103,7 +103,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         receivedCommand.AnotherValue.Should().Be("456");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Multiple_inputs_are_bound_within_a_single_magic_command_that_uses_custom_binding()
     {
         _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
@@ -124,7 +124,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         boundValue.Should().Be("123");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task An_input_type_hint_is_set_when_the_expected_parameter_specifies_it()
     {
         _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file")
@@ -164,7 +164,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
                          .Be("file");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Type_hint_is_set_based_on_inline_JSON_configuration_of_the_input_token()
     {
         RequestInputs requestInputsSent = null;
@@ -198,7 +198,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
                          .Be("date");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Type_hint_is_overridden_based_on_inline_JSON_configuration_of_the_input_token()
     {
         _shimCommand.Parameters.Add(new KernelDirectiveParameter("--file")
@@ -238,7 +238,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
                          .Be("date");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Input_field_values_can_be_stored_using_SecretManager()
     {
         // make the secret name unique across runs
@@ -262,7 +262,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         storedValue.Should().Be("123");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Previously_stored_values_are_used_to_prepopulate_input_fields()
     {
         // make the secret name unique across runs
@@ -297,7 +297,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
               .Match($"*<input * name=\"value\" value=\"{theStoredValue}\"*");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_multiple_inputs_are_enabled_then_RequestInput_is_not_sent_for_a_magic_command_that_uses_custom_binding()
     {
         _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
@@ -325,7 +325,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         requestInputSent.Should().BeNull();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_multiple_inputs_are_enabled_then_RequestInput_is_not_sent_for_a_magic_command_that_uses_JSON_binding()
     {
         _kernel.RespondToRequestInputsFormWith(new Dictionary<string, string>
@@ -353,7 +353,7 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         requestInputSent.Should().BeNull();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task When_RequestInputs_is_not_supported_then_it_falls_back_to_sending_multiple_RequestInput_commands()
     {
         using var kernel = new CompositeKernel
@@ -392,8 +392,8 @@ public class MultipleInputsWithinMagicCommandsTests : IDisposable
         receivedRequestInputs[1].ParameterName.Should().Be("--value");
     }
 
-    [Theory]
-    [MemberData(nameof(LanguageServiceCommands))]
+    [TestMethod]
+    [DynamicData(nameof(LanguageServiceCommands))]
     public async Task Language_service_commands_do_not_trigger_input_requests(KernelCommand command)
     {
         var result = await _kernel.SendAsync(command);

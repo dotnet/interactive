@@ -9,11 +9,11 @@ using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.ParserServer;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
-[Trait("Category", "Contracts and serialization")]
+[TestProperty("Category", "Contracts and serialization")]
+[TestClass]
 public class NotebookParserServerTests_Serialization
 {
     private readonly Configuration _configuration =
@@ -21,7 +21,7 @@ public class NotebookParserServerTests_Serialization
             .UsingExtension("json")
             .SetInteractive(Debugger.IsAttached);
 
-    [Fact]
+    [TestMethod]
     public void NotebookParseRequest_deserialization_contract()
     {
         var requestJson = GetTestFileContents();
@@ -41,7 +41,7 @@ public class NotebookParserServerTests_Serialization
             .Equal(new byte[] { 0x01, 0x02, 0x03 });
     }
 
-    [Fact]
+    [TestMethod]
     public void NotebookSerializeRequest_deserialization_contract()
     {
         var requestJson = GetTestFileContents();
@@ -53,7 +53,7 @@ public class NotebookParserServerTests_Serialization
         this.Assent(json, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void NotebookParseResponse_serialization_contract()
     {
         var response = new NotebookParseResponse("the-id", new InteractiveDocument(new List<InteractiveDocumentElement>
@@ -68,7 +68,7 @@ public class NotebookParserServerTests_Serialization
         this.Assent(json, _configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void NotebookSerializeResponse_serialization_contract()
     {
         var response = new NotebookSerializeResponse("the-id", new byte[] { 0x01, 0x02, 0x03 });

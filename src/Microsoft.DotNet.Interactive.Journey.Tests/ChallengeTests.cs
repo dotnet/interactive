@@ -8,14 +8,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Xunit;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.Journey.Tests;
 
+[TestClass]
 public class ChallengeTests : ProgressiveLearningTestBase
 {
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_start_another_challenge_when_evaluating_a_challenge()
     {
         var challenge1 = GetEmptyChallenge();
@@ -32,7 +32,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
         Lesson.CurrentChallenge.Should().Be(challenge2);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_access_code_from_submission_history_when_evaluating_a_challenge()
     {
         var capturedCode = new List<string>();
@@ -52,7 +52,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
         capturedCode.Should().NotContain("1 + 3");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_access_code_from_submission_history_when_evaluating_a_model_answer()
     {
         var capturedCode = new List<string>();
@@ -72,7 +72,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
         capturedCode.Should().NotContain("1 + 3");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task challenge_tracks_submitted_code_in_submission_history()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -87,7 +87,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
         challenge.SubmissionHistory.Select(h => h.SubmittedCode).ToList().Should().BeEquivalentTo("1 + 3", "1 + 2", "1 + 1");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task challenge_tracks_events_in_submission_history()
     {
         var capturedEvents = new List<List<KernelEvent>>();
@@ -107,7 +107,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
             events => events.Should().ContainSingle<CommandFailed>());
     }
 
-    [Fact]
+    [TestMethod]
     public async Task challenge_tracks_evaluations_in_submission_history()
     {
         var numberOfSubmission = 1;
@@ -132,7 +132,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
             e => e.Message.Should().Be("1"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_access_code_when_evaluating_a_rule()
     {
         var capturedCode = new List<string>();
@@ -152,7 +152,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
         capturedCode.Should().BeEquivalentTo("1 + 1", "1 + 2", "1 + 3");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_access_events_when_evaluating_a_rule()
     {
         var capturedEvents = new List<List<KernelEvent>>();
@@ -175,7 +175,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
             events => events.Should().ContainSingle<ReturnValueProduced>().Which.Value.Should().Be(3));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_assertion_libraries_in_rule_definitions()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -191,7 +191,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
         challenge.CurrentEvaluation.RuleEvaluations.First().Reason.Should().Be("Expected value to be 10, but found 3 (difference of -7).");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task teacher_can_use_exceptions_to_fail_evaluation()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);
@@ -205,7 +205,7 @@ public class ChallengeTests : ProgressiveLearningTestBase
         challenge.CurrentEvaluation.RuleEvaluations.First().Reason.Should().Be("Students should write better than 1 + 1");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task unhandled_exception_will_cause_rule_to_fail()
     {
         using var kernel = await CreateKernel(LessonMode.StudentMode);

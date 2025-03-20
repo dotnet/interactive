@@ -6,15 +6,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 using FluentAssertions;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests;
 
 public sealed partial class PlainTextFormatterTests
 {
+    [TestClass]
     public class Defaults : FormatterTestBase
     {
-        [Fact]
+        [TestMethod]
         public void Default_formatter_for_Type_displays_generic_parameter_name_for_single_parameter_generic_type()
         {
             typeof(List<string>).ToDisplayString()
@@ -23,7 +23,7 @@ public sealed partial class PlainTextFormatterTests
                               .Should().Be("System.Collections.Generic.List<System.String>");
         }
 
-        [Fact]
+        [TestMethod]
         public void Default_formatter_for_Type_displays_generic_parameter_name_for_multiple_parameter_generic_type()
         {
             typeof(Dictionary<string, IEnumerable<int>>).ToDisplayString()
@@ -31,7 +31,7 @@ public sealed partial class PlainTextFormatterTests
                                                             "System.Collections.Generic.Dictionary<System.String,System.Collections.Generic.IEnumerable<System.Int32>>");
         }
 
-        [Fact]
+        [TestMethod]
         public void Default_formatter_for_Type_displays_generic_parameter_names_for_open_generic_types()
         {
             typeof(IList<>).ToDisplayString()
@@ -40,7 +40,7 @@ public sealed partial class PlainTextFormatterTests
                                   .Should().Be("System.Collections.Generic.IDictionary<TKey,TValue>");
         }
 
-        [Fact]
+        [TestMethod]
         public void Custom_formatter_for_Type_can_be_registered()
         {
             Formatter.Register<Type>(t => t.GUID.ToString());
@@ -49,7 +49,7 @@ public sealed partial class PlainTextFormatterTests
                      .Should().Be(GetType().GUID.ToString());
         }
         
-        [Fact]
+        [TestMethod]
         public void Exception_StackTrace_is_included_by_default()
         {
             string msg;
@@ -68,7 +68,7 @@ public sealed partial class PlainTextFormatterTests
                .Contain($"at {typeof(PlainTextFormatterTests)}.{nameof(Defaults)}.{MethodInfo.GetCurrentMethod().Name}");
         }
 
-        [Fact]
+        [TestMethod]
         public void Exception_Type_is_included_by_default()
         {
             var ex = new InvalidOperationException("oh noes!", new NullReferenceException());
@@ -78,7 +78,7 @@ public sealed partial class PlainTextFormatterTests
             msg.Should().Contain("InvalidOperationException");
         }
 
-        [Fact]
+        [TestMethod]
         public void Exception_Message_is_included_by_default()
         {
             var ex = new InvalidOperationException("oh noes!", new NullReferenceException());
@@ -88,7 +88,7 @@ public sealed partial class PlainTextFormatterTests
             msg.Should().Contain("oh noes!");
         }
 
-        [Fact]
+        [TestMethod]
         public void Exception_InnerExceptions_are_included_by_default()
         {
             var ex = new InvalidOperationException("oh noes!", new NullReferenceException("oh my.", new DataException("oops!")));
@@ -101,7 +101,7 @@ public sealed partial class PlainTextFormatterTests
               .Contain("DataException");
         }
 
-        [Fact]
+        [TestMethod]
         public void When_ResetToDefault_is_called_then_default_formatters_are_immediately_reregistered()
         {
             var widget = new Widget { Name = "hola!" };

@@ -13,30 +13,29 @@ using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.LanguageServices;
 
 public partial class CompletionTests
 {
+    [TestClass]
     public class MagicCommands : LanguageKernelTestBase
     {
-        public MagicCommands(ITestOutputHelper output) : base(output)
+        public MagicCommands(TestContext output) : base(output)
         {
         }
 
-        [Theory]
+        [TestMethod]
         // commands
-        [InlineData("[|#!c|]", "#!csharp")]
-        [InlineData("[|#!|]", "#!csharp,#!who,#!whos")]
-        [InlineData("[|#!w|]", "#!who,#!whos")]
-        [InlineData("[|#!w|]\n", "#!who,#!whos")]
-        [InlineData("[|#!w|]  \n", "#!who,#!whos")]
+        [DataRow("[|#!c|]", "#!csharp")]
+        [DataRow("[|#!|]", "#!csharp,#!who,#!whos")]
+        [DataRow("[|#!w|]", "#!who,#!whos")]
+        [DataRow("[|#!w|]\n", "#!who,#!whos")]
+        [DataRow("[|#!w|]  \n", "#!who,#!whos")]
         // options
-        [InlineData("#!share [||]", "--from")]
-        [InlineData("#!connect [||]", "signalr")]
-        [InlineData("""
+        [DataRow("#!share [||]", "--from")]
+        [DataRow("#!connect [||]", "signalr")]
+        [DataRow("""
                     
                     
                     
@@ -44,12 +43,12 @@ public partial class CompletionTests
                     
                     #!share [||]
                     """, "--from")]
-        [InlineData("""
+        [DataRow("""
                     
                     #!set --name x [||]
                     
                     """, "--value")]
-        [InlineData("""
+        [DataRow("""
                     
                     #!connect signalr
                     
@@ -84,13 +83,13 @@ public partial class CompletionTests
                                 because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
         }
 
-        [Theory]
+        [TestMethod]
         // commands
-        [InlineData("#!sha[||]", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")]
+        [DataRow("#!sha[||]", "Get a value from one kernel and create a copy (or a reference if the kernels are in the same process) in another.")]
         // options
-        [InlineData("#!share --fr[||]", "The name of the kernel to get the value from")]
+        [DataRow("#!share --fr[||]", "The name of the kernel to get the value from")]
         // subcommands
-        [InlineData("#!connect jup[||]", "Connects a Jupyter kernel as a .NET Interactive subkernel.")]
+        [DataRow("#!connect jup[||]", "Connects a Jupyter kernel as a .NET Interactive subkernel.")]
         public async Task Completion_documentation_is_available_for_magic_commands(
             string markupCode,
             string expected)
@@ -121,7 +120,7 @@ public partial class CompletionTests
                 .Match($"*{expected}*");
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Insertion_range_is_correct_for_parameter_completions()
         {
             var kernel = CreateCompositeKernel();
@@ -141,7 +140,7 @@ public partial class CompletionTests
                             new LinePosition(0, 10))));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Insertion_range_is_correct_for_directive_completions()
         {
             var kernel = CreateCompositeKernel();
@@ -161,7 +160,7 @@ public partial class CompletionTests
                             new LinePosition(0, 4))));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Completions_include_magic_commands_from_all_kernels()
         {
             var markupCode = "[|#!|]";
@@ -192,9 +191,9 @@ public partial class CompletionTests
                                 because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
         }
 
-        [Theory]
-        [InlineData("#!share [| |]")]
-        [InlineData("#!connect [| |]")]
+        [TestMethod]
+        [DataRow("#!share [| |]")]
+        [DataRow("#!connect [| |]")]
         public async Task Inner_symbol_completions_do_not_include_top_level_symbols(string markupCode)
         {
             var kernel = CreateCompositeKernel();
@@ -217,7 +216,7 @@ public partial class CompletionTests
                             .NotContain(c => c.Contains("#!")));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Completions_do_not_include_duplicates()
         {
             var cSharpKernel = new CSharpKernel();
@@ -244,13 +243,13 @@ public partial class CompletionTests
                   .ContainSingle(e => e.DisplayText == commandName);
         }
 
-        [Theory]
-        [InlineData("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.CSharp)]
-        [InlineData("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.CSharp)]
-        [InlineData("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.FSharp)]
-        [InlineData("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.FSharp)]
-        [InlineData("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.PowerShell)]
-        [InlineData("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.PowerShell)]
+        [TestMethod]
+        [DataRow("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.CSharp)]
+        [DataRow("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.CSharp)]
+        [DataRow("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.FSharp)]
+        [DataRow("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.FSharp)]
+        [DataRow("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.PowerShell)]
+        [DataRow("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.PowerShell)]
         public async Task Completions_are_available_for_magic_commands_added_at_runtime_to_child_and_parent_kernels(
             string markupCode,
             string expected,
@@ -281,7 +280,7 @@ public partial class CompletionTests
                                 because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Share_suggests_kernel_names()
         {
             var kernel = CreateCompositeKernel();
@@ -300,7 +299,7 @@ public partial class CompletionTests
                   .Contain(new[] { "fsharp", "pwsh" });
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Set_suggests_kernel_qualified_variable_name()
         {
             var kernel = CreateCompositeKernel();
@@ -322,7 +321,7 @@ public partial class CompletionTests
                   .Contain(new[] { "@csharp:x" });
         }
 
-        [Fact]
+        [TestMethod]
         public async Task Share_suggests_variable_names()
         {
             var kernel = CreateCompositeKernel();

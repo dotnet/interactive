@@ -5,13 +5,13 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Connection;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
+[TestClass]
 public class KernelEventEnvelopeTests
 {
-    [Fact]
+    [TestMethod]
     public void Create_creates_envelope_of_the_correct_type()
     {
         KernelEvent @event = new DisplayedValueProduced(
@@ -23,7 +23,7 @@ public class KernelEventEnvelopeTests
         envelope.Should().BeOfType<KernelEventEnvelope<DisplayedValueProduced>>();
     }
         
-    [Fact]
+    [TestMethod]
     public void Create_creates_envelope_with_reference_to_original_event()
     {
         KernelEvent @event = new DisplayedValueProduced(

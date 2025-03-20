@@ -8,25 +8,24 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using System.Threading.Tasks;
 using Pocket;
-using Xunit;
-using Xunit.Abstractions;
 using Microsoft.DotNet.Interactive.CSharpProject.Build;
 using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
+[TestClass]
 public class PrebuildTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
-    public PrebuildTests(ITestOutputHelper output)
+    public PrebuildTests(TestContext output)
     {
         _disposables.Add(output.SubscribeToPocketLogger());
     }
 
     public void Dispose() => _disposables.Dispose();
 
-    [Fact]
+    [TestMethod]
     public async Task A_prebuild_is_not_initialized_more_than_once()
     {
         var initializer = new TestPrebuildInitializer(
@@ -41,7 +40,7 @@ public class PrebuildTests : IDisposable
         initializer.InitializeCount.Should().Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Prebuild_after_create_actions_are_not_run_more_than_once()
     {
         var afterCreateCallCount = 0;
@@ -63,7 +62,7 @@ public class PrebuildTests : IDisposable
         afterCreateCallCount.Should().Be(1);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task A_prebuild_copy_is_not_reinitialized_if_the_source_was_already_initialized()
     {
         var initializer = new TestPrebuildInitializer(
@@ -81,7 +80,7 @@ public class PrebuildTests : IDisposable
         initializer.InitializeCount.Should().Be(1);
     }
     
-    [Fact]
+    [TestMethod]
     public async Task When_prebuild_contains_simple_console_app_then_entry_point_dll_is_in_the_build_directory()
     {
         var prebuild = PrebuildUtilities.CreateEmptyBuildablePrebuild(initializer: new PrebuildInitializer("console", "empty"));
@@ -101,7 +100,7 @@ public class PrebuildTests : IDisposable
                 "empty.dll"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task If_a_build_is_in_flight_then_the_second_one_will_wait_on_it_to_complete()
     {
         var buildEvents = new LogEntryList();
@@ -134,7 +133,7 @@ public class PrebuildTests : IDisposable
                            .Contain(e => e.StartsWith($"Skipping build for prebuild '{prebuild.Name}'"));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Directory_is_created_on_demand_during_build()
     {
         DirectoryInfo directory = new(Path.Combine(Prebuild.DefaultPrebuildsDirectory.FullName, Guid.NewGuid().ToString("N")));

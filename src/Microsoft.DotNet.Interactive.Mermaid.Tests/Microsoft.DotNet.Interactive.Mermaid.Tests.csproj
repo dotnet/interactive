@@ -23,18 +23,14 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Assent" />
     <PackageReference Include="HtmlAgilityPack" />
+    <PackageReference Include="MSTest" />
   </ItemGroup>
-
-
-  <ItemGroup>
-    <PackageReference Update="xunit.runner.visualstudio" >
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
 
   <ItemGroup>
     <Folder Include="Utility\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 </Project>

@@ -8,18 +8,17 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
+    [TestClass]
     public class Subcommands
     {
-        private readonly ITestOutputHelper _output;
+        private readonly TestContext _output;
 
-        public Subcommands(ITestOutputHelper output)
+        public Subcommands(TestContext output)
         {
             _output = output;
         }
@@ -61,7 +60,7 @@ public partial class PolyglotSyntaxParserTests
             }
         };
 
-        [Fact]
+        [TestMethod]
         public void Subcommand_can_be_parsed()
         {
             var tree = Parse("""
@@ -76,7 +75,7 @@ public partial class PolyglotSyntaxParserTests
                 .Which.Text.Should().Be("one");
         }
 
-        [Fact]
+        [TestMethod]
         public void Subcommand_parameters_must_appear_after_subcommands()
         {
             var markupCode = """
@@ -114,11 +113,11 @@ public partial class PolyglotSyntaxParserTests
                 .Be(span.End);
         }
 
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
                 #!connect mssql --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false" --kernel-name sql-adventureworks 
                 """)]
-        [InlineData("""
+        [DataRow("""
                 #!connect mssql  --kernel-name sql-adventureworks  --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false"
                 """)]
         public void Parameters_defined_on_parent_command_are_valid_on_subcommand(string code)
@@ -134,11 +133,11 @@ public partial class PolyglotSyntaxParserTests
             tree.RootNode.GetDiagnostics().Should().BeEmpty();
         }
 
-        [Theory]
-        [InlineData("""
+        [TestMethod]
+        [DataRow("""
                     #!connect mssql --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false" --kernel-name sql-adventureworks
                     """)]
-        [InlineData("""
+        [DataRow("""
                     #!connect mssql  --kernel-name sql-adventureworks  --connection-string "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost; Encrypt=false"
                     """)]
         public void Parameters_defined_on_subcommand_are_parented_to_the_subcommand_node(string code)
@@ -156,10 +155,10 @@ public partial class PolyglotSyntaxParserTests
             tree.RootNode.GetDiagnostics().Should().BeEmpty();
         }
 
-        [Theory]
-        [InlineData("sub-command")]
-        [InlineData("sub_command")]
-        [InlineData("sub_com-mand")]
+        [TestMethod]
+        [DataRow("sub-command")]
+        [DataRow("sub_command")]
+        [DataRow("sub_com-mand")]
         public void Subcommands_can_contain_hyphens_and_underscores(string subcommandName)
         {
             var tree = Parse($"""
@@ -198,7 +197,7 @@ public partial class PolyglotSyntaxParserTests
             tree.RootNode.GetDiagnostics().Should().BeEmpty();
         }
 
-        [Fact]
+        [TestMethod]
         public void Grandchild_subcommands_cannot_be_added()
         {
             var directive = new KernelActionDirective("#!test");
@@ -215,7 +214,7 @@ public partial class PolyglotSyntaxParserTests
                          .Should().Be("Only one level of directive subcommands is allowed.");
         }
 
-        [Fact]
+        [TestMethod]
         public void Directives_with_subcommands_cannot_be_added_to_a_parent_directive()
         {
             var childDirective = new KernelActionDirective("one");
@@ -231,7 +230,7 @@ public partial class PolyglotSyntaxParserTests
                        .Should().Be("Only one level of directive subcommands is allowed.");
         }
 
-        [Fact]
+        [TestMethod]
         public void Commands_cannot_be_reparented()
         {
             var directive = new KernelActionDirective("#!test");

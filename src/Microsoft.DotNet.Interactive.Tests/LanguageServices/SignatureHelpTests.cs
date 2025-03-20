@@ -7,15 +7,14 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
-using Xunit.Abstractions;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests.LanguageServices;
 
+[TestClass]
 public class SignatureHelpTests : LanguageKernelTestBase
 {
-    public SignatureHelpTests(ITestOutputHelper output) : base(output)
+    public SignatureHelpTests(TestContext output) : base(output)
     {
     }
 
@@ -25,14 +24,14 @@ public class SignatureHelpTests : LanguageKernelTestBase
         return kernel.SendAsync(command);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;", "Add($$", 0, "int Add(int a, int b)", 0, "a")]
-    [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;", "Add($$)", 0, "int Add(int a, int b)", 0, "a")]
-    [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;", "Add(,$$", 0, "int Add(int a, int b)", 1, "b")]
-    [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;", "Add(1,$$", 0, "int Add(int a, int b)", 1, "b")]
-    [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;", "Add(1,$$)", 0, "int Add(int a, int b)", 1, "b")]
-    [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;\nint Sub(int c, int d) => c - d;", "Add(Sub($$", 0, "int Sub(int c, int d)", 0, "c")]
-    [InlineData(Language.CSharp, "int Add(int a, int b) => a + b;\nint Sub(int c, int d) => c - d;", "Add(Sub(1, 2),$$", 0, "int Add(int a, int b)", 1, "b")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "int Add(int a, int b) => a + b;", "Add($$", 0, "int Add(int a, int b)", 0, "a")]
+    [DataRow(Language.CSharp, "int Add(int a, int b) => a + b;", "Add($$)", 0, "int Add(int a, int b)", 0, "a")]
+    [DataRow(Language.CSharp, "int Add(int a, int b) => a + b;", "Add(,$$", 0, "int Add(int a, int b)", 1, "b")]
+    [DataRow(Language.CSharp, "int Add(int a, int b) => a + b;", "Add(1,$$", 0, "int Add(int a, int b)", 1, "b")]
+    [DataRow(Language.CSharp, "int Add(int a, int b) => a + b;", "Add(1,$$)", 0, "int Add(int a, int b)", 1, "b")]
+    [DataRow(Language.CSharp, "int Add(int a, int b) => a + b;\nint Sub(int c, int d) => c - d;", "Add(Sub($$", 0, "int Sub(int c, int d)", 0, "c")]
+    [DataRow(Language.CSharp, "int Add(int a, int b) => a + b;\nint Sub(int c, int d) => c - d;", "Add(Sub(1, 2),$$", 0, "int Add(int a, int b)", 1, "b")]
     public async Task correct_signature_help_is_displayed(Language language, string submittedCode, string markupCode, int activeSignature, string signaureLabel, int activeParameter, string parameterName)
     {
         var kernel = CreateKernel(language);
@@ -56,7 +55,7 @@ public class SignatureHelpTests : LanguageKernelTestBase
                                             signatureInfo.Parameters[activeParameter].Label == parameterName);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task signature_help_can_handle_language_switching_and_offsets()
     {
         // switch to C# from an F# kernel/cell
@@ -81,8 +80,8 @@ public class SignatureHelpTests : LanguageKernelTestBase
             .Contain(sigInfo => sigInfo.Label == "void Console.WriteLine()");
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, "System.Environment.GetEnvironmentVariable($$", 0, "Retrieves the value of an environment variable from the current process")]
+    [TestMethod]
+    [DataRow(Language.CSharp, "System.Environment.GetEnvironmentVariable($$", 0, "Retrieves the value of an environment variable from the current process")]
     public async Task signature_help_can_return_doc_comments_from_bcl_types(Language language, string markupCode, int activeSignature, string expectedDocumentationSubstring)
     {
         using var kernel = CreateKernel(language);
@@ -110,8 +109,8 @@ public class SignatureHelpTests : LanguageKernelTestBase
             .Contain(expectedDocumentationSubstring);
     }
 
-    [Theory]
-    [InlineData(Language.CSharp, @"
+    [TestMethod]
+    [DataRow(Language.CSharp, @"
             /// <summary>
             /// Adds two numbers.
             /// </summary>
@@ -146,7 +145,7 @@ public class SignatureHelpTests : LanguageKernelTestBase
             .Be(expectedMethodDocumentation);
     }
 
-    [Fact]
+    [TestMethod]
     public async Task csharp_signature_help_contains_doc_comments_from_individually_referenced_assemblies_with_xml_files()
     {
         using var assembly = new TestAssemblyReference("Project", "netstandard2.0", "Program.cs", @"
@@ -177,7 +176,7 @@ public class SampleClass
             .ContainSingle(sh => sh.Documentation.Value.Contains("A sample class constructor."));
     }
 
-    [Fact]
+    [TestMethod]
     public async Task csharp_signature_help_can_read_doc_comments_from_nuget_packages_after_forcing_the_assembly_to_load()
     {
         using var kernel = CreateKernel(Language.CSharp);
@@ -201,7 +200,8 @@ public class SampleClass
             .ContainSingle(sh => sh.Documentation.Value.Contains("Deserializes the JSON to a .NET object."));
     }
 
-    [Fact(Skip = "https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
+    [TestMethod]
+    [Ignore("https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
     public async Task csharp_signature_help_can_read_doc_comments_from_nuget_packages()
     {
         using var kernel = CreateKernel(Language.CSharp);

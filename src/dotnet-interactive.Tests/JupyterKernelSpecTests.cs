@@ -11,11 +11,11 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 using static Microsoft.DotNet.Interactive.Tests.Utility.DirectoryUtility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class JupyterKernelSpecTests
 {
     private readonly List<DirectoryInfo> _kernelInstallations = new();
@@ -23,7 +23,7 @@ public class JupyterKernelSpecTests
     private TestConsole Console { get; } = new();
 
 
-    [Fact]
+    [TestMethod]
     public async Task Returns_success_output_when_kernel_installation_succeeded()
     {
         var kernelDir = CreateDirectory();
@@ -43,7 +43,7 @@ public class JupyterKernelSpecTests
         output.Should().MatchEquivalentOf("*Installed * kernel.");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Uses_default_kernel_paths_when_kernelspec_module_is_not_on_path_and_jupyter_is_installed()
     {
         var root = CreateDirectory();
@@ -68,7 +68,7 @@ public class JupyterKernelSpecTests
         output.Should().Match($"Installing using path { destination.FullName}.*");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task Fails_to_install_kernels_when_jupyter_is_not_installed()
     {
         var root = CreateDirectory();

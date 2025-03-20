@@ -11,11 +11,11 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 
+[TestClass]
 public class StdIoBehaviorTests
 {
-    [Fact]
+    [TestMethod]
     public async Task Quit_command_causes_stdio_process_to_end()
     {
         var testProcessDelay = TimeSpan.FromSeconds(5);

@@ -9,10 +9,10 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.AspNetCore.Tests;
 
+[TestClass]
 public class AspNetCoreTests : IDisposable
 {
     private readonly CompositeKernel _kernel;
@@ -25,7 +25,7 @@ public class AspNetCoreTests : IDisposable
         };
 
         var loadTask = AspNetCoreKernelExtension.LoadAsync(_kernel);
-        Assert.Same(Task.CompletedTask, loadTask);
+        Assert.AreSame(Task.CompletedTask, loadTask);
 
         HttpResponseMessageFormattingExtensions.RegisterFormatters();
     }
@@ -35,7 +35,7 @@ public class AspNetCoreTests : IDisposable
         _kernel.Dispose();
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_define_aspnet_endpoint_with_MapGet()
     {
         var result = await _kernel.SendAsync(new SubmitCode(@"
@@ -54,7 +54,7 @@ await HttpClient.GetAsync(""/"")"));
             .Which.Value.Should().Contain("Hello from MapGet!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_redefine_aspnet_endpoint_with_MapInteractive()
     {
         var result = await _kernel.SendAsync(new SubmitCode(@"
@@ -83,7 +83,7 @@ await HttpClient.GetAsync(""/"")"));
             .Which.Value.Should().Contain("Hello from MapInteractive 2!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task can_define_aspnet_middleware_with_Use()
     {
         var result = await _kernel.SendAsync(new SubmitCode(@"
@@ -105,7 +105,7 @@ await HttpClient.GetAsync(""/"")"));
             .Which.Value.Should().Contain("Hello from middleware!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task endpoints_take_precedence_over_new_middleware()
     {
         var result = await _kernel.SendAsync(new SubmitCode(@"
@@ -151,7 +151,7 @@ await HttpClient.GetAsync(""/"")"));
             .Which.Value.Should().Contain("Hello from MapGet!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task repeatedly_invoking_aspnet_command_noops()
     {
         var result = await _kernel.SendAsync(new SubmitCode(@"
@@ -171,7 +171,7 @@ await HttpClient.GetAsync(""/"")"));
             .Which.Value.Should().Contain("Hello from MapGet!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task aspnet_command_is_only_necessary_in_first_submission()
     {
         var commandResult = await _kernel.SendAsync(new SubmitCode("#!aspnet"));
@@ -192,7 +192,7 @@ await HttpClient.GetAsync(""/"")"));
             .Which.Value.Should().Contain("Hello from MapGet!");
     }
 
-    [Fact]
+    [TestMethod]
     public async Task server_listens_on_ephemeral_port()
     {
         var result = await _kernel.SendAsync(new SubmitCode(@"

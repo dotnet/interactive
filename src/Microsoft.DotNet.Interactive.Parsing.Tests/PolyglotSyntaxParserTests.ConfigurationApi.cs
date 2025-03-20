@@ -4,15 +4,15 @@
 using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Directives;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Parsing.Tests;
 
 public partial class PolyglotSyntaxParserTests
 {
+    [TestClass]
     public class ConfigurationApi
     {
-        [Fact]
+        [TestMethod]
         public void Duplicate_subcommand_names_are_not_allowed_on_a_single_directive()
         {
             var directive = new KernelActionDirective("#!test");
@@ -27,7 +27,7 @@ public partial class PolyglotSyntaxParserTests
                       .Should().Be("Directive already contains a subcommand named 'dupe'.");
         }
 
-        [Fact]
+        [TestMethod]
         public void When_conflicting_parameter_names_are_configured_then_it_throws()
         {
             var directive = new KernelActionDirective("#!test");
@@ -43,7 +43,7 @@ public partial class PolyglotSyntaxParserTests
             
         }
 
-        [Fact]
+        [TestMethod]
         public void Multiple_implicit_property_names_are_not_allowed_on_a_single_directive()
         {
             var directive = new KernelActionDirective("#!test");

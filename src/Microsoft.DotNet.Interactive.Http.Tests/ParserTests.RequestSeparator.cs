@@ -5,16 +5,16 @@ using System.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Http.Parsing;
 using Microsoft.DotNet.Interactive.Parsing.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Http.Tests;
 
 public partial class HttpParserTests
 {
+    [TestClass]
     public class RequestSeparator
     {
 
-        [Fact]
+        [TestMethod]
         public void request_separator_at_start_of_request_is_valid()
         {
             var code = """
@@ -29,7 +29,7 @@ public partial class HttpParserTests
                   .Which.UrlNode.Text.Should().Be("https://example.com");
         }
 
-        [Fact]
+        [TestMethod]
         public void tokens_on_request_separator_nodes_are_parsed_into_request_separator()
         {
             var result = Parse(
@@ -44,7 +44,7 @@ public partial class HttpParserTests
                                     .Which.Text.Should().Be("### Slow Response (Json)");
         }
 
-        [Fact]
+        [TestMethod]
         public void request_separator_nodes_after_various_nodes_are_parsed_correctly()
         {
             var result = Parse(
@@ -73,7 +73,7 @@ public partial class HttpParserTests
             result.SyntaxTree.RootNode.ChildNodes.OfType<HttpRequestSeparatorNode>().Count().Should().Be(3);
         }
 
-        [Fact]
+        [TestMethod]
         public void request_separator_nodes_after_variable_nodes_are_parsed_correctly()
         {
             var result = Parse(
@@ -104,7 +104,7 @@ public partial class HttpParserTests
             result.SyntaxTree.RootNode.GetDiagnostics().Should().BeEmpty();
         }
 
-        [Fact]
+        [TestMethod]
         public void request_separator_nodes_with_comments_after_variable_nodes_are_parsed_correctly()
         {
             var result = Parse(

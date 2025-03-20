@@ -30,13 +30,12 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.ValueSharing;
 using Pocket;
-using Xunit;
-using Xunit.Abstractions;
 using CommandLineParser = Microsoft.DotNet.Interactive.App.CommandLine.CommandLineParser;
 
 namespace Microsoft.DotNet.Interactive.Tests.Connection;
 
-[Trait("Category", "Contracts and serialization")]
+[TestProperty("Category", "Contracts and serialization")]
+[TestClass]
 public class SerializationTests
 {
     private static readonly IEnumerable<Assembly> _assembliesWhereCommandEventTypesAreFound = new[]
@@ -57,15 +56,15 @@ public class SerializationTests
         KernelEventEnvelope.RegisterEvent<CodeExpansionInfosProduced>();
     }
 
-    private readonly ITestOutputHelper _output;
+    private readonly TestContext _output;
 
-    public SerializationTests(ITestOutputHelper output)
+    public SerializationTests(TestContext output)
     {
         _output = output;
     }
 
-    [Theory]
-    [MemberData(nameof(Commands))]
+    [TestMethod]
+    [DynamicData(nameof(Commands))]
     public void All_command_types_are_round_trip_serializable(KernelCommand command)
     {
         var originalEnvelope = KernelCommandEnvelope.Create(command);
@@ -84,8 +83,8 @@ public class SerializationTests
                       .Excluding(info => IsPropertyJsonIgnored(info)));
     }
 
-    [Theory]
-    [MemberData(nameof(Events))]
+    [TestMethod]
+    [DynamicData(nameof(Events))]
     public void All_event_types_are_round_trip_serializable(KernelEvent @event)
     {
         var originalEnvelope = KernelEventEnvelope.Create(@event);
@@ -119,8 +118,8 @@ public class SerializationTests
         return false;
     }
 
-    [Theory]
-    [MemberData(nameof(Commands))]
+    [TestMethod]
+    [DynamicData(nameof(Commands))]
     public void Command_contract_has_not_been_broken(KernelCommand command)
     {
         var _configuration = new Configuration()
@@ -134,8 +133,8 @@ public class SerializationTests
         this.Assent(Indent(json), _configuration);
     }
 
-    [Theory]
-    [MemberData(nameof(EventsUniqueByType))]
+    [TestMethod]
+    [DynamicData(nameof(EventsUniqueByType))]
     public void Event_contract_has_not_been_broken(KernelEvent @event)
     {
         var configuration = new Configuration()
@@ -149,7 +148,7 @@ public class SerializationTests
         this.Assent(Indent(json), configuration);
     }
 
-    [Fact]
+    [TestMethod]
     public void All_command_types_are_tested_for_round_trip_serialization()
     {
         var knownCommandTypes = _assembliesWhereCommandEventTypesAreFound
@@ -164,7 +163,7 @@ public class SerializationTests
             .BeEquivalentTo(knownCommandTypes);
     }
 
-    [Fact]
+    [TestMethod]
     public void All_event_types_are_tested_for_round_trip_serialization()
     {
         var knownEventTypes = _assembliesWhereCommandEventTypesAreFound

@@ -12,10 +12,10 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SQLite.Tests;
 
+[TestClass]
 public class SQLiteKernelExtensionTests : IDisposable
 {
     private readonly Configuration _configuration;
@@ -27,7 +27,8 @@ public class SQLiteKernelExtensionTests : IDisposable
             .UsingExtension("json");
     }
 
-    [WindowsFact]
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     public async Task can_generate_tabular_json_from_database_table_result()
     {
         using var kernel = new CompositeKernel
@@ -54,7 +55,8 @@ SELECT * FROM fruit
         this.Assent(tabularData.ToDisplayString(TabularDataResourceFormatter .MimeType), _configuration);
     }
 
-    [WindowsFact]
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     public async Task can_handle_duplicate_columns_in_query_results()
     {
         using var kernel = new CompositeKernel

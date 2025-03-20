@@ -7,11 +7,11 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Formatting;
 using Pocket;
-using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.App.Tests;
 
+[TestClass]
 public class FormatterConfigurationTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
@@ -26,7 +26,7 @@ public class FormatterConfigurationTests : IDisposable
         _disposables.Dispose();
     }
 
-    [Fact]
+    [TestMethod]
     public void LatexString_type_is_formatted()
     {
         var latex = new LaTeXString(@"F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx");
@@ -41,7 +41,7 @@ public class FormatterConfigurationTests : IDisposable
         formattedValue.Value.Should().Be(@"F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx");
     }
 
-    [Fact]
+    [TestMethod]
     public void ScriptContent_type_is_formatted()
     {
         var script = new ScriptContent("alert('hello');");
@@ -58,7 +58,7 @@ public class FormatterConfigurationTests : IDisposable
             """);
     }
 
-    [Fact]
+    [TestMethod]
     public void ScriptContent_type_with_possible_html_characters_is_not_HTML_encoded()
     {
         var scriptText = "if (true && false) { alert('hello with embedded <>\" escapes'); };";
