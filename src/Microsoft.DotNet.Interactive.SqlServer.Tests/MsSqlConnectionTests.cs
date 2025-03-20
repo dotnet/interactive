@@ -599,7 +599,7 @@ select TOP(@testVar) * from sys.databases";
         requestInput.InputTypeHint.Should().Be("connectionstring-mssql");
     }
 
-    [Fact]
+    [TestMethod]
     public void DependencyVersions_are_correctly_scaffolded_from_build()
     {
         var dependencyVersionsType = typeof(ConnectMsSqlKernel)
