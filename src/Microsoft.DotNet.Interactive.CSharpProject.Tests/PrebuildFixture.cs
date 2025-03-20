@@ -6,32 +6,19 @@ using Microsoft.DotNet.Interactive.CSharpProject.Build;
 
 namespace Microsoft.DotNet.Interactive.CSharpProject.Tests;
 
-public sealed class PrebuildFixture
+[TestClass]
+public static class PrebuildFixture
 {
-    private bool _alreadyInitialized;
-
-    private PrebuildFixture()
+    [AssemblyInitialize]
+    public static async Task InitializeAsync(TestContext _)
     {
-    }
-
-    public static PrebuildFixture Instance { get; } = new PrebuildFixture();
-
-    public async Task InitializeAsync()
-    {
-        if (_alreadyInitialized)
-        {
-            return;
-        }
-
         var consolePrebuild = await Prebuild.GetOrCreateConsolePrebuildAsync(true);
         await consolePrebuild.EnsureReadyAsync();
 
         consolePrebuild = await Prebuild.GetOrCreateConsolePrebuildAsync(false);
         await consolePrebuild.EnsureReadyAsync();
         Prebuild = consolePrebuild;
-
-        _alreadyInitialized = true;
     }
 
-    public Prebuild Prebuild { get; private set; }
+    public static Prebuild Prebuild { get; private set; }
 }

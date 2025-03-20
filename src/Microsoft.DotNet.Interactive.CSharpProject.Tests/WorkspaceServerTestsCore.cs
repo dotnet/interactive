@@ -21,14 +21,8 @@ public abstract class WorkspaceServerTestsCore : IDisposable
 
     protected ICodeRunner GetCodeRunner() => CreateRoslynWorkspaceServer();
 
-    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
-    public static async Task ClassInitialize(TestContext testContext)
-    {
-        await PrebuildFixture.Instance.InitializeAsync();
-    }
-
     private WorkspaceServer CreateRoslynWorkspaceServer()
     {
-        return new WorkspaceServer(PrebuildFinder.Create(() => Task.FromResult(PrebuildFixture.Instance.Prebuild)));
+        return new WorkspaceServer(PrebuildFinder.Create(() => Task.FromResult(PrebuildFixture.Prebuild)));
     }
 }
