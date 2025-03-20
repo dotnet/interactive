@@ -38,7 +38,7 @@ public class MarkupTestFileFacts
             new TextSpan(0, 10),
             new TextSpan(15, 11)
         );
-        Assert.AreEqual(expected.ToArray(), spans.ToArray());
+        CollectionAssert.AreEquivalent(expected.ToArray(), spans.ToArray());
     }
 
     [TestMethod]
@@ -47,6 +47,6 @@ public class MarkupTestFileFacts
         var input = "{|first:input span|}other";
         MarkupTestFile.GetNamedSpans(input, out string output, out IDictionary<string, ImmutableArray<TextSpan>> spans);
         var expected = ImmutableArray.Create(new TextSpan(0, 10));
-        Assert.AreEqual(expected.ToArray(), spans["first"].ToArray());
+        CollectionAssert.AreEquivalent(expected.ToArray(), spans["first"].ToArray());
     }
 }
