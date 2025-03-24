@@ -137,7 +137,7 @@ public static class CodeSubmission
         if (!kernelInfo.Contains("markdown"))
         {
             kernelInfo = kernelInfo.Clone();
-            kernelInfo.Add(new KernelInfo("markdown", languageName: "markdown", aliases: new[] { "md" }));
+            kernelInfo.Add(new KernelInfo("markdown", languageName: "markdown", aliases: ["md"]));
         }
 
         return kernelInfo;

@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Text;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.ParserServer;
 using Newtonsoft.Json;
 using Xunit;
@@ -125,16 +126,33 @@ public partial class NotebookParserServerTests
 
             var response = NotebookParserServer.HandleRequest(request);
 
-            response
-                .Should()
-                .BeOfType<NotebookParseResponse>()
-                .Which
-                .Document
+            using var _ = new AssertionScope();
+
+            var document = response
+                           .Should()
+                           .BeOfType<NotebookParseResponse>()
+                           .Which
+                           .Document;
+
+            document
                 .Elements
                 .Single()
                 .KernelName
                 .Should()
                 .Be("snake-language");
+
+            var kernelInfo = document.GetKernelInfo()
+                                     .Should()
+                                     .BeOfType<KernelInfoCollection>()
+                                     .Which;
+
+            kernelInfo
+                .DefaultKernelName
+                .Should()
+                .Be("snake-language");
+
+            kernelInfo
+                .Should().Contain(i => i.LanguageName == "python");
         }
 
         [Fact]

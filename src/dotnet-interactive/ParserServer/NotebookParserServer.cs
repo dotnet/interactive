@@ -31,13 +31,11 @@ public class NotebookParserServer : IDisposable
     {
         new("csharp", languageName: "C#", aliases: ["c#", "cs"]),
         new("fsharp", languageName: "F#", aliases: ["f#", "fs"]),
-        new("pwsh", languageName: "PowerShell", aliases: ["powershell"]),
-        new("javascript", languageName: "JavaScript", aliases: ["js"]),
         new("html", languageName: "HTML"),
-        new("sql", languageName: "SQL"),
-        new("kql", languageName: "KQL"),
-        new("mermaid", languageName: "Mermaid"),
         new("http", languageName: "HTTP"),
+        new("javascript", languageName: "JavaScript", aliases: ["js"]),
+        new("mermaid", languageName: "Mermaid"),
+        new("pwsh", languageName: "PowerShell", aliases: ["powershell"]),
         new("value"),
     };
 
