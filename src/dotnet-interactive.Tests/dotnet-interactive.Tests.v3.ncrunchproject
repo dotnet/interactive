@@ -101,6 +101,9 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.stdio_mode_honors_log_path</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.StdIoBehaviorTests.Quit_command_causes_stdio_process_to_end</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

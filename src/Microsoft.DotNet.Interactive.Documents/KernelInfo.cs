@@ -30,7 +30,7 @@ public class KernelInfo
         }
         else
         {
-            Aliases = new string[] { };
+            Aliases = [];
         }
     }
 

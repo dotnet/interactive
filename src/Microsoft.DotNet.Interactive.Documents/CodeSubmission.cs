@@ -12,6 +12,9 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Documents;
 
+/// <summary>
+/// This format is used by the .dib file format as well as for multi-kernel code submissions.
+/// </summary>
 public static class CodeSubmission
 {
     private const string MagicCommandPrefix = "#!";
@@ -89,7 +92,7 @@ public static class CodeSubmission
         AddElement();
 
         // ensure there's at least one element available
-        if (document.Elements.Count == 0)
+        if (document.Elements.Count is 0)
         {
             document.Elements.Add(CreateElement(currentKernelName, Array.Empty<string>()));
         }
@@ -134,7 +137,7 @@ public static class CodeSubmission
         if (!kernelInfo.Contains("markdown"))
         {
             kernelInfo = kernelInfo.Clone();
-            kernelInfo.Add(new KernelInfo("markdown", languageName: "markdown", aliases: new[] { "md" }));
+            kernelInfo.Add(new KernelInfo("markdown", languageName: "markdown", aliases: ["md"]));
         }
 
         return kernelInfo;

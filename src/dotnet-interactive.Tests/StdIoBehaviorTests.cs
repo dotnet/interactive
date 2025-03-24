@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FluentAssertions;
-using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
+
+namespace Microsoft.DotNet.Interactive.App.Tests;
 
 public class StdIoBehaviorTests
 {

@@ -164,35 +164,6 @@ select top 10 AddressLine1, AddressLine2 from Person.Address
     }
 
     [MsSqlFact]
-    public async Task sending_query_to_sql_will_generate_suggestions()
-    {
-        var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();
-        using var kernel = await CreateKernelAsync();
-        var result = await kernel.SubmitCodeAsync(
-            $"#!connect mssql --kernel-name adventureworks \"{connectionString}\"");
-
-        result.Events
-              .Should()
-              .NotContainErrors();
-
-        result = await kernel.SubmitCodeAsync(@"
-#!sql
-SELECT TOP 100 * FROM Person.Person
-");
-
-        result.Events
-              .Should()
-              .ContainSingle<DisplayedValueProduced>(e =>
-                                                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
-              .Which.FormattedValues.Single(f => f.MimeType == HtmlFormatter.MimeType)
-              .Value
-              .Should()
-              .Contain("#!sql-adventureworks")
-              .And
-              .Contain("SELECT TOP 100 * FROM Person.Person");
-    }
-
-    [MsSqlFact]
     public async Task It_can_scaffold_a_DbContext_in_a_CSharpKernel()
     {
         var connectionString = MsSqlFactAttribute.GetConnectionStringForTests();

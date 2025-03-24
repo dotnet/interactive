@@ -14,7 +14,7 @@ using Xunit;
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
 [Trait("Category", "Contracts and serialization")]
-public class NotebookParserServerTests_Serialization
+public class NotebookParserServerApiContractTests
 {
     private readonly Configuration _configuration =
         new Configuration()
@@ -38,7 +38,7 @@ public class NotebookParserServerTests_Serialization
             .Which
             .RawData
             .Should()
-            .Equal(new byte[] { 0x01, 0x02, 0x03 });
+            .Equal([0x01, 0x02, 0x03]);
     }
 
     [Fact]

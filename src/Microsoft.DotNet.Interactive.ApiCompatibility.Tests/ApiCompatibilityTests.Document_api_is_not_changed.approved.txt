@@ -37,6 +37,7 @@ Microsoft.DotNet.Interactive.Documents
     public System.String GetDefaultKernelName()
     public System.Collections.Generic.IAsyncEnumerable<InteractiveDocument> GetImportsAsync(System.Func<System.String,DirectiveParseResult> parseDirective, System.Boolean recursive = False)
     public System.Collections.Generic.IEnumerable<InputField> GetInputFields(System.Func<System.String,DirectiveParseResult> parseDirectiveLine)
+    public KernelInfoCollection GetKernelInfo()
   public class InteractiveDocumentElement
     .ctor()
     .ctor(System.String contents = null, System.String kernelName = null, System.Collections.Generic.IEnumerable<InteractiveDocumentOutputElement> outputs = null)

@@ -47,7 +47,7 @@ export async function registerAcquisitionCommands(context: vscode.ExtensionConte
                     createToolManifest,
                     (version: string) => {
                         vscode.window.withProgress(
-                            { location: vscode.ProgressLocation.Notification, title: `Installing .NET Interactive version ${version}... at location ${context.globalStorageUri.fsPath}` },
+                            { location: vscode.ProgressLocation.Notification, title: `Installing .NET Interactive version ${version}...` },
                             (_progress, _token) => installationPromiseCompletionSource.promise);
                     },
                     installInteractiveTool,

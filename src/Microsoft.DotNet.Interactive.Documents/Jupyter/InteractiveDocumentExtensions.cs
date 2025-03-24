@@ -13,7 +13,6 @@ internal static class InteractiveDocumentExtensions
         this InteractiveDocument document,
         string language = "C#")
     {
-        // FIX: (WithJupyterMetadata) update this
         var (kernelName, canonicalLanguageName, langVersion, fileExtension) =
             language.ToLowerInvariant() switch
             {

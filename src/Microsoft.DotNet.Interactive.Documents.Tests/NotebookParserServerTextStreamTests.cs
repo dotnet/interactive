@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.ParserServer;
@@ -14,7 +13,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Documents.Tests;
 
-public class NotebookParserServerTests_TextInterface : IDisposable
+public class NotebookParserServerTextStreamTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
@@ -27,7 +26,7 @@ public class NotebookParserServerTests_TextInterface : IDisposable
             "the-id",
             serializationType: DocumentSerializationType.Dib,
             defaultLanguage: "csharp",
-            rawData: Encoding.UTF8.GetBytes("#!csharp\nvar x = 1;"));
+            rawData: "#!csharp\nvar x = 1;"u8.ToArray());
         var requestJson = request.ToJson();
 
         var asyncEnumerator = GetResponseObjectsEnumerable(requestJson + newline).GetAsyncEnumerator();
@@ -56,7 +55,7 @@ public class NotebookParserServerTests_TextInterface : IDisposable
             "the-id",
             serializationType: DocumentSerializationType.Dib,
             defaultLanguage: "csharp",
-            rawData: Encoding.UTF8.GetBytes("#!csharp\nvar x = 1;"));
+            rawData: "#!csharp\nvar x = 1;"u8.ToArray());
         var request2 = new NotebookSerializeRequest(
             "the-second-id",
             serializationType: DocumentSerializationType.Dib,
@@ -102,7 +101,7 @@ public class NotebookParserServerTests_TextInterface : IDisposable
             "the-id",
             serializationType: DocumentSerializationType.Dib,
             defaultLanguage: "csharp",
-            rawData: Array.Empty<byte>());
+            rawData: []);
 
         var requestJson = string.Concat(
             "this is a request that can't be handled in any meaningful way, including returning an error",

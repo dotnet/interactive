@@ -74,6 +74,7 @@ export function getEol(): Eol {
 }
 
 export function toNotebookDocument(document: vscode.NotebookDocument): InteractiveDocument {
+    const metadata = metadataUtilities.getNotebookDocumentMetadataFromNotebookDocument(document);
     return {
         elements: document.getCells().map(toInteractiveDocumentElement),
         metadata: document.metadata

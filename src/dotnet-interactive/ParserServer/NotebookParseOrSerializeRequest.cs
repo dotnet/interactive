@@ -8,21 +8,27 @@ namespace Microsoft.DotNet.Interactive.App.ParserServer;
 
 public abstract class NotebookParseOrSerializeRequest
 {
-    public abstract RequestType Type { get; }
-    public string Id { get; }
-    public DocumentSerializationType SerializationType { get; }
-    public string DefaultLanguage { get; }
-
-    private protected NotebookParseOrSerializeRequest(string id, DocumentSerializationType serializationType, string defaultLanguage)
+    private protected NotebookParseOrSerializeRequest(
+        string id, 
+        DocumentSerializationType serializationType, 
+        string defaultLanguage)
     {
         Id = id;
         SerializationType = serializationType;
         DefaultLanguage = defaultLanguage;
     }
 
+    public abstract RequestType Type { get; }
+
+    public string Id { get; }
+
+    public DocumentSerializationType SerializationType { get; }
+
+    public string DefaultLanguage { get; }
+
     public static NotebookParseOrSerializeRequest FromJson(string json)
     {
-        if (json == null)
+        if (json is null)
         {
             throw new ArgumentNullException(nameof(json));
         }

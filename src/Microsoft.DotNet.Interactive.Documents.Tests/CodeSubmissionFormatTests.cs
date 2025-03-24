@@ -67,8 +67,11 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
     [Fact]
     public void parsed_cells_can_specify_their_language_without_retaining_the_language_specifier()
     {
-        var notebook = ParseDib(@"#!fsharp
-let x = 1");
+        var notebook = ParseDib(
+            """
+            #!fsharp
+            let x = 1
+            """);
         notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -83,8 +86,11 @@ let x = 1");
     [Fact]
     public void parsed_cells_without_a_language_specifier_retain_magic_commands_and_the_default_language()
     {
-        var notebook = ParseDib(@"#!probably-a-magic-command
-var x = 1;");
+        var notebook = ParseDib(
+            """
+            #!probably-a-magic-command
+            var x = 1;
+            """);
         notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -99,9 +105,12 @@ var x = 1;");
     [Fact]
     public void parsed_cells_with_a_language_specifier_retain_magic_commands()
     {
-        var notebook = ParseDib(@"#!fsharp
-#!probably-a-magic-command
-let x = 1");
+        var notebook = ParseDib(
+            """
+            #!fsharp
+            #!probably-a-magic-command
+            let x = 1
+            """);
         notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -116,13 +125,16 @@ let x = 1");
     [Fact]
     public void parsed_cells_with_connect_directive_dont_cause_subsequent_cells_to_change_language()
     {
-        var notebook = ParseDib(@"
-#!csharp
-#!connect named-pipe --kernel-name wpf --pipe-name some-pipe-name
+        var notebook = ParseDib(
+            """
 
-#!csharp
-#!wpf -h
-");
+            #!csharp
+            #!connect named-pipe --kernel-name wpf --pipe-name some-pipe-name
+
+            #!csharp
+            #!wpf -h
+
+            """);
         notebook.Elements
                 .Should()
                 .SatisfyRespectively(
@@ -134,13 +146,16 @@ let x = 1");
     [Fact]
     public void multiple_cells_can_be_parsed()
     {
-        var notebook = ParseDib(@"#!csharp
-var x = 1;
-var y = 2;
+        var notebook = ParseDib(
+            """
+            #!csharp
+            var x = 1;
+            var y = 2;
 
-#!fsharp
-let x = 1
-let y = 2");
+            #!fsharp
+            let x = 1
+            let y = 2
+            """);
         notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -153,16 +168,19 @@ let y = 2");
     [Fact]
     public void empty_language_cells_are_removed_when_parsing()
     {
-        var notebook = ParseDib(@"#!csharp
-//
+        var notebook = ParseDib(
+            """
+            #!csharp
+            //
 
-#!fsharp
+            #!fsharp
 
-#!pwsh
-Get-Item
+            #!pwsh
+            Get-Item
 
-#!fsharp
-");
+            #!fsharp
+
+            """);
         notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -175,37 +193,39 @@ Get-Item
     [Fact]
     public void empty_lines_are_removed_between_cells()
     {
-        var notebook = ParseDib(@"
-
-
-#!csharp
-// first line of C#
+        var notebook = ParseDib(
+            """
 
 
 
-// last line of C#
+            #!csharp
+            // first line of C#
+
+
+
+            // last line of C#
 
 
 
 
 
-#!fsharp
+            #!fsharp
 
-// first line of F#
-
-
-
-// last line of F#
+            // first line of F#
 
 
-");
+
+            // last line of F#
+
+
+
+            """);
         notebook.Elements
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
+                .BeEquivalentToRespectingRuntimeTypes([
                     new InteractiveDocumentElement("// first line of C#\n\n\n\n// last line of C#", "csharp"),
                     new InteractiveDocumentElement("// first line of F#\n\n\n\n// last line of F#", "fsharp")
-                });
+                ]);
     }
 
     [Theory]
@@ -213,41 +233,46 @@ Get-Item
     [InlineData("md")]
     public void markdown_cells_can_be_parsed_even_though_its_not_a_kernel_language(string cellLanguage)
     {
-        var notebook = ParseDib($@"
-#!{cellLanguage}
+        var notebook = ParseDib(
+            $"""
 
-This is `markdown`.
-");
+             #!{cellLanguage}
+
+             This is `markdown`.
+
+             """);
         notebook.Elements
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
-                {
+                .BeEquivalentToRespectingRuntimeTypes([
                     new InteractiveDocumentElement("This is `markdown`.", "markdown")
-                });
+                ]);
     }
 
     [Fact]
     public void language_aliases_are_expanded_when_parsed()
     {
-        var notebook = ParseDib(@"
-#!c#
-// this is csharp 1
+        var notebook = ParseDib(
+            """
 
-#!C#
-// this is csharp 2
+            #!c#
+            // this is csharp 1
 
-#!f#
-// this is fsharp 1
+            #!C#
+            // this is csharp 2
 
-#!F#
-// this is fsharp 2
+            #!f#
+            // this is fsharp 1
 
-#!powershell
-# this is pwsh
+            #!F#
+            // this is fsharp 2
 
-#!md
-This is `markdown` with an alias.
-");
+            #!powershell
+            # this is pwsh
+
+            #!md
+            This is `markdown` with an alias.
+
+            """);
         notebook.Elements
                 .Should()
                 .BeEquivalentToRespectingRuntimeTypes(new[]
@@ -289,12 +314,15 @@ This is `markdown` with an alias.
     [Fact]
     public void parsed_notebook_outputs_are_empty()
     {
-        var notebook = ParseDib(@"
-#! csharp
+        var notebook = ParseDib(
+            """
 
-var x = 1;
+            #! csharp
 
-");
+            var x = 1;
+
+
+            """);
         notebook.Elements
                 .Should()
                 .ContainSingle()
@@ -423,22 +451,23 @@ var x = 1;
         document.Elements
                 .Select(e => e.KernelName)
                 .Should()
-                .BeEquivalentSequenceTo(new[]
-                {
+                .BeEquivalentSequenceTo([
                     "markdown",
                     "csharp",
                     "fsharp",
                     "pwsh",
                     "javascript",
-                    "mermaid",
-                });
+                    "mermaid"
+                ]);
     }
 
     [Fact]
     public void dib_file_with_only_metadata_section_can_be_loaded()
     {
-        var content = @"#!meta
-{""theAnswer"":42}";
+        var content = """
+                      #!meta
+                      {"theAnswer":42}
+                      """;
         var document = ParseDib(content);
         document
             .Metadata
@@ -449,11 +478,13 @@ var x = 1;
     [Fact]
     public void kernel_selector_can_immediately_follow_metadata_section()
     {
-        var content = @"#!meta
-{""theAnswer"":42}
-#!csharp
-var x = 1;";
-        var document = ParseDib(content);
+        var document = ParseDib(
+            """
+            #!meta
+            {"theAnswer":42}
+            #!csharp
+            var x = 1;
+            """);
 
         using var _ = new AssertionScope();
 
@@ -497,24 +528,25 @@ var x = 1;";
     [Fact]
     public void Metadata_JSON_can_span_multiple_lines()
     {
-        var dib = @"
-#!meta
+        var document = CodeSubmission.Parse(
+            """
 
-{
-  ""someProperty"": 123
-}
+            #!meta
 
-#!markdown
+            {
+                "someProperty": 123
+            }
 
-# Title
+            #!markdown
 
-#!csharp
+            # Title
 
-Console.Write(""hello"");
+            #!csharp
 
-";
+            Console.Write("hello");
 
-        var document = CodeSubmission.Parse(dib);
+
+            """);
 
         document.Metadata
                 .Should()
@@ -544,34 +576,36 @@ Console.Write(""hello"");
 
         var serializedMetadata = JsonSerializer.Serialize(metadata, App.ParserServer.ParserServerSerializer.JsonSerializerOptions);
 
-        return $@"#!meta
+        return $"""
+                #!meta
 
-{serializedMetadata}
+                {serializedMetadata}
 
-#!markdown
+                #!markdown
 
-* Markdown code
+                * Markdown code
 
-#!csharp
+                #!csharp
 
-// C# code
+                // C# code
 
-#!fsharp
+                #!fsharp
 
-// F# code
+                // F# code
 
-#!pwsh
+                #!pwsh
 
-# PowerShell code
+                # PowerShell code
 
-#!javascript
+                #!javascript
 
-// JavaScript code
+                // JavaScript code
 
-#!mermaid
+                #!mermaid
 
-%% Mermaid code
-";
+                %% Mermaid code
+
+                """;
     }
 
     [Fact]
