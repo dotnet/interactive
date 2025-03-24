@@ -14,11 +14,11 @@ import * as constants from './constants';
 
 function toInteractiveDocumentElement(cell: vscode.NotebookCellData): commandsAndEvents.InteractiveDocumentElement {
     // just need to match the shape
-    const fakeCell: vscodeLike.NotebookCell = {
+    const tempCell: vscodeLike.NotebookCell = {
         kind: vscodeLike.NotebookCellKind.Code,
         metadata: cell.metadata ?? {}
     };
-    const notebookCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(fakeCell);
+    const notebookCellMetadata = metadataUtilities.getNotebookCellMetadataFromNotebookCellElement(tempCell);
     const outputs = cell.outputs || [];
     const kernelName = cell.languageId === 'markdown' ? 'markdown' : notebookCellMetadata.kernelName ?? 'csharp';
 
