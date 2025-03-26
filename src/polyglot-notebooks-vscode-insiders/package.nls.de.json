@@ -29,5 +29,5 @@
   "command.shareValueWith": "Wert freigeben für...",
   "command.restartKernel": "Neu starten",
   "command.openValueViewer": "Variablen",
-  "command.connectSubkernel": "Polyglot-Notebook: Verbindung mit neuem Subkernel herstellen"
+  "command.connectSubkernel": "Polyglot Notebook: Mit neuem Zellenkernel verbinden"
 }

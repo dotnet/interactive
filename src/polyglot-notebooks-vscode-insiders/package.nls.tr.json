@@ -29,5 +29,5 @@
   "command.shareValueWith": "Değeri şununla paylaş...",
   "command.restartKernel": "Yeniden Başlat",
   "command.openValueViewer": "Değişkenler",
-  "command.connectSubkernel": "Polyglot Not Defteri: Yeni alt kanala bağlan"
+  "command.connectSubkernel": "Çok dilli not defteri: Yeni hücre çekirdeğine bağlanın"
 }

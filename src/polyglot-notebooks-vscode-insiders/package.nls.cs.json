@@ -29,5 +29,5 @@
   "command.shareValueWith": "Sdílet hodnotu s…",
   "command.restartKernel": "Restartovat",
   "command.openValueViewer": "Proměnné",
-  "command.connectSubkernel": "Poznámkový blok Polyglot: Připojit k novému podkernelu"
+  "command.connectSubkernel": "Vícejazyčný poznámkový blok: připojení k novému jádru buňky"
 }

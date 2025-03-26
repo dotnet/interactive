@@ -29,5 +29,5 @@
   "command.shareValueWith": "Condividi valore con...",
   "command.restartKernel": "Riavvio",
   "command.openValueViewer": "Variabili",
-  "command.connectSubkernel": "Blocco appunti Polyglot: connettiti al nuovo sottokernel"
+  "command.connectSubkernel": "Blocco appunti Polyglot: Connetti al nuovo kernel di cella"
 }
