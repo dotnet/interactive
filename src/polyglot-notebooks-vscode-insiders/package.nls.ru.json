@@ -29,5 +29,5 @@
   "command.shareValueWith": "Поделиться значением с…",
   "command.restartKernel": "Перезапустить",
   "command.openValueViewer": "Переменные",
-  "command.connectSubkernel": "Записная книжка Polyglot: подключение к новой подкернелю"
+  "command.connectSubkernel": "Записная книжка Polyglot: подключение к новому ядру ячейки"
 }

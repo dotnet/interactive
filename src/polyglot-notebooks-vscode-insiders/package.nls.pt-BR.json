@@ -29,5 +29,5 @@
   "command.shareValueWith": "Compartilhar valor com...",
   "command.restartKernel": "Reiniciar",
   "command.openValueViewer": "Variáveis",
-  "command.connectSubkernel": "Bloco de Anotações Polyglot: Conectar-se ao novo subkernel"
+  "command.connectSubkernel": "Notebook Poliglota: conectar-se ao novo kernel de célula"
 }

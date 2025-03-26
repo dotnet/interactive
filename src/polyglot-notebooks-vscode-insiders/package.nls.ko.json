@@ -29,5 +29,5 @@
   "command.shareValueWith": "다음과 값 공유...",
   "command.restartKernel": "다시 시작",
   "command.openValueViewer": "변수",
-  "command.connectSubkernel": "Polyglot Notebook: 새 하위 장치에 연결"
+  "command.connectSubkernel": "Polyglot Notebook: 새 셀 커널에 연결"
 }

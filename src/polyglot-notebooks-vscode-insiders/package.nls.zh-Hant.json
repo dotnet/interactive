@@ -29,5 +29,5 @@
   "command.shareValueWith": "與下列項目分享值...",
   "command.restartKernel": "重新啟動",
   "command.openValueViewer": "變數",
-  "command.connectSubkernel": "Polyglot 筆記本： 連線到新的子程式"
+  "command.connectSubkernel": "多語言筆記本: 連接到新的儲存格核心"
 }

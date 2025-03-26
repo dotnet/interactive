@@ -29,5 +29,5 @@
   "command.shareValueWith": "Partager la valeur avec...",
   "command.restartKernel": "Redémarrer",
   "command.openValueViewer": "Variables",
-  "command.connectSubkernel": "Bloc-notes Polyglot : se connecter à un nouveau subkernel"
+  "command.connectSubkernel": "Notebook Polyglot : Se connecter au nouveau noyau de cellule"
 }
