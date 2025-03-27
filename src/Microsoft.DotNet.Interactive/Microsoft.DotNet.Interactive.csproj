@@ -25,7 +25,7 @@
     <PackageReference Include="System.Runtime.Loader" />
     <PackageReference Include="System.Reactive" />
     <PackageReference Include="Microsoft.CodeAnalysis" />
-    <PackageReference Include="PocketLogger" >
+    <PackageReference Include="PocketLogger">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PocketLogger.Subscribe">
