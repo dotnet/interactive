@@ -52,6 +52,11 @@
         <target state="translated">Устанавливает спецификации ядра в указанный каталог</target>
         <note />
       </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_local_only_network_interfaces_Description">
+        <source>Exposes ports only on local network interfaces</source>
+        <target state="new">Exposes ports only on local network interfaces</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Cli_dotnet_interactive_log_path_Description">
         <source>Enable file logging to the specified directory</source>
         <target state="translated">Включить ведение журнала файлов в указанном каталоге</target>

@@ -124,6 +124,15 @@ namespace Microsoft.DotNet.Interactive.App {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exposes ports only on local network interfaces.
+        /// </summary>
+        internal static string Cli_dotnet_interactive_jupyter_local_only_network_interfaces_Description {
+            get {
+                return ResourceManager.GetString("Cli_dotnet_interactive_jupyter_local_only_network_interfaces_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enable file logging to the specified directory.
         /// </summary>
         internal static string Cli_dotnet_interactive_log_path_Description {
