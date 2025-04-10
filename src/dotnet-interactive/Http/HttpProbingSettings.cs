@@ -13,39 +13,40 @@ internal class HttpProbingSettings
 {
     public Uri[] AddressList { get; private set; }
 
-    public static HttpProbingSettings Create(int? port)
+    public static HttpProbingSettings Create(int? port, bool localOnlyNetworkInterfaces)
     {
         return new HttpProbingSettings
         {
-            AddressList = GetProbingAddressList(port)
+            AddressList = GetProbingAddressList(port, localOnlyNetworkInterfaces)
         };
     }
 
-    private static Uri[] GetProbingAddressList(int? httpPort)
+    private static Uri[] GetProbingAddressList(int? httpPort, bool localOnlyNetworkInterfaces)
     {
-        var sources = new List<string>();
-        foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            if (ni.OperationalStatus == OperationalStatus.Up)
-            {
-                foreach (var ip in ni.GetIPProperties().UnicastAddresses.Select(a => a.Address.ToString()))
-                {
+        var sourcesIpAddresses = new HashSet<string>() {
+            IPAddress.Loopback.ToString()
+        };
 
-                    if (ip != IPAddress.Loopback.ToString())
+        if (!localOnlyNetworkInterfaces)
+            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (ni.OperationalStatus == OperationalStatus.Up)
+                {
+                    foreach (var ip in ni.GetIPProperties().UnicastAddresses.Select(a => a.Address.ToString()))
                     {
-                        sources.Add(ip);
+                        if (ip != IPAddress.Loopback.ToString() && !string.IsNullOrWhiteSpace(ip))
+                        {
+                            sourcesIpAddresses.Add(ip);
+                        }
                     }
                 }
             }
-        }
 
-        sources.Add(IPAddress.Loopback.ToString());
-
-        var addresses = sources
-            .Where(s => !string.IsNullOrWhiteSpace(s))
-            .Select(s =>
+        var uriAddresses = sourcesIpAddresses
+            .Select(ipAddress =>
             {
-                var uriString = httpPort is not null ? $"http://{s}:{httpPort}/" : $"http://{s}/";
+                var uriString = httpPort is not null ? $"http://{ipAddress}:{httpPort}/" : $"http://{ipAddress}/";
+
                 if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
                 {
                     return uri;
@@ -56,6 +57,6 @@ internal class HttpProbingSettings
             .Where(u => u is not null)
             .ToArray();
 
-        return addresses;
+        return uriAddresses;
     }
 }

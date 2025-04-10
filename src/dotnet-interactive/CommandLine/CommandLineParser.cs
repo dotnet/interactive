@@ -171,9 +171,16 @@ public static class CommandLineParser
                 description: LocalizationResources.Cli_dotnet_interactive_jupyter_install_http_port_range_Description(),
                 isDefault: true);
 
+            var localOnlyNetworkInterfacesOption = new Option<bool>(
+                "--local-only-network-interfaces",
+                description: LocalizationResources.Cli_dotnet_interactive_jupyter_local_only_network_interfaces_Description(),
+                getDefaultValue: () => false
+            );
+
             var jupyterCommand = new Command("jupyter", LocalizationResources.Cli_dotnet_interactive_jupyter_Description())
             {
                 defaultKernelOption,
+                localOnlyNetworkInterfacesOption,
                 httpPortRangeOption,
                 new Argument<FileInfo>
                 {
@@ -272,6 +279,12 @@ public static class CommandLineParser
                     return new HttpPort(portNumber);
                 });
 
+            var localOnlyNetworkInterfacesOption = new Option<bool>(
+                "--local-only-network-interfaces",
+                description: LocalizationResources.Cli_dotnet_interactive_jupyter_local_only_network_interfaces_Description(),
+                getDefaultValue: () => false
+            );
+
             var kernelHostOption = new Option<Uri>(
                 "--kernel-host",
                 parseArgument: x => x.Tokens.Count == 0 ? KernelHost.CreateHostUriForCurrentProcessId() : KernelHost.CreateHostUri(x.Tokens[0].Value),
@@ -292,6 +305,7 @@ public static class CommandLineParser
                 defaultKernelOption,
                 httpPortRangeOption,
                 httpPortOption,
+                localOnlyNetworkInterfacesOption,
                 kernelHostOption,
                 previewOption,
                 workingDirOption
