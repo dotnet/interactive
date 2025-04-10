@@ -23,9 +23,7 @@ internal class HttpProbingSettings
 
     private static Uri[] GetProbingAddressList(int? httpPort, bool localOnlyNetworkInterfaces)
     {
-        var sourcesIpAddresses = new HashSet<string>() {
-            IPAddress.Loopback.ToString()
-        };
+        HashSet<string> sourcesIpAddresses = [IPAddress.Loopback.ToString()];
 
         if (!localOnlyNetworkInterfaces)
             foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
