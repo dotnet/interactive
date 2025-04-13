@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Security;
 
 namespace Microsoft.DotNet.Interactive.PowerShell;
@@ -25,6 +26,21 @@ internal static class PowerShellExtensions
         {
             Clear(pwsh);
         }
+    }
+
+    public static Collection<PSObject> InvokeAndClearWithResult(this PowerShell pwsh)
+    {
+        Collection<PSObject> result = null;
+        try
+        {
+            result = pwsh.Invoke(input: null, settings: _settings);
+        }
+        finally
+        {
+            Clear(pwsh);
+        }
+
+        return result;
     }
 
     public static void Clear(this PowerShell pwsh)

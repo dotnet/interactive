@@ -339,11 +339,11 @@ public class PowerShellKernel :
         var code = requestDiagnostics.Code;
 
         IsCompleteSubmission(code, out var parseErrors);
-        
+
         var diagnostics = parseErrors.Select(ToDiagnostic).ToArray();
         context.Publish(new DiagnosticsProduced(
-                            diagnostics,   
-                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(), 
+                            diagnostics,
+                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(),
                             requestDiagnostics));
 
         return Task.CompletedTask;
@@ -389,14 +389,24 @@ public class PowerShellKernel :
         try
         {
             Pwsh.Commands.AddCommand(command);
-            Pwsh.AddCommand(_outDefaultCommand);
+            //Pwsh.AddCommand(_outDefaultCommand);
 
             if (!suppressOutput)
             {
                 Pwsh.Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
             }
 
-            Pwsh.InvokeAndClear();
+            var result = Pwsh.InvokeAndClearWithResult();
+
+            foreach (var item in result)
+            {
+                var value = item?.BaseObject ?? item;
+
+                if (value is not null)
+                {
+                    KernelInvocationContext.Current?.Display(value);
+                }
+            }
 
             Pwsh.AddScript(
                 """
