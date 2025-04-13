@@ -339,10 +339,10 @@ public class PowerShellKernel :
         var code = requestDiagnostics.Code;
 
         IsCompleteSubmission(code, out var parseErrors);
-    
+
         var diagnostics = parseErrors.Select(ToDiagnostic).ToArray();
         context.Publish(new DiagnosticsProduced(
-                            diagnostics,    
+                            diagnostics,   
                             diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(), 
                             requestDiagnostics));
 
