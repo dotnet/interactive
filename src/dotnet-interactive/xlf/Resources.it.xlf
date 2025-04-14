@@ -37,6 +37,11 @@
         <target state="translated">Lingua predefinita per il kernel</target>
         <note />
       </trans-unit>
+      <trans-unit id="Cli_dotnet_interactive_jupyter_http_local_only_Description">
+        <source>Exposes ports only on local network interfaces</source>
+        <target state="new">Exposes ports only on local network interfaces</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Cli_dotnet_interactive_jupyter_install_Description">
         <source>Install the .NET kernel for Jupyter</source>
         <target state="translated">Installare il kernel .NET per Jupyter</target>

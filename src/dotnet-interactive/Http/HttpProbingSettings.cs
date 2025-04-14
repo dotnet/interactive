@@ -13,19 +13,14 @@ public class HttpProbingSettings
 {
     public IEnumerable<string> AddressList { get; private set; }
 
-    public static HttpProbingSettings Create(int? httpPort, bool httpLocalOnly)
+    public static HttpProbingSettings Create(int? httpPort, Func<NetworkInterface[]> getAllNetworkInterfaces)
     {
-        HashSet<string> ipAddress = [IPAddress.Loopback.ToString()];
-
-        if (!httpLocalOnly)
-        {
-            ipAddress = GetAllNetworkInterfaces()
+        var ipAddress = getAllNetworkInterfaces()
                 .Where(ni => ni.OperationalStatus == OperationalStatus.Up)
                 .SelectMany(ni => ni.GetIPProperties().UnicastAddresses)
                 .Select(x => x.Address.ToString())
-                .Concat(ipAddress)
+                .Append(IPAddress.Loopback.ToString())
                 .ToHashSet();
-        }
 
         var uriAddresses = ipAddress
             .Select(AddHttpPort(httpPort));
@@ -42,16 +37,5 @@ public class HttpProbingSettings
             return ipAddress => $"http://{ipAddress}/";
 
         return ipAddress => $"http://{ipAddress}:{httpPort}/";
-    }
-
-    // Delegate that matches the signature of GetAllNetworkInterfaces
-    public delegate NetworkInterface[] GetAllNetworkInterfacesDelegate();
-
-    // Property to replace the implementation for testing
-    public static GetAllNetworkInterfacesDelegate GetAllNetworkInterfacesImpl { get; set; } = NetworkInterface.GetAllNetworkInterfaces;
-
-    private static NetworkInterface[] GetAllNetworkInterfaces()
-    {
-        return GetAllNetworkInterfacesImpl();
     }
 }

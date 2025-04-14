@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Net.NetworkInformation;
 using Microsoft.DotNet.Interactive.Http;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine;
@@ -25,7 +26,11 @@ public class StartupOptions
         HttpPort = httpPort;
         KernelHost = kernelHost;
         WorkingDir = workingDir;
-        HttpLocalOnly = httpLocalOnly;
+
+        if (httpLocalOnly)
+            GetAllNetworkInterfacesImpl = GetNetworkInterfacesHttpOnly;
+        else
+            GetAllNetworkInterfacesImpl = NetworkInterface.GetAllNetworkInterfaces;
     }
 
     public DirectoryInfo LogPath { get; }
@@ -39,7 +44,13 @@ public class StartupOptions
     public Uri KernelHost { get; }
 
     public DirectoryInfo WorkingDir { get; internal set; }
-    public bool HttpLocalOnly { get; }
+
+    public Func<NetworkInterface[]> GetAllNetworkInterfacesImpl { get; set; }
 
     public bool EnableHttpApi => HttpPort is not null || HttpPortRange is not null;
+
+    public static NetworkInterface[] GetNetworkInterfacesHttpOnly()
+    { 
+        return [];
+    }
 }

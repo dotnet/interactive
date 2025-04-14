@@ -278,11 +278,6 @@ public static class CommandLineParser
                     return new HttpPort(portNumber);
                 });
 
-            var httpLocalOnlyOption = new Option<bool>(
-                "--http-local-only",
-                description: LocalizationResources.Cli_dotnet_interactive_jupyter_http_local_only_Description()
-            );
-
             var kernelHostOption = new Option<Uri>(
                 "--kernel-host",
                 parseArgument: x => x.Tokens.Count == 0 ? KernelHost.CreateHostUriForCurrentProcessId() : KernelHost.CreateHostUri(x.Tokens[0].Value),
@@ -303,7 +298,6 @@ public static class CommandLineParser
                 defaultKernelOption,
                 httpPortRangeOption,
                 httpPortOption,
-                httpLocalOnlyOption,
                 kernelHostOption,
                 previewOption,
                 workingDirOption
