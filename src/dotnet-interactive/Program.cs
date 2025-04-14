@@ -107,7 +107,7 @@ public class Program
         {
             var httpPort = GetFreePort(options);
             options.HttpPort = httpPort;
-            probingSettings = HttpProbingSettings.Create(httpPort.PortNumber, options.GetAllNetworkInterfacesImpl);
+            probingSettings = HttpProbingSettings.Create(httpPort.PortNumber, options.GetAllNetworkInterfaces);
         }
 
         var webHost = new WebHostBuilder()

@@ -197,12 +197,12 @@ public class CommandLineParserTests : IDisposable
         var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options
-            .GetAllNetworkInterfacesImpl
+            .GetAllNetworkInterfaces
             .Should()
-            .Match(x => x == StartupOptions.GetNetworkInterfacesHttpOnly);
+            .Match(x => x == StartupOptions.GetNetworkInterfacesHttpLocalOnly);
 
         options
-            .GetAllNetworkInterfacesImpl
+            .GetAllNetworkInterfaces
             .Should()
             .Match(x => x != NetworkInterface.GetAllNetworkInterfaces);
     }
@@ -217,12 +217,12 @@ public class CommandLineParserTests : IDisposable
         var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options
-            .GetAllNetworkInterfacesImpl
+            .GetAllNetworkInterfaces
             .Should()
-            .Match(x => x != StartupOptions.GetNetworkInterfacesHttpOnly);
+            .Match(x => x != StartupOptions.GetNetworkInterfacesHttpLocalOnly);
 
         options
-            .GetAllNetworkInterfacesImpl
+            .GetAllNetworkInterfaces
             .Should()
             .Match(x => x == NetworkInterface.GetAllNetworkInterfaces);
     }

@@ -28,9 +28,9 @@ public class StartupOptions
         WorkingDir = workingDir;
 
         if (httpLocalOnly)
-            GetAllNetworkInterfacesImpl = GetNetworkInterfacesHttpOnly;
+            GetAllNetworkInterfaces = GetNetworkInterfacesHttpLocalOnly;
         else
-            GetAllNetworkInterfacesImpl = NetworkInterface.GetAllNetworkInterfaces;
+            GetAllNetworkInterfaces = NetworkInterface.GetAllNetworkInterfaces;
     }
 
     public DirectoryInfo LogPath { get; }
@@ -45,11 +45,11 @@ public class StartupOptions
 
     public DirectoryInfo WorkingDir { get; internal set; }
 
-    public Func<NetworkInterface[]> GetAllNetworkInterfacesImpl { get; set; }
+    public Func<NetworkInterface[]> GetAllNetworkInterfaces { get; }
 
     public bool EnableHttpApi => HttpPort is not null || HttpPortRange is not null;
 
-    public static NetworkInterface[] GetNetworkInterfacesHttpOnly()
+    public static NetworkInterface[] GetNetworkInterfacesHttpLocalOnly()
     { 
         return [];
     }
