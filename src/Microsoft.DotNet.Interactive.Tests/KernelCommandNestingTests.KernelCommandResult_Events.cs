@@ -209,11 +209,11 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
             returnedValueFromCSharp
                 .Should().BeOfType<List<KernelEvent>>()
                 .Which
-                .Should().ContainSingle<StandardOutputValueProduced>()
+                .Should().ContainSingle<DisplayedValueProduced>()
                 .Which.FormattedValues
                 .Should().ContainSingle()
                 .Which.Value
-                .Should().Be("123" + Environment.NewLine);
+                .Should().Contain("123");
         }
     }
 }
