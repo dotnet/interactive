@@ -75,7 +75,3 @@ Export-DataFrame $df -ParquetPath z.process.parquet
 
 $df2 = Import-DataFrame -ParquetPath 'z.process.parquet'
 $df2
-
-#!pwsh
-
-Read-Host -Prompt "Press Enter to continue"
