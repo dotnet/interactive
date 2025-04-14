@@ -9,7 +9,7 @@ using System.Net.NetworkInformation;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
-internal class HttpProbingSettings
+public class HttpProbingSettings
 {
     public IEnumerable<string> AddressList { get; private set; }
 
@@ -19,7 +19,7 @@ internal class HttpProbingSettings
 
         if (!httpLocalOnly)
         {
-            ipAddress = NetworkInterface.GetAllNetworkInterfaces()
+            ipAddress = GetAllNetworkInterfaces()
                 .Where(ni => ni.OperationalStatus == OperationalStatus.Up)
                 .SelectMany(ni => ni.GetIPProperties().UnicastAddresses)
                 .Select(x => x.Address.ToString())
@@ -40,9 +40,18 @@ internal class HttpProbingSettings
     {
         if (httpPort is null)
             return ipAddress => $"http://{ipAddress}/";
-            .Where(u => u is not null)
-        return ipAddress => $"http://{ipAddress}:{httpPort}/";
 
-        return addresses;
+        return ipAddress => $"http://{ipAddress}:{httpPort}/";
+    }
+
+    // Delegate that matches the signature of GetAllNetworkInterfaces
+    public delegate NetworkInterface[] GetAllNetworkInterfacesDelegate();
+
+    // Property to replace the implementation for testing
+    public static GetAllNetworkInterfacesDelegate GetAllNetworkInterfacesImpl { get; set; } = NetworkInterface.GetAllNetworkInterfaces;
+
+    private static NetworkInterface[] GetAllNetworkInterfaces()
+    {
+        return GetAllNetworkInterfacesImpl();
     }
 }

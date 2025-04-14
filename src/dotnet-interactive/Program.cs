@@ -5,7 +5,6 @@ using System;
 using System.CommandLine.Parsing;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -108,7 +107,7 @@ public class Program
         {
             var httpPort = GetFreePort(options);
             options.HttpPort = httpPort;
-            probingSettings = HttpProbingSettings.Create(httpPort.PortNumber, options.LocalOnlyNetworkInterfaces);
+            probingSettings = HttpProbingSettings.Create(httpPort.PortNumber, options.HttpLocalOnly);
         }
 
         var webHost = new WebHostBuilder()
@@ -118,7 +117,7 @@ public class Program
 
         if (options.EnableHttpApi && probingSettings is not null)
         {
-            webHost = webHost.UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
+            webHost = webHost.UseUrls(string.Join(';', probingSettings.AddressList));
         }
 
         return webHost;

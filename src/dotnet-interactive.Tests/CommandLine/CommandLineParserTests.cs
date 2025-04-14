@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -20,7 +21,6 @@ using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.App.Tests.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -188,6 +188,21 @@ public class CommandLineParserTests : IDisposable
     }
 
     [Fact]
+    public void jupyter_command_parses_http_local_only_option()
+    {
+        var result = _parser.Parse($"jupyter --http-local-only {_connectionFile}");
+
+        var binder = new ModelBinder<StartupOptions>();
+
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+
+        options
+            .HttpLocalOnly
+            .Should()
+            .BeTrue();
+    }
+
+    [Fact]
     public void jupyter_install_command_parses_path_option()
     {
         Directory.CreateDirectory(_kernelSpecInstallPath.FullName);
@@ -271,6 +286,44 @@ public class CommandLineParserTests : IDisposable
             .FullName
             .Should()
             .Be(_connectionFile.FullName);
+    }
+
+    [Fact]
+    public async Task jupyter_command_throws_error_if_no_network_interfaces_permission_no_http_local_only()
+    {
+        const int ERROR_ACCESS_DENIED = 5;
+        // Something like: 
+        // HResult: -2147024891(0x80070005)
+        // Message: "Access to the path is denied" or similar permission - related message
+
+        HttpProbingSettings.GetAllNetworkInterfacesImpl = () => throw new NetworkInformationException(ERROR_ACCESS_DENIED);
+
+        await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
+
+        var controlException = new NetworkInformationException(ERROR_ACCESS_DENIED);
+
+        _console.Error.ToString()
+            .Should()
+            .ContainAny("0x80070005", controlException.Message);
+    }
+
+    [Fact]
+    public async Task jupyter_command_works_if_no_network_interfaces_permission_http_local_only()
+    {
+        const int ERROR_ACCESS_DENIED = 5;
+        // Something like: 
+        // HResult: -2147024891(0x80070005)
+        // Message: "Access to the path is denied" or similar permission - related message
+
+        HttpProbingSettings.GetAllNetworkInterfacesImpl = () => throw new NetworkInformationException(ERROR_ACCESS_DENIED);
+
+        await _parser.InvokeAsync($"jupyter {_connectionFile} --http-local-only", _console);
+
+        var controlException = new NetworkInformationException(ERROR_ACCESS_DENIED);
+
+        _console.Error.ToString()
+            .Should()
+            .NotContainAny("0x80070005", controlException.Message);
     }
 
     [Fact]
@@ -409,6 +462,21 @@ public class CommandLineParserTests : IDisposable
         var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
 
         options.HttpPort.PortNumber.Should().Be(8000);
+    }
+
+    [Fact]
+    public void stdio_command_parses_http_local_only_options()
+    {
+        var result = _parser.Parse("stdio --http-local-only");
+
+        var binder = new ModelBinder<StartupOptions>();
+
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+        
+        options
+            .HttpLocalOnly
+            .Should()
+            .BeTrue();
     }
 
     [Fact]
