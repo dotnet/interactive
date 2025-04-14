@@ -15,7 +15,9 @@ public class StartupOptions
         HttpPortRange httpPortRange = null,
         HttpPort httpPort = null,
         Uri kernelHost = null,
-        DirectoryInfo workingDir = null)
+        DirectoryInfo workingDir = null,
+        bool httpLocalOnly = false
+    )
     {
         LogPath = logPath;
         Verbose = verbose;
@@ -23,6 +25,7 @@ public class StartupOptions
         HttpPort = httpPort;
         KernelHost = kernelHost;
         WorkingDir = workingDir;
+        HttpLocalOnly = httpLocalOnly;
     }
 
     public DirectoryInfo LogPath { get; }
@@ -36,6 +39,7 @@ public class StartupOptions
     public Uri KernelHost { get; }
 
     public DirectoryInfo WorkingDir { get; internal set; }
+    public bool HttpLocalOnly { get; }
 
     public bool EnableHttpApi => HttpPort is not null || HttpPortRange is not null;
 }

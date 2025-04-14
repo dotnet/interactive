@@ -30,7 +30,7 @@ internal static class KernelExtensions
                                       ? httpProbingSettings.AddressList
                                       :
                                       [
-                                          new Uri($"http://localhost:{httpPort}")
+                                          $"http://localhost:{httpPort}"
                                       ];
                 var html =
                     HttpApiBootstrapper.GetHtmlInjection(probingUrls, httpPort?.ToString() ?? Guid.NewGuid().ToString("N"));

@@ -11,50 +11,37 @@ namespace Microsoft.DotNet.Interactive.Http;
 
 internal class HttpProbingSettings
 {
-    public Uri[] AddressList { get; private set; }
+    public IEnumerable<string> AddressList { get; private set; }
 
-    public static HttpProbingSettings Create(int? port)
+    public static HttpProbingSettings Create(int? httpPort, bool httpLocalOnly)
     {
+        HashSet<string> ipAddress = [IPAddress.Loopback.ToString()];
+
+        if (!httpLocalOnly)
+        {
+            ipAddress = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(ni => ni.OperationalStatus == OperationalStatus.Up)
+                .SelectMany(ni => ni.GetIPProperties().UnicastAddresses)
+                .Select(x => x.Address.ToString())
+                .Concat(ipAddress)
+                .ToHashSet();
+        }
+
+        var uriAddresses = ipAddress
+            .Select(AddHttpPort(httpPort));
+
         return new HttpProbingSettings
         {
-            AddressList = GetProbingAddressList(port)
+            AddressList = uriAddresses
         };
     }
 
-    private static Uri[] GetProbingAddressList(int? httpPort)
+    private static Func<string, string> AddHttpPort(int? httpPort)
     {
-        var sources = new List<string>();
-        foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            if (ni.OperationalStatus == OperationalStatus.Up)
-            {
-                foreach (var ip in ni.GetIPProperties().UnicastAddresses.Select(a => a.Address.ToString()))
-                {
-
-                    if (ip != IPAddress.Loopback.ToString())
-                    {
-                        sources.Add(ip);
-                    }
-                }
-            }
-        }
-
-        sources.Add(IPAddress.Loopback.ToString());
-
-        var addresses = sources
-            .Where(s => !string.IsNullOrWhiteSpace(s))
-            .Select(s =>
-            {
-                var uriString = httpPort is not null ? $"http://{s}:{httpPort}/" : $"http://{s}/";
-                if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
-                {
-                    return uri;
-                }
-
-                return null;
-            })
+        if (httpPort is null)
+            return ipAddress => $"http://{ipAddress}/";
             .Where(u => u is not null)
-            .ToArray();
+        return ipAddress => $"http://{ipAddress}:{httpPort}/";
 
         return addresses;
     }
