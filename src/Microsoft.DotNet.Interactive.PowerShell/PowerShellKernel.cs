@@ -1,6 +1,5 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -286,7 +285,7 @@ public class PowerShellKernel :
         }
         else
         {
-            var success = RunLocally(code, out var errorMessage);
+            var success = RunLocally(code, out var errorMessage, context: context);
 
             if (!success)
             {
@@ -379,7 +378,7 @@ public class PowerShellKernel :
         }
     }
 
-    internal bool RunLocally(string code, out string errorMessage, bool suppressOutput = false)
+    internal bool RunLocally(string code, out string errorMessage, bool suppressOutput = false, KernelInvocationContext context = null)
     {
         var command = new Command(code, isScript: true);
 
@@ -397,19 +396,21 @@ public class PowerShellKernel :
 
             var result = Pwsh.InvokeAndClearWithResult();
 
-            foreach (var item in result)
+            if (!suppressOutput && context is not null)
             {
-                var value = item?.BaseObject ?? item;
+                foreach (var item in result)
+                {
+                    var value = item is PSObject ps ? ps.Unwrap() : item;
 
-                if (value is string str)
-                {
-                    var formatted = new FormattedValue("text/plain", str + Environment.NewLine);
-                    KernelInvocationContext.Current?.Publish(
-                        new StandardOutputValueProduced(KernelInvocationContext.Current.Command, new[] { formatted } ));
-                }
-                else
-                {
-                    KernelInvocationContext.Current?.Display(value);
+                    if (item.TypeNames[0] == "System.String")
+                    {
+                        var formatted = new FormattedValue("text/plain", value + Environment.NewLine);
+                        context.Publish(new StandardOutputValueProduced(context.Command, new[] { formatted } ));
+                    }
+                    else
+                    {
+                        context.Display(value);
+                    }
                 }
             }
 

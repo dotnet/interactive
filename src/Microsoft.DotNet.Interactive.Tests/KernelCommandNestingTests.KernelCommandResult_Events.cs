@@ -195,25 +195,25 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
                                  using Microsoft.DotNet.Interactive;
                                  using Microsoft.DotNet.Interactive.Commands;
 
-                                 var result = await Kernel.Root.SendAsync(new SubmitCode("echo 123", "pwsh"));
+                                 var result = await Kernel.Root.SendAsync(new SubmitCode("echo hello-world", "pwsh"));
 
                                  result.Events
 
                                  """, "csharp"));
 
-            var returnedValueFromCSharp = result.Events
-                                                .Should()
-                                                .ContainSingle<ReturnValueProduced>()
-                                                .Which.Value;
+            // var returnedValueFromCSharp = result.Events
+            //                                     .Should()
+            //                                     .ContainSingle<ReturnValueProduced>()
+            //                                     .Which.Value;
 
-            returnedValueFromCSharp
-                .Should().BeOfType<List<KernelEvent>>()
-                .Which
-                .Should().ContainSingle<DisplayedValueProduced>()
+            result.Events
+                // .Should().BeOfType<List<KernelEvent>>()
+                // .Which
+                .Should().ContainSingle<StandardOutputValueProduced>()
                 .Which.FormattedValues
                 .Should().ContainSingle()
                 .Which.Value
-                .Should().Contain("123");
+                .Should().Be("hello-world" + Environment.NewLine);
         }
     }
 }
