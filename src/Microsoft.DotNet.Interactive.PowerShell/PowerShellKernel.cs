@@ -394,7 +394,7 @@ public class PowerShellKernel :
                 Pwsh.Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
             }
 
-            var result = Pwsh.InvokeAndClearWithResult();
+            var result = Pwsh.InvokeAndClear();
 
             if (!suppressOutput && context is not null)
             {

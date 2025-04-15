@@ -16,19 +16,8 @@ internal static class PowerShellExtensions
         AddToHistory = true
     };
 
-    public static void InvokeAndClear(this PowerShell pwsh)
-    {
-        try
-        {
-            pwsh.Invoke(input: null, settings: _settings);
-        }
-        finally
-        {
-            Clear(pwsh);
-        }
-    }
 
-    public static Collection<PSObject> InvokeAndClearWithResult(this PowerShell pwsh)
+    public static Collection<PSObject> InvokeAndClear(this PowerShell pwsh)
     {
         Collection<PSObject> result = null;
         try

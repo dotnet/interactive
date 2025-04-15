@@ -201,14 +201,7 @@ await Kernel.Root.SendAsync(new SubmitCode(""error"", ""cs2""));
 
                                  """, "csharp"));
 
-            // var returnedValueFromCSharp = result.Events
-            //                                     .Should()
-            //                                     .ContainSingle<ReturnValueProduced>()
-            //                                     .Which.Value;
-
             result.Events
-                // .Should().BeOfType<List<KernelEvent>>()
-                // .Which
                 .Should().ContainSingle<StandardOutputValueProduced>()
                 .Which.FormattedValues
                 .Should().ContainSingle()
