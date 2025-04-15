@@ -562,6 +562,9 @@ describe(`metadata utility tests`, async () => {
                     language: "F#",
                     name: ".net-fsharp",
                 },
+                "language_info": {
+                    name: "polyglot-notebook"
+                },
                 polyglot_notebook: {
                     kernelInfo: {
                         defaultKernelName: "fsharp",

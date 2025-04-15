@@ -372,8 +372,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, parserSer
         const notebook = await vscode.workspace.openNotebookDocument(viewType, content);
         const _editor = await vscode.window.showNotebookDocument(notebook);
 
-        if (viewType === constants.JupyterViewType) {
-            // note, new .ipynb notebooks are currently affected by this bug: https://github.com/microsoft/vscode/issues/121974
+        if (createForIpynb) {
             await selectDotNetInteractiveKernelForJupyter();
         }
     }
