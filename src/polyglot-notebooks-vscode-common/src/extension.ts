@@ -127,7 +127,6 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         // prepare kernel transport launch arguments and working directory using a fresh config item so we don't get cached values
-
         const kernelTransportArgs = dotnetConfig.get<Array<string>>('kernelTransportArgs')!;
         const argsTemplate = {
             args: kernelTransportArgs,

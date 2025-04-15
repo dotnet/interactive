@@ -291,7 +291,8 @@ export function getMergedRawNotebookDocumentMetadataFromNotebookDocumentMetadata
 
         rawMetadata.metadata = {
             kernelspec,
-            polyglot_notebook: notebookDocumentMetadata
+            polyglot_notebook: notebookDocumentMetadata,
+            language_info: { name: "polyglot-notebook" }
         };
     } else {
         rawMetadata.polyglot_notebook = notebookDocumentMetadata;
