@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -20,7 +21,6 @@ using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.App.Tests.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -185,6 +185,46 @@ public class CommandLineParserTests : IDisposable
         _parser.Invoke("jupyter -h", _console);
 
         _console.Out.ToString().Should().Contain("default: 2048-3000");
+    }
+
+    [Fact]
+    public void jupyter_command_parses_http_local_only_option()
+    {
+        var result = _parser.Parse($"jupyter --http-local-only {_connectionFile}");
+
+        var binder = new ModelBinder<StartupOptions>();
+
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+
+        options
+            .GetAllNetworkInterfaces
+            .Should()
+            .Match(x => x == StartupOptions.GetNetworkInterfacesHttpLocalOnly);
+
+        options
+            .GetAllNetworkInterfaces
+            .Should()
+            .Match(x => x != NetworkInterface.GetAllNetworkInterfaces);
+    }
+
+    [Fact]
+    public void jupyter_command_default_network_interface_if_no_http_local_only_option()
+    {
+        var result = _parser.Parse($"jupyter {_connectionFile}");
+
+        var binder = new ModelBinder<StartupOptions>();
+
+        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+
+        options
+            .GetAllNetworkInterfaces
+            .Should()
+            .Match(x => x != StartupOptions.GetNetworkInterfacesHttpLocalOnly);
+
+        options
+            .GetAllNetworkInterfaces
+            .Should()
+            .Match(x => x == NetworkInterface.GetAllNetworkInterfaces);
     }
 
     [Fact]

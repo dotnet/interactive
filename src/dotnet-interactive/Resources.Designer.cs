@@ -97,6 +97,15 @@ namespace Microsoft.DotNet.Interactive.App {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exposes ports only on local network interfaces.
+        /// </summary>
+        internal static string Cli_dotnet_interactive_jupyter_http_local_only_Description {
+            get {
+                return ResourceManager.GetString("Cli_dotnet_interactive_jupyter_http_local_only_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Install the .NET kernel for Jupyter.
         /// </summary>
         internal static string Cli_dotnet_interactive_jupyter_install_Description {
@@ -120,6 +129,15 @@ namespace Microsoft.DotNet.Interactive.App {
         internal static string Cli_dotnet_interactive_jupyter_install_path_Description {
             get {
                 return ResourceManager.GetString("Cli_dotnet_interactive_jupyter_install_path_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exposes ports only on local network interfaces.
+        /// </summary>
+        internal static string Cli_dotnet_interactive_jupyter_local_only_network_interfaces_Description {
+            get {
+                return ResourceManager.GetString("Cli_dotnet_interactive_jupyter_local_only_network_interfaces_Description", resourceCulture);
             }
         }
         

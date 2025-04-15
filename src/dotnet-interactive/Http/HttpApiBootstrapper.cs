@@ -1,19 +1,17 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Diagnostics;
-using System.Linq;
 using Microsoft.AspNetCore.Html;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Http;
 
 internal static class HttpApiBootstrapper
 {
-    public static IHtmlContent GetHtmlInjection(Uri[] probingUris, string seed)
+    public static IHtmlContent GetHtmlInjection(IEnumerable<string> probingUris, string seed)
     {
-        var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
-        var template = 
+        var template =
             $@"
 <div>
     <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
@@ -61,12 +59,12 @@ async function probeAddresses(probingAddresses) {{
 }}
 
 function loadDotnetInteractiveApi() {{
-    probeAddresses($ADDRESSES$)
+    probeAddresses({JsonSerializer.Serialize(probingUris)})
         .then((root) => {{
         // use probing to find host url and api resources
         // load interactive helpers and language services
         let dotnetInteractiveRequire = require.config({{
-        context: '$CACHE_BUSTER$',
+        context: '{System.Environment.ProcessId}.{seed}',
                 paths:
             {{
                 'dotnet-interactive': `${{root}}resources`
@@ -105,11 +103,7 @@ function loadDotnetInteractiveApi() {{
 {JavascriptUtilities.GetCodeForEnsureRequireJs(onRequirejsLoadedCallBackName: "loadDotnetInteractiveApi")}
     </script>
 </div>";
-            
-        var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
-        var html =  template
-            .Replace("$ADDRESSES$", jsProbingUris)
-            .Replace("$CACHE_BUSTER$", apiCacheBuster);
-        return new HtmlString(html);
+
+        return new HtmlString(template);
     }
 }

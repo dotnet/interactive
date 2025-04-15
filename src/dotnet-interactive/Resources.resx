@@ -129,6 +129,9 @@
   <data name="Cli_dotnet_interactive_jupyter_Description" xml:space="preserve">
     <value>Starts dotnet-interactive as a Jupyter kernel</value>
   </data>
+  <data name="Cli_dotnet_interactive_jupyter_http_local_only_Description" xml:space="preserve">
+    <value>Exposes ports only on local network interfaces</value>
+  </data>
   <data name="Cli_dotnet_interactive_jupyter_install_Description" xml:space="preserve">
     <value>Install the .NET kernel for Jupyter</value>
   </data>

@@ -18,6 +18,12 @@ internal static class LocalizationResources
         => GetResourceString(Resources.Cli_dotnet_interactive_jupyter_default_kernel_Description);
 
     /// <summary>
+    ///   Gets a localized message like: Exposes ports only on local network interfaces
+    /// </summary>
+    internal static string Cli_dotnet_interactive_jupyter_http_local_only_Description()
+        => GetResourceString(Resources.Cli_dotnet_interactive_jupyter_http_local_only_Description);
+
+    /// <summary>
     ///   Gets a localized message like: Interactive programming for .NET.
     /// </summary>
     internal static string Cli_dotnet_interactive_Description()
