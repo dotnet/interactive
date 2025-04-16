@@ -1,6 +1,5 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -286,7 +285,7 @@ public class PowerShellKernel :
         }
         else
         {
-            var success = RunLocally(code, out var errorMessage);
+            var success = RunLocally(code, out var errorMessage, context: context);
 
             if (!success)
             {
@@ -339,11 +338,11 @@ public class PowerShellKernel :
         var code = requestDiagnostics.Code;
 
         IsCompleteSubmission(code, out var parseErrors);
-        
+
         var diagnostics = parseErrors.Select(ToDiagnostic).ToArray();
         context.Publish(new DiagnosticsProduced(
-                            diagnostics,   
-                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(), 
+                            diagnostics,
+                            diagnostics.Select(d => new FormattedValue(PlainTextFormatter.MimeType, d.ToString())).ToArray(),
                             requestDiagnostics));
 
         return Task.CompletedTask;
@@ -379,7 +378,7 @@ public class PowerShellKernel :
         }
     }
 
-    internal bool RunLocally(string code, out string errorMessage, bool suppressOutput = false)
+    internal bool RunLocally(string code, out string errorMessage, bool suppressOutput = false, KernelInvocationContext context = null)
     {
         var command = new Command(code, isScript: true);
 
@@ -389,14 +388,31 @@ public class PowerShellKernel :
         try
         {
             Pwsh.Commands.AddCommand(command);
-            Pwsh.AddCommand(_outDefaultCommand);
 
             if (!suppressOutput)
             {
                 Pwsh.Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
             }
 
-            Pwsh.InvokeAndClear();
+            var result = Pwsh.InvokeAndClear();
+
+            if (!suppressOutput && context is not null)
+            {
+                foreach (var item in result)
+                {
+                    var value = item is PSObject ps ? ps.Unwrap() : item;
+
+                    if (item.TypeNames[0] == "System.String")
+                    {
+                        var formatted = new FormattedValue("text/plain", value + Environment.NewLine);
+                        context.Publish(new StandardOutputValueProduced(context.Command, new[] { formatted } ));
+                    }
+                    else
+                    {
+                        context.Display(value);
+                    }
+                }
+            }
 
             Pwsh.AddScript(
                 """
