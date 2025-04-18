@@ -21,7 +21,8 @@ The following languages are supported by Polyglot Notebooks and .NET Interactive
 | SQL                           |        ✅       |   
 | KQL ([Kusto Query Language](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/))    |        ✅       |  
 | [Python](docs/jupyter-in-polyglot-notebooks.md)  |        ✅       |
-| [R](docs/jupyter-in-polyglot-notebooks.md)       |        ✅       |      
+| [Coconut](https://coconut.readthedocs.io/en/latest/DOCS.html#ipython-jupyter-support)  |        ✅       |
+| [R](docs/jupyter-in-polyglot-notebooks.md)       |        ✅       |     
 | HTML                         |        ⛔         |     
 | HTTP                         |        ✅         | 
 | [Mermaid](https://mermaid.js.org/intro/)         |        ⛔       |        
