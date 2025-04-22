@@ -38,27 +38,27 @@ public static class AssertionExtensions
         return assertions;
     }
 
-    public static void BeEquivalentToRespectingRuntimeTypes<TExpectation>(
+    public static void BeEquivalentToPreferringRuntimeMemberTypes<TExpectation>(
         this GenericCollectionAssertions<TExpectation> assertions,
         params object[] expectations)
     {
-        assertions.BeEquivalentTo(expectations, o => o.RespectingRuntimeTypes());
+        assertions.BeEquivalentTo(expectations, o => o.PreferringRuntimeMemberTypes());
     }
 
-    public static void BeEquivalentToRespectingRuntimeTypes<TExpectation>(
+    public static void BeEquivalentToPreferringRuntimeMemberTypes<TExpectation>(
         this ObjectAssertions assertions,
         TExpectation expectation,
-        Func<EquivalencyAssertionOptions<TExpectation>, EquivalencyAssertionOptions<TExpectation>> config = null)
+        Func<EquivalencyOptions<TExpectation>, EquivalencyOptions<TExpectation>> config = null)
     {
         assertions.BeEquivalentTo(expectation, o =>
         {
             if (config is not null)
             {
-                return config.Invoke(o).RespectingRuntimeTypes();
+                return config.Invoke(o).PreferringRuntimeMemberTypes();
             }
             else
             {
-                return o.RespectingRuntimeTypes();
+                return o.PreferringRuntimeMemberTypes();
             }
         });
     }
@@ -66,7 +66,7 @@ public static class AssertionExtensions
     public static void BeJsonEquivalentTo<T>(this StringAssertions assertion, T expected)
     {
         var obj = System.Text.Json.JsonSerializer.Deserialize(assertion.Subject, expected.GetType());
-        obj.Should().BeEquivalentToRespectingRuntimeTypes(expected);
+        obj.Should().BeEquivalentToPreferringRuntimeMemberTypes(expected);
     }
 
     public static AndConstraint<GenericCollectionAssertions<T>> BeEquivalentSequenceTo<T>(
@@ -88,7 +88,7 @@ public static class AssertionExtensions
             {
                 tuple.actual
                      .Should()
-                     .BeEquivalentToRespectingRuntimeTypes(tuple.expected);
+                     .BeEquivalentToPreferringRuntimeMemberTypes(tuple.expected);
             }
         }
 

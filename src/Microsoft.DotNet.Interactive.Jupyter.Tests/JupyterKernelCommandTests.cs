@@ -497,7 +497,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
             .Which
             .LinePositionSpan
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(linePosition, linePosition));
+            .BeEquivalentToPreferringRuntimeMemberTypes(new LinePositionSpan(linePosition, linePosition));
 
         for (int i = 0; i < mimeTypes.Length; i++)
         {
@@ -629,7 +629,7 @@ public class JupyterKernelCommandTests : JupyterKernelTestBase
             .Which
             .LinePositionSpan
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(
+            .BeEquivalentToPreferringRuntimeMemberTypes(
                     new LinePositionSpan(
                             new LinePosition(linePos, startPos),
                             new LinePosition(linePos, curPosition)));

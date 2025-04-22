@@ -42,7 +42,7 @@ public class FrontendEnvironmentHandlingTests
             .ContainSingle()
             .Which
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(new FormattedValue("text/html", @"<script type=""text/javascript"">
+            .BeEquivalentToPreferringRuntimeMemberTypes(new FormattedValue("text/html", @"<script type=""text/javascript"">
 if (typeof window.createDotnetInteractiveClient === typeof Function) {
     window.createDotnetInteractiveClient('http://12.12.12.12:4242/').then(async function (interactive) {
         const console = interactive.getConsole('token-abcd');

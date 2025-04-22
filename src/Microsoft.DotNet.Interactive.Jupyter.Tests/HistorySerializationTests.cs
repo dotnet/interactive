@@ -53,7 +53,7 @@ public class HistorySerializationTests
 
         var serialized = @"{""history"":[[0,0,""input value""],[1,0,""input value""],[2,0,[""input value"",""output result""]]]}";
         var historyReply = JsonSerializer.Deserialize<HistoryReply>(serialized);
-        historyReply.Should().BeEquivalentToRespectingRuntimeTypes(new HistoryReply(new HistoryElement[]
+        historyReply.Should().BeEquivalentToPreferringRuntimeMemberTypes(new HistoryReply(new HistoryElement[]
         {
             new InputHistoryElement(0, 0, "input value"),
             new InputHistoryElement(1, 0, "input value"),
@@ -67,7 +67,7 @@ public class HistorySerializationTests
 
         var serialized = @"{""history"":[]}";
         var historyReply = JsonSerializer.Deserialize<HistoryReply>(serialized);
-        historyReply.Should().BeEquivalentToRespectingRuntimeTypes(new HistoryReply(new HistoryElement[]{}));
+        historyReply.Should().BeEquivalentToPreferringRuntimeMemberTypes(new HistoryReply(new HistoryElement[]{}));
     }
 
     [Fact]
@@ -75,6 +75,6 @@ public class HistorySerializationTests
     {
         var serialized = @"{""history"":null}";
         var historyReply = JsonSerializer.Deserialize<HistoryReply>(serialized);
-        historyReply.Should().BeEquivalentToRespectingRuntimeTypes(new HistoryReply());
+        historyReply.Should().BeEquivalentToPreferringRuntimeMemberTypes(new HistoryReply());
     }
 }

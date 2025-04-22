@@ -26,7 +26,7 @@ public class CustomMetadataParsingTests
             .ContainKey("dotnet_interactive")
             .WhoseValue
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(language: "fsharp"));
+            .BeEquivalentToPreferringRuntimeMemberTypes(new InputCellMetadata(language: "fsharp"));
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class CustomMetadataParsingTests
             .ContainKey("polyglot_notebook")
             .WhoseValue
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata(kernelName: "fsharp"));
+            .BeEquivalentToPreferringRuntimeMemberTypes(new InputCellMetadata(kernelName: "fsharp"));
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class CustomMetadataParsingTests
             .ContainKey("dotnet_interactive")
             .WhoseValue
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata());
+            .BeEquivalentToPreferringRuntimeMemberTypes(new InputCellMetadata());
     }
 
     [Fact]

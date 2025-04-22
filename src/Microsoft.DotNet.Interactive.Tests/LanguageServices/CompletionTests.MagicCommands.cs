@@ -136,7 +136,7 @@ public partial class CompletionTests
                 .AllSatisfy(c =>
                     c.LinePositionSpan
                         .Should()
-                        .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(
+                        .BeEquivalentToPreferringRuntimeMemberTypes(new LinePositionSpan(
                             new LinePosition(0, 8),
                             new LinePosition(0, 10))));
         }
@@ -156,7 +156,7 @@ public partial class CompletionTests
                 .AllSatisfy(c =>
                     c.LinePositionSpan
                         .Should()
-                        .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(
+                        .BeEquivalentToPreferringRuntimeMemberTypes(new LinePositionSpan(
                             new LinePosition(0, 0),
                             new LinePosition(0, 4))));
         }

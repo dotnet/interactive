@@ -23,7 +23,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json"  />
     <PackageReference Include="Assent" />
-    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Pocket.Disposable">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
