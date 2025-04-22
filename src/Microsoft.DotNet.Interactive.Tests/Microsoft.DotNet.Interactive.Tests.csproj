@@ -48,8 +48,8 @@
     <PackageReference Include="System.Linq.Async" />
     <PackageReference Include="Assent" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" />
-    <PackageReference Include="FluentAssertions" />
-    <PackageReference Include="FluentAssertions.Json" />
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="AwesomeAssertions.Json" />
     <PackageReference Include="Nerdbank.Streams" />
     <PackageReference Include="Pocket.Disposable">
       <PrivateAssets>all</PrivateAssets>

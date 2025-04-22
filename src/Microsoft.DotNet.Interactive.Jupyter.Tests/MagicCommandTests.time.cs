@@ -67,7 +67,7 @@ display(123);
                 .Value
                 .As<TimeSpan>()
                 .Should()
-                .BeGreaterOrEqualTo(500.Milliseconds());
+                .BeGreaterThanOrEqualTo(500.Milliseconds());
         }
     }
 }

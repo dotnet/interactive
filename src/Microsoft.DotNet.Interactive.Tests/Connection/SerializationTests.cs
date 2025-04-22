@@ -78,7 +78,7 @@ public class SerializationTests
 
         deserializedEnvelope
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(
+            .BeEquivalentToPreferringRuntimeMemberTypes(
                 originalEnvelope,
                 o => o.Excluding(e => e.Command.Handler)
                       .Excluding(info => IsPropertyJsonIgnored(info)));
@@ -98,7 +98,7 @@ public class SerializationTests
 
         deserializedEnvelope
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(
+            .BeEquivalentToPreferringRuntimeMemberTypes(
                 originalEnvelope,
                 o => o.Excluding(info => IsPropertyJsonIgnored(info)));
     }

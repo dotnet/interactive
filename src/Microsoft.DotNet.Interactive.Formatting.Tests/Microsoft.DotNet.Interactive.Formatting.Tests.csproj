@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json"  />
-    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Assent" />
     <PackageReference Include="PocketLogger">
       <PrivateAssets>all</PrivateAssets>

@@ -158,7 +158,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
             """);
         notebook.Elements
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
+                .BeEquivalentToPreferringRuntimeMemberTypes(new[]
                 {
                     new InteractiveDocumentElement("var x = 1;\nvar y = 2;", "csharp"),
                     new InteractiveDocumentElement("let x = 1\nlet y = 2", "fsharp")
@@ -183,7 +183,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
             """);
         notebook.Elements
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
+                .BeEquivalentToPreferringRuntimeMemberTypes(new[]
                 {
                     new InteractiveDocumentElement("//", "csharp"),
                     new InteractiveDocumentElement("Get-Item", "pwsh")
@@ -222,7 +222,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
             """);
         notebook.Elements
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes([
+                .BeEquivalentToPreferringRuntimeMemberTypes([
                     new InteractiveDocumentElement("// first line of C#\n\n\n\n// last line of C#", "csharp"),
                     new InteractiveDocumentElement("// first line of F#\n\n\n\n// last line of F#", "fsharp")
                 ]);
@@ -243,7 +243,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
              """);
         notebook.Elements
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes([
+                .BeEquivalentToPreferringRuntimeMemberTypes([
                     new InteractiveDocumentElement("This is `markdown`.", "markdown")
                 ]);
     }
@@ -275,7 +275,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
             """);
         notebook.Elements
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
+                .BeEquivalentToPreferringRuntimeMemberTypes(new[]
                 {
                     new InteractiveDocumentElement("// this is csharp 1", "csharp"),
                     new InteractiveDocumentElement("// this is csharp 2", "csharp"),
@@ -304,7 +304,7 @@ public class CodeSubmissionFormatTests : DocumentFormatTestsBase
         var notebook = ParseDib(code);
         notebook.Elements
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[]
+                .BeEquivalentToPreferringRuntimeMemberTypes(new[]
                 {
                     new InteractiveDocumentElement("1+1", "csharp"),
                     new InteractiveDocumentElement("[1;2;3;4]\n|> List.sum", "fsharp")

@@ -34,7 +34,7 @@ public class JupyterMessageSerializationTests
 
         deserializedMessage
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(message);
+            .BeEquivalentToPreferringRuntimeMemberTypes(message);
     }
 
     public static IEnumerable<object[]> Messages()

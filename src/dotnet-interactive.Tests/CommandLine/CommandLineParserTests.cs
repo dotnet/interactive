@@ -176,7 +176,7 @@ public class CommandLineParserTests : IDisposable
         options
             .HttpPortRange
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(new HttpPortRange(3000, 4000));
+            .BeEquivalentToPreferringRuntimeMemberTypes(new HttpPortRange(3000, 4000));
     }
 
     [Fact]
@@ -265,7 +265,7 @@ public class CommandLineParserTests : IDisposable
         options
             .HttpPortRange
             .Should()
-            .BeEquivalentToRespectingRuntimeTypes(new HttpPortRange(3000, 4000));
+            .BeEquivalentToPreferringRuntimeMemberTypes(new HttpPortRange(3000, 4000));
     }
 
     [Fact]

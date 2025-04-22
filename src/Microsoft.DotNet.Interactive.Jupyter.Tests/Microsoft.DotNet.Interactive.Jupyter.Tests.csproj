@@ -31,7 +31,7 @@
 
   <ItemGroup>
     <PackageReference Include="Assent" />
-    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="HtmlAgilityPack" />
     <PackageReference Include="Pocket.Disposable">
       <PrivateAssets>all</PrivateAssets>

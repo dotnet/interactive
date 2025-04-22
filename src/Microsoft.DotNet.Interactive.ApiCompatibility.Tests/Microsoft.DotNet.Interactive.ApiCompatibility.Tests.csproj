@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Assent" />
     <PackageReference Include="Pocket.Disposable">
       <PrivateAssets>all</PrivateAssets>

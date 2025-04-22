@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Drawing.Common"  />
-    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Assent" />
     <PackageReference Include="System.Security.Cryptography.X509Certificates" />
     <PackageReference Include="xunit" />

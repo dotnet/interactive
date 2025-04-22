@@ -552,7 +552,7 @@ public class JupyterKernelTests : JupyterKernelTestBase
             .Which
             .Completions
                 .Should()
-                .BeEquivalentToRespectingRuntimeTypes(new[] {
+                .BeEquivalentToPreferringRuntimeMemberTypes(new[] {
                         new CompletionItem("TEST1TEST", "Method", "test1-test", "test1-test", "test1-test"),
                         new CompletionItem("test2-test", "Class", "test2-test", "test2-test", "test2-test")
                     });
