@@ -36,4 +36,4 @@ Please provide as much information as you can.
     - [ ] Other (please specify)
 
 ### Screenshots
-If applicable, add screenshots to help explain your problem.
+If applicable, please add screenshots of the entire VS Code window.
