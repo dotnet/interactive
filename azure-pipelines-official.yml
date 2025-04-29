@@ -65,6 +65,18 @@ extends:
         severity: error
       sbom:
         enabled: true
+      tsa:
+        enabled: true
+        config:
+          repositoryName: 'dotnet-interactive'
+          codebaseName: 'dotnet-interactive'
+          instanceUrl: 'https://devdiv.visualstudio.com/'
+          projectName: 'DEVDIV'
+          iterationPath: 'DevDiv\\Future Backlog'
+          areaPath: 'DevDiv\\NET Developer Experience\\VS Testing\\Interactive'
+          notificationAliases: ['dotnetInteractive@microsoft.com']
+          serviceTreeID: 'ab4d58de-beb3-4714-866c-1b46a48ea002'
+          allTools: true
     stages:
     - stage: build
       displayName: Build and Test
