@@ -45,12 +45,12 @@ export class JavascriptKernel extends Kernel {
         const submitCode = <commandsAndEvents.SubmitCode>invocation.commandEnvelope.command;
         const code = submitCode.code;
 
-        super.kernelInfo.localName;//?
-        super.kernelInfo.uri;//?
-        super.kernelInfo.remoteUri;//?
+        super.kernelInfo.localName;
+        super.kernelInfo.uri;
+        super.kernelInfo.remoteUri;
         const codeSubmissionReceivedEvent = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.CodeSubmissionReceivedType, { code }, invocation.commandEnvelope);
         invocation.context.publish(codeSubmissionReceivedEvent);
-        invocation.context.commandEnvelope.routingSlip;//?
+        invocation.context.commandEnvelope.routingSlip;
         this.capture.kernelInvocationContext = invocation.context;
         let result: any = undefined;
 
@@ -66,8 +66,17 @@ export class JavascriptKernel extends Kernel {
                 const returnValueProducedEvent = new commandsAndEvents.KernelEventEnvelope(commandsAndEvents.ReturnValueProducedType, event, invocation.commandEnvelope);
                 invocation.context.publish(returnValueProducedEvent);
             }
-        } catch (e) {
-            throw e;//?
+        } catch (e: any) {
+            const errorProduced = new commandsAndEvents.KernelEventEnvelope(
+                commandsAndEvents.ErrorProducedType,
+                {
+                    message:
+                        `${e.message}
+
+                    ${e.stack}`
+                },
+                invocation.commandEnvelope);
+            invocation.context.publish(errorProduced);
         }
         finally {
             this.capture.kernelInvocationContext = undefined;

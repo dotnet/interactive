@@ -7,6 +7,7 @@ import * as commandsAndEvents from "../src/commandsAndEvents";
 import { JavascriptKernel } from "../src/javascriptKernel";
 import { Logger } from "../src/logger";
 import * as uuid from "uuid";
+import { ErrorProduced } from "../src/commandsAndEvents";
 
 describe("javascriptKernel", () => {
 
@@ -235,6 +236,32 @@ return command.toJson();`
         await kernel.send(submitCode);
 
         expect(events.find(e => e.eventType === commandsAndEvents.ReturnValueProducedType)).to.not.be.undefined;
+    });
+
+    it("publishes ErrorProduced when evaluation throws", async () => {
+        let events: commandsAndEvents.KernelEventEnvelope[] = [];
+        const kernel = new JavascriptKernel();
+        kernel.subscribeToKernelEvents((e) => {
+            events.push(e);
+        });
+
+        const submitCode = new commandsAndEvents.KernelCommandEnvelope(commandsAndEvents.SubmitCodeType, <commandsAndEvents.SubmitCode>{
+            code: `
+                f = function DoSomethingThatCausesAnError() {
+                    const n = 1;
+                    n = 2;
+                };
+
+                f();
+            ` });
+
+        await kernel.send(submitCode);
+
+        const errorProduced: ErrorProduced = events.find(e => e.eventType === commandsAndEvents.ErrorProducedType)?.event as ErrorProduced;
+        expect(errorProduced).to.not.be.undefined;
+        expect(errorProduced.message).to.contain(`Error: Assignment to constant variable.`);
+        expect(errorProduced.message).to.contain(`TypeError: Assignment to constant variable.`);
+        expect(errorProduced.message).to.contain(`at DoSomethingThatCausesAnError`);
     });
 
     it("handles async code", async () => {
