@@ -117,9 +117,9 @@ export function getCellMetadata(cell: vscodeLike.NotebookCell) {
 
 export function getDocumentMetadata(document: vscodeLike.NotebookDocument) {
     const ipynbMetadata = document.metadata?.metadata?.polyglot_notebook ?? {};
-    const metadata = document.metadata.polyglot_notebook ?? {};
+    const polyglot_notebook = document.metadata.polyglot_notebook ?? {};
 
-    const merged = { ...ipynbMetadata, ...metadata };
+    const merged = { ...ipynbMetadata, ...polyglot_notebook };
 
     return merged;
 }
@@ -278,7 +278,8 @@ export function getKernelspecMetadataFromNotebookDocumentMetadata(notebookDocume
 export function getRawNotebookCellMetadataFromNotebookCellMetadata(notebookCellMetadata: NotebookCellMetadata): { [key: string]: any } {
     return {
         metadata: {
-            polyglot_notebook: notebookCellMetadata
+            polyglot_notebook: notebookCellMetadata,
+            language_info: { name: "polyglot-notebook" }
         }
     };
 }

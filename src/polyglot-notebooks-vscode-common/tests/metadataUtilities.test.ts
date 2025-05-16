@@ -494,6 +494,7 @@ describe(`metadata utility tests`, async () => {
                 polyglot_notebook: {
                     kernelName: "fsharp",
                 },
+                language_info: { name: "polyglot-notebook" }
             },
         });
     });
