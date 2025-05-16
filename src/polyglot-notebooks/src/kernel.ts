@@ -118,7 +118,6 @@ export class Kernel {
         } else {
             Logger.default.warn(`Trying to stamp ${commandEnvelope.commandType} as arrived but uri ${kernelUri} is already present.`);
         }
-        commandEnvelope.routingSlip;
 
         return this.getScheduler().runAsync(commandEnvelope, (value) => this.executeCommand(value).finally(() => {
             if (!commandEnvelope.routingSlip.contains(kernelUri)) {
