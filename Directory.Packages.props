@@ -70,7 +70,7 @@
     <PackageVersion Include="Microsoft.PowerShell.SecretStore" Version="1.0.6" />
     <PackageVersion Include="Microsoft.Reactive.Testing" Version="6.0.0" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
-    <PackageVersion Include="Nerdbank.Streams" Version="2.10.69" />
+    <PackageVersion Include="Nerdbank.Streams" Version="2.11.90" />
     <PackageVersion Include="NetMQ" Version="4.0.1.13" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Npgsql" Version="9.0.2" />
@@ -85,7 +85,7 @@
     <PackageVersion Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageVersion Include="Serilog" Version="4.0.0" />
     <PackageVersion Include="SkiaSharp" Version="2.88.6" />
-    <PackageVersion Include="StreamJsonRpc" Version="2.17.8" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.21.69" />
     <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
     <PackageVersion Include="System.CommandLine.NamingConventionBinder" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
