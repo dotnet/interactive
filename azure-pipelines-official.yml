@@ -36,6 +36,12 @@ schedules:
     include:
     - main
 
+- cron: "0 8 17 * *"
+  displayName: Monthly build for Component Governance scans
+  branches:
+    include:
+    - main
+
 variables:
 - template: /eng/templates/variables-template.yml@self
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
