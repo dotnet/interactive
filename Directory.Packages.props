@@ -3,14 +3,14 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     
-    <RoslynVersion>4.12.0</RoslynVersion>
+    <RoslynVersion>4.14.0</RoslynVersion>
   </PropertyGroup>
   
   <PropertyGroup Label="Properties used for generating package references (#r nuget) at runtime. Inlining these might cause some tests to fail.">
     <HumanizerVersion>2.14.1</HumanizerVersion>
-    <MicrosoftDataSqlClientVersion>5.2.2</MicrosoftDataSqlClientVersion>
+    <MicrosoftDataSqlClientVersion>6.0.2</MicrosoftDataSqlClientVersion>
     <MicrosoftIdentityClientVersion>4.66.2</MicrosoftIdentityClientVersion>
-    <MicrosoftEntityFrameworkVersion>9.0.0</MicrosoftEntityFrameworkVersion>
+    <MicrosoftEntityFrameworkVersion>9.0.5</MicrosoftEntityFrameworkVersion>
   </PropertyGroup>
   
 
@@ -23,23 +23,23 @@
     <PackageVersion Include="DuckDB.NET.Data" Version="1.1.2.1" />
     <PackageVersion Include="AwesomeAssertions.Json" Version="8.0.0" />
     <PackageVersion Include="AwesomeAssertions" Version="8.1.0" />
-    <PackageVersion Include="FSharp.Compiler.Service" Version="43.9.100" />
-    <PackageVersion Include="FSharp.Core" Version="9.0.100" />
+    <PackageVersion Include="FSharp.Compiler.Service" Version="43.9.300" />
+    <PackageVersion Include="FSharp.Core" Version="9.0.300" />
     <PackageVersion Include="HtmlAgilityPack" Version="1.11.57" />
     <PackageVersion Include="Humanizer.Core" Version="$(HumanizerVersion)" />
     <PackageVersion Include="Humanizer" Version="$(HumanizerVersion)" />
     <PackageVersion Include="Iced" Version="1.17.0" />
     <PackageVersion Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
     <PackageVersion Include="JsonDiffPatch.Net" Version="2.3.0" />
-    <PackageVersion Include="JsonSchema.Net" Version="7.3.0" />
-    <PackageVersion Include="Markdig.Signed" Version="0.34.0" />
-    <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
-    <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.22.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
+    <PackageVersion Include="JsonSchema.Net" Version="7.3.4" />
+    <PackageVersion Include="Markdig.Signed" Version="0.41.0" />
+    <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
+    <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.23.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.3.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.5" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.5" />
     <PackageVersion Include="Microsoft.Azure.Kusto.Data" Version="12.2.8" />
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.5" />
     <PackageVersion Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="$(RoslynVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynVersion)" />
@@ -52,20 +52,20 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="$(RoslynVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis" Version="$(RoslynVersion)" />
     <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageVersion Include="Microsoft.Data.Analysis" Version="0.22.0" />
+    <PackageVersion Include="Microsoft.Data.Analysis" Version="0.22.2" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="$(MicrosoftDataSqlClientVersion)" />
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.5" />
     <PackageVersion Include="Microsoft.Diagnostics.Runtime" Version="2.2.343001" />
     <PackageVersion Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(MicrosoftEntityFrameworkVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(MicrosoftEntityFrameworkVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.5" />
     <PackageVersion Include="Microsoft.IdentityClient" Version="$(MicrosoftIdentityClientVersion)" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" Condition="'$(DisableArcade)' == '1'" />
-    <PackageVersion Include="microsoft.playwright" Version="1.28.0" />
+    <PackageVersion Include="microsoft.playwright" Version="1.52.0" />
     <PackageVersion Include="Microsoft.PowerShell.Archive" Version="1.2.5" />
-    <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.6" />
+    <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.5.1" />
     <PackageVersion Include="Microsoft.PowerShell.SecretManagement" Version="1.1.2" />
     <PackageVersion Include="Microsoft.PowerShell.SecretStore" Version="1.0.6" />
     <PackageVersion Include="Microsoft.Reactive.Testing" Version="6.0.0" />
@@ -73,7 +73,7 @@
     <PackageVersion Include="Nerdbank.Streams" Version="2.11.90" />
     <PackageVersion Include="NetMQ" Version="4.0.1.13" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageVersion Include="Npgsql" Version="9.0.2" />
+    <PackageVersion Include="Npgsql" Version="9.0.3" />
     <PackageVersion Include="PackageManagement" Version="1.4.8.1" />
     <PackageVersion Include="Pocket.Disposable" Version="1.2.0" />
     <PackageVersion Include="Pocket.TypeDiscovery" Version="0.6.0" />
@@ -83,28 +83,28 @@
     <PackageVersion Include="PocketLogger" Version="0.9.1" />
     <PackageVersion Include="PowerShellGet" Version="2.2.5" />
     <PackageVersion Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
-    <PackageVersion Include="Serilog" Version="4.0.0" />
+    <PackageVersion Include="Serilog" Version="4.2.0" />
     <PackageVersion Include="SkiaSharp" Version="2.88.6" />
     <PackageVersion Include="StreamJsonRpc" Version="2.21.69" />
-    <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
+    <PackageVersion Include="System.Collections.Immutable" Version="9.0.5" />
     <PackageVersion Include="System.CommandLine.NamingConventionBinder" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="9.0.0" />
-    <PackageVersion Include="System.Drawing.Common" Version="9.0.0" />
-    <PackageVersion Include="System.IO.Pipelines" Version="9.0.0" />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="9.0.5" />
+    <PackageVersion Include="System.Drawing.Common" Version="9.0.5" />
+    <PackageVersion Include="System.IO.Pipelines" Version="9.0.5" />
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
     <PackageVersion Include="System.Memory" Version="4.6.0" />
     <PackageVersion Include="System.Net.Http" Version="4.3.4" />
     <PackageVersion Include="System.Reactive" Version="6.0.0" />
-    <PackageVersion Include="System.Reflection.Metadata" Version="8.0.0" />
-    <PackageVersion Include="System.Runtime.Caching" Version="9.0.0" />
+    <PackageVersion Include="System.Reflection.Metadata" Version="9.0.5" />
+    <PackageVersion Include="System.Runtime.Caching" Version="9.0.5" />
     <PackageVersion Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageVersion Include="System.Runtime.Loader" Version="4.3.0" />
-    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="9.0.0" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="9.0.5" />
     <PackageVersion Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="9.0.0" />
-    <PackageVersion Include="System.Text.Json" Version="9.0.0" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="9.0.5" />
+    <PackageVersion Include="System.Text.Json" Version="9.0.5" />
     <PackageVersion Include="ThreadJob" Version="2.0.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" />
     <PackageVersion Include="xunit" Version="2.7.0" />

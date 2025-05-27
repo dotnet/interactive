@@ -65,7 +65,7 @@ public class CSharpProjectKernel :
     {
         _prebuildFinder = prebuildFinder;
         KernelInfo.LanguageName = "C#";
-        KernelInfo.LanguageVersion = "11.0";
+        KernelInfo.LanguageVersion = "13.0";
     }
 
     async Task IKernelCommandHandler<OpenProject>.HandleAsync(OpenProject command, KernelInvocationContext context)
