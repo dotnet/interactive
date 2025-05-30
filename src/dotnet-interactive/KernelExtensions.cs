@@ -448,6 +448,11 @@ public static class KernelExtensions
         this CompositeKernel kernel,
         TelemetrySender telemetrySender)
     {
+        if (telemetrySender is null)
+        {
+            throw new ArgumentNullException(nameof(telemetrySender));
+        }
+
         var executionOrder = 0;
         var sessionId = Guid.NewGuid().ToString();
         var subscription = kernel.KernelEvents.Subscribe(SendTelemetryFor);

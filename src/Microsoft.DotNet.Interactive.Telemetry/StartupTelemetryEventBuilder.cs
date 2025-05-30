@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry;
 public sealed class StartupTelemetryEventBuilder
 {
     private readonly Func<string, string> _hash;
-    private readonly HashSet<string> _clearTextProperties = new(new[] { "frontend" });
+    private readonly HashSet<string> _clearTextProperties = ["frontend"];
 
     public StartupTelemetryEventBuilder(Func<string, string> hash)
     {
@@ -80,7 +80,7 @@ public sealed class StartupTelemetryEventBuilder
 
             var commandResult = parseResult.CommandResult;
 
-            var frontendName = GetFrontendName(parseResult.Directives, parseResult.CommandResult);
+            var frontendName = GetFrontendName(parseResult, parseResult.CommandResult);
             entryItems.Add(new KeyValuePair<string, string>("frontend", frontendName));
 
             foreach (var item in rule.Items)
@@ -94,7 +94,10 @@ public sealed class StartupTelemetryEventBuilder
                 switch (item)
                 {
                     case OptionItem optItem:
-                        var optionValue = commandResult.Children.OfType<OptionResult>().FirstOrDefault(o => o.Option.HasAlias(optItem.Option))?.GetValueOrDefault()?.ToString();
+                        var optionResult = commandResult.Children.OfType<OptionResult>().FirstOrDefault(o => o.Option.Name == optItem.Option);
+
+                        var optionValue = optionResult?.GetValue<object>(optItem.Option)?.ToString();
+
                         if (optionValue is not null && optItem.Values.Contains(optionValue))
                         {
                             entryItems.Add(new KeyValuePair<string, string>(optItem.EntryKey, optionValue));
@@ -259,7 +262,7 @@ public sealed class StartupTelemetryEventBuilder
     };
 
     private static string GetFrontendName(
-        DirectiveCollection directives,
+        ParseResult parseResult,
         CommandResult commandResult)
     {
         if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CODESPACES")))
@@ -267,15 +270,15 @@ public sealed class StartupTelemetryEventBuilder
             return "gitHubCodeSpaces";
         }
 
-        foreach (var directive in directives)
+        foreach (var directive in parseResult.Tokens.Where(t => t is { Type: TokenType.Directive }))
         {
-            switch (directive.Key)
+            switch (directive.Value)
             {
-                case "jupyter":
-                case "synapse":
-                case "vscode":
-                case "vs":
-                    return directive.Key;
+                case "[jupyter]":
+                case "[synapse]":
+                case "[vscode]":
+                case "[vs]":
+                    return directive.Value.Trim('[', ']');
             }
         }
 

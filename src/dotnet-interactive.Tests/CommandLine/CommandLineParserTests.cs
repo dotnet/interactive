@@ -2,10 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine.Invocation;
-using System.CommandLine.IO;
-using System.CommandLine.NamingConventionBinder;
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,10 +10,8 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-
 using FluentAssertions;
 using FluentAssertions.Execution;
-
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Connection;
 using Microsoft.DotNet.Interactive.App.Tests.Extensions;
@@ -26,18 +21,17 @@ using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Extensions.DependencyInjection;
-
 using Xunit;
 using Xunit.Abstractions;
+using CommandLineParser = Microsoft.DotNet.Interactive.App.CommandLine.CommandLineParser;
 
 namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine;
 
 public class CommandLineParserTests : IDisposable
 {
     private readonly ITestOutputHelper _output;
-    private readonly TestConsole _console = new();
-    private StartupOptions _startOptions;
-    private readonly Parser _parser;
+    private StartupOptions _startupOptions;
+    private readonly RootCommand _rootCommand;
     private readonly FileInfo _connectionFile;
     private readonly DirectoryInfo _kernelSpecInstallPath;
     private readonly ServiceCollection _serviceCollection;
@@ -51,25 +45,25 @@ public class CommandLineParserTests : IDisposable
             SentinelExists = false
         };
 
-        _parser = CommandLineParser.Create(
+        _rootCommand = CommandLineParser.Create(
             _serviceCollection,
-            startServer: (options, invocationContext) =>
+            startWebServer: startupOptions =>
             {
-                _startOptions = options;
+                _startupOptions = startupOptions;
             },
-            jupyter: (startupOptions, console, startServer, context) =>
+            startJupyter: (startupOptions, _) =>
             {
-                _startOptions = startupOptions;
+                _startupOptions = startupOptions;
                 return Task.FromResult(1);
             },
-            startKernelHost: (startupOptions, host, console) =>
+            startStdio: (startupOptions, _) =>
             {
-                _startOptions = startupOptions;
+                _startupOptions = startupOptions;
                 return Task.FromResult(1);
             },
-            startHttp: (startupOptions, console, startServer, context) =>
+            startHttp: (startupOptions, _) =>
             {
-                _startOptions = startupOptions;
+                _startupOptions = startupOptions;
                 return Task.FromResult(1);
             },
             telemetrySender: new FakeTelemetrySender(firstTimeUseNoticeSentinel));
@@ -81,8 +75,8 @@ public class CommandLineParserTests : IDisposable
     private Kernel GetKernel()
     {
         return _serviceCollection
-            .FirstOrDefault(s => s.ServiceType == typeof(Kernel))
-            .ImplementationInstance.As<Kernel>();
+               .FirstOrDefault(s => s.ServiceType == typeof(Kernel))
+               .ImplementationInstance.As<Kernel>();
     }
 
     public void Dispose()
@@ -95,9 +89,9 @@ public class CommandLineParserTests : IDisposable
     {
         var logPath = new DirectoryInfo(Path.GetTempPath());
 
-        await _parser.InvokeAsync($"jupyter --log-path {logPath} {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter --log-path {logPath} {_connectionFile}").InvokeAsync();
 
-        _startOptions
+        _startupOptions
             .LogPath
             .FullName
             .Should()
@@ -128,8 +122,8 @@ public class CommandLineParserTests : IDisposable
 
         // wait for log file to be created
         var logFile = await logPath.Directory.WaitForFile(
-            timeout: waitTime,
-            predicate: _ => true); // any matching file is the one we want
+                          timeout: waitTime,
+                          predicate: _ => true); // any matching file is the one we want
         logFile.Should().NotBeNull($"a log file should have been created at {logFile.FullName}");
 
         // check log file for expected contents
@@ -156,9 +150,9 @@ public class CommandLineParserTests : IDisposable
     [Fact]
     public async Task It_parses_verbose_option()
     {
-        await _parser.InvokeAsync($"jupyter --verbose {_connectionFile}", _console);
+        await _rootCommand.Parse($"jupyter --verbose {_connectionFile}").InvokeAsync();
 
-        _startOptions
+        _startupOptions
             .Verbose
             .Should()
             .BeTrue();
@@ -167,41 +161,34 @@ public class CommandLineParserTests : IDisposable
     [Fact]
     public void jupyter_command_parses_port_range_option()
     {
-        var result = _parser.Parse($"jupyter --http-port-range 3000-4000 {_connectionFile}");
+        _rootCommand.Parse($"jupyter --http-port-range 3000-4000 {_connectionFile}").Invoke();
 
-        var binder = new ModelBinder<StartupOptions>();
-
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options
-            .HttpPortRange
-            .Should()
-            .BeEquivalentToPreferringRuntimeMemberTypes(new HttpPortRange(3000, 4000));
+        _startupOptions.HttpPortRange
+                     .Should()
+                     .BeEquivalentToPreferringRuntimeMemberTypes(new HttpPortRange(3000, 4000));
     }
 
     [Fact]
     public void jupyter_command_help_shows_default_port_range()
     {
-        _parser.Invoke("jupyter -h", _console);
+        var output = new StringWriter();
 
-        _console.Out.ToString().Should().Contain("default: 2048-3000");
+        _rootCommand.Parse("jupyter -h").Invoke(new() { Output = output });
+
+        output.ToString().Should().Match("*default:*2048-3000*");
     }
 
     [Fact]
     public void jupyter_command_parses_http_local_only_option()
     {
-        var result = _parser.Parse($"jupyter --http-local-only {_connectionFile}");
+        _rootCommand.Parse($"jupyter --http-local-only {_connectionFile}").InvokeAsync();
 
-        var binder = new ModelBinder<StartupOptions>();
-
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options
+        _startupOptions
             .GetAllNetworkInterfaces
             .Should()
             .Match(x => x == StartupOptions.GetNetworkInterfacesHttpLocalOnly);
 
-        options
+        _startupOptions
             .GetAllNetworkInterfaces
             .Should()
             .Match(x => x != NetworkInterface.GetAllNetworkInterfaces);
@@ -210,18 +197,14 @@ public class CommandLineParserTests : IDisposable
     [Fact]
     public void jupyter_command_default_network_interface_if_no_http_local_only_option()
     {
-        var result = _parser.Parse($"jupyter {_connectionFile}");
+        _rootCommand.Parse($"jupyter {_connectionFile}").InvokeAsync();
 
-        var binder = new ModelBinder<StartupOptions>();
-
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options
+        _startupOptions
             .GetAllNetworkInterfaces
             .Should()
             .Match(x => x != StartupOptions.GetNetworkInterfacesHttpLocalOnly);
 
-        options
+        _startupOptions
             .GetAllNetworkInterfaces
             .Should()
             .Match(x => x == NetworkInterface.GetAllNetworkInterfaces);
@@ -232,7 +215,7 @@ public class CommandLineParserTests : IDisposable
     {
         Directory.CreateDirectory(_kernelSpecInstallPath.FullName);
 
-        _parser.InvokeAsync($"jupyter install --path {_kernelSpecInstallPath}");
+        _rootCommand.Parse($"jupyter install --path {_kernelSpecInstallPath}").Invoke();
 
         var installedKernels = _kernelSpecInstallPath.GetDirectories();
 
@@ -245,69 +228,61 @@ public class CommandLineParserTests : IDisposable
     [Fact]
     public void jupyter_install_command_does_not_parse_http_port_option()
     {
-        var result = _parser.Parse("jupyter install --http-port 8000");
+        var result = _rootCommand.Parse("jupyter install --http-port 8000");
 
         result.Errors
-            .Select(e => e.Message)
-            .Should()
-            .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'.");
+              .Select(e => e.Message)
+              .Should()
+              .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'.");
     }
 
     [Fact]
     public void jupyter_install_command_parses_port_range_option()
     {
-        var result = _parser.Parse("jupyter install --http-port-range 3000-4000");
+        var result = _rootCommand.Parse("jupyter install --http-port-range 3000-4000");
 
-        var binder = new ModelBinder<StartupOptions>();
+        var startupOptions = StartupOptions.Parse(result);
 
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options
+        startupOptions
             .HttpPortRange
             .Should()
             .BeEquivalentToPreferringRuntimeMemberTypes(new HttpPortRange(3000, 4000));
     }
 
     [Fact]
-    public async Task jupyter_command_returns_error_if_connection_file_path_is_not_passed()
+    public void jupyter_command_returns_error_if_connection_file_path_is_not_passed()
     {
-        var testConsole = new TestConsole();
+        var result = _rootCommand.Parse("jupyter");
 
-        await _parser.InvokeAsync("jupyter", testConsole);
-
-        testConsole.Error.ToString().Should().Contain("Required argument missing for command: 'jupyter'.");
+        result.Errors.Should().Contain(e => e.Message == "Required argument missing for command: 'jupyter'.");
     }
 
     [Fact]
     public void jupyter_command_does_not_parse_http_port_option()
     {
-        var result = _parser.Parse($"jupyter {_connectionFile} --http-port 8000");
+        var result = _rootCommand.Parse($"jupyter {_connectionFile} --http-port 8000");
 
         result.Errors
-            .Select(e => e.Message)
-            .Should()
-            .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'.");
+              .Select(e => e.Message)
+              .Should()
+              .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'.");
     }
 
     [Fact]
     public async Task jupyter_command_enables_http_api_when_http_port_range_is_specified()
     {
-        await _parser.InvokeAsync($"jupyter --http-port-range 3000-5000 {_connectionFile}");
+        await _rootCommand.Parse($"jupyter --http-port-range 3000-5000 {_connectionFile}").InvokeAsync();
 
-        _startOptions.EnableHttpApi.Should().BeTrue();
+        _startupOptions.EnableHttpApi.Should().BeTrue();
     }
 
     [Fact]
     public void jupyter_command_parses_connection_file_path()
     {
-        var result = _parser.Parse($"jupyter {_connectionFile}");
+        _rootCommand.Parse($"jupyter {_connectionFile}").Invoke();
 
-        var binder = new ModelBinder<JupyterOptions>();
-
-        var options = (JupyterOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options
-            .ConnectionFile
+        _startupOptions
+            .JupyterConnectionFile
             .FullName
             .Should()
             .Be(_connectionFile.FullName);
@@ -316,40 +291,36 @@ public class CommandLineParserTests : IDisposable
     [Fact]
     public async Task jupyter_command_enables_http_api_by_default()
     {
-        await _parser.InvokeAsync($"jupyter {_connectionFile}");
+        await _rootCommand.Parse($"jupyter {_connectionFile}").InvokeAsync();
 
-        _startOptions.EnableHttpApi.Should().BeTrue();
+        _startupOptions.EnableHttpApi.Should().BeTrue();
     }
 
     [Fact]
     public async Task jupyter_command_by_default_uses_port_rage()
     {
-        await _parser.InvokeAsync($"jupyter {_connectionFile}");
+        await _rootCommand.Parse($"jupyter {_connectionFile}").InvokeAsync();
 
         using var scope = new AssertionScope();
-        _startOptions.HttpPortRange.Should().NotBeNull();
-        _startOptions.HttpPortRange.Start.Should().Be(HttpPortRange.Default.Start);
-        _startOptions.HttpPortRange.End.Should().Be(HttpPortRange.Default.End);
+        _startupOptions.HttpPortRange.Should().NotBeNull();
+        _startupOptions.HttpPortRange.Start.Should().Be(HttpPortRange.Default.Start);
+        _startupOptions.HttpPortRange.End.Should().Be(HttpPortRange.Default.End);
     }
 
     [Fact]
     public void jupyter_command_default_kernel_option_value()
     {
-        var result = _parser.Parse($"jupyter {Path.GetTempFileName()}");
-        var binder = new ModelBinder<JupyterOptions>();
-        var options = (JupyterOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+        _rootCommand.Parse($"jupyter {Path.GetTempFileName()}").Invoke();
 
-        options.DefaultKernel.Should().Be("csharp");
+        _startupOptions.DefaultKernel.Should().Be("csharp");
     }
 
     [Fact]
     public void jupyter_command_honors_default_kernel_option()
     {
-        var result = _parser.Parse($"jupyter --default-kernel bsharp {Path.GetTempFileName()}");
-        var binder = new ModelBinder<JupyterOptions>();
-        var options = (JupyterOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+        _rootCommand.Parse($"jupyter --default-kernel bsharp {Path.GetTempFileName()}").Invoke();
 
-        options.DefaultKernel.Should().Be("bsharp");
+        _startupOptions.DefaultKernel.Should().Be("bsharp");
     }
 
     [Fact]
@@ -357,52 +328,43 @@ public class CommandLineParserTests : IDisposable
     {
         var expected = "not_exist.json";
 
-        var testConsole = new TestConsole();
-        await _parser.InvokeAsync($"jupyter {expected}", testConsole);
+        var error = new StringWriter();
+        await _rootCommand.Parse($"jupyter {expected}").InvokeAsync(new() { Output = new StringWriter(), Error = error });
 
-        testConsole.Error.ToString().Should().ContainAll("File does not exist", "not_exist.json");
+        error.ToString().Should().ContainAll("File does not exist", "not_exist.json");
     }
 
     [Fact]
     public void stdio_command_kernel_host_defaults_to_process_id()
     {
-        var result = _parser.Parse("stdio");
+        _rootCommand.Parse("stdio").Invoke();
 
-        var binder = new ModelBinder<StartupOptions>();
+        // FIX: (stdio_command_kernel_host_defaults_to_process_id) maybe broken because Uri parsing was removed?
 
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options.KernelHost
-            .Should()
-            .Be(new Uri($"kernel://pid-{Process.GetCurrentProcess().Id}"));
+        _startupOptions.KernelHostUri
+                     .Should()
+                     .Be(new Uri($"kernel://pid-{Process.GetCurrentProcess().Id}"));
     }
 
     [Fact]
-    public void stdio_command_kernel_name_can_be_specified()
+    public void stdio_command_kernel_host_uri_can_be_specified()
     {
-        var result = _parser.Parse("stdio --kernel-host some-kernel-name");
+        _rootCommand.Parse("stdio --kernel-host some-kernel-name").Invoke();
+        ;
 
-        var binder = new ModelBinder<StartupOptions>();
-
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options.KernelHost
-            .Should()
-            .Be(new Uri("kernel://some-kernel-name"));
+        _startupOptions.KernelHostUri
+                     .Should()
+                     .Be(new Uri("kernel://some-kernel-name"));
     }
 
     [Fact]
     public void stdio_command_working_dir_defaults_to_process_current()
     {
-        var result = _parser.Parse("stdio");
+        _rootCommand.Parse("stdio").Invoke();
 
-        var binder = new ModelBinder<StartupOptions>();
-
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options.WorkingDir.FullName
-            .Should()
-            .Be(Environment.CurrentDirectory);
+        _startupOptions.WorkingDir.FullName
+                     .Should()
+                     .Be(Environment.CurrentDirectory);
     }
 
     [Fact]
@@ -416,97 +378,89 @@ public class CommandLineParserTests : IDisposable
             _ => "/some/dir"
         };
 
-        var result = _parser.Parse($"stdio --working-dir {workingDir}");
+        var result = _rootCommand.Parse($"stdio --working-dir {workingDir}");
 
-        var binder = new ModelBinder<StartupOptions>();
+        var startupOptions = StartupOptions.Parse(result);
 
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options.WorkingDir.FullName
-            .Should()
-            .Be(workingDir);
+        startupOptions.WorkingDir.FullName
+                      .Should()
+                      .Be(workingDir);
     }
-
 
     [Fact]
     public void stdio_command_does_not_support_http_port_and_http_port_range_options_at_same_time()
     {
-        var result = _parser.Parse("stdio --http-port 8000 --http-port-range 3000-4000");
+        var result = _rootCommand.Parse("stdio --http-port 8000 --http-port-range 3000-4000");
 
         result.Errors
-            .Select(e => e.Message)
-            .Should()
-            .Contain(errorMessage => errorMessage == "Cannot specify both --http-port-range and --http-port together");
+              .Select(e => e.Message)
+              .Should()
+              .Contain(errorMessage => errorMessage == "Cannot specify both --http-port-range and --http-port together");
     }
 
     [Fact]
     public void stdio_command_parses_http_port_options()
     {
-        var result = _parser.Parse("stdio --http-port 8000");
+        _rootCommand.Parse("stdio --http-port 8000").Invoke();
 
-        var binder = new ModelBinder<StartupOptions>();
-
-        var options = (StartupOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
-
-        options.HttpPort.PortNumber.Should().Be(8000);
+        _startupOptions.HttpPort.PortNumber.Should().Be(8000);
     }
 
     [Fact]
     public async Task stdio_command_parses_http_port_range_options()
     {
-        await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
+        await _rootCommand.Parse("stdio --http-port-range 3000-4000").InvokeAsync();
 
         using var scope = new AssertionScope();
-        _startOptions.HttpPortRange.Should().NotBeNull();
-        _startOptions.HttpPortRange.Start.Should().Be(3000);
-        _startOptions.HttpPortRange.End.Should().Be(4000);
+        _startupOptions.HttpPortRange.Should().NotBeNull();
+        _startupOptions.HttpPortRange.Start.Should().Be(3000);
+        _startupOptions.HttpPortRange.End.Should().Be(4000);
     }
 
     [Fact]
     public async Task stdio_command_requires_api_bootstrapping_when_http_is_enabled()
     {
-        await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
+        await _rootCommand.Parse("stdio --http-port-range 3000-4000").InvokeAsync();
 
         var kernel = GetKernel();
 
         kernel.FrontendEnvironment.As<HtmlNotebookFrontendEnvironment>()
-            .RequiresAutomaticBootstrapping
-            .Should()
-            .BeTrue();
+              .RequiresAutomaticBootstrapping
+              .Should()
+              .BeTrue();
     }
 
     [Fact]
     public void stdio_command_defaults_to_csharp_kernel()
     {
-        var result = _parser.Parse("stdio");
-        var binder = new ModelBinder<StdIOOptions>();
-        var options = (StdIOOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+        _rootCommand.Parse("stdio").Invoke();
 
-        options.DefaultKernel.Should().Be("csharp");
+        _startupOptions.DefaultKernel.Should().Be("csharp");
     }
 
     [Fact]
     public async Task stdio_command_does_not_enable_http_api_by_default()
     {
-        await _parser.InvokeAsync("stdio");
+        // FIX: (stdio_command_does_not_enable_http_api_by_default) inline
+        var parseResult = _rootCommand.Parse("stdio");
+        parseResult.Errors.Should().BeEmpty();
 
-        _startOptions.EnableHttpApi.Should().BeFalse();
+        await parseResult.InvokeAsync();
+
+        _startupOptions.EnableHttpApi.Should().BeFalse();
     }
-
 
     [Fact]
     public void stdio_command_honors_default_kernel_option()
     {
-        var result = _parser.Parse("stdio --default-kernel bsharp");
-        var binder = new ModelBinder<StdIOOptions>();
-        var options = (StdIOOptions)binder.CreateInstance(new InvocationContext(result).BindingContext);
+        _rootCommand.Parse("stdio --default-kernel bsharp").Invoke();
 
-        options.DefaultKernel.Should().Be("bsharp");
+        _startupOptions.DefaultKernel.Should().Be("bsharp");
     }
 
     [Fact]
     public void Parser_configuration_is_valid()
     {
-        _parser.Configuration.ThrowIfInvalid();
+        _rootCommand.ThrowIfInvalid();
     }
 }

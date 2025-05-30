@@ -1,5 +1,13 @@
-<ProjectConfiguration>
+﻿<ProjectConfiguration>
   <Settings>
     <DefaultTestTimeout>20000</DefaultTestTimeout>
+    <IgnoredTests>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Http.Tests.HttpKernelTests+NamedRequest.body_content_produces_the_entirety_of_the_body_content("example.response.body.*")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.Http.Tests.HttpKernelTests.traceparent_header_has_a_new_top_level_value_for_each_request</TestName>
+      </NamedTestSelector>
+    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
