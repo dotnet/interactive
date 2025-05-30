@@ -10,23 +10,24 @@ using System.IO;
  {
      static int Main(string[] args)
      {
-         var existingOnlyOption = new Option<FileInfo>("--out-file")
+         var outFileOption = new Option<FileInfo>("--out-file")
          {
              Description = "Location to write the generated interface file",
-             IsRequired = true
-         }.ExistingOnly();
+             Required = true
+         }.AcceptExistingOnly();
 
          var command = new RootCommand
          {
-             existingOnlyOption
+             outFileOption
          };
 
-         command.SetHandler(async (FileInfo f) =>
+         command.SetAction(async (parseResult, cancellationToken) => 
          {
              var generated = InterfaceGenerator.Generate();
-             await File.WriteAllTextAsync(f.FullName, generated);
-         }, existingOnlyOption);
+             await File.WriteAllTextAsync(parseResult.GetValue(outFileOption).FullName, generated, cancellationToken);
+             return 0;
+         });
 
-         return command.Invoke(args);
+         return command.Parse(args).Invoke();
      }
  }

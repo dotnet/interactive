@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Tests.Utility;
+namespace Microsoft.DotNet.Interactive.App.Tests.Extensions;
 
 public static class EnumerableExtensions
 {

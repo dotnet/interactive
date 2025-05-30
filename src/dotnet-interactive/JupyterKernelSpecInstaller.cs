@@ -3,8 +3,6 @@
 
 using Microsoft.DotNet.Interactive.Jupyter;
 using System;
-using System.CommandLine;
-using System.CommandLine.IO;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -15,16 +13,18 @@ namespace Microsoft.DotNet.Interactive.App;
 
 public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
 {
-    private readonly IConsole _console;
+    private readonly TextWriter _stdOut;
+    private readonly TextWriter _stdErr;
     private readonly IJupyterKernelSpecModule _kernelSpecModule;
 
-    public JupyterKernelSpecInstaller(IConsole console) : this(console, new JupyterKernelSpecModule())
+    public JupyterKernelSpecInstaller(TextWriter stdOut, TextWriter stdErr) : this(stdOut, stdErr, new JupyterKernelSpecModule())
     {
     }
 
-    public JupyterKernelSpecInstaller(IConsole console, IJupyterKernelSpecModule jupyterKernelSpecModule)
+    public JupyterKernelSpecInstaller(TextWriter stdOut, TextWriter stdErr, IJupyterKernelSpecModule jupyterKernelSpecModule)
     {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
+        _stdOut = stdOut ?? throw new ArgumentNullException(nameof(stdOut));
+        _stdErr = stdErr ?? throw new ArgumentNullException(nameof(stdErr));
         _kernelSpecModule = jupyterKernelSpecModule;
     }
 
@@ -42,8 +42,8 @@ public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
             var result = await _kernelSpecModule.InstallKernelAsync(sourceDirectory);
             if (result.ExitCode == 0)
             {
-                _console.Out.WriteLine("Installing using jupyter kernelspec module.");
-                _console.Out.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
+                _stdOut.WriteLine("Installing using jupyter kernelspec module.");
+                _stdOut.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
                 return true;
             }
         }
@@ -52,7 +52,7 @@ public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
             // file not found when executing process
             if (!w32e.Source.Contains(typeof(System.Diagnostics.Process).FullName))
             {
-                _console.Error.WriteLine($"Failed to install \"{kernelDisplayName}\" kernel.");
+                _stdErr.WriteLine($"Failed to install \"{kernelDisplayName}\" kernel.");
                 throw;
             }
         }
@@ -67,22 +67,22 @@ public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
     {
         if (!destination.Exists)
         {
-            _console.Error.WriteLine($"The kernelspec path {destination.FullName} does not exist.");
-            _console.Error.WriteLine($"Failed to install \"{kernelDisplayName}\" kernel.");
+            _stdErr.WriteLine($"The kernelspec path {destination.FullName} does not exist.");
+            _stdErr.WriteLine($"Failed to install \"{kernelDisplayName}\" kernel.");
 
             return false;
         }
 
-        _console.Out.WriteLine($"Installing using path {destination.FullName}.");
+        _stdOut.WriteLine($"Installing using path {destination.FullName}.");
 
         var succeeded = CopyKernelSpecFiles(sourceDirectory, destination);
         if (succeeded)
         {
-            _console.Out.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
+            _stdOut.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
         }
         else
         {
-            _console.Error.WriteLine(
+            _stdErr.WriteLine(
                 $"Failed to install \"{kernelDisplayName}\" kernel.");
         }
 
@@ -112,7 +112,7 @@ public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
 
         if (!destination.Exists)
         {
-            _console.Error.WriteLine($"Directory {destination.FullName} does not exist.");
+            _stdErr.WriteLine($"Directory {destination.FullName} does not exist.");
             return false;
         }
 
@@ -140,7 +140,7 @@ public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
         }
         catch (IOException ioe)
         {
-            _console.Error.WriteLine(ioe.Message);
+            _stdErr.WriteLine(ioe.Message);
             return false;
         }
 

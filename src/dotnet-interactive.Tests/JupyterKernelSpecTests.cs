@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.CommandLine.IO;
 using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
@@ -20,8 +19,8 @@ public class JupyterKernelSpecTests
 {
     private readonly List<DirectoryInfo> _kernelInstallations = new();
 
-    private TestConsole Console { get; } = new();
-
+    private StringWriter Output { get; } = new();
+    private StringWriter Error { get; } = new();
 
     [Fact]
     public async Task Returns_success_output_when_kernel_installation_succeeded()
@@ -30,11 +29,11 @@ public class JupyterKernelSpecTests
         UnpackKernelsSpecTo(kernelDir);
 
         var jupyterKernelSpecModuleSimulator = new JupyterKernelSpecModuleSimulator(true);
-        var kernelSpecInstaller = new JupyterKernelSpecInstaller(Console, jupyterKernelSpecModuleSimulator);
+        var kernelSpecInstaller = new JupyterKernelSpecInstaller(Output, Error, jupyterKernelSpecModuleSimulator);
            
 
         var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
-        var output = Console.Out.ToString();
+        var output = Output.ToString();
 
         using var scope = new AssertionScope();
         result.Should().BeTrue();
@@ -59,9 +58,9 @@ public class JupyterKernelSpecTests
             Source = typeof(System.Diagnostics.Process).FullName
         });
             
-        var kernelSpecInstaller = new JupyterKernelSpecInstaller(Console, jupyterKernelSpecModuleSimulator);
+        var kernelSpecInstaller = new JupyterKernelSpecInstaller(Output, Error, jupyterKernelSpecModuleSimulator);
         var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
-        var output = Console.Out.ToString();
+        var output = Output.ToString();
 
         using var scope = new AssertionScope();
         result.Should().BeTrue();
@@ -84,9 +83,9 @@ public class JupyterKernelSpecTests
         });
 
         var defaultPath = jupyterKernelSpecModuleSimulator.GetDefaultKernelSpecDirectory();
-        var kernelSpecInstaller = new JupyterKernelSpecInstaller(Console, jupyterKernelSpecModuleSimulator);
+        var kernelSpecInstaller = new JupyterKernelSpecInstaller(Output, Error, jupyterKernelSpecModuleSimulator);
         var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
-        var error = Console.Error.ToString();
+        var error = Error.ToString();
 
         using var scope = new AssertionScope();
         result.Should().BeFalse();
