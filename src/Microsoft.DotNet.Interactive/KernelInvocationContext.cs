@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -412,6 +411,8 @@ public class KernelInvocationContext : IDisposable
     }
 
     internal DirectiveNode CurrentlyParsingDirectiveNode { get; set; }
+
+    internal static KernelInvocationContext None => new(KernelCommand.None);
 
     internal class KernelCommandTokenComparer : IEqualityComparer<KernelCommand>
     {

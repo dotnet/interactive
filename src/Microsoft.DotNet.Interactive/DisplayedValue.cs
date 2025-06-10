@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive;
 
@@ -24,10 +25,18 @@ public class DisplayedValue
     public string DisplayId { get; }
 
     public IReadOnlyList<FormattedValue> FormattedValues { get; private set; }
-    
+
     public void Update(object updatedValue)
     {
         var mimeTypes = FormattedValues.Select(x => x.MimeType).ToArray();
+
+        if (_context.Command is NoCommand)
+        {
+            // If no context is available, we write to the console.
+            var output = updatedValue.ToDisplayString(mimeTypes.FirstOrDefault() ?? "text/plain");
+            Console.WriteLine(output);
+            return;
+        }
 
         FormattedValues = FormattedValue.CreateManyFromObject(updatedValue, mimeTypes);
 
