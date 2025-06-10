@@ -10,11 +10,13 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive;
 
-public class DisplayedValue
+public class DisplayedValue_OLD
 {
+    // FIX: (DisplayedValue) remove this type
+
     private KernelInvocationContext _context;
 
-    public DisplayedValue(IReadOnlyList<FormattedValue> formattedValues, KernelInvocationContext context)
+    public DisplayedValue_OLD(IReadOnlyList<FormattedValue> formattedValues, KernelInvocationContext context)
     {
         FormattedValues = formattedValues ?? throw new ArgumentNullException(nameof(formattedValues));
         _context = context ?? throw new ArgumentNullException(nameof(context));

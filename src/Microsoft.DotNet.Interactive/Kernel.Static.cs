@@ -147,6 +147,24 @@ public partial class Kernel
                 .SelectMany(i => i.GenericTypeArguments)
                 .ToArray());
 
+    private static void OnDisplayedValue(DisplayedValue displayedValue)
+    {
+        if (KernelInvocationContext.Current is { } context)
+        {
+            context.Display(displayedValue);
+        }
+        else
+        {
+            var formattedValue = displayedValue.FormattedValues.FirstOrDefault(v => v.MimeType == PlainTextFormatter.MimeType) ??
+                                 displayedValue.FormattedValues.FirstOrDefault();
+
+            if (formattedValue?.Value is { } value)
+            {
+                Console.WriteLine(value);
+            }
+        }
+    }
+
     protected delegate Task SetValueAsyncDelegate(
         string name,
         object value,

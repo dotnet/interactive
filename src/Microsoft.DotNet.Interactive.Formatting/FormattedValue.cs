@@ -8,6 +8,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive;
 
+// FIX: move namespace
 public class FormattedValue
 {
     public FormattedValue(string mimeType, string value)
